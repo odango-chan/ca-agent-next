@@ -161,7 +161,7 @@ Tasks:
 
 **External gates:** ca-skills PR #88 remains OPEN until rechecked. Compiler Issue #61 must produce the versioned Artifact and Python CEL interoperability before any Assurance `when` conformance claim. ca-client-tools PR #39 is OPEN with Phase B final pass and Phase C not started. Do not claim a dependency is merged/released or a codec message is qualified unless the exact evidence exists.
 
-**Acceptance:** OM-01 through OM-10 and OM-13/OM-14 pass on fixtures and exact protocol vectors before live E2E. The OpenAMSM Plugin contains no Skill selection, Owner operation map, RunStore, Runtime or authorization logic.
+**Acceptance:** OM-01 through OM-10 and OM-13/OM-15 pass on fixtures and exact protocol vectors before live E2E. The OpenAMSM Plugin contains no Skill selection, Owner operation map, RunStore, Runtime or authorization logic.
 
 ## 9. Phase H — Real OpenAMSM Create → Modify → Release E2E
 
