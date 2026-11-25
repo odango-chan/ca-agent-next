@@ -78,6 +78,15 @@ The Plugin manifest declares Event types and Schemas; it does not name a Skill o
 | EX-18 | Plugin package | Load a valid YAML plugin.yaml. Reject malformed YAML, duplicate/unknown fields, unsupported versions, invalid Schema references, path escape and handshake mismatch without registering extensions. No package signature or extra SHA-256 snapshot is required. |
 | EX-19 | Continuation | Resume the exact pending Run with original bindings. Duplicate and invalid deliveries cause no new selection or execution advance. |
 | EX-20 | Business neutrality | Add a second independently owned Event/Skill/Interface fixture by installing its Plugin and Skill assets and changing deployment inputs only. The same Host, Resolver, Runtime and Plugin Manager build works without business-specific Core code. |
+| EX-21 | Core-owned SkillCatalog | Startup/import registers all valid Skills, including SKILL.md-only Skills, in one immutable in-memory Catalog owned by Core/Host; Plugin Manager does not own or scan Skill packages. |
+| EX-22 | Hot-path residency | After Catalog activation, fresh Event selection performs no Skill-directory scan, SKILL.md/Assurance file read or Compiler invocation. Full SKILL.md text and precompiled when programs are served from memory. |
+| EX-23 | when compile-once / evaluate-per-Event | Import/update compiles and type-checks when once. Two fresh Events with different input values evaluate the same in-memory program independently and may produce different results; no previous boolean result is reused. |
+| EX-24 | Replay and continuation | A duplicate Event is deduplicated before fresh selection; an exact continuation resumes its original Run and pinned Catalog generation without reevaluating when. |
+| EX-25 | Atomic Catalog update | An explicit update builds a candidate generation off-path and atomically activates it only after validation. A failed update leaves the active generation unchanged. |
+| EX-26 | Invocation generation pinning | An Invocation selected under generation N continues using N's SKILL.md, Artifact and Capability bindings after generation N+1 is activated; new Invocations use N+1. |
+| EX-27 | SKILL.md and semantic metadata residency | Semantic candidate selection uses metadata derived from cached SKILL.md; after selection the full SKILL.md is supplied from memory without rereading the package file. |
+| EX-28 | Lazy knowledge assets | references/ and large knowledge assets are not loaded during every Event selection; they are loaded only when the selected Skill/context needs them. |
+| EX-29 | Compiler/Runtime when parity | The admitted Artifact carries the Compiler-owned portable checked when program and its CEL profile/type bindings. Python Runtime evaluates it against current event.type/input with results matching the CA-SL normative fixtures; no Python reparse or per-Event Compiler call. |
 
 ## 4. Skill selection and mode behavior
 
@@ -95,7 +104,7 @@ The Plugin manifest declares Event types and Schemas; it does not name a Skill o
 | LLM returns an unoffered Skill identity | Reject the result |
 | Continuation | Resume the original Run before fresh selection |
 
-The Event Plugin declares only normalized Event types and Schemas. There is no Event→Skill or Event→Mode mapping table. when belongs only to assurance/contract.yaml. predicates.yaml remains execution-time business evaluation.
+The Event Plugin declares only normalized Event types and Schemas. There is no Event→Skill or Event→Mode mapping table. when belongs only to assurance/contract.yaml. predicates.yaml remains execution-time business evaluation. The Resolver reads an immutable Core-owned in-memory SkillCatalog snapshot; it does not read package files on each Event. It evaluates each compiled when program for each fresh Event, without caching the result.
 
 ### 4.2 Execution mode
 
@@ -116,7 +125,8 @@ The Event Plugin declares only normalized Event types and Schemas. There is no E
 ## 5. Compiler and Tool Plugin integration
 
 - Python invokes the canonical CA-SL Compiler interface for Assurance source Check/Build and Artifact Inspect/Verify. Do not copy Go Compiler source or reimplement its semantics.
-- At this document revision, support for refreshed CA-SL v1alpha5 contract.when and the Assurance-free SKILL.md import path must be verified against the Compiler owner. Do not silently strip when or claim an unsupported Compiler release works.
+- At this document revision, support for refreshed CA-SL v1alpha5 contract.when, its portable checked Artifact representation, and the Assurance-free SKILL.md import path must be verified against the Compiler owner. See [SkillCatalog and Compiler integration requirements](integration/skill-catalog-compiler-contract.md). Do not silently strip when or claim an unsupported Compiler release works.
+- The Compiler parses/type-checks when once at import/update. Python Runtime evaluates the admitted compiled program for each fresh Event; it must not parse/type-check raw CEL on the hot path.
 - Importing a compiled Artifact invokes Inspect/Verify and Host Admission but not Build.
 - The Echo Tool Interface Package is consumed from its canonical Compiler-owned format. Do not duplicate ToolCatalog or calculate an additional Host-side package digest.
 - The Tool Plugin process is loaded through the unified Plugin Manager. A temporary adapter may consume ca-client-tools.provider/v2 behind the same manager.
@@ -126,12 +136,12 @@ The Echo Plugin may be a tiny Go process. It does not require a live OpenAMSM de
 
 ## 6. Definition of Demo acceptance
 
-Accept the architecture MVP only when EX-01 through EX-20 pass, the Assurance-backed Echo Skill runs in both modes, the SKILL.md-only Skill runs without Compiler invocation, the same Plugin process supports Event/Delivery/Tools, source and compiled-Artifact import behave differently as specified, and a second business works without business-specific Core changes.
+Accept the architecture MVP only when EX-01 through EX-29 pass, the Assurance-backed Echo Skill runs in both modes, the SKILL.md-only Skill runs without Compiler invocation, the same Plugin process supports Event/Delivery/Tools, source and compiled-Artifact import behave differently as specified, SkillCatalog residency/generation tests pass, and a second business works without business-specific Core changes.
 
 This does not claim live OpenAMSM qualification, production readiness or complete 3GPP protocol parity.
 
 ## 7. Explicit non-goals
 
-Do not add extra SHA-256 package/event snapshot hashing, package signatures, Trust Registry, Domain/Task Contract Packages, a second Skill descriptor, supportedModes, legacy compatibility, Marketplace, installer, automatic download, hot reload, production HA, distributed failover, complex multi-tenant/security governance, central business registry, distributed Event Bus, separate artifact database, complex compensation orchestration or elaborate DFX merely to pass the Demo.
+Do not add extra SHA-256 package/event snapshot hashing, package signatures, Trust Registry, Domain/Task Contract Packages, a second Skill descriptor, supportedModes, legacy compatibility, Marketplace, installer, automatic download, filesystem watchers or generic Plugin hot reload, production HA, distributed failover, complex multi-tenant/security governance, central business registry, distributed Event Bus, separate artifact database, complex compensation orchestration or elaborate DFX merely to pass the Demo. Explicit SkillCatalog import/update with atomic generation activation is in scope; it is not a general Plugin hot-reload system.
 
 Keep basic YAML/Schema/version/reference validation, path containment, clear errors, minimal correlation and truthful test evidence.
