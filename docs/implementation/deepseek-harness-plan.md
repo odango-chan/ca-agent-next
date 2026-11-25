@@ -150,7 +150,7 @@ Start only after the Generic Echo vertical E2E passes. OpenAMSM is the second in
 Tasks:
 
 1. Align ca-openamsm-plugin with docs/plugin-package.md and docs/plugin-artifact-handoff.md. The Next documents are the sole target contract; do not reuse ca-agent-demo's ca-agent-host.plugin/v0 protocol.
-2. Implement SBI HTTP/2 ingress, normalized Event publication, multipart/Content-ID parsing, raw N1/N2 artifact handoff and response Delivery in the independent Go Plugin. Do not eagerly deep-decode every NAS/NGAP IE for business reasoning.
+2. Implement SBI HTTP/2 ingress, normalized Event publication, multipart/Content-ID parsing, raw N1/N2 artifact handoff and response Delivery in the independent Go Plugin. For shared operations such as UpdateSMContext, extract only the minimal NAS discriminator needed to normalize the Event type, reusing the shared codec implementation; do not eagerly deep-decode every NAS/NGAP IE for business reasoning or choose the Skill in the Plugin.
 3. Use ca-client-tools v1.2.0 as the OpenAMSM Tool Plugin through the one Plugin Manager tools extension adapter. Keep its provider/v2 translation inside that manager; do not create a second Provider Manager.
 4. Add Codec Tool operations to that existing tools extension only after the operation and Schema are published in the canonical Interface Package. Reuse the accepted Go codec package/Worker/Facade; do not create a separate Codec Plugin/Manager or duplicate decoding in Host/Event Plugin.
 5. Import the existing Establish, Modify and UE-requested Release Skills from ca-skills. Do not copy business procedures into the Plugin or Agent Core.
