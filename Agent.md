@@ -26,6 +26,8 @@ DeepSeek Harness 默认使用 Goal 模式。按[SR 管理规范](docs/规范/SR%
 - ca-skill-compiler、ca-skills、ca-client-tools、ca-openamsm-plugin、env-openamsm 等保有独立实现和发布职责。
 - 所有项目群任务从本仓进入。修改协作仓须获得当前任务的授权，并在本仓登记覆盖目标仓、变更范围和验收的 SR。SR 达到 READY 且依赖满足后方可实施，再回填目标仓 PR、Commit 和验收证据。READY 仅表示具备实施条件，不授予写入权限。合并 PR 和发布 Release 需要单独授权。
 
+- 规范或设计尚在评审时，负责人可按 [SR 管理规范 §8.2](docs/规范/SR%20管理规范.md#82-使用评审中的固定提交开展受限实施)批准固定 PR SHA，供 READY 阶段实施和验收。按 SR 记录范围、授权和证据。正式发布、集成和主分支可达性按各阶段要求核对。
+
 ## 3. 不可违反的架构约束
 
 - 全系统只有一个 Plugin Manager；Plugin 是独立包/进程，可导出 Event ingress、Event delivery、Tools Extension。
@@ -156,3 +158,4 @@ review_scope:
 | 2026-11-25 | Codex | 第 5 节 | EC02 Compiler 设计集中归档 | 明确设计与机器契约所有权 | SR-012、#2 |
 | 2026-11-25 | Codex / GPT-6 | §2、§5 | 明确中央设计归属 | 跨仓设计移交 | IR-006 |
 | 2026-11-25 | Codex | §1 | 加入 Issue、分支命名和 Goal 入口 | 统一交接门禁 | [Issue #5](https://github.com/odango-chan/ca-agent-next/issues/5) |
+| 2026-11-25 | Codex | 第 2 节 | 引用固定 PR SHA 的分阶段实施规则 | 支持先验证再定稿 | SR-013、PR #7 |
