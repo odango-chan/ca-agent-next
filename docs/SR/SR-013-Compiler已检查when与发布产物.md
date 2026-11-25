@@ -216,12 +216,12 @@ Any type URL 固定为 type.googleapis.com/cel.expr.CheckedExpr；payload 为标
 ### 6.3 必跑命令
 
 ~~~bash
-GOWORK=off go test ./... -count=1
-GOWORK=off go vet ./...
-CGO_ENABLED=0 GOWORK=off go build ./...
-CGO_ENABLED=0 GOOS=js GOARCH=wasm GOWORK=off go build -o dist/skillc.wasm ./cmd/skillc-wasm
-GOWORK=off go test ./cmd/skillc -count=1 -run TestCLIEndToEnd -v
-CHROMIUM_PARITY=1 GOWORK=off go test ./internal/parity -count=1 -run TestChromiumWorkerParity -v
+GOTOOLCHAIN=go1.27.4 GOWORK=off go test ./... -count=1
+GOTOOLCHAIN=go1.27.4 GOWORK=off go vet ./...
+GOTOOLCHAIN=go1.27.4 CGO_ENABLED=0 GOWORK=off go build ./...
+GOTOOLCHAIN=go1.27.4 CGO_ENABLED=0 GOOS=js GOARCH=wasm GOWORK=off go build -o dist/skillc.wasm ./cmd/skillc-wasm
+GOTOOLCHAIN=go1.27.4 GOWORK=off go test ./cmd/skillc -count=1 -run TestCLIEndToEnd -v
+GOTOOLCHAIN=go1.27.4 GOWORK=off node scripts/chromium-parity.mjs
 git diff --check
 ~~~
 
