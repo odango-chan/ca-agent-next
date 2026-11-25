@@ -50,6 +50,13 @@ extensions:
         description: Normalized Nsmf CreateSMContext request.
         requestSchema: schemas/create-sm-context.request.schema.yaml
         artifacts:
+          - slot: n1.request
+            mediaType: application/vnd.3gpp.5gnas
+            required: true
+          - slot: n2.request
+            mediaType: application/vnd.3gpp.ngap
+            required: false
+        artifacts:
           input:
             - slot: n1.request
               mediaType: application/vnd.3gpp.5gnas
@@ -112,6 +119,7 @@ Manifest rules:
 - process.executable is relative to the installed package root. process.args is passed as an argument vector without shell interpretation.
 - extensions contains one or more of event.ingress, event.delivery and tools. A Plugin may expose all three in one process.
 - Event schemas describe the normalized Event payload. They do not contain Skill IDs, business Goals, execution modes or authorization grants.
+- An Event declaration may include `artifacts` slot declarations (slot, mediaType and required) when the SBI operation carries binary parts. Slot names and requiredness must follow the operation's 3GPP OpenAPI definition and [Plugin Artifact Handoff](plugin-artifact-handoff.md); they are not a second protocol Schema.
 - An Event may declare artifacts.input slots; a delivery response may declare artifacts.output slots. Each slot has an exact slot name, mediaType and required flag. The Event Schema and OpenAMSM operation mapping determine conditional requirements; undeclared slots are rejected.
 - event.delivery pairs a response schema with the originating event type. Host records the response obligation; Plugin does not choose which Run or response to deliver.
 - tools.interfacePackage points to the canonical Tool Interface Package. Callable IDs, input/output Schemas, Effects, Capability membership and Owner outcome semantics remain owned by that package.
@@ -261,9 +269,13 @@ One Plugin process may handle concurrent requests, but it must serialize writes 
 
 ## 6. Tool Plugin and ca-client-tools
 
-ca-client-tools is the OpenAMSM Tool implementation and canonical owner of its Tool Interface Package and Provider runtime bindings. ca-openamsm-plugin is not a Tool Provider and must not duplicate Owner operations.
+`ca-client-tools` is the OpenAMSM Tool implementation and canonical owner of its Tool Interface Package and Provider runtime bindings. It is loaded as the Plugin exposing the `tools` extension; an individual Tool remains a callable operation in that extension, not a separate Plugin process. `ca-openamsm-plugin` is the Event ingress/delivery Plugin and must not duplicate Owner operations.
 
-The current ca-client-tools executable speaks its existing provider/v2 process protocol, not this native Plugin IPC. During migration, one Tool-extension adapter inside the single Plugin Manager translates the common Runtime Action invocation to provider/v2 and translates the result back. This is a transport adapter owned by Plugin Manager, not a second Provider Manager, Tool registry, Runtime or authorization path.
+The current `ca-client-tools` executable speaks its existing provider/v2 process protocol, not this native Plugin IPC. During migration, one Tool-extension adapter inside the single Plugin Manager translates the common Runtime Action invocation to provider/v2 and translates the result back. This is a transport adapter owned by Plugin Manager, not a second Provider Manager, Tool registry, Runtime or authorization path.
+
+Protocol Codec operations may be added to the same Tool Plugin through its canonical Interface Package. They use the existing Go codec packages/Worker/Facade and are invoked exactly like other Tools. A Skill calls Decode only when it needs structured protocol fields; otherwise it can pass the original artifactRef to a business Tool. Do not create a separate Codec Plugin/Manager or duplicate codec code in Host/Event Plugin.
+
+The current `protocol/nas5gsm` package is a pure Go codec library for a narrow 5GSM Establishment Request slice. It is not yet an Agent-callable Tool, and it does not establish full NAS/NGAP coverage. Do not expose it to Skills until the callable operation and Schema are published in the Interface Package and the exact message subset is accepted.
 
 Do not fork the Go Provider, reimplement its Tool catalog in Python or copy its private Owner bindings into the OpenAMSM Event Plugin.
 
@@ -275,11 +287,12 @@ The Plugin receives Host-created inbound/outbound staging directories only when 
 
 ## 8. OpenAMSM integration boundary
 
-- The OpenAMSM Plugin owns SBI listener/wire handling, multipart and Content-ID parsing, protocol decoding/normalization and response encoding.
+- The OpenAMSM Event Plugin owns SBI listener/wire handling, JSON/multipart and Content-ID parsing, normalized Event publication and response encoding. It preserves original N1/N2 bytes and does not eagerly deep-decode them for business reasoning.
 - Host owns Event validation, Skill selection, Run identity, retry/replay, response obligations, resource/alias mapping, ArtifactStore, authorization and delivery records.
-- ca-client-tools owns Tool implementation, private backend binding and Owner-facing calls.
+- ca-client-tools owns Tool implementation, private backend binding, Owner-facing calls and any Codec Tool operations it actually publishes.
 - OpenAMSM Owner/SMF remains authoritative for SM Context identity, existence and business mutation outcomes.
 - The Plugin never selects a Skill. Every fresh request binds a Skill first; optional assurance/contract.yaml.when is evaluated by the Host Resolver.
+- A selected Skill may invoke a Codec Tool through the normal Runtime Action Boundary when it needs NAS/NGAP fields. Decode is optional; the original artifact remains the source for any later forwarding.
 - Establish, Modify and UE-requested Release are separate Skill cases. Modify and Release may arrive through the same Nsmf service operation and must be distinguished only by fields validated in the normalized Event Schema. Do not infer the Skill from an HTTP path alone.
 - Exact mapping of Create/Update/Release and release continuation messages to OpenAMSM OpenAPI operations, Event fields and stable externalRequestId is a pre-implementation acceptance gate.
 
