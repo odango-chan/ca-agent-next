@@ -6,7 +6,7 @@
 > 创建日期：2026-11-25  
 > 所属阶段：Phase G  
 > 上游需求：[IR-005](../IR/IR%20总登记册.md#ir-005)  
-> 设计依据：[Plugin平台设计说明书](../设计说明书/F03-Plugin平台/Plugin平台设计说明书.md) v0.2.1 §7；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.2.1 §7；[公共契约与所有权规范](../规范/公共契约与所有权规范.md) v0.1.1 §5、6  
+> 设计依据：[Plugin平台设计说明书](../设计说明书/F03-Plugin平台/Plugin平台设计说明书.md) v0.3.1 §8；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.2.0 全文；[公共契约与所有权规范](../规范/公共契约与所有权规范.md) v0.2.1 §5、6  
 > Acceptance：OM-04、OM-10、OM-13（见[演示验收基线](../验收与实施/演示验收基线.md)）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：见第 3 节
