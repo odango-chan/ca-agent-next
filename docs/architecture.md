@@ -99,7 +99,7 @@ when: 'event.type == "nsmf.create-sm-context" && input.requestType == 1'
 
 ### 4.2 Candidate resolution
 
-1. Validate the Event envelope and payload. Resolve an exact continuation first; a continuation never re-enters fresh Skill selection.
+1. Validate and deduplicate the Event envelope/payload. Resolve an exact continuation first; a continuation never re-enters fresh Skill selection.
 2. Pin the active in-memory SkillCatalog generation for this fresh Event. A package with invalid Assurance was rejected at import and is not a candidate; do not scan package directories on this path.
 3. Evaluate the precompiled `when` program for each eligible Assurance Skill that declares it, using this Event's current values. A true result is an explicit match. False excludes that Skill. A runtime evaluation error fails closed, excludes that Skill and records a diagnostic. A statically invalid expression prevents Assurance compilation/admission.
 4. If one explicit true match exists, select it without an LLM call. If multiple explicit true matches exist, the LLM may disambiguate only within that exact set; validate the returned Skill identity.
