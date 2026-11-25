@@ -54,7 +54,7 @@ An optional top-level assurance/contract.yaml when is compiled once during impor
 
 A Plugin is the common package/process unit managed by one Plugin Manager. It may expose `event.ingress`, `event.delivery`, `tools`, or a combination in one process. A **Tool Plugin** is a Plugin that exposes the `tools` extension; an individual Tool is a callable operation described by its owning Interface Package, not a separate process or import unit. There is no second Tool Registry or Provider Manager.
 
-SBI is not JSON-only. The OpenAMSM Event Plugin parses SBI JSON and `multipart/related`, associates Content-ID values and preserves original binary parts through the Host-owned [Plugin Artifact Handoff](docs/plugin-artifact-handoff.md). A Skill may call a Codec Tool from the `ca-client-tools` Tool Plugin when it needs decoded fields; it may also pass the original artifact reference onward without decoding. Codec is not built into Agent Core or duplicated in the Event Plugin.
+SBI is not JSON-only. The OpenAMSM Event Plugin parses SBI JSON and `multipart/related`, associates Content-ID values and preserves original binary parts through the Host-owned [Plugin Artifact Handoff](docs/plugin-artifact-handoff.md). A Skill may call a Codec Tool from the `ca-client-tools` Tool Plugin when it needs decoded fields; it may also pass the original artifact reference onward without decoding. For a shared SBI operation such as UpdateSMContext, the Event Plugin may extract only the minimum NAS discriminator needed to normalize the Event before Skill selection. This is not full decoding or business logic. Codec is not built into Agent Core or duplicated in the Event Plugin.
 
 ## Example-first development
 
