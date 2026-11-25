@@ -1,7 +1,7 @@
 # Context 与 Artifact 管理设计说明书
 
 > 文档类型：机制设计说明书  
-> 文档版本：0.4.0  
+> 文档版本：0.4.1  
 > 状态：目标设计已重建；ca-host.artifact-store/v1 已冻结并由 Provider v1.2.0 消费；ca-agent Go Host P1 已验收；Next Python Host / ArtifactStore / Channel NOT_IMPLEMENTED  
 > 功能归属：F05 — Context 与 Artifact 管理  
 > 关联 SR：SR-009；交叉 SR：SR-007、SR-010、SR-011、SR-015、SR-017  
@@ -311,7 +311,9 @@ Demo 必须具备：本地 Host-owned ArtifactStore、精确 slot、相对路径
 | ca-host.artifact-store/v1 契约 | FROZEN / ACCEPTED | TARGET01 原文；contract pin 2c0b07f；Provider v1.2.0 固定 fixtures；artifactRef 为随机 opaque token，SHA-256 仅用于逐 Artifact 传输校验 |
 | ca-client-tools Provider Artifact Channel | IMPLEMENTED（Provider v1.2.0） | main 7bcb261；`contracts/host-artifact-store/v1/`、`internal/artifactchannel/`、`internal/providerapp/artifacts.go`；缺少 artifactChannel 时 fail-closed |
 | Next Host→Tool Artifact Channel | NOT_IMPLEMENTED | Next Python Host 尚无 server/adapter；SR-010 实施；通过 ca-host.artifact-store/v1 共享 fixtures 前保持 NOT_CONFIGURED |
-| ca-client-tools Codec Phase B | OPEN / NOT_MERGED | PR #39；Phase C Consumer Migration NOT_STARTED |
+| ca-client-tools Codec Phase B | OPEN / NOT_MERGED | PR #39 OPEN（非 Draft）；Phase B 已达 FINAL_PASS / PHASE_C_READY，但未合并 |
+| env-5gc-sim Mock AMF Codec C1 | OPEN / NOT_MERGED | PR #86 OPEN；只将 Mock AMF 测试对端迁移到 `ca-client-tools/protocol/codec`，不提供 Agent Tool/Provider Callable，也不实现 Next Host/Runtime 集成 |
+| Next Agent Tool / Provider Codec Consumer | NOT_STARTED | PR #39 尚未合并；PR #86 不属于 Agent Tool/Provider 集成；Next 尚无 Codec Tool Callable 消费验收 |
 | Next Artifact / OpenAMSM E2E | NOT_RUN | 不得以外部仓的测试 PASS 代替 |
 
 ### 14.1 复用原则
@@ -329,6 +331,7 @@ Demo 必须具备：本地 Host-owned ArtifactStore、精确 slot、相对路径
 - [ca-agent Host Artifact Store 契约原文](../目标参考/TARGET01-Go%20Host%20Artifact%20Store契约原文.md)
 - [ca-agent Go Host P1 Artifact Store 验收证据](https://github.com/odango-chan/ca-agent/blob/447d0cce7e42c7c1184b11fb2563792eead68d51/docs/evidence/host-artifact-store-p1-20261118.md)
 - [ca-client-tools Host integration](https://github.com/odango-chan/ca-client-tools/blob/7bcb2614aa3615d8358df31eecefd0909e894e40/docs/host-integration.md)
+- [env-5gc-sim Mock AMF Codec C1 PR #86](https://github.com/odango-chan/env-5gc-sim/pull/86)（OPEN；仅测试对端消费迁移，不是 Agent Tool/Provider 集成）
 - [F03 Plugin 平台设计](../F03-Plugin平台/Plugin平台设计说明书.md)
 - [F03.05 Tool Interface / Provider 集成设计](../F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md)
 - [F04 Runtime 执行设计](../F04-Runtime执行/Runtime执行设计说明书.md)
@@ -363,3 +366,4 @@ Demo 必须具备：本地 Host-owned ArtifactStore、精确 slot、相对路径
 | 2026-11-25 | 0.2.1 | GPT-6.2（ChatGPT） | §1–12 | 补充 Event/Delivery staging、OpenAMSM slot、Run/Artifact 关联与失败处理 | IR-005；SR-009 |
 | 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | 全文 | 从未实现视角重建 Context/Artifact 目标；核对 ca-agent-demo Context/ArtifactStore 代码与测试；明确不移植 content-addressed SHA256，并冻结 Host→Tool Channel 未发布边界 | Issue #12；SR-009、SR-010、SR-015 |
 | 2026-11-25 | 0.4.0 | GPT-6.2（ChatGPT） | §5、§6.2、§7、§12～17 | 将 Host Artifact Store v1 从“未发布”纠正为已冻结契约；区分 Provider/Go Host 外部实现与 Next Python Host 未实现；明确随机 artifactRef 与逐字节 SHA-256 传输校验的不同语义，并把 SR-009/SR-010 的 Host/Plugin 责任拆清 | ca-agent contract pin 2c0b07f、ca-agent main 447d0cc P1 证据、ca-client-tools v1.2.0 源码/fixtures；避免沿用 ca-agent-demo 旧注释和内容寻址实现误判协议状态 | Issue #12；SR-009、SR-010、SR-015 |
+| 2026-11-25 | 0.4.1 | GPT-6.2（ChatGPT） | §14～15 | 补入 env-5gc-sim PR #86 的 Mock AMF Codec C1 状态，并明确它不等于 Agent Tool/Provider Codec Consumer；保持 Next Host ArtifactStore/Channel NOT_IMPLEMENTED | 防止把测试对端的 Codec API 迁移误报为 Next Tool/Provider 或 Host 二进制链路完成 | Issue #12；SR-009、SR-010、SR-011 |
