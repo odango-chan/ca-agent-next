@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：目标设计，待实现和验收  
-> 文档版本：0.2.1  
+> 文档版本：0.2.2  
 > 功能归属：F04 — Runtime 执行  
 > 关联 SR：SR-007    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -101,6 +101,11 @@ Skill/Artifact 无效、Callable Scope 不匹配、Schema 不匹配、Plugin 不
 
 本说明书属于 F04，主要需求为 SR-007。Run/Continuation 的协议身份由 F05/F06 的集成设计补充；Owner Receipt/Commit Proof 的权威字段由 EC03/EC05 定义，Runtime 只消费并解释，不复制 Owner 私有状态映射。
 
+### 既有执行内核边界
+
+现行 ca-runtime 的 RuntimeHost.v1、ProviderBinding、请求重放、Outcome 与执行期 Predicate 具有独立实现基线。Next 沿用结果和证据语义，业务 Skill 选择在宿主完成。SR-022 负责核对出入参、实现和证据。 详见[分仓证据](../../参考与审计/跨仓设计资产迁移与一致性审计.md)。
+
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修订内容 | 原因 | 关联 |
@@ -108,3 +113,4 @@ Skill/Artifact 无效、Callable Scope 不匹配、Schema 不匹配、Plugin 不
 | 2026-11-25 | 0.1.0 | 历史修订者/模型未记录 | 原始设计全文 | 既有功能机制设计基线；逐章历史记录未建立 | 原文档未记录历史作者，本轮不臆造 | PR #1 |
 | 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 第 1～8 章 | 归入对应 Feature 并补充外部能力边界 | 按 F04 归档，固定两种执行模式共用的 Action Boundary、Run 和 Owner Outcome 语义 | F04；SR-007；EC03/EC05；PR #1 |
 | 2026-11-25 | 0.2.1 | 刷新需求追踪、目录或证据引用 | 对齐最新分支与 IR/SR 基线 | 见关联 SR |
+| 2026-11-25 | 0.2.2 | Codex / GPT-6 | 既有执行内核边界 | 合并有效边界与分仓证据入口 | 跨仓设计移交 | IR-006 |

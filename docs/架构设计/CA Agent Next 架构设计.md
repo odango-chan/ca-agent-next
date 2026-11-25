@@ -2,7 +2,7 @@
 
 > 文档类型：总体架构设计  
 > 状态：目标架构基线，随 PR #1 评审；尚未实现、尚未验收    
-> 文档版本：0.3.2
+> 文档版本：0.3.3
 > 修订日期：2026-11-25  
 > 适用范围：ca-agent-next 通用 Agent Core、Host、Runtime、Skill 与 Plugin 公共机制  
 > 权威边界：本文是本仓唯一总体架构文档；字段级契约见规范，机制细节见设计说明书  
@@ -42,7 +42,7 @@ CA Agent Next 是一个通用 Agent。Agent Core 不内置 OpenAMSM、5GC 或其
 
 ## 3. 仓库职责与语言边界
 
-| 仓库 | 权威职责 | Next 的使用方式 |
+| 仓库 | 实现与发布职责 | Next 的使用方式 |
 |---|---|---|
 | ca-agent-next | 新一代 Agent Core、Host、Runtime 和公共机制 | Python 新实现 |
 | ca-agent-demo | 既有 Python 实现、测试和复用证据 | 逐文件审计、选择性复用 |
@@ -53,6 +53,8 @@ CA Agent Next 是一个通用 Agent。Agent Core 不内置 OpenAMSM、5GC 或其
 | ca-openamsm-plugin | OpenAMSM SBI Event ingress / Delivery | 作为独立 Event Plugin 接入 |
 
 Agent Core、Host、Importer、Resolver 和 Runtime 使用 Python。独立 Plugin 可以使用 Go。Go Plugin 不意味着 Go Host，也不改变 Core 的语言决策。
+
+本轮拟将项目群的架构、设计和规范集中到 Next，按功能评审并切换权威文档。各实现仓继续交付实现、机器契约、发布物和运行证据。历史与当前基线按 [跨仓设计资产迁移与一致性审计](../参考与审计/跨仓设计资产迁移与一致性审计.md) 追溯。
 
 ## 4. 总体组件架构
 
@@ -243,3 +245,4 @@ sequenceDiagram
 本架构目标按 F01～F07 功能域组织，SR-001～SR-011 负责需求分解和实施追踪。完整功能树、外部能力 EC01～EC05、SR 登记册、Issue/PR/Commit/Test 关系和当前状态统一见《[功能树与需求追踪基线](../治理/功能树与需求追踪基线.md)》。实施必须以状态为 READY 且依赖满足的 SR 为入口；架构文档不重复维护需求清单和实施状态。
 
 详细机制按功能读取 F01～F06 设计说明书；F07 的示例与验收由演示验收基线承载。
+| 2026-11-25 | 0.3.3 | Codex / GPT-6 | §3 | 提出集中设计与分仓交付边界 | IR-006 设计移交 | IR-006 |
