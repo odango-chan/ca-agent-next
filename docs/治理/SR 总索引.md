@@ -77,7 +77,7 @@
 - Phase F：SR-008。
 - Phase G：SR-009、SR-010。
 - Phase H：SR-011。
-- Compiler 外部发布依赖：SR-012、SR-013；SR-013 的 AC-013-01 隔离 PoC 阶段状态按 SR-013 阶段执行单单独维护，不代表完整 SR VERIFIED。
+- Compiler 外部发布依赖：SR-012、SR-013；SR-013 的 AC-013-01 隔离 PoC 阶段已 PASS（Go/Python 18/18，详见 SR-013），但不代表 Compiler 产品发布或完整 SR VERIFIED。
 
 阶段顺序是建议依赖顺序；每个 SR 只有达到 READY 且依赖满足后才能进入实施。Goal 模式可将同一依赖批次中的多个 READY SR 合并执行，但不得跨越未满足的依赖或把 DRAFT SR 当成可执行任务。
 
@@ -86,7 +86,7 @@
 - 设计来源：ca-agent-next PR #1 的架构、设计、规范和 Acceptance 文档。
 - PR #1：已合并；只代表设计文档变更。
 - Next Runtime：README 声明尚无已验收 Runtime 实现。
-- 22 项 SR 当前均为 DRAFT；SR-013 的 AC-013-01 是独立阶段状态，不改变 SR 总体状态。
+- 22 项 SR 当前均为 DRAFT；SR-013 的 AC-013-01 隔离 PoC 阶段已 PASS，不改变 SR-013 总体 DRAFT 状态。
 - Issue #12 追踪本轮中央设计资产恢复；PR #13 是 SR-015 的设计文档 PR（OPEN），不是实现 PR。
 - 本分支 docs/restore-original-designs-20261125 尚未创建 PR；文档静态链接门禁和跨仓完整审查尚未通过。
 - ca-agent-demo、ca-client-tools、ca-skill-compiler、ca-skills 和 ca-openamsm-plugin 的现有代码/PR 只能作为外部复用或依赖证据，不能自动算作 Next SR 已实施。
@@ -103,4 +103,4 @@
 | 2026-11-25 | 0.2.5 | 更新 EC02 归档与追踪 | 对齐中央设计及 Compiler #61 | SR-012 |
 | 2026-11-25 | 0.2.6 | Codex 登记 Compiler 实施 SR | 对齐跨仓实施门槛 | SR-013 |
 | 2026-11-25 | 0.2.6 | Codex / GPT-6 · §1–4 · 登记分仓 SR 与真实基线状态 | 跨仓设计移交 | IR-006 |
-| 2026-11-25 | 0.2.8 | 将 SR-015～SR-023 按功能依赖排序，区分文档恢复批次与 Next 实施阶段；记录 PR #13 与 Issue #12 的真实边界 | 避免 DRAFT 被误判为可执行 | Issue #12；SR-015～SR-023 |
+| 2026-11-25 | 0.2.8 | 将 SR-015～SR-023 按功能依赖排序，区分文档恢复批次与 Next 实施阶段；记录 PR #13 与 Issue #12 的真实边界，并注明 AC-013-01 隔离 PoC PASS | 避免 DRAFT 被误判为可执行，区分 PoC 与产品发布 | Issue #12；SR-013、SR-015～SR-023 |
