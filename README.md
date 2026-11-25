@@ -50,6 +50,12 @@ Every Skill has SKILL.md. The assurance/ directory is optional:
 
 An optional top-level assurance/contract.yaml when is compiled once during import/update and evaluated for each fresh Event. All Skills, including SKILL.md-only Skills, live in the Core-owned in-memory SkillCatalog. Catalog updates activate atomically by generation; each Invocation pins its generation. predicates.yaml remains an execution-time business check. Individual LLM Action proposals use the common Runtime Action Boundary and are not compiled.
 
+## Plugin and protocol payload model
+
+A Plugin is the common package/process unit managed by one Plugin Manager. It may expose `event.ingress`, `event.delivery`, `tools`, or a combination in one process. A **Tool Plugin** is a Plugin that exposes the `tools` extension; an individual Tool is a callable operation described by its owning Interface Package, not a separate process or import unit. There is no second Tool Registry or Provider Manager.
+
+SBI is not JSON-only. The OpenAMSM Event Plugin parses SBI JSON and `multipart/related`, associates Content-ID values and preserves original binary parts through the Host-owned [Plugin Artifact Handoff](docs/plugin-artifact-handoff.md). A Skill may call a Codec Tool from the `ca-client-tools` Tool Plugin when it needs decoded fields; it may also pass the original artifact reference onward without decoding. Codec is not built into Agent Core or duplicated in the Event Plugin.
+
 ## Example-first development
 
 Examples live in this repository under examples/; a separate ca-example repository is not needed.
