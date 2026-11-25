@@ -1,13 +1,13 @@
 # SR-024：Host Context Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.6
+> SR 版本：0.1.7
 > 状态：DRAFT
 > 创建日期：2026-11-25
 > 所属阶段：跨仓设计移交
 > 上游需求：[IR-006](../IR/IR%20总登记册.md#ir-006)
 > 功能：F09.06 — Host Context Interface Package Publisher
-> 设计依据：[F09 Publisher 输出要求](../设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md#45-两个-contract-root-的正式-publisher-输出) v0.3.6；[EC02 Development Build](../设计说明书/EC02-Compiler/Development%20Build设计.md) §2–4；[迁移审计 §3.6](../参考与审计/跨仓依赖与可行性审计.md#36-skill-studio作者导入compiler-request-与产品集成)
+> 设计依据：[F09 Publisher 输出要求](../设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md#45-两个-contract-root-的正式-publisher-输出) v0.3.7；[EC02 Development Build](../设计说明书/EC02-Compiler/Development%20Build设计.md) §2–4；[迁移审计 §3.6](../参考与审计/跨仓依赖与可行性审计.md#36-skill-studio作者导入compiler-request-与产品集成)
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：生产级资格认证、Host Admission 授权与无关 Runtime 重构
 
@@ -80,3 +80,4 @@ make verify
 | 2026-11-25 | 0.1.4 | GPT-6.2（ChatGPT） | §2～5 | 发现 Compiler v2.1.0 Development BuildRequest 要求 exact SemVer，`v1` 不能作为 package.version；保留 Schema `$id` v1，提出 `1.0.0-dev.1` package version 决策门槛 | 防止 Host Publisher 产出无法被 Compiler 接受的 Interface Package；不增加 Release、sidecar 或额外 Trust 机制 | Issue #12；F09 v0.3.5；SR-016 |
 | 2026-11-25 | 0.1.5 | Codex / GPT-6 | 正文 | §2～4 固定 Host 包版本、文件名与负例 | Issue #12 SR-024 |
 | 2026-11-25 | 0.1.6 | Codex / GPT-6 | 正文 | 同步所引权威设计版本 | Issue #12 SR-024 |
+| 2026-11-25 | 0.1.7 | Codex / GPT-6 | 正文 | 同步本轮受影响的现行设计依据 | Issue #12 SR-024 |

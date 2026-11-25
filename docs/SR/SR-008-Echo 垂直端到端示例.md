@@ -1,7 +1,7 @@
 # SR-008：Echo 垂直端到端示例
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.4\
+> SR 版本：0.1.5\
 > 状态：DRAFT；设计基线待评审，不允许实施  
 > 创建日期：2026-11-25  
 > 所属阶段：Phase F  
@@ -44,7 +44,7 @@ SR-002～SR-007。
 
 ### 实施位置与复验入口
 
-以下路径为本 SR 的目标交付物。在 ca-agent-next 仓根运行，测试通过公开入口调用受测组件。目标位置为 `examples/echo/`、测试 Host 的公开进程入口。在独立临时目录运行同一 Go Plugin、一个已发布 Assurance Echo 包和 Fake Model。对相同输入分别指定两种允许模式，校验 Run、调用与交付的 correlation；再以纯指导包验证无 Compiler 调用和无声明 Tool 的拒绝。测试结束关闭进程并清理本次临时目录。缺少正式 Echo Bundle 时保留阻塞。
+以下路径为本 SR 的目标交付物。在 ca-agent-next 仓根运行，测试通过公开入口调用受测组件。目标位置为 `examples/echo/`、测试 Host 的公开进程入口。在独立临时目录运行同一 Go Plugin、一个已发布 Assurance Echo 包和 Fake Model。对相同输入分别指定两种允许模式，校验 Run、调用与交付的 correlation；再以纯指导包验证无 Compiler 调用和无声明 Tool 的拒绝。测试结束关闭进程并清理本次临时目录。发布方为 ca-skills。READY 前登记 Echo 的作者源 commit、外部 Compiler tag/SHA、发布资产路径、Artifact API 与 Verify 日志。固定 ca-skills 审计树 `780497a2918ad3e7bdff554ab64b0ba627e867e0` 没有名称含 Echo 的作者包；若已有异名合适资产，由发布方提供该组证据。若需要增加作者包，在 ca-skills 的独立实施 SR 中跟踪，Next 不自行生成或伪造运行包。
 
 验收命令为 `python -m unittest discover -s tests -p test_echo.py -v`。必须发现并执行本节正反例；发现 0 个测试或跳过必需用例时，退出码 0 也不能计入 PASS。逐个 Acceptance ID 回填受测 SHA、命令、预期与实测值及日志位置。
 
@@ -78,3 +78,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-25 | 0.1.2 | 补齐 IR、设计章节与验收追踪 | 对齐最新分支与 IR/SR 基线 | SR-008 |
 | 2026-11-25 | 0.1.3 | 校正当前设计依据版本 | 核对 Issue #12 与固定提交 | SR-008 |
 | 2026-11-25 | 0.1.4 | Codex / GPT-6 · §5 固定目标代码位置、复验入口及可观察断言；同步所引权威设计版本 | 对齐当前架构与实施门禁 | Issue #12 SR-008 |
+| 2026-11-25 | 0.1.5 | Codex / GPT-6 · §5 明确 Echo 输入的发布方、缺件和恢复条件 | 对齐当前架构与实施门禁 | Issue #12 SR-008 |

@@ -1,7 +1,7 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.6  
+> 文档版本：0.3.7  
 > 状态：待评审  
 > 修订日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -68,7 +68,7 @@ Compiler v2.1.0 Development Build 使用 `connectionagent.io/interface-package/v
 
 **版本兼容阻塞（两个 Publisher 共用）**
 
-Compiler v2.1.0 的 `validDevelopmentVersion` 只接受 exact SemVer（`major.minor.patch[-prerelease][+build]`）；BuildRequest parser 会拒绝 `v1alpha4` 和 `v1`，诊断为 `DEVELOPMENT_SNAPSHOT_INVALID`，即使 Interface Package JSON Schema 的 `version` 属性本身只声明为字符串。当前 MAS Skill 的 `Contract.dependencies` 只声明 Package ID，不固定 package version，因此可以保持 Package ID 和源契约版本不变，为 Development Interface Package envelope 单独选择 SemVer。
+Compiler v2.1.0 的 `validDevelopmentVersion` 接受 `major.minor.patch` 和合法的 prerelease，显式拒绝 `+build` 元数据。本项目这两个 Publisher 的首版仅发布 `1.0.0`。解析器通过的其他版本仍须通过 Publisher 身份断言；这里检查的是两个不同的条件。BuildRequest parser 会拒绝 `v1alpha4` 和 `v1`，诊断为 `DEVELOPMENT_SNAPSHOT_INVALID`，即使 Interface Package JSON Schema 的 `version` 属性本身只声明为字符串。当前 MAS Skill 的 `Contract.dependencies` 只声明 Package ID，不固定 package version，因此可以保持 Package ID 和源契约版本不变，为 Development Interface Package envelope 单独选择 SemVer。
 
 两种包各自从首版 `1.0.0` 开始；锁与请求按完整 Package ID 和版本识别：
 
@@ -175,3 +175,4 @@ EC06 历史决策已统一归档于中央仓：[ADR-0001 Source-first Visual](..
 
 | 2026-11-25 | 0.3.5 | GPT-6.2（ChatGPT） | §4.5、§6～7 | 将 MAS Owner Publisher 独立归入 SR-025、Host Publisher 归入 SR-024；按 Compiler v2.1.0 修正 MAS exports 为 25/24/25/53；发现 v1alpha4/v1 非 SemVer，提出 package/source version 分离决策门槛 | 防止发布无法被 Development Build 接受的版本，同时保持 Owner/Host 源身份与 Studio lock 边界 | IR-006 · SR-015 · SR-016 · SR-024 · SR-025 · Studio #269 |
 | 2026-11-25 | 0.3.6 | Codex / GPT-6 | 正文 | 同步两个 Publisher 的 1.0.0 身份与消费边界 | Issue #12 |
+| 2026-11-25 | 0.3.7 | Codex / GPT-6 | 正文 | §4.5 依据 v2.1.0 源函数实测修正 +build 与项目包身份限制 | Issue #12 |

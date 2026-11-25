@@ -1,13 +1,13 @@
 # SR-025：MAS Owner Development Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.3
+> SR 版本：0.1.4
 > 状态：DRAFT
 > 创建日期：2026-11-25
 > 所属阶段：外部 Publisher 实施移交
 > 上游需求：[IR-006](../IR/IR%20总登记册.md#ir-006)
 > 功能：F03.05 / EC03（消费方关联 F09.07）
-> 设计依据：[F03.05 Tool Interface / Provider 设计](../../docs/设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) v0.3.6；[F09 §4.5](../../docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md#45-两个-contract-root-的正式-publisher-输出) v0.3.6；[SR-015](SR-015-工具契约设计移交.md)；[Compiler v2.1.0 Development BuildRequest](https://github.com/odango-chan/ca-skill-compiler/blob/v2.1.0/internal/compiler/development_request.go)
+> 设计依据：[F03.05 Tool Interface / Provider 设计](../../docs/设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) v0.3.6；[F09 §4.5](../../docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md#45-两个-contract-root-的正式-publisher-输出) v0.3.7；[SR-015](SR-015-工具契约设计移交.md)；[Compiler v2.1.0 Development BuildRequest](https://github.com/odango-chan/ca-skill-compiler/blob/v2.1.0/internal/compiler/development_request.go)
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：Provider v2 重构、Runtime Binding 重构、Owner Contract 语义修改、生产级 Trust/Admission/签名或额外包完整性体系
 
@@ -101,7 +101,7 @@
 - AC-025-04：CapabilityCatalog 精确为 24 IDs / 25 members，且成员集合等于 25 个公开 contract ID；EvidenceDescriptor 精确 25 项，authority 与 publisher 一致，Producer ID / provides.path 与公开 contract guarantee 精确匹配；Schema exports 精确覆盖 53 项公开 $ref 闭包。
 - AC-025-05：正式 ZIP 根目录含 package.json 和 56 个 payload 文件；package.json.files[] 精确列出全部 payload 文件及其 schema-required SHA-256。公开源文件保持原始字节，capability-catalog.yaml 是唯一生成投影；不得额外加入 manifest、sidecar、包级 checksum manifest、签名或 Trust Registry。
 - AC-025-06：go test ./... -count=1 PASS；generate / verify 对固定 source Revision 产生逐字节确定 ZIP。覆盖损坏 manifest、错误身份、非 SemVer、重复/缺失/多余 export、notPublished/private callable 泄漏、Capability 成员错误、Evidence Producer/path 错误、Schema 闭包缺失和 ZIP 篡改等负例。
-- AC-025-07：使用 ca-client-tools release.yml 固定的 Compiler v2.1.0 binary 执行 BuildDevelopment + VerifyDevelopment；显式 mas root 的正例为 VALIDATED / LINKED / BUILT / NOT_ADMITTED；引用 SC.UPDATE_SM_CONTEXT 的负例必须报 export missing。不得声明真实 MAS E2E 或 Production Qualification。
+- AC-025-07：使用 ca-client-tools release.yml 固定的 Compiler v2.1.0 binary 执行 BuildDevelopment + VerifyDevelopment；正例用 `skillc build-development --request request.json --out out --json` 将 stdout 保存为 `result.json`（out 必须为空或不存在），再用 `skillc verify-development --request request.json --result result.json` 复验同一请求。两条命令均需返回 0；显式 mas root 的正例为 VALIDATED / LINKED / BUILT / NOT_ADMITTED；引用 SC.UPDATE_SM_CONTEXT 的负例必须报 export missing。不得声明真实 MAS E2E 或 Production Qualification。
 - AC-025-08：新 Owner ZIP 纳入 ca-client-tools 下一次 patch Release（若实施时 latest 仍 v1.2.0，则为 v1.2.1）；沿用现有 dist/*.zip、SHA256SUMS 和发布后下载复验，不新增第二套 Release/Registry。实际发布按目标仓授权取证。
 
 ## 6. 依赖与启动条件
@@ -127,3 +127,4 @@
 | 2026-11-25 | 0.1.1 | GPT-6.2（ChatGPT） | §2～7 | 补齐 AC-025-01～08，明确 package.version SemVer 决策门槛、导出闭包、负向测试和既有 Release 流程 | 让 ca-client-tools Publisher 达到可评审、可执行的 SR 粒度；不在决策确认前生成实施提示词 | Issue #12；F03.05；F09；SR-015、SR-016、SR-024 |
 | 2026-11-25 | 0.1.2 | Codex / GPT-6 | 正文 | §2、4～6 固定 MAS 包身份，解除 Publisher 对下游 Studio 的循环前置 | Issue #12 SR-025 |
 | 2026-11-25 | 0.1.3 | Codex / GPT-6 | 正文 | §6 明确发布者独立验收输入；同步所引权威设计版本；清理重复基线指针 | Issue #12 SR-025 |
+| 2026-11-25 | 0.1.4 | Codex / GPT-6 | 正文 | AC-025-07 固定 v2.1.0 真实 CLI 和复验输入；同步本轮受影响的现行设计依据 | Issue #12 SR-025 |
