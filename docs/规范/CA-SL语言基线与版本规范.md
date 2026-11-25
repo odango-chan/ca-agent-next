@@ -1,9 +1,9 @@
 # CA-SL 语言基线与版本规范
 
 > 文档类型：语言版本与运行时消费规范  
-> 文档版本：0.2.1  
+> 文档版本：0.2.2  
 > 状态：CA-SL v1alpha5 FROZEN / RELEASED；Compiler when 运行时 Artifact 尚未完成  
-> 修订日期：2026-11-25  
+> 修订日期：2026-11-26  
 > 关联 IR：IR-003、IR-006；SR-023、SR-013  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：旧版兼容、Agent 内置 Compiler、Skill Admission、签名、Trust Registry 和额外 SHA-256
@@ -21,6 +21,10 @@
 - [发布记录](https://github.com/odango-chan/ca-skills/blob/main/docs/releases/ca-sl-v1alpha5.md)。
 
 源仓当前 main 的规范文件头部仍有 Proposed Refresh / Normative Candidate 表述，而 Release Record 已记录正式发布。为避免误用，本仓以 Release Record 指向的不可变提交作为规范发布身份；源仓头部状态不一致列为待清理项，不改变已合并 PR 和 Release Record 的事实。
+
+### 新发布物的数字版本
+
+两个 Development Interface Package 的 `package.json.version` 与各自 snapshot key 均为 `1.0.0`。新设计的 Runtime Artifact 与 BuildResult 候选版本段为 `2`，按 SR-013 的 Owner 契约确认及发布流程冻结。复核已有发行物时按固定 revision 读取原始路径、`apiVersion`、`languageTarget`、Schema `$id` 和字节；若要迁移既有机器标识，须由源仓先发布新契约并让生产端和消费端对同一 fixture 通过，再切换活动入口。
 
 ## 2. Next 作者与运行时消费边界
 
@@ -66,3 +70,4 @@ CA-SL 语义变化必须：
 | 2026-11-25 | 0.1.3 | 原记录 | 全文 | 建立 CA-SL v1alpha5 发布登记 | IR-006 |
 | 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | §1–5 | 核对 #88/#89 合并状态，迁入完整规范正文，明确源仓状态差异与 Compiler #61 未完成边界 | Issue #12；SR-023；SR-013 |
 | 2026-11-25 | 0.2.1 | Codex / GPT-6 | 正文 | §4 对齐中央设计与语言发布责任 | Issue #12 |
+| 2026-11-26 | 0.2.2 | Codex / GPT-6 | 见本行变更 | 区分数字版本的新发布物和固定来源的实际机器标识 | Issue #12 |

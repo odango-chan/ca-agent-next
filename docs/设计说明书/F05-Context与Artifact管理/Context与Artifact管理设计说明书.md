@@ -1,12 +1,12 @@
 # Context 与 Artifact 管理设计说明书
 
 > 文档类型：机制设计说明书  
-> 文档版本：0.4.1  
+> 文档版本：0.4.2  
 > 状态：目标设计已重建；ca-host.artifact-store/v1 已冻结并由 Provider v1.2.0 消费；ca-agent Go Host P1 已验收；Next Python Host / ArtifactStore / Channel NOT_IMPLEMENTED  
 > 功能归属：F05 — Context 与 Artifact 管理  
 > 关联 SR：SR-009；交叉 SR：SR-007、SR-010、SR-011、SR-015、SR-017  
 > 关联 IR：IR-004、IR-005、IR-006  
-> 修订日期：2026-11-25  
+> 修订日期：2026-11-26  
 > 适用范围：Event Context、Run Context、Observation/Evidence 投影、Host-owned ArtifactStore、SBI multipart、Plugin Handoff、Codec 输入输出
 
 全局评审范围继承根目录 [Agent.md](../../../Agent.md) 的 review_scope。本文局部非目标见 §13。
@@ -30,7 +30,7 @@ F05 定义 Host 如何组装当前执行所需 Context，以及如何保留、�
 | 外部 SBI 解析、multipart、Content-ID、N1/N2 原始字节提取/编码 | Event/Delivery Plugin |
 | Context 组装、模型可见投影、ArtifactStore、opaque artifactRef、staging 目录 | Host |
 | 当前 Action 可读写的 Context/Artifact 范围 | Runtime |
-| Tool 输入输出中的 Artifact 槽位与引用语义 | Tool Interface Package |
+| Tool 的公开输入输出与引用语义 | 当前 Callable 的 Provider Interface 或 Owner Contract；进程内交接按 backend binding 的 artifactSlots |
 | Observation 的来源事实与 Evidence 的权威语义 | 对应 READ Tool / Owner Contract |
 | 业务事实和 mutation 最终状态 | Owner |
 
@@ -52,7 +52,7 @@ Host 按 Run 和当前 Action 组装 Context，不建设全局可变 Context Reg
 1. 新 Event 通过 Schema 校验后，Host 先创建 Event identity 和 response obligation，再由 F02 选择 Skill。
 2. Run 固定 Skill identity、发布 Artifact identity、Catalog generation 和原始 Event；Catalog 更新不得改变在途 Run。
 3. 每次 Action 只获得其所需的 Context 和已授权 Artifact refs；不得把整个 Host store 暴露给模型或 Plugin。
-4. Continuation 恢复原 Run、原 Skill 和原 response obligation，不重新选择 Skill。
+4. Continuation 恢复原 Run、原 Skill、原代际及该 Run 已有响应义务。新到达的 HTTP 回调若需要回包，单独记录其 responseChannelId 与响应义务；两者分别结清，不重新选择 Skill。
 5. Context 只读投影可以按需重建；不要求引入独立 Context DB 或全局快照服务。
 6. 原始二进制只通过 Artifact ref / 独立交接通道使用，不转换成模型可见文本。
 
@@ -73,7 +73,7 @@ Context Fact 是带来源的结构化事实，不因进入 Context 就自动成�
 ### 3.1 Observation
 
 - Observation 必须由声明为 READ 的 Tool 能力取得。
-- READ 返回必须符合 Tool Interface Package 的输出 Schema，并关联原 Run/Invocation。
+- READ 返回必须符合该 Callable 所属 Provider Interface 或 Owner Contract 的输出 Schema，并关联原 Run/Invocation。
 - Observation 的来源、对象范围和新鲜度必须保留；缺失、来源不匹配或 Schema 无效时不得构造成功事实。
 - UNKNOWN 必须保持 UNKNOWN，不得因模型推断、缓存默认值或“没有查到”而转成 PASS/true。
 - Observation 不得触发 Owner mutation。
@@ -367,3 +367,4 @@ Demo 必须具备：本地 Host-owned ArtifactStore、精确 slot、相对路径
 | 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | 全文 | 从未实现视角重建 Context/Artifact 目标；核对 ca-agent-demo Context/ArtifactStore 代码与测试；明确不移植 content-addressed SHA256，并冻结 Host→Tool Channel 未发布边界 | Issue #12；SR-009、SR-010、SR-015 |
 | 2026-11-25 | 0.4.0 | GPT-6.2（ChatGPT） | §5、§6.2、§7、§12～17 | 将 Host Artifact Store v1 从“未发布”纠正为已冻结契约；区分 Provider/Go Host 外部实现与 Next Python Host 未实现；明确随机 artifactRef 与逐字节 SHA-256 传输校验的不同语义，并把 SR-009/SR-010 的 Host/Plugin 责任拆清 | ca-agent contract pin 2c0b07f、ca-agent main 447d0cc P1 证据、ca-client-tools v1.2.0 源码/fixtures；避免沿用 ca-agent-demo 旧注释和内容寻址实现误判协议状态 | Issue #12；SR-009、SR-010、SR-015 |
 | 2026-11-25 | 0.4.1 | GPT-6.2（ChatGPT） | §14～15 | 补入 env-5gc-sim PR #86 的 Mock AMF Codec C1 状态，并明确它不等于 Agent Tool/Provider Codec Consumer；保持 Next Host ArtifactStore/Channel NOT_IMPLEMENTED | 防止把测试对端的 Codec API 迁移误报为 Next Tool/Provider 或 Host 二进制链路完成 | Issue #12；SR-009、SR-010、SR-011 |
+| 2026-11-26 | 0.4.2 | Codex / GPT-6 | 见本行变更 | §2～4 明确跨请求的响应义务及声明 Schema 的归属 | Issue #12 |

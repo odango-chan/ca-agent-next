@@ -1,12 +1,12 @@
 # SR-011：真实 OpenAMSM 创建修改释放端到端验证
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.7  
+> SR 版本：0.1.8  
 > 状态：DRAFT；设计基线待评审，不允许实施  
 > 创建日期：2026-11-25  
 > 所属阶段：Phase H  
 > 上游需求：[IR-005](../IR/IR%20总登记册.md#ir-005)  
-> 设计依据：[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.2.2 §5～10；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.1 §2～12；[演示验收基线](../验收与实施/演示验收基线.md) v0.2.7 §2～10  
+> 设计依据：[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.2.4 §5～10；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.2 §2～12；[演示验收基线](../验收与实施/演示验收基线.md) v0.2.7 §2～10  
 > Acceptance：EX-20、OM-09、OM-11、OM-12（见[演示验收基线](../验收与实施/演示验收基线.md)）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：见第 3 节
@@ -45,7 +45,7 @@ SR-008、SR-009、SR-010；外部依赖为真实 OpenAMSM、ca-client-tools 和�
 
 ### 实施位置与复验入口
 
-以下路径为本 SR 的目标交付物。在 ca-agent-next 仓根运行，测试通过公开入口调用受测组件。目标位置为 `examples/openamsm/` 与 Next 组合测试入口。先记录隔离实例、各发布资产、固定版本、专用 UE/PSI、初始会话与仅限该实例的复位命令。对同一 UE 连续运行 Create/Modify/UE Release，关联三次请求、原始 N1/N2、PFCP、Owner Receipt、原 Run/generation 与最终清理。未提供隔离配置或组件版本时入口报环境缺失并记 BLOCKED，不能用合成包通过。
+以下路径为本 SR 的目标交付物。在 ca-agent-next 仓根运行，测试通过公开入口调用受测组件。目标位置为 `examples/openamsm/` 与 Next 组合测试入口。先记录隔离实例、各发布资产、固定版本、专用 UE/PSI、初始会话与仅限该实例的复位命令。从 env-5gc-sim 的场景驱动保存三组私有请求身份样本：同内容同 ID 重试、不同内容同 ID 冲突、同内容新 ID 独立操作。记录请求数、响应通道与 Owner mutation 数，首组不得重复 mutation，冲突组不得新增 mutation。对同一 UE 连续运行 Create/Modify/UE Release，关联三次请求、原始 N1/N2、PFCP、Owner Receipt、原 Run/generation 与最终清理。未提供隔离配置或组件版本时入口报环境缺失并记 BLOCKED，不能用合成包通过。
 
 验收命令为 `python -m unittest discover -s tests -p test_openamsm.py -v`。必须发现并执行本节正反例；发现 0 个测试或跳过必需用例时，退出码 0 也不能计入 PASS。逐个 Acceptance ID 回填受测 SHA、命令、预期与实测值及日志位置。
 
@@ -53,7 +53,7 @@ SR-008、SR-009、SR-010；外部依赖为真实 OpenAMSM、ca-client-tools 和�
 
 | 项目 | 当前值 |
 |---|---|
-| 实施仓库 | ca-agent-next |
+| 实施仓库 | ca-agent-next（组合验收）；env-5gc-sim（本次隔离场景的请求/重放 fixture） |
 | GitHub Issue | 未创建 |
 | 实施 PR | 未创建 |
 | Commit | 无 |
@@ -81,3 +81,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-25 | 0.1.5 | 更新 F06 与 Acceptance 基线版本至 v0.2.2 / v0.2.5；同步 F05 v0.4.1 | 保证 SR-011 的集成目标、Artifact 边界和验收入口引用同一轮设计基线 | Issue #12；F05 v0.4.1；F06 v0.2.2；Acceptance v0.2.5 |
 | 2026-11-25 | 0.1.6 | 将 Acceptance 基线引用更新至 v0.2.6 | 对齐演示验收基线最终修订，避免 SR-011 指向旧验收快照 | Issue #12；Acceptance v0.2.6 |
 | 2026-11-25 | 0.1.7 | Codex / GPT-6 · §5 固定目标代码位置、复验入口及可观察断言；同步所引权威设计版本 | 对齐当前架构与实施门禁 | Issue #12 SR-011 |
+| 2026-11-26 | 0.1.8 | §5、6 指定隔离对端复验的实施仓与身份样本；同步设计依据到本次复审的修订版本 | 对齐跨仓实现与独立复验 | Issue #12 |

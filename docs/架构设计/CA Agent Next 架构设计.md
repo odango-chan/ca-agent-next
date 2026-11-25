@@ -2,8 +2,8 @@
 
 > 文档类型：总体架构设计  
 > 状态：目标架构基线；PR #1 已合并；架构所定义的 Next Host/Runtime/Plugin Manager 尚未实现、尚未验收    
-> 文档版本：0.4.2
-> 修订日期：2026-11-25  
+> 文档版本：0.4.3
+> 修订日期：2026-11-26  
 > 适用范围：ca-agent-next 通用 Agent Core、Host、Runtime、Skill 与 Plugin 公共机制  
 > 权威边界：本文是本仓唯一总体架构文档；字段级契约见规范，机制细节见设计说明书  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope；本文局部非目标见 §2.2
@@ -153,7 +153,7 @@ when 是纯 CEL Skill 选择表达式，作者源位置为可选 Assurance 的 c
 
 Tool 是 Plugin 的 Operation，不是独立进程、Manager 或 Runtime。Tool Plugin 是导出 tools Extension 的 Plugin。一个 Plugin 可以同时导出 Event、Delivery 和多个 Tool Operation。不得增加独立 Provider Manager、Tool Registry、Codec Manager 或第二条授权/分发路径。
 
-Tool 的公开 Callable ID、输入/输出 Schema、Effect、Capability 归属和 Artifact IO 由 Tool Interface Package 定义；Owner Contract 定义权威业务结果、Receipt、Commit Proof 和 Reconcile；Provider Runtime Bindings 映射 Provider 私有 Backend operation。三者边界见 [F03.05 Tool Interface 与 Provider 集成设计](../设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) 和[公共契约与所有权规范](../规范/公共契约与所有权规范.md)。
+Provider 自有 Tool 的公开 Callable、Schema、Effect 和 Capability 归 Provider Interface Package。MAS 等业务 Owner 的公开 Callable、Schema、Effect、Capability、权威业务结果、Receipt、Commit Proof 与 Reconcile 均归 Owner Contract；部署侧按已发布绑定交接 Artifact；Provider Runtime Bindings 映射 Provider 私有 Backend operation。三者边界见 [F03.05 Tool Interface 与 Provider 集成设计](../设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) 和[公共契约与所有权规范](../规范/公共契约与所有权规范.md)。
 
 Plugin Manifest 只声明进程和 Extension，不复制 Callable 定义。Provider v2 是 Provider 自身的进程协议，不是 Next Plugin IPC；唯一 Plugin Manager 通过 ProviderV2 Driver 适配它。
 
@@ -279,3 +279,4 @@ sequenceDiagram
 | 2026-11-25 | 0.4.0 | GPT-6.2（ChatGPT） | §3、§8、§10、§13–14 | 纳入 EC01～EC07/REF/TARGET/G01 职责，补齐 F03.05、Artifact Channel 未发布边界、最新外部 PR/Release 状态和完整设计入口 | 纠正外部域遗漏、过期依赖快照和 Provider/Artifact 边界 | Issue #12；SR-015～SR-023 |
 | 2026-11-25 | 0.4.1 | GPT-6.2（ChatGPT） | §10、外部依赖快照 | 纠正 Host Artifact Store Channel 生命周期；同步 Provider v1.2.0、Go Host P1 外部参考与 Next Python Host 未实现状态；区分 Mock AMF Codec C1 | 统一总体架构、F05、Plugin IPC 和验收基线中的协议状态 | Issue #12；SR-009、SR-010、SR-011、SR-015 |
 | 2026-11-25 | 0.4.2 | Codex / GPT-6 | 正文 | §7 对齐 M.3 输入校验与候选排除顺序 | 消除执行歧义并同步中央设计 | Issue #12 |
+| 2026-11-26 | 0.4.3 | Codex / GPT-6 | 见本行变更 | §Tool 更正业务公共契约所有权 | 对齐跨仓实现与独立复验 | Issue #12 |

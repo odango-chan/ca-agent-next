@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.2.6\
+> 文档版本：0.2.7\
 > 状态：设计补充待评审；Compiler 实施由 SR-013 跟踪  
 > 修订日期：2026-11-26  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -29,7 +29,7 @@ Native CLI 与 Go/WASM Worker 必须继续调用同一个 Go Compiler Core。现
 | internal/compiler/inherited_semantics.go | 既有 CA-SL 语义主链 | Contract.when 进入同一 Skill 语义链，不建立平行解析器 |
 | internal/compiler/cel_check.go | 现有 Predicate CEL 检查 | 复用 cel-go 与 G.4 白名单思想；不能把当前 Predicate 检查误认为已实现 Contract.when |
 | internal/compiler/schema_registry.go | Schema Registry、引用和闭包相关能力 | 复用解析能力并建立逐 Skill Request Schema 类型环境 |
-| internal/compiler/v1alpha5_artifact.go、v1alpha5_artifact_verify.go、contracts/v1alpha5/artifact-manifest.schema.json | 冻结 v1alpha5 Artifact 只输出 procedure.json / ingress-links.json；sourceFiles 只记录源路径，不携带本地 Request Schema 字节 | 新 v2alpha1 必须发布已验证 Request Schema 根与完整 G.4 引用闭包，供 Host 运行期按 M.3 验证 Event input；不得修改冻结 v1alpha5 |
+| internal/compiler/v1alpha5_artifact.go、v1alpha5_artifact_verify.go、contracts/v1alpha5/artifact-manifest.schema.json | 冻结 v1alpha5 Artifact 只输出 procedure.json / ingress-links.json；sourceFiles 只记录源路径，不携带本地 Request Schema 字节 | 新 2 必须发布已验证 Request Schema 根与完整 G.4 引用闭包，供 Host 运行期按 M.3 验证 Event input；不得修改冻结 v1alpha5 |
 | internal/compiler/development_link.go、development_multi_skill_test.go | Development Link / 多 Skill Lock 测试 | 仅作为 Schema 作用域和多 Skill fixture 的参考；不是正式发布 Artifact 路径 |
 
 AC-013-01 的 PoC 通过 Development 多 Skill 共享 Lock fixture，复用了 buildSchemaRegistry、resolveReferenceFrom 和 resolveSchemaRoot 等真实 Schema 解析能力。这证明的是可复用的 Schema 解析与跨语言序列化路径，不代表产品 Build 应调用 validateDevelopmentRequest、buildDevelopmentLinkScope 或 newDevelopmentSemantics。
@@ -163,7 +163,7 @@ AC-013-01 报告采用 Go 1.26.6、cel-go 0.33.2、Go protobuf 1.36.10、CPython
 - connectionagent.io/compiler-artifact/v1alpha5 保持完全不变。
 - Development v1alpha1 保持完全不变并继续 NOT_ADMITTED。
 - 新发布 Runtime Artifact 使用独立版本化 Manifest/文件布局，languageTarget 仍为 connectionagent.io/v1alpha5。
-- 建议的新 Artifact API 候选为 connectionagent.io/compiler-artifact/v2alpha1；对应的新 BuildResult API 候选为 connectionagent.io/compiler-build-result/v2alpha1。**两者均为本设计提案，不是已冻结 API。** 新 Runtime Build 入口复用当前 BuildRequest API connectionagent.io/compiler-build-request/v1alpha5；DependencyInspection API connectionagent.io/compiler-dependency-inspection/v1alpha5 不变，除非代码审计证明输入 DTO 必须变化。新 Compiler 版本的正式 Runtime Build 只产生 v2alpha1 BuildResult / Artifact，VerifyBuildResult 只接受该结果契约；不在同一二进制中双轨支持旧/新 Runtime BuildResult，不增加版本 dispatch、fallback 或兼容路由。旧 v2.1.0 Release 及其 Artifact/BuildResult v1alpha5 保持不可变历史发布。Development Build 继续使用其独立 v1alpha1 API/Artifact 家族，不因 when 扩展。AC-013-03 开始前 Compiler Owner 必须书面确认两个新 API version；如采用其他命名，先更新本节和 SR-013，再实施。Harness 不得自行发明第三个版本名。
+- 建议的新 Artifact API 候选为 connectionagent.io/compiler-artifact/2；对应的新 BuildResult API 候选为 connectionagent.io/compiler-build-result/2。**两者均为本设计提案，不是已冻结 API。** 新 Runtime Build 入口复用当前 BuildRequest API connectionagent.io/compiler-build-request/v1alpha5；DependencyInspection API connectionagent.io/compiler-dependency-inspection/v1alpha5 不变，除非代码审计证明输入 DTO 必须变化。新 Compiler 版本的正式 Runtime Build 只产生 2 BuildResult / Artifact，VerifyBuildResult 只接受该结果契约；不在同一二进制中双轨支持旧/新 Runtime BuildResult，不增加版本 dispatch、fallback 或兼容路由。旧 v2.1.0 Release 及其 Artifact/BuildResult v1alpha5 保持不可变历史发布。Development Build 继续使用其独立 v1alpha1 API/Artifact 家族，不因 when 扩展。AC-013-03 开始前 Compiler Owner 必须书面确认两个新 API version；如采用其他命名，先更新本节和 SR-013，再实施。Harness 不得自行发明第三个版本名。
 - 不把 Development 专用 executionStatus=NOT_ADMITTED、hostAdmission 或 Skill Admission 状态写入新发布 Runtime Artifact。
 
 ### 5.2 候选文件布局
@@ -232,7 +232,7 @@ requestSchema 对象与 when 是否存在无关；Host 依照 CA-SL v1alpha5 M.3
 - DescriptorSet 只负责 CEL 类型，不得被当作完整 JSON Schema 验证器；Request Schema 快照必须保留 G.4 的 enum/const/范围/长度/数组约束。
 - BuildResult、Manifest 与 OutputFiles 的集合和字节一致。
 
-新版 Verify 必须按 Compiler #61 的要求对新版本产物执行完整重建/逐文件比较或等价的确定性复验。新 Runtime Build 复用 BuildRequest v1alpha5，返回唯一的 BuildResult v2alpha1；VerifyBuildResult 只接受该新 BuildResult 并验证 Artifact v2alpha1，不在同一二进制中双轨 dispatch 到旧 Runtime BuildResult v1alpha5。旧 v2.1.0 Release 保留旧 BuildResult/Artifact v1alpha5 的原有行为；Development Build 仍由独立 Development API v1alpha1 处理。当前 CLI 已在写入目录前用同一 Verify 函数验证成功 BuildResult；新版本必须保持“先 Verify、后原子写盘”的既有不变量，不得假设存在一个已发布 Artifact 的独立 CLI verify 子命令。
+新版 Verify 必须按 Compiler #61 的要求对新版本产物执行完整重建/逐文件比较或等价的确定性复验。新 Runtime Build 复用 BuildRequest v1alpha5，返回唯一的 BuildResult 2；VerifyBuildResult 只接受该新 BuildResult 并验证 Artifact 2，不在同一二进制中双轨 dispatch 到旧 Runtime BuildResult v1alpha5。旧 v2.1.0 Release 保留旧 BuildResult/Artifact v1alpha5 的原有行为；Development Build 仍由独立 Development API v1alpha1 处理。当前 CLI 已在写入目录前用同一 Verify 函数验证成功 BuildResult；新版本必须保持“先 Verify、后原子写盘”的既有不变量，不得假设存在一个已发布 Artifact 的独立 CLI verify 子命令。
 
 ### 6.3 旧契约回归
 
@@ -240,7 +240,7 @@ requestSchema 对象与 when 是否存在无关；Host 依照 CA-SL v1alpha5 M.3
 
 - 冻结发布 Artifact v1alpha5 的机器 Schema、Golden 字节和旧 v2.1.0 Release Verify 行为不变；新 Compiler 不提供旧 Runtime API 兼容路由，必要的历史复验使用固定 Golden/旧 Release。
 - Development Artifact v1alpha1 的机器 Schema、Golden 字节、NOT_ADMITTED 与独立 Development Verify 行为不变；不新增 Development v1alpha2，也不把 Development 输出用于 Agent Bundle。
-- 新 Runtime Artifact 与 BuildResult 分别维护版本化 Schema（建议 contracts/v2alpha1/artifact-manifest.schema.json 与 contracts/v2alpha1/build-result.schema.json）、Golden、正负例和版本说明。
+- 新 Runtime Artifact 与 BuildResult 分别维护版本化 Schema（建议 contracts/2/artifact-manifest.schema.json 与 contracts/2/build-result.schema.json）、Golden、正负例和版本说明。
 - 不得通过更新旧 Golden 来掩盖旧契约变化。
 
 ## 7. 测试矩阵与产品门禁
@@ -310,3 +310,4 @@ Chromium parity 脚本使用真实 Headless Chrome；若默认路径不可用，
 | 2026-11-25 | 0.2.4 | GPT-6.2（ChatGPT） | §1～9 | 同步 F02/F08/SR-013 最新版本引用，明确 AC-013-01 证据 commit 远端不可检索、证据未归档 | 防止报告 PASS 被误报为独立复核或产品实现 PASS | Issue #14；PR #16/#18；SR-013 |
 | 2026-11-25 | 0.2.5 | Codex | 正文 | 同步隔离 PoC 的固定归档与复跑状态 | 核对 Issue #12 与固定提交 | Issue #12 |
 | 2026-11-26 | 0.2.6 | Codex / GPT-6 | 见本行变更 | 将实际 Bundle CI/发布归入 ca-skills 生产端 SR-027 | 对齐跨仓实现与独立复验 | Issue #12 |
+| 2026-11-26 | 0.2.7 | Codex / GPT-6 | 见本行变更 | 将未发布 Runtime Artifact 与 BuildResult 的候选版本段改为纯数字 2，保留 Owner 冻结门禁 | 对齐跨仓实现与独立复验 | Issue #12 |

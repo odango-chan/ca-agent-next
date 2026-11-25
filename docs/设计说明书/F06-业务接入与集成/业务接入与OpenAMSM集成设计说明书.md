@@ -1,12 +1,14 @@
 # 业务接入与 OpenAMSM 集成设计说明书
 
 > 文档类型：业务集成设计说明书  
-> 文档版本：0.2.3  
+> 文档版本：0.2.4  
 > 状态：目标集成设计已重建；外部 Owner 能力已实现，Next Plugin/Host 端到端尚未验收  
 > 功能归属：F06 — 业务接入与集成；EC04、EC05、EC07  
 > 关联 IR：IR-004、IR-005、IR-006  
 > 关联 SR：SR-009、SR-010、SR-011、SR-017、SR-018、SR-019  
 > 修订日期：2026-11-26
+> 全局评审范围：继承根目录 Agent.md 的 review_scope。  
+> 本文局部非目标：生产级资格、完整 NAS/NGAP 和 Core 业务分支。
 
 ## 1. 目标与范围
 
@@ -139,6 +141,8 @@ UpdateSMContext + N1 0xD1
   -> Owner Receipt / final result
 ~~~
 
+当前发布的 `SSM.RELEASE_CONFIRM_N1` 与 `SSM.RELEASE_CONFIRM_N2` 均为 MUTATION，须按各自原始 Invocation 验证 Owner 结果。收到回调、读到字节或验证关联本身不能证明确认动作已提交。CA-SL Wait 的触发只允许声明的 READ，不得将这两个确认操作填入 READ trigger。
+
 N1 与 N2 确认是两个独立输入，必须绑定同一个 Owner generation、releaseTxn、原始 Invocation 和 Run。重复、迟到、乱序、旧 generation 或错误 Session 的消息都不得触发清理。只有两者都确认后才可执行最终清理。
 
 ## 8. Owner Receipt 与 UNKNOWN
@@ -212,7 +216,11 @@ JSON 的 `n1SmMsg.contentId`、`n2SmInfo.contentId` 必须各自唯一关联对�
 
 ca-skills `780497a2` 的三个 MAS `examples/skills/*-pdu-session-mas/assurance/contract.yaml` 均未声明 when。Create 输入含 pduSessionId、pti、requestType、dnn、sNssai、servingPlmn、requestedPduSessionType、requestedSscMode；Modify 为 pduSessionId、entryKind；Release 再含 trigger。按源 Schema 的必填、枚举与关闭对象校验，不能向输入追加 NAS 类型。Release 的 trigger 使用作者枚举，不能直接填入 NAS 字节 0xD1。每个 fixture 保存原始请求、parts、预期投影、候选集合和预期 Run。若 ingress 无法仅凭可用字段构造完整合法输入，登记 EC04/作者契约缺口并停止该场景，禁止 Host 补造默认值或偷偷做完整解码。
 
-重试验收需要一次逻辑请求的稳定 externalRequestId。资源 URI、principal 或 MIME Content-ID 单独均不足以标识一次操作。在 Plugin 与 peer 的隔离 fixture 验证同次同内容重试、同 ID 内容冲突和两次内容相同的合法请求。部署尚无稳定来源时将跨重连重放记录为 BLOCKED；不得虚构标准幂等头。
+重试验收需要一次逻辑请求的稳定 externalRequestId。资源 URI、principal 或 MIME Content-ID 单独均不足以标识一次操作。在 Plugin 与 peer 的隔离 fixture 验证同次同内容重试、同 ID 内容冲突和两次内容相同的合法请求。隔离 Demo 的可控 peer 与 EC04 使用私有测试头 `X-CA-Request-Id`：peer 在新逻辑操作时生成唯一值并在其重试中复用，EC04 以已配置 peer 身份和该值构成 externalRequestId；新 HTTP 尝试各获独立 responseChannelId。比较相同 ID 的 operation、资源、规范化元数据及各 slot 原字节，内容冲突时拒绝；合法重复附着同一执行。该头仅属于 Demo 部署配置，不属于 3GPP。真实对端未提供等价稳定标识时，跨重连去重保持 BLOCKED。
+
+### Create 入参的已知断点
+
+`ca-agent-demo@57e277ff/src/ca_agent_host/integrations/fivegc/nsmf_http.py::_create_request` 对 `INITIAL_REQUEST` 投影为 1，从 N1 解出 PDU Session Type 与 SSC mode，并拒绝客户端在 SBI JSON 中注入同名字段。它还交叉检查 N1 与 JSON 的 PSI。当前 MAS Create 又在选择前要求这些字段。仅移植最小 discriminator 不能满足该契约。应在 ca-skills 的作者契约和 Procedure 中区分选择输入与绑定后的业务读取，由已声明的 Owner/Codec READ 根据原始 Artifact 获取后者。实施前把每个字段的来源、读取操作、Schema 和消费者写入同一 fixture，以固定作者 revision 验证；若没有已发布的所需 READ，保留该依赖的 BLOCKED。稳定重试与共享 /modify 路径的分类可用独立 fixture 先验收。
 
 ## 修订记录
 
@@ -222,3 +230,4 @@ ca-skills `780497a2` 的三个 MAS `examples/skills/*-pdu-session-mas/assurance/
 | 2026-11-25 | 0.2.1 | GPT-6.2（ChatGPT） | §2、§4、§10 | 更新 ca-skills Owner-linked Skill 源路径、PR #83～#86 状态及 ca-client-tools v1.2.0 / CA-SL Release Record 状态 | 避免旧示例、旧 Provider 版本和规范头部候选文字造成误读 | Issue #12；SR-017～019、SR-023 |
 | 2026-11-25 | 0.2.2 | GPT-6.2（ChatGPT） | §10 | 更新 ca-client-tools PR #39 与 env-5gc-sim PR #86 的 Codec 状态；明确 Mock AMF C1 不代表 Agent Tool/Provider 或 Next 集成 | 防止把独立测试对端迁移误计为 OpenAMSM Agent 集成进展 | Issue #12；SR-009～SR-011、SR-017～SR-019 |
 | 2026-11-26 | 0.2.3 | Codex / GPT-6 | 见本行变更 | §2、4、6、7 校正候选判定、HTTP 响应义务和真实 Owner Callable；§12 增补 EC04 固定协议来源、请求投影与独立复验 | Issue #12 |
+| 2026-11-26 | 0.2.4 | Codex / GPT-6 | 见本行变更 | 补足 Create 的真实 NAS 字段来源及跨仓设计缺口；补齐正式文档的评审范围与非目标；明确可控 peer/Plugin 的重试身份；§7 依据 Owner catalog 区分确认 mutation 和 Wait READ | Issue #12 |

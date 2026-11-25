@@ -1,14 +1,16 @@
 # 通用 Agent Core 与 Host 设计说明书
 
 > 文档类型：功能设计说明书  
-> 文档版本：0.2.0  
+> 文档版本：0.2.1  
 > 状态：Next 目标设计；本仓实现状态需独立验收，不以参考仓 PASS 代替  
 > 功能归属：F01 — 通用 Agent Core 与 Host  
 > 关联 SR：SR-002、SR-020、SR-021  
-> 修订日期：2026-11-25  
+> 修订日期：2026-11-26  
 > 适用范围：Python Host、Agent Core、Model Loop、Event/Run 协调、Runtime/Plugin 边界
 
 关联 IR-002、IR-006。参考架构原文见 §12。
+> 全局评审范围：继承根目录 Agent.md 的 review_scope。  
+> 本文局部非目标：业务专用协议、Owner 状态机与生产级部署。
 
 ## 1. 目标与原则
 
@@ -98,7 +100,7 @@ Context 与 Artifact 的详细契约见 F05。Model Loop 不得将模型生成�
 新增一个业务域的最小扩展：
 1. Event/Delivery Plugin 声明协议 Event 和响应；
 2. 一个或多个 Skill 定义适用条件和执行流程；
-3. Tool Interface Package 定义外部 Callable 与 Schema；
+3. Provider Interface Package 或业务 Owner Contract 按 Callable 归属定义公开接口与 Schema；
 4. Tool Plugin 适配对应 Provider；
 5. Owner 实现业务状态和权威结果；
 6. 部署配置将上述资产装配到 Host。
@@ -157,3 +159,4 @@ Demo 以单 Host 进程和本机/内网 Plugin 进程为基线；不要求 HA、
 |---|---|---|---|---|---|
 | 2026-11-25 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 建立 Core/Host/Model Loop 和业务中立基线 | SR-002 |
 | 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 全文 | 补齐 Event/Run/Response、Action Boundary、配置、失败恢复和跨仓实现差异 | Issue #12；SR-020、SR-021 |
+| 2026-11-26 | 0.2.1 | Codex / GPT-6 | 见本行变更 | 公共 Callable 按权威源消费；补齐正式文档的评审范围与非目标 | Issue #12 |
