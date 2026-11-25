@@ -9,7 +9,8 @@ For every non-trivial task, read:
 1. README.md
 2. docs/architecture.md
 3. docs/plugin-package.md
-4. docs/audit/ca-agent-demo.md
+4. docs/plugin-artifact-handoff.md
+5. docs/audit/ca-agent-demo.md
 5. docs/audit/reuse-and-feasibility.md
 6. docs/acceptance.md
 7. docs/implementation/deepseek-harness-plan.md
@@ -35,7 +36,8 @@ If implementation and documentation disagree, stop and report the exact conflict
 - Do not create separate permanent Plugin Manager and Provider Manager subsystems, separate Tool registries, or separate authorization/dispatch paths.
 - Runtime Action dispatch goes through the Plugin Manager to the selected Tool extension. Runtime remains the sole authorization and outcome authority.
 - During migration, an adapter may speak the existing ca-client-tools.provider/v2 process protocol. Keep it behind the unified Plugin Manager; do not fork/copy the Go Provider or establish a second Runtime.
-- ca-openamsm-plugin is an Event Plugin; ca-client-tools is a Tool Plugin. They remain independently owned packages/processes and must not duplicate each other's business implementation.
+- ca-openamsm-plugin is an Event Plugin; ca-client-tools is the Tool implementation consumed through the same Plugin Manager tools extension. They remain independently owned and must not duplicate each other's business implementation.
+- Native Event/Delivery Plugins use the exact Package/IPC contract in docs/plugin-package.md. Binary Event/Delivery data uses docs/plugin-artifact-handoff.md; do not invent another wire protocol.
 - Plugin manifests are YAML-first. Do not introduce a second JSON manifest format.
 
 ## 4. Skill package and optional Assurance — mandatory
@@ -84,7 +86,7 @@ If implementation and documentation disagree, stop and report the exact conflict
 - LLM-created/edited Skill source follows the same import path as user-authored source.
 - An individual LLM Action proposal is not Skill source and is validated by Runtime Action Boundary. Do not compile it, create a temporary Procedure or invoke the Compiler for each Action.
 - Do not copy the Go Compiler or reimplement its parsing/linking semantics in Python. Consume its canonical CLI/API.
-- Current Compiler support for the refreshed v1alpha5 contract.when Artifact must be verified. The SKILL.md-only import path is owned by Next's Skill Importer and must not invoke Compiler. If the Compiler lacks the refreshed when support, report the exact dependency blocker; never silently strip the field or claim support.
+- Current Compiler support for the refreshed v1alpha5 contract.when field must be verified. SKILL.md-only import is a Host Skill Importer behavior and must not invoke the Compiler; it is not a Compiler feature. If contract.when is unsupported, report the exact dependency blocker; never silently strip the field or claim support.
 - The Compiler Artifact must expose a portable, statically checked `when` program and its CEL profile/type bindings for the Python Runtime. Do not make Python reparse/type-check the source expression per Event; follow [the SkillCatalog/Compiler integration requirements](docs/integration/skill-catalog-compiler-contract.md).
 
 ## 7. Execution modes and Runtime
