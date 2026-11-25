@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：目标机制设计；Artifact 互操作部分依赖外部 Compiler 发布  
-> 文档版本：0.2.3  
+> 文档版本：0.2.4  
 > 功能归属：F02 — Skill 管理与选择  
 > 关联 SR：SR-004、SR-005、SR-006    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -67,7 +67,7 @@ Agent 只执行以下消费端检查：
 - Artifact 的格式标识受当前 Agent 支持。
 - 必需 Artifact 文件存在且路径位于包根目录内。
 - Manifest 引用的文件、Schema/type data 和本地依赖可解析。
-- Tool/Capability 依赖能够解析到当前部署已安装的 Interface Package。
+- Tool/Capability 依赖必须解析到 Artifact dependency closure 指定的精确契约快照。依赖来源可以是 Provider Interface Package，也可以是业务 Owner Contract Package；当前 OpenAMSM MAS Skill 的 `mas` alias 指向 `urn:openamsm:mas:tool-contracts` v1alpha4 Owner snapshot，不是 ca-client-tools 仅导出 11 个 READ Tools 的 Interface ZIP。
 - when 的 CheckedExpr 和类型描述数据可被指定 Python CEL Runtime 反序列化。
 - Artifact 文件、路径或依赖不满足要求时给出明确错误并拒绝导入。
 
@@ -81,7 +81,7 @@ SkillCatalog 属于 Python Agent Core / Host，不属于 Plugin Manager。它是
 - 完整 SKILL.md 文本及由其生成的轻量候选元数据；
 - 是否存在有效发布 Assurance Artifact；
 - 已反序列化的 when 程序、CEL Profile 和类型环境；
-- 发布 Artifact 声明的 Callable/Capability 依赖引用。
+- 发布 Artifact 声明的 Callable/Capability 依赖引用，以及其精确 dependency alias、stable package identity、snapshot digest 和 export closure。
 
 初始化、显式导入或更新时读取包内容并构造候选 Catalog generation。基本检查和依赖解析全部成功后原子激活；任何失败保留旧 generation。每个 Invocation 固定其选择时的 generation。references/ 和大型知识材料按需加载，不在每次 Event 选择时扫描目录或读取文件。
 
@@ -126,7 +126,8 @@ CheckedExpr、google.protobuf.Any、FileDescriptorSet、DescriptorPool、字段�
 
 - ca-skills PR #88：同标识 CA-SL v1alpha5 的 optional Assurance/when 刷新；实施前重新确认合并与正式规范状态。
 - ca-skill-compiler Issue #61：新版发布运行时 Artifact 与 CheckedExpr/DescriptorSet 格式；详细互操作方案见[Skill管理与选择设计说明书](Skill管理与选择设计说明书.md) §11。
-- ca-agent-next：只负责已发布包的消费、Catalog、选择和 Runtime，不调用 Compiler。
+- ca-agent-next：只负责已发布包的消费、Catalog、选择和 Runtime，不调用 Compiler。对 CA-SL v1alpha5 冻结 Artifact，Agent 按 dependency closure 解析 Provider Interface Package 与 Owner Contract Package 的精确快照；不得将 Owner ToolCatalog 当成 Provider Interface Package。
+- 当前 CA-SL v1alpha5 MAS 作者源以 `dependencies.mas: urn:openamsm:mas:tool-contracts` 引用 Owner 契约，并通过 `capabilities` / `mas::CALLABLE` 声明与调用 Owner 能力。冻结 v1alpha5 Compiler 以 `resolvedDependencies` 和 `trustedBuildContext` 完成静态 Owner/Capability 链接；Development v1alpha1 的 `package.json` / Interface Package / Dependency Lock 是独立构建 profile。Agent 不调用任一 Compiler profile。
 - cel-expr-python：作为 Python Runtime 的 CEL 反序列化/求值依赖，版本固定并以跨语言 fixtures 验收。
 
 Agent 不调用 Compiler Inspect/Verify，也不实现 Skill Admission。Compiler 在发布前完成 Build/Verify；Agent 只做消费端基本结构检查和依赖解析。
@@ -200,3 +201,4 @@ Next 在 Skill 导入时反序列化已检查程序和类型环境，建立运�
 | 2026-11-25 | 0.2.1 | 刷新需求追踪、目录或证据引用 | 对齐最新分支与 IR/SR 基线 | 见关联 SR |
 | 2026-11-25 | 0.2.2 | Codex / GPT-6 | §12 | 记录中央规范与 Compiler/Studio/Next 分工 | 跨仓设计移交 | IR-006 |
 | 2026-11-25 | 0.2.3 | Codex / GPT-6 | §6 | 明确 Event Request Schema 资格与诊断次序 | 对齐 CA-SL 候选 M.3／SA-012 | IR-003、SR-006、EX-10 |
+| 2026-11-25 | 0.2.4 | GPT-6.2（ChatGPT） | §4、§5、§9 | 将 Tool/Capability 依赖解析扩展为 Provider Interface 与 Owner Contract 两类精确快照，并明确 MAS `mas` dependency | 对齐 ca-skills v1alpha5 MAS 作者源与 Compiler 冻结 Build / Development 分离路径 | IR-006 · SR-015 · Issue #12 |
