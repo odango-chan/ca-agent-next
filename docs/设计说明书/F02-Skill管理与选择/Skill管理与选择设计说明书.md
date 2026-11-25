@@ -1,8 +1,8 @@
 # Skill 管理与选择设计说明书
 
 > 文档类型：机制设计说明书  
-> 状态：目标机制设计；Artifact 互操作部分依赖外部 Compiler 发布  
-> 文档版本：0.2.3  
+> 状态：CA-SL v1alpha5 已发布；when 运行时 Artifact 依赖 Compiler Issue #61 完成  
+> 文档版本：0.2.4  
 > 功能归属：F02 — Skill 管理与选择  
 > 关联 SR：SR-004、SR-005、SR-006    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -100,7 +100,7 @@ Agent 不实现文件监视器、自动下载、分布式缓存或通用 Plugin 
 9. 无候选时澄清或拒绝；不得无 Skill 绑定地回退到 Generic Agent。
 10. 精确绑定 Skill 后，才选择 Deterministic 或 LLM-guided 模式。
 
-无规范化 Event 的直接用户任务只走未声明 when 的语义候选路径。上面的 Event 资格规则取自 [CA-SL v1alpha5 候选 M.3／SA-012](../../规范/CA-SL语言基线与版本规范.md#31-候选复核结果)，实施以正式发布版本为准。
+无规范化 Event 的直接用户任务只走未声明 when 的语义候选路径。上面的 Event 资格规则取自 [CA-SL v1alpha5 正式规范 M.3／SA-012](../../规范/CA-SL%20v1alpha5完整语言规范.md)；正式发布身份见 [语言基线](../../规范/CA-SL语言基线与版本规范.md)。
 
 when 只能读取规范化 Event 的 event.type 和 Contract.requestSchema 声明的 input 字段，不得访问 Tool、Observation、Runtime Context、时钟或可变 Host 状态。读取 input 成员必须由作者源 Contract 声明 requestSchema，并由外部 Compiler 在发布前静态检查。
 
@@ -124,7 +124,7 @@ CheckedExpr、google.protobuf.Any、FileDescriptorSet、DescriptorPool、字段�
 
 ## 9. 外部依赖与状态边界
 
-- ca-skills PR #88：同标识 CA-SL v1alpha5 的 optional Assurance/when 刷新；实施前重新确认合并与正式规范状态。
+- ca-skills PR #88 / #89：CA-SL v1alpha5 同标识刷新与发布记录均已合并；完整规范固定于 18d8184367982ccbc835756136c4a53f9096c3a0。源仓 main 文件头部状态与 Release Record 不一致，Next 以 Release Record 固定提交为规范身份。
 - ca-skill-compiler Issue #61：新版发布运行时 Artifact 与 CheckedExpr/DescriptorSet 格式；详细互操作方案见[Skill管理与选择设计说明书](Skill管理与选择设计说明书.md) §11。
 - ca-agent-next：只负责已发布包的消费、Catalog、选择和 Runtime，不调用 Compiler。
 - cel-expr-python：作为 Python Runtime 的 CEL 反序列化/求值依赖，版本固定并以跨语言 fixtures 验收。
@@ -200,3 +200,6 @@ Next 在 Skill 导入时反序列化已检查程序和类型环境，建立运�
 | 2026-11-25 | 0.2.1 | 刷新需求追踪、目录或证据引用 | 对齐最新分支与 IR/SR 基线 | 见关联 SR |
 | 2026-11-25 | 0.2.2 | Codex / GPT-6 | §12 | 记录中央规范与 Compiler/Studio/Next 分工 | 跨仓设计移交 | IR-006 |
 | 2026-11-25 | 0.2.3 | Codex / GPT-6 | §6 | 明确 Event Request Schema 资格与诊断次序 | 对齐 CA-SL 候选 M.3／SA-012 | IR-003、SR-006、EX-10 |
+
+
+| 2026-11-25 | 0.2.4 | GPT-6.2（ChatGPT） | §6、§9、§12 | 将 CA-SL v1alpha5 从候选状态更新为正式发布基线，并标记 Compiler #61 未完成 | Issue #12；SR-023、SR-013 |
