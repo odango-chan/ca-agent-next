@@ -18,7 +18,7 @@ Before coding:
 4. Treat ca-agent-demo as read-only source. Do not modify it.
 5. Treat ca-skill-compiler, ca-client-tools, ca-skills, ca-openamsm-plugin and ca-agent as read-only dependencies unless the user separately authorizes a cross-repository change.
 6. Do not start OpenAMSM/Nsmf migration. The first target is Echo.
-7. Read current CA-SL v1alpha5 and Compiler release contracts. CA-SL refresh PR #88 is OPEN; Compiler v2.1.0 does not establish `contract.when` or Python CheckedExpr interoperability. Compiler Issue #61 tracks a new Development Artifact Manifest v1alpha2 while preserving frozen v1alpha5 and Development v1alpha1 contracts. First complete the Go cel-go → Python cel-expr-python CheckedExpr/DescriptorSet PoC and Compiler PR; only then unblock Next Assurance import/Resolver. SKILL.md-only import is Host-owned and bypasses Compiler. Do not strip fields, fake Compiler success or implement a second Compiler in Python.
+7. Read current CA-SL v1alpha5 and Compiler release contracts. CA-SL refresh PR #88 is OPEN; Compiler v2.1.0 does not establish `contract.when` or Python CheckedExpr interoperability. Compiler Issue #61 must deliver a new versioned published runtime Artifact contract carrying CheckedExpr + DescriptorSet; it must preserve the frozen `compiler-artifact/v1alpha5` and Development v1alpha1 contracts. First complete the Go cel-go → Python cel-expr-python PoC and Compiler release. Next imports only published Artifacts and never invokes Compiler. SKILL.md-only packages import directly. Do not strip fields, fake Compiler success or implement a second Compiler in Python.
 
 ## 1. Fixed target architecture
 
@@ -66,31 +66,31 @@ Do not add package signatures, Trust Registry, extra SHA-256 snapshot hashing, s
 
 **Acceptance:** Python Host starts one Go process, validates plugin.yaml, discovers all declared extension kinds, routes one test message per extension and shuts down cleanly. This phase does not yet require Skill selection or full business E2E.
 
-## 4. Phase C — CA-SL Compiler integration and Skill Importer
+## 4. Phase C — Published Skill Importer (no embedded Compiler)
 
-**Allowed changes:** ca-agent-next only; consume the canonical external Compiler interface.
+**Allowed changes:** ca-agent-next only. The independent Compiler is a release-time dependency, not an Agent runtime dependency.
 
-Implement one Skill Importer with these paths:
+The Agent accepts only these published inputs:
 
-1. SKILL.md-only source: validate basic Skill metadata and import Agent guidance directly. Do not invoke Compiler.
-2. Source with assurance/: require the CA-SL source layout; invoke the canonical Compiler Check/Build path, then Inspect/Verify the resulting Artifact and perform Host Admission.
-3. Already compiled Skill Artifact: invoke Inspect/Verify and Host Admission directly. Do not invoke Build or recompile.
-4. Present but incomplete/invalid Assurance: reject import. Never downgrade to SKILL.md-only.
-5. Editing SKILL.md alone updates Agent guidance. Editing Assurance source or its compile dependencies triggers a new build and admission.
-6. LLM-created/edited Skill source uses exactly the same import path as user-authored source.
+1. SKILL.md-only package: validate basic Skill metadata, safe paths and references; import Agent guidance directly.
+2. Published Assurance Skill: require SKILL.md plus the Compiler-generated runtime Artifact. Check supported manifest/Artifact format, required files and references, parseability of CheckedExpr/type descriptors, and resolve declared Tool/Capability dependencies against installed Plugins.
+3. Assurance source YAML without its compiled published Artifact: reject with a clear "published compiled Artifact missing" diagnostic. Never invoke Compiler and never downgrade it to SKILL.md-only.
+4. Malformed/incompatible compiled Artifact or unresolved dependencies: reject import with exact diagnostics.
+5. Editing SKILL.md alone updates Agent guidance. Editing Assurance source happens in the external authoring/release toolchain; a new compiled Artifact must be published before import.
+6. LLM-created/edited Assurance source is not executable as-is; it must go through the external publishing workflow.
 
 Tasks:
 
-- Add a small Python subprocess/API client for the released Compiler commands.
-- Keep Compiler parsing, CA-SL semantics, linking and Artifact generation inside the Go Compiler.
-- Keep Host Artifact admission and Capability binding separate from Compiler Build.
-- Do not invent a second Artifact format, Skill Contract format or package integrity framework.
-- Do not add Host-side SHA-256 package hashing or signature verification. Retain only the identity checks already required by the Compiler/Interface Package contracts.
-- Build an immutable candidate SkillCatalog generation from successfully imported packages. Include SKILL.md-only entries; keep full SKILL.md text and compiled Assurance selection metadata in memory. A failed package update must not partially mutate the active generation.
+- Do not add a Python subprocess/API client for Compiler. Agent must not invoke Check, Build, Inspect or Verify.
+- Keep Compiler parsing, CA-SL semantics, static CEL checking, linking, Build and Verify entirely in the external Go Compiler.
+- Implement only basic runtime package/manifest/path/reference/type-data loading and local Tool/Capability dependency resolution. This is ordinary import validation, not a separate Skill Admission mechanism.
+- Do not invent a second Artifact format, Skill Contract format or package-integrity framework.
+- Do not add Host-side SHA-256 package hashing or signature verification.
+- Build an immutable candidate SkillCatalog generation from successfully imported published packages. Include SKILL.md-only entries; keep full SKILL.md text and deserialized Assurance selection programs in memory. A failed package update must not partially mutate the active generation.
 
-**External dependency gate:** [Compiler Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) must deliver a reviewed Development Artifact Manifest v1alpha2, standard CheckedExpr Any + DescriptorSet, and real Python CEL interoperability. The CA-SL refresh [PR #88](https://github.com/odango-chan/ca-skills/pull/88) must be merged and its exact normative SHA pinned before claiming final language conformance. Do not modify frozen v1alpha5 or Development v1alpha1 contracts. SKILL.md-only import is a Next-owned Importer path and bypasses Compiler, so it can be implemented independently. If the Compiler release/artifact is unavailable, keep Assurance source import and Resolver integration BLOCKED; do not silently strip when or claim the old release is compatible.
+**External dependency gate:** [Compiler Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) must deliver a new versioned published runtime Artifact contract carrying standard CheckedExpr Any + DescriptorSet and real Python CEL interoperability. It must preserve the frozen published Artifact v1alpha5 contract and Development v1alpha1 contract; the CA-SL languageTarget remains v1alpha5. The CA-SL refresh [PR #88](https://github.com/odango-chan/ca-skills/pull/88) must be merged and its exact normative SHA pinned before claiming final language conformance. If the Compiler release/artifact is unavailable, keep Assurance Artifact import/Resolver integration BLOCKED; do not accept source YAML or silently strip when. Detailed interchange contract: [技能目录与编译器运行时接口设计说明书](../集成设计/技能目录与编译器运行时接口设计说明书.md).
 
-**Acceptance:** SKILL.md-only import succeeds without Compiler invocation; Assurance source uses the released Artifact v1alpha2 and passes Inspect/Verify + Host Admission; compiled Artifact import does not Build; invalid Assurance fails closed; import/update builds a candidate Catalog generation and atomically activates only after success. Phase C remains blocked until Compiler Issue #61 and CA-SL PR #88 gates are satisfied. Detailed interchange contract: [技能目录与编译器运行时接口设计说明书](../集成设计/技能目录与编译器运行时接口设计说明书.md).
+**Acceptance:** SKILL.md-only import succeeds without Compiler invocation; published Assurance Artifact import succeeds using only basic structural/reference checks and local dependency resolution; missing/malformed/incompatible Artifacts and unresolved dependencies fail explicitly; no Compiler command or Skill Admission stage runs in Agent; import/update builds a candidate Catalog generation and atomically activates only after checks succeed. Phase C remains blocked until Compiler Issue #61 and CA-SL PR #88 gates are satisfied.
 
 ## 5. Phase D — Skill Resolver and mode derivation
 
@@ -100,7 +100,7 @@ Implement:
 
 1. Resolve exact continuations before fresh Skill selection.
 2. Resolve from the active immutable in-memory SkillCatalog generation pinned for this fresh Event. Do not scan package directories or reread SKILL.md/Assurance files on the Event hot path; do not use deployment-owned Event→Skill tables or business Contract Packages.
-3. For Assurance Skills, use the Catalog's already deserialized CEL Expression (loaded from Artifact v1alpha2 CheckedExpr Any and DescriptorSet by `cel-expr-python`) against this Event's normalized event.type and input. Compiler parses/type-checks once during Build; Python loads the CheckedExpr once during Catalog import/update. Every fresh Event gets a new activation and independent evaluation; do not cache the boolean result. Static invalidity is a Compiler error; false and runtime evaluation error exclude the Skill.
+3. For Assurance Skills, use the Catalog's already deserialized CEL Expression (loaded from the published runtime Artifact's CheckedExpr Any and DescriptorSet by `cel-expr-python`) against this Event's normalized event.type and input. External Compiler parses/type-checks once before publication; Python only deserializes the checked program once during Catalog import/update. Every fresh Event gets a new activation and independent evaluation; do not cache the boolean result. Static invalidity is a Compiler error; false and runtime evaluation error exclude the Skill.
 4. If exactly one explicit true match exists, select it without LLM. If multiple true matches exist, offer only those candidates to the LLM.
 5. If no explicit true match exists, form semantic candidates from unguarded Skills (no when), using cached candidate metadata derived from SKILL.md. This includes SKILL.md-only Skills and Assurance Skills whose Contract omits when. After selection, provide the full SKILL.md content from Catalog memory; do not reread the package file.
 6. Never reintroduce a false/error guarded Skill into the unguarded set. Validate the exact Skill identity returned by the model.
@@ -115,17 +115,17 @@ Implement:
 
 Implement:
 
-1. One Python Runtime with Run identity, Skill binding, pinned catalogGeneration, admission, Capability authorization, Action Request validation, Tool Plugin dispatch, Outcome/Evidence and basic Wait/Resume semantics. Each Invocation retains its generation until completion; a later Catalog activation affects only new Invocations.
-2. Deterministic Procedure Engine derives the next Action from the admitted Procedure Artifact.
+1. One Python Runtime with Run identity, Skill binding, pinned catalogGeneration, Action Request validation, declared Capability/callable scope checks, Tool Plugin dispatch, Outcome/Evidence and basic Wait/Resume semantics. There is no separate Skill Admission mechanism. Each Invocation retains its generation until completion; a later Catalog activation affects only new Invocations.
+2. Deterministic Procedure Engine derives the next Action from the published compiled Procedure Artifact.
 3. LLM-guided Host Model Loop proposes the next Action from Skill-scoped Context.
 4. Both paths submit the same Action Request to the same Runtime method and same Plugin tools extension.
 5. An individual LLM Action is validated by Runtime and never sent to Compiler.
-6. An LLM-created/edited Assurance source is handled by Phase C Skill Importer; it must be compiled/admitted before deterministic use.
+6. An LLM-created/edited Assurance source is not handled or compiled by Agent; it must be compiled and published externally before the resulting Artifact is imported.
 7. READ Tools produce Observation facts with provenance; MUTATION Tools preserve Owner Receipt/Commit Proof semantics where required.
 8. Resolve exact continuations before the Resolver. Invalid or duplicate delivery cannot advance a Run.
 9. No direct Agent→Plugin call, no duplicate Provider dispatcher and no second authorization path.
 
-**Acceptance:** same Assurance-backed Echo Skill succeeds in Deterministic and LLM-guided modes; traces show both entering the same Runtime Action boundary and same Tool Plugin operation. The SKILL.md-only Echo Skill runs LLM-guided only. Unauthorized Capability and forged COMMITTED cases fail. LLM Action does not invoke Compiler.
+**Acceptance:** same Assurance-backed Echo Skill succeeds in Deterministic and LLM-guided modes; traces show both entering the same Runtime Action boundary and same Tool Plugin operation. The SKILL.md-only Echo Skill runs LLM-guided only. Actions outside the selected Skill's declared Capability/callable scope are rejected; forged COMMITTED cases fail. LLM Action does not invoke Compiler.
 
 ## 7. Phase F — Echo vertical E2E and regression
 
@@ -134,8 +134,8 @@ Implement:
 1. Make Echo a runnable Example under examples/.
 2. Add Echo Acceptance Tests for EX-01 through EX-19 and EX-21 through EX-29. Reserve EX-20 for Phase G's OpenAMSM second-business proof.
 3. Exercise Event → Skill import/selection → Run → Tool → Outcome/Evidence → response delivery.
-4. Exercise SKILL.md-only import, Assurance source import, compiled Artifact import, and LLM Skill Authoring.
-5. Exercise Catalog residency, no per-Event file reads/Compiler calls, compile-once/evaluate-per-Event behavior, duplicate/continuation bypass, atomic update, failed-update rollback, generation pinning and lazy references (EX-21–EX-28).
+4. Exercise SKILL.md-only import, published compiled Artifact import, missing/malformed Artifact errors, dependency-resolution errors and LLM Skill Authoring.
+5. Exercise Catalog residency, no per-Event file reads/Compiler calls, external compile-once / Agent load-once / evaluate-per-Event behavior, duplicate/continuation bypass, atomic update, failed-update rollback, generation pinning and lazy references (EX-21–EX-28).
 6. Exercise the same Assurance-backed Skill in both modes.
 7. Exercise the individual LLM Action path without Compiler.
 8. Remove unused scaffolding, duplicated registries and obsolete adapters.
