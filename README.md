@@ -30,10 +30,10 @@ For the next major redesign after promotion, create a fresh ca-agent-next. Keep 
 
 - [Agent instructions](Agent.md) — mandatory rules for coding agents and VibeCoding.
 - [Architecture](docs/architecture.md) — Python Core, optional Assurance, Core-owned in-memory SkillCatalog, Skill import/selection, unified Plugin and Runtime boundary.
-- [SkillCatalog and Compiler integration](docs/integration/skill-catalog-compiler-contract.md) — import/update lifecycle, hot-path residency, Catalog generations and portable compiled when requirement.
 - [Plugin Package v1alpha1](docs/plugin-package.md) — YAML manifest, extensions and complete common IPC contract.
 - [Plugin Artifact Handoff](docs/plugin-artifact-handoff.md) — Host-owned N1/N2 staging, custody and delivery.
-- [SkillCatalog / Compiler Integration](docs/integration/skill-catalog-compiler-contract.md) — import-once, in-memory Catalog, compile-once and when evaluation per Event.
+- [技能目录与编译器运行时接口设计说明书](docs/集成设计/技能目录与编译器运行时接口设计说明书.md) — Catalog 生命周期、CEL CheckedExpr 交换、Development Artifact v1alpha2 与运行时求值边界。
+- [DeepSeek Harness 实施提示词](docs/实施计划/DeepSeek%20Harness实施提示词.md) — 可直接交给 Harness 的分阶段实施任务。
 - [Demo audit](docs/audit/ca-agent-demo.md) — current source inventory and evidence.
 - [Reuse and feasibility](docs/audit/reuse-and-feasibility.md) — copy vs adapt vs external dependency decisions.
 - [DeepSeek Harness plan](docs/implementation/deepseek-harness-plan.md) — staged implementation task package.
