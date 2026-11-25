@@ -239,7 +239,7 @@ bindings:
 
 hostInvocation 的字段来源只允许 HOST_CONTEXT 或 DERIVED_ORIGINAL_INVOCATION_ID；arguments 将 Skill-authored argument 固定绑定到 Host scope field，二者不一致时在 dispatch 前拒绝。privateArguments 只能来自 PRIVATE_MATERIAL，且不得与公开 input Schema properties 相交；Host 在 Runtime Schema 校验后注入。
 
-MUTATION observation 的 WIRE_OK 指向 RECEIPT；ACL_DENIED 指向 DENIED；OWNER_TIMEOUT、OWNER_ERROR、TRANSPORT_ERROR、TIMEOUT、CANCELED、INVALID_RESPONSE 均指向 UNKNOWN；未声明 code 也必须为 OUTCOME_UNKNOWN。Owner Receipt schemaVersion 为 openamsm.mas-mutation-receipt/v1，必须绑定原始 originalInvocationId、Callable、MAS/op/stepId、deploymentId、ownerInstanceId、SUPI 和 PSI；commit proof 的 invocationId 必须是同一个 originalInvocationId。Reconcile 使用 sidecar 指定的 mas-reconcile binding 查询同一原始 Invocation，不得重发 mutation。
+MUTATION observation 的 WIRE_OK 指向 RECEIPT；ACL_DENIED 指向 DENIED；OWNER_TIMEOUT、OWNER_ERROR、TRANSPORT_ERROR、TIMEOUT、CANCELED、INVALID_RESPONSE 均指向 UNKNOWN；未声明 code 也必须为 OUTCOME_UNKNOWN。Owner Receipt schemaVersion 为 openamsm.mas-mutation-receipt/v1，必须绑定原始 originalInvocationId、Callable、MAS/op/stepId、deploymentId、ownerInstanceId、SUPI 和 PSI；commit proof 的 invocationId 必须是同一个 originalInvocationId。Reconcile 使用 sidecar 指定的 mas-reconcile binding 查询同一原始 Invocation，不得重发 mutation。 当前 OpenAMSM v1.2.0 路径使用 OWNER_RECEIPT；DEVELOPMENT_NO_RECEIPT 仅允许用于无法发布 Owner Receipt 的开发 Provider，且该模式永远不能产生 COMMITTED。
 
 ### 6.6 Provider Backend Binding Catalog v2
 
