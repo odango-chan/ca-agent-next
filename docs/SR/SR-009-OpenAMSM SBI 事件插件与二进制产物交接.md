@@ -1,7 +1,7 @@
 # SR-009：OpenAMSM SBI 事件插件与二进制产物交接
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.6  
+> SR 版本：0.1.7  
 > 状态：DRAFT；设计基线待评审，不允许实施  
 > 创建日期：2026-11-25  
 > 所属阶段：Phase G  
@@ -69,6 +69,10 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 - 影响分析：初始分解；等待设计基线评审。
 - 本 SR 的范围和验收条件在进入 READY 后冻结。后续发生语义变化时创建新的 SR 并引用本 SR，不覆盖历史要求。
 
+### EC04 源仓验收入口
+
+以 [F06 两端实施矩阵](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md#ec04-两端实现与逐例复核) 的 operationId、固定 OpenAPI、peer 输入与 MAS 作者契约制作 fixtures。先在 ca-openamsm-plugin 以独立测试 Host 核对双向 IPC、HTTP 与 staging，再在 ca-agent-next 接真实子进程。分别记录外部仓和中央仓的 SHA、命令、测试数、输入投影及结果。授权跨仓后按上述归属修改，不能只改 Host 使 fixture 通过。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订内容 | 原因 | 影响 SR |
@@ -80,3 +84,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-25 | 0.1.4 | 更新 F05 至 v0.4.0，并将 Event/Delivery Plugin 的 staging 职责与 Next Host ArtifactStore / Tool Channel 明确分离 | 防止把 Host 实现责任错误计入 ca-openamsm-plugin；Host 侧由 SR-010 追踪 | Issue #12；SR-009、SR-010 |
 | 2026-11-25 | 0.1.5 | 更新 F05/F06/Plugin IPC 设计依据至当前版本；同步冻结的 Host Artifact Store v1 与 Codec Consumer 分层状态 | 避免 SR-009 继续指向过期设计版本，确保 Plugin staging 和 Host→Tool Channel 的实施边界一致 | Issue #12；F05 v0.4.1；F06 v0.2.2；Plugin IPC v0.2.2 |
 | 2026-11-25 | 0.1.6 | Codex / GPT-6 · §4～5 清除自依赖，区分协议组件和组合验收 | 对齐当前架构与实施门禁 | Issue #12 SR-009 |
+| 2026-11-26 | 0.1.7 | 补齐外部实现输入及两端验收 | 对齐跨仓实现与独立复验 | Issue #12 |

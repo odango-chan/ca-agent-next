@@ -2,12 +2,12 @@
 
 > 文档类型：机制设计说明书  
 > 状态：目标设计，待实现和验收  
-> 文档版本：0.3.2
+> 文档版本：0.3.3
 > 功能归属：F03 — Plugin 平台  
 > 关联 SR：SR-003、SR-010    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
 > 本文局部非目标：以本文范围与非目标章节为准；无额外扩展  
-> 修订日期：2026-11-25  
+> 修订日期：2026-11-26  
 > 适用范围：Python Plugin Manager、独立进程 Plugin、Package、IPC 与 Extension 分发  
 > 对应规范：[插件包与进程通信协议规范](../../规范/插件包与进程通信协议规范.md)
 
@@ -62,10 +62,10 @@ plugins/<plugin-id>/
 1. 读取 plugin.yaml，使用安全 YAML 1.2 解析器，拒绝重复 YAML key。
 2. 校验 API 版本、Plugin 身份、Extension 结构和必填字段。
 3. 解析相对包根目录的可执行文件、Schema 和资源路径；拒绝绝对路径、路径穿越和逃逸包根的符号链接。
-4. 校验 Event Schema；对 Provider Tools Extension 按引用加载其 Tool Interface Package；对当前 Skill Artifact dependency closure 中的 Owner Contract Package 加载精确 Owner snapshot。Provider v2 包由 ProviderV2 Driver 另外读取 Runtime Bindings sidecar；该 sidecar 是私有执行映射，不替代 Provider Interface Package 或 Owner Contract Package。
+4. 校验当前 Plugin 声明的 Event Schema 与部署选定的工具快照。Plugin 启动可独立于 Skill 导入，Skill 的 required exports 在导入/调用边界按各自声明检查。Provider v2 包由 ProviderV2 Driver 另外读取 Runtime Bindings sidecar；该 sidecar 是私有执行映射，不替代 Provider Interface Package 或 Owner Contract Package。
 5. 启动独立进程，发送 host.initialize。
 6. 接收 plugin.ready，核对 Plugin ID、版本、IPC 版本和实际 Extension 列表。
-7. 只有握手匹配的 Extension 才进入可用状态；失败时该 Plugin 不可用并提供可诊断错误。
+7. 只有整个 Plugin 握手成功才原子注册其声明的所有 Extension；失败时该 Plugin 不可用并提供可诊断错误。
 
 Demo 使用显式安装路径和操作员提供的进程参数。修改 Plugin 后重启 Host 即可，不要求 Marketplace、自动下载、通用安装器、文件监视器或热更新。
 
@@ -122,7 +122,7 @@ Demo 不增加签名、Trust Registry、包完整性哈希或生产级密钥体�
 
 ## 10. 当前实现状态
 
-Plugin Package/IPC v1alpha1 是 PR #1 中的目标契约，不等于已完成实现。ca-client-tools v1.2.0 已发布 Provider v2、Interface Package 与 Runtime Bindings；Next 侧 ProviderV2 Driver 仍是目标设计，尚未实现或验收。何时切换 Native IPC 需由真实集成验收决定。
+Plugin Package/IPC v1alpha1 是 PR #1 中的目标契约，不等于已完成实现。ca-client-tools v1.2.0 已发布 Provider v2、Interface Package 与 Runtime Bindings；Next 侧 ProviderV2 Driver 仍是目标设计，尚未实现或验收。Native 包走 host.initialize，现有 Provider 平台包走 Provider v2 initialize。部署选择包入口后只进入对应 Driver；启动失败不可换协议重试。
 
 
 
@@ -147,3 +147,4 @@ F03.05 的详细设计见 [Tool Interface 与 Provider 集成设计说明书](To
 | 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | 第 3、5、7、10、11 章 | 拆分 Interface Package、Owner Contract Package 与 Provider Runtime Bindings；固定 Provider v2 迁移 Driver 和 F03.05 子设计入口 | 消除 Owner 结果权威与 Provider 私有映射混淆，按 ca-client-tools v1.2.0 和 ca-agent-demo main 校准 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.3.1 | GPT-6.2（ChatGPT） | 第 3、7、11 章 | 增加 Provider Backend Binding Catalog v2 的内部边界，并引用 11/25/31/44 库存闭合 | 防止将 Provider 私有目录误当作第二份公开 Tool Catalog | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.3.2 | GPT-6.2（ChatGPT） | 第 2、3、5、7 章 | 明确 Provider Interface 与 Owner Contract 分别提供不同 Skill-facing Callable；MAS `mas::` 依赖由 Owner snapshot 解析 | 对齐 ca-skills v1alpha5 作者源和 F03.05 契约依赖设计 | IR-006 · SR-015 · Issue #12 |
+| 2026-11-26 | 0.3.3 | Codex / GPT-6 | 见本行变更 | §5、10 明确启动顺序与整包注册，消除依赖当前 Skill 的装载循环 | 对齐跨仓实现与独立复验 | Issue #12 |

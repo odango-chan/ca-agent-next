@@ -1,12 +1,12 @@
 # 业务接入与 OpenAMSM 集成设计说明书
 
 > 文档类型：业务集成设计说明书  
-> 文档版本：0.2.2  
+> 文档版本：0.2.3  
 > 状态：目标集成设计已重建；外部 Owner 能力已实现，Next Plugin/Host 端到端尚未验收  
 > 功能归属：F06 — 业务接入与集成；EC04、EC05、EC07  
 > 关联 IR：IR-004、IR-005、IR-006  
 > 关联 SR：SR-009、SR-010、SR-011、SR-017、SR-018、SR-019  
-> 修订日期：2026-11-25
+> 修订日期：2026-11-26
 
 ## 1. 目标与范围
 
@@ -17,7 +17,7 @@
 - F02 Resolver 绑定 Skill，Plugin 不选择 Skill。
 - F05 Host ArtifactStore 管理原始 N1/N2 字节。
 - F04 Runtime 执行已绑定 Skill 的 Action，并解释 Owner Receipt/Outcome。
-- EC03 ca-client-tools 提供 Tool Interface Package、Provider 和 Codec Tool。
+- EC03 ca-client-tools 提供 Tool Interface Package 和 Provider；Codec Tool 待公开发布。
 - EC05 env-openamsm MAS Owner 负责权威业务状态和 mutation。
 - EC07 env-5gc-sim 提供 Mock AMF SBI test peer；它不是 Owner，也不代表真实 5GC 状态。
 
@@ -39,9 +39,9 @@ OpenAMSM SBI request
   -> EC04 Delivery Plugin
 ~~~
 
-Event Schema 只描述协议归一化后的输入和 Artifact slots。它不携带 Skill ID、Goal、Procedure 或 Capability Grant。每个新业务 Event 必须绑定一个 Skill；没有候选、输入冲突或 when 失败时显式停止，不得走 unbound Generic Agent fallback。
+Event Schema 只描述协议归一化后的输入和 Artifact slots。它不携带 Skill ID、Goal、Procedure 或 Capability Grant。每个新业务 Event 必须绑定一个 Skill；逐个候选检查 requestSchema 与可选 when，单个候选不匹配时继续评估其余候选；最终零个或多个匹配时显式停止，不得走 unbound Generic Agent fallback。
 
-Continuation 不重新选择 Skill，必须恢复原 Run、原 Skill、原 generation 和原 response obligation。
+Continuation 不重新选择 Skill，必须恢复原 Run、原 Skill、原 generation；区分被恢复 Run 的原响应义务与本次 HTTP 请求自己的响应义务，分别按 correlation 完成。
 
 ## 3. OpenAMSM SBI Event / Delivery Plugin
 
@@ -72,7 +72,7 @@ Plugin 不负责：
 | NAS 5GSM 消息与字段 | 3GPP NAS 标准、已资格化 Codec | Skill 按需调用 Codec Tool |
 | NGAP N2 PDU Session Resource 消息 | 3GPP NGAP 标准、已资格化 Codec | Skill 按需调用 Codec Tool |
 | Skill requestSchema / when | CA-SL v1alpha5 | F02 Resolver |
-| Tool Callable / IO Schema / Effect / Capability | ca-client-tools Interface Package | F04 / Plugin Manager |
+| Tool Callable / IO Schema / Effect / Capability | Provider 自有 Callable 取自 Provider Interface Package，MAS Callable 取自 Owner Contract | F04 / Plugin Manager |
 | Owner 状态、Receipt、Commit Proof、Reconcile | env-openamsm MAS Owner v1alpha4 | Runtime 结果解释 |
 | 原始二进制 Artifact refs | Next Host ArtifactStore | F05 |
 
@@ -98,8 +98,8 @@ UpdateSMContext + N1 0xC9
   -> Skill Resolver selects Modify Skill
   -> F05 artifactRef carries original N1 bytes
   -> optional Codec Tool parse
-  -> SSM.PARSE_N1_MODIFY (READ) / typed parse result
-  -> UPN.MODIFY_QOS_DELTA or published Modify Callable
+  -> mas::SSM.PARSE_N1_MODIFY (READ)
+  -> mas::UPN.MODIFY_QOS_DELTA
   -> PFCP Update QER 52/53
   -> SSM / Relay delivers N1 0xCB + N2 PDU_RES_MOD_REQ
   -> Owner waits for correlated completion
@@ -125,17 +125,17 @@ UE-requested PDU Session Release 是 UpdateSMContext 携带 NAS 5GSM 0xD1 的场
 UpdateSMContext + N1 0xD1
   -> EC04 discriminator
   -> Skill Resolver selects UE Release Skill
-  -> SSM.PARSE_N1_RELEASE (READ)
-  -> SSM.BUILD_RELEASE_COMMAND
+  -> mas::SSM.PARSE_N1_RELEASE (READ)
+  -> mas::SSM.BUILD_RELEASE_COMMAND
   -> N1 Release Command 0xD3 + N2 PDU_RES_REL_CMD
-  -> Event/Delivery Plugin sends response
-  -> Wait on N1 Release Complete 0xD4
-  -> Wait on N2 PDU_RES_REL_RSP
+  -> SMF sends Namf N1N2MessageTransfer to AMF
+  -> mas::SSM.RELEASE_CONFIRM_N1 (0xD4)
+  -> mas::SSM.RELEASE_CONFIRM_N2 (PDU_RES_REL_RSP)
   -> validate same releaseGeneration + releaseTxn + original Run
-  -> PA.DELETE_SM_POLICY
-  -> UPN.DELETE_UP_SESSION (PFCP 54/55)
-  -> SE.EMIT_RELEASE_EVENT
-  -> SC.RELEASE_SM_CONTEXT(finalize=1)
+  -> mas::PA.DELETE_SM_POLICY_C
+  -> mas::UPN.DELETE_UP_SESSION (PFCP 54/55)
+  -> mas::SE.EMIT_RELEASE_EVENT_C
+  -> mas::SC.RELEASE_SM_CONTEXT_C
   -> Owner Receipt / final result
 ~~~
 
@@ -197,6 +197,23 @@ EC07 Mock AMF SBI Test Peer 负责发送协议准确的 Create/Update/UE-request
 - [env-5gc-sim 架构原文](../../架构设计/外部能力域/EC07-5GC模拟器架构原文.md)
 - [EC03 Typed MAS Callables](../外部能力域/EC03-Tool%20Provider/MAS%20Scheme%20C%20Typed%20Callables设计原文.md)
 
+### EC04 两端实现与逐例复核
+
+OpenAPI 源位于 env-openamsm `dc83ccbf` 的 `upstream/openamsm/lib/sbi/support/r19-20260402-openapitools-7.20.0/standard/TS29502_Nsmf_PDUSession.yaml`。以下路径相对 `/nsmf-pdusession/v1`。在 ca-openamsm-plugin 实现 HTTP/2 与 Event/Delivery，ca-agent-next 实现通用 IPC、ArtifactStore、Resolver、Continuation。对端 fixture 来源为 env-5gc-sim `6ba1dc4` 的 `internal/mockamf/ue_modify.go` 和 `ue_release.go`。
+
+| HTTP POST / operationId | 输入与身份 | 可观察结果 |
+|---|---|---|
+| `/sm-contexts` / `PostSmContexts` | Create，解析引用的 multipart part | 新 Event。成功时 201 和 Host 公共资源 Location |
+| `/sm-contexts/{smContextRef}/modify` / `UpdateSmContext` | N1 0xC9 或 0xD1 | 分别为新 Modify 或新 UE Release；核对 Owner 结果后验证成功响应 204 |
+| 同一 modify 路径 | N2 PDU_RES_SETUP_RSP、PDU_RES_MOD_RSP、PDU_RES_REL_RSP，或 N1 Release Complete 0xD4 | 进入对应既有事务。Release 的 N1/N2 可分次到达；回调自身的 HTTP 响应按本次请求关联 |
+| `/sm-contexts/{smContextRef}/release` / `ReleaseSmContext` | AMF/network-initiated Release | 与 UE 0xD1 分开，未支持的入口显式拒绝 |
+
+JSON 的 `n1SmMsg.contentId`、`n2SmInfo.contentId` 必须各自唯一关联对应 part，N2 同时校验 `n2SmInfoType`。缺失、重复、类型冲突或不完整时不得产生 mutation。Namf 下行传输与 Nsmf 入站响应分别验收。
+
+ca-skills `780497a2` 的三个 MAS `examples/skills/*-pdu-session-mas/assurance/contract.yaml` 均未声明 when。Create 输入含 pduSessionId、pti、requestType、dnn、sNssai、servingPlmn、requestedPduSessionType、requestedSscMode；Modify 为 pduSessionId、entryKind；Release 再含 trigger。按源 Schema 的必填、枚举与关闭对象校验，不能向输入追加 NAS 类型。Release 的 trigger 使用作者枚举，不能直接填入 NAS 字节 0xD1。每个 fixture 保存原始请求、parts、预期投影、候选集合和预期 Run。若 ingress 无法仅凭可用字段构造完整合法输入，登记 EC04/作者契约缺口并停止该场景，禁止 Host 补造默认值或偷偷做完整解码。
+
+重试验收需要一次逻辑请求的稳定 externalRequestId。资源 URI、principal 或 MIME Content-ID 单独均不足以标识一次操作。在 Plugin 与 peer 的隔离 fixture 验证同次同内容重试、同 ID 内容冲突和两次内容相同的合法请求。部署尚无稳定来源时将跨重连重放记录为 BLOCKED；不得虚构标准幂等头。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
@@ -204,3 +221,4 @@ EC07 Mock AMF SBI Test Peer 负责发送协议准确的 Create/Update/UE-request
 | 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 全文 | 根据 OpenAMSM Owner、Plugin Draft、Mock AMF 与当前跨仓状态重建 Create/Modify/UE Release 集成设计 | Issue #12；SR-017～019 |
 | 2026-11-25 | 0.2.1 | GPT-6.2（ChatGPT） | §2、§4、§10 | 更新 ca-skills Owner-linked Skill 源路径、PR #83～#86 状态及 ca-client-tools v1.2.0 / CA-SL Release Record 状态 | 避免旧示例、旧 Provider 版本和规范头部候选文字造成误读 | Issue #12；SR-017～019、SR-023 |
 | 2026-11-25 | 0.2.2 | GPT-6.2（ChatGPT） | §10 | 更新 ca-client-tools PR #39 与 env-5gc-sim PR #86 的 Codec 状态；明确 Mock AMF C1 不代表 Agent Tool/Provider 或 Next 集成 | 防止把独立测试对端迁移误计为 OpenAMSM Agent 集成进展 | Issue #12；SR-009～SR-011、SR-017～SR-019 |
+| 2026-11-26 | 0.2.3 | Codex / GPT-6 | 见本行变更 | §2、4、6、7 校正候选判定、HTTP 响应义务和真实 Owner Callable；§12 增补 EC04 固定协议来源、请求投影与独立复验 | Issue #12 |
