@@ -8,7 +8,7 @@
 
 ## 0. Mandatory preflight
 
-Read README.md, Agent.md, docs/architecture.md, docs/audit/ca-agent-demo.md, docs/audit/reuse-and-feasibility.md, docs/plugin-package.md, docs/plugin-artifact-handoff.md, docs/acceptance.md and [the SkillCatalog/Compiler integration requirements](../integration/skill-catalog-compiler-contract.md).
+Read README.md, Agent.md, docs/architecture.md, docs/audit/ca-agent-demo.md, docs/audit/reuse-and-feasibility.md, docs/plugin-package.md, docs/plugin-artifact-handoff.md, docs/acceptance.md, [技能目录与编译器运行时接口设计说明书](../集成设计/技能目录与编译器运行时接口设计说明书.md) and [DeepSeek Harness 实施提示词](../实施计划/DeepSeek%20Harness实施提示词.md).
 
 Before coding:
 
@@ -18,7 +18,7 @@ Before coding:
 4. Treat ca-agent-demo as read-only source. Do not modify it.
 5. Treat ca-skill-compiler, ca-client-tools, ca-skills, ca-openamsm-plugin and ca-agent as read-only dependencies unless the user separately authorizes a cross-repository change.
 6. Do not start OpenAMSM/Nsmf migration. The first target is Echo.
-7. Read the current CA-SL v1alpha5 and Compiler release contracts. If the refreshed when grammar or Compiler-owned portable checked-program representation is not supported, stop the Assurance/Resolver subtask and report the exact external blocker. SKILL.md-only import is Host-owned and must bypass Compiler. Do not strip fields, fake Compiler success or implement a second Compiler in Python.
+7. Read current CA-SL v1alpha5 and Compiler release contracts. CA-SL refresh PR #88 is OPEN; Compiler v2.1.0 does not establish `contract.when` or Python CheckedExpr interoperability. Compiler Issue #61 tracks a new Development Artifact Manifest v1alpha2 while preserving frozen v1alpha5 and Development v1alpha1 contracts. First complete the Go cel-go → Python cel-expr-python CheckedExpr/DescriptorSet PoC and Compiler PR; only then unblock Next Assurance import/Resolver. SKILL.md-only import is Host-owned and bypasses Compiler. Do not strip fields, fake Compiler success or implement a second Compiler in Python.
 
 ## 1. Fixed target architecture
 
@@ -88,9 +88,9 @@ Tasks:
 - Do not add Host-side SHA-256 package hashing or signature verification. Retain only the identity checks already required by the Compiler/Interface Package contracts.
 - Build an immutable candidate SkillCatalog generation from successfully imported packages. Include SKILL.md-only entries; keep full SKILL.md text and compiled Assurance selection metadata in memory. A failed package update must not partially mutate the active generation.
 
-**External dependency gate:** the refreshed CA-SL v1alpha5 contract.when grammar and portable compiled Artifact representation must be supported by the Compiler contract/release before Assurance import/Resolver conformance can pass. SKILL.md-only import is a Next-owned Importer path and does not invoke Compiler, so it can be implemented and tested independently. If current skillc lacks when support, record the precise missing behavior and stop; do not silently strip when or claim the old release is compatible.
+**External dependency gate:** [Compiler Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) must deliver a reviewed Development Artifact Manifest v1alpha2, standard CheckedExpr Any + DescriptorSet, and real Python CEL interoperability. The CA-SL refresh [PR #88](https://github.com/odango-chan/ca-skills/pull/88) must be merged and its exact normative SHA pinned before claiming final language conformance. Do not modify frozen v1alpha5 or Development v1alpha1 contracts. SKILL.md-only import is a Next-owned Importer path and bypasses Compiler, so it can be implemented independently. If the Compiler release/artifact is unavailable, keep Assurance source import and Resolver integration BLOCKED; do not silently strip when or claim the old release is compatible.
 
-**Acceptance:** SKILL.md-only import succeeds without Compiler invocation; Assurance source invokes Compiler and is admitted only after success; compiled Artifact is inspected/admitted without Build; invalid Assurance fails closed; import/update produces a candidate Catalog generation but does not expose it until atomic activation. Phase C remains blocked on the Compiler-owned when Artifact contract described in docs/integration/skill-catalog-compiler-contract.md.
+**Acceptance:** SKILL.md-only import succeeds without Compiler invocation; Assurance source uses the released Artifact v1alpha2 and passes Inspect/Verify + Host Admission; compiled Artifact import does not Build; invalid Assurance fails closed; import/update builds a candidate Catalog generation and atomically activates only after success. Phase C remains blocked until Compiler Issue #61 and CA-SL PR #88 gates are satisfied. Detailed interchange contract: [技能目录与编译器运行时接口设计说明书](../集成设计/技能目录与编译器运行时接口设计说明书.md).
 
 ## 5. Phase D — Skill Resolver and mode derivation
 
@@ -100,14 +100,14 @@ Implement:
 
 1. Resolve exact continuations before fresh Skill selection.
 2. Resolve from the active immutable in-memory SkillCatalog generation pinned for this fresh Event. Do not scan package directories or reread SKILL.md/Assurance files on the Event hot path; do not use deployment-owned Event→Skill tables or business Contract Packages.
-3. For Assurance Skills, evaluate the precompiled when program from the Catalog against this Event's normalized event.type and input. Compiler parses/type-checks it only on import/update. Every fresh Event is evaluated independently; do not cache the boolean result. Static invalidity is a Compiler error; false and runtime evaluation error exclude the Skill.
+3. For Assurance Skills, use the Catalog's already deserialized CEL Expression (loaded from Artifact v1alpha2 CheckedExpr Any and DescriptorSet by `cel-expr-python`) against this Event's normalized event.type and input. Compiler parses/type-checks once during Build; Python loads the CheckedExpr once during Catalog import/update. Every fresh Event gets a new activation and independent evaluation; do not cache the boolean result. Static invalidity is a Compiler error; false and runtime evaluation error exclude the Skill.
 4. If exactly one explicit true match exists, select it without LLM. If multiple true matches exist, offer only those candidates to the LLM.
 5. If no explicit true match exists, form semantic candidates from unguarded Skills (no when), using cached candidate metadata derived from SKILL.md. This includes SKILL.md-only Skills and Assurance Skills whose Contract omits when. After selection, provide the full SKILL.md content from Catalog memory; do not reread the package file.
 6. Never reintroduce a false/error guarded Skill into the unguarded set. Validate the exact Skill identity returned by the model.
 7. Derive supported modes from Assurance presence/validity. No Assurance means LLM-guided only; valid Assurance means both modes; invalid Assurance means import failure. Do not add supportedModes.
 8. Select execution mode only after exact Skill binding.
 
-**Acceptance:** EX-09/EX-10/EX-11 and EX-21/EX-22/EX-23/EX-27/EX-29 pass with deterministic fake Model client; no business-specific route configuration; false/error candidates are excluded and out-of-set IDs rejected. The Resolver uses only the pinned Catalog snapshot and never invokes Compiler or filesystem reads during selection.
+**Acceptance:** EX-09/EX-10/EX-11 and EX-21/EX-22/EX-23/EX-27/EX-29 pass with deterministic fake Model client; Compiler-generated CheckedExpr is deserialized once by Python and matches Go/G.4 fixtures; no business-specific route configuration; false/error candidates are excluded and out-of-set IDs rejected. The Resolver uses only the pinned Catalog snapshot and never invokes Compiler or filesystem reads during selection.
 
 ## 6. Phase E — One Runtime Action Boundary and two execution modes
 
@@ -159,7 +159,7 @@ Tasks:
 8. Preserve Host Run lifecycle, response obligations, resource mapping, Owner Receipt/Commit Proof, UNKNOWN and exact-original Reconcile semantics.
 9. Make Codec invocation Skill-driven: no-decode Skills pass original artifactRefs to business Tools; Skills needing protocol fields call Codec through the common Runtime Action Boundary. Keep the original bytes unchanged for forwarding and response composition.
 
-**External gates:** ca-skills PR #88 is OPEN. Compiler v2.1.0 support for the proposed v1alpha5 contract.when and portable checked-program representation is not established. ca-client-tools PR #39 is OPEN with Phase B final pass and Phase C not started. Do not claim a dependency is merged/released or a codec message is qualified unless the exact evidence exists.
+**External gates:** ca-skills PR #88 remains OPEN until rechecked. Compiler Issue #61 must produce the versioned Artifact and Python CEL interoperability before any Assurance `when` conformance claim. ca-client-tools PR #39 is OPEN with Phase B final pass and Phase C not started. Do not claim a dependency is merged/released or a codec message is qualified unless the exact evidence exists.
 
 **Acceptance:** OM-01 through OM-10 and OM-13/OM-14 pass on fixtures and exact protocol vectors before live E2E. The OpenAMSM Plugin contains no Skill selection, Owner operation map, RunStore, Runtime or authorization logic.
 
