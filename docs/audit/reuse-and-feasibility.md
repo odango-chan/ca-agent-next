@@ -93,7 +93,7 @@ This audit records repository evidence as observed on 2026-11-25. The following 
 - Every package has SKILL.md. Packages with assurance/ contain contract.yaml, procedure.yaml and the Predicate definitions they use; packages without assurance/ are LLM-guided only.
 - Source packages with Assurance are compiled before admission. SKILL.md-only packages import without Compiler. Already compiled Artifacts are inspected/verified/admitted without rebuilding.
 - The optional top-level assurance/contract.yaml.when is used for Skill selection; predicates.yaml remains execution-time business evaluation.
-- The v1alpha5 refresh is not yet evidence that the released Compiler supports the portable compiled when Artifact or Assurance-free package import. Verify the matching Compiler behavior before implementation claims.
+- The v1alpha5 refresh is not yet evidence that the released Compiler supports the portable compiled when Artifact. Verify this Compiler behavior before implementation claims. SKILL.md-only import is a Next-owned Importer path and must bypass Compiler.
 - The SkillCatalog/generation lifecycle is a new Next mechanism, not a proven reusable ca-agent-demo subsystem. Reuse Formal Resolver and admission primitives selectively; implement immutable Catalog snapshots and Invocation generation pinning in Next.
 - Do not copy Create/Modify/Release business logic into Agent Core. Echo is the first mechanism proof; OpenAMSM Skills are a later real-domain integration.
 
@@ -155,7 +155,7 @@ Critical work:
 1. **Unify Plugin/Tool extension management.** Current PR #246 has a generic Provider Manager/ToolComposition; PR #249 proposes a separate Plugin Manager. Next should have one Plugin Manager with Event and Tool extension kinds.
 2. **Resolve Skill-first conflict.** PR #249 and ca-openamsm-plugin PR #1 currently describe Agent-default/Skill-optional. Next must bind a Skill first for every fresh business Event.
 3. **Replace Event→Root mapping.** Current Demo structuredEventRoutes is not the target. Use optional Assurance contract.when for explicit matches and SKILL.md semantic selection for unguarded Skills.
-4. **Refresh CA-SL and Compiler support.** The v1alpha5 spec must define contract.when and optional Assurance; the Compiler must support that grammar and the Assurance-free import boundary. Demo MockCompiler is not a substitute.
+4. **Refresh CA-SL and Compiler support.** The v1alpha5 spec must define contract.when and optional Assurance; the Compiler must support the grammar, static type-checking and portable compiled Artifact representation. Next's Skill Importer separately handles SKILL.md-only packages without invoking Compiler. Demo MockCompiler is not a substitute.
 5. **Add the Core-owned SkillCatalog.** Build the immutable in-memory selection read model, compile when on import/update, evaluate it per fresh Event, atomically swap generations and pin each Invocation. This is a Next-owned mechanism; do not assume Demo has an equivalent reusable Catalog.
 6. **Simplify Resident/Runtime.** Current Demo includes Nsmf-specific execution and durable recovery; Echo should prove the common mechanism without copying all of it.
 7. **Respect current gate state.** PR #246 is OPEN; synthetic G5 22 passed does not equal live Scheme C G6. Do not migrate OpenAMSM until the generic Echo mechanism is accepted.
