@@ -41,7 +41,7 @@ If implementation and documentation disagree, stop and report the exact conflict
 ## 4. Skill package and optional Assurance — mandatory
 
 - Every Skill package has one required SKILL.md.
-- assurance/ is optional. It contains the CA-SL deterministic execution source: contract.yaml, procedure.yaml and predicates.yaml when Predicate definitions are used.
+- assurance/ is optional. When present, it contains the complete CA-SL source trio: contract.yaml, procedure.yaml and predicates.yaml (an empty PredicateSet when unused).
 - contract.yaml belongs inside assurance/. Do not move it to the Skill root or require it for every Skill.
 - No Assurance means the Skill is LLM-guided only; there is no Deterministic execution path.
 - Valid Assurance means the Skill supports both Deterministic and LLM-guided execution. Select the mode only after exact Skill binding.
