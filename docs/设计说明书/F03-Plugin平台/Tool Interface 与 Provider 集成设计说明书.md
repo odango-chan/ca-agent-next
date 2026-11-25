@@ -1,14 +1,14 @@
 # Tool Interface 与 Provider 集成设计说明书
 
 > 文档类型：功能子模块设计说明书
-> 文档版本：0.3.6
+> 文档版本：0.3.7
 > 状态：目标设计；待评审
 > 功能归属：F03.05 — Tool Plugin 集成
 > 交叉功能：F03.01～F03.04、F04.01、F04.05、F05.02、F06
 > 关联 SR：SR-003、SR-007、SR-010、SR-015、SR-025
 > 全局评审范围：继承根目录 Agent.md 的 review_scope。
 > 本文局部非目标：不实施 Provider/Host 代码迁移，不修改外部仓库，不完成 Codec Phase C，不声明生产资格。
-> 修订日期：2026-11-25
+> 修订日期：2026-11-26
 
 本文定义 CA Agent Next 如何消费 Tool Interface Package、Owner Contract Package 和 Provider Runtime Bindings，并将 Provider 作为唯一 Plugin Manager 管理的 Tools Extension 接入。本文是 **Next 消费侧架构与集成行为的权威设计**；外部包的实际字段、发布物和实现仍由各自所有者维护，Next 不复制其完整 Catalog 或 Schema。
 
@@ -119,7 +119,7 @@
 - SE.EMIT_RELEASE_EVENT
 - UPN.MODIFY_QOS_FLOWS
 
-因此，ProviderV2 Driver 的显式 catalog 请求应使用 provider.yaml 的 11 个公开 Tool backend mappings 与 Runtime Bindings sidecar 的 25 个 Owner backend mappings 的去重并集（当前预期 36 个 ID）。Provider 内部另外存在的 8 个 legacy callable 不得加入请求集合。加载期必须验证每个公开/Owner Callable 都有唯一 backend 映射、Effect 一致，并能在 Provider catalog 中找到；任何缺失、重复或多余映射均 fail-closed。
+因此，ProviderV2 Driver 的显式 catalog 请求应使用 provider.yaml 的 11 个公开 Tool backend mappings 与 Runtime Bindings sidecar 的 25 个 Owner backend mappings 的去重并集（当前预期 36 个 ID）。Provider 内部另外存在的 8 个 legacy callable 不得加入请求集合。加载期必须验证每个公开/Owner Callable 都有唯一 backend 映射、Effect 一致。wire catalog 的 supported 与 unsupported 合起来必须恰好覆盖请求集合；漏项、重叠、重复或未请求项使响应无效。合法的 NOT_IMPLEMENTED / NOT_CONFIGURED 只标记对应 binding unavailable。
 
 **CA-SL v1alpha5 的实际 Owner 依赖方式：** 当前 ca-skills MAS 作者源在 `assurance/contract.yaml` 声明 `dependencies.mas: urn:openamsm:mas:tool-contracts`，`capabilities` 列出 `mas.*` Capability ID；Procedure 使用 `tool: mas::SC.CREATE_SM_CONTEXT` 等精确 Callable。这里的 `mas` alias 指向 env-openamsm Owner v1alpha4 发布快照，不是 `ca-client-tools_interface_1.2.0.zip`。Owner `tool-catalog.yaml` 提供 25 个 contracts（23 个业务 Callable + Receipt Query / Reconcile 两个 evidence operations）；Receipt Query 是显式 READ Callable，Reconcile 仅作为专用 Reconcile target 使用；`capability-contracts.yaml` 是独立的 Capability→Callable membership 来源，`evidence-guarantees.yaml` 与 Schema 同属 Owner 发布快照。
 
@@ -178,9 +178,9 @@ Plugin Manager 的部署配置为每个 Provider Extension 提供一个显式、
 
 1. **解析包入口。** 使用严格 YAML 解析；拒绝重复 key、未知字段、缺失必需字段和不支持的版本。
 2. **约束包内路径。** runtimeBindingsPath、Schema 文件和可执行文件必须解析在所选包根目录内；拒绝绝对路径、路径穿越和符号链接逃逸。
-3. **校验契约依赖快照。** 按已发布 Skill Artifact 的 dependency closure 解析 Provider Interface Package 与 Owner Contract Package；Provider Interface bytes 必须与 provider.yaml 的 `interfaceSnapshotDigest` 一致，且其 stablePackageId / required exports 必须与 Artifact dependencyClosure 一致；Owner stablePackageId 和 required exports 必须与 Artifact dependencyClosure 一致，Owner version / publicationDigest / manifestDigest 必须与 Provider Runtime Bindings sidecar 及部署配置一致。不得宣称 v1alpha5 Artifact 提供了依赖 snapshotDigest，也不得把 Owner ToolCatalog 当成 Provider Interface Package或自行生成缺失 Schema。
+3. **校验契约依赖快照。** 装载时按部署包和 sidecar 解析 Provider Interface Package 与 Owner Contract Package；以下与 Skill dependencyClosure 的交叉核验在绑定该 Skill 时执行；Provider Interface bytes 必须与 provider.yaml 的 `interfaceSnapshotDigest` 一致，且其 stablePackageId / required exports 必须与 Artifact dependencyClosure 一致；Owner stablePackageId 和 required exports 必须与 Artifact dependencyClosure 一致，Owner version / publicationDigest / manifestDigest 必须与 Provider Runtime Bindings sidecar 及部署配置一致。不得宣称 v1alpha5 Artifact 提供了依赖 snapshotDigest，也不得把 Owner ToolCatalog 当成 Provider Interface Package或自行生成缺失 Schema。
 4. **校验 Runtime Bindings sidecar。** 验证其精确 API identity、Provider ID/version、Owner Contract stable ID/version/publicationDigest/manifestDigest 引用、Schema 文件闭包和唯一 binding ID；Owner 引用必须与当前安装的 Owner snapshot 一致。
-5. **校验映射一致性。** 每个 Runtime Binding 的 ownerCallableId、runtimeOperationId、Effect、Schema 和 Capability 必须与所引用 Owner Contract 一致；每个 backendOperationId 必须能在 Provider 私有 catalog 中按精确 ID 找到，禁止由名称拼接、lowercase 或猜测生成。
+5. **校验映射一致性。** 每个 Runtime Binding 的 ownerCallableId、runtimeOperationId、Effect、Schema 和 Capability 必须与所引用 Owner Contract 一致；静态校验完成后保留精确 backendOperationId，步骤 8 在进程启动后通过 wire catalog 对账，禁止由名称拼接、lowercase 或猜测生成。
 6. **启动 Provider。** 使用固定可执行文件和 argv（当前命令为 provider serve），不经 Shell 字符串解释。一个已选 Provider 包对应一个长生命周期进程。
 7. **Provider initialize。** 发送 Host/Provider instance identity 与 frame、in-flight、call-duration limits；核对 Provider ID、版本、build digest、backend catalog digest 和 catalogVersion。
 8. **显式 catalog 查询。** 向 Provider 请求 provider.yaml 公开 bindings 与 Runtime Bindings sidecar 的精确 backendOperationId 去重并集；校验返回的 supported/unsupported 分区、描述符和请求顺序。无需新增 list-all 方法，也不得用 catalog 响应发现未声明的公开 Callable。
@@ -210,12 +210,12 @@ ProviderV2 Driver 必须按 ca-client-tools.provider/v2 的精确字段消费，
 
 | Method | Request params | Result / semantics |
 |---|---|---|
-| initialize | hostInstanceId、providerInstanceId、limits；可选 artifactChannel | providerId、providerVersion、buildDigest、backendBindingCatalogDigest、catalogVersion、effective limits；有 artifact channel 时回报有效 bounds |
+| initialize | hostInstanceId、providerInstanceId、limits；可选 artifactChannel | providerId、providerVersion、buildDigest、backendBindingCatalogDigest、catalogVersion、`limits`；有通道时 `artifactChannel` 只回报有效 bounds，不回显 processToken/baseUrl |
 | catalog | backendOperationIds：唯一的精确 ID 数组 | supported、unsupported（NOT_IMPLEMENTED / NOT_CONFIGURED）、catalogVersion、仅 supported IDs 的 bindings 描述符；保持请求顺序 |
 | invoke | backendOperationId、arguments、invocation（invocationId、producerInvocationId、deadline）；仅 typed MAS 可选 hostInvocation | Provider result envelope；MUTATION 只能走 typed MAS handler，genericSBI MUTATION 在远端 I/O 前拒绝；不得把 Owner Outcome 映射成 COMMITTED |
 | cancel | targetRequestId | CANCEL_REQUESTED / ALREADY_COMPLETED / NOT_FOUND；取消不等于远端 mutation 回滚 |
 
-initialize 的 limits 至少约束 maxFrameBytes、maxInFlight 和 maxCallDurationMs。可选 artifactChannel 是关闭对象，字段为 baseUrl、processToken、requestTimeoutMs、maxArtifactBytes、maxAggregateBytes、maxAttachments；缺失 channel 时 artifact-bearing binding 为 NOT_CONFIGURED，且必须在远端 I/O 前拒绝。原始二进制通过 ca-host.artifact-store/v1 channel 传输，不进入 NDJSON。
+initialize 的 limits 至少约束 maxFrameBytes、maxInFlight 和 maxCallDurationMs。可选 artifactChannel 是关闭对象，字段为 baseUrl、processToken、requestTimeoutMs、maxArtifactBytes、maxAggregateBytes、maxAttachments；缺失 channel 时 artifact-bearing binding 为 NOT_CONFIGURED，且必须在远端 I/O 前拒绝。显式提供格式非法的 channel 则 initialize 返回 PROVIDER_CONFIGURATION_INVALID，不进入 READY，不发 catalog 或 invoke。原始二进制通过 ca-host.artifact-store/v1 channel 传输，不进入 NDJSON。
 
 catalog descriptor 只包含私有 backendOperationId、Effect、request/response media type、参数或 generic schema、source pin 和 Artifact slot 描述。不得包含服务 origin、URL、HTTP method、route template、header/token、公开 Callable ID、Capability ID、Owner Outcome 或 Evidence guarantee。catalog 是可用性核对，不是授权。
 
@@ -463,6 +463,12 @@ Runtime 在任何 Plugin IPC / Provider invoke 之前必须完成：
 - ca-agent-demo main 提供参考代码与测试，不等于 Next 已实施或已验收。
 - Next 的 Plugin Manager、ProviderV2 Driver、Runtime Action Boundary 和跨仓集成验收均未由本 SR 执行；真实 Harness/代码执行保持 NOT_RUN。
 
+### EC03 外部生产端与复验
+
+Provider v1.2.0 固定源 `7bcb2614aa3615d8358df31eecefd0909e894e40`，以 `internal/provider/protocol.go`、`internal/provider/server_v2_test.go`、`internal/provider/artifact_protocol_test.go` 和 `contracts/host-artifact-store/v1/` 核对两端。在 ca-client-tools 根运行 `go test ./internal/provider ./internal/runtimebindings`，在 Next 执行 SR-010 的 channel 测试。分别捕获无通道、有效通道、显式非法通道的 initialize/catalog 帧以及 upstream 调用次数，保留测试用 token 的遮蔽结果。
+
+Codec PR #39 的固定候选 `eb1169fe1d0e2e691d101908aad08ee8801da754` 在 `protocol/codec/nas.go` 暴露 Go 函数，未给出已发布 Tool Callable。由 [SR-026](../../SR/SR-026-Codec公开工具发布.md) 跟踪公开接口、Provider 本地执行与最小有效 NAS 子集；SR-010 消费其发布物，SR-015 仅恢复中央设计。
+
 ## 12. 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
@@ -477,3 +483,4 @@ Runtime 在任何 Plugin IPC / Provider invoke 之前必须完成：
 
 | 2026-11-25 | 0.3.5 | GPT-6.2（ChatGPT） | §4.4 | 区分冻结 v1alpha5 Runtime Owner Contract 与 Compiler v2.1.0 Development Interface Package；将 MAS Owner Publisher 实施责任链接到 SR-025，并记录 package/source version 的 SemVer 决策门槛 | 防止把 Owner Contract、Provider Interface Package 和 Development wrapper 混为同一发布面 | Issue #12；F09 v0.3.5；SR-015；SR-025 |
 | 2026-11-25 | 0.3.6 | Codex / GPT-6 | 正文 | 同步 Publisher 身份、版本和验收边界 | 消除执行歧义并同步中央设计 | Issue #12 |
+| 2026-11-26 | 0.3.7 | Codex / GPT-6 | 见本行变更 | §4、6 校正装载顺序、catalog 分区与 initialize 失败语义；§12 前补齐 ca-client-tools 两端及 Codec 发布归属 | 对齐跨仓实现与独立复验 | Issue #12 |

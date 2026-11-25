@@ -1,8 +1,8 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.2.5\
+> 文档版本：0.2.6\
 > 状态：设计补充待评审；Compiler 实施由 SR-013 跟踪  
-> 修订日期：2026-11-25  
+> 修订日期：2026-11-26  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产准入、Owner 信任运营、签名、Trust Registry、生产资格及真实 5GC/MAS 认证。
 
@@ -276,7 +276,7 @@ Chromium parity 脚本使用真实 Headless Chrome；若默认路径不可用，
 ## 8. 发布边界与外部消费
 
 - Compiler 的职责止于 Check、Build、Verify、Artifact Schema、Compiler Release 和可复现证据。
-- ca-skills CI 负责选取并固定稳定 Compiler Release、编译 Assurance Skill、验证结果，并按 ca-skills Bundle 契约组装 SKILL.md 与发布 Artifact。该工作由 F08 与 SR-023 追踪，不归入 Compiler #61 的代码实现。
+- ca-skills CI 负责选取并固定稳定 Compiler Release、编译 Assurance Skill、验证结果，并按 ca-skills Bundle 契约组装 SKILL.md 与发布 Artifact。该工作由 F08 与 SR-027 追踪，不归入 Compiler #61 的代码实现。
 - Next Agent 只消费正式发布 Bundle；导入、Catalog、CEL 反序列化和每 Event 求值由 F02 / SR-004/005/006 验收。Next 不内置 Compiler、不调用 Compiler 命令、不实现 Skill Admission。
 - Compiler Release、ca-skills Bundle Release、Next Runtime E2E 是三个独立证据层。一个通过不能替代另一个。
 
@@ -309,3 +309,4 @@ Chromium parity 脚本使用真实 Headless Chrome；若默认路径不可用，
 | 2026-11-25 | 0.2.3 | GPT-6.2（ChatGPT） | §1～9 | 同步 F02/F08/SR-013 新版本，并将 AC-013-01 证据状态明确为报告 PASS、远端证据未归档、独立复核未运行 | 防止隔离 PoC 报告被误认作 Compiler 产品发布或完整 SR 验收 | Issue #14；PR #16/#18；SR-013 |
 | 2026-11-25 | 0.2.4 | GPT-6.2（ChatGPT） | §1～9 | 同步 F02/F08/SR-013 最新版本引用，明确 AC-013-01 证据 commit 远端不可检索、证据未归档 | 防止报告 PASS 被误报为独立复核或产品实现 PASS | Issue #14；PR #16/#18；SR-013 |
 | 2026-11-25 | 0.2.5 | Codex | 正文 | 同步隔离 PoC 的固定归档与复跑状态 | 核对 Issue #12 与固定提交 | Issue #12 |
+| 2026-11-26 | 0.2.6 | Codex / GPT-6 | 见本行变更 | 将实际 Bundle CI/发布归入 ca-skills 生产端 SR-027 | 对齐跨仓实现与独立复验 | Issue #12 |

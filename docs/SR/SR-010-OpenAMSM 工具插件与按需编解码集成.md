@@ -1,7 +1,7 @@
 # SR-010：OpenAMSM 工具插件与按需编解码集成
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.6  
+> SR 版本：0.1.7  
 > 状态：DRAFT；设计基线待评审，不允许实施  
 > 创建日期：2026-11-25  
 > 所属阶段：Phase G  
@@ -44,7 +44,7 @@ SR-003、SR-007、SR-009；外部依赖为 ca-client-tools Provider v1.2.0 / Cod
 
 1. ca-client-tools Provider v2 经同一 Plugin Manager 的 tools Extension 调用；不存在第二 Provider Manager。
 2. Next Host ArtifactStore 生成 v1 合规随机 opaque `artifactRef`，并将引用绑定到当前 Invocation、direction 和 slot；拒绝跨 Invocation、跨方向、跨 slot 或未声明位置的引用。
-3. Host 在 `initialize` 中提供 v1 闭合 `artifactChannel`，只监听 `127.0.0.1` ephemeral port；缺失或无效配置时，artifact-bearing binding 为 `NOT_CONFIGURED`，并在远端 I/O 前拒绝。
+3. Host 在 `initialize` 中提供 v1 闭合 `artifactChannel`，只监听 `127.0.0.1` ephemeral port；省略通道时 initialize 可成功，artifact-bearing binding 报 `NOT_CONFIGURED`；显式非法配置时 initialize 返回 `PROVIDER_CONFIGURATION_INVALID`，无后续 catalog/invoke。两类路径均不产生远端 I/O。
 4. Provider 可按 v1 contract GET 输入 Artifact、POST 输出 Artifact；Host 校验媒体类型、Content-Length、SHA-256、配额和 invocation/slot 绑定，输出仅在整个结果校验通过后原子发布。
 5. 取消、超时、Provider 退出、无效结果和部分上传均清理 staged outputs；过期引用不可读取。
 6. Next Host 通过 ca-host.artifact-store/v1 共享 conformance fixtures，覆盖 reference、bootstrap、GET/POST、slot、quota、expiry、partial-write、atomic publication 和 error mapping；使用确定性本地 upstream，不声称真实 NF multipart 已验收。
@@ -56,7 +56,7 @@ SR-003、SR-007、SR-009；外部依赖为 ca-client-tools Provider v1.2.0 / Cod
 
 ### 实施位置与复验入口
 
-以下路径为本 SR 的目标交付物。在 ca-agent-next 仓根运行，测试通过公开入口调用受测组件。目标位置为 `src/ca_agent_next/plugins/` 与 Host ArtifactStore 实现。按 ca-client-tools v1.2.0 的 `contracts/host-artifact-store/v1/` fixtures 启动独立 Provider。缺通道、跨 slot、过期和截断输出均有输入，记录真实 GET/POST、发布/清理结果与 upstream 调用次数。配置缺失时上游调用为零；无已发布 Codec Callable 时停止 decode-required 用例。
+以下路径为本 SR 的目标交付物。在 ca-agent-next 仓根运行，测试通过公开入口调用受测组件。目标位置为 `src/ca_agent_next/plugins/` 与 Host ArtifactStore 实现。按 ca-client-tools v1.2.0 的 `contracts/host-artifact-store/v1/` fixtures 启动独立 Provider。缺通道、跨 slot、过期和截断输出均有输入，记录真实 GET/POST、发布/清理结果与 upstream 调用次数。配置缺失时上游调用为零；无已发布 Codec Callable 时将 decode-required 记为 BLOCKED，生产端由 SR-026 跟踪，可独立验收现有 Provider v2 路径。
 
 验收命令为 `python -m unittest discover -s tests -p test_artifact_channel.py -v`。必须发现并执行本节正反例；发现 0 个测试或跳过必需用例时，退出码 0 也不能计入 PASS。逐个 Acceptance ID 回填受测 SHA、命令、预期与实测值及日志位置。
 
@@ -91,3 +91,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-25 | 0.1.4 | 将 ca-host.artifact-store/v1 Host 端实现、Provider artifactChannel bootstrap/GET/POST、原子输出发布和共享 fixtures 纳入 Next 工具集成验收；同步 F03.05/F05/公共契约版本 | 当前 Provider v1.2.0 已有 channel consumer 与冻结契约，Next Host 仍需实现并独立验收；不能把 ca-agent Go Host PASS 计入 Next | Issue #12；SR-010、SR-015 |
 | 2026-11-25 | 0.1.5 | 更新 F05 设计依据至 v0.4.1；明确 Mock AMF Codec C1 PR #86 不构成 Agent Tool/Provider Consumer，也不解除 Next Host Channel 的 NOT_IMPLEMENTED 门槛 | 对齐 Host ArtifactStore 与 Codec 的最新跨仓状态，避免把测试对端迁移误判为 Next 实施 | Issue #12；F05 v0.4.1；F06 v0.2.2 |
 | 2026-11-25 | 0.1.6 | Codex / GPT-6 · §5 固定目标代码位置、复验入口及可观察断言；同步所引权威设计版本 | 对齐当前架构与实施门禁 | Issue #12 SR-010 |
+| 2026-11-26 | 0.1.7 | §5 对齐真实 Provider v2，分别验收消费与外部发布 | 对齐跨仓实现与独立复验 | Issue #12 |

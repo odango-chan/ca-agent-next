@@ -1,9 +1,9 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.6\
+> 文档版本：0.2.7\
 > 状态：DRAFT（设计补充待评审；不得据此启动产品实施）  
 > 创建日期：2026-11-25  
-> 修订日期：2026-11-25  
+> 修订日期：2026-11-26  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：Next 消费端实现、生产准入、Owner Trust 治理、自动发布及真实 5GC/MAS 资格。
 
@@ -264,7 +264,7 @@ AC-013-05 只验收 Compiler 新版 Runtime Artifact 的正式 Release 输入，
 4. 运行一次实际 Build / Verify smoke，保存完整命令、环境、输出和日志。
 5. 更新 EC02/F08 与本 SR 的正式发布链接。
 
-ca-skills 的 Skill Bundle 组装与发布由 SR-023 负责；Next 导入与运行时消费由 SR-004/005/006 负责。没有发布授权时保持 BLOCKED，不创建 Release。
+ca-skills 的 Skill Bundle 组装与发布由 SR-027 负责；Next 导入与运行时消费由 SR-004/005/006 负责。没有发布授权时保持 BLOCKED，不创建 Release。
 
 ## 8. 依赖、实施顺序与停止条件
 
@@ -313,7 +313,7 @@ SR-013 达到 READY 且文档门禁通过后，实施使用一个连续 Goal，�
 - AC-013-03 只有在 Compiler Owner 已确认 Artifact API 后才可继续；没有确认就停在 Owner Gate，不得自行更换版本名。
 - AC-013-05 必须再次检查发布授权；没有明确授权时只完成 Release 前检查，不创建 Tag 或 Release。
 - 若无法读取固定的 PR #18 归档、EVIDENCE.md 或其 Artifact，必须标记证据不可访问并请求提供；不得假装已复核，也不得用聊天报告替代独立复核。
-- Compiler 代码变更在 ca-skill-compiler 仓执行；Next 仅维护中央设计、SR 和验收证据。ca-skills Bundle CI 与 Next Runtime 消费端仍按 SR-023、SR-004/005/006 分别处理。
+- Compiler 代码变更在 ca-skill-compiler 仓执行；Next 仅维护中央设计、SR 和验收证据。ca-skills Bundle CI 与 Next Runtime 消费端仍按 SR-027、SR-004/005/006 分别处理。
 - 只有 G1～G10 文档门禁、SR READY、依赖检查和目标仓写入授权全部满足后，才生成一个完整可复制的 Goal 提示词。提示词必须包含固定文档 SHA、Issue #61、各 AC 顺序、精确命令、停止规则、非目标和证据格式。
 
 ## 9. 非目标
@@ -321,7 +321,7 @@ SR-013 达到 READY 且文档门禁通过后，实施使用一个连续 Goal，�
 本 SR 不实施：
 
 - Next Agent Runtime、SkillCatalog、Resolver、Continuation 或 Python 导入代码；这些由 SR-004/005/006 负责。
-- ca-skills Bundle CI；由 SR-023 负责。
+- ca-skills Bundle CI；由 SR-027 负责。
 - Compiler 内的 Tool/Owner 执行、网络访问或 Runtime。
 - CA-SL v1alpha6、旧版兼容映射、冻结 Artifact 修改。
 - Development Artifact 作为发布 Bundle。
@@ -361,3 +361,4 @@ SR-013 只有 AC-013-01～05 均达到各自通过条件，Compiler Release 有�
 | 2026-11-25 | 0.2.4 | GPT-6.2（ChatGPT） | §1～9 | 同步 F02/F08/Compiler 设计版本引用；保留 AC-013-01 18/18 报告结果并明确证据未归档、独立复核未运行 | 避免不同文件引用不同版本或把报告状态升级为完整 SR 验收 | Issue #14；PR #16/#18 |
 | 2026-11-25 | 0.2.5 | Codex | 正文 | 固定 PoC 归档并记录本轮完整性复核 | 核对 Issue #12 与固定提交 | Issue #12 |
 | 2026-11-25 | 0.2.6 | Codex / GPT-6 | 正文 | 同步所引权威设计版本 | 消除执行歧义并同步中央设计 | Issue #12 SR-013 |
+| 2026-11-26 | 0.2.7 | Codex / GPT-6 | 见本行变更 | 将实际 Bundle CI/发布归入 ca-skills 生产端 SR-027 | 对齐跨仓实现与独立复验 | Issue #12 |

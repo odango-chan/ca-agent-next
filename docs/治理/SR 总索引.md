@@ -1,9 +1,9 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.5\
+> 文档版本：0.3.6\
 > 状态：待评审；全部 SR 当前为 DRAFT，不允许直接实施  
-> 修订日期：2026-11-25  
+> 修订日期：2026-11-26  
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：以本文范围与非目标章节为准；无额外扩展  
@@ -46,6 +46,8 @@
 | [SR-023](../SR/SR-023-技能作者源与语言规范移交.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 技能作者源与语言规范移交 | DRAFT |
 | [SR-024](../SR/SR-024-Host%20Context%20Interface%20Package%20Publisher.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Host Context Interface Package Publisher | DRAFT |
 | [SR-025](../SR/SR-025-MAS%20Owner%20Interface%20Package%20Publisher.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | MAS Owner Development Interface Package Publisher | DRAFT |
+| [SR-026](../SR/SR-026-Codec公开工具发布.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Codec 公开工具发布 | DRAFT |
+| [SR-027](../SR/SR-027-技能Bundle构建与发布.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 技能 Bundle 构建与发布 | DRAFT |
 
 设计版本与章节、依赖、验收 ID、实施证据以各 SR 为准。逐项阻塞见[就绪审计](../参考与审计/跨仓设计资产迁移与一致性审计.md#8-设计就绪审计)。
 
@@ -89,7 +91,7 @@
 - 设计来源：ca-agent-next PR #1 的架构、设计、规范和 Acceptance 文档。
 - PR #1：已合并；只代表设计文档变更。
 - Next Runtime：README 声明尚无已验收 Runtime 实现。
-- 24 项 SR 当前均为 DRAFT；[PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)已核对 58 个文件与 SHA256SUMS；归档报告为 Go/Python 18/18，当前审计复跑 NOT_RUN，不改变 SR-013 总体 DRAFT 状态。SR-009 仅覆盖 Event/Delivery Plugin 与本地 staging；SR-010 还覆盖 Next Host ArtifactStore、ca-host.artifact-store/v1 channel server、Provider v2 Driver 和 Codec 消费。
+- 26 项 SR 当前均为 DRAFT；[PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)已核对 58 个文件与 SHA256SUMS；归档报告为 Go/Python 18/18，当前审计复跑 NOT_RUN，不改变 SR-013 总体 DRAFT 状态。SR-009 仅覆盖 Event/Delivery Plugin 与本地 staging；SR-010 还覆盖 Next Host ArtifactStore、ca-host.artifact-store/v1 channel server、Provider v2 Driver 和 Codec 消费。
 - Issue #12 追踪本轮中央设计资产恢复；PR #11/#13/#15/#16/#18 均在独立分支 OPEN/DRAFT，恢复分支已同步可复用的最新文档内容但尚未创建 PR；PR 状态不等于 SR 实施状态。
 - 本分支 docs/restore-original-designs-20261125 尚未创建 PR；现行入口的相对路径和锚点已复核；各 SR 的正式资产、环境与交付门禁分开判断。
 - ca-agent-demo、ca-client-tools、ca-skill-compiler、ca-skills 和 ca-openamsm-plugin 的现有代码/PR 只能作为外部复用或依赖证据，不能自动算作 Next SR 已实施。
@@ -115,3 +117,4 @@
 | 2026-11-25 | 0.3.3 | GPT-6.2（ChatGPT） | §2～4 | 新增 ca-client-tools MAS Owner Development Interface Package Publisher SR-025，并将其置于 SR-015 设计之后、SR-024 Host Publisher 之前 | 按目标仓分离 Owner 与 Host Publisher，避免把中央设计 SR 当作外部代码实施 SR | Issue #12；SR-015、SR-016、SR-024、SR-025 |
 | 2026-11-25 | 0.3.4 | Codex / GPT-6 · 同步 Publisher 身份、版本和验收边界 | 对齐当前架构与实施门禁 | Issue #12 |
 | 2026-11-25 | 0.3.5 | Codex / GPT-6 · §3～4 区分文档检查、实现和独立审批条件 | 对齐当前架构与实施门禁 | Issue #12 |
+| 2026-11-26 | 0.3.6 | 更新新增两项跨仓生产端 SR 的当前统计；登记新 SR 和 IR 归属 | 对齐跨仓实现与独立复验 | Issue #12 |

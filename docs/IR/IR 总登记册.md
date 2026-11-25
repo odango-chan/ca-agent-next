@@ -1,7 +1,7 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录  
-> 文档版本：0.1.5  
+> 文档版本：0.1.6  
 > 状态：新增跨仓需求待评审  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级需求管理平台
@@ -80,7 +80,7 @@ Compiler 实施沿用 [SR-013](../SR/SR-013-Compiler已检查when与发布产物
 以 Next 作为唯一设计中心。分仓移交现行与历史基线并补齐 Contract.when 链路，Next 消费验收沿用 IR-003。
 
 - 协作入口：[ca-skills #88](https://github.com/odango-chan/ca-skills/pull/88)、[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)。
-- 实施分解：[SR-023](../SR/SR-023-技能作者源与语言规范移交.md)、[SR-015](../SR/SR-015-工具契约设计移交.md)、[SR-016](../SR/SR-016-工作台设计移交与条件编辑.md)、[SR-017](../SR/SR-017-业务插件设计移交.md)、[SR-018](../SR/SR-018-业务所有者设计移交.md)、[SR-019](../SR/SR-019-仿真对端设计移交.md)、[SR-020](../SR/SR-020-参考宿主设计移交.md)、[SR-021](../SR/SR-021-原生宿主设计移交.md)、[SR-022](../SR/SR-022-执行内核设计移交.md)、[SR-024](../SR/SR-024-Host%20Context%20Interface%20Package%20Publisher.md)。
+- 实施分解：[SR-023](../SR/SR-023-技能作者源与语言规范移交.md)、[SR-015](../SR/SR-015-工具契约设计移交.md)、[SR-016](../SR/SR-016-工作台设计移交与条件编辑.md)、[SR-017](../SR/SR-017-业务插件设计移交.md)、[SR-018](../SR/SR-018-业务所有者设计移交.md)、[SR-019](../SR/SR-019-仿真对端设计移交.md)、[SR-020](../SR/SR-020-参考宿主设计移交.md)、[SR-021](../SR/SR-021-原生宿主设计移交.md)、[SR-022](../SR/SR-022-执行内核设计移交.md)、[SR-024](../SR/SR-024-Host%20Context%20Interface%20Package%20Publisher.md)、[SR-025](../SR/SR-025-MAS%20Owner%20Interface%20Package%20Publisher.md)、[SR-026](../SR/SR-026-Codec公开工具发布.md)、[SR-027](../SR/SR-027-技能Bundle构建与发布.md)。
 - 设计与验收：[跨仓设计资产迁移与一致性审计](../参考与审计/跨仓设计资产迁移与一致性审计.md)，逐仓检查文档迁移和行为符合性。
 
 
@@ -95,3 +95,4 @@ Compiler 实施沿用 [SR-013](../SR/SR-013-Compiler已检查when与发布产物
 | 2026-11-25 | 0.1.3 | GPT-6.2（ChatGPT） | IR-003 | 明确 Compiler #61 为外部实现 Issue、Next #14 为文档刷新 Issue；不改变 SR-004/005/006 的消费端职责 | 区分外部实现和中央设计治理 | Issue #14、SR-013、Compiler #61 |
 | 2026-11-25 | 0.1.4 | GPT-6.2（ChatGPT） | IR-003 | 登记 PR #16 为中央设计 Draft PR，明确不计入产品实施 | 使需求、设计 PR 和实施 Issue 状态一致 | Issue #14、PR #16、Compiler #61 |
 | 2026-11-25 | 0.1.5 | GPT-6.2（ChatGPT） | IR-006 | 登记 Host Context Interface Package Publisher 独立需求 SR-024，并保留 SR-020 的参考宿主审计职责 | 修复 SR ID 冲突，保持 IR→SR 一对多追踪 | IR-006；SR-020、SR-024 |
+| 2026-11-26 | 0.1.6 | 修复 IR-006 缺 SR-025 并登记 SR-026/027 | 对齐跨仓实现与独立复验 | Issue #12 |
