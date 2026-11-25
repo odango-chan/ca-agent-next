@@ -28,6 +28,7 @@ For the next major redesign after promotion, create a fresh `ca-agent-next`. Kee
 
 - [Agent instructions](Agent.md) — mandatory rules for coding agents and VibeCoding.
 - [Architecture](docs/architecture.md) — Python Core, unified Plugin model, Skill-first selection, Runtime boundary and data flow.
+- [Plugin Package v1alpha1](docs/plugin-package.md) — installed layout, manifest and validation.
 - [Demo audit](docs/audit/ca-agent-demo.md) — current source inventory and evidence.
 - [Reuse and feasibility](docs/audit/reuse-and-feasibility.md) — copy vs adapt vs external dependency decisions.
 - [DeepSeek Harness plan](docs/implementation/deepseek-harness-plan.md) — staged implementation task package.

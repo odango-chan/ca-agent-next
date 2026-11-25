@@ -29,7 +29,7 @@ Build one Python Agent Core and one Plugin Manager. A Plugin is one extension pa
 
 A Tool is an operation exported by a Tool Plugin, not a separate process/manager/runtime. One Plugin may expose both Event and Tool extensions. Tool Interface Package remains the authority for callable ID, IO schemas, Effect, Capability membership and Owner outcome semantics.
 
-Every business Event must resolve a Skill first using Formal-first selection. Only after exact Skill binding may the Host choose Deterministic or LLM-guided mode. Both modes submit the same Runtime Action Request to the same Runtime Action Boundary and Tool Plugin dispatch.
+Every fresh business Event resolves a Skill first using Formal-first selection. Exact continuations resume before selection. Only after exact Skill binding may the Host choose Deterministic or LLM-guided mode. Both modes submit the same Runtime Action Request to the same Runtime Action Boundary and Tool Plugin dispatch.
 
 ## 2. Phase A — Python Core skeleton and dependency map
 
@@ -53,7 +53,7 @@ Tasks:
 Implement:
 
 1. One Plugin Manager for process start/stop, handshake, IPC framing, correlation and extension discovery.
-2. One generic Plugin manifest containing Plugin identity and extension declarations.
+2. Validate the installed package using [Plugin Package v1alpha1](../plugin-package.md), including matching the handshake to its manifest (EX-14).
 3. Event ingress/delivery extension.
 4. Tool extension with operation dispatch. Tool Interface Package is imported by reference/digest; Plugin manifest does not duplicate ToolCatalog.
 5. One Go Echo Plugin process exposing both `event.ingress` / `event.delivery` and at least one Tool operation.
@@ -69,14 +69,11 @@ Implement:
 
 Tasks:
 
-1. Import Plugin Event Contract and Skill/domain business-contract packages from their package-owned sources.
-2. Make Skill applicability declarations part of the Skill package.
-3. Implement Formal candidate filtering using exact contract reference, input Schema, applicability, Host Base Capability Envelope, Context requirements and available Artifact/Variant.
-4. Implement 0/1/N behavior: 0 stop/ask; 1 direct select; N formal disambiguation; LLM fallback only for unresolved ambiguity within the eligible set.
-5. Validate exact selected Skill package/artifact identity.
-6. Do not implement Event→Skill config or Event→Mode config.
+1. Import verified Plugin Event and Skill/domain snapshots.
+2. Apply static eligibility and the CEL selection tiers from [Architecture §4](../architecture.md#4-skill-first-formal-first-selection). Validate exact output identity. Cover false, error, unguarded fallback and out-of-set model selection.
+3. Verify complete and lightweight Contract support with the canonical CA-SL and Compiler owners. Keep this compatibility gate open until exercised. Do not add Host routing tables or silently strip fields from compiler input.
 
-**Acceptance:** EX-05/EX-06 pass with deterministic fake Model client; no LLM call for 0/1/formally-resolved candidate cases; out-of-set candidate is rejected.
+**Acceptance:** EX-05/EX-06 and the selection portion of EX-17.
 
 ## 5. Phase D — Compiler integration and exact Artifact binding
 
@@ -86,7 +83,7 @@ Tasks:
 
 1. Add a small Python subprocess client for pinned `skillc` commands.
 2. Import exact Interface Package snapshots and Dependency Lock for Echo Tool interface.
-3. Build/check/verify the Echo Skill using the real Go Compiler.
+3. Use the real Compiler's v1alpha5 Build/Verify profile for the static Echo Procedure. Record the CLI version and Artifact generator identity separately. Any Development Build retains its NOT_ADMITTED status and requires an explicit Host decision.
 4. Implement/port only Host-side exact Artifact/Variant admission and Capability binding; verify source digest, package digest and Compiler identity.
 5. Keep Compiler build/verify separate from Runtime authorization.
 
@@ -98,7 +95,7 @@ Tasks:
 
 Tasks:
 
-1. Implement one Python Runtime with Skill Run identity, exact Artifact/Capability binding, Action Request validation, authorization, Tool Plugin dispatch, Outcome/Evidence and basic Wait/Resume semantics.
+1. Implement one Python Runtime with Skill Run identity, exact Artifact/Capability binding, Action Request validation, authorization, Tool Plugin dispatch, Outcome/Evidence and basic Wait/Resume semantics. Resolve exact continuations before the Resolver and prove invalid or duplicate delivery cannot advance a Run (EX-15).
 2. Deterministic Procedure Engine derives the next Action from the validated Procedure.
 3. LLM-guided Host Model Loop proposes the next Action from Skill-scoped Context.
 4. Both paths submit the same Action Request to the same Runtime method and same Plugin Tool extension.
@@ -112,7 +109,7 @@ Tasks:
 **Allowed changes:** `ca-agent-next` only.
 
 1. Make Echo a runnable Example under `examples/`.
-2. Add automated Acceptance Tests for EX-01–EX-13.
+2. Add automated Acceptance Tests for EX-01–EX-17, including a second independently installed business fixture.
 3. Remove unused scaffolding, duplicated registries and obsolete adapters.
 4. Update docs and record exact test commands/results.
 5. Do not introduce production DFX or multi-tenant security frameworks.
@@ -140,7 +137,7 @@ This phase may require a later cross-repository contract alignment PR. Do not ed
 - Do not create a separate permanent Provider Manager alongside Plugin Manager.
 - Do not create a second ToolCatalog or central business Goal Registry.
 - Do not add Event→Skill or Event→Mode mapping tables.
-- Do not let an Event bypass Skill selection.
+- Do not start a fresh business Run without Skill selection.
 - Do not let LLM invoke Plugins directly or declare Owner commit.
 - Do not move NsmfRunExecutor, Owner claims, Receipt/Reconcile, or Skill Runtime into `ca-openamsm-plugin`.
 - Do not start T3/OpenAMSM before Echo mechanism acceptance.

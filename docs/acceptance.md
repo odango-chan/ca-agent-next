@@ -44,7 +44,7 @@ Use a deterministic fake Model client in tests. A real-model smoke test is optio
 | EX-03 | Unified extensions | The same Plugin process exposes Event ingress/delivery and Tool invocation; one manager discovers and routes both. |
 | EX-04 | Event contract import | Host loads the Plugin-owned Event manifest/Schema and validates a normalized Event. No event-specific Host handler. |
 | EX-05 | Skill package discovery | Host discovers imported Skill packages and matches business-contract references against Skill applicability; no central business registry or Event→Skill map. |
-| EX-06 | Formal-first Skill selection | 0 candidates stops/asks input; 1 selects without LLM; N uses formal rules first; only unresolved ambiguity invokes LLM over eligible candidates; out-of-set IDs rejected. |
+| EX-06 | Formal-first Skill selection | Exercise every case in the selection table, including out-of-set model results. |
 | EX-07 | Execution mode | Mode is selected only after exact Skill binding and is constrained by that Skill's supported modes. |
 | EX-08 | Deterministic execution | Compiler-validated Artifact/Variant is executed by the deterministic Procedure Engine. |
 | EX-09 | LLM-guided execution | Agent receives Skill-scoped Context and proposes Actions; cannot call Plugin directly or widen Capability. |
@@ -52,6 +52,10 @@ Use a deterministic fake Model client in tests. A real-model smoke test is optio
 | EX-11 | READ Observation provenance | READ Tool result becomes an Observation with Tool/Package/Invocation/Result provenance; it is not confused with model text. |
 | EX-12 | Mutation outcome | A MUTATION Tool cannot become COMMITTED from HTTP success or LLM text; Owner Receipt/Commit Proof is required where its Interface Package says so. |
 | EX-13 | End-to-end delivery | Event → Task → Skill → Run → Tool Plugin → result/evidence → Host response → originating Plugin delivery succeeds in both modes. |
+| EX-14 | Plugin package | Load a valid installed Echo package. Reject a malformed manifest, escaping entry point, changed snapshot and handshake mismatch without registering extensions. |
+| EX-15 | Continuation | Resume the exact pending Run with original bindings. Duplicate and invalid deliveries cause no new selection or execution advance. |
+| EX-16 | Business neutrality | Add a second independently owned Event/Skill/Interface fixture by installing packages and changing deployment inputs only. Validate exact contract matching, candidate isolation and Capability-scoped dispatch with the same Host build. |
+| EX-17 | Lightweight Skill | A lightweight Contract can carry `when` and execute LLM-guided with trusted session authorization. Check that its route grants no Tool permissions. Verify an unchanged legacy Skill and a complete Contract with `when` against the declared compatibility path. |
 
 ## 4. Selection and mode behavior
 
@@ -59,10 +63,12 @@ Use a deterministic fake Model client in tests. A real-model smoke test is optio
 
 | Formal outcome | Required behavior |
 |---|---|
-| 0 eligible Skills | Stop or request missing input; no LLM candidate generation |
-| 1 eligible Skill | Select directly; no LLM call |
-| N candidates, formal rules resolve one | Select formal result; no LLM call |
-| N remain ambiguous | LLM may select only from eligible candidates; Host validates exact package/artifact identity |
+| One eligible explicit true match | Select directly with no model call |
+| Multiple eligible explicit true matches | Offer only exact matching candidates to the model |
+| Zero explicit true matches | Offer only eligible unguarded candidates, including a singleton |
+| Empty applicable tier | Stop or request missing input |
+| False, malformed CEL or evaluation error | Exclude the guarded Skill and report errors |
+| Continuation | Resume the original Run before selection or return an appropriate invalid/duplicate result |
 
 ### Execution mode
 
@@ -74,7 +80,7 @@ Use a deterministic fake Model client in tests. A real-model smoke test is optio
 
 ### Procedure source
 
-Test the source types used by the implementation: `STATIC`, `LLM_PROPOSAL`, `FALLBACK`, `PATCH-DERIVED`. Every candidate must pass deterministic validation/Compiler build and exact Artifact/Variant binding. Fallback is valid only when the published deterministic Procedure explicitly opts in.
+The first Demo gate covers `STATIC`. Add a runnable Example and acceptance test with each subsequent Procedure source. All executable Procedures pass deterministic validation, Compiler build and exact Artifact/Variant binding.
 
 ## 5. Compiler and Tool Plugin integration
 
@@ -87,7 +93,7 @@ The Echo example may use its own tiny Go Tool Plugin. It does not require a live
 
 ## 6. Definition of Demo acceptance
 
-Accept the architecture MVP only when EX-01 through EX-13 pass, the same Skill runs in both modes, the same Plugin process supports both Event and Tool extensions, and no business-specific Agent Core code is needed to add the Example.
+Accept the architecture MVP only when EX-01 through EX-17 pass, the same Skill runs in both modes, the same Plugin process supports both Event and Tool extensions, and no business-specific Agent Core code is needed to add the Example.
 
 This does not claim live OpenAMSM qualification, production readiness or complete 3GPP protocol parity.
 

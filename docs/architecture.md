@@ -43,6 +43,8 @@ A Plugin is the generic extension unit: one package/process, one lifecycle and o
 - The existing `ca-client-tools.provider/v2` is an already released Tool process protocol. It may initially be consumed by a small Tool-Plugin driver inside the unified Plugin Manager. This is a migration adapter, **not** a second Provider Manager or a second Runtime. Do not rewrite or copy the Go implementation just to rename the protocol.
 - Converge new Plugin implementations on the shared Plugin mechanism after the Echo Example proves the boundary. Do not maintain two permanent process managers, registries, catalogs or authorization paths.
 
+Native packages use the [Plugin Package v1alpha1 contract](plugin-package.md). Deployment pins package identity and imported snapshots before activation.
+
 ### 2.2 Tool contract is still package-owned
 
 The Plugin mechanism does not become a global ToolCatalog.
@@ -83,34 +85,23 @@ Rules:
 - No Event → Skill mapping table.
 - No Event → execution-mode mapping.
 - Plugin Event Contract carries a business-contract reference and payload, not a Skill ID.
-- Skill declares which business-contract references it supports. The Resolver matches imported packages by contract identity and validates schemas/applicability.
+- Structured Skill declarations use exact business-contract identities. The Resolver scopes lightweight fallback to the package and session rules in §4.
 - Host configuration may choose package sources, available Plugin processes and a generic default execution mode. It must not encode business-specific routing.
 
 No new `ca-contracts` repository is required for the Demo. Keep the generic Plugin mechanism contract small and versioned; keep business contracts beside their owners.
 
 ## 4. Skill-first, Formal-first selection
 
-Every business request—including Plugin-originated Events—must pass through Skill selection. There is no direct generic Agent-to-Tool path.
+Every fresh business request binds a Skill before execution. After validating the incoming Event, Host first resolves continuations against an exact pending Run. A valid continuation uses its original bindings. Invalid or duplicate deliveries do not advance the Run or enter selection.
 
-1. Plugin receives/decodes an external request.
-2. Plugin publishes a normalized Event containing the Event type, business-contract package reference, payload and correlation metadata.
-3. Host validates the generic envelope and the Plugin-owned Event Schema; creates/correlates a Task.
-4. Formal Skill Resolver examines imported Skill packages using:
-   - exact business-contract reference and input Schema;
-   - Skill-declared applicability/Goal;
-   - Host Base Capability Envelope;
-   - required Context availability;
-   - available exact Skill Artifact/Variant and declared Capability closure.
-5. Candidate result:
-   - **0:** stop or ask for missing input; never ask LLM to invent a Skill.
-   - **1:** select directly; no LLM call.
-   - **N:** apply formal rules first; if ambiguity remains, LLM may choose only within the eligible set; Host validates the exact Skill identity.
-6. Bind exact Skill package, Artifact/Variant and Capability requirements.
-7. Only now choose Deterministic or LLM-guided execution, constrained by Skill-supported modes and generic request/deployment policy.
-8. Execute through the same Runtime Action Boundary.
-9. Host assembles a structured response; originating Plugin performs protocol-specific delivery.
+1. Form the static eligible set using exact business-contract identity where declared, validated input, package availability and known deployment capability constraints. Scope any semantic fallback to imported packages and the trusted Host session. Resolve runtime-dependent Context and execution preconditions after selection.
+2. Evaluate optional top-level `contract.yaml.when` as a pure CEL boolean over validated `event` metadata and normalized `input`. A malformed or statically non-boolean expression makes the Skill unavailable at load time. False and request-time evaluation errors exclude that Skill. Retain diagnostics for errors.
+3. One explicit true match selects directly. Multiple true matches restrict the LLM to those exact candidates. With zero true matches, offer only eligible Skills without `when` for semantic selection. An empty tier stops or requests input. Validate the exact returned identity against the offered set.
+4. Bind the exact Skill package snapshot, select a supported mode and admit its mode-specific Artifact/Variant and invocation capabilities before execution. Both modes use one Runtime Action Boundary.
 
-LLM participation in Skill selection does not mean the Run uses LLM-guided execution.
+Keep `SKILL.md` generic and `predicates.yaml` for execution-time checks. The intended authoring contract supports a complete assurance form and a lightweight form that can carry `when`. Validated assurance assets enable Deterministic execution. Lightweight Skills use LLM-guided execution and explicit trusted Host session authorization. Complete Skills may also declare LLM-guided support. Pin the CEL source to the selected Skill snapshot.
+
+The canonical `ca-skills` source rules and Compiler compatibility must be verified before adopting the new authoring forms. The frozen CA-SL v1alpha5 and pinned `skillc v2.1.0` have no verified support for them in this baseline.
 
 ## 5. Procedure and execution-mode selection
 
@@ -181,13 +172,14 @@ flowchart TB
     PM["Python Plugin Manager<br/>one lifecycle + IPC + event.ingress / event.delivery / tools"]
     EVENT["Normalized Event<br/>business contract ref + payload + correlation"]
     HOST["Python Host<br/>validate + create/correlate Task"]
-    RES["Formal Skill Resolver"]
-    CAND{"Eligible Skills"}
-    STOP["0 candidates<br/>stop / ask input"]
-    ONE["1 candidate<br/>select directly"]
-    FORMAL["N candidates<br/>formal disambiguation"]
-    LLMSEL["LLM fallback<br/>eligible candidates only"]
-    SKILL["Exact selected Skill<br/>Artifact / Variant / Capability binding"]
+    ENTRY{"Fresh request or continuation?"}
+    RES["Static eligibility + CEL when"]
+    CAND{"Explicit true matches"}
+    FALLBACK["Eligible Skills without when"]
+    STOP["Stop / request input"]
+    LLMSEL["LLM chooses from offered tier"]
+    SKILL["Exact Skill package binding"]
+    RESUME["Resume exact pending Run"]
     MODE{"Mode after Skill selection"}
     PROC["Formal Procedure Resolver<br/>source resolution + Compiler validation"]
     ENGINE["Deterministic Procedure Engine"]
@@ -205,12 +197,15 @@ flowchart TB
     DELIVERY["Plugin Manager delivery extension"]
     OUT["External protocol response"]
 
-    EXT --> EPLUGIN --> PM --> EVENT --> HOST --> RES --> CAND
-    CAND -->|0| STOP
-    CAND -->|1| ONE --> SKILL
-    CAND -->|N| FORMAL
-    FORMAL -->|one remains| SKILL
-    FORMAL -->|still ambiguous| LLMSEL --> SKILL
+    EXT --> EPLUGIN --> PM --> EVENT --> HOST --> ENTRY
+    ENTRY -->|fresh| RES --> CAND
+    ENTRY -->|exact continuation| RESUME --> RT
+    ENTRY -->|invalid or duplicate| RESPONSE
+    CAND -->|0| FALLBACK
+    FALLBACK -->|empty| STOP
+    FALLBACK -->|available| LLMSEL
+    CAND -->|1| SKILL
+    CAND -->|multiple| LLMSEL --> SKILL
     SKILL --> MODE
     MODE -->|Deterministic| PROC --> ENGINE --> ACTION
     MODE -->|LLM-guided| CTX --> LOOP --> PROPOSE --> ACTION
@@ -234,7 +229,7 @@ flowchart TB
   COMP -.-> PROC
 ```
 
-The Plugin does not name the Skill. The Skill declares supported business contracts and required Capabilities. The Host resolves the Skill formally, then selects the execution mode. Both execution modes enter the same Runtime Action Boundary.
+The Plugin does not name the Skill. The Host resolves exact continuations first. For fresh requests it applies the static and CEL eligibility rules before selecting the execution mode. Both execution modes enter the same Runtime Action Boundary.
 
 ## 9. What is reused from ca-agent-demo
 

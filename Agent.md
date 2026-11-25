@@ -27,7 +27,7 @@ If implementation and documentation disagree, stop and report the exact conflict
 
 ## 3. Unified Plugin mechanism — mandatory direction
 
-- A Plugin is the generic extension/package/process unit managed by one Plugin Manager.
+- A Plugin is the generic extension/package/process unit managed by one Plugin Manager. Native packages follow [Plugin Package v1alpha1](docs/plugin-package.md).
 - A Plugin may expose one or more extension kinds: `event.ingress`, `event.delivery`, and `tools`.
 - A **Tool Plugin** is a Plugin whose exported extension is one or more callable Tools. A Plugin may expose both Events and Tools; do not require one process per Tool.
 - A Tool is an exported callable operation, not a process. Its input/output Schema, Effect, Capability membership and Owner outcome/receipt semantics remain in its owning Interface Package.
@@ -49,13 +49,9 @@ If implementation and documentation disagree, stop and report the exact conflict
 
 ## 5. Skill-first and Formal-first are mandatory
 
-- Every business request/event must resolve and bind a Skill before business execution. There is no generic LLM path that bypasses Skill selection and directly calls Tools.
-- A Plugin emits a normalized Event/Task intent plus a business-contract package reference and payload. It must not name a Skill or choose an execution mode.
-- Formal Resolver filters imported Skill packages using business-contract reference, input Schema, Skill applicability, Host Base Capability Envelope, required Context and available Artifact/Variant.
-- 0 eligible Skills: stop or request missing input; do not ask the LLM to invent one.
-- 1 eligible Skill: select directly without LLM.
-- N candidates: apply formal rules first. Only unresolved ambiguity may invoke LLM, restricted to the eligible candidate set. Host validates the exact returned Skill identity.
-- Selection stages remain separate: Skill Selection → Procedure Selection/Source Resolution → exact Artifact/Variant and Capability Binding.
+- Every fresh business request resolves and binds a Skill before execution. Exact continuations resume the original Run before the Resolver.
+- Event Plugins supply validated business-contract identity and normalized Event data. Apply static eligibility and optional `contract.yaml.when` using the selection rules in [Architecture §4](docs/architecture.md#4-skill-first-formal-first-selection).
+- Bind the exact Skill snapshot, choose a supported mode, and verify the mode-specific Artifact/Variant and Capability authorization before execution.
 - LLM proposals are proposals, not executable Procedures. STATIC, LLM_PROPOSAL, FALLBACK and PATCH-DERIVED sources must converge through deterministic validation/compilation.
 - FALLBACK may select only a published deterministic Procedure explicitly marked fallback-eligible. UNKNOWN or missing facts remain unresolved.
 
