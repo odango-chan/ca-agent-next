@@ -1,105 +1,201 @@
 # 业务接入与 OpenAMSM 集成设计说明书
 
-> 文档类型：功能设计说明书  
-> 文档版本：0.1.2  
-> 功能归属：F06 — 业务接入与集成  
-> 关联 SR：SR-009、SR-010、SR-011  
-> 状态：目标集成设计；真实隔离 E2E 尚未完成  
-> 修订日期：2026-11-25  
-> 全局评审范围：继承根目录 Agent.md 的 review_scope
-
-关联需求项见 [IR-005](../../IR/IR%20总登记册.md#ir-005)。
+> 文档类型：业务集成设计说明书  
+> 文档版本：0.2.0  
+> 状态：目标集成设计已重建；外部 Owner 能力已实现，Next Plugin/Host 端到端尚未验收  
+> 功能归属：F06 — 业务接入与集成；EC04、EC05、EC07  
+> 关联 IR：IR-004、IR-005、IR-006  
+> 关联 SR：SR-009、SR-010、SR-011、SR-017、SR-018、SR-019  
+> 修订日期：2026-11-25
 
 ## 1. 目标与范围
 
-本功能验证通用 Agent 可以通过独立 Plugin、Skill、Tool Interface Package 和 Owner 能力接入 OpenAMSM，而不在 Agent Core 中增加 OpenAMSM 专用业务分支。
+本功能验证通用 Agent 可通过 Skill-first Event 接入、统一 Plugin、Tool Interface Package 和 Owner 能力接入 OpenAMSM，而不在 Agent Core 中增加 OpenAMSM 专用业务分支。
 
-OpenAMSM 是 Echo 之后的第二个业务集成。本文定义 Next 侧集成边界，不复制 ca-openamsm-plugin、ca-client-tools 或 env-openamsm 的内部设计。二进制 Artifact 交接细节由 [Context 与 Artifact 管理设计说明书](../F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) 维护；Plugin 生命周期和 IPC 由 F03 维护；Runtime 和 Owner 结果解释由 F04 维护。
+本设计定义 Next 侧集成边界：
+- EC04 OpenAMSM Plugin 负责 SBI ingress、Event normalization、multipart/Content-ID、二进制 staging 和 response Delivery。
+- F02 Resolver 绑定 Skill，Plugin 不选择 Skill。
+- F05 Host ArtifactStore 管理原始 N1/N2 字节。
+- F04 Runtime 执行已绑定 Skill 的 Action，并解释 Owner Receipt/Outcome。
+- EC03 ca-client-tools 提供 Tool Interface Package、Provider 和 Codec Tool。
+- EC05 env-openamsm MAS Owner 负责权威业务状态和 mutation。
+- EC07 env-5gc-sim 提供 Mock AMF SBI test peer；它不是 Owner，也不代表真实 5GC 状态。
 
-## 2. Skill-first 业务接入
+## 2. Skill-first Event 接入
 
-外部 Event 到达 Host 后，先形成规范化 Event，再由 F02 Resolver 绑定 Skill，之后才选择执行模式并进入 Runtime。Event Schema 不包含 Skill ID、Goal 或业务 Contract Package；不新增 Event→Skill 或 Event→Mode 映射表。
+新 Event 流程：
 
-业务选择信息只允许来自明确的协议 discriminator 和 Skill Contract.when。没有匹配候选时停止或澄清，不进入无 Skill 绑定的通用执行路径。
+~~~text
+OpenAMSM SBI request
+  -> EC04 Event Plugin parses / normalizes
+  -> Host validates declared Event Schema
+  -> Host creates Event + responseObligation
+  -> F02 Resolver evaluates Skill candidates / contract.when
+  -> Host binds Skill + Catalog generation
+  -> F04 creates/resumes Run
+  -> Runtime Action Boundary
+  -> EC03 Tool Plugin / EC05 Owner
+  -> Host prepares response
+  -> EC04 Delivery Plugin
+~~~
+
+Event Schema 只描述协议归一化后的输入和 Artifact slots。它不携带 Skill ID、Goal、Procedure 或 Capability Grant。每个新业务 Event 必须绑定一个 Skill；没有候选、输入冲突或 when 失败时显式停止，不得走 unbound Generic Agent fallback。
+
+Continuation 不重新选择 Skill，必须恢复原 Run、原 Skill、原 generation 和原 response obligation。
 
 ## 3. OpenAMSM SBI Event / Delivery Plugin
 
-EC04 ca-openamsm-plugin 负责：
+EC04 的目标职责：
+- 处理 SBI HTTP/2 ingress 和响应 Delivery。
+- 解析 JSON 与 multipart/related。
+- 根据 Content-ID 关联 N1/N2 原始字节。
+- 对已声明的 SBI operation 生成规范化 Event。
+- 仅提取 Skill selection 所需的最小 discriminator。
+- 把原始二进制交给 F05 Host staging/ArtifactStore。
+- 按 Host 的 delivery.dispatch 发送响应和输出 Artifact。
 
-- SBI HTTP/2 ingress 和响应 Delivery。
-- JSON 与 multipart/related 解析。
-- Content-ID 与 N1/N2 原始字节关联。
-- 规范化 Event 发布。
-- 将原始二进制交给 F05 定义的 Host staging / ArtifactStore。
+Plugin 不负责：
+- Skill 选择、Run 生命周期或执行模式。
+- Owner Tool 调用、Owner 状态机或 Receipt 判定。
+- 完整 NAS/NGAP 业务解码。
+- PFCP/QoS 计算或会话状态管理。
+- Runtime Wait/Resume 或 Reconcile。
 
-该 Plugin 不负责 Skill 选择、Owner Tool、RunStore、Wait/Resume、Runtime、完整 NAS/NGAP 业务解码或业务状态机。
+对于共享 UpdateSMContext，Plugin 只提取最小 5GSM discriminator：0xC9 表示 UE PDU Session Modification Request；0xD1 表示 UE-requested PDU Session Release Request。它不解析完整 NAS、不做业务状态判断；Host Resolver 根据规范化 Event 选择对应 Skill。畸形、未知或不支持消息必须 fail closed。
 
-共享 UpdateSMContext 只允许提取已资格化的最小 NAS discriminator，用于区分 Modify 与 UE-requested Release。畸形、歧义或不支持的消息必须显式失败；不得把业务选择逻辑藏进 Plugin。
-
-## 4. 协议与契约归属
+## 4. 协议与契约权威
 
 | 内容 | 权威来源 | Next 使用方式 |
 |---|---|---|
-| Nsmf/Namf SBI Operation、HTTP 路径和 JSON Schema | 3GPP OpenAPI / OpenAMSM 版本基线 | Event Plugin 按协议解析 |
-| NAS / NGAP 消息和字段 | 对应 3GPP 标准及已资格化 Codec | Skill 按需调用 Codec Tool |
-| Skill 选择输入 | Skill Contract.requestSchema 与 when | 只描述 Skill 所需业务输入 |
-| Tool Callable / IO Schema / Effect / Capability | ca-client-tools Tool Interface Package | Runtime / Plugin Manager 消费 |
-| Owner 状态、Receipt、Commit Proof、Reconcile | Owner 及其 Interface Package | Tool Plugin 返回权威结果 |
-| Plugin Manifest / IPC | ca-agent-next Plugin 规范 | Event Plugin 对齐本仓契约 |
+| Nsmf SBI Operation、HTTP 路径和 JSON Schema | 3GPP TS 29.502 / OpenAMSM OpenAPI 基线 | EC04 解析 |
+| multipart/related、Content-ID、N1/N2 slot | 3GPP OpenAPI 与 OpenAMSM 实际行为 | EC04 + F05 |
+| NAS 5GSM 消息与字段 | 3GPP NAS 标准、已资格化 Codec | Skill 按需调用 Codec Tool |
+| NGAP N2 PDU Session Resource 消息 | 3GPP NGAP 标准、已资格化 Codec | Skill 按需调用 Codec Tool |
+| Skill requestSchema / when | CA-SL v1alpha5 | F02 Resolver |
+| Tool Callable / IO Schema / Effect / Capability | ca-client-tools Interface Package | F04 / Plugin Manager |
+| Owner 状态、Receipt、Commit Proof、Reconcile | env-openamsm MAS Owner v1alpha4 | Runtime 结果解释 |
+| 原始二进制 Artifact refs | Next Host ArtifactStore | F05 |
 
-不把完整 3GPP OpenAPI 或 NAS/NGAP Schema 复制进 SKILL.md 的 requestSchema；不在 Next 重定义 Owner 契约。
+SBI requestSchema 是业务 Skill 输入契约，不应复制完整 3GPP multipart schema 或把原始 N1/N2 变成模型可见字符串。
 
-## 5. Create、Modify 与 UE-requested Release
+## 5. CreateSMContext
 
-### 5.1 Create
+Create 的新 Event 来自 Nsmf CreateSMContext。Event Plugin 提取 HTTP/JSON 请求字段和 N1/N2 multipart slots，形成 nsmf.create-sm-context Event。F02 根据 requestType、Event type 和可选 contract.when 选择建立 PDU Session 的 Skill。
 
-规范化 Create Event 先绑定 Establish Skill。Skill 通过已发布 Tool Interface Package 调用 Owner 创建操作。Runtime 依据 Owner Receipt / Commit Proof 判定提交结果；HTTP 201 本身不是 Commit Proof。后续 N1/N2 消息和响应通过 F05 Artifact Handoff。
+Skill 按 CA-SL Procedure 调用 Owner Callable，完成订阅校验、SM Context、UECM、Policy、UP Anchor、地址、Charging、UP Session 等步骤。每一步输入输出来自 Owner Tool Interface Package；Agent 不在 Core 中硬编码 5GC 流程。
 
-### 5.2 Modify
+成功响应由 Host 汇总 Runtime/Owner 结果并交给 Delivery Plugin。只有 Owner 有效 Receipt/Commit Proof 证明的 mutation 才能作为提交成功。
 
-Modify Event 绑定 Modify Skill。业务变化通过 Tool Interface Package 暴露的 typed Callable 表达；Runtime 不维护 MAS 私有字段投影。Owner 对 QoS / Session 修改的提交结果和状态由 Owner Receipt、Commit Proof 与最终状态投影证明。
+## 6. Modify
 
-### 5.3 UE-requested Release
+UE Modify 是 UpdateSMContext 中携带 5GSM PDU Session Modification Request（0xC9）的场景，不是任何 N1/N2 completion callback。
 
-UE-requested Release Event 绑定 Release Skill。N1 Release Complete（0xD4）及适用 N2 Release Response 通过原 Run 的 Wait / Continuation 恢复；不得把旧消息、旧 generation 或其他 UE/PSI 的消息串入新 Run。
+目标流程：
 
-Create、Modify、Release 的详细业务 Procedure 由 ca-skills 作者源和发布 Artifact 维护；Owner 行为由 env-openamsm 与 ca-client-tools 维护。Next 不复制这些业务流程。
+~~~text
+UpdateSMContext + N1 0xC9
+  -> EC04 minimal discriminator
+  -> Skill Resolver selects Modify Skill
+  -> F05 artifactRef carries original N1 bytes
+  -> optional Codec Tool parse
+  -> SSM.PARSE_N1_MODIFY (READ) / typed parse result
+  -> UPN.MODIFY_QOS_DELTA or published Modify Callable
+  -> PFCP Update QER 52/53
+  -> SSM / Relay delivers N1 0xCB + N2 PDU_RES_MOD_REQ
+  -> Owner waits for correlated completion
+  -> Owner Receipt / final result
+  -> UpdateSMContext response Delivery
+~~~
 
-## 6. Core 零业务耦合
+约束：
+- 原始 N1 字节始终保留在 Host ArtifactStore。
+- Codec Tool 是普通 Tool，通过 Runtime Action Boundary 调用；不得另建 Codec Manager。
+- Agent 不自行解码 NAS、不计算 QER、不发 PFCP。
+- PFCP 已应用但 N1/N2 Transfer 未确认时不得报告成功；Owner 可能返回 UNKNOWN/失败语义。
+- N1/N2 completion response 不得重新启动 Modify mutation。
+- QFI、5QI、GFBR/MBR 等字段由 Owner/Codec 契约定义，不由模型自由生成。
 
-第二业务接入的验收目标是只增加：
+## 7. UE-requested Release
 
-- 业务 Event / Delivery Plugin。
-- 业务 Skill 和已发布 Artifact。
-- Tool Interface Package 与 Tool Plugin。
-- 部署配置、协议 Schema 和验收 Fixture。
+UE-requested PDU Session Release 是 UpdateSMContext 携带 NAS 5GSM 0xD1 的场景，不能与 AMF/network-initiated ReleaseSMContext 混为一谈。
 
-不得修改 F01 Agent Core、F02 Resolver、F03 Plugin Manager 或 F04 Runtime 的业务专用分支。确有通用机制缺口时，先定义通用 SR，再设计不包含 OpenAMSM 词汇的机制扩展。
+目标流程：
 
-## 7. 外部依赖
+~~~text
+UpdateSMContext + N1 0xD1
+  -> EC04 discriminator
+  -> Skill Resolver selects UE Release Skill
+  -> SSM.PARSE_N1_RELEASE (READ)
+  -> SSM.BUILD_RELEASE_COMMAND
+  -> N1 Release Command 0xD3 + N2 PDU_RES_REL_CMD
+  -> Event/Delivery Plugin sends response
+  -> Wait on N1 Release Complete 0xD4
+  -> Wait on N2 PDU_RES_REL_RSP
+  -> validate same releaseGeneration + releaseTxn + original Run
+  -> PA.DELETE_SM_POLICY
+  -> UPN.DELETE_UP_SESSION (PFCP 54/55)
+  -> SE.EMIT_RELEASE_EVENT
+  -> SC.RELEASE_SM_CONTEXT(finalize=1)
+  -> Owner Receipt / final result
+~~~
 
-| 外部能力 | 权威仓库 | Next 关联 |
+N1 与 N2 确认是两个独立输入，必须绑定同一个 Owner generation、releaseTxn、原始 Invocation 和 Run。重复、迟到、乱序、旧 generation 或错误 Session 的消息都不得触发清理。只有两者都确认后才可执行最终清理。
+
+## 8. Owner Receipt 与 UNKNOWN
+
+MUTATION 调用的提交结果由 EC05 Owner 决定。Runtime 使用 originalInvocationId 查询 Receipt；UNKNOWN 不能提升为 COMMITTED，也不能直接重发 mutation。PFCP deletion UNKNOWN 只能按 Owner 精确绑定的 Reconcile 设计处理。Delivery 成功不等于业务 mutation 成功；HTTP 2xx 不等于 Owner COMMITTED。
+
+## 9. Mock AMF 与真实 E2E
+
+EC07 Mock AMF SBI Test Peer 负责发送协议准确的 Create/Update/UE-requested Release 输入、模拟 AMF 对端交互、提供 N1/N2 回调和可重复测试场景。它是测试对端，不拥有 OpenAMSM SMF 的业务状态，也不代替真实 AMF/UPF。
+
+必须分开记录：
+- Mock AMF 组件/进程 PASS；
+- Mock AMF 对真实 OpenAMSM 的协议交互 PASS；
+- ca-agent-demo Python Host/Runtime E2E PASS；
+- Next Python Host/Plugin/Runtime E2E PASS；
+- Production Qualification（本 Demo 不声明）。
+
+前面几项的 PASS 不自动传递到后面的层级。
+
+## 10. 当前实现审计
+
+| 对象 | 当前证据 | 状态 |
 |---|---|---|
-| Skill 作者规范和业务 Skill | ca-skills（EC01） | SR-011 |
-| Compiler 发布物和 when | ca-skill-compiler（EC02） | SR-004、SR-005 |
-| Tool Interface / Provider / Codec | ca-client-tools（EC03） | SR-003、SR-007、SR-010、SR-011 |
-| SBI Event / Delivery Plugin | ca-openamsm-plugin（EC04） | SR-009、SR-011 |
-| Owner 状态与 Receipt | env-openamsm（EC05） | SR-007、SR-010、SR-011 |
+| env-openamsm MAS Owner v1alpha4 | main dc83ccbf；23 业务 Callable + 2 证据 READ；Receipt/Proof/Reconcile | IMPLEMENTED |
+| Scheme C Modify / UE-requested Release | Owner 设计和补丁记录；真实 PFCP 52/53、54/55 与 N1/N2 流程证据 | IMPLEMENTED（Owner/隔离演示范围） |
+| env-5gc-sim Mock AMF | main 6ba1dc4；完整设计、实现记录和 E2E 场景 | IMPLEMENTED（测试对端范围；按证据限定） |
+| ca-client-tools Provider v1.1.0 | main 7bcb261；Provider package/typed callables | IMPLEMENTED；Next adapter 未验收 |
+| ca-client-tools Codec Phase B | PR #39 OPEN | NOT_MERGED |
+| ca-openamsm-plugin | main eb83c8f 仅 README；PR #1 OPEN/Draft | NOT_IMPLEMENTED |
+| ca-agent-demo Provider runtime cutover | PR #246 OPEN；#248/#249 OPEN | NOT_MERGED |
+| Next OpenAMSM Skill-first E2E | 依赖 F02/F03/F04/F05/EC04/EC05 | NOT_RUN |
 
-外部仓内部设计以其权威文档为准。外部状态快照统一由功能树和跨仓审计维护，本文不重复维护会过期的 PR 状态。
+## 11. 验收门槛
 
-## 8. 验收与追踪
+- Event Plugin 只做协议解析、最小分类和响应 Delivery；不选择 Skill。
+- Create、Modify、UE-requested Release 分别有规范 Event fixture、Skill 选择和完整 Owner callable 路径。
+- 0xC9 与 0xD1 的正负向分类测试覆盖 malformed/unknown/unsupported。
+- N1/N2 原始 bytes 不进入 NDJSON 或 LLM Context；Artifact refs 按 Run/Invocation 授权。
+- Modify PFCP 52/53 与 N1/N2 response correlation 通过。
+- UE Release N1 0xD4 + N2 PDU_RES_REL_RSP 的双确认、generation、releaseTxn 和 Run 绑定通过。
+- Owner Receipt/Commit Proof/UNKNOWN/Reconcile 全部按 exact-original 规则验证。
+- duplicate Event、duplicate invocation、late/old N1/N2、delivery failure 不产生第二次 mutation。
+- Mock AMF 与真实 OpenAMSM E2E、ca-agent-demo E2E、Next E2E 分层报告。
+- 不声明 Production Qualification。
 
-- SR-009：OM-01～OM-03、OM-05～OM-08、OM-14、OM-15。
-- SR-010：OM-04、OM-10、OM-13。
-- SR-011：EX-20、OM-09、OM-11、OM-12。
+## 12. 原始设计资产
 
-真实隔离 E2E 必须使用一个 UE/PSI，经真实 OpenAMSM Owner 完成 Create → Modify → UE-requested Release，保留 N1/N2 原始 Artifact、Run/Wait 关联、Owner Receipt/Commit Proof 和零重复 mutation 证据。Synthetic Owner、fixture 或离线测试不能替代真实隔离 E2E。
+- [OpenAMSM Plugin Draft 架构](../../架构设计/外部能力域/EC04-OpenAMSM%20Go%20Event%20Plugin架构提案原文.md)
+- [MAS Owner Receipt / Proof](../外部能力域/EC05-OpenAMSM%20Owner/MAS%20Owner契约与Receipt设计原文.md)
+- [Scheme C Modify / Release Owner](../外部能力域/EC05-OpenAMSM%20Owner/Scheme%20C%20Modify与Release%20Owner设计原文.md)
+- [PFCP UNKNOWN Reconcile](../外部能力域/EC05-OpenAMSM%20Owner/PFCP%20UNKNOWN%20Reconcile与重启恢复设计原文.md)
+- [Mock AMF SBI Test Peer 完整设计](../外部能力域/EC07-5GC仿真与Mock%20AMF/Mock%20AMF%20SBI%20Test%20Peer完整设计原文.md)
+- [env-5gc-sim 架构原文](../../架构设计/外部能力域/EC07-5GC模拟器架构原文.md)
+- [EC03 Typed MAS Callables](../外部能力域/EC03-Tool%20Provider/MAS%20Scheme%20C%20Typed%20Callables设计原文.md)
 
-## 9. 文档修订记录
+## 修订记录
 
-| 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
-|---|---|---|---|---|---|---|
-| 2026-11-25 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 建立 F06 业务接入与 OpenAMSM 集成设计 | 将 SBI、Tool、Owner 和业务 E2E 统一到一个集成边界，不在 Core 中复制业务逻辑 | F06；SR-009～011；EC01～EC05；PR #1 |
-| 2026-11-25 | 0.1.1 | 刷新需求追踪、目录或证据引用 | 对齐最新分支与 IR/SR 基线 | 见关联 SR |
-| 2026-11-25 | 0.1.2 | Codex / GPT-6 | OpenAMSM Owner 与仿真对端 | 合并有效边界与分仓证据入口 | 跨仓设计移交 | IR-006 |
+| 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
+|---|---|---|---|---|---|
+| 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 全文 | 根据 OpenAMSM Owner、Plugin Draft、Mock AMF 与当前跨仓状态重建 Create/Modify/UE Release 集成设计 | Issue #12；SR-017～019 |
