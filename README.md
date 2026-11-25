@@ -41,14 +41,16 @@ For the next major redesign after promotion, create a fresh ca-agent-next. Keep 
 
 ## Skill model at a glance
 
-Every Skill has SKILL.md. The assurance/ directory is optional:
+Every published Skill has SKILL.md. The assurance/ directory is optional in the authoring source:
 
-- No Assurance: LLM-guided only; import SKILL.md directly without Compiler.
-- Valid Assurance: Deterministic and LLM-guided; source import automatically compiles before admission.
-- Compiled Skill Artifact: Inspect/Verify and admit directly without rebuilding.
-- Invalid present Assurance: fail import; never silently downgrade.
+- SKILL.md-only published Skill: LLM-guided only; import directly.
+- Published Skill with compiled Assurance Artifact: supports Deterministic and LLM-guided execution.
+- Assurance source YAML is compiled and verified by the independent Compiler before publication. The Agent never imports Assurance source, invokes Compiler or recompiles a Skill.
+- A package declaring Assurance but missing its compiled Artifact, containing malformed/incompatible compiled data, or referring to unavailable Tools/Capabilities fails import with an explicit diagnostic; it is never silently downgraded.
 
-An optional top-level assurance/contract.yaml when is compiled once during import/update and evaluated for each fresh Event. All Skills, including SKILL.md-only Skills, live in the Core-owned in-memory SkillCatalog. Catalog updates activate atomically by generation; each Invocation pins its generation. predicates.yaml remains an execution-time business check. Individual LLM Action proposals use the common Runtime Action Boundary and are not compiled.
+The Agent Importer performs only basic published-package checks (supported manifest/Artifact format, required files and references, safe paths, parseable CEL/type data) and resolves Tool/Capability dependencies against locally installed Plugins. This is ordinary import validation, not Skill Admission, trust evaluation, approval or production authorization. The Demo has no separate Skill Admission mechanism.
+
+An optional top-level authoring-source `assurance/contract.yaml.when` is compiled before publication. The Agent loads/deserializes the published CEL program once during import and evaluates it for each fresh Event. All Skills, including SKILL.md-only Skills, live in the Core-owned in-memory SkillCatalog. Catalog updates activate atomically by generation; each Invocation pins its generation. `predicates.yaml` remains an execution-time business check. Individual LLM Action proposals use the common Runtime Action Boundary and are not compiled.
 
 ## Plugin and protocol payload model
 
