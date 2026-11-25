@@ -62,7 +62,7 @@ Implement:
 5. One Go Echo Plugin process exposing Event ingress, Delivery and at least one Tool operation.
 6. Keep Plugin process independent of Python imports. Use stdio/NDJSON for Host IPC.
 
-Do not add package signatures, Trust Registry, extra SHA-256 snapshot hashing, separate Provider Manager, hot reload or Marketplace.
+Do not add package signatures, Trust Registry, extra SHA-256 snapshot hashing, separate Provider Manager, filesystem watchers or generic Plugin hot reload. SkillCatalog explicit import/update is a separate Core-owned lifecycle.
 
 **Acceptance:** Python Host starts one Go process, validates plugin.yaml, discovers all declared extension kinds, routes one test message per extension and shuts down cleanly. This phase does not yet require Skill selection or full business E2E.
 
