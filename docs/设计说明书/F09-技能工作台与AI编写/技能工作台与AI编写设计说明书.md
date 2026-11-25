@@ -1,184 +1,155 @@
-# 技能工作台与 AI 编写设计说明书
+# 技能工作台与AI编写设计说明书
 
-> 文档类型：外部能力集成与工作台设计说明书  
-> 文档版本：0.2.0  
-> 状态：目标设计已重建；Studio 当前实现与下一版本架构存在差异，需按 §11 逐项验收  
-> 功能归属：F09 — 技能工作台与 AI 编写；EC06  
-> 关联 IR：IR-006  
-> 关联 SR：SR-016、SR-023  
+> 文档类型：设计说明书  
+> 文档版本：0.3.1  
+> 状态：待评审  
 > 修订日期：2026-11-25  
-> 适用范围：Theia Browser-Only 工作台、CA-SL v1alpha5 编辑、Package View、LSP、Source-first Visual Editor、AI Authoring
+> 全局评审范围：继承根目录 Agent.md 的 review_scope  
+> 本文局部非目标：生产级准入、额外 package-level digest、签名和 Trust Registry；仅保留 Compiler v2.1.0 Interface Package schema 明确要求的 `files[].sha256`  
 
-## 1. 定位与所有权
+关联 IR-006、SR-015、SR-016、SR-020（参考宿主架构审计）、SR-024（Host Context Publisher）；Compiler 接口以 [EC02 Development Build 设计](../EC02-Compiler/Development%20Build设计.md) 为准。基线为 [docs/architecture/studio-boundaries.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/architecture/studio-boundaries.md)、[docs/design/ai-procedure-authoring.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/design/ai-procedure-authoring.md)。
 
-Skill Studio 是 Skill 作者工具和源码编辑器，不是 Agent Runtime、Skill Selector、Compiler、Tool Provider 或 5GC Owner。源文件是唯一业务真源；图、节点、边、布局、Inspector、诊断和 AI 候选都是从当前源码投影出来的视图或变更提案。
+## 1. 编辑与语言服务
 
-~~~text
-Skill Source Files
-  -> YAML 1.2 CST / source spans
-  -> Semantic Projection / Package Context
-  -> Graph / Outline / Inspector / Problems / Data Flow
-  -> bounded Source Patch proposal
-  -> reparse + semantic validation
-  -> Diff / explicit confirmation
-  -> native WorkspaceEdit / Undo / Save
-~~~
+Theia 的 Package Explorer 以作者源码为工作区入口。可视化视图、导航与诊断来自同一源码和语言核心，未保存缓冲区及包代际变化要驱动刷新；Browser Worker 失效后要给出可见状态。编辑器维护诊断、语义 token、补全和导航，规范锁固定到已发布版本。Package View 的 Dependencies 与 Build Artifacts 使用各自数据源，源码修改保留文本与未改动区域。
 
-责任分工：
+## 2. AI 编写
 
-- ca-skills：CA-SL 规范、Skill 作者源和业务 Skill。
-- ca-skill-compiler：唯一 Compiler、静态检查、链接、Build/Verify 和运行时 Artifact。
-- ca-agent-next：Skill Bundle 导入、SkillCatalog、Resolver 和 Runtime。
-- ca-skill-studio-demo：编辑器、语言服务、可视化投影、源码 Patch、AI Authoring UI。
-- ai-gateway：模型协议、Provider credential 和请求转发。
-- Studio 不执行 Skill、不调用业务 Tool、不写 Owner 状态、不代替 Runtime 证据。
+上下文与变更集由编辑宿主管理。模型和独立 Gateway 返回候选提案；宿主校验语义操作，将其转换为可预览的源码补丁。应用前对同一候选执行 Compiler gate，用户保存后才持久化。编辑器及 Gateway 不负责 Skill 选择、Runtime 执行或 Tool 调用。
 
-## 2. 宿主与工作台架构
+## 3. when 编写与验收
 
-当前交付以 Theia Browser-Only / 静态 Pages 为主要入口，复用 Theia 原生 Explorer、Editor、Outline、Problems 和 Markdown Preview。工作台通过 VS Code Web Extension 适配器接入 Theia；共享的语言核心、源码投影和 Patch Engine 不依赖具体宿主。
+正式语言刷新后，Contract 字段提示与诊断对齐中央规范。`when` 是 `assurance/contract.yaml` 中的可选顶层字段，不是 SKILL.md Front Matter 字段；其 Schema 类型、CEL 静态检查与错误定位必须对齐 CA-SL v1alpha5 作者规范。没有 `when` 的 Contract 保持原有行为。文本与 AI 编辑均保持可预览，不能把选择条件写入 Predicate。覆盖 Browser Worker、源码往返、已有包、有效与无效表达式、Compiler gate 与应用后再打开。
 
-默认编辑体验保持双栏：左侧源码，右侧预览；禁止增加常驻第三栏。Package Explorer 默认可见，依赖信息只读。Outline、Problems 使用宿主原生视图。Markdown 预览使用固定版本的原生 VS Code Markdown extension，不再维护 Classic 自研 Markdown Preview 作为默认入口。
+## 4. Interface Package 导入与项目快照
 
-宿主适配层只负责 TreeDataProvider、TextDocument、Workspace FS、DiagnosticCollection、WorkspaceEdit 和 Webview 生命周期，不重新定义 CA-SL 语义。
+### 4.1 职责边界
 
-## 3. Package 工作区与源码权威
+Skill Studio 的依赖导入负责**获取、验证和固定原始包快照**，不实现 Compiler Linker，也不把 ToolCatalog / Schema Bundle 自动转换成 Compiler Interface Package。
 
-一个 Package 是编辑、诊断、导出和 Compiler 检查的边界。Package Context 必须绑定完整文件清单和 generation。未保存的 TextDocument Buffer 优先于磁盘内容；文档变更、Package import/update 和依赖快照变化都使相关 generation 失效。
+- Add Dependency 支持本地 ZIP，以及用户明确指定的 GitHub owner/repository/tag/asset。禁止默认 latest/main、模糊资产匹配或离线静默回退。
+- ZIP Importer 校验 ZIP 结构、CRC、文件数/展开大小限制、路径、重复/大小写冲突、符号链接/特殊文件、根 `package.json`、文件清单和原始字节 SHA-256。不得重写 `package.json`、规范化/改写载荷或推断 Owner 授权。
+- 导入后保存**原始文件字节**和来源信息为不可变项目快照。Package Explorer 只读展示 Manifest exports 与来源；点击导出只打开已锁定快照，不进行网络请求。
+- 浏览器直连 GitHub Release 若受 CORS/网络限制必须 fail-closed；本地 ZIP 仍是可用导入路径。不得声称 CORS 已通过，除非实际 Pages-origin Chromium 验收通过。
 
-Source 文件可以被用户编辑；依赖/生成产物不能被当作普通作者源。当前源仓的 Plugin-managed Studio v0.1 设计将 Package Dependencies 交给 Plugin Dependency Service，不再要求固定的 lib/ 和 output/ 目录。现有 main 代码和测试仍包含早期 skills/lib/output 布局，因此二者是“当前实现”与“下一版本目标”的差异，不能把早期目录直接写成新契约。迁移前应保持用户文件不被覆盖，结构变化需要单独验收。
+### 4.2 两种 Lock 不得混淆
 
-Package View 至少展示：
-- 当前 Package 与 Skill Source；
-- Plugin-managed Dependencies 的来源、版本和只读快照；
-- 真实 Compiler BuildResult 存在时才显示 Build Artifacts；
-- 缺少依赖、文件、Schema 或 Compiler Result 时显示明确 unavailable，不生成虚假状态。
+- Studio 项目锁 `skillc.lock/v0.1` 是持久化的项目导入/来源/快照记录，保存 alias、dependency kind、来源 ref/revision、包身份和精确文件字节/摘要。它是 Studio Resolver 的权威输入，重新加载时重新校验快照字节。
+- Compiler `connectionagent.io/interface-dependency-lock/v1alpha1` 是 Development BuildRequest 的**派生输入**。Build adapter 根据每个 Skill 的 `assurance/contract.yaml.dependencies`（alias → stable Package ID）和锁定 Interface Package 的 manifest dependencies，构造 roots、packages 与传递闭包。
+- 不把 Compiler Lock 另存为第二个持久化项目锁，不替换 `skillc.lock/v0.1`。两个 Lock 的字段、摘要 framing 和职责不同。
+- Compiler request 的 Interface Package snapshots 必须直接来自已验证 Studio 快照的原始字节。Studio lock 摘要与 Compiler `CA-SKILL-DEPENDENCY-SNAPSHOT\\0v1\\0` 摘要是不同 framing；Build adapter 先复核 Studio 锁摘要，再从同一原始字节计算 Compiler 摘要。
 
-## 4. Source Editor 与 Visual Editor
+### 4.3 BuildRequest 的依赖选择
 
-YAML 源文本是唯一权威数据。Procedure Preview 从解析器和源码 span 构建 Node/Route 投影；ELK 负责布局，React Flow 负责展示和交互。Node、Edge、坐标、折叠状态、Inspector selection 不得写成第二份业务定义。
+- 只选择当前 Skill Contract 明确声明的根 alias，以及这些根 package manifest 声明的传递依赖闭包。
+- 项目中未被当前 Skill 引用的额外依赖（例如仅供 IntelliSense 的 `ca-client`）不得自动进入 roots，也不得因为它们是 `tool-catalog` / `schema-bundle` 就阻断另一个 Skill 的独立构建。
+- 若 Contract 声明的根 alias 在 Studio lock 中不存在，报精确的 Missing Root；若该 alias 对应的锁定条目不是正式 `connectionagent.io/interface-package/v1alpha1`，报明确的 Unsupported Dependency Kind。不得把不同 kind 转换为伪造的 Interface Package。
+- 所有入选根及传递依赖必须通过 packageId/version、manifest edge、原始快照摘要、路径和文件清单校验。缺包、歧义 alias、冲突版本、依赖环、锁边与 manifest 不一致、损坏字节均 fail-closed。
+- Compiler 是静态链接与类型/语义验证权威。Studio 的 Package Explorer / LSP 可以投影已验证导出，但不得替代 Compiler 进行完整 Callable、Capability、Evidence、Schema Link 判断。
 
-任何可视化编辑必须：
+### 4.4 当前 OpenAMSM Example 的真实边界
 
-1. 绑定当前文档 URI、版本、Package generation 和精确 YAML source span。
-2. 检查语法与结构处于支持范围；未知/歧义结构降级为 Source-only。
-3. 构造有界 Patch，不重写无关节点、注释、顺序或原始字段。
-4. 重新解析候选源码并做结构/语义对比。
-5. 显示精确 Diff，由用户显式确认。
-6. 通过宿主原生 WorkspaceEdit 写入当前 Buffer，保留 Undo/Redo。
-7. 源版本变化、span 失效或候选不再等价时拒绝 Apply。
+当前三个 MAS Example Contract 的根依赖为：
 
-不允许通过重新序列化整份 YAML 破坏用户格式或注释。
+| Contract alias | Stable Package ID | 当前 Studio lock kind | 状态 |
+|---|---|---|---|
+| `mas` | `urn:openamsm:mas:tool-contracts` | `tool-catalog`（ca-client-tools v1.2.0 Owner contract source） | 尚非正式 Interface Package |
+| `ca-context` | `urn:connectionagent:ca:host-context` | `schema-bundle`（Host Development fixture） | 尚非正式 Interface Package |
 
-## 5. LSP 与语言服务
+项目另预加载 `ca-client`，其 Package ID 为 `urn:wtlab:ca-client-tools:openamsm-sbi-interface`，来自已发布 `ca-client-tools_interface_1.1.0.zip`。它导出十一项 public READ Tools / 两个 Capabilities，用于只读 SBI Query IntelliSense；它**不是** `mas` Owner contract，也不是 `ca-context`，当前 Contract 未声明它为根。Studio/Compiler 不得推断替换。
 
-LSP Server/Browser Worker 是只读语言服务，使用同一共享分析器。跨文件导航必须绑定完整 Package generation 和精确 UTF-16 source range。
+要让当前 MAS Example 使用 Compiler v2.1.0 Development Build，Owner 与 Host 必须分别发布正式 `connectionagent.io/interface-package/v1alpha1` 包。发布任务分别归入 [SR-015](../../SR/SR-015-工具契约设计移交.md)（MAS Owner）和 [SR-024](../../SR/SR-024-参考宿主设计移交.md)（Host Context）；Studio 只导入发布物，不代替 Publisher 组包。
 
-支持范围以实际实现为准，当前源设计包括：
-- Definition：Procedure/Predictate Script 路径定位脚本 metadata；Python input/output Schema metadata 定位 Schema 标题。
-- References：返回精确引用点并遵守 includeDeclaration。
-- Hover：显示源码可证明的 Script、Tool、Schema 和 Python 顶层声明信息。
-- Document Symbols：Python 顶层 class/function。
-- Completion：仅在已支持的 Script path 和 Schema metadata 上给出 Package-local 候选。
-- Diagnostics：编辑期跨文件问题、缺失文件和已知结构错误。
+### 4.5 两个 Contract root 的正式 Publisher 输出
 
-负向边界：
-- 不做完整 Python 类型检查，不替代 Pyright/Pylance。
-- 不把 LSP 诊断当 Compiler PASS。
-- Package 不完整、重复名称、source range 歧义、generation 过期时不猜测导航目标。
-- 不因模型或文件名推断 Tool eligibility、Runtime 能力或 Owner 状态。
+两个包的 `package.json` 必须严格符合 Compiler v2.1.0 的 [interface-package.schema.json](https://github.com/odango-chan/ca-skill-compiler/blob/v2.1.0/contracts/development/v1alpha1/interface-package.schema.json)：`apiVersion`、`packageId`、`version`、`languageTarget`、`publisher`、`dependencies`、`exports`、`files` 为完整字段集合；Schema `additionalProperties: false`，不得添加 `sourceStatus` 等自定义字段。`files[]` 的 SHA-256 必须针对实际包内的精确文件字节计算；这是已发布 Interface Package schema 的逐文件字段，不是 CA-SL Skill Artifact 的额外包级完整性体系。不得增加 manifest-level digest、签名或 Trust Registry。新生成的 `package.json` 是正式 Interface Package envelope；它不能冒充或覆盖 Owner 原有的 `manifest.json`。
 
-## 6. AI Authoring Workbench
+**MAS Owner 包**
 
-AI Authoring 是源码修改助手，不是自动执行 Agent。模型只生成结构化 Change Set；宿主拥有上下文、Source revision、语义 Patch、Diff、验证、Apply 和保存。
+- 固定身份：`packageId=urn:openamsm:mas:tool-contracts`、`version=v1alpha4`、`publisher=openamsm.smf.mas`、`languageTarget=connectionagent.io/v1alpha5`。
+- 权威来源：`odango-chan/ca-client-tools` tag `v1.2.0`，目录 `contracts/owner/openamsm-mas/v1alpha4`，解析 Revision `fc44c3a745c68443fcfb12054c7eadf0ed7cc3f7`，Owner source `buildIdentity=sha256:ac834080f31ff0fa91b9eb846fa47c889a94837fc1f37ec2034190e4e83085c0`。
+- `CallableCatalog` exports 从 `tool-catalog.yaml` 的正式 `spec.contracts[].id` 逐项生成；`CapabilityCatalog` exports 从 `capability-contracts.yaml` 的 capability ID 生成；`EvidenceDescriptor` exports 从 `evidence-guarantees.yaml` 的 fact ID 生成；`Schema` exports 覆盖这些公开接口及其 `$ref` 闭包中的精确 Schema `$id`。Export ID 必须取自源契约，不得由 Studio 猜测。
+- 保留上述公开契约文件及 Schema 文件的原始字节；先按 Owner source `manifest.json` 校验来源工件，再由 Publisher 生成正式 `package.json`。`manifest.json` 的 `connectionagent.io/toolcatalog/v1alpha4` 是 Owner source manifest，不是 Interface Package manifest。
+- `deployment-binding.yaml` 及其部署私有数据、Runtime-only Provider bindings 不得进入公开 exports 或包文件闭包；仅导出 Skill/Compiler 静态链接实际需要的公开接口。不得把 `ca-client-tools#37` 的 private Runtime-only bindings 包装成 public Callable。
 
-流程：
+**Host Context Development fixture 包**
 
-~~~text
-用户任务
-  -> Context disclosure / user consent
-  -> Package snapshot（包含未保存 Buffer）
-  -> AI Gateway / OpenAI-compatible model
-  -> structured Change Set
-  -> Host schema + semantic operation validation
-  -> source Patch Engine
-  -> candidate Procedure
-  -> Compiler Check gate
-  -> current vs candidate preview / YAML diff
-  -> user accepts atomic groups
-  -> native WorkspaceEdit
-  -> user Save
-~~~
+- 固定身份：`packageId=urn:connectionagent:ca:host-context`、`version=v1`、`publisher=urn:connectionagent:owner:ca-context`、`languageTarget=connectionagent.io/v1alpha5`。
+- 权威来源：`odango-chan/ca-agent-demo` Revision `57e277ff9094dad93543df46910a12a1dbbaf560`，目录 `tests/fixtures/compiler/mas-v1alpha5-scheme-c/trusted/snapshots/ca-context`，文件 `subject.schema.json`，Git blob `4faee66642b8bc5eb2e45c131be4688b982037d8`。
+- 发布一个 `Schema` export，ID 精确等于 Schema `$id` `urn:connectionagent:ca:context:subject:v1`，路径为包内原始 `subject.schema.json`；不得重写或重新序列化 Schema 字节。
+- `sourceStatus=DEVELOPMENT_FIXTURE` 保留在 Studio `skillc.lock/v0.1` 的 `source` provenance 中；不得写入 `package.json`。Compiler BuildRequest 的 `profile=DEVELOPMENT` 表示构建档位，二者都不授予 Host Admission。
 
-关键决策：
-- 第一阶段只修改现有 CA-SL v1alpha5 Procedure，不支持旧版本兼容。
-- 不允许模型直接写文件；模型输出必须符合 Change Set schema 和 operation allowlist。
-- Change Set 由 Studio Host 管理，具有 base revision、目标 Package、目标文件和原子组。
-- Apply 前必须重新验证 Source revision，冲突时拒绝过期提案。
-- 用户可逐原子组接受/拒绝；不能应用的组明确说明原因。
-- Apply 只写入当前 TextDocument Buffer，保存仍由用户完成。
-- Compiler gate 必须使用真实 Compiler 结果；缺少 Compiler 能力时禁用 Apply，不用本地轻量检查冒充 Compiler PASS。
-- 不自动触发 Runtime、Tool 或真实 5GC 副作用。
+**共同边界**
 
-## 7. AI Gateway 与部署边界
+- 两个 Publisher 都只生成正式静态 Interface Package；`publisher` 是声明身份，不是 Host 已验证的 Owner Trust。
+- `dependencies` 只列出实际 Interface Package 依赖；无依赖时使用空数组。不得通过 Studio 重写包字节、改 Package ID、猜测 Export ID 或合成 Owner/Host 授权。
+- Compiler v2.1.0 Development BuildRequest 不接受 `trustedBuildContext`、Owner attestation、Deployment Grant 或 Provider binding。成功结果仍是 `VALIDATED / LINKED / BUILT / NOT_ADMITTED`；Host Admission 与 Runtime Execution 继续独立处理。
 
-Gateway 是独立 Go 服务，提供 OpenAI-compatible 请求/响应协议和统一 Provider credential。浏览器 Studio 不持有模型 Provider Key；Gateway credential 由部署者配置。可部署在 loopback 或可信内网；不依赖 Cloudflare，也不要求每个用户管理自己的模型 Key。
+`ca-client-tools_interface_1.1.0.zip` 仍应作为独立的真实发布包正例：使用一个 Contract 明确声明 `ca-client` alias 与精确 Package ID 的 synthetic Skill 验证 Compiler v2.1.0。该测试证明真实 ZIP 与 Compiler 契约互操作，不代表 MAS Create/Modify/Release Example 已链接或 Qualified。
 
-Studio 保存 Gateway URL、模型选择和部署配置；Provider/model availability 由 Gateway 报告。网络不可达、认证失败、Provider 返回错误、超时和模型响应 Schema 错误都必须显示可诊断错误，不生成伪候选。
+## 5. Compiler Development Build 与状态投影
 
-## 8. React Flow 当前/候选对比
+### 5.1 单一 Build 路径
 
-当前与候选 Procedure 双图对比只读，不产生新的业务图模型。两张图共享 CA-SL v1alpha5 source analyzer、ELK layout 和 React Flow projection。Node/Stage/Route 的新增、修改、删除和重定向使用精确 Source identity 标记。点击图元素只定位对应 Change Set 原子组和源码行，不直接接受变更。
+Package Audit 和 AI Authoring 必须共用同一个 Development Build request builder、Compiler v2.1.0 Worker/WASM 与 VerifyDevelopment。不得各自实现 Linker、依赖闭包、摘要或结果解释，也不得在 Development Build 失败时静默回退到冻结 v1alpha5 Build/Verify v2.0.2。
 
-默认显示所有路径，避免折叠隐藏失败/恢复路径的变化；“仅显示正常路径”是显式视图选项。图投影失败时回退到语义 Outline 和 YAML Diff，不影响 Compiler fail-closed 规则。
+- Package Audit 对当前保存源码和当前 lock generation 进行 Build + VerifyDevelopment。
+- AI Authoring 对**同一候选源码字节**和同一 lock generation 进行 Build + VerifyDevelopment；候选变更或 lock generation 改变立即使旧 Build/Verify 结果失效。
+- 仅在候选的 Build + VerifyDevelopment 成功后，才允许显示可应用的候选；Apply 仍需用户明确确认。Apply 使用原生编辑器 Buffer，Undo 必须恢复精确原文；Save 由用户决定。
+- Worker 只执行 Compiler Core，不下载依赖、不访问项目文件系统、不读取 Provider credentials、不授予 Owner Trust、不执行 Runtime Tool。
 
-## 9. Package 生命周期与恢复
+### 5.2 结果状态
 
-- 导入 Package 时创建完整 inventory 和 generation。
-- 当前打开的未保存文档优先作为分析输入。
-- 删除、移动、重命名或依赖变化后重新计算 Package Context。
-- Browser Worker 崩溃或协议失败时显示失败状态，禁止使用陈旧诊断/导航结果。
-- stale LSP result、stale graph selection 和 stale AI proposal 必须由 generation/document version 检查拒绝。
-- ZIP 导出保持文件路径和内容；下载 ZIP 不等于本地磁盘原位保存或 GitHub 提交。
+Compiler Development Build 成功结果固定为：
 
-## 10. 验收
-
-- Browser-Only 和 Theia Host 使用同一 Source analyzer、Patch Engine 和 Change Set schema。
-- 双栏 Source/Preview、Package View、Outline、Problems、Markdown 原生 Preview 行为一致。
-- YAML round-trip 保持注释、键顺序和未修改区域字节身份。
-- 可视化 Patch 精确 span、Diff、确认、Undo/Redo 和 stale rejection 全部有正负向测试。
-- LSP 对 CRLF、Unicode、multiline YAML 的 UTF-16 offsets 正确；不完整 Package 不猜测跨文件目标。
-- AI Context 只包含用户授权文件；请求前展示披露；Gateway key 不进入浏览器或日志。
-- Change Set schema、operation allowlist、atomic groups、stale revision、Compiler gate、Apply 和 Undo 均有测试。
-- React Flow 双图与当前 main 的 Change Set 对照测试通过；失败时 Source/Outline fallback。
-- Runtime/5GC 执行不在本仓验收范围。
-
-## 11. 当前实现审计与待决差异
-
-| 能力 | 当前证据 | 状态 |
+| 字段 | 成功值 | 含义 |
 |---|---|---|
-| Theia Browser-Only / 原生 Explorer、Outline、Problems | Studio main 架构和迁移文档 | IMPLEMENTED |
-| Source-first Visual Editor、ELK / React Flow、精确 Patch / Diff | Studio 多份设计与实现记录 | IMPLEMENTED（支持范围受限） |
-| LSP Browser Worker、导航、诊断 | LSP L2 设计及主线测试 | IMPLEMENTED（仅声明范围） |
-| Package Explorer / Dependencies | 当前 main 使用早期 skills/lib/output 工作区，Plugin-managed v0.1 是后续目标 | PARTIAL / TARGET DESIGN |
-| AI Gateway | 独立 Gateway main 有可运行 Go 服务；Studio 连接和模型调用有真实 Smoke 证据 | IMPLEMENTED / DEMO |
-| AI Workbench Change Set / Compiler gate | 原始设计与多个已合并实现切片 | PARTIAL；以当前 main 测试逐项核对 |
-| React Flow current/candidate 双图 | PR #258 已 MERGED，head 428d818f441dcec819825752596a1bec22161823 | IMPLEMENTED |
-| Pages 部署 | 本轮未独立核对最新部署 SHA | UNVERIFIED |
-| 完整 CA-SL v1alpha5 编译一致性 | 依赖 Compiler #61 新版 when Artifact | BLOCKED / NOT_RUN |
-| Runtime / OpenAMSM E2E | 非 Studio 所有权 | NOT_APPLICABLE |
+| `sourceStatus` | `VALIDATED` | 当前源码通过 Compiler 静态检查 |
+| `interfaceLinkStatus` | `LINKED` | Contract roots 和完整 Interface Package 闭包链接成功 |
+| `artifactStatus` | `BUILT` | Development Artifact 已生成 |
+| `executionStatus` | `NOT_ADMITTED` | 不授予 Host/Runtime 执行资格 |
 
-## 12. 原始设计资产
+失败时，失败阶段为 `FAILED`，后续未执行阶段为 `NOT_RUN`，不得返回部分 Artifact。Host Admission Requirements 和 Runtime Execution Requirements 是不同集合，不能把 Requirement 缺失、Build 成功或 `NOT_ADMITTED` 误报为真实 Owner 授权或 Runtime 结果。
 
-- [Studio ownership / source authority 原文](../../架构设计/外部能力域/EC06-Skill%20Studio所有权与源码边界原文.md)
-- [Theia workbench 架构与迁移原文](../../架构设计/外部能力域/EC06-Theia工作台架构与迁移原文.md)
-- [AI Procedure Authoring Workbench 原文](../外部能力域/EC06-Skill%20Studio/AI%20Procedure%20Authoring%20Workbench设计原文.md)
-- [Authoring Workbench 原文](../外部能力域/EC06-Skill%20Studio/Authoring%20Workbench设计原文.md)
-- [LSP 语言导航设计原文](../外部能力域/EC06-Skill%20Studio/LSP语言导航与补全设计原文.md)
-- [Theia / Package-first ADR](../../决策记录/EC06-ADR-0004-Package优先工作区.md)
-- [React Flow 双图 PR #258](https://github.com/odango-chan/ca-skill-studio-demo/pull/258)
+Package Explorer、LSP、Problems 与 AI Workbench 必须区分源码诊断、接口链接诊断、Artifact 状态、Host Admission Requirement 和 Runtime Execution Requirement。Compiler 未运行、未链接或没有 Artifact 时不得显示 Build PASS。
+
+## 6. 无 Assurance、零根依赖与 no-root 状态
+
+- 只有 `SKILL.md`、没有 `assurance/` 的 Skill 按 CA-SL v1alpha5 走 LLM-guided only 路径：不调用 Compiler，不构造 Development BuildRequest，不生成 Deterministic Artifact。
+- 存在 Assurance 但 `contract.dependencies` 没有根依赖的 Skill，不能直接调用当前 Compiler v2.1.0 Development Build：冻结的 BuildRequest / Interface Dependency Lock 契约要求非空 `snapshots`、`roots` 和 `packages`。
+- Studio 必须显示显式 `NO_INTERFACE_ROOTS` / `BUILD_NOT_RUN` 状态和可理解的诊断，不合成假 Package、不构造空 roots 请求、不回退冻结 v2.0.2 Build、不生成 Artifact，也不伪造 `NOT_ADMITTED`（该值只来自成功 Development BuildResult）。
+- 本地编辑器语法提示可以继续工作，但不得将本地提示冒充 Compiler `VALIDATED`。Compiler 未运行时，其 `sourceStatus` 是 `NOT_RUN`，或根本不存在 BuildResult。
+- 如果产品需要“零外部依赖的 Assurance Skill 也生成确定性 Artifact”，必须另立 Compiler 契约变更并发布新契约版本；不得改变 v2.1.0 冻结 Schema 或在 Studio 中私自扩展。
+
+## 7. 当前实施状态与验收门槛
+
+截至 2026-11-25：
+
+| 项目 | 状态 | 证据 / 未完成 |
+|---|---|---|
+| ZIP Import / immutable snapshot / Package Explorer | MERGED | [Studio #267](https://github.com/odango-chan/ca-skill-studio-demo/pull/267)，main merge `11b1246` |
+| Default Example dependency preload | MERGED | [Studio #270](https://github.com/odango-chan/ca-skill-studio-demo/pull/270)，main merge `d3b1d36` |
+| Compiler v2.1.0 request builder | OPEN / DRAFT / STALE | [Studio #272](https://github.com/odango-chan/ca-skill-studio-demo/pull/272)，测试 HEAD `8abffc7`，当前落后 main 67 commits |
+| Compiler v2.1.0 Node/Browser Worker | OPEN / DRAFT / STALE | [Studio #276](https://github.com/odango-chan/ca-skill-studio-demo/pull/276)，测试 HEAD `7d6adeb`，落后 #272 base 9 commits |
+| Package Audit Development Build cutover | NOT_IMPLEMENTED | [Studio #269](https://github.com/odango-chan/ca-skill-studio-demo/issues/269) |
+| AI Authoring exact-candidate Development Build gate | NOT_IMPLEMENTED | [Studio #269](https://github.com/odango-chan/ca-skill-studio-demo/issues/269) |
+| MAS / Host Context formal Interface Package publication | BLOCKED | 当前锁定 kind 分别为 `tool-catalog` / `schema-bundle`；Publisher 设计与验收归入 SR-015 / SR-024，尚未发布 |
+| Real released ca-client-tools v1.1.0 as Compiler root | NOT_RUN | 需显式 `ca-client` synthetic Contract 正例 |
+| No-root UI state | NOT_IMPLEMENTED | 不调用 Compiler、无 Artifact、无 `NOT_ADMITTED` |
+
+#272 / #276 曾在各自历史 HEAD 通过 PR Verify、Native Windows、IDE Host、Theia Browser-Only、Theia Browser Host 和 Pages Chromium 等检查，但当前分支分别落后 main / base；历史 PASS 不满足当前合并门禁。必须在刷新分支后重跑完整 exact-head 验收。
+
+必要验收至少包括：原始发布 ZIP 导入/锁定字节一致性；Contract root closure 只包含可达 Interface Packages；无关项目依赖不进入 BuildRequest；声明为非 Interface Package 的 root fail-closed；缺失/损坏/摘要错/传递依赖环拒绝；零根不调用 Compiler；Node/WASM/Chromium 结果一致；AI 候选 stale invalidation、Apply/Undo 和磁盘未保存语义。所有结果只证明相应静态/编辑器层，不代表 Owner/Host Admission、Runtime、Production 或真实 5GC Qualification。
+
+## 8. 历史决策
+
+保留 [docs/decisions/0001-source-first-visual.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/decisions/0001-source-first-visual.md) 与 [docs/decisions/0002-ide-host-spike.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/decisions/0002-ide-host-spike.md)；Classic 为历史迁移证据。Package-first 见 [docs/decisions/0004-package-first-workspace.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/decisions/0004-package-first-workspace.md)。
 
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
 |---|---|---|---|---|---|
-| 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 全文 | 按最新 Studio 架构、AI Authoring、LSP 和 PR #258 恢复完整目标设计，并分离当前实现与 Plugin-managed v0.1 目标 | Issue #12；SR-016 |
+| 2026-11-25 | 0.1.0 | Codex / GPT-6 | 全文 | 整合已核对的跨仓基线和候选变更，建立分仓验收入口。 | F09 · IR-006 · SR-016 |
+| 2026-11-25 | 0.2.0 | GPT-6 | §4–7 | 明确 Studio 项目锁与 Compiler Lock 的边界、当前 MAS roots 的 package-kind 不匹配、no-root 行为、统一 Development Build gate 和当前 PR 新鲜度门禁。 | Studio #261、#267、#269、#270、#272、#276；EC02 Development Build |
+| 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | §3–7 | 明确 when 位于 `assurance/contract.yaml`；补齐 MAS Owner / Host Context Interface Package 的 Publisher 字段、导出闭包、精确来源与 Development provenance 边界，并关联 SR-015 / SR-020。 | IR-006 · SR-015 · SR-016 · SR-020 · Studio #269 |
+| 2026-11-25 | 0.3.1 | GPT-6.2（ChatGPT） | §4.4～7 | 将 Host Context Interface Package Publisher 从 SR-020 拆分到新 SR-024；SR-020 保留参考宿主架构审计职责；明确仅使用 Compiler v2.1.0 schema 要求的 files[].sha256 | 避免一个 SR ID 承载两项不同工作，并区分既有 Interface Package 文件摘要与 CA-SL Skill Artifact 的非目标完整性体系 | IR-006；SR-015、SR-016、SR-020、SR-024；Studio #261/#269/#272/#276 |
