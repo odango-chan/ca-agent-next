@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.2.7  
+> 文档版本：0.2.8  
 > 状态：待评审；全部 SR 当前为 DRAFT，不允许直接实施  
 > 修订日期：2026-11-25  
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -36,7 +36,7 @@
 
 | [SR-012](../SR/SR-012-Compiler设计归档与跨仓收敛.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Compiler 设计归档与跨仓收敛 | DRAFT |
 | [SR-013](../SR/SR-013-Compiler已检查when与发布产物.md) | [IR-003](../IR/IR%20总登记册.md#ir-003) | Compiler 已检查 when 与发布产物 | DRAFT |
-| [SR-015](../SR/SR-015-工具契约设计移交.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 工具契约设计移交 | DRAFT |
+| [SR-015](../SR/SR-015-工具契约设计移交.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Tool Interface 与 Provider 集成设计移交 | DRAFT |
 | [SR-016](../SR/SR-016-工作台设计移交与条件编辑.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 工作台设计移交与条件编辑 | DRAFT |
 | [SR-017](../SR/SR-017-业务插件设计移交.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 业务插件设计移交 | DRAFT |
 | [SR-018](../SR/SR-018-业务所有者设计移交.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 业务所有者设计移交 | DRAFT |
@@ -67,7 +67,7 @@
 - 设计来源：ca-agent-next PR #1 的架构、设计、规范和 Acceptance 文档。
 - PR #1：已合并；只代表设计文档变更。
 - Next Runtime：README 声明尚无已验收 Runtime 实现。
-- 所有 SR：DRAFT；Issue、实现 PR、Commit 和测试证据均未建立。
+- 所有 SR 当前仍为 DRAFT。SR-015 已关联 Next Issue #12 并有设计移交 PR 待审；其余 SR 的 Issue、实施 PR、Commit 和验收证据按各 SR 单独核对，不从本索引推断。
 - ca-agent-demo、ca-client-tools、ca-skill-compiler、ca-skills 和 ca-openamsm-plugin 的现有代码/PR 只能作为外部复用或依赖证据，不能自动算作 Next SR 已实施。
 
 ## 修订记录
@@ -82,3 +82,4 @@
 | 2026-11-25 | 0.2.5 | 更新 EC02 归档与追踪 | 对齐中央设计及 Compiler #61 | SR-012 |
 | 2026-11-25 | 0.2.6 | Codex 登记 Compiler 实施 SR | 对齐跨仓实施门槛 | SR-013 |
 | 2026-11-25 | 0.2.6 | Codex / GPT-6 · §1–4 · 登记分仓 SR 与真实基线状态 | 跨仓设计移交 | IR-006 |
+| 2026-11-25 | 0.2.8 | GPT-6.2（ChatGPT） | §2、§3 | 更新 SR-015 标题、设计移交范围和 Issue 关联说明 | 对齐 F03.05 Tool Interface 与 Provider 设计移交 | IR-006 · SR-015 · Issue #12 |
