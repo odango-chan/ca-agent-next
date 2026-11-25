@@ -43,15 +43,15 @@ If implementation and documentation disagree, stop and report the exact conflict
 
 ## 4. Skill package and optional Assurance — mandatory
 
-- Every Skill package has one required SKILL.md.
-- assurance/ is optional. When present, it contains the complete CA-SL source trio: contract.yaml, procedure.yaml and predicates.yaml (an empty PredicateSet when unused).
-- contract.yaml belongs inside assurance/. Do not move it to the Skill root or require it for every Skill.
-- No Assurance means the Skill is LLM-guided only; there is no Deterministic execution path.
-- Valid Assurance means the Skill supports both Deterministic and LLM-guided execution. Select the mode only after exact Skill binding.
-- If Assurance exists but is incomplete, invalid, unsupported or fails compilation/admission, reject the import. Never silently downgrade to SKILL.md-only.
+- Every Skill package has one required `SKILL.md`.
+- `assurance/` is optional in the authoring source. When present, it contains the complete CA-SL source trio: `contract.yaml`, `procedure.yaml` and `predicates.yaml` (an empty PredicateSet when unused).
+- The Agent runtime does not import Assurance source YAML and does not contain or invoke a Compiler. Assurance Skills are published with a Compiler-generated runtime Artifact; the published package contains the required compiled files and `SKILL.md`.
+- No Assurance / no compiled Assurance Artifact means the published Skill is LLM-guided only. A valid compiled Assurance Artifact enables both Deterministic and LLM-guided execution.
+- A published package that declares Assurance but omits required compiled files, has an unsupported Artifact format, malformed type data, or unresolved Tool/Capability dependencies fails import with an explicit diagnostic. It is never silently downgraded to SKILL.md-only.
+- The Importer performs only basic package/manifest/path/reference/type-data checks and local Plugin/Tool dependency resolution. This is not Skill Admission, trust evaluation, approval or production authorization.
 - Do not add supportedModes, a second LLM Contract, Domain Contract Package, TaskContract Package, applicability.yaml, activation.yaml, constraint.yaml or another Skill descriptor.
-- SKILL.md is Agent-facing natural-language guidance. It is not a deterministic Procedure or a second CEL contract.
-- predicates.yaml is execution-time business evaluation only; it does not select Skills.
+- `SKILL.md` is Agent-facing natural-language guidance. It is not a deterministic Procedure or a second CEL contract.
+- `predicates.yaml` is execution-time business evaluation only; it does not select Skills.
 
 ## 5. Skill selection — mandatory
 
@@ -68,34 +68,33 @@ If implementation and documentation disagree, stop and report the exact conflict
 ### 5.1 SkillCatalog residency and generation — mandatory
 
 - SkillCatalog is owned by Python Agent Core / Host, not by the Plugin Manager. Plugin Manager owns Plugin process lifecycle, IPC and extension dispatch only.
-- On startup and every explicit Skill import/update, read SKILL.md and the package assets once, validate them, compile Assurance `when` once through the canonical Compiler, and build a new immutable Catalog generation.
-- Every Skill, including SKILL.md-only Agent-only Skills, is registered in the Catalog. Keep full SKILL.md text, selection metadata, schema/type environment, compiled `when` program and admitted Artifact reference available in memory.
-- For each fresh Event, evaluate the already compiled `when` program against that Event's current `event.type` and `input`. Reuse the program, never cache the previous Event's boolean result by default.
+- On startup and every explicit Skill import/update, read the published Skill package once, validate its basic structure and references, resolve its declared Tool/Capability dependencies against locally installed Plugins, load the compiled Assurance Artifact if present, and build a new immutable Catalog generation.
+- Every Skill, including SKILL.md-only Skills, is registered in the Catalog. Keep full SKILL.md text, selection metadata, schema/type environment, deserialized `when` program and published Artifact reference available in memory.
+- For each fresh Event, evaluate the already deserialized `when` program against that Event's current `event.type` and `input`. Reuse the program; never cache the previous Event's boolean result.
 - Semantic selection uses candidate metadata derived from the imported SKILL.md. After selection, supply the full SKILL.md text from memory; do not reread the package file.
 - Load `references/` and large knowledge assets only when the selected Skill actually needs them. Large Procedure payloads may be loaded after selection and cached per Catalog generation; they must not cause per-Event package scans.
-- Build updates off to the side and atomically activate the new immutable generation only after the requested update validates. Failed updates leave the active generation unchanged. In-flight Invocations retain their pinned generation until completion.
+- Build updates off to the side and atomically activate the new immutable generation only after the requested package's basic structure, Artifact references and local dependencies have been checked. Failed updates leave the active generation unchanged. In-flight Invocations retain their pinned generation until completion.
 - Use a simple process-local monotonic generation number. Do not add Redis, a distributed cache, content digests or a new integrity system. No filesystem watcher or automatic package hot reload is required; explicit Skill import/update is the supported activation path.
 
-## 6. Skill Import and Compiler — mandatory
+## 6. Skill Import and published Artifact — mandatory
 
-- SKILL.md-only source imports directly without invoking the CA-SL Compiler.
-- Source containing assurance/ automatically invokes the canonical CA-SL Compiler before Artifact admission.
-- An already compiled Skill Artifact is inspected, verified and admitted directly; do not rebuild/recompile it.
-- A failed Assurance build/verify/admission is a hard import error. Do not strip fields, ignore unknown syntax or downgrade to LLM-guided.
-- Editing only SKILL.md updates Agent guidance and does not require rebuilding unchanged Assurance.
-- Editing contract.yaml, procedure.yaml, predicates.yaml or another Assurance source dependency triggers a new Compiler build and admission.
-- LLM-created/edited Skill source follows the same import path as user-authored source.
-- An individual LLM Action proposal is not Skill source and is validated by Runtime Action Boundary. Do not compile it, create a temporary Procedure or invoke the Compiler for each Action.
-- Do not copy the Go Compiler or reimplement its parsing/linking semantics in Python. Consume its canonical CLI/API.
-- Compiler v2.1.0 当前不包含刷新后的 contract.when 编译与 Python Runtime Artifact 互操作能力。实施任务以 [Compiler Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) 为准：保留冻结的 Development v1alpha1，新增 Development Artifact Manifest v1alpha2。
-- 目标交换格式是标准 google.api.expr.CheckedExpr（google.protobuf.Any）和对应的 FileDescriptorSet；必须先通过 cel-go → cel-expr-python 的真实互操作 PoC。Python 不得自行重解析/重做静态类型检查，也不得在每个 Event 调用 Compiler。详细约束见[技能目录与编译器运行时接口设计说明书](docs/集成设计/技能目录与编译器运行时接口设计说明书.md)。
+- The Agent accepts published Skill packages only. It does not accept Assurance source packages as runtime input.
+- SKILL.md-only published packages import directly without invoking a Compiler.
+- A Skill with Assurance must be compiled and verified by the independent Compiler before publication. Its published package contains SKILL.md and the compiled runtime Artifact; source YAML is not required by the Agent and is not compiled by the Agent.
+- The Agent Importer never invokes Compiler Check, Build, Inspect or Verify. It checks only the published Artifact's supported format/version, required files, safe relative paths, referenced-file presence, parseability of CheckedExpr/type descriptors, and resolvability of declared Tool/Capability dependencies against locally installed Plugins.
+- A package declaring Assurance but missing its compiled Artifact, containing malformed/incompatible compiled data, or referring to unavailable Tools/Capabilities fails import with a clear error. Never silently downgrade it to LLM-guided.
+- A published Artifact is loaded as-is; the Agent does not rebuild it, recompile it or independently perform Compiler release verification.
+- Editing SKILL.md updates Agent guidance. Editing Assurance source happens in the authoring/release workflow and requires a new external Compiler Build/Verify and publication before the updated Artifact is imported.
+- LLM-created/edited Assurance source is not executable in the Agent. It must go through the external Skill publishing workflow before import.
+- An individual LLM Action proposal is not Skill source and is validated by the common Runtime Action Boundary. Do not compile it, create a temporary Procedure or invoke a Compiler for each Action.
+- Do not copy the Go Compiler or reimplement its parsing/linking semantics in Python. The Compiler is an independent authoring/release toolchain and is not an Agent dependency or process.
 
 ## 7. Execution modes and Runtime
 
 - Choose execution mode only after a Skill is selected and bound.
 - No Assurance: LLM-guided only. Valid Assurance: Deterministic or LLM-guided. Invalid Assurance: import failure.
 - Python Host/Agent owns model loop, reasoning, Context assembly, Skill selection orchestration and Action proposal.
-- Python Runtime owns Skill Run, Artifact/Capability admission, common Action Request boundary, authorization, Plugin Tool dispatch, Effects, Outcomes/Evidence and Wait/Resume/Reconcile.
+- Python Runtime owns Skill Run, common Action Request boundary, declared Capability/callable scope checks, Plugin Tool dispatch, Effects, Outcomes/Evidence and Wait/Resume/Reconcile. There is no Skill Admission or production trust/approval mechanism in the Demo.
 - The deterministic Procedure Engine may live inside Runtime. The LLM Model Loop must not.
 - Both modes use exactly the same Runtime Action Boundary and Tool Plugin path.
 - LLM cannot call a Plugin directly, widen Capability, fabricate Evidence or declare an Owner mutation committed.
