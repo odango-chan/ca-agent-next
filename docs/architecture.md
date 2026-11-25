@@ -32,7 +32,7 @@ skills/<skill-name>/
 ├── assurance/                 # Optional; enables Deterministic execution
 │   ├── contract.yaml
 │   ├── procedure.yaml
-│   └── predicates.yaml        # Present when the Procedure uses Predicate definitions
+│   └── predicates.yaml        # Required; empty PredicateSet when unused
 ├── schemas/                   # Skill-owned request and other schemas
 ├── scripts/                   # Skill-owned deterministic scripts
 └── references/                # Optional Agent knowledge material
