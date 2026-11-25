@@ -1,0 +1,176 @@
+# 通用 Agent 实施提示词
+
+> 用途：指导 Harness 在 ca-agent-next 实现 Demo 通用 Agent  
+> 状态：目标实施任务，尚未执行  
+> 修订日期：2026-11-25  
+> 授权范围：仅 ca-agent-next；不得自动修改兄弟仓库、合并 PR 或发布 Release
+
+## 一、任务目标
+
+在 ca-agent-next 实现一个 Python 通用 Agent Core，以 Echo 为第一垂直示例，证明：
+
+- Agent 每次先绑定 Skill，再执行。
+- 只有一个 Plugin Manager，统一管理 Event ingress、Delivery 和 Tools。
+- Tool 是 Plugin 的 Operation，不是独立 Plugin 进程或 Manager。
+- Skill 只有 SKILL.md 时仅 LLM-guided；存在有效发布 Assurance Artifact 时支持 Deterministic 和 LLM-guided。
+- Agent 只消费外部发布的 Skill Runtime Artifact，不调用 Compiler。
+- SkillCatalog 在内存中缓存 SKILL.md、候选元数据和已反序列化 when 程序。
+- 每个新 Event 对当前 input 独立求值 when；Continuation 恢复原 Run。
+- Deterministic 与 LLM-guided 通过同一个 Runtime Action Boundary。
+- OpenAMSM 是 Echo 之后的第二个业务，不允许在 Core 中增加业务专用分支。
+
+## 二、实施前必读
+
+按顺序阅读：
+
+1. README.md、Agent.md。
+2. docs/架构设计/CA Agent Next 架构设计.md。
+3. docs/治理/文档总目录与索引.md。
+4. docs/规范/文档编写与治理规范.md、文件结构规范.md、技能与确定性保障格式规范.md、插件包与进程通信协议规范.md、公共契约与所有权规范.md。
+5. 对应设计说明书和 docs/验收与实施/演示验收基线.md。
+6. 当前仓库源码、测试、配置和实际分支状态。
+
+实施前核对：
+
+- 当前 branch、HEAD、工作区是否干净。
+- PR #1 最新 head 和状态。
+- ca-skills PR #88、ca-skill-compiler Issue #61、ca-client-tools PR #39、ca-openamsm-plugin PR #1 的最新状态。
+- Compiler 已发布的 Artifact Manifest 和 CheckedExpr/DescriptorSet 实际契约是否可用。
+
+本文中的 SHA、PR 状态和版本是时间快照，必须重新核对，不能当作永久事实。
+
+### 评审范围与非目标
+
+- 开始实施和自评审前，必须阅读 Agent.md 的 review_scope 和《文档编写与治理规范》中的统一评审规则。
+- 如果 CI 已生成评审上下文，必须下载并使用；SR-001 尚未实施时，手动将 Agent.md 的范围区块和公共评审提示词交给评审 Agent。
+- 本次 SR/PR 可以缩小项目范围，不得扩大；默认只检查本次变更及其直接依赖。
+- 不得把生产级 HA/DR、SLA、容量规划、企业级 IAM、多租户治理、Trust Registry、包签名、额外 SHA-256、生产密钥管理、SIEM 或 Production Qualification 的缺失列为当前阻塞。
+- 基本输入/Schema/版本/路径校验、fail-closed、Runtime Capability/callable scope、Owner Receipt/Commit Proof、UNKNOWN、Continuation、原始 N1/N2 保真、Example 和真实 Acceptance 仍是必须要求。
+- 问题分类使用 BLOCKER、NON_BLOCKING、OUT_OF_SCOPE、DEFERRED、UNVERIFIED、SCOPE_DECISION_REQUIRED。BLOCKER 必须追溯到要求并给出可复核证据；范围冲突交由用户决定。
+
+## 三、不可改变的架构约束
+
+1. Agent Core、Host、Agent Model Loop、Skill Importer、Resolver 和 Runtime 使用 Python。
+2. Plugin 是独立进程单元，可使用 Go；Go Plugin 不意味着 Go Host。
+3. 全系统只有一个 Plugin Manager。
+4. Plugin 可导出 event.ingress、event.delivery、tools 中一种或多种 Extension。
+5. Tool 是 Plugin 的 Callable Operation；ca-client-tools 是 Tool Plugin，不是每个 Tool 一个进程。
+6. SKILL.md 必需；Assurance 可选；没有 Assurance Artifact 仅 LLM-guided；有效发布 Artifact 支持两种模式；Artifact 无效则导入失败。
+7. Skill 选择先于模式选择。when 只在 Assurance 作者源 Contract 中定义，predicates.yaml 只用于执行期业务判断。
+8. Agent 只消费已发布 Skill Runtime Artifact。Agent 不调用 Compiler Check/Build/Inspect/Verify，不建立 Skill Admission。
+9. Agent 只做发布包基本结构、必需文件、格式、路径、类型数据和本地依赖检查；不得重写 Compiler 静态语义或 Artifact 自校验。
+10. when 由外部 Compiler 在发布前静态检查；Agent 导入时反序列化一次，每个新 Event 独立求值。
+11. SkillCatalog 属于 Core/Host，不属于 Plugin Manager。显式更新原子切换 generation，在途 Invocation 固定 generation。
+12. Deterministic 与 LLM-guided 共用 Runtime Action Boundary。Runtime 做当前 Skill 声明 Callable Scope 的 Demo 级检查，不建设生产级授权体系。
+13. Owner Receipt/Commit Proof 是业务提交结果权威；HTTP 200、IPC 成功或 Delivery 成功不能替代，UNKNOWN 不得变成 COMMITTED。
+14. SBI 可携带 JSON 和 multipart/binary。Event Plugin 解析协议，Host 管理 ArtifactStore，Codec 按需通过 ca-client-tools tools Extension 调用。
+15. 不做旧版兼容，不增加 activation.yaml、constraint.yaml、supportedModes、Domain/Task Contract Package、第二个 Registry/Manager。
+16. 不增加额外 SHA-256、签名、Trust Registry、分布式缓存、文件监听、自动下载、Marketplace、通用热更新或生产级 HA/DR/SLA。
+
+## 四、实施阶段
+
+### Phase A：Python Core 基础骨架
+
+- 建立 Host、Agent Model Loop、Context、Run 和 Runtime 的 Python 模块边界。
+- 逐文件评估 ca-agent-demo 可复用代码，不复制整个目录。
+- 不引入 OpenAMSM/5GC 专用逻辑。
+
+### Phase B：唯一 Plugin Manager
+
+- 实现 Plugin Package v1alpha1 Manifest 读取和基本校验。
+- 实现进程启动、握手、NDJSON IPC、correlation、关闭。
+- 支持 Event ingress、Delivery 和 Tools 三种 Extension。
+- 在同一 Manager 内适配 ca-client-tools provider/v2；不得建立第二 Provider Manager。
+- Manifest、Schema、路径、版本、重复 YAML key 和握手不匹配均有明确失败测试。
+
+### Phase C：发布 Skill Artifact 导入
+
+- 实现 SKILL.md-only 导入。
+- 实现已发布 Assurance Artifact 的结构、必需文件、格式、路径、类型数据和依赖检查。
+- 不调用 Compiler 命令，不实现 Skill Admission。
+- Artifact 缺失/损坏/不支持/依赖未解析时导入失败，不得降级。
+- 导入时加载 CheckedExpr Any 和 DescriptorSet，反序列化一次并保存于 Catalog generation。
+
+如果 Compiler 发布契约尚未完成，先实现不依赖具体 Artifact 内部字段的包结构和接口测试；将 CEL Artifact 消费标记 BLOCKED，不得自造格式。
+
+### Phase D：SkillCatalog 与 Resolver
+
+- Catalog 注册 SKILL.md-only 与发布 Assurance Artifact Skills。
+- 缓存完整 SKILL.md 和语义候选元数据。
+- 对每个新 Event 使用当前 event.type/input 评估已加载的 when Program。
+- 一个 true 直接选择；多个 true 仅在精确候选集合内消歧；无 true 时只对无 when 的候选做语义选择。
+- false/error 的 Skill 排除，不得重新加入语义集合。
+- Continuation 先恢复原 Run，不重新选择。
+- 显式导入/更新候选 generation，成功后原子切换，失败保留旧 generation。
+- references/ 大型材料按需加载。
+
+### Phase E：统一 Runtime Action Boundary
+
+- Deterministic Procedure Engine 与 LLM Model Loop 提出同一种 Runtime Action Request。
+- Runtime 检查当前 Skill 声明的 Callable Scope、Callable ID、参数 Schema、Effect、Artifact 引用和 Run 状态。
+- Plugin Manager 只分发已检查的调用。
+- READ Observation 保留来源；MUTATION 结果按 Owner Receipt/Commit Proof 解释。
+- UNKNOWN 保持 UNKNOWN。
+
+### Phase F：Echo 垂直 E2E
+
+- 同一个 Go Plugin 进程暴露 Event、Delivery 和 Tool。
+- SKILL.md-only Echo 仅 LLM-guided。
+- 发布 Assurance Artifact Echo 分别运行 Deterministic 和 LLM-guided。
+- 覆盖 Artifact 导入、Skill 选择、when、Callable Scope、Outcome/Evidence 和 Delivery。
+- 运行 EX-01～EX-19、EX-21～EX-29；EX-20 留给 OpenAMSM 第二业务。
+- 清理冗余代码、重复 Registry 和过渡脚手架。
+
+### Phase G：OpenAMSM Plugin 集成
+
+仅在 Echo 通过后开始：
+
+- 对齐 ca-openamsm-plugin 的 Manifest/IPC/Handoff。
+- SBI HTTP/2、JSON/multipart、Content-ID、原始 N1/N2 和 Delivery 在 Go Event Plugin 中实现。
+- Event Plugin 不选择 Skill，不实现 Owner Tool 或 Runtime。
+- ca-client-tools 通过统一 tools Extension 接入。
+- 仅消费已发布 Interface Package 中实际存在且通过测试的 Codec Operation。
+- 使用 ca-skills 已发布的 Establish、Modify、UE-requested Release Artifact。
+- 冻结实际 SBI Operation、Event 字段、externalRequestId 和 continuation 关联。
+
+### Phase H：真实 OpenAMSM E2E
+
+- 一个真实隔离 OpenAMSM Owner/SMF、一个 UE/PSI。
+- Create → Modify → UE-requested Release 完整执行。
+- 验证原始 N1/N2、Artifact 关联、Run/Wait、N1 0xD4 和适用 N2 响应。
+- 验证 Receipt/Commit Proof/Reconcile 和零重复 mutation。
+- Synthetic Owner 证据不能替代真实隔离 E2E。
+
+## 五、测试与证据要求
+
+- 每个阶段实际执行测试并记录命令、数量、结果。
+- 测试失败、环境阻断和未执行分别标记 FAIL、BLOCKED、NOT_RUN。
+- 不允许根据源码审查推断测试 PASS。
+- 每个新外部可观察机制都要有 Example 和 Acceptance。
+- 更新对应设计说明书、规范、验收和文档索引。
+- 不声明 Production Qualification。
+
+## 六、停止条件
+
+出现以下任一情况，停止相关阶段并提交证据：
+
+- 实际 Artifact 契约与文档不一致。
+- 需要 Agent 调用 Compiler 或实现 Skill Admission 才能完成导入。
+- 需要在 Python 重写 CEL Parser、Compiler 或 Procedure Linker。
+- 需要引入第二 Plugin/Provider/Tool/Codec Manager。
+- 需要修改兄弟仓库才能继续，但当前阶段未授权。
+- 真实协议字段、消息类型或关联 ID 不确定。
+- 任何测试准备标 PASS 但没有真实运行结果。
+
+## 七、交付报告
+
+报告仓库、分支、基线 SHA、最新 HEAD、PR/Commit、修改文件、测试命令/结果、对应 Example、外部依赖状态、NOT_RUN/BLOCKED 项、架构偏差和下一阶段是否可启动。
+
+不得自动合并 PR、发布 Release 或修改兄弟仓库。
+
+
+## 修订记录
+
+| 日期 | 修订 | 说明 |
+|---|---|---|
+| 2026-11-25 | R2 | 增加统一评审范围和非目标约束。 |
