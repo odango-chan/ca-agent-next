@@ -42,6 +42,14 @@
 
 SR-013 整体仍为 DRAFT。AC-013-01 的隔离 PoC 完成不自动把 SR-013 提升为 READY，也不授权修改 Compiler 主线、合并 PR 或发布 Release。
 
+| AC | 当前状态 | 下一步 |
+|---|---|---|
+| AC-013-01 | PASS（隔离 PoC 报告）；独立复核 NOT_RUN | 获取本地证据提交 78dddd5 并完成独立复核；不得把报告当产品实现 | 
+| AC-013-02 | NOT_RUN | 正式 Contract.when AST、G.4、Schema-aware Guard / Nullable lowering | 
+| AC-013-03 | BLOCKED（依赖 AC-013-02 和 Owner Gate） | Compiler Owner 确认新版 Artifact API 与 Manifest | 
+| AC-013-04 | NOT_RUN | 新版 Build / Verify、Go/Python、Native/WASM/Chromium 与旧契约回归 | 
+| AC-013-05 | BLOCKED（依赖 AC-013-01～04 和发布授权） | 经授权发布 Compiler Release 并记录资产和 smoke 证据 | 
+
 ## 3. AC-013-01：Schema-aware Go/Python 隔离 PoC
 
 ### 3.1 结果摘要
@@ -288,6 +296,22 @@ AC-013-05  经授权 Compiler Release
 - 目标仓写入权限、PR 合并或 Release 授权缺失：只做只读检查或已授权范围内的工作，不越权。
 
 恢复时先重新核对规范 SHA、Compiler HEAD、Issue #61、目标分支、权限和最后一个已通过 Acceptance；从第一个未通过阶段继续，不重跑或覆盖已通过证据。
+
+## 8.1 DeepSeek Harness Goal 执行约束
+
+SR-013 达到 READY 且文档门禁通过后，实施使用一个连续 Goal，避免将 AC 拆成彼此失去上下文的零散任务：
+
+- 模式：DeepSeek Harness Goal。
+- 模型：DeepSeek 最新 Flash。
+- 推理强度：low。
+- 顺序：AC-013-01 证据复核 → AC-013-02 → AC-013-03 → AC-013-04 → AC-013-05。
+- 允许在同一个 Goal 内按依赖连续处理多个 AC；不得并行执行有依赖关系的阶段，不得跳过失败阶段。
+- 每个 AC 仍需独立记录 Issue #61 关联、提交、测试、受测 SHA 和证据；不得把一个总的 PASS 替代逐 AC 验收。
+- AC-013-03 只有在 Compiler Owner 已确认 Artifact API 后才可继续；没有确认就停在 Owner Gate，不得自行更换版本名。
+- AC-013-05 必须再次检查发布授权；没有明确授权时只完成 Release 前检查，不创建 Tag 或 Release。
+- 若远端找不到本地证据提交 78dddd5、EVIDENCE.md 或其 Artifact，必须标记证据不可访问并请求提供；不得假装已复核，也不得用聊天报告替代独立复核。
+- Compiler 代码变更在 ca-skill-compiler 仓执行；Next 仅维护中央设计、SR 和验收证据。ca-skills Bundle CI 与 Next Runtime 消费端仍按 SR-023、SR-004/005/006 分别处理。
+- 只有 G1～G10 文档门禁、SR READY、依赖检查和目标仓写入授权全部满足后，才生成一个完整可复制的 Goal 提示词。提示词必须包含固定文档 SHA、Issue #61、各 AC 顺序、精确命令、停止规则、非目标和证据格式。
 
 ## 9. 非目标
 
