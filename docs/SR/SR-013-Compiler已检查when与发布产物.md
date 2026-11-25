@@ -59,7 +59,7 @@ SR-013 整体仍为 DRAFT。AC-013-01 的隔离 PoC 完成不自动把 SR-013 �
 | 真实 Schema 管线 | PASS：使用 Development 多 Skill 共享 Lock fixture；逐 Skill 解析 Request Schema |
 | Schema 解析 | PASS：buildSchemaRegistry → resolveReferenceFrom → resolveSchemaRoot |
 | DescriptorSet | PASS：由 Schema Registry 解析结果生成 FileDescriptorSet |
-| Nullable 三态 | PASS：[T, null] 通过 oneof { value, is_null } 区分 Missing / Explicit Null / Value |
+| Nullable 三态 | PASS：[T, "null"] 通过 oneof { value, is_null } 区分 Missing / Explicit Null / Value |
 | CheckedExpr | PASS：Go 生成标准 cel.expr.CheckedExpr Any 和类型描述 |
 | Python 消费 | PASS：Python 只调用 env.deserialize(bytes)，未解析或重编源表达式 |
 | 跨语言用例 | PASS：同一产物 18/18 结果一致 |
@@ -162,9 +162,9 @@ PoC 中复用 Development Schema/Lock fixture 只证明共享 Schema 解析机�
 
 ### 5.1 版本决策
 
-设计推荐候选 API：connectionagent.io/compiler-artifact/v2alpha1。这是与冻结 connectionagent.io/compiler-artifact/v1alpha5 不兼容的新 Runtime Artifact API；语言目标仍为 connectionagent.io/v1alpha5。
+设计推荐候选 API：Artifact 为 connectionagent.io/compiler-artifact/v2alpha1，BuildResult 为 connectionagent.io/compiler-build-result/v2alpha1。这两个 API 与冻结的 v1alpha5 API 分别版本化；languageTarget 仍为 connectionagent.io/v1alpha5。
 
-**Owner Gate：** Compiler Owner 必须在 AC-013-03 代码实施前确认该 API 名称。若拒绝，先在 EC02 / SR-013 中更新决策及理由；Harness 不得自行改用 v1alpha6、Development v1alpha2 或其他临时名字。
+**Owner Gate：** Compiler Owner 必须在 AC-013-03 代码实施前确认两个 API 名称。若拒绝，先在 EC02 / SR-013 中更新决策及理由；Harness 不得自行改用 v1alpha6、Development v1alpha2 或其他临时名字。
 
 ### 5.2 候选文件
 
@@ -182,18 +182,13 @@ when.*.pb 仅在 Skill 声明 when 时存在。最终文件名和 Manifest 字�
 
 每个有 when 的 Skill 必须能够从 Manifest 精确确定：
 
-- CheckedExpr Any 文件路径。
-- FileDescriptorSet 文件路径。
-- 当表达式访问 input 时所绑定的 Request Schema 精确身份。
-- 作者源路径 assurance/contract.yaml。
-- when 表达式源码位置。
-- Skill 对程序与类型闭包的独占归属。
+新版 Manifest 保留现有 v1alpha5 顶层字段语义，skills[] 保留 name、sourceDigest、sourceFiles、compiledFiles、waitLinks，并为有 when 的 Skill 增加可选 when 对象。该对象至少记录 checkedExprPath、descriptorSetPath、input 被引用时的 requestSchemaRef 与 resolvedRequestSchemaPath、sourcePath 和 sourceRange（startLine/startColumn/endLine/endColumn）。
 
-Any type URL 固定为 type.googleapis.com/cel.expr.CheckedExpr；payload 为标准 cel.dev/expr.CheckedExpr。DescriptorSet 是标准 google.protobuf.FileDescriptorSet。不增加额外 SHA-256、签名或 Trust Registry。
+when.checked.pb 与 when.types.pb 同时进入该 Skill 的 compiledFiles[] 和 Manifest outputFiles[]；逐文件 sha256 复用既有 outputFiles 机制，不增加额外摘要字段。Any type URL 固定为 type.googleapis.com/cel.expr.CheckedExpr；payload 为标准 cel.dev/expr.CheckedExpr。DescriptorSet 是标准 google.protobuf.FileDescriptorSet。
 
 ### 5.4 AC-013-03 验收
 
-- 新 Artifact API、JSON Schema、Go DTO/Assembler/Verifier 和文件布局经 Compiler Owner 确认。
+- 新 Artifact API 与 BuildResult API、JSON Schema、Go DTO/Assembler/Verifier 和文件布局经 Compiler Owner 确认；建议 Schema 路径为 contracts/v2alpha1/artifact-manifest.schema.json 与 contracts/v2alpha1/build-result.schema.json。
 - 有 when 与无 when 两类 Skill 的 Manifest 正确。
 - CheckedExpr / DescriptorSet 文件路径、Schema identity、SourcePath 和源码位置闭合。
 - 多 Skill 文件与 Descriptor 归属无冲突。
@@ -218,7 +213,7 @@ Any type URL 固定为 type.googleapis.com/cel.expr.CheckedExpr；payload 为标
 - 验证所有类型引用可解析，Request Schema identity 与该 Skill 一致。
 - 验证 SourcePath、表达式位置、程序文件与 Manifest 一致。
 - 验证不存在跨 Skill Descriptor 引用。
-- 对新版产物执行完整重建和逐文件比较或 Compiler Owner 批准的等价确定性复验。
+- 新版 BuildResult 使用对应版本化 Verify 路径，执行完整重建和逐文件比较或 Compiler Owner 批准的等价确定性复验；现有 CLI 写盘前 Verify 的不变量必须保留。
 - 新版失败行为不改变冻结 v1alpha5 与 Development v1alpha1 的 Verify。
 
 ### 6.3 必跑命令
