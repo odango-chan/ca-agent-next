@@ -1,169 +1,211 @@
 # Plugin Package v1alpha1
 
-**Status:** proposed Next Demo contract. This document defines the YAML package manifest and the minimal common Plugin process boundary. It does not define a Marketplace, package trust platform or business contract registry.
+**Status:** normative target contract for ca-agent-next and all native Plugins. The document is part of the open architecture PR; it is not an implementation claim.
 
-## 1. Package layout
+## 1. One Plugin mechanism
 
-A Plugin is one independently running process/package. Its installed directory contains a YAML manifest, its executable, and only the local Event Schemas or other assets it owns.
+A Plugin is one independently running package/process managed by the single Python Plugin Manager. One process may expose any combination of:
+
+- event.ingress — Plugin publishes normalized external Events to Host;
+- event.delivery — Host sends a structured response to the originating Plugin;
+- tools — Host invokes callable Tool operations exported by the Plugin.
+
+A Tool is an operation, not a process, manager or Runtime. There is no separate Provider Manager, Tool registry, Event Registry or Delivery manager.
+
+The Plugin Manager owns process lifecycle, handshake, IPC framing, correlation and extension dispatch. It does not select Skills, authorize Actions or decide Owner outcomes.
+
+## 2. Package layout and manifest
+
+A native Plugin package contains one YAML manifest, its executable and the local assets it owns.
 
 ~~~text
-plugins/echo/
+plugins/openamsm/
 ├── plugin.yaml
 ├── bin/
-│   └── echo
-├── schemas/
-│   ├── echo-request.schema.yaml
-│   └── echo-response.schema.yaml
-└── interface/
-    └── <Compiler-owned Tool Interface Package files>
+│   └── ca-openamsm-plugin
+└── schemas/
+    ├── create-sm-context.request.schema.yaml
+    ├── update-sm-context.request.schema.yaml
+    └── response.schema.yaml
 ~~~
 
-The Tool Interface Package keeps its own canonical format. Do not rewrite it to match the Plugin manifest or copy its Tool definitions into plugin.yaml.
-
-## 2. YAML manifest
+The manifest is YAML-first. Tool definitions are not copied into it.
 
 ~~~yaml
-# plugin.yaml
 apiVersion: connectionagent.io/plugin-package/v1alpha1
 kind: Plugin
 metadata:
-  id: urn:example:plugin:echo
+  id: urn:connectionagent:plugin:openamsm
   version: 0.1.0
 
 process:
-  executable: bin/echo
+  executable: bin/ca-openamsm-plugin
   args: [serve]
   protocol: connectionagent.io/plugin-ipc/v1alpha1
 
 extensions:
   event.ingress:
     events:
-      - type: echo.request
-        description: Receive an Echo request.
-        requestSchema: schemas/echo-request.schema.yaml
+      - type: nsmf.create-sm-context
+        description: Normalized Nsmf CreateSMContext request.
+        requestSchema: schemas/create-sm-context.request.schema.yaml
+
+      - type: nsmf.update-sm-context
+        description: Normalized Nsmf UpdateSMContext request.
+        requestSchema: schemas/update-sm-context.request.schema.yaml
 
   event.delivery:
     responses:
-      - eventType: echo.request
-        responseSchema: schemas/echo-response.schema.yaml
-
-  tools:
-    interfacePackage: interface/
+      - eventType: nsmf.create-sm-context
+        responseSchema: schemas/response.schema.yaml
+      - eventType: nsmf.update-sm-context
+        responseSchema: schemas/response.schema.yaml
 ~~~
 
-Rules:
+Manifest rules:
 
-- metadata.id is a stable Plugin identity; metadata.version is the installed Plugin release version.
-- process.executable is relative to the installed package root. process.args is passed as an argument vector, without shell interpretation.
-- process.protocol selects the common Plugin IPC version.
-- extensions declares one or more of event.ingress, event.delivery and tools. A Plugin may expose any combination in the same process.
-- Each Event type has a normalized request Schema. A paired response declaration identifies the response Schema for that Event type.
-- The tools extension references the existing Tool Interface Package. Callable IDs, input/output Schemas, Effects, Capability membership and Owner outcome semantics remain owned by that Interface Package.
-- The manifest must not contain a Skill ID, business Goal, business Contract Package reference, execution mode or authorization grant.
-- A Tool Plugin may export many Tool operations. Do not create one process per Tool.
+- apiVersion and process.protocol are exact versions. No aliases, fallback versions or legacy compatibility.
+- metadata.id identifies the Plugin; metadata.version identifies the installed Plugin release.
+- process.executable is relative to the installed package root. process.args is passed as an argument vector without shell interpretation.
+- extensions contains one or more of event.ingress, event.delivery and tools. A Plugin may expose all three in one process.
+- Event schemas describe the normalized Event payload. They do not contain Skill IDs, business Goals, execution modes or authorization grants.
+- event.delivery pairs a response schema with the originating event type. Host records the response obligation; Plugin does not choose which Run or response to deliver.
+- tools.interfacePackage points to the canonical Tool Interface Package. Callable IDs, input/output Schemas, Effects, Capability membership and Owner outcome semantics remain owned by that package.
+- Unknown fields, duplicate YAML keys, missing fields, unsupported versions, invalid Schema references and paths escaping the package root fail Plugin loading with an actionable diagnostic.
 
-## 3. Basic package validation
+The manifest is not a second business Contract, ToolCatalog, Skill descriptor or authorization document.
 
-At startup the Plugin Manager:
+## 3. Package loading and lifecycle
 
-1. Loads plugin.yaml with a YAML 1.2 safe parser.
-2. Rejects invalid YAML, duplicate keys, unknown manifest fields, missing required fields, unsupported API versions and an empty extension set.
-3. Validates the Plugin ID/version shape and the basic manifest Schema.
-4. Resolves executable, Event Schema and Interface Package paths relative to the installed root. Reject absolute paths, path traversal and symlinks that escape the root.
-5. Validates the referenced Event Schemas and loads the Tool Interface Package using its owning contract.
-6. Starts the executable directly, performs the handshake and registers only the extensions confirmed by both manifest and Plugin.
-7. Leaves the Plugin unavailable if preflight or handshake fails.
+At Host startup, the one Plugin Manager:
 
-This is ordinary correctness validation. The Demo does not calculate an additional SHA-256 snapshot for the Plugin or Event package, require package signatures, run a Trust Registry, or implement a package-integrity framework. The Compiler/Interface Package may retain its own canonical identity rules where its owning contract requires them; the Host must not add a parallel hashing system.
+1. Loads plugin.yaml with a safe YAML 1.2 parser.
+2. Validates the manifest shape, exact API version, Plugin identity and extension declarations.
+3. Resolves executable and local Schema paths relative to the package root. Reject absolute paths, traversal and symlinks escaping the root.
+4. Validates declared Event Schemas and loads a Tool Interface Package using that package's own canonical contract.
+5. Starts the executable directly, performs the common IPC handshake and compares the Plugin's reported identity, protocol and extensions with the manifest.
+6. Makes only the verified extensions available. A failed package or handshake leaves that Plugin unavailable.
 
-Deployment configuration selects the installed package directory, executable configuration, endpoints and secret references. Adding or changing a Plugin requires an explicit deployment change and Host restart. No Marketplace, installer, automatic download or hot reload is required.
+The Demo uses explicit installed package paths and operator-provided process arguments. A deployment change and Host restart are sufficient to add or change a Plugin. No Marketplace, installer, automatic download, hot reload, package signature or Trust Registry is required.
 
-## 4. Normalized Event contract
+This is basic correctness validation, not a package-integrity framework. Do not add extra Plugin/Event SHA-256 snapshots or package signatures. Existing Compiler/Interface Package identity rules remain with their owners.
 
-The Event Plugin owns protocol decoding and normalization. The Host receives only the declared normalized Event type and payload.
+## 4. Normalized Event envelope
 
-Example Event declaration:
-
-~~~yaml
-# Part of plugin.yaml
-extensions:
-  event.ingress:
-    events:
-      - type: nsmf.create-sm-context
-        description: A normalized Create SM Context request.
-        requestSchema: schemas/create-sm-context.schema.yaml
-~~~
-
-Example ingress payload:
+The Event Plugin owns external protocol parsing and normalization. Host receives only a declared Event type and its normalized payload.
 
 ~~~json
 {
   "eventId": "event-123",
   "ingressId": "openamsm.nsmf",
   "eventType": "nsmf.create-sm-context",
-  "source": "authenticated-peer",
+  "externalRequestId": "protocol-stable-request-id",
+  "responseChannelId": "plugin-local-channel-456",
+  "source": {
+    "protocol": "3gpp-sbi",
+    "peerId": "authenticated-peer"
+  },
   "payload": {
     "requestType": 1
-  }
+  },
+  "artifacts": []
 }
 ~~~
 
-The Event envelope contains:
+Fields:
 
-- eventId: stable logical identity for this external event, distinct from the IPC frame ID;
-- ingressId: the exact declared ingress extension;
-- eventType: an exact event type declared in plugin.yaml;
-- source: the authenticated or otherwise Plugin-established source identity;
-- payload: normalized input validated against the Event request Schema.
+- eventId: unique logical Event instance ID; distinct from an IPC messageId and an HTTP/2 stream ID.
+- ingressId: exact declared ingress extension ID.
+- eventType: exact declared normalized Event type.
+- externalRequestId: stable protocol request/retry identity when the external operation defines one. It must not be an HTTP/2 stream ID. If an operation has no reliable retry identity, its retry/replay behavior remains an explicit integration blocker; do not invent a false guarantee.
+- responseChannelId: opaque Plugin-local handle for the current external response channel. It is not a Host Run ID and is not a durable business identity.
+- source: protocol and authenticated peer context established by the Plugin.
+- payload: normalized JSON input validated against the declared Event request Schema.
+- artifacts: optional inbound binary descriptors defined by the Host Artifact Handoff contract.
 
-The Event Plugin does not select a Skill and does not include a Skill ID or business-contract package reference. The normalized payload is the input offered to Skill selection. A selected Assurance requestSchema must accept that input; the Host does not guess or invent a business-specific projection.
+The Host assigns Run IDs and responseObligationIds. The Plugin never supplies a Skill ID, selects a Skill, names a Run or chooses execution mode.
 
-For paired responses, the Host records an opaque response handle with the accepted Event and sends the structured response to the same originating Plugin process. Protocol-specific encoding remains inside that Plugin.
+For the same stable externalRequestId, an identical retry attaches a new response obligation to the original Run. Reuse with different normalized content is a conflict. The Host must compare the actual normalized values and referenced bytes as needed; no semantic-content digest is introduced. If identity or equality cannot be established, fail closed rather than repeat a mutation.
 
-## 5. Common Plugin IPC
+The Event payload is the input offered to Skill selection. An Assurance Skill's requestSchema, when present, must also accept the normalized input. No generic business projection layer is added.
 
-The initial Demo uses one long-lived child process per configured Plugin and UTF-8 NDJSON over stdin/stdout.
+## 5. Common IPC v1alpha1
 
-- Host writes protocol frames to Plugin stdin.
-- Plugin writes protocol frames to stdout.
+Native Plugin processes use UTF-8 NDJSON over stdin/stdout:
+
+- Host writes frames to Plugin stdin.
+- Plugin writes frames to stdout.
 - stdout is protocol-only; diagnostics go to stderr.
-- The Plugin does not import Python Host modules or expose a second Host control API.
-- One connection carries initialization, Event ingress, Tool invocation, Delivery, cancellation and shutdown messages.
+- One long-lived process connection serves initialization, Event ingress, Tools, Delivery, cancellation and shutdown.
+- The Plugin must not import Python Host modules or create a second Host API.
 
-Every frame has this common envelope:
+Every frame has one envelope:
 
 ~~~json
 {
   "apiVersion": "connectionagent.io/plugin-ipc/v1alpha1",
   "messageId": "frame-123",
-  "correlationId": "request-456",
-  "type": "message.type",
+  "correlationId": "frame-100",
+  "type": "ingress.ack",
   "payload": {}
 }
 ~~~
 
-messageId identifies one transport frame. correlationId links a request and its reply or a long-running operation. Neither replaces the logical Event ID, Run ID or Owner invocation identity.
+Envelope semantics:
 
-### 5.1 Message inventory
+- apiVersion: exact IPC version.
+- messageId: unique ID for this frame.
+- correlationId: required for a reply or a message continuing an existing request; it equals the messageId of the request being answered. It may be omitted for an unsolicited ingress.event.
+- type: exact message type from the inventory below.
+- payload: type-specific object.
 
-| Direction | Type | Purpose |
-|---|---|---|
-| Host → Plugin | host.initialize | Supply Plugin identity, supported IPC version and deployment configuration |
-| Plugin → Host | plugin.ready | Confirm Plugin identity, release version, IPC version and available extensions |
-| Plugin → Host | ingress.event | Submit a normalized Event |
-| Host → Plugin | ingress.ack | Return accepted, duplicate, conflict or rejected disposition and Run reference when accepted |
-| Host → Plugin | tools.invoke | Invoke an exported Tool operation |
-| Plugin → Host | tools.result | Return Tool output or a structured error/result |
-| Host → Plugin | delivery.dispatch | Deliver a validated structured response to the originating Plugin |
-| Plugin → Host | delivery.result | Report delivered, failed or unknown |
-| Host → Plugin | host.cancel | Request cancellation of a correlated operation where supported |
-| Plugin → Host | plugin.cancelled | Confirm cancellation disposition |
-| Host → Plugin | host.shutdown | Stop accepting new work and shut down |
-| Plugin → Host | plugin.stopped | Confirm process shutdown |
+messageId, correlationId, eventId, invocationId, deliveryId, responseObligationId and Run ID are distinct identities. Do not substitute one for another.
 
-The exact required fields for each payload are defined by the IPC message Schema in the implementation. Do not create a second IPC protocol for Tools or Event Delivery.
+### 5.1 Message inventory and required payloads
 
-### 5.2 Lifecycle
+| Direction | Type | Required payload fields | Meaning |
+|---|---|---|---|
+| Host → Plugin | host.initialize | pluginId, expectedVersion, ipcVersion, config | Start configuration and negotiated IPC version. When binary transfer is enabled, includes Host-created artifactStaging.inboundDirectory and artifactStaging.outboundDirectory. |
+| Plugin → Host | plugin.ready | pluginId, pluginVersion, ipcVersion, extensions | Confirms identity, protocol and exact extension IDs/types implemented by this process. |
+| Plugin → Host | ingress.event | eventId, ingressId, eventType, externalRequestId, responseChannelId, source, payload, artifacts | Publish one normalized external Event. correlationId is omitted unless the Event is itself a continuation of a correlated IPC operation. |
+| Host → Plugin | ingress.ack | eventId, disposition, runId?, responseObligationId?, artifactRefs?, error? | Accepted, duplicate attached, conflict or rejected disposition. |
+| Host → Plugin | tools.invoke | invocationId, callableId, arguments, artifactRefs, deadlineMs? | Invoke one authorized Tool operation. Runtime has already checked the selected Skill, Capability, Effect and input Schema. |
+| Plugin → Host | tools.result | invocationId, result? or error | Return the Tool result matching the owning Interface Package, or a transport/operation error. |
+| Host → Plugin | delivery.dispatch | deliveryId, runId, responseObligationId, eventType, statusCode, headers, body, artifacts | Deliver the Host-validated response for the recorded obligation. |
+| Plugin → Host | delivery.result | deliveryId, disposition, statusCode?, error? | Report delivered, failed or unknown. |
+| Host → Plugin | host.cancel | targetMessageId or targetOperationId, reason | Request cancellation where the operation supports it. |
+| Plugin → Host | plugin.cancelled | targetOperationId, disposition | Report cancelled, too_late or unsupported. |
+| Host → Plugin | host.shutdown | gracePeriodMs | Stop accepting new work and shut down. |
+| Plugin → Host | plugin.stopped | inFlightCount | Confirm process stop and report remaining in-flight work. |
+
+Type-specific requirements:
+
+- host.initialize must provide the Plugin's exact package identity and the one supported IPC version. Plugin must not choose a different version.
+- plugin.ready must report only extensions declared in plugin.yaml. A mismatch fails the handshake.
+- ingress.ack disposition is one of accepted, duplicate_attached, conflict or rejected. accepted and duplicate_attached include Host-assigned runId and responseObligationId. Rejected/conflict includes error.
+- tools.invoke uses the exact callableId and argument shape from the canonical Tool Interface Package. The Runtime authorizes before dispatch. Tool Plugin does not grant Capability or choose a Skill.
+- tools.result returns the Interface Package-defined result. Owner Receipt, Commit Proof and outcome semantics are interpreted by Runtime from the owning contract; Plugin transport success is not business COMMITTED.
+- delivery.dispatch is addressed by responseObligationId created by Host. It includes the exact status, headers, structured body and only the authorized outbound artifact descriptors.
+- delivery.result disposition is delivered, failed or unknown. An ambiguous delivery remains unknown; it never changes the Owner business outcome.
+- Cancellation is best-effort. A too_late or unsupported response must not be interpreted as rollback of an external mutation.
+- A malformed frame, invalid JSON, unsupported message type, mismatched correlation or invalid payload produces a clear protocol error and fails the affected operation closed.
+
+### 5.2 Error shape
+
+An operation error uses one common object:
+
+~~~json
+{
+  "code": "PLUGIN_OPERATION_FAILED",
+  "message": "The external operation failed.",
+  "retryable": false,
+  "details": {}
+}
+~~~
+
+code and message are required. retryable is required and is a transport/retry hint only; it does not assert that a business mutation did not commit. details is optional diagnostic context and must not contain secrets or raw binary payloads.
+
+### 5.3 Lifecycle
 
 ~~~text
 CONFIGURED → STARTING → READY
@@ -171,15 +213,40 @@ CONFIGURED → STARTING → READY
 READY → STOPPING → STOPPED
 ~~~
 
-A failed Plugin makes its own bindings unavailable. The Demo does not require automatic hot reload or a general restart supervisor.
+One Plugin process may handle concurrent requests, but it must serialize writes to stdout and correlate each reply to its request. A Plugin failure makes only its own extensions unavailable. No automatic hot reload or production supervisor is required.
 
-## 6. Runtime and Tool ownership
+## 6. Tool Plugin and ca-client-tools
 
-- The Runtime validates each proposed Action, selected Skill scope, Capability, Effect, Schema and budget before dispatch.
-- The Plugin Manager routes the authorized invocation to the Tool extension of the selected Plugin.
-- The Tool Plugin performs the external call and returns the result or Owner receipt it actually received.
-- The Runtime remains the sole authority for normalizing outcomes and recording Evidence.
-- A Tool Plugin cannot grant itself Capability, choose a Skill, or turn HTTP success/model text into COMMITTED.
-- The Interface Package remains the single authority for Tool contracts. Plugin registration/availability is not invocation authorization.
+ca-client-tools is the OpenAMSM Tool implementation and canonical owner of its Tool Interface Package and Provider runtime bindings. ca-openamsm-plugin is not a Tool Provider and must not duplicate Owner operations.
 
-The released ca-client-tools.provider/v2 process may initially be consumed by a Tool-extension adapter inside this Plugin Manager. This adapter is temporary protocol reuse, not a second permanent Provider Manager or Runtime.
+The current ca-client-tools executable speaks its existing provider/v2 process protocol, not this native Plugin IPC. During migration, one Tool-extension adapter inside the single Plugin Manager translates the common Runtime Action invocation to provider/v2 and translates the result back. This is a transport adapter owned by Plugin Manager, not a second Provider Manager, Tool registry, Runtime or authorization path.
+
+Do not fork the Go Provider, reimplement its Tool catalog in Python or copy its private Owner bindings into the OpenAMSM Event Plugin.
+
+## 7. Host Artifact Handoff
+
+Binary N1/N2 data uses the Host-owned staging and ArtifactStore contract in [Plugin Artifact Handoff](plugin-artifact-handoff.md). It is not embedded in NDJSON, Base64-encoded, or stored in a Plugin-owned database.
+
+The Plugin receives Host-created inbound/outbound staging directories only when its declared extensions require binary transfer. The Host validates and imports inbound files, issues opaque artifactRefs, authorizes access per Run/Action, stages authorized outbound files and cleans temporary files.
+
+## 8. OpenAMSM integration boundary
+
+- The OpenAMSM Plugin owns SBI listener/wire handling, multipart and Content-ID parsing, protocol decoding/normalization and response encoding.
+- Host owns Event validation, Skill selection, Run identity, retry/replay, response obligations, resource/alias mapping, ArtifactStore, authorization and delivery records.
+- ca-client-tools owns Tool implementation, private backend binding and Owner-facing calls.
+- OpenAMSM Owner/SMF remains authoritative for SM Context identity, existence and business mutation outcomes.
+- The Plugin never selects a Skill. Every fresh request binds a Skill first; optional assurance/contract.yaml.when is evaluated by the Host Resolver.
+- Establish, Modify and UE-requested Release are separate Skill cases. Modify and Release may arrive through the same Nsmf service operation and must be distinguished only by fields validated in the normalized Event Schema. Do not infer the Skill from an HTTP path alone.
+- Exact mapping of Create/Update/Release and release continuation messages to OpenAMSM OpenAPI operations, Event fields and stable externalRequestId is a pre-implementation acceptance gate.
+
+## 9. Demo constraints
+
+Do not add:
+
+- a second Plugin IPC or compatibility alias;
+- a separate Provider Manager, Tool registry, Event Registry or business Contract Package;
+- extra SHA-256 Plugin/Event/Artifact hashing, package signatures or Trust Registry;
+- a Plugin-owned Artifact database or Base64 binary transport;
+- legacy compatibility, Marketplace, automatic downloads, hot reload or production-grade DFX.
+
+Keep basic manifest/Schema/version/reference validation, path containment, clear errors, explicit process configuration, minimal correlation and useful logs. Existing Compiler/Interface Package identity rules remain owned by their canonical contracts.
