@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.1.1  
+> 文档版本：0.1.2  
 > 状态：待评审；IR-006 / SR-012 / #2  
 > 修订日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -45,7 +45,7 @@ Native CLI 与 Go/WASM Worker 调用同一个 Go Core。Check 返回诊断，Ins
 ~~~text
 /goal 推进 CA-SL v1alpha5 已检查 when 的 Compiler → Python Runtime 交付，直至目标 SR 的必需验收全部有可复核证据，或已完成所有可独立推进的工作且具体外部门槛仍阻塞。保持冻结 v1alpha5 Build/Verify 与 Development v1alpha1 的契约、字节和行为。未经用户授权不得合并 PR 或发布版本。
 
-入口：odango-chan/ca-agent-next PR #3 的 EC02 Compiler 设计说明书、Agent.md 的 review_scope、功能树 EC02/F02、SR-012、SR-004/005 和《跨仓互操作实施任务说明》。上游追踪 odango-chan/ca-skills PR #88、odango-chan/ca-skill-compiler Issue #61。执行前逐仓记录目标 ref、HEAD SHA、工作区状态、目标 SR 和 Acceptance ID。
+入口：odango-chan/ca-agent-next PR #3 的 EC02 Compiler 设计说明书、Agent.md 的 review_scope、功能树 EC02/F02、SR-012、SR-004/005 和《跨仓互操作实施任务说明》。上游追踪 odango-chan/ca-skills PR #88、odango-chan/ca-skill-compiler Issue #61。以本文 §6 的阶段输入与证据包作为交接清单。执行前逐仓记录目标 ref、HEAD SHA、工作区状态、目标 SR 和 Acceptance ID。
 
 1. 先做只读预检。复核语言规范是否已合入并发布、#61 的范围与依赖、目标 SR 是否 READY、目标仓写入授权、可运行环境与固定输入。逐项记录阻塞、解除条件、权威链接和可独立推进的工作。无写入权限或目标 SR 未 READY 时保留源码与治理状态，继续只读核对。不得把上游 PR 打开、历史 PASS 或设计文档当作当前验收。
 2. 已获授权且门槛满足后，固定正式语言规范 SHA 及 Go/Python/CEL/protobuf 版本。先执行 Go cel-go → CheckedExpr Any + FileDescriptorSet → cel-expr-python 的最小 PoC。用实际输出验证 true/false/error、未知字段、缺失与 null、数值边界以及共享 Lock 下的多 Skill 类型隔离。发现语义差异，保存最小复现与证据并暂停依赖该 PoC 的阶段。
@@ -54,9 +54,27 @@ Native CLI 与 Go/WASM Worker 调用同一个 Go Core。Check 返回诊断，Ins
 5. 每轮保留可恢复交接：最后完成阶段、仓库与 SHA、变更或 PR、验收结果、阻塞及第一个可执行的恢复步骤。恢复后先重新核对 ref 与门槛，再从第一个未验收阶段继续。只有全部必需验收 PASS 才报告目标完成。外部阻塞时以 BLOCKED 收尾，附已做的预检与解除条件；不得把阻塞交接写成完成。
 ~~~
 
+## 6. 实施输入与验收交接
+
+以[跨仓互操作实施任务说明](../../验收与实施/跨仓互操作实施任务说明.md)的阶段步骤、[演示验收基线](../../验收与实施/演示验收基线.md)和对应 READY SR 的验收 ID 为准。以下证据包用于阶段间交接。归档 SR-012 的权限范围只覆盖文档收敛，Compiler 实施须有独立的 Next SR 覆盖实际代码和测试改动。
+
+| 阶段 | 必需输入 | 可继续的条件 | 必交证据 |
+|---|---|---|---|
+| 0 门禁 | Next 设计 ref；各仓 HEAD；CA-SL 规范发布记录；目标 SR、授权和 Acceptance | Compiler 实施 SR 已登记并 READY；#88 正式规范可固定 SHA；环境可运行 | 逐仓 ref/SHA、SR/Issue、权限、环境、未满足门槛及解除条件 |
+| 1 CEL PoC | 固定规范 SHA；固定 Go/Python/CEL/protobuf 版本；#61 §1–2 样例 | Python 加载 Go 生成的同一 Any 与 DescriptorSet；同一真值表与错误语义；G.4 缺失与 null 行为一致 | 可复跑命令、输入与预期表、原始两个 protobuf 文件、Go/Python 实际结果和最小失败样例 |
+| 2 Compiler 契约与回归 | PoC PASS；Compiler Owner 确认的新 Artifact API 版本与文件布局 | 验证新版成功、损坏产物拒绝、失败时空结果、多 Skill 类型隔离；两个冻结 profile 的机器契约与 Golden 对基准字节一致 | 契约 diff、fixture/golden、冻结产物比较、#61 全部门禁日志与受测 SHA |
+| 3 Next 导入与验收 | 正式发布的新版 Compiler 契约与实际 Bundle；READY 的 SR-004/005；涉及 Resolver/Continuation 时另核对 SR-006 | Bundle 导入和拒绝路径符合 SR；导入时一次反序列化；Catalog 原子切换与代际固定；Event 热路径仅求值；阶段必需 Acceptance 全 PASS | Release SHA/资产、Bundle 来源、以 SR 为单位的 Acceptance 表与执行日志 |
+
+PoC 至少覆盖：同一程序对多个 Event 分别得到 true、false 和运行期错误；未知字段、缺 Request Schema、非 bool 及禁用语法在 Compiler 静态阶段失败；可选字段缺失、显式 null、带守卫可安全求值；不同 Skill 共用 Lock 时，使用另一 Skill 的 Schema 或 Descriptor 不能放宽原 Skill 的类型环境。使用正式规范给出的预期并保留实际诊断，任何差异都阻断依赖阶段。
+
+验收记录每行至少包含 `stage | SR/Acceptance | repository@SHA | fixture/source | command | environment | expected | actual/exit_code | result | evidence`。门槛缺失且尚未运行时记录 `BLOCKED` 并附解除条件。未运行且无外部阻塞的检查记 `NOT_RUN`。只对实跑并符合预期的记录写 `PASS`。需要 Owner 裁定 Artifact API、评审 READY 或授权发布时，保留已通过的独立阶段证据及第一个恢复步骤。
+
+截至 2026-11-25，Next PR #3 为草案，ca-skills #88 未合并，Compiler #61 开放，尚无经本轮复核的正式 when 规范、互操作 PASS 或已发布的新 Artifact。当前可执行阶段为只读门禁预检。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者 | 章节 | 修改内容 | 原因 | 关联 |
 |---|---|---|---|---|---|---|
 | 2026-11-25 | 0.1.0 | Codex | 全文 | 建立 EC02 设计基线 | 集中维护及验证交接 | IR-006、SR-012、#2 |
 | 2026-11-25 | 0.1.1 | Codex | §5 | 加入 Goal 的实施门槛、恢复点和完成判据 | 支持分阶段执行及阻塞后恢复 | IR-006、SR-012、#2、PR #3 |
+| 2026-11-25 | 0.1.2 | Codex | §5–6 | 明确分阶段输入、退出条件、证据包及实施 SR 边界 | 降低 Harness 自主执行时的裁量 | IR-006、SR-012、#2、PR #3、Compiler #61 |
