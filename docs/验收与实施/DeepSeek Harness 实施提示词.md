@@ -39,6 +39,15 @@
 
 本文中的 SHA、PR 状态和版本是时间快照，必须重新核对，不能当作永久事实。
 
+### 评审范围与非目标
+
+- 开始实施和自评审前，必须阅读 Agent.md 的 review_scope 和《文档编写与治理规范》中的统一评审规则。
+- 如果 CI 已生成评审上下文，必须下载并使用；SR-001 尚未实施时，手动将 Agent.md 的范围区块和公共评审提示词交给评审 Agent。
+- 本次 SR/PR 可以缩小项目范围，不得扩大；默认只检查本次变更及其直接依赖。
+- 不得把生产级 HA/DR、SLA、容量规划、企业级 IAM、多租户治理、Trust Registry、包签名、额外 SHA-256、生产密钥管理、SIEM 或 Production Qualification 的缺失列为当前阻塞。
+- 基本输入/Schema/版本/路径校验、fail-closed、Runtime Capability/callable scope、Owner Receipt/Commit Proof、UNKNOWN、Continuation、原始 N1/N2 保真、Example 和真实 Acceptance 仍是必须要求。
+- 问题分类使用 BLOCKER、NON_BLOCKING、OUT_OF_SCOPE、DEFERRED、UNVERIFIED、SCOPE_DECISION_REQUIRED。BLOCKER 必须追溯到要求并给出可复核证据；范围冲突交由用户决定。
+
 ## 三、不可改变的架构约束
 
 1. Agent Core、Host、Agent Model Loop、Skill Importer、Resolver 和 Runtime 使用 Python。
@@ -158,3 +167,10 @@
 报告仓库、分支、基线 SHA、最新 HEAD、PR/Commit、修改文件、测试命令/结果、对应 Example、外部依赖状态、NOT_RUN/BLOCKED 项、架构偏差和下一阶段是否可启动。
 
 不得自动合并 PR、发布 Release 或修改兄弟仓库。
+
+
+## 修订记录
+
+| 日期 | 修订 | 说明 |
+|---|---|---|
+| 2026-11-25 | R2 | 增加统一评审范围和非目标约束。 |
