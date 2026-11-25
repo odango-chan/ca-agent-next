@@ -236,7 +236,7 @@ git diff --check
 
 - 新版 Build / Verify 正向、负向、损坏产物、缺文件、缺 Descriptor、错误 Any type URL 和多 Skill 隔离全部通过。
 - 新版重复 Build 字节确定。
-- 冻结 Artifact v1alpha5 与 Development v1alpha1 Golden 字节、Schema 和 Verify 行为不变。
+- 冻结 Artifact v1alpha5 的 Schema/Golden 与旧 v2.1.0 Release Verify 行为不变；新 Runtime Build 不提供旧 BuildResult v1alpha5 兼容路由。Development v1alpha1 的 Schema/Golden 和独立 Verify 行为不变，继续使用 Development 专用 API，不作为 Agent 发布包。
 - Native、WASM、CLI E2E、Chromium Worker parity 与 Python 互操作全部有真实执行日志。
 - 每项记录受测 SHA、环境、版本、命令、退出码、预期、实际和证据位置。
 
