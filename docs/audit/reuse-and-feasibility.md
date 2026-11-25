@@ -67,7 +67,8 @@ This audit records repository evidence as observed on 2026-11-25. The following 
 - `docs/provider-protocol-v2.md` defines a long-lived stdio/NDJSON process with `initialize`, `catalog`, `invoke`, `cancel`, request correlation and negotiated bounds.
 - `contracts/provider-bindings/v2/provider-bindings.yaml` is the Go-owned canonical Tool source. Release generates a Compiler Interface Package and runtime `provider.yaml` from that source.
 - v1.2.0 publishes 11 public READ Tools and 2 Capabilities in the Interface Package, plus a separate Runtime-only sidecar with 25 bindings (21 MUTATION + 4 READ) under the exact Host scope contract. These are not 25 public Compiler Tools.
-- The Go Provider owns SBI transport, typed OpenAMSM clients, private argument projection and Owner calls. Host/Runtime own Skill Capability authorization, Run identity and final outcomes.
+- The Go Provider owns SBI client transport, typed OpenAMSM clients, private argument projection and Owner calls. Host/Runtime own Skill Capability authorization, Run identity and final outcomes.
+- `protocol/nas5gsm` is a pure Go codec library for a narrow 5GSM Establishment Request slice; it is not yet an Agent-callable Tool. The current public Interface Package does not expose it as a Codec Tool. ca-client-tools PR #39 is OPEN; use only the exact merged/released message subset and do not claim full NGAP parity.
 
 **DECISION — Tool Plugin, do not copy or translate**
 
@@ -76,6 +77,7 @@ This audit records repository evidence as observed on 2026-11-25. The following 
 - Use the existing Go executable and published package. No Go-to-Python translation.
 - Initial next implementation may adapt `ca-client-tools.provider/v2` behind the unified Plugin Manager's Tool extension driver. This avoids rewriting a mature released protocol while preventing a separate Provider Manager/Runtime.
 - Keep the Interface Package as the Tool contract authority and Runtime as the only authorization/outcome authority.
+- Expose protocol Codec operations, when ready, through this same `tools` extension and Interface Package. A Skill calls Decode only when it needs protocol fields; otherwise it passes the original Host artifact reference to a business Tool. No separate Codec Plugin/Manager or duplicate Host decoder.
 - Do not move OpenAMSM Tool implementation into `ca-openamsm-plugin`.
 
 **Current integration caveat:** ca-agent-demo PR #246 is still OPEN. It reports G5 synthetic Owner 22 passed, but live Scheme C G6 remains NOT_RUN/BLOCKED; its generic Provider loader is a branch input, not mainline accepted code.
@@ -111,6 +113,9 @@ This audit records repository evidence as observed on 2026-11-25. The following 
 - Keep the repository independent and Go.
 - It implements `event.ingress` and `event.delivery`, not MAS Owner Tools, Skill selection, RunStore or Runtime.
 - Align its process/extension contract with the unified Plugin mechanism before writing implementation.
+- It owns SBI HTTP/2, JSON/multipart and Content-ID parsing, Event normalization and response encoding. It preserves original N1/N2 bytes through [Plugin Artifact Handoff](../plugin-artifact-handoff.md); it does not eagerly deep-decode all protocol IEs.
+- It consumes Codec Tools from ca-client-tools when a selected Skill needs protocol fields. The Event Plugin is not the Codec Tool provider and must not copy the codec implementation.
+- Fresh Events always enter the Host Skill Resolver first; no Generic-Agent-default bypass.
 - Do not copy the whole Nsmf/Run execution chain from Demo.
 
 ## 3. What may be copied from ca-agent-demo into next
