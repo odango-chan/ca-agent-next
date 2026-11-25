@@ -1,13 +1,13 @@
 # SR-024：Host Context Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.2
+> SR 版本：0.1.3
 > 状态：DRAFT
 > 创建日期：2026-11-25
 > 所属阶段：跨仓设计移交
 > 上游需求：[IR-006](../IR/IR%20总登记册.md#ir-006)
 > 功能：F09.06 — Host Context Interface Package Publisher
-> 设计依据：[F09 Publisher 输出要求](../设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md#45-两个-contract-root-的正式-publisher-输出) v0.3.3；[EC02 Development Build](../设计说明书/EC02-Compiler/Development%20Build设计.md) §2–4；[迁移审计 §3.6](../参考与审计/跨仓依赖与可行性审计.md#36-skill-studio作者导入compiler-request-与产品集成)
+> 设计依据：[F09 Publisher 输出要求](../设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md#45-两个-contract-root-的正式-publisher-输出) v0.3.4；[EC02 Development Build](../设计说明书/EC02-Compiler/Development%20Build设计.md) §2–4；[迁移审计 §3.6](../参考与审计/跨仓依赖与可行性审计.md#36-skill-studio作者导入compiler-request-与产品集成)
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：生产级资格认证、Host Admission 授权与无关 Runtime 重构
 
@@ -74,3 +74,4 @@ make verify
 | 2026-11-25 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 从重复占用 SR-020 的 Host Context Publisher 设计中建立独立 SR-024；固定源 Schema、包身份、Export、原始字节、Studio provenance 与 Development Build 验收 | IR-006；F09；SR-015、SR-016、SR-024；Studio #269 |
 | 2026-11-25 | 0.1.1 | GPT-6.2（ChatGPT） | §1～5 | 修正 SR 标题/功能归属/相对链接，明确只使用 schema-required files[].sha256，不新增包级摘要、签名、Trust Registry 或 Admission；补充实施 Issue 与提示词门禁 | Issue #12；SR-020 保留参考宿主审计；SR-024 独立发布 Host Context Package |
 | 2026-11-25 | 0.1.2 | GPT-6.2（ChatGPT） | §2～5 | 将 Studio lock 的 `source.sourceStatus` 明确归 SR-016；解除 #269 对 Publisher 的硬前置；补齐 ca-agent-demo 的目标文件、固定 Compiler schema blob、生成命令和测试门槛 | 让 Publisher 与 Studio 消费端职责分离，并使 SR 在评审通过后可由 Harness 按固定步骤实施 | Issue #12；F09 v0.3.3；SR-016；Studio #267/#269 |
+| 2026-11-25 | 0.1.3 | GPT-6.2（ChatGPT） | §1～5 | 同步 F09 v0.3.4 与中央归档的 CA-SL/EC06 源材料入口；Publisher 范围与验收不变 | 保持 SR 设计依据指向唯一中央版本 | Issue #12；F09 v0.3.4；SR-016 |

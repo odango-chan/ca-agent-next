@@ -1,7 +1,7 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.3  
+> 文档版本：0.3.4  
 > 状态：待评审  
 > 修订日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -144,7 +144,7 @@ Package Explorer、LSP、Problems 与 AI Workbench 必须区分源码诊断、�
 
 ## 8. 历史决策
 
-保留 [docs/decisions/0001-source-first-visual.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/decisions/0001-source-first-visual.md) 与 [docs/decisions/0002-ide-host-spike.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/decisions/0002-ide-host-spike.md)；Classic 为历史迁移证据。Package-first 见 [docs/decisions/0004-package-first-workspace.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/decisions/0004-package-first-workspace.md)。
+EC06 历史决策已统一归档于中央仓：[ADR-0001 Source-first Visual](../../决策记录/EC06-ADR-0001-Source-first-Visual.md)、[ADR-0002 IDE Host Spike](../../决策记录/EC06-ADR-0002-IDE%20Host%20Spike.md)、[ADR-0003 Theia 原生工作台与 Markdown](../../决策记录/EC06-ADR-0003-Theia原生工作台与Markdown.md)、[ADR-0004 Package 优先工作区](../../决策记录/EC06-ADR-0004-Package优先工作区.md)、[ADR-0005 固定源码与预览工作台](../../决策记录/EC06-ADR-0005-固定源码与预览工作台.md)。Classic 为历史迁移证据。原始设计材料包括 [Studio boundaries](../../架构设计/外部能力域/EC06-Skill%20Studio所有权与源码边界原文.md)、[Authoring Workbench](../外部能力域/EC06-Skill%20Studio/Authoring%20Workbench设计原文.md)、[Plugin-managed Configuration v0.1](../外部能力域/EC06-Skill%20Studio/Plugin-managed%20Configuration%20%26%20Tool%20Integration%20v0.1原文.md) 和 [C4 Package Overview](../外部能力域/EC06-Skill%20Studio/C4%20Package%20Overview原文.md)；当前目标设计仍以本文为准。
 
 ## 修订记录
 
@@ -156,3 +156,4 @@ Package Explorer、LSP、Problems 与 AI Workbench 必须区分源码诊断、�
 | 2026-11-25 | 0.3.1 | GPT-6.2（ChatGPT） | §4.4～7 | 将 Host Context Interface Package Publisher 从 SR-020 拆分到新 SR-024；SR-020 保留参考宿主架构审计职责；明确仅使用 Compiler v2.1.0 schema 要求的 files[].sha256 | 避免一个 SR ID 承载两项不同工作，并区分既有 Interface Package 文件摘要与 CA-SL Skill Artifact 的非目标完整性体系 | IR-006；SR-015、SR-016、SR-020、SR-024；Studio #261/#269/#272/#276 |
 | 2026-11-25 | 0.3.2 | GPT-6.2（ChatGPT） | §1、§4.4～7 | 修复 SR-024 Publisher 文档链接并同步 F02/F08/SR-016/SR-024 版本；明确 SR-020 只承担参考宿主审计 | 解决 SR-020/SR-024 责任冲突，确保 Publisher 入口唯一 | IR-006；SR-015、SR-016、SR-020、SR-024 |
 | 2026-11-25 | 0.3.3 | GPT-6.2（ChatGPT） | §4.5、§5.2、§7 | 对照 Studio #267 合入代码，明确 `source.sourceStatus` 尚未写入 lock，并将其归入 SR-016/#269；区分项目来源元数据与 Compiler BuildResult.sourceStatus | 避免把设计要求误报为当前持久化能力，防止两个 sourceStatus 语义混淆 | Issue #12；SR-016、SR-024；Studio #267/#269 |
+| 2026-11-25 | 0.3.4 | GPT-6.2（ChatGPT） | §8 | 将 EC06 ADR-0001/0002 与 Plugin-managed/C4 原文纳入中央仓，并将 F09 历史决策和原始设计引用切换为 Next 内部链接 | 关闭原始设计缺失与跨仓引用断链；不改变历史决策内容 | Issue #12；EC06-ADR-0001～0005；SR-016、SR-024 |

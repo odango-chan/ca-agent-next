@@ -2,6 +2,7 @@
 > 固定源提交：18d8184367982ccbc835756136c4a53f9096c3a0  
 > 原始状态：2026-11-25 同标识刷新正式发布的唯一完整规范性单文件；源仓 Release Record 指向该提交  
 > 迁移追踪：ca-agent-next Issue #12。以下保留源文内容；规范正文的权威版本身份以对应 Release Record 和固定源提交为准。
+> 配套规范附件：ca-skills main `780497a2918ad3e7bdff554ab64b0ba627e867e0` 中的 `docs/design/ingress-diagnostic-registry-v1alpha1.md` / `.json` 与 `docs/design/wait-conformance-v1alpha5.json` 已按源文件 Git blob 原样迁入 `docs/规范/design/`，供本文相对引用使用；附件源 SHA 见原始资产恢复清单。
 
 ---
 
