@@ -3,7 +3,9 @@
 > 用途：指导 Harness 在 ca-agent-next 实现 Demo 通用 Agent  
 > 状态：目标实施任务，尚未执行  
 > 修订日期：2026-11-25  
-> 授权范围：仅 ca-agent-next；不得自动修改兄弟仓库、合并 PR 或发布 Release
+> 授权范围：仅 ca-agent-next；不得自动修改兄弟仓库、合并 PR 或发布 Release  
+> 全局评审范围：继承根目录 Agent.md 的 review_scope  
+> 本文局部非目标：不要求实现 Agent.md 明确排除的生产级能力
 
 ## 一、任务目标
 
