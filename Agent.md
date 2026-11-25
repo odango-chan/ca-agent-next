@@ -12,10 +12,10 @@ For every non-trivial task, read:
 4. docs/plugin-artifact-handoff.md
 5. docs/integration/skill-catalog-compiler-contract.md
 6. docs/audit/ca-agent-demo.md
-5. docs/audit/reuse-and-feasibility.md
-6. docs/acceptance.md
-7. docs/implementation/deepseek-harness-plan.md
-8. The relevant source, package contracts and tests.
+7. docs/audit/reuse-and-feasibility.md
+8. docs/acceptance.md
+9. docs/implementation/deepseek-harness-plan.md
+10. The relevant source, package contracts and tests.
 
 If implementation and documentation disagree, stop and report the exact conflict. Do not silently invent a third design.
 
