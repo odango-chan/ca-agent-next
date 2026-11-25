@@ -1,7 +1,7 @@
 # SR-025：MAS Owner Development Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.0
+> SR 版本：0.1.1
 > 状态：DRAFT
 > 创建日期：2026-11-25
 > 所属阶段：外部 Publisher 实施移交
@@ -93,14 +93,25 @@
 - 现有 `release.yml` 已将 `dist/*.zip` 纳入 Release assets，`ca-client-tools_*.zip` 纳入 `SHA256SUMS`，并在发布后下载 `ca-client-tools_*` 复验。Publisher 必须接入既有流程，新增 generate/verify 和 Compiler Build/Verify gate；不得建立第二套 Release 或 Registry。
 - 不改写 Owner source Revision/buildIdentity，不把它们复制进 Studio lock；Studio 只锁定正式 Interface Package snapshot 的 packageId/version/publisher 和精确文件快照。
 
-## 5. 依赖与启动条件
+## 5. 验收
+
+- AC-025-01：Publisher 固定读取本 SR 指定的 ca-client-tools source Revision；先校验 Owner source manifest 的 58 个 artifact digest。若 source Revision、manifest buildIdentity 或 artifact digest 不符，必须 fail-closed。
+- AC-025-02：正式 package.json 通过 Compiler v2.1.0 Interface Package schema；Package ID、publisher、languageTarget、dependencies 与本 SR 一致。package.version 必须为用户确认的 exact SemVer；在用户确认前不得将 v1alpha4 直接写入 package.json，也不得将 SR 标记 READY。
+- AC-025-03：CallableCatalog 精确导出 25 个 Owner ToolCatalog published contract ID；7 个 notPublished ID 和 Provider 内部 8 个 legacy typed callable 均不可导出。Receipt Query / Reconcile 的角色必须与 F03.05 设计一致。
+- AC-025-04：CapabilityCatalog 精确为 24 IDs / 25 members，且成员集合等于 25 个公开 contract ID；EvidenceDescriptor 精确 25 项，authority 与 publisher 一致，Producer ID / provides.path 与公开 contract guarantee 精确匹配；Schema exports 精确覆盖 53 项公开 $ref 闭包。
+- AC-025-05：正式 ZIP 根目录含 package.json 和 56 个 payload 文件；package.json.files[] 精确列出全部 payload 文件及其 schema-required SHA-256。公开源文件保持原始字节，capability-catalog.yaml 是唯一生成投影；不得额外加入 manifest、sidecar、包级 checksum manifest、签名或 Trust Registry。
+- AC-025-06：go test ./... -count=1 PASS；generate / verify 对固定 source Revision 产生逐字节确定 ZIP。覆盖损坏 manifest、错误身份、非 SemVer、重复/缺失/多余 export、notPublished/private callable 泄漏、Capability 成员错误、Evidence Producer/path 错误、Schema 闭包缺失和 ZIP 篡改等负例。
+- AC-025-07：使用 ca-client-tools release.yml 固定的 Compiler v2.1.0 binary 执行 BuildDevelopment + VerifyDevelopment；显式 mas root 的正例为 VALIDATED / LINKED / BUILT / NOT_ADMITTED；引用 SC.UPDATE_SM_CONTEXT 的负例必须报 export missing。不得声明真实 MAS E2E 或 Production Qualification。
+- AC-025-08：新 Owner ZIP 纳入 ca-client-tools 下一次 patch Release（若实施时 latest 仍 v1.2.0，则为 v1.2.1）；沿用现有 dist/*.zip、SHA256SUMS 和发布后下载复验，不新增第二套 Release/Registry。若 package version 决策未解决，不得发布。
+
+## 6. 依赖与启动条件
 
 - 依赖 F03.05 v0.3.5、F09 §4.5 v0.3.5、Compiler v2.1.0 Development Interface Package schema/Linker 和 Studio #269 的真实 MAS Example BuildRequest。
 - ca-client-tools 当前 main 与 v1.2.0 tag 的 Owner source 59/59 blobs 相同；若实施时 source Revision 已变化，必须重新核对 source manifest、buildIdentity、exports 和 schema closure，不得静默更新基线。
 - **阻塞决策：** 用户确认 formal package version `1.0.0-alpha.4` 与 Owner source version `v1alpha4` 分离。若要求 package.version 原样为 `v1alpha4`，Compiler v2.1.0 不可用，必须先升级 Compiler 契约/实现。
 - 本 SR 保持 DRAFT；评审和版本语义确认后进入 READY，再创建 ca-client-tools 实施 Issue。不得提前提供 DeepSeek Harness Goal。
 
-## 6. 实施关联
+## 7. 实施关联
 
 - 目标仓：`odango-chan/ca-client-tools`。
 - 现有 ca-client-tools v1.2.0 Provider Interface Package 已发布；它不是本 SR 的 MAS Owner Package。
@@ -112,3 +123,5 @@
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
 |---|---|---|---|---|---|
 | 2026-11-25 | 0.1.0 | GPT-6.2（ChatGPT） | §1～6 | 新增 ca-client-tools MAS Owner Development Interface Package Publisher 独立实施 SR；固定 Owner source、25/24/25/53 exports、127 exports、56 payload files、Compiler Build/Verify gate 和 Release 集成；记录 SemVer 映射待用户确认。 | IR-006 · F03.05 · F09 · SR-015 · SR-016 · SR-024 · Issue #12 |
+
+| 2026-11-25 | 0.1.1 | GPT-6.2（ChatGPT） | §2～7 | 补齐 AC-025-01～08，明确 package.version SemVer 决策门槛、导出闭包、负向测试和既有 Release 流程 | 让 ca-client-tools Publisher 达到可评审、可执行的 SR 粒度；不在决策确认前生成实施提示词 | Issue #12；F03.05；F09；SR-015、SR-016、SR-024 |
