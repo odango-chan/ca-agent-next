@@ -145,3 +145,45 @@ This does not claim live OpenAMSM qualification, production readiness or complet
 Do not add extra SHA-256 package/event snapshot hashing, package signatures, Trust Registry, Domain/Task Contract Packages, a second Skill descriptor, supportedModes, legacy compatibility, Marketplace, installer, automatic download, filesystem watchers or generic Plugin hot reload, production HA, distributed failover, complex multi-tenant/security governance, central business registry, distributed Event Bus, separate artifact database, complex compensation orchestration or elaborate DFX merely to pass the Demo. Explicit SkillCatalog import/update with atomic generation activation is in scope; it is not a general Plugin hot-reload system.
 
 Keep basic YAML/Schema/version/reference validation, path containment, clear errors, minimal correlation and truthful test evidence.
+
+
+## 8. OpenAMSM integration acceptance — after Echo
+
+**Current status:** NOT_STARTED. These gates are target acceptance criteria, not implementation or test claims.
+
+| ID | Gate | Required evidence |
+|---|---|---|
+| OM-01 | Contract alignment | OpenAMSM Plugin uses the exact connectionagent.io/plugin-package/v1alpha1 manifest and connectionagent.io/plugin-ipc/v1alpha1 envelope/messages from docs/plugin-package.md. No ca-agent-host.plugin/v0 alias remains. |
+| OM-02 | Skill-first selection | Fresh Create/Modify/UE-requested Release Events bind the existing ca-skills Skills before mode selection. when lives only in assurance/contract.yaml. No Generic Agent path runs without a selected Skill. |
+| OM-03 | Event mapping | Event type, normalized request fields, NAS message discriminator and SBI operation mapping are validated against OpenAMSM OpenAPI. UE-requested PDU Session Release is not conflated with network-initiated ReleaseSMContext. |
+| OM-04 | Tool integration | ca-client-tools v1.2.0 is invoked through the one Plugin Manager tools extension adapter. No copied ToolCatalog, private Owner map, MAS Python backend or second Provider Manager is introduced. |
+| OM-05 | Binary ingress | Original N1/N2 multipart bytes are staged by Plugin, imported by Host ArtifactStore, associated with the correct Run and exposed only as authorized artifactRefs. No Base64 or Plugin database. |
+| OM-06 | Binary delivery | Host stages only authorized outbound N1/N2 artifacts for the exact responseObligationId; Plugin encodes the correct SBI response and reports delivery disposition. |
+| OM-07 | Continuation | N1 Release Complete (0xD4) and N2 PDU Session Resource Release Response, where applicable, resume the exact original Run/SUPI/PSI/generation. Stale or duplicate messages do not wake a newer Run or repeat a mutation. |
+| OM-08 | Retry and response obligations | Stable externalRequestId is mapped from actual protocol identity. Same-request retry attaches a new response obligation to the original Run; a conflicting reuse fails closed. HTTP/2 stream IDs are not logical Run IDs. |
+| OM-09 | Owner outcomes | Create → Modify → Release uses actual OpenAMSM Owner; Receipt, Commit Proof, UNKNOWN and Reconcile semantics remain authoritative. HTTP success and delivery success do not imply business COMMITTED. |
+| OM-10 | Codec scope | Consume only the merged/released Codec API and only its explicitly qualified NAS/N2 subset. NGAP full-PDU qualification is not claimed; Phase C consumer integration must be complete for the used paths. |
+| OM-11 | Real isolated E2E | One UE/PSI completes Create → Modify → Release against real isolated OpenAMSM/Owner with raw N1/N2, Run/Wait evidence and zero duplicate mutation. Synthetic Owner tests do not satisfy this gate. |
+| OM-12 | Zero Core business coupling | After Echo acceptance, OpenAMSM is added through Plugin package, Skills and deployment configuration; no OpenAMSM-specific branch is added to Agent Core, Resolver, Runtime or Plugin Manager. |
+
+### 8.1 External dependency gates
+
+| Dependency | State on 2026-11-25 | Required before claiming the corresponding gate |
+|---|---|---|
+| ca-skills PR #88 | OPEN, not merged; proposes same-identifier CA-SL v1alpha5 optional Assurance and contract.when | Merge/review the language refresh and align the three existing MAS Skills' when fields. |
+| ca-skill-compiler v2.1.0 | Released; new contract.when support not established | Compiler owner verifies/implements parsing, CEL validation and boolean typing for refreshed v1alpha5. SKILL.md-only import remains Host-owned and does not invoke Compiler. |
+| ca-client-tools v1.2.0 | Released; Provider v2 process | Integrate through the unified Plugin Manager adapter; separately verify real SBI multipart Artifact use through the Provider channel. |
+| ca-client-tools PR #39 | OPEN; Phase B final pass, Phase C not started | Merge/release and complete consumer integration for the exact codec calls used. NAS: 8 qualified; N2: 7 scoped qualified; NGAP: 0 CA-qualified full PDUs. |
+| ca-agent-demo PR #246 | OPEN; synthetic G5 22 passed; real G6 NOT_RUN/BLOCKED; G7 PARTIAL | Treat only as reusable evidence. Run the new Host + Plugin + Provider + real Owner path independently. |
+
+The Provider's Host-to-Provider Artifact channel has acceptance-fixture evidence; the production catalog's real-NF SBI multipart binding remains NOT_VERIFIED. OM-05/OM-06 and OM-11 must include the exact real path, not just fixture coverage.
+
+## 9. Acceptance order
+
+1. Complete Core and common Plugin Manager gates EX-01 through EX-19 and SkillCatalog gates EX-21 through EX-29.
+2. Pass the Generic Echo vertical E2E.
+3. Use OpenAMSM as the second independent business and prove EX-20: add its Plugin, Skills and Tool package through package/deployment changes only, without modifying Agent Core, Resolver, Runtime or Plugin Manager.
+4. Freeze the OpenAMSM Event Schema, exact SBI operation mapping, externalRequestId and continuation correlation.
+5. Implement the Go OpenAMSM Event Plugin and Host Artifact Handoff.
+6. Integrate ca-client-tools v1.2.0 through the common Plugin Manager tools extension.
+7. Pass OM-01 through OM-12. Keep every unrun real-lab gate explicitly NOT_RUN.
