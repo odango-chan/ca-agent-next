@@ -295,12 +295,12 @@ The Plugin receives Host-created inbound/outbound staging directories only when 
 
 ## 8. OpenAMSM integration boundary
 
-- The OpenAMSM Event Plugin owns SBI listener/wire handling, JSON/multipart and Content-ID parsing, normalized Event publication and response encoding. It preserves original N1/N2 bytes and does not eagerly deep-decode them for business reasoning.
+- The OpenAMSM Event Plugin owns SBI listener/wire handling, JSON/multipart and Content-ID parsing, normalized Event publication and response encoding. It preserves original N1/N2 bytes. It may extract only the minimal NAS discriminator needed to normalize shared operations such as UpdateSMContext; it does not perform full business decoding or select the Skill.
 - Host owns Event validation, Skill selection, Run identity, retry/replay, response obligations, resource/alias mapping, ArtifactStore, authorization and delivery records.
 - ca-client-tools owns Tool implementation, private backend binding, Owner-facing calls and any Codec Tool operations it actually publishes.
 - OpenAMSM Owner/SMF remains authoritative for SM Context identity, existence and business mutation outcomes.
 - The Plugin never selects a Skill. Every fresh request binds a Skill first; optional assurance/contract.yaml.when is evaluated by the Host Resolver.
-- A selected Skill may invoke a Codec Tool through the normal Runtime Action Boundary when it needs NAS/NGAP fields. Decode is optional; the original artifact remains the source for any later forwarding.
+- A selected Skill may invoke a Codec Tool through the normal Runtime Action Boundary when it needs additional NAS/NGAP fields. Decode is optional; the original artifact remains the source for any later forwarding. Minimal Event classification is distinct from this Skill-driven full decode.
 - Establish, Modify and UE-requested Release are separate Skill cases. Modify and Release may arrive through the same Nsmf service operation and must be distinguished only by fields validated in the normalized Event Schema. Do not infer the Skill from an HTTP path alone.
 - Exact mapping of Create/Update/Release and release continuation messages to OpenAMSM OpenAPI operations, Event fields and stable externalRequestId is a pre-implementation acceptance gate.
 
