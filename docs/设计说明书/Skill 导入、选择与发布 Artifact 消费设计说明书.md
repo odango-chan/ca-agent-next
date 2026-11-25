@@ -97,7 +97,7 @@ when 只能读取规范化 Event 的 event.type 和 Contract.requestSchema 声�
 
 ## 7. CEL CheckedExpr 与类型环境
 
-Compiler Issue #61 跟踪 Development Artifact v1alpha2 对已检查 CEL 程序的发布格式。目标互操作格式是标准 google.api.expr.CheckedExpr（由 google.protobuf.Any 包装）及对应 FileDescriptorSet；由 cel-go 生成、cel-expr-python 消费。CA-SL 语言标识保持 connectionagent.io/v1alpha5，不增加 v1alpha6。
+Compiler Issue #61 跟踪新版**发布运行时 Artifact** 对已检查 CEL 程序的承载格式。现有发布 Artifact v1alpha5 已冻结，Development Artifact v1alpha1 的 NOT_ADMITTED / hostAdmission 语义不属于 Agent 运行包；新版 Artifact API 版本由 Compiler Owner 决定。目标互操作格式是标准 google.api.expr.CheckedExpr（由 google.protobuf.Any 包装）及对应 FileDescriptorSet；由 cel-go 生成、cel-expr-python 消费。CA-SL 语言标识保持 connectionagent.io/v1alpha5，不增加 v1alpha6。
 
 Agent 侧只做：
 
@@ -123,11 +123,11 @@ Agent 侧只做：
 ## 9. 外部依赖与状态边界
 
 - ca-skills PR #88：同标识 CA-SL v1alpha5 的 optional Assurance/when 刷新；实施前重新确认合并与正式规范状态。
-- ca-skill-compiler Issue #61：Development Artifact v1alpha2 与 CheckedExpr/DescriptorSet 发布格式；Compiler 负责源码静态检查和发布。
+- ca-skill-compiler Issue #61：新版发布运行时 Artifact 与 CheckedExpr/DescriptorSet 格式；Compiler 负责源码静态检查、Build/Verify 和发布。
 - ca-agent-next：只负责已发布包的消费、Catalog、选择和 Runtime，不调用 Compiler。
 - cel-expr-python：作为 Python Runtime 的 CEL 反序列化/求值依赖，版本固定并以跨语言 fixtures 验收。
 
-注意：ca-skill-compiler Issue #61 早期说明中如仍要求 Next 调用 Inspect/Verify 或做 Skill Admission，应按本设计的最新消费边界重新对齐；本仓不实现这两项。
+Agent 不调用 Compiler Inspect/Verify，也不实现 Skill Admission。Compiler 在发布前完成 Build/Verify；Agent 只做消费端基本结构检查和依赖解析。
 
 ## 10. 验收要求
 
