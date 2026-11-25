@@ -24,7 +24,7 @@
 3. Tool 是 Plugin 导出的可调用 Operation，不是独立进程。
 4. 一个 Plugin 可以导出多个 Capability，一个 Capability 可以包含多个 Operation。
 5. Plugin Manager 负责生命周期、握手、IPC 和 Extension 分发，不负责 Skill 选择、Action 授权或 Owner 结果判断。
-6. Tool Interface Package 是 Tool 契约权威源；Plugin Manifest 不复制 Tool 定义。
+6. Tool Interface Package 是公开 Callable 契约权威源；Owner Contract Package 负责业务结果语义；Provider Runtime Bindings 只提供私有执行映射。Plugin Manifest 不复制 Tool 定义。
 7. ToolCatalog 只是可发现能力的只读视图，不管理生命周期，也不构成第二个 Registry。
 
 ## 3. 组件职责
@@ -104,7 +104,7 @@ Codec Operation 如正式发布，也通过同一个 tools Extension 暴露，�
 - Manifest、Schema、版本或路径无效：Plugin 加载失败。
 - 握手身份或 Extension 不匹配：Plugin 不可用。
 - IPC 关联不一致、未知消息类型或畸形 Payload：受影响操作失败关闭。
-- Tool 不匹配 Interface Package：调用失败。
+- Tool/Owner Callable 与其锁定 Interface/Owner Contract 不匹配：拒绝加载或调用。
 - Owner outcome UNKNOWN：保持 UNKNOWN，不得由 Plugin Manager 推断为 COMMITTED。
 - Plugin 传输成功：只代表 IPC 层成功，不代表业务 mutation 已提交。
 
