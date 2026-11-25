@@ -41,7 +41,7 @@ CA Agent Next 是下一代通用 Agent 的独立实现仓。目标是用尽可�
 | 参考实现（REF01） | ca-agent-demo | 逐文件选择性复用代码和测试 |
 | 后续晋级目标（TARGET01） | ca-agent | Next 验收后评估晋级 |
 
-外部能力的内部设计留在权威仓库；Next 只维护消费边界和集成 SR，不复制 Compiler、Tool、Codec、Owner 或业务 Skill 实现。
+Compiler 机制设计集中在 [EC02](docs/设计说明书/EC02-Compiler/Compiler设计说明书.md)，实现和机器契约由 ca-skill-compiler 维护。其余外部能力的内部设计由各权威仓维护，Next 管理消费边界与集成 SR。
 
 ## 架构要点
 
