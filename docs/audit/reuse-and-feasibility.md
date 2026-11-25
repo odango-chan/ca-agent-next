@@ -11,8 +11,8 @@ This audit records repository evidence as observed on 2026-11-25. The following 
 - Every Skill has SKILL.md. assurance/ is optional and contains CA-SL deterministic execution assets; contract.yaml stays inside assurance/.
 - No Assurance means LLM-guided only. Valid Assurance supports both Deterministic and LLM-guided. Invalid present Assurance is an import error, never a downgrade.
 - Optional assurance/contract.yaml.when is the only formal Skill-selection expression. predicates.yaml remains execution-time business evaluation. Skills without when, including SKILL.md-only Skills, are semantic candidates from SKILL.md.
-- Skill source with Assurance is automatically compiled before admission. SKILL.md-only source imports without Compiler. A compiled Artifact is inspected/verified/admitted without rebuilding.
-- Individual LLM Actions go through the common Runtime Action Boundary and are not compiled. LLM-created/edited Assurance source follows the normal source-import/Compiler path.
+- Assurance source is compiled and verified by the independent release toolchain before publication. Agent accepts only SKILL.md-only or SKILL.md + published compiled Artifact bundles; it never invokes Compiler.
+- Individual LLM Actions go through the common Runtime Action Boundary and are not compiled. LLM-created/edited Assurance source must be externally compiled and published before Agent import.
 - One Plugin Manager owns Event ingress, Delivery and Tools extensions. A Tool Plugin is a Plugin exposing the `tools` extension; individual Tools are callable operations in the Interface Package, not separate processes or import units. No separate Tool Registry or Provider Manager.
 - No Domain Contract Package, TaskContract Package, extra Plugin-package SHA-256 hashing, package signatures or Trust Registry.
 - SBI Event Plugins own JSON/multipart and Content-ID parsing; Host owns binary artifact custody; Skills invoke Codec Tools from ca-client-tools only when they need decoded protocol fields.
@@ -37,7 +37,7 @@ This audit records repository evidence as observed on 2026-11-25. The following 
 
 ## 2. Mature project reuse decisions
 
-### 2.1 ca-skill-compiler — direct external dependency
+### 2.1 ca-skill-compiler — independent release toolchain (not an Agent runtime dependency)
 
 **EVIDENCE**
 
@@ -45,18 +45,17 @@ This audit records repository evidence as observed on 2026-11-25. The following 
 - README describes a deterministic, stateless compiler with one Go Core powering native CLI and Go/WASM Worker.
 - Supported CA-SL target is `connectionagent.io/v1alpha5`.
 - CLI provides frozen `check` / `build` / `inspect` / `verify` and Development `build-development` / `verify-development`.
-- Compiler validates static source, links supplied immutable Interface Packages and emits deterministic Artifacts. It does not execute Tools, grant Host admission or qualify Owner behavior.
-- CA-SL refresh proposal [ca-skills PR #88](https://github.com/odango-chan/ca-skills/pull/88) defines contract.when and delegates the physical compiled representation to the Compiler. Current v2.1.0 does not implement it: ContractAST has no when field, cel_check.go validates Predicate CEL only, and its external Schema parameter path uses DynType. Compiler [Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) proposes Development Artifact Manifest v1alpha2 with standard CheckedExpr Any + DescriptorSet while preserving frozen v1alpha5 and Development v1alpha1 contracts.
+- Compiler validates static source, links supplied immutable Interface Packages and emits deterministic Artifacts. It does not execute Tools or qualify Owner behavior. The Agent does not call Compiler.
+- CA-SL refresh proposal [ca-skills PR #88](https://github.com/odango-chan/ca-skills/pull/88) defines contract.when and delegates the compiled representation to Compiler. Current v2.1.0 does not implement it: ContractAST has no when field, cel_check.go validates Predicate CEL only, and its external Schema parameter path uses DynType. Compiler [Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) now tracks a new versioned published runtime Artifact contract with CheckedExpr Any + DescriptorSet; the frozen published Artifact v1alpha5 and Development v1alpha1 remain unchanged.
 
 **DECISION — direct dependency, no code copy**
 
-- Python Skill Importer invokes the canonical `skillc` executable for Assurance source Check/Build and Artifact Inspect/Verify. SKILL.md-only source does not invoke Compiler; an already compiled Artifact is inspected/verified without rebuilding.
-- Pass the exact Assurance source root and the dependency inputs required by the Compiler contract; capture structured output and exit status.
-- Compiler must reuse cel-go and the existing Schema Registry to type-check when against event.type and the exact Request Schema, then emit a standard CheckedExpr Any and a DescriptorSet in the new Artifact Manifest v1alpha2. Python Runtime uses cel-expr-python to deserialize/evaluate the same checked program per fresh Event. The Go-to-Python PoC, including G.4 optional/null semantics, is a hard gate. Do not mutate frozen v1alpha5 or Development v1alpha1 contracts.
+- The independent authoring/release pipeline invokes canonical `skillc` to Check/Build/Verify Assurance source before publication. This is outside ca-agent-next; Agent does not invoke `skillc` or accept source Assurance YAML.
+- Compiler must reuse cel-go and the existing Schema Registry to type-check when against event.type and the exact Request Schema, then emit a standard CheckedExpr Any and DescriptorSet in a new versioned published runtime Artifact. Python Runtime uses cel-expr-python to deserialize/evaluate the same checked program per fresh Event. The Go-to-Python PoC, including G.4 optional/null semantics, is a hard gate. Do not mutate the frozen published Artifact v1alpha5 or Development v1alpha1 contracts.
 - SkillCatalog is a Next-owned Core mechanism: retain when programs and SKILL.md content in memory; the Compiler does not own Catalog residency, Event evaluation results or atomic generation swaps.
-- Host separately admits the exact Artifact/Variant and binds Capability requirements to the selected Run.
+- Agent performs basic package/manifest/file/reference checks and resolves the declared Tool/Capability dependencies against locally installed Plugins. The Demo has no separate Skill Admission or approval mechanism.
 - Do not copy Go Compiler packages into next; do not reimplement compiler linking/validation in Python.
-- Existing Demo `runtime/compiler_artifact.py` and `runtime/compiler_skill.py` are candidate Python Host-side Artifact admission/lowering adapters, not a replacement Compiler. Audit/adapt them against v2.1.0 output before reuse.
+- Existing Demo `runtime/compiler_artifact.py` and `runtime/compiler_skill.py` are candidate Artifact loading/lowering adapters, not a replacement Compiler or Skill Admission system. Reuse only the basic loading/structural-check pieces needed for published runtime Artifacts.
 - Start with native CLI. Do not add WASM integration unless the actual deployment requires browser execution.
 
 ### 2.2 ca-client-tools — Tool Plugin, direct external dependency
@@ -94,10 +93,10 @@ This audit records repository evidence as observed on 2026-11-25. The following 
 **DECISION**
 
 - Every package has SKILL.md. Packages with assurance/ contain contract.yaml, procedure.yaml and the Predicate definitions they use; packages without assurance/ are LLM-guided only.
-- Source packages with Assurance are compiled before admission. SKILL.md-only packages import without Compiler. Already compiled Artifacts are inspected/verified/admitted without rebuilding.
+- Assurance source is compiled and verified externally before publication. Agent imports only the published compiled Artifact; SKILL.md-only packages import directly. Agent does not run Compiler Verify or Skill Admission.
 - The optional top-level assurance/contract.yaml.when is used for Skill selection; predicates.yaml remains execution-time business evaluation.
 - The v1alpha5 refresh is not yet evidence that the released Compiler supports the portable compiled when Artifact. Compiler Issue #61 is the implementation dependency. SKILL.md-only import is a Next-owned Importer path and must bypass Compiler.
-- The SkillCatalog/generation lifecycle is a new Next mechanism, not a proven reusable ca-agent-demo subsystem. Reuse Formal Resolver and admission primitives selectively; implement immutable Catalog snapshots and Invocation generation pinning in Next.
+- The SkillCatalog/generation lifecycle is a new Next mechanism, not a proven reusable ca-agent-demo subsystem. Reuse only Formal Resolver candidate/exclusion primitives; implement immutable Catalog snapshots and Invocation generation pinning in Next.
 - Do not copy Create/Modify/Release business logic into Agent Core. Echo is the first mechanism proof; OpenAMSM Skills are a later real-domain integration.
 
 ### 2.4 ca-openamsm-plugin — Event ingress/delivery Plugin, not a Tool Provider
@@ -130,8 +129,8 @@ The following means selective Python source reuse after tests/import review, not
 | `agent/host/root_eligibility.py`, `routing.py` | **ADAPT (M)** | Reuse candidate/exclusion types; replace structured Event→Root mapping with optional contract.when and unguarded SKILL.md semantic candidates |
 | `agent/context/`, `runtime/observation/` | **COPY + ADAPT (M)** | Useful read-only resolver and fact/provenance model; simplify |
 | `runtime/tool_contract.py`, `runtime/outcomes.py` | **COPY + ADAPT (M)** | Strong existing shared Tool validation and outcome boundary; dispatch target becomes Plugin Tool extension |
-| `runtime/compiler_artifact.py`, `runtime/compiler_skill.py` | **ADAPT (M)** | Host Artifact admission, not Compiler; verify against v2.1.0 |
-| `runtime/linker.py`, `runtime/frozen.py`, `runtime/casl_adapter.py` | **REVIEW/ADAPT (L)** | Large dependency surface; retain only the exact CA-SL v1alpha5 integration needed after compiler artifact admission |
+| `runtime/compiler_artifact.py`, `runtime/compiler_skill.py` | **ADAPT (M)** | Basic published Artifact loading/structural checks, not Compiler or Skill Admission |
+| `runtime/linker.py`, `runtime/frozen.py`, `runtime/casl_adapter.py` | **REVIEW/ADAPT (L)** | Large dependency surface; retain only the exact CA-SL v1alpha5 runtime lowering needed after published Artifact import |
 | `resident/invocation.py`, basic `resident/service.py` | **ADAPT (M)** | One Run/Invocation path; remove business composition and duplicate direct path |
 | `resident/run_store.py`, `artifact_store.py` | **ADAPT (M)** | Reuse only minimum Task/Run correlation and Host-managed artifact custody needed by Demo |
 | `observability/events.py` | **COPY/ADAPT (S)** | Lightweight trace events useful for VibeCoding acceptance |
@@ -154,15 +153,15 @@ The following means selective Python source reuse after tests/import review, not
 
 ## 5. Feasibility and critical gaps
 
-**Overall: FEASIBLE**, with staged implementation. The external Compiler and Tool Plugin are independent release artifacts; Python Core can orchestrate them without sharing language/runtime. The refreshed CA-SL/Compiler behavior is a prerequisite gate for Assurance source import, not an assumption that v2.1.0 already supports contract.when and its portable checked-program representation. SKILL.md-only import is Host behavior, not a Compiler feature.
+**Overall: FEASIBLE**, with staged implementation. The external Compiler and Tool Plugin are independent release artifacts; Python Core can orchestrate them without sharing language/runtime. The refreshed CA-SL/Compiler behavior is a prerequisite gate for published Assurance Artifact import, not an assumption that v2.1.0 already supports contract.when and its portable checked-program representation. SKILL.md-only import is Host behavior, not a Compiler feature.
 
 Critical work:
 
 1. **Unify Plugin/Tool extension management.** Current PR #246 has a generic Provider Manager/ToolComposition; PR #249 proposes a separate Plugin Manager. Next should have one Plugin Manager with Event and Tool extension kinds.
 2. **Resolve Skill-first conflict.** PR #249 and ca-openamsm-plugin PR #1 currently describe Agent-default/Skill-optional. Next must bind a Skill first for every fresh business Event.
 3. **Replace Event→Root mapping.** Current Demo structuredEventRoutes is not the target. Use optional Assurance contract.when for explicit matches and SKILL.md semantic selection for unguarded Skills.
-4. **Refresh CA-SL and Compiler support.** The v1alpha5 spec must define contract.when and optional Assurance; the Compiler must support the grammar, static type-checking and portable compiled Artifact representation. Next's Skill Importer separately handles SKILL.md-only packages without invoking Compiler. Demo MockCompiler is not a substitute.
-5. **Add the Core-owned SkillCatalog.** Build the immutable in-memory selection read model, compile when on import/update, evaluate it per fresh Event, atomically swap generations and pin each Invocation. This is a Next-owned mechanism; do not assume Demo has an equivalent reusable Catalog.
+4. **Refresh CA-SL and Compiler release Artifact.** The v1alpha5 spec must define contract.when and optional Assurance; the Compiler must support the grammar, static type-checking and a versioned published runtime Artifact. Next only imports that published Artifact; it never invokes Compiler. Demo MockCompiler is not a substitute.
+5. **Add the Core-owned SkillCatalog.** Build the immutable in-memory selection read model, deserialize published when programs on import/update, evaluate them per fresh Event, atomically swap generations and pin each Invocation. This is a Next-owned mechanism; do not assume Demo has an equivalent reusable Catalog.
 6. **Simplify Resident/Runtime.** Current Demo includes Nsmf-specific execution and durable recovery; Echo should prove the common mechanism without copying all of it.
 7. **Respect current gate state.** PR #246 is OPEN; synthetic G5 22 passed does not equal live Scheme C G6. Do not migrate OpenAMSM until the generic Echo mechanism is accepted.
 
@@ -180,7 +179,7 @@ The largest architectural risk is not Python↔Go interop. Both existing Go exec
 
 - ca-agent-next PR #1 is the single target specification for Plugin Package v1alpha1, Plugin IPC v1alpha1, Skill-first selection and Host Artifact Handoff. It remains OPEN and is not yet merged or implemented.
 - ca-openamsm-plugin PR #1 is design-only and must reference the Next contract. It must not retain the old ca-agent-demo plugin/v0 protocol or Generic-Agent-default flow.
-- ca-skills PR #88 is OPEN and proposes the same-identifier v1alpha5 Assurance/when refresh. Compiler v2.1.0 does not yet implement the new when field or portable checked-program representation; Compiler Issue #61 tracks the versioned Artifact work. The SKILL.md-only path is owned by the Next Host importer and bypasses Compiler.
+- ca-skills PR #88 is OPEN and proposes the same-identifier v1alpha5 Assurance/when refresh. Compiler v2.1.0 does not yet implement the new when field or portable checked-program representation; Compiler Issue #61 tracks the versioned published runtime Artifact. The Agent imports published bundles only and never invokes Compiler. The Demo has no separate Skill Admission mechanism.
 - ca-client-tools v1.2.0 is the Tool implementation. Its Provider v2 process is adapted behind the one Plugin Manager. The production Provider catalog's real-NF SBI multipart binding remains NOT_VERIFIED even though the Host-to-Provider Artifact channel has fixture evidence.
 - ca-client-tools PR #39 is OPEN: Phase B final pass; Phase C consumer migration NOT_STARTED. NAS has 8 CA-qualified message types, N2 has 7 scoped qualified roots, and NGAP has 0 CA-qualified full PDUs.
 - ca-agent-demo PR #246 is OPEN: synthetic Owner G5 reports 22 passing tests; real isolated Scheme C G6 is NOT_RUN/BLOCKED and G7 is PARTIAL. This is not real OpenAMSM E2E evidence.
