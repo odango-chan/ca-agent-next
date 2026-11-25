@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：目标设计，待实现和验收  
-> 文档版本：0.2.2  
+> 文档版本：0.3.0  
 > 功能归属：F03 — Plugin 平台  
 > 关联 SR：SR-003、SR-010    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -36,7 +36,9 @@
 | Event Extension | 解析外部协议并发布规范化 Event | 业务 Skill 映射、Owner Tool 调用 |
 | Tool Extension | 执行 Interface Package 定义的 Operation | 自行授权、声明业务提交 |
 | Delivery Extension | 按 Host 指令向外部协议响应方交付 | 选择 Run、改变 Owner outcome |
-| Tool Interface Package | Callable ID、Schema、Effect、Capability 和 Owner 结果契约 | 进程生命周期 |
+| Tool Interface Package | 公共 Callable ID、输入/输出 Schema、Effect、Capability membership | 进程生命周期、Provider 私有 backend 映射 |
+| Owner Contract Package | Owner Callable、Owner Outcomes、Receipt、Commit Proof、Reconcile | Provider 进程和私有 handler |
+| Provider Runtime Bindings | 公开/Owner Callable 到私有 backendOperationId 的映射、HostInvocation 和 privateArguments 来源 | 公开 Tool 契约、Capability 授权和 Owner 语义 |
 
 ## 4. 包与进程模型
 
@@ -59,7 +61,7 @@ plugins/<plugin-id>/
 1. 读取 plugin.yaml，使用安全 YAML 1.2 解析器，拒绝重复 YAML key。
 2. 校验 API 版本、Plugin 身份、Extension 结构和必填字段。
 3. 解析相对包根目录的可执行文件、Schema 和资源路径；拒绝绝对路径、路径穿越和逃逸包根的符号链接。
-4. 校验 Event Schema，并按引用加载 Tool Interface Package。
+4. 校验 Event Schema；对 Tools Extension 按引用加载 Tool Interface Package。Provider v2 包由 ProviderV2 Driver 另外读取其发布的 Runtime Bindings sidecar；该 sidecar 是私有执行映射，不替代公开 Interface Package 或 Owner Contract Package。
 5. 启动独立进程，发送 host.initialize。
 6. 接收 plugin.ready，核对 Plugin ID、版本、IPC 版本和实际 Extension 列表。
 7. 只有握手匹配的 Extension 才进入可用状态；失败时该 Plugin 不可用并提供可诊断错误。
@@ -89,11 +91,13 @@ messageId、correlationId、eventId、invocationId、deliveryId、responseObliga
 
 ## 7. ca-client-tools 的迁移适配
 
-ca-client-tools 当前 Provider v2 进程协议可以由统一 Plugin Manager 内部的 tools Extension Driver 适配。该适配只是一段迁移桥接，不得演变为永久 Provider Manager、第二套 Tool Registry 或第二条授权路径。
+ca-client-tools v1.2.0 当前发布的是独立 Provider 包，进程协议为 ca-client-tools.provider/v2（长生命周期 NDJSON）。Next 由唯一 Plugin Manager 内部的 ProviderV2 Tools Extension Driver 消费现有 provider.yaml 和 runtime-bindings.yaml，并把 Provider v2 的 initialize/catalog/invoke/cancel 适配为统一 Tools Extension 调用。Driver 只负责进程与协议适配，不得演变为永久 Provider Manager、第二套 Tool Registry 或第二条授权路径。Native Plugin 仍使用本仓统一 Plugin IPC v1alpha1。
 
-Plugin Manager 只转发 Runtime 已检查的调用。Tool Plugin 返回的传输成功不等于 Owner 业务 COMMITTED；Owner Receipt、Commit Proof 和 outcome mapping 由其 Interface Package 与 Runtime 解释。
+Plugin Manager 只转发 Runtime 已检查的调用。公开 Callable/Schema/Effect/Capability 来自锁定的 Tool Interface Package；Owner Outcomes、Receipt、Commit Proof 和 Reconcile 来自 Owner Contract Package；Provider Runtime Bindings 只提供 backendOperationId、HostInvocation/privateArguments 来源和 Provider observation 定位。三者不得合并成一份 Next 自维护 Catalog。
 
-Codec Operation 如正式发布，也通过同一个 tools Extension 暴露，不建立独立 Codec Plugin/Manager。Codec 具体可调用范围由 Interface Package 和已验收消息子集决定。
+Tool Plugin 返回的传输成功不等于 Owner 业务 COMMITTED。Runtime 必须按 Owner Contract 验证 Receipt 与 Commit Proof；UNKNOWN 保持 UNKNOWN，并按原 Invocation 执行 exact-original Reconcile。
+
+Codec Operation 如正式发布，也通过同一个 tools Extension 暴露，不建立独立 Codec Plugin/Manager。Codec 只有在正式 Callable/Runtime Binding 发布后才可调用；当前 ca-client-tools PR #39 的 Phase C Consumer Migration 未开始。
 
 ## 8. 错误处理
 
@@ -117,18 +121,18 @@ Demo 不增加签名、Trust Registry、包完整性哈希或生产级密钥体�
 
 ## 10. 当前实现状态
 
-Plugin Package/IPC v1alpha1 是 PR #1 中的目标契约，不等于已完成实现。Provider v2 适配是迁移策略；何时切换 Native IPC 需由真实集成验收决定。
+Plugin Package/IPC v1alpha1 是 PR #1 中的目标契约，不等于已完成实现。ca-client-tools v1.2.0 已发布 Provider v2、Interface Package 与 Runtime Bindings；Next 侧 ProviderV2 Driver 仍是目标设计，尚未实现或验收。何时切换 Native IPC 需由真实集成验收决定。
 
 
 
 
 ## 11. 功能归属与外部能力
 
-本说明书属于 F03。SR-003 定义唯一 Plugin Manager 与 Extension IPC；SR-010 定义 OpenAMSM Tool Plugin 与按需 Codec 集成。Tool Interface Package、Provider 和 Codec 的内部契约以 EC03 ca-client-tools 为准；OpenAMSM Event/Delivery Plugin 的内部实现以 EC04 ca-openamsm-plugin 为准。Next 只维护 Manager 生命周期、Extension 分发和消费端边界。
+本说明书属于 F03。SR-003 定义唯一 Plugin Manager 与 Extension IPC；SR-010 定义 OpenAMSM Tool Plugin 与按需 Codec 集成；SR-015 负责将 EC03 的 Tool Interface / Provider / Codec 消费设计集中到 Next。OpenAMSM Event/Delivery Plugin 的内部实现以 EC04 ca-openamsm-plugin 为准。
 
 ### Tool Interface 与 Provider
 
-Tool Interface 绑定 callable ID、参数、结果和 Effect，Provider v2 在工具进程分发。Next 适配通过唯一 Plugin Manager 的 tools Extension；已有 Codec 的接口和发布证据先按 SR-015 固定版本。 详见[分仓证据](../../参考与审计/跨仓设计资产迁移与一致性审计.md)。
+F03.05 的详细设计见 [Tool Interface 与 Provider 集成设计说明书](Tool%20Interface%20与%20Provider%20集成设计说明书.md)。该子设计固定三层边界：公开 Tool Interface Package、Owner Contract Package、Provider Runtime Bindings；并定义 ca-client-tools v1.2.0 的 ProviderV2 Driver 如何纳入唯一 Plugin Manager。EC03 的 Go 实现、发布物和运行说明仍由 ca-client-tools 维护；Next 不复制其机器契约或实现代码。详见[分仓证据](../../参考与审计/跨仓设计资产迁移与一致性审计.md)。
 
 
 ## 修订记录
@@ -139,3 +143,4 @@ Tool Interface 绑定 callable ID、参数、结果和 Effect，Provider v2 在�
 | 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 第 1～10 章 | 归入对应 Feature 并补充外部能力边界 | 按 F03 归档，明确统一 Plugin Manager 与外部 Tool Interface 权威边界 | F03；SR-003/010；EC03/EC04；PR #1 |
 | 2026-11-25 | 0.2.1 | 刷新需求追踪、目录或证据引用 | 对齐最新分支与 IR/SR 基线 | 见关联 SR |
 | 2026-11-25 | 0.2.2 | Codex / GPT-6 | Tool Interface 与 Provider | 合并有效边界与分仓证据入口 | 跨仓设计移交 | IR-006 |
+| 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | 第 3、5、7、10、11 章 | 拆分 Interface Package、Owner Contract Package 与 Provider Runtime Bindings；固定 Provider v2 迁移 Driver 和 F03.05 子设计入口 | 消除 Owner 结果权威与 Provider 私有映射混淆，按 ca-client-tools v1.2.0 和 ca-agent-demo main 校准 | IR-006 · SR-015 · Issue #12 |
