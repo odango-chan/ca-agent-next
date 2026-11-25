@@ -1,57 +1,62 @@
 # ca-agent-demo 复用审计
 
-> 文档类型：代码复用与实现证据审计  
-> 状态：实现参考快照；实施前需重新核对  
+> 文档类型：既有实现审计与复用建议  
+> 状态：审计快照；不是 Next 实现证明  
 > 审计日期：2026-11-25  
 > 主审基线：ca-agent-demo main 57e277ff9094dad93543df46910a12a1dbbaf560  
-> 补充输入：PR #246（68a6f9e7723a0c2da1aebf5047c23ae96c5d237f，OPEN）、PR #249（dfbcc33467a1ea3b6fa45d661ac2e77bfd71423a，OPEN）
+> 补充输入：PR #246 head 68a6f9e7723a0c2da1aebf5047c23ae96c5d237f（OPEN）、PR #249 head dfbcc33467a1ea3b6fa45d661ac2e77bfd71423a（OPEN）
 
-## 1. 审计结论
+## 1. 仓库状态与定位
 
-ca-agent-demo 是 Next Python Agent Core 的主要代码和测试证据来源，但不是可以整体复制的模板。应逐文件审计依赖和业务耦合，选择性复用 Python 模块；不得把 OpenAMSM/5GC 集成层、Mock Compiler 或 Mock Runtime 当作 Next 的最终实现。
+- ca-agent-demo 是 Generic Agent Host 的 Python 参考实现，包含 Agent、Host、Runtime、Resident、Context、Tool 契约和 5GC 集成。
+- 主线 README 将 5GC 定位为业务/集成示例，而不是 Host 身份；主线包含 src/ca_agent_host/、tools/、skills/、examples/ 和 pytest 测试。
+- Python Distribution 为 ca-agent-host，导入包为 ca_agent_host，README 标注架构版本 0.4.0。
+- PR #246 在开放分支增加通用 Provider loader / ToolComposition，但不是 main 已合并代码。
+- PR #249 是 Plugin/Event 契约设计输入，不代表 Plugin Runtime 已实现。
+- 结论：ca-agent-demo 是 Next 的主要 Python 代码和测试证据来源，但必须按文件和依赖逐项复用，不能整仓复制。
 
-本文区分三类信息：**证据**表示已检查的仓库、文件或 PR 记录；**判断**表示基于证据的架构结论；**建议**表示 Next 的实施方向。本文没有重新执行 ca-agent-demo 全量测试套件。
+本文区分三类信息：证据表示已检查的仓库、文件或 PR 记录；判断表示基于证据的架构结论；建议表示 Next 的实施方向。本文没有重新执行 ca-agent-demo 全量测试套件。
 
-## 2. 仓库基线
+## 2. 机制盘点与 Next 处理建议
 
-- 主分支基线：57e277ff9094dad93543df46910a12a1dbbaf560。
-- README 将项目定位为 Generic Agent Host 参考实现；Python Distribution 为 ca-agent-host，导入包为 ca_agent_host，README 标注架构版本 0.4.0。
-- 主目录包含 src/ca_agent_host/、tools/、skills/、examples/ 和 pytest 测试。
-- 当前 README 将通用 Agent Host 架构作为主实现依据，将 5GC 定位为业务集成示例，而不是 Host 身份。
-- 复用方向是从 Python 实现中挑选模块迁入 Next；不从 ca-agent 的 Go 源码开始。
-
-## 3. 机制盘点与 Next 处理方式
-
-| 机制 | Demo 中的实现证据 | Next 处理建议 |
+| 机制 | Demo 现有位置/证据 | Next 建议 |
 |---|---|---|
-| Agent / Model 边界 | agent/intent/、agent/model_adapter.py、model_request.py 及对应 ingress 测试 | 复用并简化 Python Model Adapter；Model Loop 留在 Host/Agent |
-| Formal 搜索与计划绑定 | agent/formal/search、grounding、operators、ranking、resolver、strategy | 复用检索、grounding 和排序原语；选择语义改为 when 显式候选 + SKILL.md 无条件语义候选 |
-| Root Eligibility / Routing | agent/host/root_eligibility.py、routing.py、root_routing_profile.py | 只复用候选、排除和消歧结构；删除部署侧 Event→Root 路由模型 |
-| LLM 歧义选择 | SkillRoutingChooser、agent/semantic/chooser.py | 只允许在精确候选集合内消歧，并校验返回的 Skill ID |
-| Context / Observation | agent/context/、runtime/observation/ | 复用来源与只读观察的类型设计，按 Next 简化 |
-| 发布 Artifact 加载 | runtime/admission.py、compiler_artifact.py、compiler_skill.py、skill_assets.py | 只复用基本格式、文件、引用和本地依赖检查；不迁移 Skill Admission、信任或审批机制 |
-| Tool / Provider | PR #246 的通用 Provider Loader、Interface Package Loader、Runtime-only bindings | 复用已验证的通用调用实现；Next 统一收敛到唯一 Plugin Manager 的 tools Extension |
-| Run / Artifact Store | Demo 中的最小 Run、Artifact 管理实现 | 评估后选择性复用，不引入生产级分布式存储 |
-| Owner Receipt / Evidence | Outcome、Receipt、Commit Proof 相关实现与测试 | 保留权威 Owner 结果语义；UNKNOWN 不得被提升为 COMMITTED |
-| 5GC 专用集成 | integrations/fivegc/、NsmfRunExecutor 等 | 不整体复制，不进入 Agent Core |
+| Intent / Agent Model Boundary | agent/intent、agent/model_adapter.py、model_request.py、tests/unit/test_intent_ingress.py | 复用并简化；模型循环留在 Python Host |
+| Formal Search / Grounding | agent/formal/search、grounding、operators、ranking、resolver、strategy | 复用候选与排序能力；改为 when 显式候选 + SKILL.md 无 when 候选 |
+| Root/Skill Eligibility | agent/host/root_eligibility.py、routing.py、root_routing_profile.py | 复用通用排除/候选概念；移除部署级 Event→Root 业务路由 |
+| LLM 歧义选择 | agent/host/routing.py、agent/semantic/chooser.py | 仅允许在精确候选集合内消歧，并验证返回的 Skill ID |
+| Context / Observation | agent/context、runtime/observation | 复用来源/投影思路，简化 Provenance |
+| Artifact 检查 | runtime/admission.py、compiler_artifact.py、compiler_skill.py、skill_assets.py | 只借鉴包结构与依赖检查；Next 不建立 Skill Admission，也不调用 Compiler Inspect/Verify |
+| Compiler | skill_toolchain/compiler.py 中有 MockCompiler；真正 Compiler 在独立 Go 仓库 | MockCompiler 不能作为正式 Compiler；Next 运行时不调用 Compiler |
+| Procedure Linker | runtime/linker.py、frozen.py、casl_adapter.py | 只评估必要的消费/执行适配，不复制 CA-SL 语言语义 |
+| Runtime | runtime/engine.py（MockRuntime）、outcomes.py、evidence_wait.py、durable.py | 复用语义边界和测试；在 Next 建立简化的统一 Runtime |
+| Tool Action Boundary | runtime/tool_contract.py、ToolContractRegistry、ToolBoundOperationBackend；tests/unit/test_unified_resident_action.py | 强复用候选；分发目标改为 Plugin tools Extension |
+| Host/Resident Lifecycle | resident/host.py、service.py、invocation.py、delivery.py、ingress.py | 复用基础生命周期；避免复制 5GC 组合逻辑和过度恢复机制 |
+| Run / Artifact Store | resident/run_store.py、artifact_store.py | 只复用 Demo 所需最小 Run 关联和 Host Artifact 托管 |
+| Provider 集成 | integrations/ca_client_tools/provider_v2.py、mas_typed.py | 不携带 MAS 专用表和 Python Owner Adapter |
+| 通用 Tool Plugin Loader | PR #246 的 providers/manifest、interface、process、runtime、backend、service、runtime_bindings 和 ToolComposition | 作为实现证据，吸收到唯一 Plugin Manager，不保留 Provider Manager |
+| Event ingress/Delivery | PR #249 文档 | 只作为契约输入；必须服从 Skill-first 和统一 Plugin 机制 |
+| 5GC SBI/Nsmf | integrations/fivegc、NsmfRunExecutor、Namf Relay | 不整体复制；按协议 Plugin、Host、Runtime、Owner 职责拆分 |
 
-## 4. 与 Next 目标架构的差异
+## 3. 与 Next 目标架构的主要差异
 
-### 4.1 Event 路由不是 Skill Resolver
+### 3.1 Event→Root 路由不是目标
 
-Demo 的 root_routing_profile.py 使用部署侧 StructuredEventRoute，结合 Contract Version、Message Type、Request Type 选择 Root。它不是目标中的 Skill 包自声明适用性机制。
+Demo 当前有结构化 Event/Root Routing。Next 使用可选 Assurance Contract.when 做显式 Skill 选择；没有 when 的 Skill 通过 SKILL.md 语义候选。不得把现有路由表改名后带入 Next。
 
-Next 对新 Event 先评估可选 assurance/contract.yaml.when；显式匹配集合优先。没有显式匹配时，只对未声明 when 的 Skill 使用 SKILL.md 语义选择。不得新增 Domain Contract Package、业务路由表或 Event→Skill 映射表。
+### 3.2 Agent-first / Skill-optional 不是目标
 
-### 4.2 Plugin 与 Tool 管理需要统一
+PR #249 的早期设计含 Agent 默认路径。Next 要求每个新业务 Event 先绑定 Skill；无候选时澄清或拒绝，不允许无 Skill 绑定的 Generic Agent fallback。
 
-既有 PR #246 的 Provider Manager / ToolComposition 不能与 PR #249 提出的 Plugin Manager 并列成为两个永久管理器。Next 只有一个 Plugin Manager；Tool 是 Plugin 导出的 Operation，Tool Plugin 只是导出 tools Extension 的 Plugin。
+### 3.3 SkillCatalog 是 Next 新机制
 
-### 4.3 Catalog 与 Compiler 边界不同
+Demo 的现有目录/缓存实现不能直接视为目标 SkillCatalog。Next 必须明确进程内不可变快照、when 程序驻留、每个 Event 独立求值、原子 generation 更新和 Invocation generation pinning。
 
-Next 的 SkillCatalog 由 Python Core/Host 拥有。Agent 只消费已发布 Skill 包，不调用 Compiler，也不建立 Skill Admission。Demo 中的 MockCompiler、MockRuntime 不构成真实 Compiler 或 Next Runtime 的验收证据。
+### 3.4 Mock 名称不代表正式能力
 
-## 5. 选择性复用清单
+MockCompiler 不是真正的 CA-SL Compiler；MockRuntime 也不证明 Next Runtime 已实现。Compiler 是独立 Go 工具链。Next 只消费其发布 Artifact，不在运行时执行编译或 Admission。
+
+## 4. 选择性复用清单
 
 | 源码范围 | 建议 | 处理原则 |
 |---|---|---|
@@ -61,10 +66,16 @@ Next 的 SkillCatalog 由 Python Core/Host 拥有。Agent 只消费已发布 Ski
 | agent/context/、runtime/observation/ | 复制并适配 | 保留来源和 Observation 模型，简化上下文装配 |
 | published Artifact 读取与结构检查 | 选择性复用 | 去掉 Admission / Trust / Approval |
 | 通用 Tool 契约校验与 Outcome/Evidence | 选择性复用 | 以 Interface Package 和 Owner Receipt 为准 |
-| integrations/fivegc/、NsmfRunExecutor | 不复制 | 业务集成不得进入通用 Core |
+| integrations/fivegc/、NsmfRunExecutor、Owner claims、业务补偿 | 不复制 | 业务集成不得进入通用 Core |
 | MockCompiler、MockRuntime | 不作为最终实现 | 仅可作测试替身，不能冒充真实依赖 |
 
-## 6. PR 与测试证据
+**优先复用/改造：** Python Agent/Model Adapter、Formal Search/Grounding/Ranking、Context Loader、Observation Provenance、Tool Contract Validation、Outcome/Evidence 语义、最小 Run/Invocation、Host ArtifactStore，以及 PR #246 的通用进程和 Interface Package Loader 思路。
+
+**需要重构：** Skill 选择从结构化 Event→Root 映射改为 when + SKILL.md 候选；Tool dispatch 从 Provider 专属路径改为统一 Plugin Manager 的 tools Extension；重新划分 Runtime 与 Host；区分 Context 中 Event、Observation、Evidence 和模型文本的来源。
+
+**禁止整块复制：** integrations/fivegc/、NsmfRunExecutor、5GC 专用路由和补偿、MockCompiler 作为真实 Compiler、MockRuntime 作为 Next 最终 Runtime、独立 Provider Manager 或第二 Tool Registry。
+
+## 5. PR / Issue 证据与状态
 
 | 记录 | 截至审计日状态 | 能证明 | 不能证明 |
 |---|---|---|---|
@@ -73,8 +84,10 @@ Next 的 SkillCatalog 由 Python Core/Host 拥有。Agent 只消费已发布 Ski
 | Issue #235 | OPEN | 延后 Plugin ingress/delivery 范围 | Plugin Runtime 已实现 |
 | PR #249 | OPEN，head dfbcc334，文档设计 | Event Contract、Plugin IPC/Manifest 的设计提案 | Plugin Runtime 或 T2/T3 已通过 |
 
-PR #246 记录的 G5 为合成有状态 Owner，22 项测试通过；真实隔离 OpenAMSM Scheme C G6 仍为 NOT_RUN/BLOCKED。不得将合成 G5 表述为真实 OpenAMSM E2E。
+PR #246 记录的 G5 为合成有状态 Owner，22 项测试通过；真实隔离 OpenAMSM Scheme C G6 仍为 NOT_RUN/BLOCKED，G7 为 PARTIAL。不得将 Synthetic G5 表述为真实 OpenAMSM E2E。
 
-## 7. 使用限制
+## 6. 使用限制与结论
 
 本审计是代码和状态快照，不是全量测试报告。实施前必须重新读取 ca-agent-demo 的当前分支、PR 和源文件；任何复用都应在 Next 内独立运行测试。复用结论不授权直接修改 ca-agent-demo 或其他兄弟仓。
+
+ca-agent-demo 为 Next 提供了可观的 Python 代码和测试资产，但 Next 的目标边界更简单：Python Core + 一个 Plugin Manager + 一个 Runtime Action Boundary + Core-owned SkillCatalog + 外部发布的 Skill Artifact。复用必须以测试和依赖审查为前提，不能把 Demo 既有 5GC 业务组合结构带入通用 Core。
