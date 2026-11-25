@@ -1,35 +1,46 @@
 # CA Agent Next
 
-**Purpose:** an isolated workspace for the next-generation Agent architecture, its smallest runnable mechanisms, and their acceptance examples.
+**Purpose:** an isolated next-generation Agent implementation, evolved from `ca-agent-demo`, with a deliberately small mechanism surface and runnable Examples.
 
-**Current status:** architecture and repository instructions are documented on the review branch; implementation has not started and no mechanism acceptance is claimed yet.
+**Agent Core language: Python.** This is a fixed architecture decision for `ca-agent-next`. Go is used by independently running Plugins such as `ca-openamsm-plugin` and `ca-client-tools`; it does not imply a Go Agent Core.
 
-## Repository roles
+**Current status:** architecture/audit documents are under review in PR #1. This repository still has no Agent implementation. Do not mistake the design baseline for an implemented or accepted runtime.
+
+## Repository evolution
 
 | Repository | Role |
 |---|---|
-| [ca-agent](https://github.com/odango-chan/ca-agent) | Current stable Go Agent baseline. Reference HEAD: `447d0cce7e42c7c1184b11fb2563792eead68d51` (2026-11-18). |
-| [ca-agent-demo](https://github.com/odango-chan/ca-agent-demo) | Mechanism prototype and cross-component design/acceptance reference. |
-| **ca-agent-next** | Isolated next-generation implementation, runnable examples, and acceptance tests. |
+| [ca-agent-demo](https://github.com/odango-chan/ca-agent-demo) | **Primary evolution source.** Existing Python Agent/Host/Runtime mechanisms, runnable examples, tests, and implementation evidence are audited here. Reuse selectively; do not copy the whole repository. |
+| **ca-agent-next** | New, isolated **Python** implementation. Reorganize and simplify mechanisms against the agreed target architecture. |
+| [ca-agent](https://github.com/odango-chan/ca-agent) | Current stable implementation and eventual promotion target. It is not the source tree for this redesign. |
+| [ca-skill-compiler](https://github.com/odango-chan/ca-skill-compiler) | Independent Go Compiler; consume its released executable/API. Do not copy its Go implementation into next. |
+| [ca-client-tools](https://github.com/odango-chan/ca-client-tools) | Independent Go Tool Plugin for OpenAMSM; consume its released package/process. Do not port or copy its implementation into Python. |
+| [ca-openamsm-plugin](https://github.com/odango-chan/ca-openamsm-plugin) | Independent Go Event Plugin for OpenAMSM protocol ingress/delivery. |
+| [ca-skills](https://github.com/odango-chan/ca-skills) | CA-SL v1alpha5 language and published business Skill sources. Consume/import Skill packages; do not embed business logic in Agent Core. |
 
-When the next implementation satisfies its acceptance baseline, it can be promoted to `ca-agent`. For the following major redesign, create a fresh `ca-agent-next`. Keep the old stable baseline intact during the experiment; do not mix old and new architecture in one working tree.
+Promotion flow:
+
+`ca-agent-demo` (source/evidence) → `ca-agent-next` (new Python implementation) → `ca-agent` (promotion after acceptance).
+
+For the next major redesign after promotion, create a fresh `ca-agent-next`. Keep the stable `ca-agent` tree intact during this experiment.
 
 ## Start here
 
 - [Agent instructions](Agent.md) — mandatory rules for coding agents and VibeCoding.
-- [Architecture baseline](docs/architecture.md) — contract ownership, selection, execution, Runtime, and end-to-end flow.
-- [MVP acceptance](docs/acceptance.md) — runnable-example rule, first example, acceptance gates, and non-goals.
+- [Architecture](docs/architecture.md) — Python Core, unified Plugin model, Skill-first selection, Runtime boundary and data flow.
+- [Demo audit](docs/audit/ca-agent-demo.md) — current source inventory and evidence.
+- [Reuse and feasibility](docs/audit/reuse-and-feasibility.md) — copy vs adapt vs external dependency decisions.
+- [DeepSeek Harness plan](docs/implementation/deepseek-harness-plan.md) — staged implementation task package.
+- [Acceptance](docs/acceptance.md) — runnable Example and mechanism acceptance gates.
 
 ## Example-first development
 
-Examples live in this repository under `examples/`; a separate `ca-example` repository is not needed at this stage.
+Examples live in this repository under `examples/`; a separate `ca-example` repository is not needed.
 
-Every new externally observable extension or execution mechanism must add a new runnable Example case in the same change set. That Example must consume the public mechanism boundary and have an automated Acceptance Test proving it works.
+Every new externally observable mechanism must add a new runnable Example case and an automated Acceptance Test in the same change set. Examples must exercise the same public Plugin/Skill/Runtime boundaries as independent packages. They must not import Agent Core internals.
 
-An Example must not import Agent `internal` packages or require business-specific changes to Agent Core. Internal refactoring that adds no externally observable mechanism does not require a new Example.
-
-The first planned vertical example is an Echo domain with its own business contract, an independent Go Plugin, a Skill package, a Provider, deterministic and LLM-guided scenarios, and response delivery. It is a plan, not an implemented feature.
+The first planned vertical Example is **Echo**: Python Agent Core, one independently running Go Plugin that can expose both an Event extension and a Tool extension, an Echo-owned business contract, one Skill, and deterministic plus LLM-guided runs. This is a plan, not an implementation claim.
 
 ## Scope
 
-This is a **Demo-level mechanism implementation**, not a production platform. Keep basic schema validation, clear errors, minimal event/task correlation, and useful logs. Do not add production HA, complex security governance, multi-tenant isolation, Marketplace, central business registries, distributed event buses, complex compensation orchestration, or broad legacy compatibility unless a later task explicitly changes scope.
+This is a **Demo-level mechanism implementation**, not a production platform. Keep basic schema validation, clear errors, package identity, minimal correlation, useful logs and executable tests. Defer production HA, complex security governance, multi-tenant isolation, Marketplace, distributed Event Bus, complex compensation orchestration and broad legacy compatibility unless explicitly re-scoped.
