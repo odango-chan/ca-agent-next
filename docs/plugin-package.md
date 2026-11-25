@@ -221,7 +221,7 @@ messageId, correlationId, eventId, invocationId, deliveryId, responseObligationI
 | Plugin → Host | plugin.ready | pluginId, pluginVersion, ipcVersion, extensions | Confirms identity, protocol and exact extension IDs/types implemented by this process. |
 | Plugin → Host | ingress.event | eventId, ingressId, eventType, externalRequestId, responseChannelId, source, payload, artifacts | Publish one normalized external Event. correlationId is omitted unless the Event is itself a continuation of a correlated IPC operation. |
 | Host → Plugin | ingress.ack | eventId, disposition, runId?, responseObligationId?, artifactRefs?, error? | Accepted, duplicate attached, conflict or rejected disposition. |
-| Host → Plugin | tools.invoke | invocationId, callableId, arguments, artifactRefs, deadlineMs? | Invoke one authorized Tool operation. Runtime has already checked the selected Skill, Capability, Effect and input Schema. |
+| Host → Plugin | tools.invoke | invocationId, callableId, arguments, invocationContext, artifactRefs, deadlineMs? | Invoke one authorized Tool operation. Runtime has already checked the selected Skill, Capability, Effect and input Schema. |
 | Plugin → Host | tools.result | invocationId, result? or error | Return the Tool result matching the owning Interface Package, or a transport/operation error. |
 | Host → Plugin | delivery.dispatch | deliveryId, runId, responseObligationId, eventType, statusCode, headers, body, artifacts | Deliver the Host-validated response for the recorded obligation. |
 | Plugin → Host | delivery.result | deliveryId, disposition, statusCode?, error? | Report delivered, failed or unknown. |
@@ -235,7 +235,7 @@ Type-specific requirements:
 - host.initialize must provide the Plugin's exact package identity and the one supported IPC version. Plugin must not choose a different version.
 - plugin.ready must report only extensions declared in plugin.yaml. A mismatch fails the handshake.
 - ingress.ack disposition is one of accepted, duplicate_attached, conflict or rejected. accepted and duplicate_attached include Host-assigned runId and responseObligationId. Rejected/conflict includes error.
-- tools.invoke uses the exact callableId and argument shape from the canonical Tool Interface Package. The Runtime authorizes before dispatch. Tool Plugin does not grant Capability or choose a Skill.
+- tools.invoke uses the exact callableId and argument shape from the canonical Tool Interface Package. invocationContext carries only the Host invocation fields declared by that Tool binding's existing hostInvocation contract; it does not create a second context schema. Runtime authorizes before dispatch. Tool Plugin does not grant Capability or choose a Skill.
 - tools.result returns the Interface Package-defined result. Owner Receipt, Commit Proof and outcome semantics are interpreted by Runtime from the owning contract; Plugin transport success is not business COMMITTED.
 - delivery.dispatch is addressed by responseObligationId created by Host. It includes the exact status, headers, structured body and only the authorized outbound artifact descriptors.
 - delivery.result disposition is delivered, failed or unknown. An ambiguous delivery remains unknown; it never changes the Owner business outcome.
