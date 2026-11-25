@@ -167,7 +167,7 @@ EC07 Mock AMF SBI Test Peer 负责发送协议准确的 Create/Update/UE-request
 | env-openamsm MAS Owner v1alpha4 | main dc83ccbf；23 业务 Callable + 2 证据 READ；Receipt/Proof/Reconcile | IMPLEMENTED |
 | Scheme C Modify / UE-requested Release | Owner 设计和补丁记录；真实 PFCP 52/53、54/55 与 N1/N2 流程证据 | IMPLEMENTED（Owner/隔离演示范围） |
 | env-5gc-sim Mock AMF | main 6ba1dc4；完整设计、实现记录和 E2E 场景 | IMPLEMENTED（测试对端范围；按证据限定） |
-| ca-client-tools Provider v1.1.0 | main 7bcb261；Provider package/typed callables | IMPLEMENTED；Next adapter 未验收 |
+| ca-client-tools Provider v1.2.0 | main 7bcb261；Provider package/typed callables | IMPLEMENTED；Next adapter 未验收 |
 | ca-client-tools Codec Phase B | PR #39 OPEN | NOT_MERGED |
 | ca-openamsm-plugin | main eb83c8f 仅 README；PR #1 OPEN/Draft | NOT_IMPLEMENTED |
 | ca-agent-demo Provider runtime cutover | PR #246 OPEN；#248/#249 OPEN | NOT_MERGED |
