@@ -98,6 +98,14 @@ extensions:
             - slot: n2.response
               mediaType: application/vnd.3gpp.ngap
               required: false
+        artifacts:
+          output:
+            - slot: n1.response
+              mediaType: application/vnd.3gpp.5gnas
+              required: false
+            - slot: n2.response
+              mediaType: application/vnd.3gpp.ngap
+              required: false
       - eventType: nsmf.update-sm-context
         responseSchema: schemas/response.schema.yaml
         artifacts:
