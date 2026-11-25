@@ -59,7 +59,19 @@ If implementation and documentation disagree, stop and report the exact conflict
 - One explicit true match selects directly. Multiple explicit true matches may be disambiguated by the LLM only within that exact candidate set.
 - If there are no explicit true matches, semantic candidates are the imported Skills without when. This includes SKILL.md-only Skills and Assurance Skills whose Contract omits when. The Agent uses SKILL.md guidance and may choose only among imported candidates.
 - A false/error guarded Skill must never be reintroduced into the unguarded semantic set.
+- Resolve fresh Events from the Core-owned in-memory SkillCatalog; do not scan Skill directories or reread SKILL.md/Assurance files on the Event hot path.
 - No Event→Skill mapping table, Event→Mode table, Domain Contract Package or business-specific Host routing.
+
+### 5.1 SkillCatalog residency and generation — mandatory
+
+- SkillCatalog is owned by Python Agent Core / Host, not by the Plugin Manager. Plugin Manager owns Plugin process lifecycle, IPC and extension dispatch only.
+- On startup and every explicit Skill import/update, read SKILL.md and the package assets once, validate them, compile Assurance `when` once through the canonical Compiler, and build a new immutable Catalog generation.
+- Every Skill, including SKILL.md-only Agent-only Skills, is registered in the Catalog. Keep full SKILL.md text, selection metadata, schema/type environment, compiled `when` program and admitted Artifact reference available in memory.
+- For each fresh Event, evaluate the already compiled `when` program against that Event's current `event.type` and `input`. Reuse the program, never cache the previous Event's boolean result by default.
+- Semantic selection uses candidate metadata derived from the imported SKILL.md. After selection, supply the full SKILL.md text from memory; do not reread the package file.
+- Load `references/` and large knowledge assets only when the selected Skill actually needs them. Large Procedure payloads may be loaded after selection and cached per Catalog generation; they must not cause per-Event package scans.
+- Build updates off to the side and atomically activate the new immutable generation only after the requested update validates. Failed updates leave the active generation unchanged. In-flight Invocations retain their pinned generation until completion.
+- Use a simple process-local monotonic generation number. Do not add Redis, a distributed cache, content digests or a new integrity system. No filesystem watcher or automatic package hot reload is required; explicit Skill import/update is the supported activation path.
 
 ## 6. Skill Import and Compiler — mandatory
 
@@ -73,6 +85,7 @@ If implementation and documentation disagree, stop and report the exact conflict
 - An individual LLM Action proposal is not Skill source and is validated by Runtime Action Boundary. Do not compile it, create a temporary Procedure or invoke the Compiler for each Action.
 - Do not copy the Go Compiler or reimplement its parsing/linking semantics in Python. Consume its canonical CLI/API.
 - Current Compiler support for refreshed v1alpha5 contract.when and Assurance-free SKILL.md import must be verified. If unsupported, report the exact dependency blocker; never silently strip the field or claim support.
+- The Compiler Artifact must expose a portable, statically checked `when` program and its CEL profile/type bindings for the Python Runtime. Do not make Python reparse/type-check the source expression per Event; follow [the SkillCatalog/Compiler integration requirements](docs/integration/skill-catalog-compiler-contract.md).
 
 ## 7. Execution modes and Runtime
 
@@ -109,7 +122,7 @@ Do not add:
 - Domain Contract Packages, TaskContract Packages or a second Skill descriptor;
 - supportedModes or a second LLM Contract;
 - legacy format compatibility or automatic migration;
-- Marketplace, installer, automatic package download or hot reload;
+- Marketplace, installer, automatic package download, filesystem watchers or generic Plugin hot reload (explicit SkillCatalog import/update with atomic generation activation is allowed);
 - separate Provider Manager, Tool registry, Runtime or authorization path;
 - production HA, complex multi-tenant governance, distributed Event Bus or elaborate DFX.
 
