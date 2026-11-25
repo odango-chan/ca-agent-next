@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.1.6  
+> 文档版本：0.1.7  
 > 状态：待评审；IR-006 / SR-012 / #2  
 > 修订日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -86,6 +86,8 @@ PoC 至少覆盖：同一程序对多个 Event 分别得到 true、false 和运�
 
 正式规范门槛已解除。SR-013 保持 DRAFT，待负责人确认实施范围与 READY 后执行 AC-013-01。PoC 通过后由 Compiler Owner 裁定新版 Artifact API。
 
+AC-013-01 的 Windows 环境和常量交换已预检。Go 默认 CheckedExpr Any 类型标识在 Python 下被拒绝；使用 `cel.expr.CheckedExpr` 重新构造 Any 后常量求值通过。完整 typed fixture 未执行，见 SR-013 的预检记录。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者 | 章节 | 修改内容 | 原因 | 关联 |
@@ -97,3 +99,4 @@ PoC 至少覆盖：同一程序对多个 Event 分别得到 true、false 和运�
 | 2026-11-25 | 0.1.4 | Codex | §7 | 登记规范与 Next 的职责冲突及 READY 判定 | 防止 DSH 误执行 M.4 | SR-013、ca-skills #88 |
 | 2026-11-25 | 0.1.5 | Codex | §7 | 复审 #88 修订并更新发现状态 | 区分候选文本已解决与正式实施门槛 | SR-013、ca-skills #88 |
 | 2026-11-25 | 0.1.6 | Codex | §6–7 | 固定已发布规范 SHA | ca-skills #89 已合并 | SR-013 |
+| 2026-11-25 | 0.1.7 | Codex | §7 | 回链实跑预检 | 记录已验证的交换路径和剩余范围 | SR-013 |
