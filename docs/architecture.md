@@ -24,57 +24,80 @@ ca-agent (stable implementation target; not source for this redesign)
 
 ## 2. Skill package and execution modes
 
-Every Skill package has one required Agent-facing SKILL.md. Deterministic execution is optional and is introduced only by the presence of a valid assurance directory.
+Every published Skill package has one required Agent-facing `SKILL.md`. Deterministic execution is optional and is provided only by a Compiler-generated, published Assurance Artifact.
 
-~~~text
-skills/<skill-name>/
-├── SKILL.md
-├── assurance/                 # Optional; enables Deterministic execution
-│   ├── contract.yaml
-│   ├── procedure.yaml
-│   └── predicates.yaml        # Required; empty PredicateSet when unused
-├── schemas/                   # Skill-owned request and other schemas
-├── scripts/                   # Skill-owned deterministic scripts
-└── references/                # Optional Agent knowledge material
-~~~
+The authoring repository may contain `assurance/contract.yaml`, `procedure.yaml` and `predicates.yaml`. Those source files are Compiler inputs; they are not Agent runtime inputs and are not required in the published runtime package.
 
-| Package shape | LLM-guided | Deterministic |
+| Published package shape | LLM-guided | Deterministic |
 |---|---:|---:|
-| SKILL.md only; no assurance directory | Yes | No |
-| SKILL.md + valid assurance source | Yes | Yes |
-| SKILL.md + imported compiled Assurance Artifact | Yes | Yes |
-| Assurance directory exists but is incomplete or invalid | Import fails | Import fails |
+| SKILL.md-only package, no compiled Assurance Artifact | Yes | No |
+| SKILL.md + valid compiled Assurance Artifact | Yes | Yes |
+| Package declares Assurance but compiled Artifact is absent, invalid or incompatible | Import fails | Import fails |
 
 Normative rules:
 
-1. SKILL.md is required for every Skill and contains the Agent-facing description, usage guidance and natural-language applicability.
-2. The assurance directory is optional. Its contract.yaml belongs inside assurance; it is not a mandatory file for every Skill.
-3. A valid Assurance enables both execution modes. The selected mode is chosen after exact Skill selection.
-4. If assurance is absent, the Skill is LLM-guided only. The Agent follows SKILL.md and the common Runtime Action Boundary.
-5. If assurance is present but malformed, incomplete, unsupported or fails compilation/admission, reject the Skill import. Never silently downgrade it to SKILL.md-only.
+1. SKILL.md is required for every published Skill and contains the Agent-facing description, usage guidance and natural-language applicability.
+2. Assurance is optional in the authoring source. Its source contract remains inside `assurance/`; it is compiled and verified before publication.
+3. The Agent accepts only the published compiled Assurance Artifact. It never imports Assurance source YAML, invokes a Compiler or compiles a Skill.
+4. A published package without a compiled Assurance Artifact is LLM-guided only. A package that declares Assurance but has missing/invalid compiled files or unresolved dependencies fails import; it is never silently downgraded.
+5. The Importer performs only basic structural checks and local dependency resolution. The Demo has no separate Skill Admission, approval, trust evaluation or production authorization mechanism.
 6. Do not add supportedModes, a second LLM Contract, a separate applicability.yaml, activation.yaml, constraint.yaml or another Skill descriptor.
 7. predicates.yaml is for execution-time business predicates only. It does not select Skills.
 
-## 3. Skill source and Artifact import lifecycle
+## 3. Published Skill import lifecycle
 
-The Skill Importer recognizes three inputs. It does not implement a second Compiler or package manager.
+Compiler and Agent Importer are separate processes and separate lifecycle stages. Compiler belongs to the external authoring/release toolchain; it is not embedded in Agent and is never invoked by Agent.
 
-| Input | Import path | Compiler behavior |
+| Published input | Agent import path | Compiler behavior in Agent |
 |---|---|---|
-| SKILL.md-only source package | Parse basic Skill metadata and import Agent guidance | No Compiler invocation |
-| Source package with assurance/ | Validate package shape, invoke CA-SL Compiler, then inspect/admit the generated Artifact | Automatically compile before admission |
-| Already compiled Skill Artifact | Inspect, verify and admit the supplied Artifact | Do not rebuild or recompile |
+| SKILL.md-only package | Parse basic metadata, check safe paths/references, import guidance | None |
+| SKILL.md + compiled Assurance Artifact | Check supported Artifact format/version, required files and references; parse CEL/type data; resolve local Tool/Capability dependencies | None |
+| Assurance source YAML without a compiled Artifact | Not a supported runtime package; report missing published Artifact | Never compile or fall back |
+
+External publication pipeline:
+
+~~~text
+Authoring source (SKILL.md + optional assurance/*.yaml)
+   |
+   v
+External CA-SL Compiler: Check / Build
+   |
+   v
+Compiler Verify
+   |
+   v
+Publish runtime Skill bundle (SKILL.md + compiled Artifact + optional references)
+~~~
+
+Agent import pipeline:
+
+~~~text
+Published Skill bundle
+   |
+   v
+Skill Importer
+   |
+   +--> basic format / manifest / required-file / path / reference checks
+   |
+   +--> deserialize compiled CEL and type data (if Assurance exists)
+   |
+   +--> resolve declared Tool / Capability dependencies against installed Plugins
+   |
+   v
+Build candidate SkillCatalog generation
+   |
+   v
+Atomically publish active generation
+~~~
 
 Additional rules:
 
-- The Compiler owns CA-SL parsing, semantic checks, linking and Artifact generation. Python invokes the released Compiler interface; it must not reimplement Compiler semantics.
-- Source with Assurance is not executable until the Compiler succeeds and Host admission succeeds.
-- An imported compiled Artifact is not recompiled. The Host uses the Compiler's Inspect/Verify contract and then performs its own deployment/Capability admission.
-- A failed build, verify or admission is a hard error. Do not strip assurance files, ignore an unknown field or fall back to LLM-guided mode.
-- Editing only SKILL.md updates the Agent-facing guidance; it does not require rebuilding an unchanged Assurance Artifact.
-- Editing contract.yaml, procedure.yaml, predicates.yaml or another Assurance source dependency triggers a new Compiler build and Artifact admission.
-- LLM-created or LLM-edited Skill source follows this same import path. Creating a source file does not itself make it executable.
-- An individual LLM Action proposal is not Skill source and does not invoke the Compiler.
+- Compiler owns CA-SL parsing, static semantics, linking, Build and Verify before publication. Agent does not call its CLI/API, copy its code or reproduce its validation.
+- The Agent Importer does not run Compiler Inspect/Verify and does not perform a separate Artifact Admission. It only checks that the published bundle is structurally readable and that its local dependencies can be resolved.
+- Required files/references missing, unsupported manifest/Artifact format, unsafe paths, malformed CEL/type data or unresolved Tool/Capability dependencies cause a clear import error.
+- The Agent does not import or execute Assurance source YAML and does not automatically compile or repair a package.
+- Editing SKILL.md updates Agent-facing guidance. Editing Assurance source happens in the external authoring/release workflow; a new compiled Artifact must be published before the Agent imports the update.
+- An individual LLM Action proposal is not Skill source and does not invoke Compiler.
 
 ## 4. Skill-first selection and optional contract.when
 
@@ -101,11 +124,11 @@ when: 'event.type == "nsmf.create-sm-context" && input.requestType == 1'
 
 1. Validate and deduplicate the Event envelope/payload. Resolve an exact continuation first; a continuation never re-enters fresh Skill selection.
 2. Pin the active in-memory SkillCatalog generation for this fresh Event. A package with invalid Assurance was rejected at import and is not a candidate; do not scan package directories on this path.
-3. Evaluate the precompiled `when` program for each eligible Assurance Skill that declares it, using this Event's current values. A true result is an explicit match. False excludes that Skill. A runtime evaluation error fails closed, excludes that Skill and records a diagnostic. A statically invalid expression prevents Assurance compilation/admission.
+3. Evaluate the precompiled `when` program for each eligible Assurance Skill that declares it, using this Event's current values. A true result is an explicit match. False excludes that Skill. A runtime evaluation error fails closed, excludes that Skill and records a diagnostic. A statically invalid expression prevents Compiler publication.
 4. If one explicit true match exists, select it without an LLM call. If multiple explicit true matches exist, the LLM may disambiguate only within that exact set; validate the returned Skill identity.
 5. If there are no explicit true matches, form the unguarded semantic candidate set from Skills without when. This includes SKILL.md-only Skills and valid Assurance Skills whose contract omits when. Use their SKILL.md descriptions for semantic selection; the LLM cannot invent a Skill outside the imported set.
 6. If the applicable candidate set is empty, stop or request the missing information. A Skill whose when evaluated false or errored is not reintroduced as an unguarded candidate.
-7. Bind the exact selected Skill package and, when Assurance exists, its exact admitted Artifact and Capability requirements.
+7. Bind the exact selected Skill package and, when Assurance exists, its exact published Artifact and Capability requirements.
 8. Select Deterministic or LLM-guided mode only after Skill binding.
 
 There is no Event-to-Skill table, Event-to-mode table, business-contract package registry or domain-specific Host route. The Plugin does not name a Skill.
@@ -114,37 +137,41 @@ There is no Event-to-Skill table, Event-to-mode table, business-contract package
 
 SkillCatalog is a Python Agent Core / Host mechanism. It is deliberately separate from Plugin Manager: Plugin Manager owns Plugin lifecycle, IPC and Event/Delivery/Tool extension dispatch; it neither owns Skill assets nor performs Skill selection.
 
-The Catalog is an immutable, process-local snapshot built at startup and on an explicit Skill import/update operation. It is the active read model for Skill discovery and selection; package files remain the source of truth, not the Catalog itself.
+The Catalog is an immutable, process-local snapshot built at startup and on an explicit Skill import/update operation. It is the active read model for Skill discovery and selection; published package files remain the source of truth, not the Catalog itself.
 
 Each Catalog entry retains, as applicable:
 
-- Skill identity and package/source reference;
+- Skill identity and published package reference;
 - the full imported SKILL.md text plus lightweight candidate metadata derived from it;
-- Assurance presence/validity and the admitted Artifact reference;
-- the precompiled `when` program and its CEL profile/type environment;
-- the validated Request Schema/type information needed by selection;
-- the Capability requirements and other admission metadata needed after selection.
+- Assurance presence and the published compiled Artifact reference;
+- the deserialized `when` program and its CEL profile/type environment;
+- the Request Schema/type information needed by selection;
+- declared Capability requirements and resolved local callable references.
 
 Residency and loading rules:
 
-1. Read and parse SKILL.md once when importing/updating a package. Keep its full text in memory. Semantic selection uses bounded candidate metadata derived from that in-memory content; after selection, provide the full SKILL.md text from memory, not by rereading disk.
-2. Compile and statically type-check `when` once during Assurance import/update. Keep the compiled program and its type environment in memory. Do not parse or compile CEL on the Event hot path.
+1. Read and parse SKILL.md once when importing/updating a published package. Keep its full text in memory. Semantic selection uses bounded candidate metadata derived from this in-memory content; after selection, provide the full SKILL.md text from memory, not by rereading disk.
+2. For a published Assurance Artifact, parse its supported manifest and required references, then deserialize the CheckedExpr and type descriptors once. The Agent does not compile or statically re-check the source CEL expression.
 3. Every fresh Event evaluates the cached program against that Event's current `event.type` and `input`. Do not cache a prior Event's true/false/error result: two Events for the same Skill may have different payloads. Duplicate Event handling and exact continuation resolution happen before fresh selection, so a replay/continuation does not cause a new evaluation.
 4. Register SKILL.md-only Skills in the same Catalog. They have no `when` program and remain semantic candidates when the explicit-match set is empty.
-5. Keep small Skill metadata, SKILL.md text, CEL programs, Schema/type information and Artifact admission handles resident. Load `references/` and large knowledge assets only when the selected Skill needs them. A large Procedure payload may be materialized after selection and cached for that Catalog generation; it must not trigger per-Event package scans.
-6. Build a candidate generation off-path. An explicit update activates it with one atomic snapshot swap only after the requested package changes validate. If the update fails, retain the previous active generation. No filesystem watcher or automatic package hot reload is required.
-7. A fresh Invocation pins the Catalog generation used for selection. Its Skill text, Artifact and Capability bindings remain from that generation even after a newer generation is activated. Retain an old generation while any Invocation still references it, then reclaim it.
+5. Keep small Skill metadata, SKILL.md text, CEL programs, Schema/type information and resolved Artifact references resident. Load `references/` and large knowledge assets only when the selected Skill needs them. A large Procedure payload may be materialized after selection and cached for that Catalog generation; it must not trigger per-Event package scans.
+6. Build a candidate generation off-path. An explicit update activates it with one atomic snapshot swap only after the requested package's basic structure, Artifact references and local dependencies are checked. If the update fails, retain the previous active generation. This is ordinary import validation, not a separate admission stage.
+7. A fresh Invocation pins the Catalog generation used for selection. Its Skill text, Artifact and Capability/callable bindings remain from that generation even after a newer generation is activated. Retain an old generation while any Invocation still references it, then reclaim it.
 8. Use a simple process-local monotonically increasing generation number for this Demo. Do not add a distributed cache, Redis, content digest, package signature or another integrity mechanism.
 
 The Event hot path is therefore: validate/deduplicate Event → resolve exact continuation (if any) → pin active Catalog generation for a fresh Event → evaluate in-memory `when` programs → perform semantic selection only among unguarded in-memory candidates if there is no explicit match → bind Skill → select execution mode. It does not read SKILL.md, scan Skill directories or invoke Compiler.
 
 ### 4.4 Compiler-to-Runtime `when` Artifact boundary
 
-CA-SL v1alpha5 Appendix M defines the author expression and static typing rules. `event.type` is string; `input` is typed from the exact `Contract.requestSchema`; accessing an input member without `requestSchema` is `CEL_INVALID`. Compiler owns G.4 static validation and checked-program generation; Python Resolver owns per-Event evaluation.
+CA-SL v1alpha5 Appendix M defines the author expression and static typing rules. `event.type` is string; `input` is typed from the exact `Contract.requestSchema`; accessing an input member without `requestSchema` is `CEL_INVALID`. The independent Compiler owns G.4 static validation and checked-program generation; Python Resolver owns per-Event evaluation.
 
-Compiler v2.1.0 and its Development v1alpha1 contracts are already released/frozen. The proposed contract is tracked by [ca-skill-compiler Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61): keep Development BuildRequest/BuildResult v1alpha1 and add a separately versioned Development Artifact Manifest v1alpha2. Frozen v1alpha5 Build/Verify bytes and Development v1alpha1 contracts must remain unchanged.
+The Compiler's existing published `compiler-artifact/v1alpha5` contract is frozen and must remain byte-identical. The separate Development Artifact v1alpha1 is explicitly `NOT_ADMITTED` and contains development-only Host Admission requirements; it is not a runtime Skill package and must not be imported by the Agent.
+
+The proposed work is tracked by [ca-skill-compiler Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61): the Compiler must define a new versioned **published runtime Artifact** contract capable of carrying the checked `when` program. Its exact Artifact API version is Compiler-owned and must not be confused with the CA-SL language version: `languageTarget` remains `connectionagent.io/v1alpha5`. Do not mutate the frozen Artifact v1alpha5 contract or use Development Artifact v1alpha1/v1alpha2 as the runtime package.
 
 The preferred interchange is a standard `google.api.expr.CheckedExpr` wrapped in `google.protobuf.Any`, plus a `google.protobuf.FileDescriptorSet` for the exact Event and Request Schema type environment. Go `cel-go` produces the checked expression; Python `cel-expr-python` deserializes and evaluates the same program. This is a target, not a PASS claim: Compiler must first prove Go-to-Python round-trip and G.4 optional/null semantics with real fixtures. Do not substitute `DynType`, a Python-only parser, a custom CEL interpreter or a per-Event Compiler subprocess.
+
+At runtime the Agent only checks basic format/required-file/reference structure, deserializes the checked program and resolves local Tool/Capability dependencies. It does not run Compiler Verify, perform Skill Admission or make a trust/production-authorization decision.
 
 See [技能目录与编译器运行时接口设计说明书](集成设计/技能目录与编译器运行时接口设计说明书.md) for the detailed contract, PoC and stop conditions.
 
@@ -225,22 +252,22 @@ Rules:
 | Python Host / Agent | Model loop, reasoning, Skill discovery/selection, Context assembly, Skill import orchestration | Direct Tool invocation or authoritative business truth |
 | SkillCatalog | Core-owned immutable in-memory Skill index, cached guidance/selection programs and Catalog generations | Plugin lifecycle, Tool dispatch or Owner truth |
 | Skill | SKILL.md guidance; optional Assurance contract and Procedure | Plugin lifecycle or Tool implementation |
-| CA-SL Compiler | Assurance source validation, linking and Artifact generation/inspection | LLM Action execution or business Runtime |
-| Python Runtime | Run state, admission, Capability authorization, Action validation, Tool dispatch, Outcomes/Evidence, Wait/Resume/Reconcile | LLM Model Loop or Plugin protocol parsing |
-| Deterministic Procedure Engine | Advance a validated Procedure and derive the next Action | Independent Tool dispatch or authorization |
+| External CA-SL Compiler | Assurance source validation, linking, Build and Verify before publication | Agent Runtime, Skill selection, Tool execution or Skill Admission |
+| Python Runtime | Run state, Action validation, declared Capability/callable scope checks, Tool dispatch, Outcomes/Evidence, Wait/Resume/Reconcile | Compiler, Skill Admission, trust evaluation or LLM Model Loop |
+| Deterministic Procedure Engine | Advance a published compiled Procedure and derive the next Action | Independent Tool dispatch or Capability scope checks |
 | Plugin Manager | Process lifecycle, IPC and extension dispatch | Skill selection, authorization or Owner truth |
 | Tool Plugin | Execute the requested Tool and return its result/receipt | Granting itself permission or inventing Owner outcomes |
 | Owner | Authoritative external business state and commit result | Agent reasoning |
 
-### 7.1 Four distinct flows
+### 7.1 Three distinct flows
 
-**A. Import SKILL.md-only source**
+**A. Import SKILL.md-only published package**
 
 ~~~text
-SKILL.md
+SKILL.md-only published package
    |
    v
-Skill Importer
+Skill Importer: basic structure / path / reference checks
    |
    v
 Build candidate Catalog generation
@@ -251,65 +278,58 @@ Atomically publish active generation
 
 No Assurance and no Compiler invocation.
 
-**B. Import source with Assurance**
+**B. Publish a Skill with Assurance (external to Agent)**
 
 ~~~text
-SKILL.md + assurance source
+SKILL.md + assurance source YAML (authoring repository)
+   |
+   v
+External CA-SL Compiler: Check / Build
+   |
+   v
+Compiler Verify
+   |
+   v
+Publish SKILL.md + compiled runtime Artifact
+~~~
+
+The Agent is not part of this build/release path and never receives or compiles the Assurance source.
+
+**C. Import a published compiled Skill Artifact**
+
+~~~text
+SKILL.md + published compiled Assurance Artifact
    |
    v
 Skill Importer
    |
-   v
-CA-SL Compiler: Check / Build
+   +--> basic format / manifest / required-file / path / reference checks
+   |
+   +--> deserialize CEL / type data
+   |
+   +--> resolve local Tool / Capability dependencies
    |
    v
-Artifact Inspect / Verify
-   |
-   v
-Host Admission
-   |
-   v
-Build candidate Catalog generation
+Build candidate SkillCatalog generation
    |
    v
 Atomically publish active generation
 ~~~
 
-**C. Import a compiled Artifact**
-
-~~~text
-SKILL.md + compiled Skill Artifact
-   |
-   v
-Skill Importer
-   |
-   v
-Artifact Inspect / Verify
-   |
-   v
-Host Admission
-   |
-   v
-Build candidate Catalog generation
-   |
-   v
-Atomically publish active generation
-~~~
-
-No rebuild.
+No Compiler invocation, Compiler Verify command or Skill Admission stage. Missing/invalid files or unresolved dependencies fail import with a diagnostic.
 
 **D. LLM Action vs Skill Authoring**
 
 - An LLM-proposed individual Action is validated by the Runtime Action Boundary. It is not compiled into a temporary Procedure.
 - An LLM-created or LLM-edited SKILL.md-only package follows the ordinary no-Assurance import path.
-- An LLM-created or LLM-edited Assurance source follows the source import and Compiler path before it can be used deterministically.
+- An LLM-created or LLM-edited Assurance source is not executable as-is; it must be compiled and published by the external toolchain before Agent import.
 
 ### 7.2 Shared Action path
 
-- Deterministic mode derives an Action from the admitted Procedure.
+- Deterministic mode derives an Action from the published compiled Procedure.
 - LLM-guided mode proposes an Action from Skill-scoped Context.
 - Both submit the same conceptual RuntimeActionRequest to the same Runtime Action Boundary.
-- Runtime validates Schema, selected Skill scope, Capability, Effect, budget and admission before dispatching through the Plugin Manager.
+- Runtime validates the Action Schema, selected Skill scope, declared Capability/callable membership and Effect before dispatching through the Plugin Manager. This is an invocation boundary, not Skill Admission or production authorization.
 - LLM cannot call Plugins directly, widen Capability grants, fabricate Evidence or declare an Owner mutation COMMITTED.
 - READ results remain Observations with provenance. MUTATION results follow their Owner Receipt/Commit Proof contract; UNKNOWN remains UNKNOWN.
 
@@ -317,15 +337,14 @@ No rebuild.
 
 ~~~mermaid
 flowchart TB
-  PKG[Configured Skill Packages / Artifacts] --> IMPORT[Skill Importer: startup or explicit update]
-  IMPORT --> SOURCE{Input kind}
-  SOURCE -->|SKILL.md only| GUIDANCE[Load guidance; no Compiler]
-  SOURCE -->|Assurance source| COMP[CA-SL Compiler Check / Build]
-  SOURCE -->|Compiled Artifact| VERIFY[Inspect / Verify]
-  COMP --> VERIFY
-  VERIFY --> ADMIT[Host Admission]
-  GUIDANCE --> CANDIDATE[Build candidate SkillCatalog generation]
-  ADMIT --> CANDIDATE
+  SOURCE[Assurance source in authoring repository] --> COMP[External CA-SL Compiler: Check / Build]
+  COMP --> VERIFY[Compiler Verify]
+  VERIFY --> RELEASE[Publish SKILL.md + compiled runtime Artifact]
+  SKILLONLY[SKILL.md-only package] --> IMPORT[Agent Skill Importer]
+  RELEASE --> IMPORT
+  IMPORT --> CHECK[Basic format / file / path / reference checks]
+  CHECK --> CEL[Deserialize CEL / type data and resolve local Tool dependencies]
+  CEL --> CANDIDATE[Build candidate SkillCatalog generation]
   CANDIDATE --> SWAP[Atomic activate immutable Catalog generation]
 
   EXT[External Event / User Task] --> EP[Event Plugin]
@@ -341,7 +360,7 @@ flowchart TB
   SEMANTIC --> SELECT
   SELECT --> GUIDANCELOAD[Use full SKILL.md from memory]
   GUIDANCELOAD --> MODE{Execution mode}
-  MODE -->|Deterministic| PROC[Admitted Procedure Artifact]
+  MODE -->|Deterministic| PROC[Published compiled Procedure Artifact]
   MODE -->|LLM-guided| LOOP[LLM Model Loop]
   PROC --> ACTION[RuntimeActionRequest]
   LOOP --> ACTION
@@ -357,7 +376,7 @@ flowchart TB
   PM --> EP
 ~~~
 
-The diagram describes the target flow, not current implementation status. A Skill must be imported and admitted before selection. A Skill with invalid Assurance is not a fallback LLM-only Skill.
+The diagram describes the target flow, not current implementation status. A published Skill must pass basic import checks and have its local dependencies resolved before it enters the Catalog. This Demo has no separate Skill Admission mechanism. A Skill that declares Assurance but lacks a valid compiled Artifact is an import error, never a fallback LLM-only Skill.
 
 ## 9. What is reused from ca-agent-demo
 
@@ -374,7 +393,7 @@ The diagram describes the target flow, not current implementation status. A Skil
 - ca-client-tools v1.2.0: independent Go Tool Plugin and Interface Package. Adapt provider/v2 behind the unified Plugin Manager initially.
 - ca-skills: canonical CA-SL Skill sources and language specification. Same-version v1alpha5 refresh proposal [PR #88](https://github.com/odango-chan/ca-skills/pull/88) adds optional Assurance and contract.when; Compiler support remains a separate dependency gate.
 - ca-openamsm-plugin: independent Go Event Plugin. Align its contract before implementation.
-- **Known gate:** ca-skills PR #88 is OPEN; Compiler implementation is tracked by [Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61). Compiler v2.1.0 does not yet establish refreshed `contract.when` support or Python CheckedExpr interoperability. SKILL.md-only import is Next-owned and bypasses Compiler. Assurance source import / `when` selection remains blocked until the Compiler Artifact v1alpha2 contract, Go/Python PoC and release are verified. See [the Chinese integration design](集成设计/技能目录与编译器运行时接口设计说明书.md).
+- **Known gate:** ca-skills PR #88 is OPEN; Compiler implementation is tracked by [Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61). Compiler v2.1.0 does not yet establish refreshed `contract.when` support or Python CheckedExpr interoperability. SKILL.md-only packages import directly. Assurance Skills require a new versioned published runtime Artifact contract; the Agent never compiles or runs Compiler Verify. See [the Chinese integration design](集成设计/技能目录与编译器运行时接口设计说明书.md).
 
 ## 11. Demo-level non-goals
 
@@ -386,7 +405,8 @@ Do not add:
 - separate Provider Manager, Tool registry, Runtime or authorization path;
 - legacy format compatibility or automatic migration;
 - Marketplace, installer, automatic package downloads, filesystem watchers or generic Plugin hot reload. Explicit Skill import/update with atomic SkillCatalog generation activation is allowed and required;
-- production HA, complex multi-tenant governance, distributed Event Bus, broad DFX or production qualification machinery.
+- Skill Admission, approval workflows, Owner Trust, package signatures, Trust Registry, production authorization or qualification machinery;
+- production HA, complex multi-tenant governance, distributed Event Bus or broad DFX.
 
 Keep basic YAML/Schema/version/reference validation, path containment, clear errors, explicit process configuration, minimal correlation and runnable acceptance Examples. Existing Compiler/Interface Package identities remain governed by their owning contracts; do not add a second Host-side digest or integrity system.
 
