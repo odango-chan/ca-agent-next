@@ -20,9 +20,9 @@ CA Agent Next 是下一代通用 Agent 的独立实现仓。目标是用尽可�
 
 ## 文档体系
 
-32 份正式文档，另有 1 份 IR 登记册（6 项 IR）和 22 份 SR 记录。
+正式文档和 IR/SR 数量见[文档索引](docs/治理/文档总目录与索引.md#3-当前文档数量)。
 
-架构设计与设计说明书在 docs 下同级。设计说明书按各功能域归档；SR 记录需求范围和验收条件，不替代功能设计。F07 示例与验收由统一验收基线承载。
+架构设计与设计说明书在 docs 下同级。总体架构下可按领域、子系统和模块维护多份架构与设计文档。见[外部能力域架构总览](docs/架构设计/外部能力域架构总览.md)；SR 记录需求范围和验收条件，不替代功能设计。F07 示例与验收由统一验收基线承载。
 
 ## 跨仓任务入口
 
@@ -54,6 +54,8 @@ Next 是项目群设计和规范的集中治理入口，各协作仓维护实现
 - SBI 可携带 JSON 和 multipart 二进制。Event Plugin 处理外部协议；Host 管理 ArtifactStore；Codec 按需作为现有 Tool Plugin 的 Operation 调用。
 
 ## 实施顺序
+
+所有变更先关联 Issue，新分支使用[分支命名规范](docs/规范/文档编写与治理规范.md#14-分支命名与生命周期)。Harness 默认采用 Goal 模式，提示词在[文档门禁](docs/规范/文档编写与治理规范.md#13-执行提示词交付门禁)通过后生成。
 
 先完成 Python Core、唯一 Plugin Manager、已发布 Skill 导入、SkillCatalog / Resolver 和 Runtime Action Boundary；通过 Echo 垂直 E2E 后，再接入 OpenAMSM Plugin、Tool Package 和 Create → Modify → Release。未取得真实证据的阶段标记 NOT_STARTED / NOT_RUN。
 
