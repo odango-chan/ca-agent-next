@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.2.9
+> 文档版本：0.3.0
 > 状态：待评审；全部 SR 当前为 DRAFT，不允许直接实施  
 > 修订日期：2026-11-25  
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -67,7 +67,7 @@
 - 设计来源：ca-agent-next PR #1 的架构、设计、规范和 Acceptance 文档。
 - PR #1：已合并；只代表设计文档变更。
 - Next Runtime：README 声明尚无已验收 Runtime 实现。
-- 所有 SR 当前仍为 DRAFT。SR-015 已关联 Next Issue #12，设计移交 PR [#13](https://github.com/odango-chan/ca-agent-next/pull/13) 为 OPEN；其余 SR 的 Issue、实施 PR、Commit 和验收证据按各 SR 单独核对，不从本索引推断。
+- 所有 SR 当前仍为 DRAFT。SR-015 已关联 Next Issue #12，设计移交 PR [#13](https://github.com/odango-chan/ca-agent-next/pull/13) 为 OPEN；评审记录 6056500193 提出 5 项 P1 / 4 项 P2，本轮文档修正提交后仍需独立复评，不能据此提前 VERIFIED。其余 SR 的 Issue、实施 PR、Commit 和验收证据按各 SR 单独核对，不从本索引推断。
 - ca-agent-demo、ca-client-tools、ca-skill-compiler、ca-skills 和 ca-openamsm-plugin 的现有代码/PR 只能作为外部复用或依赖证据，不能自动算作 Next SR 已实施。
 
 ## 修订记录
@@ -84,3 +84,4 @@
 | 2026-11-25 | 0.2.6 | Codex / GPT-6 · §1–4 · 登记分仓 SR 与真实基线状态 | 跨仓设计移交 | IR-006 |
 | 2026-11-25 | 0.2.8 | GPT-6.2（ChatGPT） | §2、§3 | 更新 SR-015 标题、设计移交范围和 Issue 关联说明 | 对齐 F03.05 Tool Interface 与 Provider 设计移交 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.2.9 | GPT-6.2（ChatGPT） | §4 | 回填 SR-015 设计 PR #13 状态 | 保持 SR、Issue 与 PR 追踪一致 | IR-006 · SR-015 · Issue #12 |
+| 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | §2～4 | 回填 SR-015 评审发现及修正待独立复评状态，保持 SR-015 DRAFT | 防止把 GitHub mergeable 状态误当作设计验收完成 | IR-006 · SR-015 · Issue #12 |

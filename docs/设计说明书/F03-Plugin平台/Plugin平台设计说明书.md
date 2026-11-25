@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：目标设计，待实现和验收  
-> 文档版本：0.3.2
+> 文档版本：0.3.3
 > 功能归属：F03 — Plugin 平台  
 > 关联 SR：SR-003、SR-010    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -94,9 +94,9 @@ messageId、correlationId、eventId、invocationId、deliveryId、responseObliga
 
 ca-client-tools v1.2.0 当前发布的是独立 Provider 包，进程协议为 ca-client-tools.provider/v2（长生命周期 NDJSON）。Next 由唯一 Plugin Manager 内部的 ProviderV2 Tools Extension Driver 消费现有 provider.yaml 和 runtime-bindings.yaml，并把 Provider v2 的 initialize/catalog/invoke/cancel 适配为统一 Tools Extension 调用。Driver 只负责进程与协议适配，不得演变为永久 Provider Manager、第二套 Tool Registry 或第二条授权路径。Native Plugin 仍使用本仓统一 Plugin IPC v1alpha1。
 
-Plugin Manager 只转发 Runtime 已检查的调用。ca-client-tools Interface Package 当前提供 11 个 Provider READ Callable；OpenAMSM MAS Skill 通过 `mas` dependency alias 引用 Owner v1alpha4 ToolCatalog，Owner Contract Package 提供其业务 Callable、Schema、Capability membership、Outcome、Receipt、Commit Proof、Evidence 和 Reconcile。Provider Runtime Bindings 只提供 backendOperationId、HostInvocation/privateArguments 来源和 Provider observation 定位。三类跨组件契约不得合并成一份 Next 自维护 Catalog；Provider Backend Binding Catalog v2 只在 Provider 进程内部使用，Host 通过显式 catalog 请求核对映射，不解析或复制它。
+Plugin Manager 只转发 Runtime 已检查的调用。ca-client-tools Interface Package 当前提供 11 个 Provider READ Callable；OpenAMSM MAS Skill 通过 `mas` dependency alias 引用 Owner v1alpha4 ToolCatalog，Owner Contract Package 提供其业务 Callable、Schema、Capability membership、Outcome、Receipt、Commit Proof、Evidence 和 Reconcile。冻结 v1alpha5 Artifact 不携带 Skill Capability ID，Runtime Scope 只依据 Artifact operation/observation exports。当前 Owner v1alpha4 将 `MAS.RECONCILE` 发布为普通 READ operation，Next Runtime 必须依据 sidecar Mutation `commitProof.reconcile.bindingId` 将其标记为 internal-only，并从普通 Skill/LLM dispatch 排除；仅 Reconcile Coordinator 可通过内部专用入口调用。Provider Runtime Bindings 只提供 backendOperationId、HostInvocation/privateArguments 来源和 Provider observation 定位。三类跨组件契约不得合并成一份 Next 自维护 Catalog；Provider Backend Binding Catalog v2 只在 Provider 进程内部使用，Host 通过显式 catalog 请求核对映射，不解析或复制它。
 
-Tool Plugin 返回的传输成功不等于 Owner 业务 COMMITTED。Runtime 必须按 Owner Contract 验证 Receipt 与 Commit Proof；UNKNOWN 保持 UNKNOWN，并按原 Invocation 执行 exact-original Reconcile。
+Tool Plugin 返回的传输成功不等于 Owner 业务 COMMITTED。Runtime 必须按 Owner Contract 验证 Receipt 与 Commit Proof；UNKNOWN 保持 UNKNOWN，并按原 Invocation 执行 exact-original Reconcile。Skill 对 `MAS.RECONCILE` 的直接 Action 必须被 Runtime 拒绝；内部 Reconcile Coordinator 才能使用原 Invocation 身份调用专用 binding。
 
 Codec Operation 如正式发布，也通过同一个 tools Extension 暴露，不建立独立 Codec Plugin/Manager。Codec 只有在正式 Callable/Runtime Binding 发布后才可调用；当前 ca-client-tools PR #39 的 Phase C Consumer Migration 未开始。
 
@@ -147,3 +147,4 @@ F03.05 的详细设计见 [Tool Interface 与 Provider 集成设计说明书](To
 | 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | 第 3、5、7、10、11 章 | 拆分 Interface Package、Owner Contract Package 与 Provider Runtime Bindings；固定 Provider v2 迁移 Driver 和 F03.05 子设计入口 | 消除 Owner 结果权威与 Provider 私有映射混淆，按 ca-client-tools v1.2.0 和 ca-agent-demo main 校准 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.3.1 | GPT-6.2（ChatGPT） | 第 3、7、11 章 | 增加 Provider Backend Binding Catalog v2 的内部边界，并引用 11/25/31/44 库存闭合 | 防止将 Provider 私有目录误当作第二份公开 Tool Catalog | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.3.2 | GPT-6.2（ChatGPT） | 第 2、3、5、7 章 | 明确 Provider Interface 与 Owner Contract 分别提供不同 Skill-facing Callable；MAS `mas::` 依赖由 Owner snapshot 解析 | 对齐 ca-skills v1alpha5 作者源和 F03.05 契约依赖设计 | IR-006 · SR-015 · Issue #12 |
+| 2026-11-25 | 0.3.3 | GPT-6.2（ChatGPT） | 第 3、7 章 | 同步 frozen v1alpha5 Capability 字段边界与 sidecar 驱动的 internal-only Reconcile dispatch 规则 | 保证 Plugin 平台总设计与 F03.05 / F04 的运行时调用边界一致 | IR-006 · SR-015 · Issue #12 |

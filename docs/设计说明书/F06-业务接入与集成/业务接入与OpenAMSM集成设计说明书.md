@@ -1,7 +1,7 @@
 # 业务接入与 OpenAMSM 集成设计说明书
 
 > 文档类型：功能设计说明书  
-> 文档版本：0.1.6
+> 文档版本：0.1.7
 > 功能归属：F06 — 业务接入与集成  
 > 关联 SR：SR-009、SR-010、SR-011  
 > 状态：目标集成设计；真实隔离 E2E 尚未完成  
@@ -44,11 +44,11 @@ EC04 ca-openamsm-plugin 负责：
 | NAS / NGAP 消息和字段 | 对应 3GPP 标准及已资格化 Codec | Skill 按需调用 Codec Tool |
 | Skill 选择输入 | Skill Contract.requestSchema 与 when | 只描述 Skill 所需业务输入 |
 | Provider 公开 Callable / IO Schema / Effect / Capability | ca-client-tools Tool Interface Package（当前公开 11 个 READ Tools） | Compiler / Runtime 消费；不表示 Skill 获得授权 |
-| OpenAMSM 业务 Callable / Owner Outcomes / Receipt / Commit Proof / Reconcile | env-openamsm Owner Contract Package v1alpha4 | Skill Compiler 从 `mas` dependency 的构建输入解析 Owner ToolCatalog；Runtime 使用与 Provider sidecar Owner identity 一致的部署固定版本；Owner 是业务状态权威 |
+| OpenAMSM 业务 Callable / Owner Outcomes / Receipt / Commit Proof / Reconcile | env-openamsm Owner Contract Package v1alpha4 | Compiler 在 Build 时从 `mas` dependency 解析 Owner ToolCatalog，并校验作者源 Capability 与 Owner CapabilityContracts；Runtime 使用与 Provider sidecar Owner identity 一致的部署固定版本。冻结 v1alpha5 Artifact 不携带 Capability ID，Runtime Scope 只依据其 operation/observation exports；Owner 是业务状态权威 |
 | Provider 私有 backendOperationId / HostInvocation / privateArguments | ca-client-tools Provider Runtime Bindings v1 | 唯一 Plugin Manager 内部 ProviderV2 Driver 消费；不暴露给 Skill |
 | Plugin Manifest / IPC | ca-agent-next Plugin 规范 | Event Plugin 对齐本仓契约 |
 
-Provider 进程、Tool Interface、Owner Contract 与 Provider Runtime Bindings 的 Next 消费边界见 [F03.05 Tool Interface 与 Provider 集成设计说明书](../F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md)。本说明书只负责 OpenAMSM 业务接入、Event/Delivery 与 Create/Modify/Release 的业务组合，不定义通用 Provider Manager。
+Provider 进程、Tool Interface、Owner Contract 与 Provider Runtime Bindings 的 Next 消费边界见 [F03.05 Tool Interface 与 Provider 集成设计说明书](../F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md)。冻结 v1alpha5 Artifact 不序列化 Skill Capability ID；Runtime 只按 operation/observation exports 建立 Callable Scope。当前 Owner v1alpha4 将 `MAS.RECONCILE` 发布为普通 READ operation，Next Runtime 必须按 sidecar Mutation `commitProof.reconcile.bindingId` 将其过滤为 internal-only，普通 Skill/LLM Action 不得直接调用。本说明书只负责 OpenAMSM 业务接入、Event/Delivery 与 Create/Modify/Release 的业务组合，不定义通用 Provider Manager。
 
 不把完整 3GPP OpenAPI 或 NAS/NGAP Schema 复制进 SKILL.md 的 requestSchema；不在 Next 重定义 Owner 契约。
 
@@ -66,7 +66,7 @@ Modify Event 绑定 Modify Skill。业务变化通过 Owner Contract Package 声
 
 UE-requested Release Event 绑定 Release Skill。N1 Release Complete（0xD4）及适用 N2 Release Response 通过原 Run 的 Wait / Continuation 恢复；不得把旧消息、旧 generation 或其他 UE/PSI 的消息串入新 Run。
 
-当前 ca-skills main 的 [Establish](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/examples/skills/establish-pdu-session-mas/assurance/contract.yaml)、[Modify](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/examples/skills/modify-pdu-session-mas/assurance/contract.yaml)、[Release](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/examples/skills/release-pdu-session-mas/assurance/contract.yaml) 作者源均使用 `dependencies.mas` 指向 Owner stable ID，并通过 `capabilities` / `mas::` 声明与调用 Owner 能力。冻结 v1alpha5 Artifact dependencyClosure 不携带 Owner package version / snapshotDigest；当前 Demo 由 provider.yaml 的 `interfaceSnapshotDigest` 固定 Provider Interface snapshot，由 Provider sidecar 的 Owner stableId/version/publicationDigest/manifestDigest 固定 Owner 部署版本；Runtime 分别校验两者。此为部署级 pin，不宣称逐 Skill digest pin。Create、Modify、Release 的详细业务 Procedure 由 ca-skills 作者源和发布 Artifact 维护；Owner 行为由 env-openamsm 与 ca-client-tools 维护。Next 不复制这些业务流程。
+当前 ca-skills main 的 [Establish](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/examples/skills/establish-pdu-session-mas/assurance/contract.yaml)、[Modify](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/examples/skills/modify-pdu-session-mas/assurance/contract.yaml)、[Release](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/examples/skills/release-pdu-session-mas/assurance/contract.yaml) 作者源均使用 `dependencies.mas` 指向 Owner stable ID，并通过 `capabilities` / `mas::` 声明与调用 Owner 能力。冻结 v1alpha5 Compiler 在 Build 时校验 CapabilityContracts，但 Artifact dependencyClosure 不携带 Capability ID、Owner package version / snapshotDigest；Runtime 只使用 operation/observation exports 建立 Skill Callable Scope。Next 目标部署设计由 provider.yaml 的 `interfaceSnapshotDigest` 固定 Provider Interface snapshot，由 Provider sidecar 的 Owner stableId/version/publicationDigest/manifestDigest 固定 Owner 部署版本；Runtime 分别校验两者。此为部署级 pin，不宣称逐 Skill digest pin。该 loader 不是 ca-agent-demo main 已实现能力，PR #246 仍 OPEN、未合并。Create、Modify、Release 的详细业务 Procedure 由 ca-skills 作者源和发布 Artifact 维护；Owner 行为由 env-openamsm 与 ca-client-tools 维护。Next 不复制这些业务流程。
 
 ## 6. Core 零业务耦合
 
@@ -110,3 +110,4 @@ UE-requested Release Event 绑定 Release Skill。N1 Release Complete（0xD4）�
 | 2026-11-25 | 0.1.4 | GPT-6.2（ChatGPT） | §4、§5 | 将 Create/Modify/Release Skill-facing Callable 来源明确为 Owner Contract Package，并链接 ca-skills 当前 MAS 作者源 | 修正业务操作并非由 ca-client-tools 11-READ Interface Package 导出的误解 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.1.5 | GPT-6.2（ChatGPT） | §4、§5 | 更正 `dependencies.mas` 是 stable ID 引用而非 Artifact 内 snapshotDigest 锁；明确 Owner 版本由 Provider sidecar / 部署配置固定 | 对齐冻结 v1alpha5 Artifact 的 dependencyClosure 实际字段 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.1.6 | GPT-6.2（ChatGPT） | §4、§5 | 补充 provider.yaml interfaceSnapshotDigest 固定 Provider Interface snapshot，与 Owner sidecar 的 deployment pin 区分 | 完整说明 Create/Modify/Release 的两类工具依赖部署边界 | IR-006 · SR-015 · Issue #12 |
+| 2026-11-25 | 0.1.7 | GPT-6.2（ChatGPT） | §4、§5 | 明确 MAS Capability 在 Compiler Build 时校验、冻结 Artifact 不携带 Capability ID；补充 Reconcile internal-only Runtime 边界并区分 Next 目标部署设计与 Demo main | 避免将 Capability 编译期约束误当作运行时 Artifact 字段，并避免将 PR #246 误报为已实现 | IR-006 · SR-015 · Issue #12 |

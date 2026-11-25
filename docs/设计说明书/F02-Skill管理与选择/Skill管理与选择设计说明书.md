@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：目标机制设计；Artifact 互操作部分依赖外部 Compiler 发布  
-> 文档版本：0.2.6
+> 文档版本：0.2.7
 > 功能归属：F02 — Skill 管理与选择  
 > 关联 SR：SR-004、SR-005、SR-006    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -14,7 +14,7 @@
 
 ## 1. 设计目标
 
-Agent 只消费已发布 Skill 包，不承担 CA-SL 源码编译、Artifact 发布或独立 Skill Admission。SkillImporter 负责读取 SKILL.md、检查发布包基本结构和必需文件、解析本地 Tool/Capability 依赖，并将有效 Skill 加入 Core-owned SkillCatalog。
+Agent 只消费已发布 Skill 包，不承担 CA-SL 源码编译、Artifact 发布或独立 Skill Admission。SkillImporter 负责读取 SKILL.md、检查发布包基本结构和必需文件、解析冻结 v1alpha5 Artifact 的 Callable export dependency closure，并将有效 Skill 加入 Core-owned SkillCatalog。Skill 的 `contract.capabilities` 已由外部 Compiler 在 Build 时对 Owner CapabilityContracts 做静态校验；冻结 v1alpha5 Artifact 不携带 Skill Capability ID，Importer 不得从 Artifact 推断或重建该字段。
 
 作者源的 CA-SL 静态检查、Procedure 编译、when 类型检查、Artifact 构建和发布由 ca-skill-compiler 及外部发布流程负责。Agent 不调用 Compiler Check/Build/Inspect/Verify，不重写 Compiler 语义。
 
@@ -54,7 +54,7 @@ published-skills/<skill-id>/
 | 输入 | Agent 处理 | Compiler 调用 |
 |---|---|---|
 | 只有 SKILL.md 的 Skill 包 | 读取指导和候选元数据，加入 Catalog；仅 LLM-guided | 不调用 |
-| SKILL.md + 已发布 Assurance Artifact | 基本结构/必需文件/格式/类型数据检查，解析 Tool/Capability 依赖，加入 Catalog | 不调用 |
+| SKILL.md + 已发布 Assurance Artifact | 基本结构/必需文件/格式/类型数据检查，解析 Artifact operation/observation exports 与对应契约快照，加入 Catalog；Capability ID 是 Build-time 约束，不从冻结 Artifact 读取 | 不调用 |
 | 无效或不完整的发布包 | 显式导入失败，不得降级为 SKILL.md-only | 不调用 |
 
 Agent 不接收尚未发布的 Assurance 作者源作为可执行 Skill。LLM 创建或修改 Assurance 源码后，必须经外部发布流程编译并发布新的运行包，才能进入 Agent Catalog。LLM 创建或修改 SKILL.md-only 包则可按普通 Skill 导入流程更新。
@@ -67,7 +67,7 @@ Agent 只执行以下消费端检查：
 - Artifact 的格式标识受当前 Agent 支持。
 - 必需 Artifact 文件存在且路径位于包根目录内。
 - Manifest 引用的文件、Schema/type data 和本地依赖可解析。
-- Tool/Capability 依赖必须解析到 Artifact dependency closure 声明的 dependency alias、stablePackageId 和 required exports。依赖来源可以是 Provider Interface Package，也可以是业务 Owner Contract Package；当前 OpenAMSM MAS Skill 的 `mas` alias 指向 `urn:openamsm:mas:tool-contracts` v1alpha4 Owner publication，不是 ca-client-tools 仅导出 11 个 READ Tools 的 Interface ZIP。Provider Interface snapshot 由 provider.yaml 的 `interfacePackagePath` / `interfaceSnapshotDigest` 固定；Owner publication 由 Runtime Bindings sidecar 的 ownerContract identity 固定。
+- Callable 依赖必须解析到 Artifact `dependencyClosure` 声明的 dependency alias、stablePackageId 和 required operation/observation exports。依赖来源可以是 Provider Interface Package，也可以是业务 Owner Contract Package；当前 OpenAMSM MAS Skill 的 `mas` alias 指向 `urn:openamsm:mas:tool-contracts` v1alpha4 Owner publication，不是 ca-client-tools 仅导出 11 个 READ Tools 的 Interface ZIP。Provider Interface snapshot 由 provider.yaml 的 `interfacePackagePath` / `interfaceSnapshotDigest` 固定；Owner publication 由 Runtime Bindings sidecar 的 ownerContract identity 固定。冻结 v1alpha5 Artifact 不包含 Capability ID / `capabilityRequirements[]`；Compiler 已在 Build 时验证作者源 `capabilities` 与 Owner CapabilityContracts，Runtime 只用 Artifact operation/observation exports 建立精确 Callable allowlist，不得伪造 Capability ID 或把它当作 Capability Grant。
 - when 的 CheckedExpr 和类型描述数据可被指定 Python CEL Runtime 反序列化。
 - Artifact 文件、路径或依赖不满足要求时给出明确错误并拒绝导入。
 
@@ -81,7 +81,7 @@ SkillCatalog 属于 Python Agent Core / Host，不属于 Plugin Manager。它是
 - 完整 SKILL.md 文本及由其生成的轻量候选元数据；
 - 是否存在有效发布 Assurance Artifact；
 - 已反序列化的 when 程序、CEL Profile 和类型环境；
-- 发布 Artifact 声明的 Callable/Capability 依赖引用，以及其 dependency alias、stable package identity 和 export closure。注意：冻结 CA-SL v1alpha5 Artifact 的 dependencyClosure 不包含 dependency version / snapshotDigest；不能将其表述为逐 Skill 字节级依赖锁。
+- 发布 Artifact 声明的 Callable 依赖引用，以及其 dependency alias、stable package identity 和 export closure。冻结 CA-SL v1alpha5 Artifact 的 `dependencyClosure` 不包含 dependency version / snapshotDigest，也不包含 Skill Capability ID；Capability 选择仅在 Compiler Build 时由作者源与 Owner CapabilityContracts 校验。Runtime Scope 由 Artifact operation/observation exports 构成，不能将其表述为 Capability ID allowlist 或逐 Skill 字节级依赖锁。
 
 初始化、显式导入或更新时读取包内容并构造候选 Catalog generation。基本检查和依赖解析全部成功后原子激活；任何失败保留旧 generation。每个 Invocation 固定其选择时的 generation。references/ 和大型知识材料按需加载，不在每次 Event 选择时扫描目录或读取文件。
 
@@ -126,9 +126,9 @@ CheckedExpr、google.protobuf.Any、FileDescriptorSet、DescriptorPool、字段�
 
 - ca-skills PR #88：同标识 CA-SL v1alpha5 的 optional Assurance/when 刷新；实施前重新确认合并与正式规范状态。
 - ca-skill-compiler Issue #61：新版发布运行时 Artifact 与 CheckedExpr/DescriptorSet 格式；详细互操作方案见[Skill管理与选择设计说明书](Skill管理与选择设计说明书.md) §11。
-- ca-agent-next：只负责已发布包的消费、Catalog、选择和 Runtime，不调用 Compiler。对 CA-SL v1alpha5 冻结 Artifact，Agent 按 dependency closure 中的 stablePackageId / exports 解析 Provider Interface Package 与 Owner Contract Package；Provider Interface bytes 必须匹配 provider.yaml 的 `interfaceSnapshotDigest`；Owner Contract 的实际部署版本由 Provider Runtime Bindings sidecar 的 stableId、version、publicationDigest、manifestDigest 固定，Agent 必须校验已安装 Owner publication 与 sidecar 一致。不得将 Owner ToolCatalog 当成 Provider Interface Package。
+- ca-agent-next：只负责已发布包的消费、Catalog、选择和 Runtime，不调用 Compiler。对 CA-SL v1alpha5 冻结 Artifact，Agent 按 dependency closure 中的 stablePackageId / operation/observation exports 解析 Provider Interface Package 与 Owner Contract Package；Capability ID 不在 Artifact 中，不能由 Runtime 重建。Provider Interface bytes 必须匹配 provider.yaml 的 `interfaceSnapshotDigest`；Owner Contract 的实际部署版本由 Provider Runtime Bindings sidecar 的 stableId、version、publicationDigest、manifestDigest 固定，Agent 必须校验已安装 Owner publication 与 sidecar 一致。不得将 Owner ToolCatalog 当成 Provider Interface Package。此为 Next 目标部署设计；ca-agent-demo main 没有 provider.yaml / sidecar package loader，PR #246 仍 OPEN、未合并。
 - Development v1alpha1 Artifact 虽然携带 packageId/version/snapshotDigest 的 Dependency Lock，但 executionStatus 固定 `NOT_ADMITTED`，不是当前 Agent 的运行时输入；不能把该 profile 的 Lock 能力套用到冻结 v1alpha5 Artifact。若未来需要 per-Skill digest pin，需由新的 Compiler Artifact API/profile 提供。
-- 当前 CA-SL v1alpha5 MAS 作者源以 `dependencies.mas: urn:openamsm:mas:tool-contracts` 引用 Owner 契约，并通过 `capabilities` / `mas::CALLABLE` 声明与调用 Owner 能力。冻结 v1alpha5 Compiler 以 `resolvedDependencies` 和 `trustedBuildContext` 完成静态 Owner/Capability 链接；Development v1alpha1 的 `package.json` / Interface Package / Dependency Lock 是独立构建 profile。Agent 不调用任一 Compiler profile。
+- 当前 CA-SL v1alpha5 MAS 作者源以 `dependencies.mas: urn:openamsm:mas:tool-contracts` 引用 Owner 契约，并通过 `capabilities` / `mas::CALLABLE` 声明与调用 Owner 能力。冻结 v1alpha5 Compiler 以 `resolvedDependencies` 和 `trustedBuildContext` 在 Build 时完成静态 Owner/Capability 链接；但冻结 Artifact 只记录依赖 export closure，不序列化 Capability ID。Runtime 的公开 Scope 以 Artifact operation/observation exports 为准，并排除由 sidecar Mutation `commitProof.reconcile.bindingId` 引用的 internal-only Reconcile binding。Development v1alpha1 的 `package.json` / Interface Package / Dependency Lock 是独立构建 profile，不能套用到当前运行输入。Agent 不调用任一 Compiler profile。
 - cel-expr-python：作为 Python Runtime 的 CEL 反序列化/求值依赖，版本固定并以跨语言 fixtures 验收。
 
 Agent 不调用 Compiler Inspect/Verify，也不实现 Skill Admission。Compiler 在发布前完成 Build/Verify；Agent 只做消费端基本结构检查和依赖解析。
@@ -205,3 +205,4 @@ Next 在 Skill 导入时反序列化已检查程序和类型环境，建立运�
 | 2026-11-25 | 0.2.4 | GPT-6.2（ChatGPT） | §4、§5、§9 | 将 Tool/Capability 依赖解析扩展为 Provider Interface 与 Owner Contract 两类精确快照，并明确 MAS `mas` dependency | 对齐 ca-skills v1alpha5 MAS 作者源与 Compiler 冻结 Build / Development 分离路径 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.2.5 | GPT-6.2（ChatGPT） | §4、§5、§9 | 更正冻结 v1alpha5 Artifact 不含 dependency snapshotDigest 的事实，明确 Owner version pin 由 Provider sidecar / 部署配置提供 | 避免把 Development v1alpha1 Lock 能力误认为当前 Agent 运行期能力 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.2.6 | GPT-6.2（ChatGPT） | §4、§9 | 补充 provider.yaml interfaceSnapshotDigest 对 Provider Interface snapshot 的部署级固定 | 与 Owner Contract sidecar pin 一起覆盖当前 Tools 依赖的两种外部契约 | IR-006 · SR-015 · Issue #12 |
+| 2026-11-25 | 0.2.7 | GPT-6.2（ChatGPT） | §2～5、§9 | 明确冻结 v1alpha5 Artifact 不序列化 Skill Capability ID，Runtime Scope 只依据 operation/observation exports；补充 internal-only Reconcile 过滤与 ca-agent-demo package-loader 状态 | 修正 Capability Build-time 语义与运行期可读取字段不一致的问题，避免误把目标设计写成 Demo main 已实现 | IR-006 · SR-015 · Issue #12 |
