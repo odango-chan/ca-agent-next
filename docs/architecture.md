@@ -303,7 +303,7 @@ The diagram describes the target flow, not current implementation status. A Skil
 
 - ca-skill-compiler v2.1.0: independent Go Compiler. Python consumes its CLI/API; do not copy its source or reimplement semantics.
 - ca-client-tools v1.2.0: independent Go Tool Plugin and Interface Package. Adapt provider/v2 behind the unified Plugin Manager initially.
-- ca-skills: canonical CA-SL Skill sources and language specification. The v1alpha5 refresh adds Assurance contract.when and clarifies optional Assurance.
+- ca-skills: canonical CA-SL Skill sources and language specification. Same-version v1alpha5 refresh proposal [PR #88](https://github.com/odango-chan/ca-skills/pull/88) adds optional Assurance and contract.when; Compiler support remains a separate dependency gate.
 - ca-openamsm-plugin: independent Go Event Plugin. Align its contract before implementation.
 - **Known gate:** current compiler support for the refreshed contract.when and SKILL.md-only package import is not yet established by this documentation review. Do not claim support, strip the field or implement a second compiler in Python. The Compiler owner must deliver/verify the matching v1alpha5 behavior before deterministic source import can pass.
 
