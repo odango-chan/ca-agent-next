@@ -7,7 +7,7 @@
 非简单任务必须先阅读：
 
 1. README.md。
-2. docs/架构设计/CA Agent Next架构设计.md。
+2. docs/架构设计/CA Agent Next 架构设计.md。
 3. docs/治理/文档总目录与索引.md。
 4. docs/规范/文档编写与治理规范.md、docs/规范/文件结构规范.md。
 5. 与任务对应的规范和设计说明书。
