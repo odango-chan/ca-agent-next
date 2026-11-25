@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.2.0  
+> 文档版本：0.2.1  
 > 状态：设计补充待评审；Compiler 实施由 SR-013 跟踪  
 > 修订日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -29,6 +29,7 @@ Native CLI 与 Go/WASM Worker 必须继续调用同一个 Go Compiler Core。现
 | internal/compiler/inherited_semantics.go | 既有 CA-SL 语义主链 | Contract.when 进入同一 Skill 语义链，不建立平行解析器 |
 | internal/compiler/cel_check.go | 现有 Predicate CEL 检查 | 复用 cel-go 与 G.4 白名单思想；不能把当前 Predicate 检查误认为已实现 Contract.when |
 | internal/compiler/schema_registry.go | Schema Registry、引用和闭包相关能力 | 复用解析能力并建立逐 Skill Request Schema 类型环境 |
+| internal/compiler/v1alpha5_artifact.go、v1alpha5_artifact_verify.go、contracts/v1alpha5/artifact-manifest.schema.json | 冻结 v1alpha5 Artifact 只输出 procedure.json / ingress-links.json；sourceFiles 只记录源路径，不携带本地 Request Schema 字节 | 新 v2alpha1 必须发布已验证 Request Schema 根与完整 G.4 引用闭包，供 Host 运行期按 M.3 验证 Event input；不得修改冻结 v1alpha5 |
 | internal/compiler/development_link.go、development_multi_skill_test.go | Development Link / 多 Skill Lock 测试 | 仅作为 Schema 作用域和多 Skill fixture 的参考；不是正式发布 Artifact 路径 |
 
 AC-013-01 的 PoC 通过 Development 多 Skill 共享 Lock fixture，复用了 buildSchemaRegistry、resolveReferenceFrom 和 resolveSchemaRoot 等真实 Schema 解析能力。这证明的是可复用的 Schema 解析与跨语言序列化路径，不代表产品 Build 应调用 validateDevelopmentRequest、buildDevelopmentLinkScope 或 newDevelopmentSemantics。
@@ -77,7 +78,7 @@ Compiler 必须实现 CA-SL v1alpha5 G.4，不得因 cel-go 支持更多语法�
 | 长度 | size(x)，仅 string / array |
 | Schema 约束 | required / optional、nullable、enum、const、范围和数组元素约束按已冻结 Schema 赋值规则检查 |
 
-必须拒绝：动态索引、切片、动态成员名、对象构造、宏/推导式、反射、未声明函数、时间、随机数、外部数据访问、算术类型隐式混用及 G.4 未允许的结构。数组可以作为静态 Schema 类型并参与 size，但不允许数组索引。枚举约束由 Schema 闭包和输入校验保留；CEL 类型映射不得丢失底层标量类型或放宽 enum/const 约束。
+必须拒绝：所有算术运算符、动态索引、切片、动态成员名、对象构造、宏/推导式、反射、未声明函数、时间、随机数、外部数据访问及 G.4 未允许的结构。数组可以作为静态 Schema 类型并参与 size，但不允许数组索引。字符串只允许 == / !=；null 只允许相等/不等比较；大小比较仅限同一数值类型。has(x.field) 只检查已声明属性是否在本次对象中出现。枚举、const、范围、长度和数组元素约束由 G.4 Schema 验证保留；CEL 类型映射不得丢失底层标量类型或放宽这些约束。
 
 CEL int 是有符号 64 位；double 是有限 IEEE-754 binary64。int/double 不隐式混合。静态不能证明表达式最终为 bool、字段类型或数值语义时，报 CEL_INVALID。
 
@@ -86,9 +87,9 @@ CEL int 是有符号 64 位；double 是有限 IEEE-754 binary64。int/double �
 正式编译按以下逻辑执行：
 
 1. 对每个 Skill 读取同一次规范化 YAML 解析产生的 Contract AST。
-2. 从该 Skill 的 Contract.requestSchema 定位 Request Schema 根；解析 $ref 闭包，验证根类型、闭合性、字段、必需性、可空性、enum/const、范围和数组元素。
+2. 若该 Skill 声明 Contract.requestSchema，定位 Request Schema 根并解析 $ref 闭包，验证根类型、闭合性、字段、必需性、可空性、enum/const、范围和数组元素。若 when 实际引用 input，则 requestSchema 必须存在；若 when 只引用 event.type，则不要求声明 requestSchema，也不得虚构 input 类型。
 3. 复用 Compiler 现有 Schema Registry 与 Reference Resolver。必要时抽取共享内部函数，但不得把 Development Build 的 Request/Artifact 契约搬进正式发布链。
-4. 以当前 Skill 的 Request Schema 闭包构造 CEL 类型环境和 DescriptorSet。event.type 使用统一 Host Event 类型定义。
+4. 每个 when 的 CEL 环境始终包含统一 Host Event 的 event.type 类型；仅当表达式引用 input 时，才把当前 Skill 的 Request Schema 闭包加入类型环境和 DescriptorSet。event-only when 不依赖 Request Schema。若 Contract 已声明 requestSchema，即使 when 不引用 input，也仍须按 G.4 验证并在新版 Artifact 中发布该 Schema 快照，供 Host 按 M.3 验证 Event payload。
 5. 未知字段、缺失 Reference、跨 Skill 私有 Schema 借用、类型不匹配、非 bool 结果及 G.4 禁止语法均在 Compiler 静态阶段拒绝。
 6. 多 Skill 共享 Lock 时，对每个 Skill 单独建立 Root/Scope。共享依赖可以复用相同的权威依赖身份，但不得把 Skill A 的私有字段注册到 Skill B 的 CEL 环境。
 
@@ -134,7 +135,8 @@ Lowering 必须保留作者表达式的左到右短路语义，并将作者层�
 ### 3.7 诊断与源码定位
 
 - 保留 assurance/contract.yaml 中 when 的原始 SourcePath、行、列及表达式范围。
-- CEL parse、类型、字段、守卫、G.4 结构和 lowering 错误统一进入现有 Compiler Diagnostic[]，语义不合规使用 CEL_INVALID。
+- CEL parse、类型、字段、守卫、G.4 表达式结构、input 缺少 requestSchema 和 lowering 错误使用现有 CEL_INVALID。
+- Contract Schema 根缺失/引用无法解析/Schema 不满足 G.4 时，沿用 SCHEMA_MISSING / SCHEMA_INVALID；Contract 中未知字段沿用 UNKNOWN_FIELD。不得把所有 Schema 解析失败误报成 CEL_INVALID。
 - 错误信息至少指出 Skill、SourcePath、表达式位置、字段路径和失败原因。
 - 不引入新的诊断注册表或独立诊断阶段。
 - 未知、错误或不能求值的表达式不得生成可执行 Artifact。
@@ -145,7 +147,7 @@ Lowering 必须保留作者表达式的左到右短路语义，并将作者层�
 
 - Go Compiler 使用 cel-go 解析和检查源表达式，导出标准 cel.dev/expr.CheckedExpr Protobuf。
 - 用 google.protobuf.Any 包装；互操作验证要求 Any type URL 为 type.googleapis.com/cel.expr.CheckedExpr。不得直接把 cel-go 的旧 google.api.expr.v1alpha1.CheckedExpr type URL 当成 Python 可消费类型。
-- 同一 Skill Artifact 携带 google.protobuf.FileDescriptorSet，包含 event.type 与该 Skill Request Schema 的必要类型闭包。
+- 同一 Skill Artifact 的 when.types.pb 携带 google.protobuf.FileDescriptorSet，包含 event.type；当 when 引用 input 时再包含该 Skill Request Schema 的必要类型闭包。DescriptorSet 只提供 CEL 类型描述，不完整表达 enum、const、minLength、数值范围等 G.4 Schema 断言，不能替代 Host 运行期 Request Schema 验证所需的 Schema 快照。
 - Python 固定版本 cel-expr-python 使用 Env.deserialize(bytes) 直接加载同一 Any；DescriptorSet 用于构造对应 DescriptorPool 和 typed activation。
 - Python 不解析 CEL 源字符串、不重新编译、不自行实现 CEL Parser/Type Checker，不使用 DynType 逃逸静态类型。
 - 导入阶段反序列化一次；每个新 Event 仅传入新的 typed activation 求值。此消费端生命周期由 F02 / SR-004/005 负责。
@@ -166,43 +168,51 @@ AC-013-01 报告采用 Go 1.26.6、cel-go 0.33.2、Go protobuf 1.36.10、CPython
 
 ### 5.2 候选文件布局
 
-在现有发布产物结构上按需增加 when 文件；精确文件清单由 Compiler Owner 在 AC-013-03 定稿：
+新版 Runtime Artifact 必须同时解决两类不同的运行时输入：Request Schema 校验数据与可选 when 程序。候选布局如下，精确文件名由 Compiler Owner 在 AC-013-03 定稿：
 
 ~~~text
 manifest.json
 skills/<skill-name>/compiled/procedure.json
 skills/<skill-name>/compiled/ingress-links.json
+skills/<skill-name>/compiled/request-schema/root.json
+skills/<skill-name>/compiled/request-schema/resources/<resource>.json
 skills/<skill-name>/compiled/when.checked.pb
 skills/<skill-name>/compiled/when.types.pb
 ~~~
 
-- 只有声明 when 的 Skill 才输出 when.checked.pb 和 when.types.pb。
-- 无 when 的 Assurance Skill 不生成空表达式或占位文件。
-- when.checked.pb 是 Any 序列化字节；when.types.pb 是 FileDescriptorSet。
-- 文件路径是本设计的建议值，Compiler Owner 必须在正式 Artifact Schema、Golden 和 PR 中定稿，不得同时保留多个别名布局。
+- 只要 Contract 声明 requestSchema，就必须输出规范化的 G.4 Request Schema 根及完整、可解析的 $ref 资源闭包；与 when 是否存在、是否读取 input 无关。
+- 没有声明 requestSchema 时不输出 Request Schema 文件；event-only when 仍可编译，DescriptorSet 只需包含 event.type。
+- 只有声明 when 的 Skill 才输出 when.checked.pb 和 when.types.pb；无 when 时不生成空表达式或占位文件。
+- when.checked.pb 是 Any 序列化字节；when.types.pb 是 CEL 类型所需的 FileDescriptorSet。Request Schema 文件保留完整 G.4 断言，不能用 DescriptorSet 代替。
+- 根 Schema 与所有闭包资源保留精确 $id；Artifact 内部以 Manifest 的资源表完成 ID 到文件路径映射，运行期不得访问远端或作者工作区。
+- 文件路径和资源映射是本设计候选值，Compiler Owner 必须在正式 Artifact Schema、Golden 和 PR 中定稿，不得同时保留多个兼容别名布局。
 
 ### 5.3 Manifest 最小语义
 
-新 Manifest 必须保留现有 v1alpha5 的顶层语义字段：apiVersion、languageTarget、validationScope、generator、dependencyClosure、skills、outputFiles；旧 Schema 本身仍冻结，不得直接加字段。新版 skills[] 保留 name、sourceDigest、sourceFiles、compiledFiles、waitLinks，并为有 when 的 Skill 增加可选 when 元数据对象。
+新 Manifest 保留现有 v1alpha5 的顶层语义字段：apiVersion、languageTarget、validationScope、generator、dependencyClosure、skills、outputFiles；旧 Schema 本身仍冻结，不得直接加字段。新版 skills[] 保留 name、sourceDigest、sourceFiles、compiledFiles、waitLinks。
 
-when 元数据至少表达：
+每个声明 Contract.requestSchema 的 Skill 增加 requestSchema 元数据对象，至少记录：
 
-1. checkedExprPath：CheckedExpr Any 文件路径。
-2. descriptorSetPath：DescriptorSet 文件路径。
-3. requestSchemaRef 与 resolvedRequestSchemaPath：仅当表达式访问 input 时记录作者引用和解析后的精确 Schema 身份；只访问 event.type 时可省略。
-4. sourcePath：作者源路径 assurance/contract.yaml。
-5. sourceRange：when 表达式的 startLine/startColumn/endLine/endColumn。
+1. sourceRef：Contract.requestSchema 的作者相对路径。
+2. rootSchemaId：经 Compiler 解析的根 Schema 精确 $id。
+3. rootPath：Artifact 内根 Schema 文件路径。
+4. resources[]：闭包中每个精确 schemaId 与对应 Artifact path；必须覆盖完整、无循环的 G.4 $ref 闭包。
 
-建议字段名和文件名是本设计的实现默认值；Compiler Owner 在 AC-013-03 冻结 JSON Schema 前确认。when.checked.pb 和 when.types.pb 必须同时进入该 Skill 的 compiledFiles[]，并分别进入 Manifest outputFiles[]；outputFiles[].sha256 复用既有逐文件字节校验，sourceDigest 复用现有字段。不得增加第二套哈希字段、独立 SHA-256 体系、签名、Trust Registry 或包准入机制。
+requestSchema 对象与 when 是否存在无关；Host 依照 CA-SL v1alpha5 M.3 使用它验证 Event payload。所有根/资源文件同时进入该 Skill 的 compiledFiles[] 和 Manifest outputFiles[]。
+
+仅为声明 when 的 Skill 增加 when 元数据对象，至少记录 checkedExprPath、descriptorSetPath、sourcePath 和 sourceRange（startLine/startColumn/endLine/endColumn）。当表达式引用 input 时，when 元数据还记录 requestSchemaRef 与 resolvedRequestSchemaPath，且必须与同一 Skill 的 requestSchema.rootSchemaId / sourceRef 一致；只访问 event.type 时可省略这两个引用字段。没有 when 时不输出 when 元数据。
+
+建议字段名和文件名是本设计的实现默认值；Compiler Owner 在 AC-013-03 冻结 JSON Schema 前确认。when.checked.pb 与 when.types.pb 必须同时进入 compiledFiles[] 和 Manifest outputFiles[]；Request Schema 根与资源闭包也必须进入相同清单。outputFiles[].sha256 复用既有逐文件字节校验，sourceDigest 复用现有字段。不得增加第二套哈希字段、独立 SHA-256 体系、签名、Trust Registry 或包准入机制。
 
 ## 6. Build / Verify 责任与行为
 
 ### 6.1 Build
 
 1. 通过现有单一版本入口和正式 CA-SL v1alpha5 解析/语义链。
-2. 对有 when 的 Skill 执行 §3 的 Schema-aware G.4 检查、Guard 分析和 typed lowering。
-3. 生成 CheckedExpr Any 与对应 DescriptorSet。
-4. 按新 Runtime Artifact Manifest 组装完整产物；没有 when 的 Skill 不生成 when 文件。
+2. 对声明 requestSchema 的 Skill 生成规范化 G.4 Schema 根和完整资源闭包，作为 Host 运行期输入校验数据；即使没有 when 也必须输出。
+3. 对有 when 的 Skill 执行 §3 的 Schema-aware G.4 检查、Guard 分析和 typed lowering。只有表达式引用 input 时才使用 Request Schema 类型环境；event-only when 不要求 requestSchema。
+4. 生成 CheckedExpr Any 与对应 DescriptorSet。
+5. 按新 Runtime Artifact Manifest 组装完整产物；没有 when 的 Skill 不生成 when 文件。
 5. 使用 RFC 8785 JCS、稳定排序和既有确定性约束；不得写入时间、随机值、绝对宿主路径或环境相关数据。
 6. 任何静态检查或装配失败都返回完整诊断和空 OutputFiles，不返回部分 Artifact。
 
@@ -212,12 +222,14 @@ when 元数据至少表达：
 
 - Artifact API version 与 languageTarget 精确受支持。
 - Manifest、文件清单、路径、重复归属和必需文件完整。
+- 每个已声明 Request Schema 的根文件与全部资源可解析，保留精确 $id、G.4 关键字和约束；不存在未解析、越界或重复资源。
 - 每个 CheckedExpr Any 可反序列化，type URL 与标准类型一致。
 - 每个 DescriptorSet 可解析，所有 CheckedExpr 类型引用均可解析。
-- CheckedExpr 最终类型为 bool，类型闭包与该 Skill Request Schema 精确匹配。
+- CheckedExpr 最终类型为 bool；引用 input 时，其类型闭包必须与该 Skill 的 Request Schema root/closure 精确匹配。event-only when 不得被强制要求 Request Schema。
 - when 源路径/位置、程序路径和 DescriptorSet 路径相互一致。
 - 不存在跨 Skill 私有 Schema 或 Descriptor 引用。
-- 无 when 的 Skill 不得带伪造/空的 when 程序。
+- 无 when 的 Skill 不得带伪造/空的 when 程序；但若其 Contract 声明 requestSchema，仍必须携带 Schema 根和闭包。
+- DescriptorSet 只负责 CEL 类型，不得被当作完整 JSON Schema 验证器；Request Schema 快照必须保留 G.4 的 enum/const/范围/长度/数组约束。
 - BuildResult、Manifest 与 OutputFiles 的集合和字节一致。
 
 新版 Verify 必须按 Compiler #61 的要求对新版本产物执行完整重建/逐文件比较或等价的确定性复验。新 Runtime Build 复用 BuildRequest v1alpha5，返回唯一的 BuildResult v2alpha1；VerifyBuildResult 只接受该新 BuildResult 并验证 Artifact v2alpha1，不在同一二进制中双轨 dispatch 到旧 Runtime BuildResult v1alpha5。旧 v2.1.0 Release 保留旧 BuildResult/Artifact v1alpha5 的原有行为；Development Build 仍由独立 Development API v1alpha1 处理。当前 CLI 已在写入目录前用同一 Verify 函数验证成功 BuildResult；新版本必须保持“先 Verify、后原子写盘”的既有不变量，不得假设存在一个已发布 Artifact 的独立 CLI verify 子命令。
@@ -236,14 +248,14 @@ when 元数据至少表达：
 | 类别 | 必测内容 |
 |---|---|
 | 作者格式 | 无 when、合法 when、空值、非字符串、重复 YAML Key、未知旧字段 |
-| G.4 正例 | event.type、typed input、字段点访问、括号、布尔逻辑、比较、has、size、数组字段与枚举/const Schema 约束 |
+| G.4 正例 | event.type-only（无 requestSchema）、typed input（有 requestSchema）、字段点访问、括号、布尔逻辑、比较、has、size、数组字段与枚举/const Schema 约束 |
 | G.4 负例 | 未知字段、缺 requestSchema、非 bool、宏/推导式、动态索引、切片、对象构造、动态成员、外部函数、未支持语法 |
 | Presence / Null | Missing、Explicit Null、Value；optional 守卫；nullable 非 null 守卫；嵌套 optional ancestor |
 | Boolean Flow | AND、OR、NOT、安全/不安全 OR、左到右短路和事实汇合 |
 | Numeric | int64 最小/最大值、finite double、非有限值拒绝、int/double 混用拒绝 |
 | Isolation | 多 Skill 共享 Lock、每 Skill Request Schema 根、跨 Skill 字段借用拒绝 |
 | Serialization | Go CheckedExpr Any + DescriptorSet；Python 直接反序列化同一字节；18/18 PoC 基线扩展为正式 fixtures |
-| Artifact | 新版 Build/Verify、损坏文件拒绝、缺失 Descriptor 拒绝、无 when、重复构建确定性 |
+| Artifact | 新版 Build/Verify、Request Schema 根/闭包发布与验证、损坏文件拒绝、缺失 Descriptor 拒绝、无 when、重复构建确定性 |
 | Compatibility | 冻结 v1alpha5 和 Development v1alpha1 Golden/字节回归 |
 | Platform | Native、WASM、CLI E2E、真实 Chromium Worker parity |
 
@@ -292,3 +304,4 @@ Chromium parity 脚本使用真实 Headless Chrome；若默认路径不可用，
 | 2026-11-25 | 0.1.7 | Codex | §7 | 回链实跑预检 | 记录已验证的交换路径和剩余范围 | SR-013 |
 | 2026-11-25 | 0.1.8 | Codex | §5–7 | 更新隔离 PoC 入口 | 为 AC-013-01 提供可复现起点 | SR-013 |
 | 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 全文 | 补齐 Contract.when AST、G.4、Schema/Guard/Nullable lowering、CheckedExpr/DescriptorSet、新版 Artifact、Build/Verify、测试与发布边界；修正旧提示词和过期状态 | AC-013-01 已产生真实隔离 PoC 结果，后续阶段需要达到 Harness low-effort 可执行粒度 | Issue #14、SR-013、Compiler #61、F02、F08 |
+| 2026-11-25 | 0.2.1 | GPT-6.2（ChatGPT） | §2–7 | 补充 Contract.requestSchema 的独立运行期发布快照，区分 G.4 Schema 验证与 CEL DescriptorSet；明确 event.type-only when 不要求 requestSchema | 对齐 CA-SL v1alpha5 M.2/M.3，修复 Host 运行期缺少 Request Schema 数据的发布契约缺口 | Issue #14、SR-013、Compiler #61、F02、F08 |
