@@ -161,7 +161,7 @@ AC-013-01 报告采用 Go 1.26.6、cel-go 0.33.2、Go protobuf 1.36.10、CPython
 - connectionagent.io/compiler-artifact/v1alpha5 保持完全不变。
 - Development v1alpha1 保持完全不变并继续 NOT_ADMITTED。
 - 新发布 Runtime Artifact 使用独立版本化 Manifest/文件布局，languageTarget 仍为 connectionagent.io/v1alpha5。
-- 建议的新 Artifact API 候选为 connectionagent.io/compiler-artifact/v2alpha1；对应的新 BuildResult API 候选为 connectionagent.io/compiler-build-result/v2alpha1，用于表达与冻结 v1alpha5 不兼容的发布结构。**两者均为本设计提案，不是已冻结 API。** AC-013-03 开始前 Compiler Owner 必须书面确认两个 API version；如采用其他命名，先更新本节和 SR-013，再实施。Harness 不得自行发明第三个版本名。
+- 建议的新 Artifact API 候选为 connectionagent.io/compiler-artifact/v2alpha1；对应的新 BuildResult API 候选为 connectionagent.io/compiler-build-result/v2alpha1。**两者均为本设计提案，不是已冻结 API。** 当前 BuildRequest API connectionagent.io/compiler-build-request/v1alpha5 与 DependencyInspection API connectionagent.io/compiler-dependency-inspection/v1alpha5 不改变，除非代码审计证明输入 DTO 必须变化。新 Compiler 版本采用固定 API 集，不在同一二进制中双轨支持旧/新 BuildResult，不增加版本 dispatch、fallback 或兼容路由；旧 v2.1.0 Release 及其 Artifact/BuildResult v1alpha5 保持不可变历史发布。AC-013-03 开始前 Compiler Owner 必须书面确认两个新 API version；如采用其他命名，先更新本节和 SR-013，再实施。Harness 不得自行发明第三个版本名。
 - 不把 Development 专用 executionStatus=NOT_ADMITTED、hostAdmission 或 Skill Admission 状态写入新发布 Runtime Artifact。
 
 ### 5.2 候选文件布局
@@ -220,14 +220,14 @@ when 元数据至少表达：
 - 无 when 的 Skill 不得带伪造/空的 when 程序。
 - BuildResult、Manifest 与 OutputFiles 的集合和字节一致。
 
-新版 Verify 必须按 Compiler #61 的要求对新版本产物执行完整重建/逐文件比较或等价的确定性复验。当前 v1alpha5 BuildResult / VerifyBuildResult 只接受冻结的 compiler-build-result/v1alpha5；新 Runtime Artifact 应使用 Owner 批准的 v2alpha1 BuildResult 与对应版本化 Verify 路径，不能让旧 Verify 误读新格式，也不能改变冻结 v1alpha5 行为。当前 CLI 已在写入目录前用同一 Verify 函数验证成功 BuildResult；新版本必须保持“先 Verify、后原子写盘”的既有不变量，不得假设存在一个已发布 Artifact 的独立 CLI verify 子命令。
+新版 Verify 必须按 Compiler #61 的要求对新版本产物执行完整重建/逐文件比较或等价的确定性复验。新 Compiler 版本采用固定 API 集：BuildRequest 继续使用现有 v1alpha5 输入契约，BuildResult 使用 Owner 批准的 v2alpha1 输出契约；VerifyBuildResult 只接受该新 BuildResult API 并验证新 Artifact，不在同一二进制中双轨 dispatch 到旧 v1alpha5。旧 v2.1.0 Release 保留旧 BuildResult/Artifact v1alpha5 的原有行为。当前 CLI 已在写入目录前用同一 Verify 函数验证成功 BuildResult；新版本必须保持“先 Verify、后原子写盘”的既有不变量，不得假设存在一个已发布 Artifact 的独立 CLI verify 子命令。
 
 ### 6.3 旧契约回归
 
 每次新增 Artifact 版本都必须执行：
 
 - 冻结发布 Artifact v1alpha5 的机器 Schema、Golden 字节和 Verify 行为不变。
-- Development Artifact v1alpha1 的机器 Schema、Golden 字节、NOT_ADMITTED 与 Verify 行为不变。
+- Development Artifact v1alpha1 的机器 Schema、Golden 字节、NOT_ADMITTED 与 Verify 行为不变；不新增 Development v1alpha2，也不把 Development 输出用于 Agent Bundle。
 - 新 Runtime Artifact 与 BuildResult 分别维护版本化 Schema（建议 contracts/v2alpha1/artifact-manifest.schema.json 与 contracts/v2alpha1/build-result.schema.json）、Golden、正负例和版本说明。
 - 不得通过更新旧 Golden 来掩盖旧契约变化。
 
