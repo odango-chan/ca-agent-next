@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.1.8  
+> 文档版本：0.1.9  
 > 状态：待评审；IR-006 / SR-012 / #2  
 > 修订日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -74,22 +74,19 @@ PoC 至少覆盖：同一程序对多个 Event 分别得到 true、false 和运�
 
 ## 7. 技术评审与 READY 判定
 
-复核基线：Next PR #3 的 `380092b6133140c05a087c63f848a17ab1850905`、ca-skills #88 的 `2eedf4231075b6c589212d7d25576c7abbe6a5d9`、Compiler #61 与 v2.1.0 冻结契约。以下为静态评审，产品验收未运行。
+复核基线：Next PR #3 的 380092b6133140c05a087c63f848a17ab1850905；ca-skills #88/#89 的合并结果；正式 CA-SL v1alpha5 规范提交 18d8184367982ccbc835756136c4a53f9096c3a0；Compiler #61 与 v2.1.0 冻结契约。静态规范评审与 AC-013-01 隔离 PoC 已完成；Compiler 产品实现、发布 Artifact、Next 导入和完整回归仍未验收。
 
 | 结论 | 要求和证据 | 处理 |
 |---|---|---|
-| BLOCKER | [ca-skills #88 附录 M.4 / SA-002、009、011](https://github.com/odango-chan/ca-skills/blob/2eedf4231075b6c589212d7d25576c7abbe6a5d9/docs/skill-language-spec.v1alpha5.zh-CN.md#m4-skill-import-与编译边界) 将 Compiler Check/Build、Inspect/Verify 和 Host Admission 写成 Skill Importer 的 MUST；Next Agent.md 与 Compiler #61 排除 Agent Compiler 调用及独立 Skill Admission。 | 规范负责人应明确作者源编译与资格流程属于外部工具链或独立产品 profile，并明确 published Bundle 消费路径的必需行为。更新对应 SA 用例，明确 Next 可声明的符合范围。冲突解决并正式发布前，不把 M.4 导入要求下发给 DSH。 |
-| 待澄清 | #88 §12.8 / M.3 要求先校验 Request Schema，语义候选条款又以未声明 when 为条件；SA-008 未给出未声明 when 且 Request Schema 不匹配的预期。 | 在规范中补一条带具体 payload 的负例，明确其是否加入语义候选及诊断。DSH 不自行把 Request Schema 不符当作运行期 CEL error。 |
-| 待验证 | #88 M.2 继承 G.4，声明唯一字段、bool、纯表达式及 Request Schema 类型来源。SA-004/005 有编译正负例；缺失、显式 null、has 守卫与数值边界仍需 AC-013-01 的真实 Go/Python 输入输出验证。 | 按正式规范为同一 fixture 固定输入、预期及错误阶段；不得以文档校验代替运行证据。 |
-| NON_BLOCKING | 编译单核与发布边界与 Next 方向一致；两种 Verify 的具体行为已分别列出。 | 历史样例、机器 Schema 和 release evidence 保留固定 SHA。 |
+| RESOLVED | ca-skills PR #88（规范刷新）和 #89（Release Record）均 MERGED。正式规范固定于 18d8184367982ccbc835756136c4a53f9096c3a0；Release Record 为发布状态依据。规范正文文件头部仍有 PROPOSED REFRESH 字样，是源文件状态标记未同步，不改变 Release Record 的发布身份。 | 以固定发布提交和 Release Record 为规范依据；保留源文件头部不一致记录，等待源仓清理，不再将 #88 标记为 OPEN/BLOCKER。 |
+| RESOLVED | CA-SL M.4 与 SA-002/009/011 已明确外部作者编译/发布和 Agent 已发布 Bundle 导入的职责边界。 | Next Agent 不调用 Compiler、不做独立 Skill Admission；Compiler 保持外部工具链。 |
+| RESOLVED | CA-SL §12.8、M.3 与 SA-012 已明确 Request Schema 不符时排除候选并记录诊断。 | Next Resolver 不把 Request Schema mismatch 当成运行期 CEL error。 |
+| ISOLATED_POC_PASS / PRODUCT_PENDING | AC-013-01 隔离 PoC 已在 Compiler 255ab85 的隔离副本完成：真实 Schema Registry 管线；Go 生成 CheckedExpr Any / FileDescriptorSet；Python 直接反序列化；18/18 一致；覆盖 missing/null/value、布尔组合、嵌套路径、int64/finite double、6 类非法输入静态拒绝和多 Skill 隔离。证据与环境见 [SR-013](../../SR/SR-013-Compiler已检查when与发布产物.md)。 | 只标记隔离 PoC 阶段 PASS。该结果不等于 Compiler 产品 Core、Artifact Schema、Build/Verify、Release 或 Next Consumer PASS。 |
+| BLOCKER | [Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) 仍 OPEN；当前 main ContractAST 无 when，发布型 CheckedExpr / DescriptorSet Runtime Artifact、Go/Python 产品互操作和 Build/Verify 尚未实现/发布。 | Compiler Owner 需定稿新 Artifact API、版本化 Schema、作者表达式转换、静态诊断、Go/Python 消费和 Golden；完成前 Next 不得自行解析 CEL 或使用 DynType。 |
+| BLOCKER | Next SR-004/005 的正式 Skill Bundle 导入、发布 Artifact 消费和 Runtime 选择验收尚未完成。 | 外部 Compiler 产品发布后，再按 SR-004/005 的 READY 和 Acceptance 门槛实现；Development v1alpha1 不作为 Next 可运行包。 |
+| NON_BLOCKING | 单一 Go Core、Native/WASM Worker 与 CLI 的分层方向已固定；冻结 Build/Verify v1alpha5 与 Development v1alpha1 是不同 API/产物边界。 | 保留现有机器契约和 golden，不修改冻结 Artifact 字节/语义。 |
 
-以上为首轮评审记录。复审 [ca-skills #88 修订提交](https://github.com/odango-chan/ca-skills/commit/697246a967067cdeddb01c2f43b11a3e56afa480) 后，M.4 与 SA-002/009/011 已明确外部编译发布与 Agent 导入的职责。§12.8、M.3 和 SA-012 已明确 Request Schema 不符时排除候选并记录诊断。两项评审发现已在候选文本中解决。该提交的 source-hygiene PASS；AC-013-01 仍为 NOT_RUN。
-
-正式规范门槛已解除。SR-013 保持 DRAFT，待负责人确认实施范围与 READY 后执行 AC-013-01。PoC 通过后由 Compiler Owner 裁定新版 Artifact API。
-
-AC-013-01 的 Windows 环境和常量交换已预检。Go 默认 CheckedExpr Any 类型标识在 Python 下被拒绝；使用 `cel.expr.CheckedExpr` 重新构造 Any 后常量求值通过。完整 typed fixture 未执行，见 SR-013 的预检记录。
-
-AC-013-01 的隔离 PoC 已可启动，正式产品实施仍按 SR-013 的后续阶段条件执行。先执行 SR-013 的阶段执行单。
+正式 CA-SL v1alpha5 规范门槛已满足。SR-013 总体保持 DRAFT；AC-013-01 隔离 PoC 阶段完成，但 AC-013-02～05、Compiler 产品实现/发布和 Next SR-004/005 消费仍未完成。AC-013-01 的实测结果只覆盖隔离副本，不是产品仓实现或发布证明。
 
 ## 修订记录
 
@@ -104,3 +101,4 @@ AC-013-01 的隔离 PoC 已可启动，正式产品实施仍按 SR-013 的后续
 | 2026-11-25 | 0.1.6 | Codex | §6–7 | 固定已发布规范 SHA | ca-skills #89 已合并 | SR-013 |
 | 2026-11-25 | 0.1.7 | Codex | §7 | 回链实跑预检 | 记录已验证的交换路径和剩余范围 | SR-013 |
 | 2026-11-25 | 0.1.8 | Codex | §5–7 | 更新 Goal 的隔离 PoC 入口 | 供 DSH 独立开展 AC-013-01 | SR-013 |
+| 2026-11-25 | 0.1.9 | GPT-6.2（ChatGPT） | §1、§7 | 将 ca-skills #88/#89 更新为已合并发布；登记 AC-013-01 隔离 PoC PASS，并保留 Compiler #61 产品级阻塞 | 区分规范发布、隔离 PoC、Compiler 产品实现与 Next 消费四个阶段 | Issue #12；SR-013 |
