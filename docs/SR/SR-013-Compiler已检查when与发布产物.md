@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.4  
+> 文档版本：0.2.5\
 > 状态：DRAFT（设计补充待评审；不得据此启动产品实施）  
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-25  
@@ -37,14 +37,14 @@
 | 目标仓写入授权 | 产品实现前须再次确认；本轮文档 PR 不授予 Compiler 写入权限 |
 | 合并 / 发布 | 必须单独授权；本轮不包含 |
 | 规范门槛 | 已满足；正式源 SHA 已固定 |
-| PoC | AC-013-01 隔离 PoC 报告为 PASS；证据提交尚未推送，独立复核待完成 |
+| PoC | [PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)已核对 58 个文件与 SHA256SUMS；归档报告为 Go/Python 18/18，当前审计复跑 NOT_RUN |
 | 产品实施 | AC-013-02～04 NOT_RUN；AC-013-05 BLOCKED |
 
 SR-013 整体仍为 DRAFT。AC-013-01 的隔离 PoC 完成不自动把 SR-013 提升为 READY，也不授权修改 Compiler 主线、合并 PR 或发布 Release。
 
 | AC | 当前状态 | 下一步 |
 |---|---|---|
-| AC-013-01 | PASS（隔离 PoC 报告）；独立复核 NOT_RUN | 获取本地证据提交 78dddd5 并完成独立复核；不得把报告当产品实现 | 
+| AC-013-01 | PASS（已归档的隔离 PoC 报告）；本轮复跑 NOT_RUN | 固定归档 SHA；产品验收继续按 AC-013-02～05 取证 |
 | AC-013-02 | NOT_RUN | 正式 Contract.when AST、G.4、Schema-aware Guard / Nullable lowering | 
 | AC-013-03 | BLOCKED（依赖 AC-013-02 和 Owner Gate） | Compiler Owner 确认新版 Artifact API 与 Manifest | 
 | AC-013-04 | NOT_RUN | 新版 Build / Verify、Go/Python、Native/WASM/Chromium 与旧契约回归 | 
@@ -85,8 +85,8 @@ SR-013 整体仍为 DRAFT。AC-013-01 的隔离 PoC 完成不自动把 SR-013 �
 - 证据单：.agent-tmp/ac-013-01-poc/EVIDENCE.md。
 - 产物目录：.agent-tmp/ac-013-01-poc/artifacts/，含 cases.json 及逐用例 .checked.pb / .types.pb。
 - 隔离源码：compiler-255ab85/internal/compiler/ac013_poc_test.go。
-- SR 回填提交：78dddd5，本地分支 docs/ac-013-01-poc-evidence，基于 Next PR #7 的 f93975f。该分支和证据尚未推送到远端；当前远端无法独立读取这些文件。
-- 上述是用户提供的执行报告与本地证据定位；本轮尚未独立复跑或审查该本地提交。独立复核状态：NOT_RUN。
+- [PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)已核对 58 个文件与 SHA256SUMS；归档报告为 Go/Python 18/18，当前审计复跑 NOT_RUN。原始提交 78dddd5 的追溯保留在 PR #18 的提交 trailer。
+- 已检查归档清单与 Git blob；PR #18 报告在干净 Compiler 基线独立复跑。当前审计未重新执行 Go/Python。
 
 ### 3.4 未覆盖边界
 
@@ -104,7 +104,7 @@ SR-013 整体仍为 DRAFT。AC-013-01 的隔离 PoC 完成不自动把 SR-013 �
 
 AC-013-01 可记录为 **PASS（隔离 PoC 范围）**，但必须同时保留以下状态：
 
-- 独立证据审查：NOT_RUN。
+- 归档完整性复核：PASS；本轮独立复跑：NOT_RUN。
 - Compiler 产品代码实现：NOT_RUN。
 - 新 Runtime Artifact API：未定稿。
 - Build/Verify 产品门禁：NOT_RUN。
@@ -269,7 +269,7 @@ ca-skills 的 Skill Bundle 组装与发布由 SR-023 负责；Next 导入与运�
 ## 8. 依赖、实施顺序与停止条件
 
 ~~~text
-AC-013-01  隔离 PoC（报告 PASS；独立复核待完成）
+AC-013-01  隔离 PoC（归档报告 PASS；本轮复跑 NOT_RUN）
      |
      v
 AC-013-02  正式 Contract.when / G.4 / Schema-aware 编译
@@ -312,7 +312,7 @@ SR-013 达到 READY 且文档门禁通过后，实施使用一个连续 Goal，�
 - 每个 AC 仍需独立记录 Issue #61 关联、提交、测试、受测 SHA 和证据；不得把一个总的 PASS 替代逐 AC 验收。
 - AC-013-03 只有在 Compiler Owner 已确认 Artifact API 后才可继续；没有确认就停在 Owner Gate，不得自行更换版本名。
 - AC-013-05 必须再次检查发布授权；没有明确授权时只完成 Release 前检查，不创建 Tag 或 Release。
-- 若远端找不到本地证据提交 78dddd5、EVIDENCE.md 或其 Artifact，必须标记证据不可访问并请求提供；不得假装已复核，也不得用聊天报告替代独立复核。
+- 若无法读取固定的 PR #18 归档、EVIDENCE.md 或其 Artifact，必须标记证据不可访问并请求提供；不得假装已复核，也不得用聊天报告替代独立复核。
 - Compiler 代码变更在 ca-skill-compiler 仓执行；Next 仅维护中央设计、SR 和验收证据。ca-skills Bundle CI 与 Next Runtime 消费端仍按 SR-023、SR-004/005/006 分别处理。
 - 只有 G1～G10 文档门禁、SR READY、依赖检查和目标仓写入授权全部满足后，才生成一个完整可复制的 Goal 提示词。提示词必须包含固定文档 SHA、Issue #61、各 AC 顺序、精确命令、停止规则、非目标和证据格式。
 
@@ -359,3 +359,4 @@ SR-013 只有 AC-013-01～05 均达到各自通过条件，Compiler Release 有�
 | 2026-11-25 | 0.2.2 | GPT-6.2（ChatGPT） | §5.3 | 明确根 Schema 的 $id 可选，根身份可由作者 sourceRef 与 Artifact rootPath 确定 | 避免对 CA-SL 未要求的 Schema $id 增加新约束 | Next Issue #14、Compiler #61 |
 | 2026-11-25 | 0.2.3 | GPT-6.2（ChatGPT） | §1～9 | 合并 PR #16 的完整 when/Request Schema/Compiler Artifact 设计；保留 AC-013-01 Go/Python 18/18 的隔离 PoC 报告，同时明确证据 commit 78dddd5 未在远端仓库找到、独立复核 NOT_RUN | 设计范围与阶段 PoC 证据分开，防止将报告结果升级为 Compiler 产品 PASS 或 SR VERIFIED | Issue #14；PR #16/#18；IR-003；F02 v0.2.7；F08 v0.3.3；EC02 Compiler v0.2.3 |
 | 2026-11-25 | 0.2.4 | GPT-6.2（ChatGPT） | §1～9 | 同步 F02/F08/Compiler 设计版本引用；保留 AC-013-01 18/18 报告结果并明确证据未归档、独立复核未运行 | 避免不同文件引用不同版本或把报告状态升级为完整 SR 验收 | Issue #14；PR #16/#18 |
+| 2026-11-25 | 0.2.5 | Codex | 正文 | 固定 PoC 归档并记录本轮完整性复核 | 核对 Issue #12 与固定提交 | Issue #12 |
