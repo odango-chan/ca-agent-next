@@ -162,7 +162,9 @@ Keep basic YAML/Schema/version/reference validation, path containment, clear err
 | OM-07 | Continuation | N1 Release Complete (0xD4) and N2 PDU Session Resource Release Response, where applicable, resume the exact original Run/SUPI/PSI/generation. Stale or duplicate messages do not wake a newer Run or repeat a mutation. |
 | OM-08 | Retry and response obligations | Stable externalRequestId is mapped from actual protocol identity. Same-request retry attaches a new response obligation to the original Run; a conflicting reuse fails closed. HTTP/2 stream IDs are not logical Run IDs. |
 | OM-09 | Owner outcomes | Create → Modify → Release uses actual OpenAMSM Owner; Receipt, Commit Proof, UNKNOWN and Reconcile semantics remain authoritative. HTTP success and delivery success do not imply business COMMITTED. |
-| OM-10 | Codec scope | Consume only the merged/released Codec API and only its explicitly qualified NAS/N2 subset. NGAP full-PDU qualification is not claimed; Phase C consumer integration must be complete for the used paths. |
+| OM-10 | Codec scope | Consume only merged/released Codec APIs and the explicitly qualified NAS/N2 message subset. NGAP full-PDU qualification is not claimed; Phase C consumer integration must be complete for the exact used paths. |
+| OM-13 | On-demand Codec | A Skill that does not need protocol fields passes the original artifactRef without invoking Codec. A Skill that needs fields calls the published Codec Tool through the same Runtime Action Boundary and receives structured JSON. Decode never replaces the original N1/N2 bytes. |
+| OM-14 | Protocol Schema ownership | SBI request/response and multipart structure follow the applicable 3GPP OpenAPI; NAS/NGAP Codec structures follow the relevant 3GPP definitions. Skill requestSchema contains only the business fields the Skill consumes; no duplicate or rewritten 3GPP Schema is introduced. |
 | OM-11 | Real isolated E2E | One UE/PSI completes Create → Modify → Release against real isolated OpenAMSM/Owner with raw N1/N2, Run/Wait evidence and zero duplicate mutation. Synthetic Owner tests do not satisfy this gate. |
 | OM-12 | Zero Core business coupling | After Echo acceptance, OpenAMSM is added through Plugin package, Skills and deployment configuration; no OpenAMSM-specific branch is added to Agent Core, Resolver, Runtime or Plugin Manager. |
 
@@ -186,4 +188,4 @@ The Provider's Host-to-Provider Artifact channel has acceptance-fixture evidence
 4. Freeze the OpenAMSM Event Schema, exact SBI operation mapping, externalRequestId and continuation correlation.
 5. Implement the Go OpenAMSM Event Plugin and Host Artifact Handoff.
 6. Integrate ca-client-tools v1.2.0 through the common Plugin Manager tools extension.
-7. Pass OM-01 through OM-12. Keep every unrun real-lab gate explicitly NOT_RUN.
+7. Pass OM-01 through OM-14. Keep every unrun real-lab gate explicitly NOT_RUN.
