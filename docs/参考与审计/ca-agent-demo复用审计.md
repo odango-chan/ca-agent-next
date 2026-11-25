@@ -2,6 +2,9 @@
 
 > 文档类型：既有实现审计与复用建议  
 > 状态：审计快照；不是 Next 实现证明  
+> 文档版本：0.1.0    
+> 全局评审范围：继承根目录 Agent.md 的 review_scope    
+> 本文局部非目标：以本文范围与非目标章节为准；无额外扩展  
 > 审计日期：2026-11-25  
 > 主审基线：ca-agent-demo main 57e277ff9094dad93543df46910a12a1dbbaf560  
 > 补充输入：PR #246 head 68a6f9e7723a0c2da1aebf5047c23ae96c5d237f（OPEN）、PR #249 head dfbcc33467a1ea3b6fa45d661ac2e77bfd71423a（OPEN）
@@ -91,3 +94,9 @@ PR #246 记录的 G5 为合成有状态 Owner，22 项测试通过；真实隔�
 本审计是代码和状态快照，不是全量测试报告。实施前必须重新读取 ca-agent-demo 的当前分支、PR 和源文件；任何复用都应在 Next 内独立运行测试。复用结论不授权直接修改 ca-agent-demo 或其他兄弟仓。
 
 ca-agent-demo 为 Next 提供了可观的 Python 代码和测试资产，但 Next 的目标边界更简单：Python Core + 一个 Plugin Manager + 一个 Runtime Action Boundary + Core-owned SkillCatalog + 外部发布的 Skill Artifact。复用必须以测试和依赖审查为前提，不能把 Demo 既有 5GC 业务组合结构带入通用 Core。
+
+## 修订记录
+
+| 日期 | 版本 | 修订内容 | 原因 | 影响 SR |
+|---|---|---|---|---|
+| 2026-11-25 | 0.1.0 | 登记现有文档基线并纳入 SR 追踪 | 建立文档版本和需求追踪基线 | SR-002～SR-008 |
