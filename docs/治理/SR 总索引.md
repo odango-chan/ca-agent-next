@@ -21,11 +21,11 @@
 | SR ID | 需求 | 设计依据 | Acceptance | 依赖 | 状态 | Issue / 实施 PR |
 |---|---|---|---|---|---|---|
 | [SR-001](../SR/SR-001-评审上下文自动生成.md) | 评审上下文自动生成 | 文档编写与治理规范 §11；Agent.md review_scope | AC-REV-01～AC-REV-10 | 无 | DRAFT | 未创建 |
-| [SR-002](../SR/SR-002-Python%20核心与%20Host%20基础骨架.md) | Python 核心与 Host 基础骨架 | CA Agent Next 架构设计 §3～§5；实施路线与阶段门槛 §1 | EX-01 | 无；ca-agent-demo 仅作为只读复用证据。 | DRAFT | 未创建 |
-| [SR-003](../SR/SR-003-统一%20Plugin%20Manager%20与%20Extension%20IPC.md) | 统一 Plugin Manager 与 Extension IPC | 插件管理与通信设计说明书 §3～§10；插件包与进程通信协议规范 §1～§12 | EX-02、EX-03、EX-18 | SR-002。 | DRAFT | 未创建 |
-| [SR-004](../SR/SR-004-已发布%20Skill%20包导入.md) | 已发布 Skill 包导入 | 技能导入与选择设计说明书 §2～§4；技能与确定性保障格式规范 §1～§5 | EX-05～EX-08 | SR-002；外部依赖为 ca-skills 作者格式与 ca-skill-compiler 发布契约。 | DRAFT | 未创建 |
-| [SR-005](../SR/SR-005-SkillCatalog%20与已检查%20when%20程序消费.md) | SkillCatalog 与已检查 when 程序消费 | 技能导入与选择设计说明书 §5、§7；发布产物与 CEL 运行时互操作设计说明书 §5～§8 | EX-21～EX-23、EX-25～EX-29 | SR-004；外部依赖为 ca-skill-compiler 发布 CheckedExpr/DescriptorSet 格式及 Python CEL Runtime。 | DRAFT | 未创建 |
-| [SR-006](../SR/SR-006-Skill%20Resolver%20与%20continuation%20选择.md) | Skill Resolver 与 continuation 选择 | 技能导入与选择设计说明书 §6；CA Agent Next 架构设计 §7 | EX-09、EX-10、EX-19、EX-24 | SR-005。 | DRAFT | 未创建 |
+| [SR-002](../SR/SR-002-Python%20核心与宿主基础骨架.md) | Python 核心与宿主基础骨架 | CA Agent Next 架构设计 §3～§5；实施路线与阶段门槛 §1 | EX-01 | 无；ca-agent-demo 仅作为只读复用证据。 | DRAFT | 未创建 |
+| [SR-003](../SR/SR-003-统一插件管理器与扩展通信.md) | 统一插件管理器与扩展通信 | 插件管理与通信设计说明书 §3～§10；插件包与进程通信协议规范 §1～§12 | EX-02、EX-03、EX-18 | SR-002。 | DRAFT | 未创建 |
+| [SR-004](../SR/SR-004-已发布技能包导入.md) | 已发布技能包导入 | 技能导入与选择设计说明书 §2～§4；技能与确定性保障格式规范 §1～§5 | EX-05～EX-08 | SR-002；外部依赖为 ca-skills 作者格式与 ca-skill-compiler 发布契约。 | DRAFT | 未创建 |
+| [SR-005](../SR/SR-005-技能目录与条件程序消费.md) | 技能目录与条件程序消费 | 技能导入与选择设计说明书 §5、§7；发布产物与 CEL 运行时互操作设计说明书 §5～§8 | EX-21～EX-23、EX-25～EX-29 | SR-004；外部依赖为 ca-skill-compiler 发布 CheckedExpr/DescriptorSet 格式及 Python CEL Runtime。 | DRAFT | 未创建 |
+| [SR-006](../SR/SR-006-技能解析器与续跑选择.md) | 技能解析器与续跑选择 | 技能导入与选择设计说明书 §6；CA Agent Next 架构设计 §7 | EX-09、EX-10、EX-19、EX-24 | SR-005。 | DRAFT | 未创建 |
 | [SR-007](../SR/SR-007-统一%20Runtime%20Action%20Boundary%20与双执行模式.md) | 统一 Runtime Action Boundary 与双执行模式 | 运行时与动作边界设计说明书 §2～§8；公共契约与所有权规范 §5～§8 | EX-13～EX-16 | SR-003、SR-004、SR-006。 | DRAFT | 未创建 |
 | [SR-008](../SR/SR-008-Echo%20首个垂直%20E2E%20示例.md) | Echo 首个垂直 E2E 示例 | 演示验收基线 §1～§6；实施路线与阶段门槛 §6 | EX-17 | SR-002～SR-007。 | DRAFT | 未创建 |
 | [SR-009](../SR/SR-009-OpenAMSM%20SBI%20Event%20Plugin%20与%20Artifact%20Handoff.md) | OpenAMSM SBI Event Plugin 与 Artifact Handoff | 事件接入与二进制产物交接设计说明书 §1～§6、§8～§10；插件包与进程通信协议规范 | OM-01～OM-03、OM-05～OM-08、OM-14、OM-15 | SR-008、SR-003；外部依赖为 ca-openamsm-plugin 设计/实现契约。 | DRAFT | 未创建 |
