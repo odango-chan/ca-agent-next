@@ -9,7 +9,8 @@ CA Agent Next 是下一代通用 Agent 的独立实现仓。目标是用尽可�
 ## 从这里开始
 
 1. [功能树与需求追踪基线](docs/治理/功能树与需求追踪基线.md) — 先识别 Feature / IR / SR，再按功能加载资料。
-2. [CA Agent Next 架构设计](docs/架构设计/CA%20Agent%20Next%20架构设计.md) — 唯一总体架构。\n3. [外部能力域架构总览](docs/架构设计/外部能力域架构总览.md) — EC01–EC07 多层能力结构与跨域边界。
+2. [CA Agent Next 架构设计](docs/架构设计/CA%20Agent%20Next%20架构设计.md) — 唯一总体架构。
+3. [外部能力域架构总览](docs/架构设计/外部能力域架构总览.md) — EC01–EC07 多层能力结构与跨域边界。
 4. [文档总目录与索引](docs/治理/文档总目录与索引.md) — 正式文档入口。
 5. [SR 管理规范](docs/规范/SR%20管理规范.md) — SR、Issue、PR、Commit 和验收追踪规则。
 6. [文档编写与治理规范](docs/规范/文档编写与治理规范.md) — 功能设计与修订记录要求。
@@ -38,7 +39,9 @@ CA Agent Next 是下一代通用 Agent 的独立实现仓。目标是用尽可�
 | Tool Interface / Provider / Codec（EC03） | ca-client-tools | 通过唯一 Plugin Manager 的 tools Extension 调用 |
 | OpenAMSM SBI Event / Delivery Plugin（EC04） | ca-openamsm-plugin | 消费统一 Plugin Package/IPC 和 Artifact Handoff |
 | OpenAMSM Owner（EC05） | env-openamsm 等 Owner 仓 | 消费权威 Receipt / Commit Proof |
-| Skill Studio（EC06） | [ca-skill-studio-demo](https://github.com/odango-chan/ca-skill-studio-demo) | 编辑和验证 ca-skills 作者源；不拥有语言规范或 Compiler |\n| 仿真对端（EC07） | [env-5gc-sim](https://github.com/odango-chan/env-5gc-sim) | 为隔离 OpenAMSM E2E 提供测试对端；不是生产 AMF |\n| 参考实现（REF01） | ca-agent-demo | 逐文件选择性复用代码和测试 |
+| Skill Studio（EC06） | [ca-skill-studio-demo](https://github.com/odango-chan/ca-skill-studio-demo) | 编辑和验证 ca-skills 作者源；不拥有语言规范或 Compiler |
+| 仿真对端（EC07） | [env-5gc-sim](https://github.com/odango-chan/env-5gc-sim) | 为隔离 OpenAMSM E2E 提供测试对端；不是生产 AMF |
+| 参考实现（REF01） | ca-agent-demo | 逐文件选择性复用代码和测试 |
 | 后续晋级目标（TARGET01） | ca-agent | Next 验收后评估晋级 |
 
 Next 是项目群所有领域（含外部能力域）的架构、模块设计和规范权威中心；各协作仓维护实现、测试、构建、发布、部署和运行说明，并链接回 Next。迁移状态见[跨仓设计资产迁移与一致性审计](docs/参考与审计/跨仓设计资产迁移与一致性审计.md)。
