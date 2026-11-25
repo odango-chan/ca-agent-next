@@ -29,7 +29,8 @@ For the next major redesign after promotion, create a fresh ca-agent-next. Keep 
 ## Start here
 
 - [Agent instructions](Agent.md) — mandatory rules for coding agents and VibeCoding.
-- [Architecture](docs/architecture.md) — Python Core, optional Assurance, Skill import/selection, unified Plugin and Runtime boundary.
+- [Architecture](docs/architecture.md) — Python Core, optional Assurance, Core-owned in-memory SkillCatalog, Skill import/selection, unified Plugin and Runtime boundary.
+- [SkillCatalog and Compiler integration](docs/integration/skill-catalog-compiler-contract.md) — import/update lifecycle, hot-path residency, Catalog generations and portable compiled when requirement.
 - [Plugin Package v1alpha1](docs/plugin-package.md) — YAML manifest, extensions and common IPC.
 - [Demo audit](docs/audit/ca-agent-demo.md) — current source inventory and evidence.
 - [Reuse and feasibility](docs/audit/reuse-and-feasibility.md) — copy vs adapt vs external dependency decisions.
@@ -45,7 +46,7 @@ Every Skill has SKILL.md. The assurance/ directory is optional:
 - Compiled Skill Artifact: Inspect/Verify and admit directly without rebuilding.
 - Invalid present Assurance: fail import; never silently downgrade.
 
-An optional top-level assurance/contract.yaml when is used for Skill selection. predicates.yaml remains an execution-time business check. Individual LLM Action proposals use the common Runtime Action Boundary and are not compiled.
+An optional top-level assurance/contract.yaml when is compiled once during import/update and evaluated for each fresh Event. All Skills, including SKILL.md-only Skills, live in the Core-owned in-memory SkillCatalog. Catalog updates activate atomically by generation; each Invocation pins its generation. predicates.yaml remains an execution-time business check. Individual LLM Action proposals use the common Runtime Action Boundary and are not compiled.
 
 ## Example-first development
 
@@ -59,4 +60,4 @@ The first planned vertical Example is Echo: Python Agent Core, one independently
 
 This is a Demo-level mechanism implementation, not a production platform. Keep basic YAML/Schema/version/reference validation, clear errors, simple package loading, minimal correlation, useful logs and executable tests.
 
-Do not add extra SHA-256 package hashing, package signatures, Trust Registry, Domain/Task Contract Packages, legacy compatibility, Marketplace, hot reload, production HA, complex multi-tenant governance or broad DFX unless explicitly re-scoped.
+Do not add extra SHA-256 package hashing, package signatures, Trust Registry, Domain/Task Contract Packages, legacy compatibility, Marketplace, filesystem watchers or generic Plugin hot reload, production HA, complex multi-tenant governance or broad DFX unless explicitly re-scoped. Explicit SkillCatalog import/update with atomic generation activation is in scope.
