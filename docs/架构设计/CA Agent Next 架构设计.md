@@ -1,8 +1,8 @@
 # CA Agent Next 架构设计
 
 > 文档类型：总体架构设计  
-> 状态：目标架构基线，随 PR #1 评审；尚未实现、尚未验收    
-> 文档版本：0.3.3
+> 状态：目标架构基线；PR #1 已合并；架构所定义的 Next Host/Runtime/Plugin Manager 尚未实现、尚未验收    
+> 文档版本：0.4.0
 > 修订日期：2026-11-25  
 > 适用范围：ca-agent-next 通用 Agent Core、Host、Runtime、Skill 与 Plugin 公共机制  
 > 权威边界：本文是本仓唯一总体架构文档；字段级契约见规范，机制细节见设计说明书  
@@ -42,19 +42,24 @@ CA Agent Next 是一个通用 Agent。Agent Core 不内置 OpenAMSM、5GC 或其
 
 ## 3. 仓库职责与语言边界
 
-| 仓库 | 实现与发布职责 | Next 的使用方式 |
+| 仓库 / 域 | 实现与发布职责 | Next 的使用方式 |
 |---|---|---|
-| ca-agent-next | 新一代 Agent Core、Host、Runtime 和公共机制 | Python 新实现 |
-| ca-agent-demo | 既有 Python 实现、测试和复用证据 | 逐文件审计、选择性复用 |
-| ca-agent | 当前稳定实现 | 后续晋级目标，不作为本次重构源码 |
-| ca-skill-compiler | CA-SL 解析、静态检查、链接、Build、Verify 和 Artifact 发布 | 外部发布工具链；Next 只消费已发布 Artifact |
-| ca-skills | CA-SL 规范和业务 Skill 源 | 作者源及发布输入，不复制业务逻辑 |
-| ca-client-tools | Tool 实现、Tool Interface Package 和 Owner 交互 | 作为导出 tools Extension 的 Plugin 接入 |
-| ca-openamsm-plugin | OpenAMSM SBI Event ingress / Delivery | 作为独立 Event Plugin 接入 |
+| ca-agent-next | 新一代 Agent Core、Python Host、Runtime 和公共机制 | 唯一中央设计/治理仓；Python 新实现 |
+| ca-agent-demo / REF01 | 既有 Python Generic Host、Context、ArtifactStore、Provider 和 Development 测试证据 | 逐文件审计、选择性复用；不整仓复制 |
+| ca-runtime / REF02 | Go Runtime Host、Procedure、Provider、Predicate、Observation 参考 | 语义/实现对照，不是 Next 运行时 |
+| ca-agent / TARGET01 | Go Native Host、ProductTask、Artifact Store 和 Host Contract | 后续晋级目标，不作为本次 Python 重构源码 |
+| ca-skills / EC01 | CA-SL v1alpha5、SKILL.md、可选 Assurance 和业务 Skill 作者源 | 作者源与发布输入；Agent 只消费发布 Bundle |
+| ca-skill-compiler / EC02 | CA-SL 检查、链接、Build、Verify 和 Artifact 发布 | 外部工具链；Next 不调用 Compiler |
+| ca-client-tools / EC03 | Tool Interface Package、Provider v2、Runtime Bindings、SBI Client、Codec | 通过唯一 Plugin Manager 的 tools Extension 接入 |
+| ca-openamsm-plugin / EC04 | OpenAMSM SBI Event ingress / Delivery | 独立 Go Event/Delivery Plugin |
+| env-openamsm / EC05 | OpenAMSM MAS Owner、Receipt、Commit Proof、Reconcile 和业务状态 | Owner 权威；Next 消费，不复制 Owner 状态 |
+| ca-skill-studio-demo / EC06 | Theia Browser、Package/Source-first、LSP、AI Authoring | Skill 作者工作台，不执行 Skill |
+| env-5gc-sim / EC07 | 5GC reference simulator、Mock AMF SBI test peer | 独立测试对端；Mock AMF 不是 Owner |
+| ai-gateway / ca-dsh / G01 | 模型服务网关和 DeepSeek Harness 执行环境 | 工程基础设施，不是 Agent Core/Runtime |
 
 Agent Core、Host、Importer、Resolver 和 Runtime 使用 Python。独立 Plugin 可以使用 Go。Go Plugin 不意味着 Go Host，也不改变 Core 的语言决策。
 
-本轮拟将项目群的架构、设计和规范集中到 Next，按功能评审并切换权威文档。各实现仓继续交付实现、机器契约、发布物和运行证据。历史与当前基线按 [跨仓设计资产迁移与一致性审计](../参考与审计/跨仓设计资产迁移与一致性审计.md) 追溯。
+**设计权威边界：** ca-agent-next 是项目群架构、设计、规范和 ADR 的唯一中央入口。外部实现仓继续维护源码、测试、发布、部署、运行和故障排查材料，并链接回本仓对应 Feature。迁入的原始资料必须保留 source repository、source path、fixed SHA 和 source status；历史提案不能伪装成当前目标设计。详细映射见[外部能力域架构总览](外部能力域架构总览.md)、[功能树](../治理/功能树与需求追踪基线.md)和[跨仓迁移审计](../参考与审计/跨仓设计资产迁移与一致性审计.md)。
 
 ## 4. 总体组件架构
 
@@ -148,7 +153,9 @@ when 是纯 CEL Skill 选择表达式，作者源位置为可选 Assurance 的 c
 
 Tool 是 Plugin 的 Operation，不是独立进程、Manager 或 Runtime。Tool Plugin 是导出 tools Extension 的 Plugin。一个 Plugin 可以同时导出 Event、Delivery 和多个 Tool Operation。不得增加独立 Provider Manager、Tool Registry、Codec Manager 或第二条授权/分发路径。
 
-Tool 的 Callable ID、输入/输出 Schema、Effect、Capability 归属和 Owner outcome/receipt 语义，以其拥有者发布的 Tool Interface Package 为准。Plugin Manifest 只声明进程和 Extension，不复制 Tool 定义。
+Tool 的公开 Callable ID、输入/输出 Schema、Effect、Capability 归属和 Artifact IO 由 Tool Interface Package 定义；Owner Contract 定义权威业务结果、Receipt、Commit Proof 和 Reconcile；Provider Runtime Bindings 映射 Provider 私有 Backend operation。三者边界见 [F03.05 Tool Interface 与 Provider 集成设计](../设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) 和[公共契约与所有权规范](../规范/公共契约与所有权规范.md)。
+
+Plugin Manifest 只声明进程和 Extension，不复制 Callable 定义。Provider v2 是 Provider 自身的进程协议，不是 Next Plugin IPC；唯一 Plugin Manager 通过 ProviderV2 Driver 适配它。
 
 ## 9. Runtime 与统一 Action Boundary
 
@@ -160,9 +167,16 @@ READ Tool 结果作为带来源的 Observation；MUTATION 结果依据 Owner Rec
 
 ## 10. SBI 二进制载荷与 Codec
 
-SBI 不限于 JSON。Event Plugin 负责 HTTP/SBI 外层解析、JSON、multipart/related、Content-ID 关联和原始 N1/N2 字节提取；Host 管理 staging、ArtifactStore、opaque artifactRef、Run 关联和访问授权。原始字节不进入 NDJSON 帧或模型 Context。
+SBI 不限于 JSON。Event Plugin 负责 HTTP/SBI 外层解析、JSON、multipart/related、Content-ID 关联和原始 N1/N2 字节提取；Host 管理本地 staging、ArtifactStore、opaque artifactRef、Run 关联和访问授权。原始字节不进入 NDJSON 帧或模型 Context。
 
-Codec 不作为 Agent Core 的内置能力。Skill 不需要协议内部字段时，直接把原始 artifactRef 交给业务 Tool；需要结构化字段时，按需调用 ca-client-tools 的 tools Extension 中发布的 Codec Operation。Codec 解码结果不能替换原始字节。Event Plugin 只允许为共享 SBI Operation 提取最小必要 NAS discriminator 来规范化 Event，不承担完整协议解码或 Skill 选择。
+必须区分两条二进制路径：
+
+1. Event/Delivery Plugin ↔ Host：通过 Host 创建的本地 inbound/outbound staging directory 和相对 stagingPath 描述符交接。Host 校验 slot、路径边界和真实 byteLength，再导入 ArtifactStore。
+2. Host/Runtime ↔ Tool Plugin：Tool 只能访问当前 Invocation 授权的 Artifact。其二进制传输依赖独立 Host Artifact Store Channel，不得使用 Event stagingPath，也不得把原始 bytes/Base64 塞进 NDJSON。
+
+**当前限制：** F03.05 引用的 ca-host.artifact-store/v1 Channel 尚未发布。Provider initialize 未配置 artifactChannel 时，所有 artifact-bearing binding 必须 NOT_CONFIGURED，并在任何远端 I/O 前拒绝。不得自行发明 Provider 私有文件路径协议。
+
+Codec 不作为 Agent Core 的内置能力。Skill 不需要协议内部字段时，直接把授权 artifactRef 交给业务 Tool；需要结构化字段时，按需调用 ca-client-tools tools Extension 中正式发布的 Codec Callable。Codec 解码结果不能替换原始字节。Event Plugin 只允许为共享 SBI Operation 提取最小必要 NAS discriminator 来规范化 Event，不承担完整协议解码或 Skill 选择。只声明实际发布和测试过的 NAS/NGAP 消息子集。
 
 ## 11. 关键端到端流程
 
@@ -219,17 +233,38 @@ sequenceDiagram
 | G | OpenAMSM Plugin 与 Skill/Tool 集成 | Echo 通过后开始 |
 | H | 真实 OpenAMSM Create → Modify → Release E2E | NOT_RUN |
 
-当前依赖状态快照：ca-skills PR #88 仍需核对是否合并；ca-skill-compiler Issue #61 跟踪 when 的已检查程序 Artifact 格式；ca-client-tools PR #39 的 Codec Consumer Migration 需按实际使用范围验收；ca-openamsm-plugin PR #1 为设计提案。实施前必须重新核对，不得将旧快照当作当前事实。Compiler/语言规范发布是外部依赖，不等于 Next 需要集成 Compiler 命令。
+外部依赖状态（2026-11-25）：
+
+- ca-skills PR #83～#86、#88、#89 均已合并；CA-SL v1alpha5 Release Record 固定规范提交 18d818436。源规范头部仍有 candidate 字样，以 Release Record 为发布状态依据。
+- ca-skill-compiler v2.1.0 已发布；Issue #61 OPEN，when 发布型 CheckedExpr/DescriptorSet Runtime Artifact 未完成。
+- ca-client-tools v1.2.0 已发布；PR #39 OPEN，Phase B Worker/Facade 有证据，Phase C Consumer Migration NOT_STARTED。
+- env-openamsm PR #26/#27 已合并；MAS Owner v1alpha4 与 Receipt/Proof/Reconcile 已进入主线。
+- env-5gc-sim PR #79 已合并；Mock AMF Modify 测试场景进入主线。
+- ca-openamsm-plugin main 只有 README；PR #1 OPEN/Draft。
+- ca-agent-demo PR #219 MERGED；Development H1/H2/H3 证据可参考，但未完整证明 durable Owner Receipt / exact-original Reconcile。PR #246/#248/#249 OPEN，不计入 main。
+- ca-skill-studio-demo PR #258 MERGED；Pages 最新部署 SHA 未重新核验。
+- ca-agent-next PR #1 已合并；PR #13 是 F03.05 设计文档 PR（OPEN），不是实现 PR。
+
+外部 Compiler/语言规范发布是 Agent 的外部依赖，不意味着 Next 需要集成 Compiler 命令。外部仓 PASS 不计入 Next PASS；实施前必须刷新准确 SHA、发布物、PR 和测试范围。
 
 ## 14. 详细设计与规范入口
 
-- [Plugin平台设计说明书](../设计说明书/F03-Plugin平台/Plugin平台设计说明书.md)
-- [Skill管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md)
-- [Runtime执行设计说明书](../设计说明书/F04-Runtime执行/Runtime执行设计说明书.md)
-- [Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md)
+- [F01 通用 Agent Core 与 Host](../设计说明书/F01-通用Agent核心与Host/通用Agent核心与Host设计说明书.md)
+- [F02 Skill 管理与选择](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md)
+- [F03 Plugin 平台](../设计说明书/F03-Plugin平台/Plugin平台设计说明书.md)
+- [F03.05 Tool Interface 与 Provider 集成](../设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md)
+- [F04 Runtime 执行](../设计说明书/F04-Runtime执行/Runtime执行设计说明书.md)
+- [F05 Context 与 Artifact 管理](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md)
+- [F06 业务接入与 OpenAMSM 集成](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md)
+- [F08 技能编译与发布](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md)
+- [F09 技能工作台与 AI 编写](../设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md)
+- [外部能力域架构总览](外部能力域架构总览.md)
 - [文档总目录与索引](../治理/文档总目录与索引.md)
+- [功能树与需求追踪基线](../治理/功能树与需求追踪基线.md)
+- [CA-SL v1alpha5 完整规范](../规范/CA-SL%20v1alpha5完整语言规范.md)
+- [Plugin Package / IPC 规范](../规范/插件包与进程通信协议规范.md)
+- [公共契约与所有权规范](../规范/公共契约与所有权规范.md)
 - [演示验收基线](../验收与实施/演示验收基线.md)
-
 
 ## 修订记录
 
@@ -237,12 +272,8 @@ sequenceDiagram
 |---|---|---|---|---|---|---|
 | 2026-11-25 | 0.2.0 | 历史修订者/模型未记录 | 第 1～14 章 | 既有总体架构基线；逐章历史记录未建立 | 原始修订者未记录，本轮不臆造 | PR #1 |
 | 2026-11-25 | 0.2.1 | 历史修订者/模型未记录 | 范围与评审章节 | 增加全局评审范围继承规则 | 既有治理要求 | PR #1 |
-| 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | 第 14～15 章 | 将设计入口改为 F01～F06 功能文档，新增 F01/F06，合并 F02 CEL 互操作入口，链接功能树 | 以功能树作为架构到需求和详细设计的统一导航 | F01～F07；SR-001～011；PR #1 |
-| 2026-11-25 | 0.3.1 | 刷新需求追踪、目录或证据引用 | 对齐最新分支与 IR/SR 基线 | 见关联 SR |
-| 2026-11-25 | 0.3.2 | Codex | 第 6 节 | 澄清已声明 Assurance Artifact 缺失的失败条件 | 对齐既有 Skill 导入规则 | SR-004；PR #1 |
-
-
-本架构目标按 F01～F07 功能域组织，SR-001～SR-011 负责需求分解和实施追踪。完整功能树、外部能力 EC01～EC05、SR 登记册、Issue/PR/Commit/Test 关系和当前状态统一见《[功能树与需求追踪基线](../治理/功能树与需求追踪基线.md)》。实施必须以状态为 READY 且依赖满足的 SR 为入口；架构文档不重复维护需求清单和实施状态。
-
-详细机制按功能读取 F01～F06 设计说明书；F07 的示例与验收由演示验收基线承载。
+| 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | 第 14～15 章 | 将设计入口改为功能文档，新增 F01/F06，统一功能树导航 | 以功能树作为架构到需求和详细设计的统一入口 | F01～F07；SR-001～SR-011；PR #1 |
+| 2026-11-25 | 0.3.1 | 历史修订者/模型未记录 | 全文 | 刷新需求追踪、目录或证据引用 | 对齐当时分支与 IR/SR 基线 | 见关联 SR |
+| 2026-11-25 | 0.3.2 | Codex | §6 | 澄清已声明 Assurance Artifact 缺失的失败条件 | 对齐既有 Skill 导入规则 | SR-004；PR #1 |
 | 2026-11-25 | 0.3.3 | Codex / GPT-6 | §3 | 提出集中设计与分仓交付边界 | IR-006 设计移交 | IR-006 |
+| 2026-11-25 | 0.4.0 | GPT-6.2（ChatGPT） | §3、§8、§10、§13–14 | 纳入 EC01～EC07/REF/TARGET/G01 职责，补齐 F03.05、Artifact Channel 未发布边界、最新外部 PR/Release 状态和完整设计入口 | 纠正外部域遗漏、过期依赖快照和 Provider/Artifact 边界 | Issue #12；SR-015～SR-023 |
