@@ -195,7 +195,7 @@ Host 必须读取真实文件长度；不使用额外校验和或 SHA-256。具�
 3. Plugin 发送 ingress.event，包含规范化 JSON payload 和 Artifact 描述符；不得发送原始 bytes 或 Base64。
 4. Host 校验 Event Schema、Manifest slot、media type、路径边界和真实 byteLength。
 5. Host 将 bytes 导入 ArtifactStore，生成 opaque artifactRef，并绑定 Event identity。
-6. Host 完成导入后才返回 ingress.ack；ack 中可返回 Host artifactRef。Plugin 不创建或选择 artifactRef。
+6. Host 完成导入后才返回 ingress.ack；ack 只返回接受/重复/拒绝状态和安全诊断。Host artifactRef 留在 Host 内部，不向 Event Plugin 暴露。Plugin 不创建或选择 artifactRef。
 7. 任一必需 part 缺失或校验失败时拒绝 Event，不创建业务 Run。
 8. Event 校验成功后，Host 创建/关联 Run，并按 Runtime 授权把所需 refs 交给对应 Tool；不得自动把全部入站 refs 交给模型。
 
@@ -203,7 +203,7 @@ Host 必须读取真实文件长度；不使用额外校验和或 SHA-256。具�
 
 1. Runtime 通过已授权 Action / Tool 获得输出 Artifact。
 2. Host 验证当前 responseObligation 是否允许该 slot，并将精确 bytes 写入 outboundDirectory。
-3. Host 发送 delivery.dispatch，包含 responseObligationId、slot、mediaType、Content-ID（如适用）、相对 stagingPath、byteLength 和 Host artifactRef。
+3. Host 发送 delivery.dispatch，包含 responseObligationId、slot、mediaType、Content-ID（如适用）、相对 stagingPath 和 byteLength。Host artifactRef 保持 Host 内部，不交给 Delivery Plugin。
 4. Plugin 只读取本次交付声明的文件，按外部协议构造 SBI multipart / Content-ID 响应。
 5. Plugin 返回 delivery.result；Host 记录 delivered / failed / unknown 并清理出站 staging 文件。
 6. Delivery UNKNOWN 不改变 Owner 业务 outcome，也不得触发 mutation 重放。
