@@ -23,7 +23,8 @@ DeepSeek Harness 默认使用 Goal 模式。按[SR 管理规范](docs/规范/SR%
 - Agent Core、Host、Agent Model Loop、Skill Importer、Skill Resolver 和 Runtime 使用 Python。
 - 独立 Plugin 可以使用 Go；Go Plugin 不代表 Go Host。
 - ca-agent-demo 是既有 Python 实现和测试证据来源，只能逐文件选择性复用，不得整体复制。
-- ca-skill-compiler、ca-skills、ca-client-tools、ca-openamsm-plugin、env-openamsm 等保有独立实现和发布职责。
+- ca-skills、ca-skill-compiler、ca-client-tools、ca-openamsm-plugin、env-openamsm、env-5gc-sim、ca-skill-studio-demo 等保有独立实现和发布职责；ca-runtime 与 ca-agent 是参考/目标仓，不是 Next 运行时依赖。
+- 项目群所有仓的架构设计、功能设计、协议规范和 ADR 统一集中在 ca-agent-next；其他实现仓保留源码、测试、发布、部署、运行和故障排查文档，并链接回本仓对应 Feature/设计章节。迁移原文必须保留源仓、源路径、固定 SHA 和原始状态，不能把历史提案改写成当前规范。
 - 所有项目群任务从本仓进入。修改协作仓须获得当前任务的授权，并在本仓登记覆盖目标仓、变更范围和验收的 SR。SR 达到 READY 且依赖满足后方可实施，再回填目标仓 PR、Commit 和验收证据。READY 仅表示具备实施条件，不授予写入权限。合并 PR 和发布 Release 需要单独授权。
 
 - 规范或设计尚在评审时，负责人可按 [SR 管理规范 §8.2](docs/规范/SR%20管理规范.md#82-使用评审中的固定提交开展受限实施)批准固定 PR SHA，供 READY 阶段实施和验收。按 SR 记录范围、授权和证据。正式发布、集成和主分支可达性按各阶段要求核对。
@@ -41,6 +42,7 @@ DeepSeek Harness 默认使用 Goal 模式。按[SR 管理规范](docs/规范/SR%
 - Deterministic 与 LLM-guided 共用 Runtime Action Boundary；LLM 不得直接调用 Plugin 或扩大 Callable Scope。
 - Owner Receipt / Commit Proof 是 mutation 结果权威；HTTP 200、IPC 成功或 Delivery 成功不能替代；UNKNOWN 不得变成 COMMITTED。
 - SBI 可携带 JSON、multipart 和二进制。Event Plugin 处理协议；Host 管理 ArtifactStore；Codec 按需作为现有 Tool Plugin 的 Operation 调用。
+- Event/Delivery Plugin 的本地 staging 与 Host→Tool Artifact Channel 是两条不同路径。ca-host.artifact-store/v1 尚未发布；artifact-bearing Provider binding 未配置 artifactChannel 时必须 NOT_CONFIGURED，并在远端 I/O 前拒绝。不得把 Event stagingPath 传给 Provider，不得将原始 bytes/Base64 放入 NDJSON。
 - 不增加 activation.yaml、constraint.yaml、supportedModes、Domain/Task Contract Package、第二份 Skill Descriptor、旧版兼容、额外 SHA-256、签名或 Trust Registry。
 
 ## 4. Demo DFX 边界
@@ -57,6 +59,8 @@ DeepSeek Harness 默认使用 Goal 模式。按[SR 管理规范](docs/规范/SR%
 - 不因每个 Issue 新建设计文档；SR 记录需求范围和验收，功能设计说明书记录完整机制设计。
 - 每份正式文档维护修订记录，记录日期、修订者/模型、章节、修改内容、原因和关联 Feature/SR/Issue/PR/Commit。历史未记录的信息不得猜测。
 - 项目群设计按功能集中到 Next；移交须核对发布版本、中央章节、历史和目标仓 SR。
+- 外部仓的架构、设计、规范、ADR 迁入 Next 后，外部仓只保留实现/测试/发布/运行资料及指向 Next 的链接；不得在兄弟仓维护第二份权威设计副本。迁移原文应放入参考/归档目录，附 source repository、source path、fixed SHA、source status；Next 目标设计必须从未实现视角独立写全，并另行核对当前代码/测试/PR/运行证据。
+- 任何文档刷新都同步更新功能树、文档总索引、SR 总索引、实施状态和跨仓迁移审计；静态链接通过不代表设计 READY，设计 READY 不代表代码 PASS。
 
 ## 6. 全局评审范围（机器可读）
 
@@ -154,6 +158,7 @@ review_scope:
 |---|---|---|---|---|---|
 | 2026-11-25 | 历史修订者/模型未记录 | 原第 1～11 节及 review_scope | 既有协作约束和机器可读评审范围；逐章历史记录未建立 | 原始修订者未记录，本轮不臆造 | PR #1 |
 | 2026-11-25 | GPT-6.2（ChatGPT） | 第 1～6 节 | 将功能识别和按需阅读流程交给功能树，精简硬约束，保留 review_scope 原始区块 | Agent.md 过长且重复设计细节 | F01～F07、G01；SR-001～011；PR #1 |
+| 2026-11-25 | GPT-6.2（ChatGPT） | 第 2、3、5 节 | 明确外部架构/设计/规范/ADR 全部集中到 Next，兄弟仓只保留实现资料并链接回中央设计；增加未发布 Host→Tool Artifact Channel fail-closed 约束 | 防止设计分叉和 Provider 误用 Event staging | EC01～EC07、REF01～REF03；SR-015～SR-023；Issue #12 |
 | 2026-11-25 | Codex | 第 2 节 | 明确跨仓写入须获当前任务授权 | 区分实施就绪与写入授权 | PR #1 |
 | 2026-11-25 | Codex | 第 5 节 | EC02 Compiler 设计集中归档 | 明确设计与机器契约所有权 | SR-012、#2 |
 | 2026-11-25 | Codex / GPT-6 | §2、§5 | 明确中央设计归属 | 跨仓设计移交 | IR-006 |
