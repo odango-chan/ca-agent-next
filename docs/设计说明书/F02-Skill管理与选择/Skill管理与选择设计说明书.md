@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：目标机制设计；Artifact 互操作部分依赖外部 Compiler 发布  
-> 文档版本：0.2.3  
+> 文档版本：0.2.4  
 > 功能归属：F02 — Skill 管理与选择  
 > 关联 SR：SR-004、SR-005、SR-006    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -110,7 +110,7 @@ when 只能读取规范化 Event 的 event.type 和 Contract.requestSchema 声�
 
 Next 只在导入阶段反序列化发布 Artifact 中的程序与类型数据，并保存在对应 Catalog generation 中；不解析 CEL 源字符串、不重复静态检查、不调用 Compiler。每个新 Event 使用当前 event.type 和 input 独立求值。
 
-CheckedExpr、google.protobuf.Any、FileDescriptorSet、DescriptorPool、字段缺失与 null 语义、G.4 optional/nullable 守卫，以及 Go/Python 互操作的具体设计，统一见[Skill 管理与选择设计说明书 §11](#11-compiler-发布物与-python-cel-运行时互操作)。本说明书只定义导入和选择消费端行为，不重复维护 CEL 二进制格式。
+CheckedExpr、google.protobuf.Any、FileDescriptorSet、DescriptorPool、字段缺失与 null 语义、G.4 optional/nullable 守卫，以及 Go/Python 互操作的 Compiler 侧设计，统一见 [EC02 Compiler 设计说明书 §3–7](../EC02-Compiler/Compiler设计说明书.md) 和 [SR-013](../../SR/SR-013-Compiler已检查when与发布产物.md)。本说明书只定义导入和选择消费端行为，不重复维护 CEL 二进制格式。
 
 ## 8. 执行模式派生
 
@@ -124,7 +124,7 @@ CheckedExpr、google.protobuf.Any、FileDescriptorSet、DescriptorPool、字段�
 
 ## 9. 外部依赖与状态边界
 
-- ca-skills PR #88：同标识 CA-SL v1alpha5 的 optional Assurance/when 刷新；实施前重新确认合并与正式规范状态。
+- ca-skills PR #88：已合并；正式 CA-SL v1alpha5 来源固定为 18d8184367982ccbc835756136c4a53f9096c3a0，发布记录见 [ca-skills release record](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs/releases/ca-sl-v1alpha5.md)。
 - ca-skill-compiler Issue #61：新版发布运行时 Artifact 与 CheckedExpr/DescriptorSet 格式；详细互操作方案见[Skill管理与选择设计说明书](Skill管理与选择设计说明书.md) §11。
 - ca-agent-next：只负责已发布包的消费、Catalog、选择和 Runtime，不调用 Compiler。
 - cel-expr-python：作为 Python Runtime 的 CEL 反序列化/求值依赖，版本固定并以跨语言 fixtures 验收。
@@ -200,3 +200,4 @@ Next 在 Skill 导入时反序列化已检查程序和类型环境，建立运�
 | 2026-11-25 | 0.2.1 | 刷新需求追踪、目录或证据引用 | 对齐最新分支与 IR/SR 基线 | 见关联 SR |
 | 2026-11-25 | 0.2.2 | Codex / GPT-6 | §12 | 记录中央规范与 Compiler/Studio/Next 分工 | 跨仓设计移交 | IR-006 |
 | 2026-11-25 | 0.2.3 | Codex / GPT-6 | §6 | 明确 Event Request Schema 资格与诊断次序 | 对齐 CA-SL 候选 M.3／SA-012 | IR-003、SR-006、EX-10 |
+| 2026-11-25 | 0.2.4 | GPT-6.2（ChatGPT） | §7、§9、§11 | 固定 CA-SL v1alpha5 正式来源并链接 EC02/SR-013 Compiler 设计 | 消除已合并规范仍标待确认及 Compiler/消费端设计入口不清 | Issue #14、SR-013、Compiler #61 |
