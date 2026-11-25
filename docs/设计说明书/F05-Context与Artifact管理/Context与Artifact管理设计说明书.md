@@ -2,13 +2,15 @@
 
 > 文档类型：机制设计说明书  
 > 状态：目标 Host/Plugin 契约设计；真实 OpenAMSM multipart Provider binding 尚未验证  
-> 文档版本：0.2.0  
+> 文档版本：0.2.1  
 > 功能归属：F05 — Context 与 Artifact 管理  
 > 关联 SR：SR-009    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
 > 本文局部非目标：以本文范围与非目标章节为准；无额外扩展  
 > 修订日期：2026-11-25  
 > 适用范围：Event ingress、SBI JSON/multipart、Content-ID、Host ArtifactStore、Delivery 和按需 Codec
+
+关联需求项见 [IR-005](../../IR/IR%20总登记册.md#ir-005)。
 
 ## 1. 设计目标与所有权
 
@@ -154,3 +156,4 @@ Native Manifest 在 event.ingress.events[].artifacts.input 和 event.delivery.re
 |---|---|---|---|---|---|---|
 | 2026-11-25 | 0.1.0 | 历史修订者/模型未记录 | 原始设计全文 | 既有 Event 与二进制 Handoff 设计基线；逐章历史记录未建立 | 原文档未记录历史作者，本轮不臆造 | PR #1 |
 | 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 第 1～12 章 | 归入 F05，明确 Context、ArtifactStore、Codec 与外部契约关系 | 按功能维护完整设计基线 | F05；SR-009；EC03/EC04；PR #1 |
+| 2026-11-25 | 0.2.1 | 刷新需求追踪、目录或证据引用 | 对齐最新分支与 IR/SR 基线 | 见关联 SR |

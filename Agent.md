@@ -2,6 +2,8 @@
 
 本文是 ca-agent-next 自动化与 AI 编码协作的入口规则，不是第二份架构文档。功能分类、需求、设计章节和外部能力导航以《功能树与需求追踪基线》为准。
 
+需求入口见[IR 总登记册](docs/IR/IR%20总登记册.md)和[SR 总索引](docs/治理/SR%20总索引.md)。实施批次先确认 IR、目标 SR、设计章节与 Acceptance ID。Next 仅启动 READY 且依赖满足的 SR。按 SR 回填实施 PR/Commit、受测 SHA、命令、环境及验收结果。
+
 ## 1. 任务开始流程
 
 1. 阅读 README.md、本文和 docs/治理/功能树与需求追踪基线.md。

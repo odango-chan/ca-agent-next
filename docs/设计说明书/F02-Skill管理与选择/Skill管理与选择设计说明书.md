@@ -2,13 +2,15 @@
 
 > 文档类型：机制设计说明书  
 > 状态：目标机制设计；Artifact 互操作部分依赖外部 Compiler 发布  
-> 文档版本：0.2.0  
+> 文档版本：0.2.1  
 > 功能归属：F02 — Skill 管理与选择  
 > 关联 SR：SR-004、SR-005、SR-006    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
 > 本文局部非目标：以本文范围与非目标章节为准；无额外扩展  
 > 修订日期：2026-11-25  
 > 适用范围：Skill 包导入、SkillCatalog、Resolver、已发布 CA-SL Runtime Artifact 与 Python CEL Runtime
+
+关联需求项见 [IR-003](../../IR/IR%20总登记册.md#ir-003)。
 
 ## 1. 设计目标
 
@@ -106,7 +108,7 @@ when 只能读取规范化 Event 的 event.type 和 Contract.requestSchema 声�
 
 Next 只在导入阶段反序列化发布 Artifact 中的程序与类型数据，并保存在对应 Catalog generation 中；不解析 CEL 源字符串、不重复静态检查、不调用 Compiler。每个新 Event 使用当前 event.type 和 input 独立求值。
 
-CheckedExpr、google.protobuf.Any、FileDescriptorSet、DescriptorPool、字段缺失与 null 语义、G.4 optional/nullable 守卫，以及 Go/Python 互操作的具体设计，统一见[发布产物与 CEL 运行时互操作设计说明书](本说明书 §11)。本说明书只定义导入和选择消费端行为，不重复维护 CEL 二进制格式。
+CheckedExpr、google.protobuf.Any、FileDescriptorSet、DescriptorPool、字段缺失与 null 语义、G.4 optional/nullable 守卫，以及 Go/Python 互操作的具体设计，统一见[Skill 管理与选择设计说明书 §11](#11-compiler-发布物与-python-cel-运行时互操作)。本说明书只定义导入和选择消费端行为，不重复维护 CEL 二进制格式。
 
 ## 8. 执行模式派生
 
@@ -121,7 +123,7 @@ CheckedExpr、google.protobuf.Any、FileDescriptorSet、DescriptorPool、字段�
 ## 9. 外部依赖与状态边界
 
 - ca-skills PR #88：同标识 CA-SL v1alpha5 的 optional Assurance/when 刷新；实施前重新确认合并与正式规范状态。
-- ca-skill-compiler Issue #61：新版发布运行时 Artifact 与 CheckedExpr/DescriptorSet 格式；详细互操作方案见[发布产物与 CEL 运行时互操作设计说明书](发布产物与CEL运行时互操作设计说明书.md)。
+- ca-skill-compiler Issue #61：新版发布运行时 Artifact 与 CheckedExpr/DescriptorSet 格式；详细互操作方案见[Skill管理与选择设计说明书](Skill管理与选择设计说明书.md) §11。
 - ca-agent-next：只负责已发布包的消费、Catalog、选择和 Runtime，不调用 Compiler。
 - cel-expr-python：作为 Python Runtime 的 CEL 反序列化/求值依赖，版本固定并以跨语言 fixtures 验收。
 
@@ -146,7 +148,7 @@ Agent 不调用 Compiler Inspect/Verify，也不实现 Skill Admission。Compile
 
 ## 11. Compiler 发布物与 Python CEL 运行时互操作
 
-本节合并原独立《发布产物与 CEL 运行时互操作设计说明书》的 Next 消费端设计。Compiler 内部架构、静态检查、Linking 和发布实现仍由 EC02 ca-skill-compiler 维护；本节不复制 Compiler 内部设计。
+本节合并原独立《Skill 管理与选择设计说明书 §11》的 Next 消费端设计。Compiler 内部架构、静态检查、Linking 和发布实现仍由 EC02 ca-skill-compiler 维护；本节不复制 Compiler 内部设计。
 
 ### 11.1 发布与运行边界
 
@@ -188,3 +190,4 @@ Next 在 Skill 导入时反序列化已检查程序和类型环境，建立运�
 |---|---|---|---|---|---|---|
 | 2026-11-25 | 0.1.0 | 历史修订者/模型未记录 | 原第 1～10 章 | 既有 Skill 导入/选择设计基线 | 初始设计登记；逐章历史记录未建立 | SR-004～006 |
 | 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 第 11 章及全文归属 | 合并 CEL 互操作设计，明确 EC01/EC02 权威和 Next 消费边界 | 避免 Skill 功能拆成多份设计说明书 | F02；SR-004～006；EC01/EC02；PR #1 |
+| 2026-11-25 | 0.2.1 | 刷新需求追踪、目录或证据引用 | 对齐最新分支与 IR/SR 基线 | 见关联 SR |
