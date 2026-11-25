@@ -99,24 +99,24 @@ This audit records repository evidence as observed on 2026-11-25. The following 
 - The SkillCatalog/generation lifecycle is a new Next mechanism, not a proven reusable ca-agent-demo subsystem. Reuse Formal Resolver and admission primitives selectively; implement immutable Catalog snapshots and Invocation generation pinning in Next.
 - Do not copy Create/Modify/Release business logic into Agent Core. Echo is the first mechanism proof; OpenAMSM Skills are a later real-domain integration.
 
-### 2.4 ca-openamsm-plugin — Event Plugin, not a Tool Provider
+### 2.4 ca-openamsm-plugin — Event ingress/delivery Plugin, not a Tool Provider
 
 **EVIDENCE**
 
-- Main `eb83c8f2` contains only README (one tree entry); no implementation code.
-- PR #1 is OPEN/DRAFT, head `7940f733`, and proposes a standalone Go Event Plugin using `ca-agent-host.plugin/v0`, SBI ingress, protocol normalization and response delivery.
-- Its original PR description proposed Generic LLM Agent as default and CA-SL Skill as optional. The refreshed design replaces that with the Next Skill-first rule; the old proposal is not authoritative.
-- PR #1 currently says `ca-client-tools` remains the sole Tool Provider; the next target architecture proposes representing it as a Tool Plugin under the same Plugin Manager.
+- Main `eb83c8f2` contains only README; no implementation code.
+- PR #1 is OPEN/DRAFT, head `1d37c4a`, and remains design-only. Its README/architecture now target the exact Next Plugin Package/IPC v1alpha1 and Host Artifact Handoff contract.
+- PR #1 uses Skill-first event consumption. There is no unbound Generic LLM Agent fallback.
+- The Event Plugin is not a Provider, Codec Tool implementation or Owner client. `ca-client-tools` remains the Tool Plugin; its current pure NAS codec package is not yet an Agent-callable Codec Tool.
 
 **DECISION**
 
 - Keep the repository independent and Go.
 - It implements `event.ingress` and `event.delivery`, not MAS Owner Tools, Skill selection, RunStore or Runtime.
-- Align its process/extension contract with the unified Plugin mechanism before writing implementation.
-- It owns SBI HTTP/2, JSON/multipart and Content-ID parsing, Event normalization and response encoding. It preserves original N1/N2 bytes through [Plugin Artifact Handoff](../plugin-artifact-handoff.md); it does not eagerly deep-decode all protocol IEs.
-- It consumes Codec Tools from ca-client-tools when a selected Skill needs protocol fields. The Event Plugin is not the Codec Tool provider and must not copy the codec implementation.
-- Fresh Events always enter the Host Skill Resolver first; no Generic-Agent-default bypass.
-- Do not copy the whole Nsmf/Run execution chain from Demo.
+- It owns SBI HTTP/2 ingress, JSON/`multipart/related` parsing, Content-ID association, raw N1/N2 extraction/staging, normalized Event publication and SBI response encoding/delivery.
+- It preserves original N1/N2 bytes and does not eagerly deep-decode protocol IEs for business reasoning.
+- It consumes Codec Tools exposed by `ca-client-tools` when a selected Skill requests protocol fields. Reuse shared Go codec packages; do not copy a decoder or create a second Codec Plugin/Manager.
+- Fresh Events always enter the Host Skill Resolver first. The Event Plugin never chooses the Skill or execution mode.
+- Keep the exact Next manifest/IPC and Host Artifact Handoff as the only target contract. Do not reuse `ca-agent-host.plugin/v0` or introduce aliases.
 
 ## 3. What may be copied from ca-agent-demo into next
 
