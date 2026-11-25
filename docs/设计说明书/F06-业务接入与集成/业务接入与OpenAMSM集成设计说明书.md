@@ -1,7 +1,7 @@
 # 业务接入与 OpenAMSM 集成设计说明书
 
 > 文档类型：功能设计说明书  
-> 文档版本：0.1.4
+> 文档版本：0.1.5
 > 功能归属：F06 — 业务接入与集成  
 > 关联 SR：SR-009、SR-010、SR-011  
 > 状态：目标集成设计；真实隔离 E2E 尚未完成  
@@ -44,7 +44,7 @@ EC04 ca-openamsm-plugin 负责：
 | NAS / NGAP 消息和字段 | 对应 3GPP 标准及已资格化 Codec | Skill 按需调用 Codec Tool |
 | Skill 选择输入 | Skill Contract.requestSchema 与 when | 只描述 Skill 所需业务输入 |
 | Provider 公开 Callable / IO Schema / Effect / Capability | ca-client-tools Tool Interface Package（当前公开 11 个 READ Tools） | Compiler / Runtime 消费；不表示 Skill 获得授权 |
-| OpenAMSM 业务 Callable / Owner Outcomes / Receipt / Commit Proof / Reconcile | env-openamsm Owner Contract Package v1alpha4 | Skill Compiler 从 `mas` dependency 解析 Owner ToolCatalog；Runtime 消费同一精确 Owner snapshot；Owner 是业务状态权威 |
+| OpenAMSM 业务 Callable / Owner Outcomes / Receipt / Commit Proof / Reconcile | env-openamsm Owner Contract Package v1alpha4 | Skill Compiler 从 `mas` dependency 的构建输入解析 Owner ToolCatalog；Runtime 使用与 Provider sidecar Owner identity 一致的部署固定版本；Owner 是业务状态权威 |
 | Provider 私有 backendOperationId / HostInvocation / privateArguments | ca-client-tools Provider Runtime Bindings v1 | 唯一 Plugin Manager 内部 ProviderV2 Driver 消费；不暴露给 Skill |
 | Plugin Manifest / IPC | ca-agent-next Plugin 规范 | Event Plugin 对齐本仓契约 |
 
@@ -56,7 +56,7 @@ Provider 进程、Tool Interface、Owner Contract 与 Provider Runtime Bindings 
 
 ### 5.1 Create
 
-规范化 Create Event 先绑定 Establish Skill。CA-SL v1alpha5 Skill 通过 `dependencies.mas: urn:openamsm:mas:tool-contracts` 锁定 Owner 契约，并以 `mas::` 引用 Owner Callable；ca-client-tools 的 11-READ Provider Interface Package 不是该 Owner 契约的替代物。Runtime 依据 Owner Receipt / Commit Proof 判定提交结果；HTTP 201 本身不是 Commit Proof。后续 N1/N2 消息和响应通过 F05 Artifact Handoff。
+规范化 Create Event 先绑定 Establish Skill。CA-SL v1alpha5 Skill 通过 `dependencies.mas: urn:openamsm:mas:tool-contracts` 声明 Owner dependency alias，并以 `mas::` 引用 Owner Callable；Compiler 构建时解析 Owner v1alpha4 snapshot，运行期 Owner 版本由 Provider Runtime Bindings sidecar 的 publication identity 固定。ca-client-tools 的 11-READ Provider Interface Package 不是该 Owner 契约的替代物。Runtime 依据 Owner Receipt / Commit Proof 判定提交结果；HTTP 201 本身不是 Commit Proof。后续 N1/N2 消息和响应通过 F05 Artifact Handoff。
 
 ### 5.2 Modify
 
@@ -66,7 +66,7 @@ Modify Event 绑定 Modify Skill。业务变化通过 Owner Contract Package 声
 
 UE-requested Release Event 绑定 Release Skill。N1 Release Complete（0xD4）及适用 N2 Release Response 通过原 Run 的 Wait / Continuation 恢复；不得把旧消息、旧 generation 或其他 UE/PSI 的消息串入新 Run。
 
-当前 ca-skills main 的 [Establish](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/examples/skills/establish-pdu-session-mas/assurance/contract.yaml)、[Modify](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/examples/skills/modify-pdu-session-mas/assurance/contract.yaml)、[Release](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/examples/skills/release-pdu-session-mas/assurance/contract.yaml) 作者源均使用 `dependencies.mas` 指向 Owner v1alpha4，并通过 `capabilities` / `mas::` 声明与调用 Owner 能力。Create、Modify、Release 的详细业务 Procedure 由 ca-skills 作者源和发布 Artifact 维护；Owner 行为由 env-openamsm 与 ca-client-tools 维护。Next 不复制这些业务流程。
+当前 ca-skills main 的 [Establish](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/examples/skills/establish-pdu-session-mas/assurance/contract.yaml)、[Modify](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/examples/skills/modify-pdu-session-mas/assurance/contract.yaml)、[Release](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/examples/skills/release-pdu-session-mas/assurance/contract.yaml) 作者源均使用 `dependencies.mas` 指向 Owner stable ID，并通过 `capabilities` / `mas::` 声明与调用 Owner 能力。冻结 v1alpha5 Artifact dependencyClosure 不携带 Owner package version / snapshotDigest；当前 Demo 由 Provider sidecar 的 Owner stableId/version/publicationDigest/manifestDigest 固定部署版本，Runtime 校验 Owner publication 与 sidecar 一致。此为部署级 pin，不宣称逐 Skill digest pin。Create、Modify、Release 的详细业务 Procedure 由 ca-skills 作者源和发布 Artifact 维护；Owner 行为由 env-openamsm 与 ca-client-tools 维护。Next 不复制这些业务流程。
 
 ## 6. Core 零业务耦合
 
@@ -108,3 +108,4 @@ UE-requested Release Event 绑定 Release Skill。N1 Release Complete（0xD4）�
 | 2026-11-25 | 0.1.2 | Codex / GPT-6 | OpenAMSM Owner 与仿真对端 | 合并有效边界与分仓证据入口 | 跨仓设计移交 | IR-006 |
 | 2026-11-25 | 0.1.3 | GPT-6.2（ChatGPT） | §4 | 区分公开 Provider Interface、Owner Contract Package 和 Provider Runtime Bindings，并链接 F03.05 集成设计 | 对齐 EC03 v1.2.0 与 Owner v1alpha4 的实际发布边界 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.1.4 | GPT-6.2（ChatGPT） | §4、§5 | 将 Create/Modify/Release Skill-facing Callable 来源明确为 Owner Contract Package，并链接 ca-skills 当前 MAS 作者源 | 修正业务操作并非由 ca-client-tools 11-READ Interface Package 导出的误解 | IR-006 · SR-015 · Issue #12 |
+| 2026-11-25 | 0.1.5 | GPT-6.2（ChatGPT） | §4、§5 | 更正 `dependencies.mas` 是 stable ID 引用而非 Artifact 内 snapshotDigest 锁；明确 Owner 版本由 Provider sidecar / 部署配置固定 | 对齐冻结 v1alpha5 Artifact 的 dependencyClosure 实际字段 | IR-006 · SR-015 · Issue #12 |
