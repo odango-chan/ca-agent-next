@@ -10,7 +10,7 @@ For every non-trivial task, read:
 2. docs/architecture.md
 3. docs/plugin-package.md
 4. docs/plugin-artifact-handoff.md
-5. docs/integration/skill-catalog-compiler-contract.md
+5. docs/集成设计/技能目录与编译器运行时接口设计说明书.md
 6. docs/audit/ca-agent-demo.md
 7. docs/audit/reuse-and-feasibility.md
 8. docs/acceptance.md
@@ -87,8 +87,8 @@ If implementation and documentation disagree, stop and report the exact conflict
 - LLM-created/edited Skill source follows the same import path as user-authored source.
 - An individual LLM Action proposal is not Skill source and is validated by Runtime Action Boundary. Do not compile it, create a temporary Procedure or invoke the Compiler for each Action.
 - Do not copy the Go Compiler or reimplement its parsing/linking semantics in Python. Consume its canonical CLI/API.
-- Current Compiler support for the refreshed v1alpha5 contract.when field must be verified. SKILL.md-only import is a Host Skill Importer behavior and must not invoke the Compiler; it is not a Compiler feature. If contract.when is unsupported, report the exact dependency blocker; never silently strip the field or claim support.
-- The Compiler Artifact must expose a portable, statically checked `when` program and its CEL profile/type bindings for the Python Runtime. Do not make Python reparse/type-check the source expression per Event; follow [the SkillCatalog/Compiler integration requirements](docs/integration/skill-catalog-compiler-contract.md).
+- Compiler v2.1.0 当前不包含刷新后的 contract.when 编译与 Python Runtime Artifact 互操作能力。实施任务以 [Compiler Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) 为准：保留冻结的 Development v1alpha1，新增 Development Artifact Manifest v1alpha2。
+- 目标交换格式是标准 google.api.expr.CheckedExpr（google.protobuf.Any）和对应的 FileDescriptorSet；必须先通过 cel-go → cel-expr-python 的真实互操作 PoC。Python 不得自行重解析/重做静态类型检查，也不得在每个 Event 调用 Compiler。详细约束见[技能目录与编译器运行时接口设计说明书](docs/集成设计/技能目录与编译器运行时接口设计说明书.md)。
 
 ## 7. Execution modes and Runtime
 
