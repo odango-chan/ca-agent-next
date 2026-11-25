@@ -1,7 +1,7 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.2  
+> 文档版本：0.3.3  
 > 状态：待评审  
 > 修订日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -77,7 +77,7 @@ Skill Studio 的依赖导入负责**获取、验证和固定原始包快照**，
 - 固定身份：`packageId=urn:connectionagent:ca:host-context`、`version=v1`、`publisher=urn:connectionagent:owner:ca-context`、`languageTarget=connectionagent.io/v1alpha5`。
 - 权威来源：`odango-chan/ca-agent-demo` Revision `57e277ff9094dad93543df46910a12a1dbbaf560`，目录 `tests/fixtures/compiler/mas-v1alpha5-scheme-c/trusted/snapshots/ca-context`，文件 `subject.schema.json`，Git blob `4faee66642b8bc5eb2e45c131be4688b982037d8`。
 - 发布一个 `Schema` export，ID 精确等于 Schema `$id` `urn:connectionagent:ca:context:subject:v1`，路径为包内原始 `subject.schema.json`；不得重写或重新序列化 Schema 字节。
-- `sourceStatus=DEVELOPMENT_FIXTURE` 保留在 Studio `skillc.lock/v0.1` 的 `source` provenance 中；不得写入 `package.json`。Compiler BuildRequest 的 `profile=DEVELOPMENT` 表示构建档位，二者都不授予 Host Admission。
+- `source.sourceStatus=DEVELOPMENT_FIXTURE` 只属于 Studio `skillc.lock/v0.1` 的来源元数据，不得写入正式 `package.json`。**当前实现核对：** Studio main `5b666c0` 的 `dependency-integration.mjs::acquireInterfaceZip` 当前保存 `type=interface-zip`、`upload`、ZIP `contentDigest`、`packageId`、`version`、`publisher`，尚未写入 `sourceStatus`；`project-configuration.mjs` 会持久化 `source` 对象，但不会自动生成该字段。因此这是 SR-016 / Studio #269 的待实施要求，不得标记为已实现。源 Revision/Git blob 由 SR-024 固定并在 Publisher 验收证据中复核，不要求当前 `skillc.lock` 重复保存。Compiler BuildRequest 的 `profile=DEVELOPMENT` 只表示构建档位；两者均不授予 Host Admission。
 
 **共同边界**
 
@@ -111,7 +111,7 @@ Compiler Development Build 成功结果固定为：
 
 失败时，失败阶段为 `FAILED`，后续未执行阶段为 `NOT_RUN`，不得返回部分 Artifact。Host Admission Requirements 和 Runtime Execution Requirements 是不同集合，不能把 Requirement 缺失、Build 成功或 `NOT_ADMITTED` 误报为真实 Owner 授权或 Runtime 结果。
 
-Package Explorer、LSP、Problems 与 AI Workbench 必须区分源码诊断、接口链接诊断、Artifact 状态、Host Admission Requirement 和 Runtime Execution Requirement。Compiler 未运行、未链接或没有 Artifact 时不得显示 Build PASS。
+Package Explorer、LSP、Problems 与 AI Workbench 必须区分源码诊断、接口链接诊断、Artifact 状态、Host Admission Requirement 和 Runtime Execution Requirement。Compiler 未运行、未链接或没有 Artifact 时不得显示 Build PASS。注意：BuildResult 顶层 `sourceStatus=VALIDATED` 与 Studio 项目锁中的 `source.sourceStatus=DEVELOPMENT_FIXTURE` 属于不同对象、不同语义，不得互相覆盖或由一方推导另一方。
 
 ## 6. 无 Assurance、零根依赖与 no-root 状态
 
@@ -134,6 +134,7 @@ Package Explorer、LSP、Problems 与 AI Workbench 必须区分源码诊断、�
 | Package Audit Development Build cutover | NOT_IMPLEMENTED | [Studio #269](https://github.com/odango-chan/ca-skill-studio-demo/issues/269) |
 | AI Authoring exact-candidate Development Build gate | NOT_IMPLEMENTED | [Studio #269](https://github.com/odango-chan/ca-skill-studio-demo/issues/269) |
 | MAS / Host Context formal Interface Package publication | BLOCKED | 当前锁定 kind 分别为 `tool-catalog` / `schema-bundle`；Publisher 设计与验收归入 SR-015 / SR-024，尚未发布 |
+| Host fixture provenance in Studio lock | NOT_IMPLEMENTED | #267 已持久化 ZIP source metadata（upload/contentDigest/packageId/version/publisher），但尚未写入 `source.sourceStatus`；由 SR-016 / Studio #269 补齐 |
 | Real released ca-client-tools v1.1.0 as Compiler root | NOT_RUN | 需显式 `ca-client` synthetic Contract 正例 |
 | No-root UI state | NOT_IMPLEMENTED | 不调用 Compiler、无 Artifact、无 `NOT_ADMITTED` |
 
@@ -154,3 +155,4 @@ Package Explorer、LSP、Problems 与 AI Workbench 必须区分源码诊断、�
 | 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | §3–7 | 明确 when 位于 `assurance/contract.yaml`；补齐 MAS Owner / Host Context Interface Package 的 Publisher 字段、导出闭包、精确来源与 Development provenance 边界，并关联 SR-015 / SR-020。 | IR-006 · SR-015 · SR-016 · SR-020 · Studio #269 |
 | 2026-11-25 | 0.3.1 | GPT-6.2（ChatGPT） | §4.4～7 | 将 Host Context Interface Package Publisher 从 SR-020 拆分到新 SR-024；SR-020 保留参考宿主架构审计职责；明确仅使用 Compiler v2.1.0 schema 要求的 files[].sha256 | 避免一个 SR ID 承载两项不同工作，并区分既有 Interface Package 文件摘要与 CA-SL Skill Artifact 的非目标完整性体系 | IR-006；SR-015、SR-016、SR-020、SR-024；Studio #261/#269/#272/#276 |
 | 2026-11-25 | 0.3.2 | GPT-6.2（ChatGPT） | §1、§4.4～7 | 修复 SR-024 Publisher 文档链接并同步 F02/F08/SR-016/SR-024 版本；明确 SR-020 只承担参考宿主审计 | 解决 SR-020/SR-024 责任冲突，确保 Publisher 入口唯一 | IR-006；SR-015、SR-016、SR-020、SR-024 |
+| 2026-11-25 | 0.3.3 | GPT-6.2（ChatGPT） | §4.5、§5.2、§7 | 对照 Studio #267 合入代码，明确 `source.sourceStatus` 尚未写入 lock，并将其归入 SR-016/#269；区分项目来源元数据与 Compiler BuildResult.sourceStatus | 避免把设计要求误报为当前持久化能力，防止两个 sourceStatus 语义混淆 | Issue #12；SR-016、SR-024；Studio #267/#269 |
