@@ -161,7 +161,7 @@ AC-013-01 报告采用 Go 1.26.6、cel-go 0.33.2、Go protobuf 1.36.10、CPython
 - connectionagent.io/compiler-artifact/v1alpha5 保持完全不变。
 - Development v1alpha1 保持完全不变并继续 NOT_ADMITTED。
 - 新发布 Runtime Artifact 使用独立版本化 Manifest/文件布局，languageTarget 仍为 connectionagent.io/v1alpha5。
-- 建议的新 Artifact API 候选为 connectionagent.io/compiler-artifact/v2alpha1，用于表达与冻结 v1alpha5 不兼容的发布结构。**这是本设计提案，不是已冻结 API。** AC-013-03 开始前 Compiler Owner 必须书面确认 API version；如采用其他命名，先更新本节和 SR-013，再实施。Harness 不得自行发明第三个版本名。
+- 建议的新 Artifact API 候选为 connectionagent.io/compiler-artifact/v2alpha1；对应的新 BuildResult API 候选为 connectionagent.io/compiler-build-result/v2alpha1，用于表达与冻结 v1alpha5 不兼容的发布结构。**两者均为本设计提案，不是已冻结 API。** AC-013-03 开始前 Compiler Owner 必须书面确认两个 API version；如采用其他命名，先更新本节和 SR-013，再实施。Harness 不得自行发明第三个版本名。
 - 不把 Development 专用 executionStatus=NOT_ADMITTED、hostAdmission 或 Skill Admission 状态写入新发布 Runtime Artifact。
 
 ### 5.2 候选文件布局
@@ -183,16 +183,17 @@ skills/<skill-name>/compiled/when.types.pb
 
 ### 5.3 Manifest 最小语义
 
-Manifest 对每个有 when 的 Skill 至少记录：
+新 Manifest 必须保留现有 v1alpha5 的顶层语义字段：apiVersion、languageTarget、validationScope、generator、dependencyClosure、skills、outputFiles；旧 Schema 本身仍冻结，不得直接加字段。新版 skills[] 保留 name、sourceDigest、sourceFiles、compiledFiles、waitLinks，并为有 when 的 Skill 增加可选 when 元数据对象。
 
-1. CheckedExpr 文件路径。
-2. DescriptorSet 文件路径。
-3. 当表达式引用 input 时使用的 Request Schema 精确身份；仅引用 event.type 时可省略。
-4. 作者源路径 assurance/contract.yaml。
-5. when 表达式的精确源码位置。
-6. 该 Skill 的程序与 DescriptorSet 归属，确保 Verify 能拒绝跨 Skill 引用。
+when 元数据至少表达：
 
-字段命名以 Compiler Owner 定稿的版本化 JSON Schema 为准；以上是必须具备的语义，不授权 Agent 自造字段。继续复用新版 Artifact 已有的文件清单、自校验与确定性机制，不增加额外 SHA-256 体系、签名、Trust Registry 或包准入机制。
+1. checkedExprPath：CheckedExpr Any 文件路径。
+2. descriptorSetPath：DescriptorSet 文件路径。
+3. requestSchemaRef 与 resolvedRequestSchemaPath：仅当表达式访问 input 时记录作者引用和解析后的精确 Schema 身份；只访问 event.type 时可省略。
+4. sourcePath：作者源路径 assurance/contract.yaml。
+5. sourceRange：when 表达式的 startLine/startColumn/endLine/endColumn。
+
+建议字段名和文件名是本设计的实现默认值；Compiler Owner 在 AC-013-03 冻结 JSON Schema 前确认。when.checked.pb 和 when.types.pb 必须同时进入该 Skill 的 compiledFiles[]，并分别进入 Manifest outputFiles[]；outputFiles[].sha256 复用既有逐文件字节校验，sourceDigest 复用现有字段。不得增加第二套哈希字段、独立 SHA-256 体系、签名、Trust Registry 或包准入机制。
 
 ## 6. Build / Verify 责任与行为
 
@@ -219,7 +220,7 @@ Manifest 对每个有 when 的 Skill 至少记录：
 - 无 when 的 Skill 不得带伪造/空的 when 程序。
 - BuildResult、Manifest 与 OutputFiles 的集合和字节一致。
 
-新版 Verify 必须按 Compiler #61 的要求对新版本产物执行完整重建/逐文件比较或等价的确定性复验；若现有 VerifyBuildResult 无法表达该语义，新增版本化 Verify 入口，不改变冻结 v1alpha5 的行为。CLI 只有 Verify 通过后才能写入输出目录。
+新版 Verify 必须按 Compiler #61 的要求对新版本产物执行完整重建/逐文件比较或等价的确定性复验。当前 v1alpha5 BuildResult / VerifyBuildResult 只接受冻结的 compiler-build-result/v1alpha5；新 Runtime Artifact 应使用 Owner 批准的 v2alpha1 BuildResult 与对应版本化 Verify 路径，不能让旧 Verify 误读新格式，也不能改变冻结 v1alpha5 行为。当前 CLI 已在写入目录前用同一 Verify 函数验证成功 BuildResult；新版本必须保持“先 Verify、后原子写盘”的既有不变量，不得假设存在一个已发布 Artifact 的独立 CLI verify 子命令。
 
 ### 6.3 旧契约回归
 
@@ -227,7 +228,7 @@ Manifest 对每个有 when 的 Skill 至少记录：
 
 - 冻结发布 Artifact v1alpha5 的机器 Schema、Golden 字节和 Verify 行为不变。
 - Development Artifact v1alpha1 的机器 Schema、Golden 字节、NOT_ADMITTED 与 Verify 行为不变。
-- 新 Runtime Artifact 单独维护 Schema、Golden、正负例和版本说明。
+- 新 Runtime Artifact 与 BuildResult 分别维护版本化 Schema（建议 contracts/v2alpha1/artifact-manifest.schema.json 与 contracts/v2alpha1/build-result.schema.json）、Golden、正负例和版本说明。
 - 不得通过更新旧 Golden 来掩盖旧契约变化。
 
 ## 7. 测试矩阵与产品门禁
