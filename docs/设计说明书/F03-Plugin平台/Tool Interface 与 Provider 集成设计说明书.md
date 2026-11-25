@@ -73,7 +73,7 @@
 
 ## 4. 契约与身份所有权
 
-三个契约层必须分开处理：
+三类跨组件契约与一个 Provider 内部执行目录必须分开处理：
 
 | 契约层 | 权威所有者 | 权威内容 | 消费者 | 不承担的职责 |
 |---|---|---|---|---|
@@ -100,7 +100,7 @@
 |---|---:|---|
 | Compiler Interface Package | 11 READ Tools | 8 个 SMF context query + 3 个 NF metrics list；2 Capabilities、4 Schemas；无 MUTATION 导出 |
 | Provider Backend Binding Catalog v2 基础部分 | 11 READ bindings | 与当前公开 Interface Package 对应的私有 backend 执行映射 |
-| Owner ToolCatalog v1alpha4 | 25 contracts | 21 MUTATION + 4 READ；其中 23 个业务 Callable（21 MUTATION + 2 READ）和 2 个内部 Owner evidence resources（Receipt Query、Reconcile） |
+| Owner ToolCatalog v1alpha4 | 25 contracts | 21 MUTATION + 4 READ；其中 23 个业务 Callable（21 MUTATION + 2 READ）和 2 个 Runtime 内部 Owner evidence resources（Receipt Query、Reconcile），不得作为 Skill-authored Callable |
 | Provider typed MAS invoke closure | 31 Callable | 29 MUTATION + 2 READ；全部是 Provider 私有执行身份，不直接成为 Skill 权限 |
 | Provider Runtime Bindings sidecar | 25 bindings | 与 Owner 发布面一致：23 个业务 Callable + 2 个 evidence resources；21 MUTATION + 4 READ |
 | Provider 进程内部 Catalog | 44 bindings | 11 个基础 READ + 31 个 typed MAS Callable + 2 个 evidence handlers |
