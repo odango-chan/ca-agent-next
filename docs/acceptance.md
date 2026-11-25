@@ -15,10 +15,12 @@ Examples consume the public Plugin/Skill/Runtime boundaries and must not import 
 One independently running Go Plugin exposes Event ingress, Delivery and at least one Tool operation through the same Plugin Manager and process.
 
 The Example contains:
-- one Assurance-backed Echo Skill that can run in both Deterministic and LLM-guided modes;
-- one SKILL.md-only Echo guidance Skill that is LLM-guided only;
-- source and compiled-Artifact import cases;
+- one published Assurance-backed Echo Skill that can run in both Deterministic and LLM-guided modes;
+- one published SKILL.md-only Echo guidance Skill that is LLM-guided only;
+- published Artifact import cases (valid, malformed, unsupported format, missing files and unresolved dependencies);
 - a deterministic fake Model client for selection and LLM-guided Action tests.
+
+Compiler source/build/release is an external toolchain concern. Next acceptance consumes a prebuilt published Artifact fixture; it does not import Assurance source or invoke Compiler.
 
 Suggested layout (adapt to actual code; do not create empty folders):
 
@@ -27,23 +29,18 @@ examples/echo/
   plugin/
     plugin.yaml
     schemas/
-  skills/
+  published-skills/
     echo-assured/
       SKILL.md
-      assurance/
-        contract.yaml
-        procedure.yaml
-        predicates.yaml
+      <Compiler-generated runtime Artifact files>
     echo-guidance/
       SKILL.md
   interface/                 # Compiler-owned Echo Tool Interface Package
   scenarios/
     deterministic/
     llm-guided/
-    import-source/
-    import-artifact/
+    import-published-artifact/
     selection/
-    authoring/
 tests/
   acceptance/
     test_echo_plugin.py
@@ -52,7 +49,7 @@ tests/
     test_runtime_action_boundary.py
 ~~~
 
-The Plugin manifest declares Event types and Schemas; it does not name a Skill or business Contract Package. The Skill's optional Assurance declares Goal, request/context requirements, Capabilities and optional when. The Plugin exports the Echo Tool; it does not authorize its invocation.
+The Plugin manifest declares Event types and Schemas; it does not name a Skill or business Contract Package. The Skill's published compiled Assurance declares Procedure, request/context requirements, Capabilities and optional when. The Plugin exports the Echo Tool; Runtime checks that an Action stays within the selected Skill's declared callable scope.
 
 ## 3. Required acceptance cases
 
@@ -63,15 +60,15 @@ The Plugin manifest declares Event types and Schemas; it does not name a Skill o
 | EX-03 | Unified extensions | The same Plugin process exposes Event ingress, Delivery and Tool invocation; one manager discovers and routes all extensions. |
 | EX-04 | Event Schema | Host validates the normalized Event type and payload against the Plugin-owned Event Schema. The Event contains no Skill ID or business Contract Package reference. |
 | EX-05 | SKILL.md-only import | A package containing SKILL.md and no assurance directory imports directly without invoking the Compiler and is LLM-guided only. |
-| EX-06 | Assurance source import | A source package with assurance/ invokes the CA-SL Compiler automatically; only successful Build/Inspect/Verify and Host Admission make it available. |
-| EX-07 | Compiled Artifact import | An already compiled Skill Artifact is inspected, verified and admitted directly; no rebuild/recompile command is invoked. |
-| EX-08 | Invalid Assurance | An incomplete, malformed or compiler-rejected Assurance package fails import. It is never downgraded to SKILL.md-only. |
-| EX-09 | when selection | A valid assurance/contract.yaml when is statically checked and evaluated against event.type and input; true/false/error and multiple-match behavior follow §4. |
+| EX-06 | Published Assurance Artifact import | A published package containing SKILL.md and a Compiler-generated runtime Artifact is imported without invoking Compiler; basic format/manifest/required-file/reference/type-data checks and local Tool/Capability dependency resolution succeed. |
+| EX-07 | Import is not compilation or admission | Agent never invokes Compiler Check/Build/Inspect/Verify and has no Skill Admission stage; it loads the published Artifact after basic structural checks and dependency resolution. |
+| EX-08 | Invalid published Artifact | Missing required compiled files, unsupported Artifact format, malformed CEL/type data, unsafe paths or unresolved Tool/Capability dependencies fail import with explicit diagnostics; never downgrade to SKILL.md-only. |
+| EX-09 | when selection | The external Compiler statically checks when before publication; Agent loads the checked program from the published Artifact and evaluates it against event.type and input. True/false/error and multiple-match behavior follow §4. |
 | EX-10 | Semantic selection | Skills without when, including SKILL.md-only Skills, are selected semantically from their imported SKILL.md descriptions; no CEL field is added to SKILL.md. |
 | EX-11 | Mode derivation | No Assurance means LLM-guided only. Valid Assurance permits both modes. No supportedModes field exists. |
-| EX-12 | LLM Skill Authoring | LLM-created/edited SKILL.md-only content imports directly. LLM-created/edited Assurance source follows the normal Compiler import path before deterministic use. |
+| EX-12 | LLM Skill Authoring | LLM-created/edited SKILL.md-only content imports directly. LLM-created/edited Assurance source is not executable until an external publishing workflow compiles and publishes its Artifact; Agent never invokes Compiler. |
 | EX-13 | LLM Action proposal | An individual LLM Action proposal is validated by Runtime Action Boundary and does not invoke the Compiler or create a temporary Procedure. |
-| EX-14 | Shared Action boundary | Deterministic and LLM-guided modes submit the same Runtime Action Request, authorization, Tool Plugin dispatch and outcome path. |
+| EX-14 | Shared Action boundary | Deterministic and LLM-guided modes submit the same Runtime Action Request, declared Skill callable-scope checks, Tool Plugin dispatch and outcome path. No separate Skill Admission or production authorization is implemented. |
 | EX-15 | READ Observation provenance | READ Tool result becomes an Observation with Tool/Interface/Invocation/Result provenance; it is not confused with model text. |
 | EX-16 | Mutation outcome | A MUTATION Tool cannot become COMMITTED from HTTP success or LLM text; Owner Receipt/Commit Proof is required where its Interface Package says so. UNKNOWN remains UNKNOWN. |
 | EX-17 | End-to-end delivery | Event → Task → Skill → Run → Tool Plugin → result/Evidence → Host response → originating Plugin delivery succeeds. |
@@ -79,14 +76,14 @@ The Plugin manifest declares Event types and Schemas; it does not name a Skill o
 | EX-19 | Continuation | Resume the exact pending Run with original bindings. Duplicate and invalid deliveries cause no new selection or execution advance. |
 | EX-20 | Business neutrality | After Echo passes, add OpenAMSM as the second independently owned Event/Skill/Interface package by installing its Plugin and Skill assets and changing deployment inputs only. The same Host, Resolver, Runtime and Plugin Manager build works without business-specific Core code. |
 | EX-21 | Core-owned SkillCatalog | Startup/import registers all valid Skills, including SKILL.md-only Skills, in one immutable in-memory Catalog owned by Core/Host; Plugin Manager does not own or scan Skill packages. |
-| EX-22 | Hot-path residency | After Catalog activation, fresh Event selection performs no Skill-directory scan, SKILL.md/Assurance file read or Compiler invocation. Full SKILL.md text and precompiled when programs are served from memory. |
-| EX-23 | when compile-once / evaluate-per-Event | Import/update compiles and type-checks when once. Two fresh Events with different input values evaluate the same in-memory program independently and may produce different results; no previous boolean result is reused. |
+| EX-22 | Hot-path residency | After Catalog activation, fresh Event selection performs no Skill-directory scan, SKILL.md/Artifact file read or Compiler invocation. Full SKILL.md text and deserialized when programs are served from memory. |
+| EX-23 | when publish-once / load-once / evaluate-per-Event | External Compiler compiles/type-checks when before publication; Agent deserializes the checked program once on import. Two fresh Events with different inputs evaluate the same in-memory program independently and may produce different results; no previous boolean result is reused. |
 | EX-24 | Replay and continuation | A duplicate Event is deduplicated before fresh selection; an exact continuation resumes its original Run and pinned Catalog generation without reevaluating when. |
-| EX-25 | Atomic Catalog update | An explicit update builds a candidate generation off-path and atomically activates it only after validation. A failed update leaves the active generation unchanged. |
-| EX-26 | Invocation generation pinning | An Invocation selected under generation N continues using N's SKILL.md, Artifact and Capability bindings after generation N+1 is activated; new Invocations use N+1. |
+| EX-25 | Atomic Catalog update | An explicit update builds a candidate generation off-path and atomically activates it only after basic package/Artifact checks and dependency resolution. A failed update leaves the active generation unchanged. No Skill Admission stage exists. |
+| EX-26 | Invocation generation pinning | An Invocation selected under generation N continues using N's SKILL.md, published Artifact and Capability/callable bindings after generation N+1 is activated; new Invocations use N+1. |
 | EX-27 | SKILL.md and semantic metadata residency | Semantic candidate selection uses metadata derived from cached SKILL.md; after selection the full SKILL.md is supplied from memory without rereading the package file. |
 | EX-28 | Lazy knowledge assets | references/ and large knowledge assets are not loaded during every Event selection; they are loaded only when the selected Skill/context needs them. |
-| EX-29 | Compiler/Runtime when parity | The admitted Artifact carries the Compiler-owned portable checked when program and its CEL profile/type bindings. Python Runtime evaluates it against current event.type/input with results matching the CA-SL normative fixtures; no Python reparse or per-Event Compiler call. |
+| EX-29 | Compiler/Runtime when parity | The published runtime Artifact carries the Compiler-owned portable checked when program and CEL profile/type bindings. Python Runtime deserializes it on import and evaluates it against current event.type/input with results matching CA-SL normative fixtures; no Python reparse or per-Event Compiler call. |
 
 ## 4. Skill selection and mode behavior
 
@@ -117,7 +114,7 @@ The Event Plugin declares only normalized Event types and Schemas. There is no E
 
 ### 4.3 Procedure and Action source
 
-- Deterministic mode executes only a Compiler-validated and admitted Procedure Artifact.
+- Deterministic mode executes only a Compiler-built and verified published Procedure Artifact.
 - An LLM-proposed individual Action is not a Procedure and is not compiled.
 - LLM-created/edited Assurance source is compiled through the Skill Importer before deterministic execution.
 - The first Demo gate covers a static Procedure. Additional Procedure-generation/patch mechanisms require their own Example and acceptance tests.
@@ -126,8 +123,8 @@ The Event Plugin declares only normalized Event types and Schemas. There is no E
 
 - Python invokes the canonical CA-SL Compiler interface for Assurance source Check/Build and Artifact Inspect/Verify. Do not copy Go Compiler source or reimplement its semantics.
 - Compiler v2.1.0 does not yet establish refreshed CA-SL v1alpha5 contract.when support. [Compiler Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) tracks the new Development Artifact Manifest v1alpha2 and cel-go → cel-expr-python CheckedExpr interoperability. SKILL.md-only import is Next-owned and bypasses Compiler. See [技能目录与编译器运行时接口设计说明书](集成设计/技能目录与编译器运行时接口设计说明书.md). Do not silently strip when or claim an unsupported release works.
-- Target behavior: Compiler parses/type-checks when once and emits CheckedExpr + DescriptorSet; Python Runtime deserializes once and evaluates the same program for every fresh Event. No raw CEL parsing/type-checking on the Event hot path.
-- Importing a compiled Artifact invokes Inspect/Verify and Host Admission but not Build.
+- Target behavior: external Compiler parses/type-checks when once before publication and emits CheckedExpr + DescriptorSet; Python Runtime deserializes once on import and evaluates the same program for every fresh Event. No raw CEL parsing/type-checking on the Event hot path.
+- Importing a compiled Artifact does not invoke any Compiler command or Skill Admission. The Agent performs only basic structural/reference checks and local dependency resolution.
 - The Echo Tool Interface Package is consumed from its canonical Compiler-owned format. Do not duplicate ToolCatalog or calculate an additional Host-side package digest.
 - The Tool Plugin process is loaded through the unified Plugin Manager. A temporary adapter may consume ca-client-tools.provider/v2 behind the same manager.
 - No separate Provider Manager, Tool registry or authorization path.
@@ -142,7 +139,7 @@ This does not claim live OpenAMSM qualification, production readiness or complet
 
 ## 7. Explicit non-goals
 
-Do not add extra SHA-256 package/event snapshot hashing, package signatures, Trust Registry, Domain/Task Contract Packages, a second Skill descriptor, supportedModes, legacy compatibility, Marketplace, installer, automatic download, filesystem watchers or generic Plugin hot reload, production HA, distributed failover, complex multi-tenant/security governance, central business registry, distributed Event Bus, separate artifact database, complex compensation orchestration or elaborate DFX merely to pass the Demo. Explicit SkillCatalog import/update with atomic generation activation is in scope; it is not a general Plugin hot-reload system.
+Do not add extra SHA-256 package/event snapshot hashing, package signatures, Trust Registry, Skill Admission, approval workflows, Owner Trust, production authorization, Domain/Task Contract Packages, a second Skill descriptor, supportedModes, legacy compatibility, Marketplace, installer, automatic download, filesystem watchers or generic Plugin hot reload, production HA, distributed failover, complex multi-tenant/security governance, central business registry, distributed Event Bus, separate artifact database, complex compensation orchestration or elaborate DFX merely to pass the Demo. Explicit SkillCatalog import/update with atomic generation activation is in scope; it is not a general Plugin hot-reload system.
 
 Keep basic YAML/Schema/version/reference validation, path containment, clear errors, minimal correlation and truthful test evidence.
 
