@@ -107,6 +107,8 @@ If implementation and documentation disagree, stop and report the exact conflict
 - Runtime/Owner Receipt and Commit Proof are execution Evidence.
 - Selected Skill supplies SKILL.md guidance and, when Assurance exists, Context Requirements and declared Capabilities.
 - Host assembles Model-visible Context and keeps lightweight source references. Model-generated text is not an Observation; a Tool response is not automatically a committed outcome.
+- SBI Events may carry JSON and binary attachments. Event Plugins use the Host-owned Plugin Artifact Handoff; raw bytes stay outside NDJSON and Model-visible Context.
+- Protocol decoding is optional. A selected Skill calls a Codec Tool through the existing Tool Plugin only when it needs structured fields; otherwise it passes the original artifactRef to the business Tool. A decoded projection never replaces the original bytes.
 
 ## 9. External projects: reuse, do not copy
 
@@ -127,6 +129,8 @@ Do not add:
 - legacy format compatibility or automatic migration;
 - Marketplace, installer, automatic package download, filesystem watchers or generic Plugin hot reload (explicit SkillCatalog import/update with atomic generation activation is allowed);
 - separate Provider Manager, Tool registry, Runtime or authorization path;
+- a separate Codec Plugin/Manager, second ArtifactStore or new binary-reference protocol; reuse ca-client-tools' existing Tool extension and the Host Artifact Handoff;
+- duplicate NAS/NGAP/PFCP codec implementations in Agent Core or the OpenAMSM Event Plugin;
 - production HA, complex multi-tenant governance, distributed Event Bus or elaborate DFX.
 
 Keep basic YAML/Schema/version/reference validation, path containment, clear errors, simple package loading, minimal Task/Event correlation and useful logs. Existing Compiler/Interface Package identity rules remain owned by their canonical contracts; do not add another Host-side hashing system.
