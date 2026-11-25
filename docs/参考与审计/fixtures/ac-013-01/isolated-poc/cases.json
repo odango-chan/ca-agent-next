@@ -1,0 +1,347 @@
+{
+  "source": "ca-skill-compiler@255ab85",
+  "version": "ac013-poc-1",
+  "cases": [
+    {
+      "id": "true",
+      "skill": "verify-ue-registration",
+      "expr": "event.type == \"create\" \u0026\u0026 input.count == 1",
+      "eventKind": "create",
+      "input": {
+        "count": 1,
+        "nested": {
+          "inner": "y"
+        },
+        "ratio": 2.5,
+        "wrapped": {
+          "value": 5
+        }
+      },
+      "want": "true",
+      "wire": "((event.type == \"create\") \u0026\u0026 (input.count == 1))",
+      "actual": "true"
+    },
+    {
+      "id": "false",
+      "skill": "verify-ue-registration",
+      "expr": "event.type == \"create\" \u0026\u0026 input.count == 1",
+      "eventKind": "modify",
+      "input": {
+        "count": 1,
+        "nested": {
+          "inner": "y"
+        },
+        "ratio": 2.5,
+        "wrapped": {
+          "value": 5
+        }
+      },
+      "want": "false",
+      "wire": "((event.type == \"create\") \u0026\u0026 (input.count == 1))",
+      "actual": "false"
+    },
+    {
+      "id": "missing_kind",
+      "skill": "verify-ue-registration",
+      "expr": "event.type == \"create\" \u0026\u0026 input.count == 1",
+      "input": {
+        "count": 1,
+        "nested": {
+          "inner": "y"
+        },
+        "ratio": 2.5,
+        "wrapped": {
+          "value": 5
+        }
+      },
+      "want": "error",
+      "wire": "((event.type == \"create\") \u0026\u0026 (input.count == 1))",
+      "actual": "error"
+    },
+    {
+      "id": "missing_optional",
+      "skill": "verify-ue-registration",
+      "expr": "has(input.note) \u0026\u0026 input.note == \"x\"",
+      "eventKind": "create",
+      "input": {
+        "count": 1,
+        "nested": {
+          "inner": "y"
+        },
+        "ratio": 2.5,
+        "wrapped": {
+          "value": 5
+        }
+      },
+      "want": "false",
+      "wire": "(has(input.note) \u0026\u0026 (input.note == \"x\"))",
+      "actual": "false"
+    },
+    {
+      "id": "present_optional",
+      "skill": "verify-ue-registration",
+      "expr": "has(input.note) \u0026\u0026 input.note == \"x\"",
+      "eventKind": "create",
+      "input": {
+        "count": 1,
+        "nested": {
+          "inner": "y"
+        },
+        "note": "x",
+        "ratio": 2.5,
+        "wrapped": {
+          "value": 5
+        }
+      },
+      "want": "true",
+      "wire": "(has(input.note) \u0026\u0026 (input.note == \"x\"))",
+      "actual": "true"
+    },
+    {
+      "id": "nullable_value",
+      "skill": "verify-ue-registration",
+      "expr": "input.wrapped != null \u0026\u0026 input.wrapped == 5",
+      "eventKind": "create",
+      "input": {
+        "count": 1,
+        "nested": {
+          "inner": "y"
+        },
+        "ratio": 2.5,
+        "wrapped": {
+          "value": 5
+        }
+      },
+      "want": "true",
+      "wire": "(has(input.wrapped.value) \u0026\u0026 (input.wrapped.value == 5))",
+      "actual": "true"
+    },
+    {
+      "id": "nullable_null",
+      "skill": "verify-ue-registration",
+      "expr": "input.wrapped != null \u0026\u0026 input.wrapped == 5",
+      "eventKind": "create",
+      "input": {
+        "count": 1,
+        "nested": {
+          "inner": "y"
+        },
+        "ratio": 2.5,
+        "wrapped": {
+          "is_null": true
+        }
+      },
+      "want": "false",
+      "wire": "(has(input.wrapped.value) \u0026\u0026 (input.wrapped.value == 5))",
+      "actual": "false"
+    },
+    {
+      "id": "nullable_eq_null",
+      "skill": "verify-ue-registration",
+      "expr": "has(input.both) \u0026\u0026 input.both == null",
+      "eventKind": "create",
+      "input": {
+        "both": {
+          "is_null": true
+        },
+        "count": 1,
+        "nested": {
+          "inner": "y"
+        },
+        "ratio": 2.5,
+        "wrapped": {
+          "value": 5
+        }
+      },
+      "want": "true",
+      "wire": "(has(input.both) \u0026\u0026 has(input.both.is_null))",
+      "actual": "true"
+    },
+    {
+      "id": "both_absent",
+      "skill": "verify-ue-registration",
+      "expr": "has(input.both) \u0026\u0026 input.both == null",
+      "eventKind": "create",
+      "input": {
+        "count": 1,
+        "nested": {
+          "inner": "y"
+        },
+        "ratio": 2.5,
+        "wrapped": {
+          "value": 5
+        }
+      },
+      "want": "false",
+      "wire": "(has(input.both) \u0026\u0026 has(input.both.is_null))",
+      "actual": "false"
+    },
+    {
+      "id": "both_value",
+      "skill": "verify-ue-registration",
+      "expr": "has(input.both) \u0026\u0026 input.both != null \u0026\u0026 input.both == \"ok\"",
+      "eventKind": "create",
+      "input": {
+        "both": {
+          "value": "ok"
+        },
+        "count": 1,
+        "nested": {
+          "inner": "y"
+        },
+        "ratio": 2.5,
+        "wrapped": {
+          "value": 5
+        }
+      },
+      "want": "true",
+      "wire": "((has(input.both) \u0026\u0026 has(input.both.value)) \u0026\u0026 (input.both.value == \"ok\"))",
+      "actual": "true"
+    },
+    {
+      "id": "nested",
+      "skill": "verify-ue-registration",
+      "expr": "has(input.nested.inner) \u0026\u0026 input.nested.inner == \"y\"",
+      "eventKind": "create",
+      "input": {
+        "count": 1,
+        "nested": {
+          "inner": "y"
+        },
+        "ratio": 2.5,
+        "wrapped": {
+          "value": 5
+        }
+      },
+      "want": "true",
+      "wire": "(has(input.nested.inner) \u0026\u0026 (input.nested.inner == \"y\"))",
+      "actual": "true"
+    },
+    {
+      "id": "int64_max",
+      "skill": "verify-ue-registration",
+      "expr": "input.count == 9223372036854775807",
+      "eventKind": "create",
+      "input": {
+        "count": 9223372036854775807,
+        "nested": {
+          "inner": "y"
+        },
+        "ratio": 2.5,
+        "wrapped": {
+          "value": 5
+        }
+      },
+      "want": "true",
+      "wire": "(input.count == 9223372036854775807)",
+      "actual": "true"
+    },
+    {
+      "id": "double",
+      "skill": "verify-ue-registration",
+      "expr": "input.ratio == 2.5",
+      "eventKind": "create",
+      "input": {
+        "count": 1,
+        "nested": {
+          "inner": "y"
+        },
+        "ratio": 2.5,
+        "wrapped": {
+          "value": 5
+        }
+      },
+      "want": "true",
+      "wire": "(input.ratio == 2.5)",
+      "actual": "true"
+    },
+    {
+      "id": "double_max",
+      "skill": "verify-ue-registration",
+      "expr": "input.ratio == 1.7976931348623157e308",
+      "eventKind": "create",
+      "input": {
+        "count": 1,
+        "nested": {
+          "inner": "y"
+        },
+        "ratio": 1.7976931348623157e+308,
+        "wrapped": {
+          "value": 5
+        }
+      },
+      "want": "true",
+      "wire": "(input.ratio == 1.7976931348623157e+308)",
+      "actual": "true"
+    },
+    {
+      "id": "and_chain",
+      "skill": "verify-ue-registration",
+      "expr": "event.type == \"create\" \u0026\u0026 input.count == 1 \u0026\u0026 input.ratio == 2.5",
+      "eventKind": "create",
+      "input": {
+        "count": 1,
+        "nested": {
+          "inner": "y"
+        },
+        "ratio": 2.5,
+        "wrapped": {
+          "value": 5
+        }
+      },
+      "want": "true",
+      "wire": "(((event.type == \"create\") \u0026\u0026 (input.count == 1)) \u0026\u0026 (input.ratio == 2.5))",
+      "actual": "true"
+    },
+    {
+      "id": "or_guarded",
+      "skill": "verify-ue-registration",
+      "expr": "!has(input.note) || input.note == \"x\"",
+      "eventKind": "create",
+      "input": {
+        "count": 1,
+        "nested": {
+          "inner": "y"
+        },
+        "ratio": 2.5,
+        "wrapped": {
+          "value": 5
+        }
+      },
+      "want": "true",
+      "wire": "(!(has(input.note)) || (input.note == \"x\"))",
+      "actual": "true"
+    },
+    {
+      "id": "not",
+      "skill": "verify-ue-registration",
+      "expr": "!(input.count == 2)",
+      "eventKind": "create",
+      "input": {
+        "count": 1,
+        "nested": {
+          "inner": "y"
+        },
+        "ratio": 2.5,
+        "wrapped": {
+          "value": 5
+        }
+      },
+      "want": "true",
+      "wire": "!((input.count == 2))",
+      "actual": "true"
+    },
+    {
+      "id": "second_skill",
+      "skill": "verify-context-only",
+      "expr": "event.type == \"create\" \u0026\u0026 input.token == \"t\"",
+      "eventKind": "create",
+      "input": {
+        "token": "t"
+      },
+      "want": "true",
+      "wire": "((event.type == \"create\") \u0026\u0026 (input.token == \"t\"))",
+      "actual": "true"
+    }
+  ]
+}

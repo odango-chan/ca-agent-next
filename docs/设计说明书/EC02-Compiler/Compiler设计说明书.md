@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.1.8  
+> 文档版本：0.1.9  
 > 状态：待评审；IR-006 / SR-012 / #2  
 > 修订日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -68,6 +68,8 @@ Native CLI 与 Go/WASM Worker 调用同一个 Go Core。Check 返回诊断，Ins
 
 PoC 至少覆盖：同一程序对多个 Event 分别得到 true、false 和运行期错误；未知字段、缺 Request Schema、非 bool 及禁用语法在 Compiler 静态阶段失败；可选字段缺失、显式 null、带守卫可安全求值；不同 Skill 共用 Lock 时，使用另一 Skill 的 Schema 或 Descriptor 不能放宽原 Skill 的类型环境。使用正式规范给出的预期并保留实际诊断，任何差异都阻断依赖阶段。
 
+**protobuf 确定性序列化专项验收（补充）。** 对含 map 字段的 `cel.expr.CheckedExpr`，必须同时验证：默认序列化不稳定而确定性选项稳定；`Any` payload 通过 `anypb.MarshalFrom` 传递确定性选项；`FileDescriptorSet` 完整可比；重复 Build 的完整 Artifact 逐文件字节一致；同一产物由 Python 加载得到的求值结果一致。该专项只补充此前未明确的要求；PoC 级通过不替代 AC-013-03 的产品 Build 确定性验收。
+
 验收记录每行至少包含 `stage | SR/Acceptance | repository@SHA | fixture/source | command | environment | expected | actual/exit_code | result | evidence`。门槛缺失且尚未运行时记录 `BLOCKED` 并附解除条件。未运行且无外部阻塞的检查记 `NOT_RUN`。只对实跑并符合预期的记录写 `PASS`。需要 Owner 裁定 Artifact API、评审 READY 或授权发布时，保留已通过的独立阶段证据及第一个恢复步骤。
 
 正式 CA-SL v1alpha5 规范固定为 `18d8184367982ccbc835756136c4a53f9096c3a0`，见 [ca-skills 正式发布记录](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs/releases/ca-sl-v1alpha5.md)。此门槛已满足。Next PR #3 已合并；SR-013 的实施范围与验收仍待负责人确认，AC-013-01 为进入 READY 后的首项验收。
@@ -104,3 +106,4 @@ AC-013-01 的隔离 PoC 已可启动，正式产品实施仍按 SR-013 的后续
 | 2026-11-25 | 0.1.6 | Codex | §6–7 | 固定已发布规范 SHA | ca-skills #89 已合并 | SR-013 |
 | 2026-11-25 | 0.1.7 | Codex | §7 | 回链实跑预检 | 记录已验证的交换路径和剩余范围 | SR-013 |
 | 2026-11-25 | 0.1.8 | Codex | §5–7 | 更新 Goal 的隔离 PoC 入口 | 供 DSH 独立开展 AC-013-01 | SR-013 |
+| 2026-11-25 | 0.1.9 | DSH Agent | §6 | 补充 protobuf 确定性序列化专项验收 | AC-013-01 复核发现 map 字段字节不确定 | SR-013、AC-013-03、Issue #17 |

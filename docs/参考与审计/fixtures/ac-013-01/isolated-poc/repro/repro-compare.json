@@ -1,0 +1,10 @@
+﻿{
+    "source_sha256":  "4b086c2fbd920d945b28b061c25f4733a6fc663f6435e3976053896f6e49de44",
+    "compiler_sha":  "255ab85fa5abb4b0bf36656bf64250cafebf45cb",
+    "generated_files":  37,
+    "byte_mismatches":  0,
+    "mismatched_files":  [
+
+                         ],
+    "py_results_equal":  true
+}

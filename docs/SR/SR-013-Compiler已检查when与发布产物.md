@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.1.10  
+> 文档版本：0.1.12  
 > 状态：DRAFT  
 > 创建日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -14,7 +14,7 @@
 
 | 验收 ID | 通过条件 | 当前证据 |
 |---|---|---|
-| AC-013-01 | Go 生成的 CheckedExpr Any 与 FileDescriptorSet 被固定版本 Python 直接加载；G.4 跨语言 fixture 对 true/false/error、缺失/null 与数值边界一致 | 隔离 PoC 报告 PASS（18/18，见下文）；独立复核 NOT_RUN；产品实现 NOT_RUN |
+| AC-013-01 | Go 生成的 CheckedExpr Any 与 FileDescriptorSet 被固定版本 Python 直接加载；G.4 跨语言 fixture 对 true/false/error、缺失/null 与数值边界一致 | 隔离 PoC 报告 PASS（18/18）；独立复核 PASS（37 文件逐字节一致）；产品实现 NOT_RUN |
 | AC-013-02 | #61 的静态正负例、诊断位置和多 Skill 共享 Lock 时的类型隔离全部符合预期 | NOT_RUN |
 | AC-013-03 | 新版 Build/Verify 确定、损坏时 fail-closed；冻结机器契约及两条冻结产物路径对基准的 Golden 字节一致 | NOT_RUN |
 | AC-013-04 | #61 指定的 Go 测试、vet、Native/WASM 构建、CLI E2E、真实 Chromium Worker parity 与 diff check 全部通过 | NOT_RUN |
@@ -78,11 +78,23 @@ Go 静态编译另拒绝了未知字段和另一共享 descriptor 文件中未�
 | 求值错误 | PASS（缺 `event` 返回 UNKNOWN，不当作匹配） |
 | 多 Skill Lock 隔离 | PASS（第二 Skill 使用自己的 Schema；跨 Skill 字段被拒） |
 
-**AC-013-01 在隔离 PoC 范围内 PASS。** 证据：`.agent-tmp/ac-013-01-poc/EVIDENCE.md`、`go-test.log`、`python.log`、`artifacts/`（含 `cases.json` 与逐用例 `.checked.pb` / `.types.pb`）。本结论不外推为产品实现：`ContractAST.when`、Schema-aware 静态检查、发布 Artifact 字段与 Build/Verify 仍为 NOT_RUN；深层可选祖先、数组、枚举、完整布尔组合与 AC-013-02 待后续。新 Artifact API 仍由 Compiler Owner 定稿。
+**AC-013-01 在隔离 PoC 范围内 PASS。** 原始证据、复跑材料与 36 个 `.pb` 产物已归档至 [isolated-poc](../参考与审计/fixtures/ac-013-01/isolated-poc/README.md)，不再依赖 `.agent-tmp` 本地路径。本结论不外推为产品实现：`ContractAST.when`、Schema-aware 静态检查、发布 Artifact 字段与 Build/Verify 仍为 NOT_RUN；深层可选祖先、数组、枚举、完整布尔组合与 AC-013-02 待后续。新 Artifact API 仍由 Compiler Owner 定稿。
 
-据执行者报告，证据生成器已改用确定性序列化：默认 `proto.Marshal` 对 `CheckedExpr` 的 `reference_map` / `type_map` 不稳定，同一输入两次运行会产生不同字节；改用 `proto.MarshalOptions{Deterministic: true}`（包括 `anypb.MarshalFrom`）后，连续两次生成的 36 个 `.pb` 哈希一致，Python 求值结果不变。该问题不影响求值语义，但新版发布 Artifact 的重复 Build 必须覆盖 protobuf map 字段的确定性序列化。
+**确定性序列化专项。** 证据生成器使用 `anypb.MarshalFrom(..., proto.MarshalOptions{Deterministic: true})`，`mustProto` 使用 `proto.MarshalOptions{Deterministic: true}`。同一源码写入两个全新输出目录，37 个生成文件（36 个 `.pb` + `cases.json`）逐字节一致；探针在同一进程序列化 200 次，默认 `proto.Marshal` 产生 106–115 种字节、`anypb.New` 产生 116–117 种，确定性选项与 `anypb.MarshalFrom` 均只产生 1 种。该问题不影响求值语义，但新版发布 Artifact 的重复 Build 必须覆盖 protobuf map 字段的确定性序列化。
 
-**独立复核边界：** 当前 PR 只提交本文件。`EVIDENCE.md`、`go-test.log`、`python.log`、`cases.json`、36 个 `.pb` 产物、`ac013_poc_test.go` 和 Python 验证脚本仍位于隔离工作区，未纳入当前仓库。评审者不能仅凭本 PR 独立复跑 Go/Python 测试、核对逐文件 SHA-256 或检查确定性序列化实现。因此，本节 18/18、哈希一致和序列化修复均为执行者报告结果，**独立复核状态为 NOT_RUN**。该发现应进入 AC-013-03 的产品验收，不代表 Compiler 产品代码已实现或通过。
+**独立复核（未参与原始实验）。** 在全新 `255ab85` worktree 中用归档源码重新执行。
+
+| 检查 | 命令 | 实际 |
+|---|---|---|
+| 归档源码一致 | SHA-256 `4b086c2fbd920d945b28b061c25f4733a6fc663f6435e3976053896f6e49de44` | 与原始记录一致 |
+| Go vet | `GOWORK=off go vet ./internal/compiler` | 退出 0 |
+| Go 生成与校验 | `GOWORK=off go test ./internal/compiler -run '^TestAC013PocGenerate$' -count=1 -v` | 退出 0，PASS |
+| Python 直接加载 | `python_verify.py repro-artifacts` | 退出 0，18/18 |
+| 复跑产物比对 | 37 个生成文件逐字节 | 0 差异 |
+| 静态拒绝 | `go-test.log` / `audit_evidence.py` | 6/6 |
+| 证据审计 | `audit_evidence.py` | `pairing_ok`、`type_url_ok`、`deserialize_ok`、`python_all_ok`、`go_test_pass` 均为 true |
+
+此前记录的「独立复核边界」（证据未入库、不可独立复跑）已由本 PR 的归档关闭；**独立复核状态：PASS（PoC 范围）**。该结果仍不代表 Compiler 产品代码已实现或通过。
 
 ## AC-013-01 阶段执行单
 
@@ -109,3 +121,4 @@ Go 静态编译另拒绝了未知字段和另一共享 descriptor 文件中未�
 | 2026-11-25 | 0.1.9 | 保留正式规范来源与分阶段执行条件 | 合并 main 的治理更新 | SR-013、PR #7 |
 | 2026-11-25 | 0.1.10 | 回填隔离 PoC 的 Go/Python 一致结果并修复损坏的证据块 | 完成 AC-013-01 隔离阶段验收 | SR-013 |
 | 2026-11-25 | 0.1.11 | 区分执行者报告结果与独立复核状态；记录原始证据未随 PR 归档及确定性序列化修复尚不可独立检查 | 防止将本地 PoC 报告误读为 PR 可复现证据或 Compiler 产品验收 | SR-013、AC-013-01、AC-013-03 |
+| 2026-11-25 | 0.1.12 | 归档 PoC 源码、日志、36 个产物与复跑说明；记录独立复核与确定性专项结果，关闭 0.1.11 的证据缺口 | 使未参与实验者仅凭仓库即可复现并判断 AC-013-01 | SR-013、AC-013-01、Issue #17 |
