@@ -1,7 +1,7 @@
 # Tool Interface 与 Provider 集成设计说明书
 
 > 文档类型：功能子模块设计说明书
-> 文档版本：0.1.0
+> 文档版本：0.2.0
 > 状态：目标设计；待评审
 > 功能归属：F03.05 — Tool Plugin 集成
 > 交叉功能：F03.01～F03.04、F04.01、F04.05、F05.02、F06
@@ -80,17 +80,45 @@
 | Tool Interface Package | 发布该 Interface Package 的 Tool/Provider 所有者 | 公共 Callable ID、Capability membership、输入/输出 Schema、Effect、包版本和依赖 | Compiler、Skill Studio、Runtime、Plugin Manager | 不包含 Provider 私有 backend ID；不代表安装或授权 |
 | Owner Contract Package | 业务 Owner；OpenAMSM 示例为 env-openamsm | Owner Callable 身份、业务输入/输出 Schema、Owner Outcomes、Receipt Schema、Commit Proof、Reconcile | Provider 发布生成器、Runtime | 不定义 Provider 进程、传输和私有 handler |
 | Provider Runtime Bindings | Provider 所有者；OpenAMSM Provider 示例为 ca-client-tools | Runtime/Owner Callable 到 backendOperationId 的映射、HostInvocation 来源、私有参数注入、Provider observation/receipt 定位、Schema 文件引用 | Plugin Manager 的 ProviderV2 Driver、Runtime 结果解释器 | 不成为公开 ToolCatalog、不授予 Capability、不重写 Owner 语义 |
+| Provider Backend Binding Catalog v2（Provider 内部） | ca-client-tools | 私有 backendOperationId 到 Go handler、serviceKey、source pin、Effect、参数/Schema 的执行映射 | Provider 进程内部；Host 仅通过 catalog 方法核对显式请求的 ID | 不公开 Callable/Capability/Owner Outcome；不授权 Skill |
 
 ### 4.1 ca-client-tools v1.2.0 的实际发布面
 
 当前 v1.2.0 发布包包含两个不同消费面：
 
-- **Compiler Interface Package ZIP**：ca-client-tools_interface_1.2.0.zip。包含 package.json、tool-catalog.yaml、capabilities.json 和导出的 Schema；这是 Skill/Compiler 的公开依赖快照。当前公开集合为 11 个 READ Tools、2 个 Capabilities、4 个 Schemas。ZIP 不包含 Provider 可执行文件、provider.yaml 或私有 Runtime Bindings。
-- **平台 Provider 包**：包含 Provider 可执行文件、provider.yaml、Interface Package 的相同文件树，以及 Provider Runtime Bindings sidecar。当前 provider.yaml 通过 runtimeBindingsPath 和 runtimeBindingsDigest 引用 sidecar。sidecar 的 Owner 引用为 urn:openamsm:mas:tool-contracts / v1alpha4；当前公布 25 个 Runtime Bindings（21 MUTATION、4 READ）。
+- **Compiler Interface Package ZIP**：ca-client-tools_interface_1.2.0.zip。包含 package.json、tool-catalog.yaml、capabilities.json 和导出的 Schema；这是 Skill/Compiler 的公开依赖快照。当前公开集合为 11 个 READ Tools、2 个 Capabilities、4 个 Schemas，**没有导出 MUTATION Tool**。ZIP 不包含 Provider 可执行文件、provider.yaml 或私有 Runtime Bindings。
+- **平台 Provider 包**：包含 Provider 可执行文件、provider.yaml、与 ZIP 字节一致的 interface/ 快照，以及 Provider Runtime Bindings sidecar。provider.yaml 保存公开 Callable 到私有 backendOperationId 的映射，并通过 runtimeBindingsPath 和 runtimeBindingsDigest 引用 sidecar。sidecar 的 Owner 引用为 urn:openamsm:mas:tool-contracts / v1alpha4，包含 25 个 Owner Contract 映射（21 MUTATION、4 READ）。
+- **Provider 内部 Backend Binding Catalog v2**：嵌入 Go Provider。基础 Catalog 有 11 个 READ backend bindings；启动时再加入固定 typed MAS closure 和 Owner Receipt/Reconcile handlers。它不是 Compiler Interface Package，也不由 Next 解析或复制。
 
-这两个包的版本、身份和 Digest 都按各自发布契约读取；不得假定 Provider Release 版本、Interface Package 版本和 Owner Contract 版本必然相同。
+这三个消费面的版本、身份和 Digest 按各自发布契约读取；不得假定 Provider Release 版本、Interface Package 版本和 Owner Contract 版本必然相同。
 
-### 4.2 Skill、Plugin 与部署配置
+### 4.2 当前 v1.2.0 的调用库存闭合
+
+以下数量描述不同层次，不能相互替代：
+
+| 库存 | 数量 | 范围 |
+|---|---:|---|
+| Compiler Interface Package | 11 READ Tools | 8 个 SMF context query + 3 个 NF metrics list；2 Capabilities、4 Schemas；无 MUTATION 导出 |
+| Provider Backend Binding Catalog v2 基础部分 | 11 READ bindings | 与当前公开 Interface Package 对应的私有 backend 执行映射 |
+| Owner ToolCatalog v1alpha4 | 25 contracts | 21 MUTATION + 4 READ；其中 23 个业务 Callable（21 MUTATION + 2 READ）和 2 个内部 Owner evidence resources（Receipt Query、Reconcile） |
+| Provider typed MAS invoke closure | 31 Callable | 29 MUTATION + 2 READ；全部是 Provider 私有执行身份，不直接成为 Skill 权限 |
+| Provider Runtime Bindings sidecar | 25 bindings | 与 Owner 发布面一致：23 个业务 Callable + 2 个 evidence resources；21 MUTATION + 4 READ |
+| Provider 进程内部 Catalog | 44 bindings | 11 个基础 READ + 31 个 typed MAS Callable + 2 个 evidence handlers |
+
+31 个 typed MAS Callable 中有 8 个旧的、Owner 未发布的 legacy callable；它们由 Provider Release Generator 的 audited legacy list 明确列出，不进入 Owner Runtime Bindings sidecar，也不得由 Next 的 Skill 或 Runtime 调用：
+
+- SC.UPDATE_SM_CONTEXT
+- UPN.MODIFY_UP_SESSION_INTENT
+- SSM.SIGNAL_UE_AN_MODIFY
+- SSM.SIGNAL_UE_AN_RELEASE
+- PA.DELETE_SM_POLICY
+- SC.RELEASE_SM_CONTEXT
+- SE.EMIT_RELEASE_EVENT
+- UPN.MODIFY_QOS_FLOWS
+
+因此，ProviderV2 Driver 的显式 catalog 请求应使用 provider.yaml 的 11 个公开 Tool backend mappings 与 Runtime Bindings sidecar 的 25 个 Owner backend mappings 的去重并集（当前预期 36 个 ID）。Provider 内部另外存在的 8 个 legacy callable 不得加入请求集合。加载期必须验证每个公开/Owner Callable 都有唯一 backend 映射、Effect 一致，并能在 Provider catalog 中找到；任何缺失、重复或多余映射均 fail-closed。
+
+### 4.3 Skill、Plugin 与部署配置
 
 - Skill Artifact 只依赖公开 Callable / Capability 和已锁定的 Interface Package，不出现 backendOperationId、Provider handler、URL、服务地址或凭据。
 - Plugin Manifest 声明 Plugin 身份、进程入口、IPC 版本和 Extensions；不复制 Tool Schema、Capability Grant、Owner Outcome 或 Provider 私有字段。
@@ -134,7 +162,7 @@ Plugin Manager 的部署配置为每个 Provider Extension 提供一个显式、
 5. **校验映射一致性。** 每个 Runtime Binding 的 ownerCallableId、runtimeOperationId、Effect、Schema 和 Capability 必须与所引用 Owner Contract 一致；每个 backendOperationId 必须能在 Provider 私有 catalog 中按精确 ID 找到，禁止由名称拼接、lowercase 或猜测生成。
 6. **启动 Provider。** 使用固定可执行文件和 argv（当前命令为 provider serve），不经 Shell 字符串解释。一个已选 Provider 包对应一个长生命周期进程。
 7. **Provider initialize。** 发送 Host/Provider instance identity 与 frame、in-flight、call-duration limits；核对 Provider ID、版本、build digest、backend catalog digest 和 catalogVersion。
-8. **显式 catalog 查询。** 只向 Provider 请求 Runtime Bindings 已列出的精确私有 backendOperationIds；校验返回的 supported/unsupported 分区与顺序。无需新增 list-all 方法，也不得用 catalog 响应发现未声明的公开 Callable。
+8. **显式 catalog 查询。** 向 Provider 请求 provider.yaml 公开 bindings 与 Runtime Bindings sidecar 的精确 backendOperationId 去重并集；校验返回的 supported/unsupported 分区、描述符和请求顺序。无需新增 list-all 方法，也不得用 catalog 响应发现未声明的公开 Callable。
 9. **发布可用 Extension。** 将明确可用的公开 Callable 绑定到该 Provider Extension。未配置或未实现的 binding 保留明确 unavailable 诊断，不得切换到其他 Provider、旧注册文件或默认业务 adapter。
 
 Plugin Manager 可以维护进程内的派发映射，但该映射只是已发布包的运行时投影，不是第二个权威 Registry。
@@ -143,9 +171,86 @@ Plugin Manager 可以维护进程内的派发映射，但该映射只是已发�
 
 - Native Plugin 使用 connectionagent.io/plugin-package/v1alpha1 与 connectionagent.io/plugin-ipc/v1alpha1。
 - ca-client-tools v1.2.0 现行进程使用 ca-client-tools.provider/v2，长生命周期 NDJSON over stdin/stdout，按 requestId 关联 initialize、catalog、invoke 和 cancel。
+- 请求帧为 protocolVersion、type=request、requestId、method、params；响应帧为 protocolVersion、type=response、requestId、ok，以及互斥的 result/error。
+- 每行一个 UTF-8 JSON object；requestId 在单进程内唯一，最多 128 个可打印 ASCII 字符；响应允许乱序，只按 requestId 关联；每个已接受请求只有一个终态响应；stdout 只输出协议帧，stderr 只输出安全诊断；EOF drain 后退出；Provider 不自动重放或重试。
 - 为消费现有已发布包，唯一 Plugin Manager 内部实现 ProviderV2 Tools Extension Driver；Runtime 和 Skill 只看到统一的 Callable 调用，不看到 Provider v2 frame、backend ID 或私有 catalog。
 - ProviderV2 Driver 只是一段明确版本化的迁移适配。它不拥有独立安装目录、配置入口、Capability Registry、Runtime 或授权路径。未来如 Provider 原生支持统一 Plugin IPC，替换该 Driver 并通过同一套验收后，才移除 v2 适配；本设计不要求本轮修改 ca-client-tools 或强制其立即切换 IPC。
 - 不允许同一 Callable 在两个 Driver 中同时注册后自动 fallback。部署只选择一个精确 Provider 包和一个 Driver。
+
+### 6.4 Provider v2 wire contract
+
+ProviderV2 Driver 必须按 ca-client-tools.provider/v2 的精确字段消费，不得自行包装成兼容 v1：
+
+~~~json
+{"protocolVersion":"ca-client-tools.provider/v2","type":"request","requestId":"<unique-id>","method":"initialize|catalog|invoke|cancel","params":{}}
+{"protocolVersion":"ca-client-tools.provider/v2","type":"response","requestId":"<same-id>","ok":true,"result":{}}
+{"protocolVersion":"ca-client-tools.provider/v2","type":"response","requestId":"<same-id>","ok":false,"error":{"code":"<stable-code>","message":"<safe-message>"}}
+~~~
+
+| Method | Request params | Result / semantics |
+|---|---|---|
+| initialize | hostInstanceId、providerInstanceId、limits；可选 artifactChannel | providerId、providerVersion、buildDigest、backendBindingCatalogDigest、catalogVersion、effective limits；有 artifact channel 时回报有效 bounds |
+| catalog | backendOperationIds：唯一的精确 ID 数组 | supported、unsupported（NOT_IMPLEMENTED / NOT_CONFIGURED）、catalogVersion、仅 supported IDs 的 bindings 描述符；保持请求顺序 |
+| invoke | backendOperationId、arguments、invocation（invocationId、producerInvocationId、deadline）；仅 typed MAS 可选 hostInvocation | Provider result envelope；不得把 Owner Outcome 映射成 COMMITTED |
+| cancel | targetRequestId | CANCEL_REQUESTED / ALREADY_COMPLETED / NOT_FOUND；取消不等于远端 mutation 回滚 |
+
+initialize 的 limits 至少约束 maxFrameBytes、maxInFlight 和 maxCallDurationMs。可选 artifactChannel 是关闭对象，字段为 baseUrl、processToken、requestTimeoutMs、maxArtifactBytes、maxAggregateBytes、maxAttachments；缺失 channel 时 artifact-bearing binding 为 NOT_CONFIGURED，且必须在远端 I/O 前拒绝。原始二进制通过 ca-host.artifact-store/v1 channel 传输，不进入 NDJSON。
+
+catalog descriptor 只包含私有 backendOperationId、Effect、request/response media type、参数或 generic schema、source pin 和 Artifact slot 描述。不得包含服务 origin、URL、HTTP method、route template、header/token、公开 Callable ID、Capability ID、Owner Outcome 或 Evidence guarantee。catalog 是可用性核对，不是授权。
+
+invoke 的 invocation.deadline 是绝对 RFC3339 UTC 时间。对 200 等 JSON 结果，Provider 返回 httpStatus + response；204/bodyless 结果只返回 httpStatus；有效 application/problem+json 作为 Provider 成功协议结果返回 httpStatus + problem。Provider 不解释 Owner 业务结果，也不自动 retry。
+
+错误代码至少包括 PROTOCOL_VERSION_UNSUPPORTED、PROTOCOL_FRAME_INVALID、PROTOCOL_FRAME_TOO_LARGE、PROTOCOL_METHOD_UNSUPPORTED、PROTOCOL_REQUEST_ID_INVALID、PROVIDER_NOT_INITIALIZED、PROVIDER_ALREADY_INITIALIZED、PROVIDER_CONFIGURATION_INVALID、PROVIDER_BINDING_CATALOG_INVALID、BACKEND_OPERATION_UNSUPPORTED、BACKEND_ARGUMENTS_INVALID、CALL_DEADLINE_EXCEEDED、CALL_CANCELLED、REMOTE_TRANSPORT_ERROR、REMOTE_RESPONSE_INVALID、ARTIFACT_REFERENCE_INVALID、ARTIFACT_TRANSFER_FAILED、PROVIDER_INTERNAL、PROVIDER_SHUTTING_DOWN。错误 message/detail 不得包含凭据、远端 body、SUPI 或调用者私有值。
+
+### 6.5 Runtime Bindings sidecar
+
+provider.yaml 必须成对声明 runtimeBindingsPath 和 runtimeBindingsDigest。v1.2.0 sidecar 的 API identity 为 ca.tool-provider-runtime-bindings/v1，根对象包含：
+
+~~~yaml
+apiVersion: ca.tool-provider-runtime-bindings/v1
+providerId: ca-client-tools.sbi
+providerVersion: 1.2.0
+ownerContract:
+  stableId: urn:openamsm:mas:tool-contracts
+  version: v1alpha4
+  publicationDigest: sha256:<owner-publication-digest>
+  manifestDigest: sha256:<owner-manifest-digest>
+  operations: 25
+files:
+  - path: runtime/schemas/<name>.json
+    sha256: sha256:<exact-file-digest>
+bindings:
+  - runtimeBindingId: sc-create-sm-context
+    runtimeOperationId: SC.CREATE_SM_CONTEXT
+    backendOperationId: openamsm.smf.mas.sc.create_sm_context
+    ownerCallableId: SC.CREATE_SM_CONTEXT
+    effect: MUTATION
+    capabilityId: mas.sc.context.create
+    ownerOutcomes: [SUCCEEDED, FAILED, NOT_COMMITTED]
+    inputSchema: {$ref: runtime/schemas/input.json}
+    outputSchema: {$ref: runtime/schemas/output.json}
+    hostInvocation: {}
+    privateArguments: []
+    observation: {}
+    commitProof: {}
+~~~
+
+实际字段以 v1 sidecar contract 为准。runtimeBindingId、runtimeOperationId、backendOperationId 均唯一；ownerCallableId 必须与 runtimeOperationId 精确一致；effect 只允许 READ/MUTATION；ownerOutcomes 不得包含 COMMITTED。Schema 是 pinned Owner Schema 的确定性 inline expansion，sidecar files 覆盖所有引用文件的精确字节 Digest。READ 不得声明 commitProof；MUTATION 必须声明 observation、Host invocation scope 和 commitProof。
+
+hostInvocation 的字段来源只允许 HOST_CONTEXT 或 DERIVED_ORIGINAL_INVOCATION_ID；arguments 将 Skill-authored argument 固定绑定到 Host scope field，二者不一致时在 dispatch 前拒绝。privateArguments 只能来自 PRIVATE_MATERIAL，且不得与公开 input Schema properties 相交；Host 在 Runtime Schema 校验后注入。
+
+MUTATION observation 的 WIRE_OK 指向 RECEIPT；ACL_DENIED 指向 DENIED；OWNER_TIMEOUT、OWNER_ERROR、TRANSPORT_ERROR、TIMEOUT、CANCELED、INVALID_RESPONSE 均指向 UNKNOWN；未声明 code 也必须为 OUTCOME_UNKNOWN。Owner Receipt schemaVersion 为 openamsm.mas-mutation-receipt/v1，必须绑定原始 originalInvocationId、Callable、MAS/op/stepId、deploymentId、ownerInstanceId、SUPI 和 PSI；commit proof 的 invocationId 必须是同一个 originalInvocationId。Reconcile 使用 sidecar 指定的 mas-reconcile binding 查询同一原始 Invocation，不得重发 mutation。
+
+### 6.6 Provider Backend Binding Catalog v2
+
+Provider 内部基础 Catalog 的 identity 为 ca-client-tools.provider-bindings/v2 / ProviderBackendBindingCatalog。它从 provider-bindings.yaml 嵌入 Go binary，结构包含 metadata（providerId、catalogVersion、sources）和 spec（schemas、bindings）。每个 binding 包含 backendOperationId、effect、handler、serviceKey、source、request、response，以及 typed arguments 或 generic argumentSchema。
+
+- backendOperationId 是稳定私有 ID，不是 public Callable ID。
+- serviceKey 只是可信部署配置查找键；Catalog 不携带 URL、origin 或凭据。
+- source pin 固定 OpenAPI/Owner 源 Commit、文件路径和 Git blob identity。
+- handler 选择 Go 中固定的执行 profile；genericSBI 只能使用其闭合 schema，不得携带任意 origin/header/token。
+- Provider 启动时把 31 个 typed MAS Callables 和 2 个 evidence handlers 追加到基础 11 个 READ bindings，并把扩展后的 catalog digest 返回给 Host。
+- Host 不读取或复制 Provider 内部 Catalog；Host 只通过 catalog 方法核对 provider.yaml 与 Runtime Bindings 已明确声明的 backendOperationIds。
 
 ## 7. Tool Invocation 端到端流程
 
@@ -303,3 +408,4 @@ Runtime 在任何 Plugin IPC / Provider invoke 之前必须完成：
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
 |---|---|---|---|---|---|---|
 | 2026-11-25 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 建立 Tool Interface、Owner Contract、Provider Runtime Bindings 与唯一 Plugin Manager 的集成设计基线 | 将 EC03 原始设计资产映射到 F03.05，并基于 ca-agent-demo main 进行选择性复用审计 | IR-006 · SR-015 · Issue #12 |
+| 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | §4、§6、§7、§11 | 补齐 Provider v2 wire contract、Runtime Bindings、内部 Backend Catalog 与 11/25/31/44 库存闭合 | 按 ca-client-tools v1.2.0 源码和 Owner v1alpha4 生成器核对实际映射，避免混淆公开/私有 Callable 数量 | IR-006 · SR-015 · Issue #12 |
