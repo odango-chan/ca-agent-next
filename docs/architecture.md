@@ -207,6 +207,7 @@ Rules:
 | Component | Owns | Does not own |
 |---|---|---|
 | Python Host / Agent | Model loop, reasoning, Skill discovery/selection, Context assembly, Skill import orchestration | Direct Tool invocation or authoritative business truth |
+| SkillCatalog | Core-owned immutable in-memory Skill index, cached guidance/selection programs and Catalog generations | Plugin lifecycle, Tool dispatch or Owner truth |
 | Skill | SKILL.md guidance; optional Assurance contract and Procedure | Plugin lifecycle or Tool implementation |
 | CA-SL Compiler | Assurance source validation, linking and Artifact generation/inspection | LLM Action execution or business Runtime |
 | Python Runtime | Run state, admission, Capability authorization, Action validation, Tool dispatch, Outcomes/Evidence, Wait/Resume/Reconcile | LLM Model Loop or Plugin protocol parsing |
