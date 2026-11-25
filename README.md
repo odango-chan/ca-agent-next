@@ -1,58 +1,55 @@
 # CA Agent Next
 
-CA Agent Next 是下一代通用 Agent 的独立实现仓。目标是以最小、可验证的机制证明：通用 Agent 可以通过可插拔 Plugin、Skill 和 Tool 扩展业务，而不需要为新增业务修改 Agent Core。
+CA Agent Next 是下一代通用 Agent 的独立实现仓。目标是用尽可能少、可验证的机制证明：通用 Agent 可以通过 Skill 和 Plugin 扩展不同业务，而不需要为每个业务修改 Agent Core。
 
-**语言决策：Agent Core、Host、Agent Model Loop、Skill Importer、Skill Resolver 和 Runtime 固定使用 Python。** 独立运行的 Plugin 可以使用 Go 等适合的语言；Go Plugin 不代表 Go Host。
+**语言决策：Agent Core、Host、Agent Model Loop、Skill Importer、Skill Resolver 和 Runtime 固定使用 Python。** 独立 Plugin 可以使用 Go；Go Plugin 不意味着 Go Host。
 
-> 当前状态：PR #1 是目标架构与契约文档基线，仍待评审；本仓尚无已验收的 Agent Runtime 实现。设计完成、代码实现和验收通过必须分别表述。
+> 当前状态：PR #1 是架构、功能设计和规范基线，仍待评审；本仓尚无已验收的 Agent Runtime 实现。设计完成、代码实现和验收通过必须分别表述。
 
 ## 从这里开始
 
-1. [CA Agent Next 架构设计](docs/架构设计/CA%20Agent%20Next%20架构设计.md)
-2. [文档总目录与索引](docs/治理/文档总目录与索引.md)
-3. [现有文档盘点与收敛计划](docs/治理/现有文档盘点与收敛计划.md)
-4. [文档编写与治理规范](docs/规范/文档编写与治理规范.md)
-5. [SR 管理规范](docs/规范/SR%20管理规范.md)
-6. [SR 总索引](docs/治理/SR%20总索引.md)
-7. [实施状态总览](docs/治理/实施状态总览.md)
-8. [SR-001：评审上下文自动生成](docs/SR/SR-001-评审上下文自动生成.md)
-9. [文件结构规范](docs/规范/文件结构规范.md)
-10. [演示验收基线](docs/验收与实施/演示验收基线.md)
-11. [仓库协作指引](Agent.md)
+1. [功能树与需求追踪基线](docs/治理/功能树与需求追踪基线.md) — 先识别 Feature / SR，再按功能加载资料。
+2. [CA Agent Next 架构设计](docs/架构设计/CA%20Agent%20Next%20架构设计.md) — 唯一总体架构。
+3. [文档总目录与索引](docs/治理/文档总目录与索引.md) — 正式文档入口。
+4. [SR 管理规范](docs/规范/SR%20管理规范.md) — SR、Issue、PR、Commit 和验收追踪规则。
+5. [文档编写与治理规范](docs/规范/文档编写与治理规范.md) — 功能设计与修订记录要求。
+6. [演示验收基线](docs/验收与实施/演示验收基线.md) — Echo 与 OpenAMSM 的 EX/OM 验收门槛。
+7. [仓库协作指引](Agent.md) — 自动化协作入口和不可违反的约束。
 
 ## 文档体系
 
-正式文档共 23 份：1 份总体架构、5 份设计说明书、7 份规范、4 份治理、4 份验收与实施、2 份参考审计；另有 11 份独立 SR 记录。README.md 和 Agent.md 是仓库入口，不计入正式文档数量。
+当前目标为 **22 份正式文档 + 11 份 SR 需求记录**。正式文档包括 1 份总体架构、6 份按功能组织的设计说明书、7 份规范、3 份治理、3 份验收与实施、2 份参考审计。README.md 和 Agent.md 不计入正式文档；SR 记录单独统计。
 
-架构设计与设计说明书在 docs 下同级。架构只定义全局边界和主流程；设计说明书描述机制；规范定义文件结构、字段和公共契约；治理目录维护索引与迁移台账；验收与实施记录门槛和实施任务；参考与审计保留代码复用和跨仓状态证据。
+架构设计与设计说明书在 docs 下同级。设计说明书按 F01～F06 功能域归档；SR 记录需求范围和验收条件，不替代功能设计。F07 示例与验收由统一验收基线承载。
 
-## 仓库职责
+## 仓库职责与外部能力
 
-| 仓库 | 权威职责 |
-|---|---|
-| ca-agent-next | Agent 架构、Plugin/Runtime 公共机制、Skill 导入与选择机制 |
-| ca-agent-demo | 既有 Python 实现、测试和复用证据 |
-| ca-skill-compiler | CA-SL 语言语义、编译、链接、Artifact 构建与发布 |
-| ca-skills | Skill 作者源、业务 Assurance 和 CA-SL 规范发布 |
-| ca-client-tools | Tool 实现、Tool Interface Package 和 Owner 交互契约 |
-| ca-openamsm-plugin | OpenAMSM SBI Event ingress / Delivery Plugin |
-| ca-agent | 当前稳定实现及未来晋级目标 |
+| 功能/能力 | 权威仓库 | Next 的责任 |
+|---|---|---|
+| Agent Core / Host / Runtime | ca-agent-next | Python 新实现 |
+| Skill 作者规范与业务 Skill（EC01） | ca-skills | 消费 SKILL.md 与发布输入 |
+| CA-SL Compiler / Artifact 发布（EC02） | ca-skill-compiler | 只消费已发布 Runtime Artifact |
+| Tool Interface / Provider / Codec（EC03） | ca-client-tools | 通过唯一 Plugin Manager 的 tools Extension 调用 |
+| OpenAMSM SBI Event / Delivery Plugin（EC04） | ca-openamsm-plugin | 消费统一 Plugin Package/IPC 和 Artifact Handoff |
+| OpenAMSM Owner（EC05） | env-openamsm 等 Owner 仓 | 消费权威 Receipt / Commit Proof |
+| 参考实现（REF01） | ca-agent-demo | 逐文件选择性复用代码和测试 |
+| 后续晋级目标（TARGET01） | ca-agent | Next 验收后评估晋级 |
 
-Next 不复制 CA-SL 语言规范、业务 Skill 或 Tool 实现。其他仓库只维护本仓实现、集成、操作和验收材料，并引用 Next 的架构和公共机制规范。
+外部能力的内部设计留在权威仓库；Next 只维护消费边界和集成 SR，不复制 Compiler、Tool、Codec、Owner 或业务 Skill 实现。
 
 ## 架构要点
 
-- 全系统只有一个 Plugin Manager。Plugin 可导出 event.ingress、event.delivery、tools 中的一种或多种 Extension。
-- Tool 是 Plugin 导出的可调用 Operation，不是独立进程、Manager 或 Registry。Tool Plugin 是导出 tools Extension 的 Plugin。
-- 每个 Skill 必须有 SKILL.md；assurance/ 可选。没有 Assurance 只能 LLM-guided；存在有效发布 Artifact 时可 Deterministic 或 LLM-guided；无效 Artifact 导入失败，不得静默降级。
-- when 是 assurance/contract.yaml 的可选 CEL 选择表达式；predicates.yaml 只用于执行期业务判断。
-- Agent 只消费已发布 Skill Artifact，不调用 Compiler，也不实现独立 Skill Admission。
-- 所有 Deterministic 和 LLM-guided Action 都经过同一个 Runtime Action Boundary。
+- 全系统只有一个 Plugin Manager。Plugin 可导出 event.ingress、event.delivery、tools 中一种或多种 Extension。
+- Tool 是 Plugin 导出的 Callable Operation，不是独立进程或 Manager。
+- 每个 Skill 必须有 SKILL.md；Assurance 可选。无 Assurance 仅 LLM-guided；有效发布 Artifact 支持 Deterministic 和 LLM-guided；无效 Artifact 导入失败。
+- when 是可选 Assurance Contract 中的 CEL 选择表达式；predicates.yaml 只用于执行期业务判断。
+- Agent 只消费已发布 Skill Artifact，不调用 Compiler，不实现 Skill Admission。
+- Deterministic 与 LLM-guided 经过同一个 Runtime Action Boundary。
 - SBI 可携带 JSON 和 multipart 二进制。Event Plugin 处理外部协议；Host 管理 ArtifactStore；Codec 按需作为现有 Tool Plugin 的 Operation 调用。
 
 ## 实施顺序
 
-先完成 Python Core、唯一 Plugin Manager、已发布 Skill 导入、SkillCatalog/Resolver 和 Runtime Action Boundary；通过 Echo 垂直 E2E 后，再接入 OpenAMSM Plugin、Tool Package 和 Create → Modify → Release。没有真实证据的阶段标记 NOT_STARTED / NOT_RUN。
+先完成 Python Core、唯一 Plugin Manager、已发布 Skill 导入、SkillCatalog / Resolver 和 Runtime Action Boundary；通过 Echo 垂直 E2E 后，再接入 OpenAMSM Plugin、Tool Package 和 Create → Modify → Release。未取得真实证据的阶段标记 NOT_STARTED / NOT_RUN。
 
 ## Demo 范围
 
