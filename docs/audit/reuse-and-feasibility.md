@@ -114,7 +114,7 @@ This audit records repository evidence as observed on 2026-11-25. The following 
 - Keep the repository independent and Go.
 - It implements `event.ingress` and `event.delivery`, not MAS Owner Tools, Skill selection, RunStore or Runtime.
 - It owns SBI HTTP/2 ingress, JSON/`multipart/related` parsing, Content-ID association, raw N1/N2 extraction/staging, normalized Event publication and SBI response encoding/delivery.
-- It preserves original N1/N2 bytes and does not eagerly deep-decode protocol IEs for business reasoning.
+- It preserves original N1/N2 bytes and does not eagerly deep-decode protocol IEs for business reasoning. For shared SBI operations such as UpdateSMContext, it may extract only the minimal NAS discriminator needed to normalize the Event; the Host Resolver still selects the Skill, and deeper decode remains a Skill-invoked Codec Tool.
 - It consumes Codec Tools exposed by `ca-client-tools` when a selected Skill requests protocol fields. Reuse shared Go codec packages; do not copy a decoder or create a second Codec Plugin/Manager.
 - Fresh Events always enter the Host Skill Resolver first. The Event Plugin never chooses the Skill or execution mode.
 - Keep the exact Next manifest/IPC and Host Artifact Handoff as the only target contract. Do not reuse `ca-agent-host.plugin/v0` or introduce aliases.
