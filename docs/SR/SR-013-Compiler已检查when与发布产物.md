@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.1.9  
+> 文档版本：0.2.0  
 > 状态：DRAFT  
 > 创建日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -14,7 +14,7 @@
 
 | 验收 ID | 通过条件 | 当前证据 |
 |---|---|---|
-| AC-013-01 | Go 生成的 CheckedExpr Any 与 FileDescriptorSet 被固定版本 Python 直接加载；G.4 跨语言 fixture 对 true/false/error、缺失/null 与数值边界一致 | 预检已有证据；完整验收 NOT_RUN |
+| AC-013-01 | Go 生成的 CheckedExpr Any 与 FileDescriptorSet 被固定版本 Python 直接加载；G.4 跨语言 fixture 对 true/false/error、缺失/null 与数值边界一致 | ISOLATED_POC_PASS：真实 Schema 管线；Go/Python 18/18 一致；三态、布尔组合、嵌套路径、int64/finite double 边界、6 类非法输入静态拒绝、多 Skill 隔离通过。证据见 .agent-tmp/ac-013-01-poc/EVIDENCE.md 和 artifacts/。不代表 Compiler 产品发布 PASS。 |
 | AC-013-02 | #61 的静态正负例、诊断位置和多 Skill 共享 Lock 时的类型隔离全部符合预期 | NOT_RUN |
 | AC-013-03 | 新版 Build/Verify 确定、损坏时 fail-closed；冻结机器契约及两条冻结产物路径对基准的 Golden 字节一致 | NOT_RUN |
 | AC-013-04 | #61 指定的 Go 测试、vet、Native/WASM 构建、CLI E2E、真实 Chromium Worker parity 与 diff check 全部通过 | NOT_RUN |
@@ -22,7 +22,7 @@
 
 Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)。规范依赖：[ca-skills #88](https://github.com/odango-chan/ca-skills/pull/88)。设计 PR：[Next #3](https://github.com/odango-chan/ca-agent-next/pull/3)。实施 PR、Commit、实际命令、环境、受测 SHA 和证据待回填。替代关系：无。
 
-正式 CA-SL v1alpha5 规范固定为 `18d8184367982ccbc835756136c4a53f9096c3a0`，见 [ca-skills 正式发布记录](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs/releases/ca-sl-v1alpha5.md)。此门槛已满足。Next PR #3 已合并；SR-013 的实施范围与验收仍待负责人确认，AC-013-01 为进入 READY 后的首项验收。
+正式 CA-SL v1alpha5 规范固定为 `18d8184367982ccbc835756136c4a53f9096c3a0`，见 [ca-skills 正式发布记录](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs/releases/ca-sl-v1alpha5.md)。此门槛已满足。Next PR #3 已合并；SR-013 总体仍为 DRAFT。AC-013-01 隔离 PoC 阶段现已完成，AC-013-02～05 和产品发布门槛仍未完成。
 
 ### AC-013-01 环境预检与最小交换实验
 
@@ -38,7 +38,7 @@ Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/6
 ` 退出 0，仅验证 Compiler 包能编译。Python 使用 `from cel_expr_python import cel` 与 `cel.NewEnv()`，可加载自己生成的表达式。
 - 用 Go 编译常量 `true`。直接 `anypb.New(AstToCheckedExpr(...))` 产生 `type.googleapis.com/google.api.expr.v1alpha1.CheckedExpr`；Python `Env.deserialize` 拒绝，报告 INVALID_ARGUMENT。将 Go CheckedExpr protobuf 序列化，再解码为 `cel.dev/expr.CheckedExpr` 并用 `anypb.New` 包装，得到 `type.googleapis.com/cel.expr.CheckedExpr`；Python 直接加载该文件并求值为 true。以真实类型构造 Any，避免只替换类型 URL。
 - 下一步按正式规范补完整 AC-013-01：Go 导出同一 typed when 的 Any 和 FileDescriptorSet；Python 用同一 DescriptorSet 构造 DescriptorPool；记录两端的 true/false/error、optional 与 null、数值边界和多 Skill 隔离。同一工具版本下重跑直接包装失败与标准类型成功的对照。仍须验证类型和语义字段在转换前后完整保留，由 Compiler Owner 据此定冻结的新 Artifact 字段。
-- 本次是隔离工作区探针，未写入 Compiler 仓。AC-013-01 尚无完整验收证据。明确区分环境/常量探针通过、旧 Type URL 失败和 typed fixture 尚未运行。
+- 本次是隔离工作区探针，未写入 Compiler 仓。当时尚无完整验收证据；该状态由本修订记录的隔离 PoC 结果更新。明确区分环境/常量探针通过、旧 Type URL 失败和 typed fixture 尚未运行。
 
 ### 已运行的 typed fixture 与未通过的 null 表示
 
@@ -73,12 +73,13 @@ Go 静态编译另拒绝了未知字段和另一共享 descriptor 文件中未�
 
 ## AC-013-01 阶段执行单
 
-**隔离 PoC 阶段：READY。** 本轮依据项目负责人委托处理到可执行位置，对隔离 PoC 作技术放行。SR-013 整体仍为 DRAFT。执行范围仅为本地临时副本的代码、fixture、测试与证据，Compiler 产品仓远程写入、契约定稿、合并、发布和 Next 消费实现各自沿用原门槛。
+**隔离 PoC 阶段：COMPLETED / PASS。** 本轮仅对固定 Compiler SHA 的隔离副本执行技术 PoC。SR-013 整体仍为 DRAFT。执行范围仅为本地临时副本的代码、fixture、测试与证据；Compiler 产品仓远程写入、契约定稿、合并、发布和 Next 消费实现各自沿用原门槛。
 
 - 规范固定为 ca-skills `18d8184367982ccbc835756136c4a53f9096c3a0`，Compiler 目标为 `odango-chan/ca-skill-compiler` 的 `255ab85fa5abb4b0bf36656bf64250cafebf45cb` 的隔离副本。原型来源为 Next PR #7 固定提交 `5702e2c3dc19445cc807a598376451d10d61391d`。Go/Python 环境采用 AC-013-01 预检的固定版本。
 - 先复跑 §作者表达式转换原型的文件和命令。Compiler 原仓基线已实跑 `GOWORK=off go test ./internal/compiler -count=1 -run 'TestDevelopmentMultiSkill|TestDevelopment.*Schema'`，退出 0。该结果仅覆盖现有 Schema/Lock，不覆盖新 `when`。
 - 在隔离副本内利用 `buildSchemaRegistry`、`resolveReferenceFrom` 和 `resolveSchemaRoot` 获取每 Skill 的 Request Schema；使用 `TestDevelopmentMultiSkillSharedLockPasses` 的实际 Lock fixture 扩展两个 Skill 的独立 Schema。以注册表结果生成 DescriptorSet，保持每 Skill 的解析范围；拒绝跨 Skill 借用另一个 Schema 的字段。将固定字段原型替换为按 Schema 驱动的短路检查与转换，并从声明了真实 `event.type` 的作者表达式开始运行。
-- 通过条件为重跑后 Go、Python 对同一实际产物的正负例一致，覆盖缺失/显式 null/有效值、AND/OR/NOT 守卫、嵌套路径、`int64` 和 finite double 边界、未知字段与无守卫拒绝、求值错误和多 Skill Lock 隔离。保留发布契约前的原始证据。缺少任一项时不写完整 PASS；将最小反例、失败命令、受测 SHA 和下一项可执行步骤记入证据单。完整 PASS 后交由 Compiler Owner 定稿新 Artifact API。
+- 已完成结果：真实 Development Schema 管线按 Skill 解析 Request Schema；Go 侧生成 CheckedExpr Any 和 FileDescriptorSet，Python 侧直接加载序列化产物，不重新解析 CEL 源文本。固定环境为 Go 1.26.6、cel-go 0.33.2、cel.dev/expr 0.25.1、CPython 3.14.6、cel-expr-python 0.1.4、protobuf 7.36.2。Go 的 go vet ./internal/compiler 与 TestAC013PocGenerate 退出 0；Python 18/18 与 Go 结果一致。缺失/null/value 三态、AND/OR/NOT、嵌套路径、int64 与 finite double 边界、6 类非法输入静态拒绝、多 Skill 类型隔离均有真实证据。证据目录为 .agent-tmp/ac-013-01-poc/EVIDENCE.md，产物位于 artifacts/；源仓 255ab85 未被修改。
+- 该 PASS 只覆盖隔离 PoC 阶段，不代表 Compiler Core 已合并实现源表达式转换、Artifact Schema 已冻结、Build/Verify/Release 已通过，也不代表 Next SR-004/005 已能消费。后续由 Compiler Owner 定稿 API 与产品实现；AC-013-02～05 保持各自状态。
 
 ## 修订记录
 
@@ -94,3 +95,4 @@ Go 静态编译另拒绝了未知字段和另一共享 descriptor 文件中未�
 | 2026-11-25 | 0.1.7 | 记录可复跑的源 AST 转换试验 | 为完整 Schema-aware 实施提供验收起点 | SR-013 |
 | 2026-11-25 | 0.1.8 | 放行隔离 AC-013-01 与记录既有 Schema/Lock 测试 | 提供明确的 DSH 下一步 | SR-013 |
 | 2026-11-25 | 0.1.9 | 保留正式规范来源与分阶段执行条件 | 合并 main 的治理更新 | SR-013、PR #7 |
+| 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | AC-013-01 阶段执行单 | 记录隔离 PoC 完成、真实 Schema 管线、Go/Python 18/18 一致性和边界；不提升 SR-013 总体状态 | 对齐用户提交的最新实测证据，区分 PoC PASS 与产品发布门槛 | Issue #12；SR-013 |
