@@ -1,7 +1,7 @@
 # 业务接入与 OpenAMSM 集成设计说明书
 
 > 文档类型：业务集成设计说明书  
-> 文档版本：0.2.0  
+> 文档版本：0.2.1  
 > 状态：目标集成设计已重建；外部 Owner 能力已实现，Next Plugin/Host 端到端尚未验收  
 > 功能归属：F06 — 业务接入与集成；EC04、EC05、EC07  
 > 关联 IR：IR-004、IR-005、IR-006  
@@ -158,6 +158,8 @@ EC07 Mock AMF SBI Test Peer 负责发送协议准确的 Create/Update/UE-request
 
 前面几项的 PASS 不自动传递到后面的层级。
 
+当前 ca-skills main 已包含 Owner-linked 作者源：`examples/skills/establish-pdu-session-mas`、`examples/skills/modify-pdu-session-mas`、`examples/skills/release-pdu-session-mas`；PR #83～#86 均已合并。它们是当前正式 Skill 源，不应与 `skills/` 下的早期独立示例混淆。2026-11-23 Development E2E 证据早于当前 Skill revision；必须对当前精确 revision 重跑，不能自动沿用旧 PASS。
+
 ## 10. 当前实现审计
 
 | 对象 | 当前证据 | 状态 |
@@ -199,3 +201,4 @@ EC07 Mock AMF SBI Test Peer 负责发送协议准确的 Create/Update/UE-request
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
 |---|---|---|---|---|---|
 | 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 全文 | 根据 OpenAMSM Owner、Plugin Draft、Mock AMF 与当前跨仓状态重建 Create/Modify/UE Release 集成设计 | Issue #12；SR-017～019 |
+| 2026-11-25 | 0.2.1 | GPT-6.2（ChatGPT） | §2、§4、§10 | 更新 ca-skills Owner-linked Skill 源路径、PR #83～#86 状态及 ca-client-tools v1.2.0 / CA-SL Release Record 状态 | 避免旧示例、旧 Provider 版本和规范头部候选文字造成误读 | Issue #12；SR-017～019、SR-023 |
