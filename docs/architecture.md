@@ -175,11 +175,23 @@ Native package format and the minimal Demo IPC are defined in [Plugin Package v1
 
 | Repository / package | Extension role | Responsibility |
 |---|---|---|
-| ca-openamsm-plugin | Event ingress + delivery | Protocol decoding/normalization and protocol response encoding |
-| ca-client-tools | Tools | OpenAMSM callable operations, private bindings and Owner-facing calls |
+| ca-openamsm-plugin | Event ingress + delivery | SBI HTTP/2 ingress, JSON/multipart parsing, Content-ID association, normalized Event publication and SBI response encoding/delivery; preserve original N1/N2 bytes |
+| ca-client-tools | Tool Plugin | Existing OpenAMSM callable operations and, when published, protocol Codec Tool operations using its shared Go codec packages |
 | Echo Example Plugin | Combined | Minimal Event ingress/delivery and one or more Tools |
 
-ca-openamsm-plugin and ca-client-tools remain independently owned projects. Do not move MAS Owner calls into the Event Plugin. Neither Plugin chooses the Skill or owns Runtime authorization.
+`ca-openamsm-plugin` and `ca-client-tools` remain independently owned projects. The Event Plugin is not a Tool Provider or Owner client. The Tool Plugin does not own SBI ingress, Skill selection or Runtime authorization. Neither Plugin chooses the Skill.
+
+The Event Plugin performs the protocol work required to parse and normalize the SBI request, including multipart and Content-ID handling. It does not eagerly decode every NAS/NGAP IE for business reasoning. The SBI operation identifies the current Event type; a Skill that needs inner protocol fields can call a Codec Tool through the existing `tools` extension.
+
+### 5.3 On-demand protocol Codec Tools
+
+- Add Codec operations to the existing `ca-client-tools` Tool Plugin through its canonical Tool Interface Package; do not create a separate Codec Manager, Tool registry or new Plugin system for this Demo.
+- The Tool Plugin may expose related operations such as NAS/NGAP/PFCP Decode and Encode, but only for the exact protocol/message subset implemented and tested by its shared Go codec packages.
+- A Codec Tool accepts a Host-owned artifact reference (or a structured message when appropriate) and returns either a structured JSON projection or an output artifact reference.
+- The selected Skill decides whether decoding is needed. If it is not, it passes the original artifact reference to the relevant business Tool without invoking Codec.
+- Decode is read-only with respect to the original artifact. The decoded projection never replaces or silently re-encodes the original N1/N2 bytes.
+- Codec Tools use the same Runtime Action Boundary, Capability authorization, Plugin Manager and Provider adapter as every other Tool. No direct Skill-to-Worker call and no Host-side duplicate codec.
+- The current `ca-client-tools/protocol/nas5gsm` library is a narrow pure codec package, not yet an Agent-callable Tool. The Tool operation and Schema must be exported by the canonical Interface Package before Skills can invoke it.
 
 ## 6. Contract and schema ownership
 
@@ -193,6 +205,10 @@ ca-openamsm-plugin and ca-client-tools remain independently owned projects. Do n
 | Tool IDs, input/output Schemas, Effects, Capability membership and Owner outcome contracts | Tool Interface Package | Existing canonical authority; do not duplicate ToolCatalog |
 | Tool implementation and private runtime binding | Tool Plugin | Executable implementation only |
 | Runtime authorization, Outcomes and Evidence | Python Runtime | One common boundary for both modes |
+| 3GPP SBI protocol Schema | Applicable 3GPP OpenAPI | Reuse the standard request/response and multipart definitions; do not invent a replacement SBI Schema |
+| NAS / NGAP protocol Schema | Applicable 3GPP TS definitions, including ASN.1 where applicable | Use standard protocol definitions for Codec input/output; not every protocol has an official YAML |
+| Codec Tool input/output Schema | Tool Interface Package | Defines the callable operation and structured result/artifact-reference contract |
+| Skill requestSchema | Skill Assurance | Describes only the business input the Skill actually consumes; it need not duplicate the complete protocol Schema |
 
 Rules:
 
@@ -397,12 +413,12 @@ The Host resolves the Skill, then derives the mode from Assurance presence/valid
 
 | Concern | Owner |
 |---|---|
-| Nsmf/Namf HTTP/2 listener, multipart and Content-ID parsing, protocol normalization and SBI response encoding | ca-openamsm-plugin |
+| Nsmf/Namf HTTP/2 listener, JSON/multipart and Content-ID parsing, normalized Event publication and SBI response encoding; preserve original N1/N2 bytes | ca-openamsm-plugin |
 | Plugin lifecycle, common IPC, Event Schema validation and dispatch | One Python Plugin Manager in ca-agent-next |
 | Skill import, when evaluation, Skill selection and mode derivation | Python Host / Skill Resolver |
 | Run identity, continuation, retry/replay, response obligations and resource/alias mapping | Python Host / Runtime |
 | N1/N2 staging, ArtifactStore custody, Run association and authorization | Python Host / Runtime |
-| Callable IDs, IO Schemas, Effects, Capability membership, private bindings and Owner calls | ca-client-tools |
+| Callable IDs, IO Schemas, Effects, Capability membership, private bindings, Owner calls and published Codec Tool operations | ca-client-tools |
 | SM Context identity, actual business state and authoritative mutation result | OpenAMSM Owner / SMF |
 | CA-SL syntax and compiled Artifact | ca-skills specification + ca-skill-compiler |
 
@@ -411,6 +427,10 @@ ca-openamsm-plugin is not a Tool Provider, Owner client, Skill Resolver, RunStor
 ### 12.3 Binary handoff
 
 N1/N2 bytes move through the Host-owned local staging and ArtifactStore contract. They are not Base64-encoded in IPC and are not persisted by the Plugin. Host imports inbound files before accepting an Event, returns opaque artifactRefs, authorizes each Runtime/Tool use, stages outbound bytes for a specific response obligation and cleans temporary files. No extra Plugin/Event/Artifact SHA-256 or content digest is introduced.
+
+The artifact handoff is transport/custody, not a mandatory decode step. A Skill may pass an artifactRef directly to an OpenAMSM business Tool. When it needs protocol fields, it invokes a Codec Tool exposed by `ca-client-tools` through the same Runtime Action Boundary. The Tool Provider resolves the invocation-scoped artifact through the existing Host artifact channel and returns a structured JSON projection. The original artifact remains unchanged and available for forwarding or response composition. Codec Encode, when needed, returns an output artifact for the Host to stage for the originating Event Plugin.
+
+The current `protocol/nas5gsm` package is not itself an Agent-callable Tool. Only merged/released Codec operations with declared Interface Package Schemas and qualified message coverage may be used by Skills.
 
 ### 12.4 Dependency and evidence status — 2026-11-25
 
