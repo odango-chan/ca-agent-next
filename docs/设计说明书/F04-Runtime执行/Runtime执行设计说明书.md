@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：目标设计，待实现和验收  
-> 文档版本：0.2.2  
+> 文档版本：0.3.0  
 > 功能归属：F04 — Runtime 执行  
 > 关联 SR：SR-007    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -33,13 +33,13 @@ Host 不直接调用 Tool Plugin。LLM 不得绕过 Runtime，也不得自行扩
 
 ## 3. 统一 Action Boundary
 
-Deterministic 与 LLM-guided 都形成同一种概念上的 Runtime Action Request，并经过相同的校验和分发路径。Action 的 Callable ID、输入/输出 Schema、Effect、Capability 归属和 Owner 结果语义来自对应 Tool Interface Package；不得在 Agent Core 内维护重复 Tool 定义。
+Deterministic 与 LLM-guided 都形成同一种概念上的 Runtime Action Request，并经过相同的校验和分发路径。公开 Callable ID、输入/输出 Schema、Effect 和 Capability membership 来自 Skill 锁定的 Tool Interface Package；业务 Owner 的 Callable、Owner Outcomes、Receipt、Commit Proof 和 Reconcile 来自 Owner Contract Package。Provider Runtime Bindings 只提供 Provider 私有 backendOperationId、HostInvocation/privateArguments 来源和 observation 定位，不是公开 Tool 契约或授权来源。不得在 Agent Core 内维护重复 Tool 定义。
 
 Runtime 在分发前至少核对：
 
 1. 当前 Run 是否绑定有效 Skill 和对应 Catalog generation。
 2. Action 是否属于当前 Skill 发布 Artifact 声明的 Callable Scope。
-3. Callable ID 是否存在，参数是否符合 Interface Package Schema。
+3. Callable ID 是否存在，参数是否符合对应 Tool Interface Package 或 Owner Contract Package Schema。
 4. Effect 是否与该 Operation 的声明一致。
 5. Artifact Reference 是否由 Host 管理并关联到当前 Invocation。
 6. Action 是否满足当前 Run 的状态和 continuation 约束。
@@ -77,7 +77,7 @@ Runtime 负责将异步等待与原 Run 关联。恢复消息必须匹配原始 
 
 Owner 返回 UNKNOWN 时必须保留 UNKNOWN，并按 Owner 契约执行后续查询或 Reconcile；任何映射都不得把 UNKNOWN 提升为 COMMITTED。传输成功、响应已发送或 Delivery 成功都不能替代 Owner 提交证明。
 
-具体状态机和 Owner Receipt 结构由对应 Owner Interface Package 定义；Runtime 不自行发明业务状态枚举。
+具体状态机和 Owner Receipt 结构由 Owner Contract Package 定义；Provider Runtime Bindings 只声明 Provider 如何定位并返回该 Receipt，不得重定义其字段和状态。Runtime 不自行发明业务状态枚举。
 
 ## 7. 失败语义
 
@@ -99,7 +99,7 @@ Skill/Artifact 无效、Callable Scope 不匹配、Schema 不匹配、Plugin 不
 
 ## 9. 功能归属与需求追踪
 
-本说明书属于 F04，主要需求为 SR-007。Run/Continuation 的协议身份由 F05/F06 的集成设计补充；Owner Receipt/Commit Proof 的权威字段由 EC03/EC05 定义，Runtime 只消费并解释，不复制 Owner 私有状态映射。
+本说明书属于 F04，主要需求为 SR-007。Run/Continuation 的协议身份由 F05/F06 的集成设计补充；Owner Receipt/Commit Proof 的权威字段由 EC05 Owner Contract Package 定义，Provider Runtime Bindings（EC03）只提供私有调用映射和 Receipt 定位。Runtime 只消费并解释，不复制 Owner 私有状态映射。Tool Provider 与 Plugin Manager 的消费边界见 [F03.05 Tool Interface 与 Provider 集成设计](../F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md)。
 
 ### 既有执行内核边界
 
@@ -114,3 +114,4 @@ Skill/Artifact 无效、Callable Scope 不匹配、Schema 不匹配、Plugin 不
 | 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 第 1～8 章 | 归入对应 Feature 并补充外部能力边界 | 按 F04 归档，固定两种执行模式共用的 Action Boundary、Run 和 Owner Outcome 语义 | F04；SR-007；EC03/EC05；PR #1 |
 | 2026-11-25 | 0.2.1 | 刷新需求追踪、目录或证据引用 | 对齐最新分支与 IR/SR 基线 | 见关联 SR |
 | 2026-11-25 | 0.2.2 | Codex / GPT-6 | 既有执行内核边界 | 合并有效边界与分仓证据入口 | 跨仓设计移交 | IR-006 |
+| 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | 第 3、6、9 章 | 区分公开 Interface Package、Owner Contract Package 与 Provider Runtime Bindings 的权威边界 | 对齐 ca-client-tools v1.2.0 与 Owner v1alpha4 的实际发布结构 | IR-006 · SR-015 · Issue #12 |
