@@ -34,7 +34,7 @@
 | Plugin Manager | 加载包、校验 Manifest、启动/停止进程、握手、IPC、关联、Extension 分发 | Skill 选择、授权、Owner Commit 判断 |
 | Plugin Process | 实现声明的 Extension，访问自己拥有的资源 | 选择 Skill、扩大 Capability |
 | Event Extension | 解析外部协议并发布规范化 Event | 业务 Skill 映射、Owner Tool 调用 |
-| Tool Extension | 执行 Interface Package 定义的 Operation | 自行授权、声明业务提交 |
+| Tool Extension | 执行 Runtime 已放行的公开 Callable / Owner Operation | 自行授权、声明业务提交 |
 | Delivery Extension | 按 Host 指令向外部协议响应方交付 | 选择 Run、改变 Owner outcome |
 | Tool Interface Package | 公共 Callable ID、输入/输出 Schema、Effect、Capability membership | 进程生命周期、Provider 私有 backend 映射 |
 | Owner Contract Package | Owner Callable、Owner Outcomes、Receipt、Commit Proof、Reconcile | Provider 进程和私有 handler |
