@@ -1,11 +1,11 @@
 # Tool Interface 与 Provider 集成设计说明书
 
 > 文档类型：功能子模块设计说明书
-> 文档版本：0.3.4
+> 文档版本：0.3.5
 > 状态：目标设计；待评审
 > 功能归属：F03.05 — Tool Plugin 集成
 > 交叉功能：F03.01～F03.04、F04.01、F04.05、F05.02、F06
-> 关联 SR：SR-003、SR-007、SR-010、SR-015
+> 关联 SR：SR-003、SR-007、SR-010、SR-015、SR-025
 > 全局评审范围：继承根目录 Agent.md 的 review_scope。
 > 本文局部非目标：不实施 Provider/Host 代码迁移，不修改外部仓库，不完成 Codec Phase C，不声明生产资格。
 > 修订日期：2026-11-25
@@ -135,6 +135,15 @@
 - Plugin Manifest 声明 Plugin 身份、进程入口、IPC 版本和 Extensions；不复制 Tool Schema、Capability Grant、Owner Outcome 或 Provider 私有字段。
 - 部署配置显式选择已安装的 Provider 包、进程参数和服务配置。凭据只由 Host/Provider 部署配置注入，不进入 Skill、Interface Package 或模型上下文。
 - Provider Runtime Bindings 是 Provider 发布包内的私有 sidecar，不是 Plugin Manifest 的第二份 Tool 定义；Owner Contract Package 独立安装，并由 sidecar 的 Owner publication identity 固定部署版本，不被复制进 Provider Interface Package。
+
+### 4.4 Compiler v2.1.0 Development Interface Package 的 Owner 投影
+
+冻结 CA-SL v1alpha5 Runtime 使用的 Owner Contract Package 与 Skill Studio / Compiler v2.1.0 Development profile 使用的 `interface-package/v1alpha1` 是两个不同消费面。Development package 是对 Owner v1alpha4 source snapshot 的静态包装，不替代 Owner 原始 ToolCatalog、CapabilityContracts、Evidence Guarantees，也不替代 Provider Interface Package 或 Provider Runtime Bindings。
+
+MAS Owner 的 Development Interface Package 由 ca-client-tools 独立 Publisher 实施（SR-025），导出闭包、CapabilityCatalog 逻辑投影、EvidenceDescriptor、Schema closure 与 package/source version 边界由 F09 §4.5 统一定义。Provider Interface Package 仍只提供 ca-client-tools 自身的 11 个 READ Callable；MAS Skill 的 `mas::` Owner Callable 不得从 Provider Package 推导。
+
+Compiler v2.1.0 的 Development package version 必须为 exact SemVer。Owner source version `v1alpha4` 不可直接作为 `package.json.version`；该映射是 Publisher 实施前的决策门槛。无论选择 SemVer 映射还是升级 Compiler，都不得改变 Owner source stable Package ID、ToolCatalog contract IDs、Owner outcomes、Receipt / Commit Proof / Reconcile 语义或冻结 v1alpha5 Runtime Owner linking。
+
 
 ## 5. 组件职责
 
@@ -465,3 +474,5 @@ Runtime 在任何 Plugin IPC / Provider invoke 之前必须完成：
 | 2026-11-25 | 0.3.2 | GPT-6.2（ChatGPT） | §1、§4、§6、§7 | 补齐 provider.yaml 的 interfaceSnapshotDigest、runtimeBindingsDigest、公开→私有映射与 initialize/catalog digest 对账；明确 Provider Interface 与 Owner 的双部署 pin | 闭合 Provider package 实际发布结构与冻结 Artifact dependencyClosure 限制，依据 v1.2.0 Go generator 和 Runtime Bindings v1 contract | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.3.3 | GPT-6.2（ChatGPT） | §4.2、§6.5～§7.4 | 校正 Receipt Query 与 Reconcile 两个 Owner evidence operation 的 Skill 可见边界；Receipt Query 是受 Scope 约束的 READ Callable，Reconcile 是专用 target | 对齐 Compiler v1alpha5 Owner Link 对 dedicated Reconcile 的实际限制，避免将两者错误地一概视为不可调用 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.3.4 | GPT-6.2（ChatGPT） | §11 | 增加 Next 侧逻辑模块分解、输入/输出边界和最小自动化验收矩阵 | 使后续代码 SR 可直接按 Loader、Driver、Resolver、Action Boundary、Outcome/Reconcile、Artifact Adapter 和单一 Manager 分解实施 | IR-006 · SR-015 · Issue #12 |
+
+| 2026-11-25 | 0.3.5 | GPT-6.2（ChatGPT） | §4.4 | 区分冻结 v1alpha5 Runtime Owner Contract 与 Compiler v2.1.0 Development Interface Package；将 MAS Owner Publisher 实施责任链接到 SR-025，并记录 package/source version 的 SemVer 决策门槛 | 防止把 Owner Contract、Provider Interface Package 和 Development wrapper 混为同一发布面 | Issue #12；F09 v0.3.5；SR-015；SR-025 |
