@@ -108,7 +108,8 @@ If implementation and documentation disagree, stop and report the exact conflict
 - Selected Skill supplies SKILL.md guidance and, when Assurance exists, Context Requirements and declared Capabilities.
 - Host assembles Model-visible Context and keeps lightweight source references. Model-generated text is not an Observation; a Tool response is not automatically a committed outcome.
 - SBI Events may carry JSON and binary attachments. Event Plugins use the Host-owned Plugin Artifact Handoff; raw bytes stay outside NDJSON and Model-visible Context.
-- Protocol decoding is optional. A selected Skill calls a Codec Tool through the existing Tool Plugin only when it needs structured fields; otherwise it passes the original artifactRef to the business Tool. A decoded projection never replaces the original bytes.
+- The Event Plugin may extract only the minimum protocol discriminator needed to normalize an Event for a shared SBI operation (for example, NAS message type for UpdateSMContext). This is protocol-to-Event classification, not Skill selection or full business decoding; reuse the shared codec implementation and do not duplicate a parser.
+- Deeper protocol decoding is optional. A selected Skill calls a Codec Tool through the existing Tool Plugin only when it needs structured fields; otherwise it passes the original artifactRef to the business Tool. A decoded projection never replaces the original bytes.
 
 ## 9. External projects: reuse, do not copy
 
