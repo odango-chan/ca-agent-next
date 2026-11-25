@@ -8,7 +8,7 @@
 
 ## 0. Mandatory preflight
 
-Read README.md, Agent.md, docs/architecture.md, docs/audit/ca-agent-demo.md, docs/audit/reuse-and-feasibility.md, docs/plugin-package.md and docs/acceptance.md.
+Read README.md, Agent.md, docs/architecture.md, docs/audit/ca-agent-demo.md, docs/audit/reuse-and-feasibility.md, docs/plugin-package.md, docs/acceptance.md and [the SkillCatalog/Compiler integration requirements](../integration/skill-catalog-compiler-contract.md).
 
 Before coding:
 
@@ -43,10 +43,11 @@ Tasks:
 1. Establish Python package, CLI entrypoint, configuration model and pytest layout.
 2. Define minimum generic contracts: Plugin identity/lifecycle, IPC envelope, extension descriptor, normalized Event, Task/Run reference, Skill source/Artifact reference, Runtime Action Request/Result, Tool result and structured response.
 3. Define interfaces before implementations; no business names in Core.
-4. Selectively port Intent/model boundary and Formal/Context primitives identified in the audit. Do not port MockCompiler or treat MockRuntime as final.
-5. Keep a small dependency graph; no premature framework or abstract factory layers.
+4. Define the Core-owned SkillCatalog and immutable CatalogGeneration interfaces before Resolver implementation. Catalog entries must represent both SKILL.md-only and Assurance Skills.
+5. Selectively port Intent/model boundary and Formal/Context primitives identified in the audit. Do not port MockCompiler or treat MockRuntime as final.
+6. Keep a small dependency graph; no premature framework or abstract factory layers.
 
-**Acceptance:** Python import/build and focused pytest pass; no Go Agent Core files; no business-specific routing table.
+**Acceptance:** Python import/build and focused pytest pass; Core exposes a process-local Catalog snapshot abstraction with generation pinning interfaces; no Go Agent Core files; no business-specific routing table.
 
 ## 3. Phase B — Unified Plugin Manager and package IPC
 
@@ -85,10 +86,11 @@ Tasks:
 - Keep Host Artifact admission and Capability binding separate from Compiler Build.
 - Do not invent a second Artifact format, Skill Contract format or package integrity framework.
 - Do not add Host-side SHA-256 package hashing or signature verification. Retain only the identity checks already required by the Compiler/Interface Package contracts.
+- Build an immutable candidate SkillCatalog generation from successfully imported packages. Include SKILL.md-only entries; keep full SKILL.md text and compiled Assurance selection metadata in memory. A failed package update must not partially mutate the active generation.
 
 **External dependency gate:** the refreshed CA-SL v1alpha5 contract.when field and Assurance-free SKILL.md package path must be supported by the Compiler contract/release before this phase can pass. If current skillc does not support them, record the precise missing behavior and stop; do not silently strip when or claim the old release is compatible.
 
-**Acceptance:** SKILL.md-only import succeeds without Compiler invocation; Assurance source invokes Compiler and is admitted only after success; compiled Artifact is inspected/admitted without Build; invalid Assurance fails closed.
+**Acceptance:** SKILL.md-only import succeeds without Compiler invocation; Assurance source invokes Compiler and is admitted only after success; compiled Artifact is inspected/admitted without Build; invalid Assurance fails closed; import/update produces a candidate Catalog generation but does not expose it until atomic activation. Phase C remains blocked on the Compiler-owned when Artifact contract described in docs/integration/skill-catalog-compiler-contract.md.
 
 ## 5. Phase D — Skill Resolver and mode derivation
 
@@ -97,15 +99,15 @@ Tasks:
 Implement:
 
 1. Resolve exact continuations before fresh Skill selection.
-2. Discover imported Skills. Do not use deployment-owned Event→Skill tables or business Contract Packages.
-3. For Assurance Skills, evaluate optional assurance/contract.yaml when against normalized event.type and input. Static invalidity is a Compiler error; false and runtime evaluation error exclude the Skill.
+2. Resolve from the active immutable in-memory SkillCatalog generation pinned for this fresh Event. Do not scan package directories or reread SKILL.md/Assurance files on the Event hot path; do not use deployment-owned Event→Skill tables or business Contract Packages.
+3. For Assurance Skills, evaluate the precompiled when program from the Catalog against this Event's normalized event.type and input. Compiler parses/type-checks it only on import/update. Every fresh Event is evaluated independently; do not cache the boolean result. Static invalidity is a Compiler error; false and runtime evaluation error exclude the Skill.
 4. If exactly one explicit true match exists, select it without LLM. If multiple true matches exist, offer only those candidates to the LLM.
-5. If no explicit true match exists, form semantic candidates from unguarded Skills (no when), using SKILL.md. This includes SKILL.md-only Skills and Assurance Skills whose Contract omits when.
+5. If no explicit true match exists, form semantic candidates from unguarded Skills (no when), using cached candidate metadata derived from SKILL.md. This includes SKILL.md-only Skills and Assurance Skills whose Contract omits when. After selection, provide the full SKILL.md content from Catalog memory; do not reread the package file.
 6. Never reintroduce a false/error guarded Skill into the unguarded set. Validate the exact Skill identity returned by the model.
 7. Derive supported modes from Assurance presence/validity. No Assurance means LLM-guided only; valid Assurance means both modes; invalid Assurance means import failure. Do not add supportedModes.
 8. Select execution mode only after exact Skill binding.
 
-**Acceptance:** EX-09/EX-10/EX-11 pass with deterministic fake Model client; no business-specific route configuration; false/error candidates are excluded and out-of-set IDs rejected.
+**Acceptance:** EX-09/EX-10/EX-11 and EX-21/EX-22/EX-23/EX-27/EX-29 pass with deterministic fake Model client; no business-specific route configuration; false/error candidates are excluded and out-of-set IDs rejected. The Resolver uses only the pinned Catalog snapshot and never invokes Compiler or filesystem reads during selection.
 
 ## 6. Phase E — One Runtime Action Boundary and two execution modes
 
@@ -113,7 +115,7 @@ Implement:
 
 Implement:
 
-1. One Python Runtime with Run identity, Skill binding, admission, Capability authorization, Action Request validation, Tool Plugin dispatch, Outcome/Evidence and basic Wait/Resume semantics.
+1. One Python Runtime with Run identity, Skill binding, pinned catalogGeneration, admission, Capability authorization, Action Request validation, Tool Plugin dispatch, Outcome/Evidence and basic Wait/Resume semantics. Each Invocation retains its generation until completion; a later Catalog activation affects only new Invocations.
 2. Deterministic Procedure Engine derives the next Action from the admitted Procedure Artifact.
 3. LLM-guided Host Model Loop proposes the next Action from Skill-scoped Context.
 4. Both paths submit the same Action Request to the same Runtime method and same Plugin tools extension.
@@ -130,15 +132,16 @@ Implement:
 **Allowed changes:** ca-agent-next only.
 
 1. Make Echo a runnable Example under examples/.
-2. Add automated Acceptance Tests for EX-01 through EX-19.
+2. Add automated Acceptance Tests for EX-01 through EX-29.
 3. Exercise Event → Skill import/selection → Run → Tool → Outcome/Evidence → response delivery.
 4. Exercise SKILL.md-only import, Assurance source import, compiled Artifact import, and LLM Skill Authoring.
-5. Exercise the same Assurance-backed Skill in both modes.
-6. Exercise the individual LLM Action path without Compiler.
-7. Remove unused scaffolding, duplicated registries and obsolete adapters.
-8. Update docs and record exact test commands/results.
+5. Exercise Catalog residency, no per-Event file reads/Compiler calls, compile-once/evaluate-per-Event behavior, duplicate/continuation bypass, atomic update, failed-update rollback, generation pinning and lazy references (EX-21–EX-28).
+6. Exercise the same Assurance-backed Skill in both modes.
+7. Exercise the individual LLM Action path without Compiler.
+8. Remove unused scaffolding, duplicated registries and obsolete adapters.
+9. Update docs and record exact test commands/results.
 
-**Acceptance:** all Echo tests pass without external credentials; Python Core remains business-neutral; one Plugin process supports Event, Delivery and Tools.
+**Acceptance:** all Echo tests pass without external credentials; Python Core remains business-neutral; one Plugin process supports Event, Delivery and Tools; EX-01–EX-29 pass or are explicitly BLOCKED by the external Compiler Artifact contract.
 
 ## 8. Phase G — Second independent business
 
@@ -158,7 +161,7 @@ Start only after Echo and second-business mechanism acceptance.
 - Use ca-openamsm-plugin as Event Plugin for SBI ingress/delivery.
 - Use ca-client-tools v1.2.0 as Tool Plugin through the unified Plugin Manager; adapt its current Provider v2 protocol rather than copying its Go code.
 - Consume ca-skills Create/Modify/Release CA-SL packages.
-- Invoke the Compiler release that supports the refreshed v1alpha5 contract.
+- Invoke the Compiler release that supports the refreshed v1alpha5 contract.when compiled Artifact representation and SKILL.md-only import boundary. Python Runtime consumes the portable checked program specified by the Compiler-owned Artifact contract.
 - Keep Nsmf Run lifecycle, resource mapping, Host Artifact Store and Runtime outside the Event Plugin.
 - Preserve Owner Receipt, Commit Proof, UNKNOWN and exact-original Reconcile semantics.
 - Do not claim live Scheme C or Production Qualification unless the isolated real environment gate is executed.
@@ -175,6 +178,8 @@ Cross-repository implementation changes require separate authorization and PRs.
 - Do not add Event→Skill or Event→Mode mapping tables.
 - Do not add extra SHA-256 package hashing, package signatures, Trust Registry or package-integrity framework.
 - Do not add legacy format compatibility or automatic migration.
+- Do not scan Skill package files, parse SKILL.md or compile CEL on every Event. Do not cache when results across distinct Events.
+- Do not put SkillCatalog under Plugin Manager or introduce a distributed cache. Explicit Catalog update is atomic; no filesystem watcher or generic Plugin hot reload.
 - Do not compile individual LLM Action proposals or wrap each one in a temporary Procedure.
 - Do not let LLM invoke Plugins directly or declare Owner commit.
 - Do not move NsmfRunExecutor, Owner claims, Receipt/Reconcile or Skill Runtime into ca-openamsm-plugin.
