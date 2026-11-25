@@ -1,4 +1,4 @@
-# DeepSeek Harness 实施提示词：CEL when Artifact 与 SkillCatalog
+# DeepSeek Harness 实施提示词：发布型 Skill Artifact 与 SkillCatalog（无内置 Compiler / 无 Skill Admission）
 
 **用途：** 将当前架构设计推进到可运行的 Compiler / Python Agent 实现。  
 **任务入口：** [ca-skill-compiler Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)  
@@ -91,12 +91,12 @@
 
 新增正反例至少覆盖 CA-SL Appendix M 的 SA-004、SA-005，并覆盖 G.4 可选/可空、未知字段、类型错配、非 bool、数值边界、禁止宏/索引等。
 
-### 五、Phase 2：Development Artifact v1alpha2
+### 五、Phase 2：新增版本化发布运行时 Artifact
 
 只在 Phase 0 互操作通过后定稿并实现：
 
-1. 新增 Artifact Manifest v1alpha2 机器 Schema 和 Go DTO/Assembler/Verifier。
-2. 原 Development v1alpha1 的五份契约、Golden 和已发布产物保持不变。
+1. 新增 Compiler-owned 的版本化发布运行时 Artifact Manifest 机器 Schema 和 Go DTO/Assembler/Verifier；具体 Artifact API 版本由 Compiler Owner 依据既有发布契约命名。
+2. 原发布 Artifact v1alpha5 和 Development v1alpha1 的全部契约、Golden 和已发布产物保持不变。
 3. 对声明 when 的 Skill 输出：
    - \`skills/<skill>/compiled/when.checked.pb\`：标准 Any，包含已检查 CheckedExpr；
    - \`skills/<skill>/compiled/when.types.pb\`：标准 FileDescriptorSet，覆盖 Event 与 Request Schema 的精确类型闭包。
@@ -132,8 +132,8 @@ Compiler Artifact 契约有可用的实现分支和明确的文件布局后，�
 1. 实现 Core-owned immutable SkillCatalog / CatalogGeneration。
 2. 导入时读取所有 SKILL.md，缓存完整文本和语义候选元数据。
 3. SKILL.md-only 直接入 Catalog，不调用 Compiler。
-4. Assurance Source 调用 canonical Compiler Check/Build，随后 Inspect/Verify 和 Host Admission。
-5. 已编译 Artifact 只 Inspect/Verify，不重新 Build。
+4. Agent 只接受发布包：SKILL.md + Compiler 生成并在发布前 Verify 的运行时 Artifact（如果有 Assurance）。Agent 不导入 Assurance source YAML。
+5. Agent 不调用 Compiler Check/Build/Inspect/Verify；只检查 Artifact 格式、Manifest、必需文件、路径/引用、CEL/type 数据可解析性，并解析本机 Plugin Tool/Capability 依赖。
 6. 读取 Artifact v1alpha2 的 CheckedExpr Any / DescriptorSet；使用 \`cel-expr-python\` 反序列化一次并保留 Expression、DescriptorPool、Schema/type bindings。
 7. 对每个 fresh Event 构造当前 activation 并求值；不缓存布尔结果，不读取磁盘，不启动 Compiler。
 8. Runtime false/error fail-closed，排除 Skill；多个 true 只在精确集合内消歧。
