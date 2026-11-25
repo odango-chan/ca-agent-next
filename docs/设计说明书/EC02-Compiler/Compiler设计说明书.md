@@ -258,7 +258,7 @@ GOTOOLCHAIN=go1.27.4 GOWORK=off node scripts/chromium-parity.mjs
 git diff --check
 ~~~
 
-另需固定并实跑 Python cel-expr-python / protobuf 互操作测试。若现有仓库没有对应 Python 测试脚本，AC-013-04 必须新增可由 CI 调用的测试入口；提示词不得编造一个不存在的命令。每项记录仓库、受测 SHA、环境、依赖版本、命令、退出码和证据位置。
+Chromium parity 脚本使用真实 Headless Chrome；若默认路径不可用，必须通过 CHROME_PATH 指向本机/CI 实际安装的 Chrome 或 Chromium。另需固定并实跑 Python cel-expr-python / protobuf 互操作测试。若现有仓库没有对应 Python 测试脚本，AC-013-04 必须新增可由 CI 调用的测试入口；提示词不得编造一个不存在的命令。每项记录仓库、受测 SHA、环境、依赖版本、命令、退出码和证据位置。
 
 ## 8. 发布边界与外部消费
 
