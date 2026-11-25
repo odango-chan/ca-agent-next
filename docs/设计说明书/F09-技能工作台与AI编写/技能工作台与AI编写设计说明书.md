@@ -64,7 +64,7 @@ Skill Studio 的依赖导入负责**获取、验证和固定原始包快照**，
 
 要让当前 MAS Example 使用 Compiler v2.1.0 Development Build，Owner 与 Host 必须分别发布正式 `connectionagent.io/interface-package/v1alpha1` 包。发布任务分别归入 [SR-015](../../SR/SR-015-工具契约设计移交.md)（MAS Owner）和 [SR-020](../../SR/SR-020-参考宿主设计移交.md)（Host Context）；Studio 只导入发布物，不代替 Publisher 组包。
 
-两个包的 `package.json` 必须严格符合 Compiler v2.1.0 的 [interface-package.schema.json](https://github.com/odango-chan/ca-skill-compiler/blob/v2.1.0/contracts/development/v1alpha1/interface-package.schema.json)：字段集合为 `apiVersion`、`packageId`、`version`、`languageTarget`、`publisher`、`dependencies`、`exports`、`files`，Schema `additionalProperties: false)，不得添加 `sourceStatus` 等自定义字段。正式 `package.json` 是新的 Interface Package envelope；它不能冒充或覆盖 Owner 原有的 `manifest.json`。Compiler 的 `files[]` 只列出 `package.json` 以外的所有快照文件，SHA-256 针对包内精确文件字节计算。
+两个包的 `package.json` 必须严格符合 Compiler v2.1.0 的 [interface-package.schema.json](https://github.com/odango-chan/ca-skill-compiler/blob/v2.1.0/contracts/development/v1alpha1/interface-package.schema.json)：字段集合为 `apiVersion`、`packageId`、`version`、`languageTarget`、`publisher`、`dependencies`、`exports`、`files`，Schema `additionalProperties: false`，不得添加 `sourceStatus` 等自定义字段。正式 `package.json` 是新的 Interface Package envelope；它不能冒充或覆盖 Owner 原有的 `manifest.json`。Compiler 的 `files[]` 只列出 `package.json` 以外的所有快照文件，SHA-256 针对包内精确文件字节计算。
 
 **版本语义是当前阻塞决策**
 
