@@ -20,7 +20,7 @@
 - Agent Core、Host、Agent Model Loop、Skill Importer、Skill Resolver 和 Runtime 使用 Python。
 - 独立 Plugin 可以使用 Go；Go Plugin 不代表 Go Host。
 - ca-agent-demo 是既有 Python 实现和测试证据来源，只能逐文件选择性复用，不得整体复制。
-- ca-skill-compiler、ca-skills、ca-client-tools、ca-openamsm-plugin、env-openamsm 等为独立权威仓。
+- ca-skill-compiler、ca-skills、ca-client-tools、ca-openamsm-plugin、env-openamsm 等保有独立实现和发布职责。
 - 所有项目群任务从本仓进入。修改协作仓须获得当前任务的授权，并在本仓登记覆盖目标仓、变更范围和验收的 SR。SR 达到 READY 且依赖满足后方可实施，再回填目标仓 PR、Commit 和验收证据。READY 仅表示具备实施条件，不授予写入权限。合并 PR 和发布 Release 需要单独授权。
 
 ## 3. 不可违反的架构约束
@@ -51,7 +51,7 @@
 - 新需求：创建 SR；一个 SR 可对应多个 Issue，一个 Issue 可覆盖多个相关 SR，但必须逐项列明。
 - 不因每个 Issue 新建设计文档；SR 记录需求范围和验收，功能设计说明书记录完整机制设计。
 - 每份正式文档维护修订记录，记录日期、修订者/模型、章节、修改内容、原因和关联 Feature/SR/Issue/PR/Commit。历史未记录的信息不得猜测。
-- 外部仓库内部设计不复制到 Next，只更新 EC 依赖和消费边界。
+- 项目群设计按功能集中到 Next；移交须核对发布版本、中央章节、历史和目标仓 SR。
 
 ## 6. 全局评审范围（机器可读）
 
@@ -150,3 +150,4 @@ review_scope:
 | 2026-11-25 | 历史修订者/模型未记录 | 原第 1～11 节及 review_scope | 既有协作约束和机器可读评审范围；逐章历史记录未建立 | 原始修订者未记录，本轮不臆造 | PR #1 |
 | 2026-11-25 | GPT-6.2（ChatGPT） | 第 1～6 节 | 将功能识别和按需阅读流程交给功能树，精简硬约束，保留 review_scope 原始区块 | Agent.md 过长且重复设计细节 | F01～F07、G01；SR-001～011；PR #1 |
 | 2026-11-25 | Codex | 第 2 节 | 明确跨仓写入须获当前任务授权 | 区分实施就绪与写入授权 | PR #1 |
+| 2026-11-25 | Codex / GPT-6 | §2、§5 | 明确中央设计归属 | 跨仓设计移交 | IR-006 |

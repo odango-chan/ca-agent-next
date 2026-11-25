@@ -4,7 +4,7 @@ CA Agent Next 是下一代通用 Agent 的独立实现仓。目标是用尽可�
 
 **语言决策：Agent Core、Host、Agent Model Loop、Skill Importer、Skill Resolver 和 Runtime 固定使用 Python。** 独立 Plugin 可以使用 Go；Go Plugin 不意味着 Go Host。
 
-> 当前状态：PR #1 是架构、功能设计和规范基线，仍待评审；本仓尚无已验收的 Agent Runtime 实现。设计完成、代码实现和验收通过必须分别表述。
+> 当前状态：PR #1 的架构、功能设计和规范基线已合并；本仓尚无已验收的 Agent Runtime 实现。设计完成、代码实现和验收通过必须分别表述。
 
 ## 从这里开始
 
@@ -20,9 +20,9 @@ CA Agent Next 是下一代通用 Agent 的独立实现仓。目标是用尽可�
 
 ## 文档体系
 
-25 份正式文档，另有 1 份 IR 登记册（5 项 IR）和 11 份 SR 记录。正式文档包括 1 份总体架构、6 份设计说明书、7 份规范、5 份治理、4 份验收与实施、2 份参考审计。
+29 份正式文档，另有 1 份 IR 登记册（6 项 IR）和 21 份 SR 记录。
 
-架构设计与设计说明书在 docs 下同级。设计说明书按 F01～F06 功能域归档；SR 记录需求范围和验收条件，不替代功能设计。F07 示例与验收由统一验收基线承载。
+架构设计与设计说明书在 docs 下同级。设计说明书按各功能域归档；SR 记录需求范围和验收条件，不替代功能设计。F07 示例与验收由统一验收基线承载。
 
 ## 跨仓任务入口
 
@@ -30,7 +30,7 @@ CA Agent Next 是下一代通用 Agent 的独立实现仓。目标是用尽可�
 
 ## 仓库职责与外部能力
 
-| 功能/能力 | 权威仓库 | Next 的责任 |
+| 功能/能力 | 实现及发布仓 | Next 的责任 |
 |---|---|---|
 | Agent Core / Host / Runtime | ca-agent-next | Python 新实现 |
 | Skill 作者规范与业务 Skill（EC01） | ca-skills | 消费 SKILL.md 与发布输入 |
@@ -41,7 +41,7 @@ CA Agent Next 是下一代通用 Agent 的独立实现仓。目标是用尽可�
 | 参考实现（REF01） | ca-agent-demo | 逐文件选择性复用代码和测试 |
 | 后续晋级目标（TARGET01） | ca-agent | Next 验收后评估晋级 |
 
-外部能力的内部设计留在权威仓库；Next 只维护消费边界和集成 SR，不复制 Compiler、Tool、Codec、Owner 或业务 Skill 实现。
+Next 是项目群设计和规范的集中治理入口，各协作仓维护实现和发布。迁移状态见[跨仓设计资产迁移与一致性审计](docs/参考与审计/跨仓设计资产迁移与一致性审计.md)。
 
 ## 架构要点
 

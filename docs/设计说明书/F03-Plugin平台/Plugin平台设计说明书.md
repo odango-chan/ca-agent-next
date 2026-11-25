@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：目标设计，待实现和验收  
-> 文档版本：0.2.1  
+> 文档版本：0.2.2  
 > 功能归属：F03 — Plugin 平台  
 > 关联 SR：SR-003、SR-010    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -126,6 +126,11 @@ Plugin Package/IPC v1alpha1 是 PR #1 中的目标契约，不等于已完成实
 
 本说明书属于 F03。SR-003 定义唯一 Plugin Manager 与 Extension IPC；SR-010 定义 OpenAMSM Tool Plugin 与按需 Codec 集成。Tool Interface Package、Provider 和 Codec 的内部契约以 EC03 ca-client-tools 为准；OpenAMSM Event/Delivery Plugin 的内部实现以 EC04 ca-openamsm-plugin 为准。Next 只维护 Manager 生命周期、Extension 分发和消费端边界。
 
+### Tool Interface 与 Provider
+
+Tool Interface 绑定 callable ID、参数、结果和 Effect，Provider v2 在工具进程分发。Next 适配通过唯一 Plugin Manager 的 tools Extension；已有 Codec 的接口和发布证据先按 SR-014 固定版本。 详见[分仓证据](../../参考与审计/跨仓设计资产迁移与一致性审计.md)。
+
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修订内容 | 原因 | 关联 |
@@ -133,3 +138,4 @@ Plugin Package/IPC v1alpha1 是 PR #1 中的目标契约，不等于已完成实
 | 2026-11-25 | 0.1.0 | 历史修订者/模型未记录 | 原始设计全文 | 既有功能机制设计基线；逐章历史记录未建立 | 原文档未记录历史作者，本轮不臆造 | PR #1 |
 | 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 第 1～10 章 | 归入对应 Feature 并补充外部能力边界 | 按 F03 归档，明确统一 Plugin Manager 与外部 Tool Interface 权威边界 | F03；SR-003/010；EC03/EC04；PR #1 |
 | 2026-11-25 | 0.2.1 | 刷新需求追踪、目录或证据引用 | 对齐最新分支与 IR/SR 基线 | 见关联 SR |
+| 2026-11-25 | 0.2.2 | Codex / GPT-6 | Tool Interface 与 Provider | 合并有效边界与分仓证据入口 | 跨仓设计移交 | IR-006 |
