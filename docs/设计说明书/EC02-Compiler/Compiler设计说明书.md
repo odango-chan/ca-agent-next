@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.1.0  
+> 文档版本：0.1.1  
 > 状态：待评审；IR-006 / SR-012 / #2  
 > 修订日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -38,16 +38,20 @@ Native CLI 与 Go/WASM Worker 调用同一个 Go Core。Check 返回诊断，Ins
 
 复核入口：[Development 实现与验收报告](https://github.com/odango-chan/ca-skill-compiler/blob/255ab85fa5abb4b0bf36656bf64250cafebf45cb/docs/design/compiler-development-build-implementation-report.zh-CN.md)、[Schema Registry](https://github.com/odango-chan/ca-skill-compiler/blob/255ab85fa5abb4b0bf36656bf64250cafebf45cb/internal/compiler/schema_registry.go)、[Development Link](https://github.com/odango-chan/ca-skill-compiler/blob/255ab85fa5abb4b0bf36656bf64250cafebf45cb/internal/compiler/development_link.go)、[多 Skill Lock 测试](https://github.com/odango-chan/ca-skill-compiler/blob/255ab85fa5abb4b0bf36656bf64250cafebf45cb/internal/compiler/development_multi_skill_test.go)、[Evidence Owner 测试](https://github.com/odango-chan/ca-skill-compiler/blob/255ab85fa5abb4b0bf36656bf64250cafebf45cb/internal/compiler/development_evidence_owner_test.go)。历史版本设计见[冻结归档](https://github.com/odango-chan/ca-skill-compiler/tree/72b41548a9c4d29c6c49abed117a04a963454f22/docs/design)。
 
-## 5. DeepSeek Harness 提示词
+## 5. DeepSeek Harness Goal 提示词
+
+将以下任务粘贴到 Goal 模式。若界面已启用 Goal 模式，去掉首行的 `/goal` 命令前缀。
 
 ~~~text
-在 odango-chan/ca-agent-next 从 Agent.md、功能树 EC02/F02、SR-012、SR-004/005 与《跨仓互操作实施任务说明》开始。记录 Next、Compiler 和 ca-skills 的目标 ref 与 HEAD SHA，核对工作区、Issue 与 PR 状态。继承 Agent.md 的 review_scope。只处理目标范围及直接依赖。
+/goal 推进 CA-SL v1alpha5 已检查 when 的 Compiler → Python Runtime 交付，直至目标 SR 的必需验收全部有可复核证据，或已完成所有可独立推进的工作且具体外部门槛仍阻塞。保持冻结 v1alpha5 Build/Verify 与 Development v1alpha1 的契约、字节和行为。未经用户授权不得合并 PR 或发布版本。
 
-先做只读预检。核对 Compiler v2.1.0、冻结 Build/Verify Artifact v1alpha5、Development v1alpha1 NOT_ADMITTED，以及 ca-skills #88 和 Compiler #61。任何目标 SR 未 READY、规范未发布、固定输入缺失或未经授权写目标仓时，输出 BLOCKED 和解除条件。可以继续查阅证据，不修改实现。
+入口：odango-chan/ca-agent-next PR #3 的 EC02 Compiler 设计说明书、Agent.md 的 review_scope、功能树 EC02/F02、SR-012、SR-004/005 和《跨仓互操作实施任务说明》。上游追踪 odango-chan/ca-skills PR #88、odango-chan/ca-skill-compiler Issue #61。执行前逐仓记录目标 ref、HEAD SHA、工作区状态、目标 SR 和 Acceptance ID。
 
-满足门槛后，从已发布 ca-skills 规范固定 SHA。先执行 Go cel-go → CheckedExpr Any + FileDescriptorSet → 固定版本 cel-expr-python 的最小 PoC。使用实际 Compiler 产物，验证 true/false/error、未知字段、optional/nullable 缺失与 null、int64/finite binary64、不同 Skill 的 Schema 隔离及共享 Lock。任一语义不一致则停止并附最小复现。通过后按 #61 实现新版发布 Artifact，保持冻结格式和 Development 字节不变。Next 只导入外部发布 Bundle，校验引用与作用域并加载已检查程序。不要调用 Compiler、引入 Skill Admission、扩大 G.4 或增加 Trust Registry。
-
-Compiler 门禁在产品仓按 #61 运行 Go test、vet、Native/WASM 构建、CLI E2E、真实 Chromium Worker parity 和 git diff --check。Next 执行各 READY SR 指定的 Acceptance。每条结果记录需求、命令、环境与版本、实际退出码、受测 SHA 和证据链接。区分 PASS、FAIL、NOT_RUN 和 BLOCKED。逐条列出 BLOCKER、NON_BLOCKING、UNVERIFIED 及影响。保持 PR 未合并，不发布版本。
+1. 先做只读预检。复核语言规范是否已合入并发布、#61 的范围与依赖、目标 SR 是否 READY、目标仓写入授权、可运行环境与固定输入。逐项记录阻塞、解除条件、权威链接和可独立推进的工作。无写入权限或目标 SR 未 READY 时保留源码与治理状态，继续只读核对。不得把上游 PR 打开、历史 PASS 或设计文档当作当前验收。
+2. 已获授权且门槛满足后，固定正式语言规范 SHA 及 Go/Python/CEL/protobuf 版本。先执行 Go cel-go → CheckedExpr Any + FileDescriptorSet → cel-expr-python 的最小 PoC。用实际输出验证 true/false/error、未知字段、缺失与 null、数值边界以及共享 Lock 下的多 Skill 类型隔离。发现语义差异，保存最小复现与证据并暂停依赖该 PoC 的阶段。
+3. PoC 通过后，按 #61 实施版本化发布 Artifact。复用同一 Compiler Core，冻结产物保留原字节，Development 继续 NOT_ADMITTED。发布产物和 SR-004/005 门槛满足后，Next 仅消费外部发布 Bundle，执行结构、引用和 callable scope 检查并加载已检查程序。Agent 不调用 Compiler，不引入 Skill Admission、Owner Trust Registry 或第二套 CEL 实现。
+4. 在 Compiler 仓执行 #61 的 Go test、vet、Native/WASM 构建、CLI E2E、真实 Chromium Worker parity 和 git diff --check。对 Next 执行目标 READY SR 指定的 Acceptance。每项记录需求 ID、执行命令、环境与版本、受测 SHA、退出码和证据链接。需要合并或发布才能解除门槛时报告待授权事项。
+5. 每轮保留可恢复交接：最后完成阶段、仓库与 SHA、变更或 PR、验收结果、阻塞及第一个可执行的恢复步骤。恢复后先重新核对 ref 与门槛，再从第一个未验收阶段继续。只有全部必需验收 PASS 才报告目标完成。外部阻塞时以 BLOCKED 收尾，附已做的预检与解除条件；不得把阻塞交接写成完成。
 ~~~
 
 ## 修订记录
@@ -55,3 +59,4 @@ Compiler 门禁在产品仓按 #61 运行 Go test、vet、Native/WASM 构建、C
 | 日期 | 版本 | 修订者 | 章节 | 修改内容 | 原因 | 关联 |
 |---|---|---|---|---|---|---|
 | 2026-11-25 | 0.1.0 | Codex | 全文 | 建立 EC02 设计基线 | 集中维护及验证交接 | IR-006、SR-012、#2 |
+| 2026-11-25 | 0.1.1 | Codex | §5 | 加入 Goal 的实施门槛、恢复点和完成判据 | 支持分阶段执行及阻塞后恢复 | IR-006、SR-012、#2、PR #3 |
