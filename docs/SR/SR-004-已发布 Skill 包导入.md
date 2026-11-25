@@ -1,0 +1,69 @@
+# SR-004：已发布 Skill 包导入
+
+> 文档类型：软件需求（SR）  
+> SR 版本：0.1.0  
+> 状态：DRAFT；设计基线待评审，不允许实施  
+> 创建日期：2026-11-25  
+> 所属阶段：Phase C  
+> 设计依据：技能导入与选择设计说明书 §2～§4；技能与确定性保障格式规范 §1～§5  
+> Acceptance：EX-05～EX-08  
+> 全局评审范围：继承根目录 Agent.md 的 review_scope  
+> 本文局部非目标：见第 3 节
+
+## 1. 目标
+
+实现 Agent 对 SKILL.md-only 包和外部已发布 Assurance Artifact 包的消费端导入，不在 Agent 内编译或发布 Skill。
+
+## 2. 实施范围
+
+- 导入 SKILL.md-only Skill 并读取其 Agent-facing 指导。
+- 导入包含有效已发布 Assurance Artifact 的 Skill 包。
+- 检查基本格式、Manifest、必需文件、路径、引用、类型数据和本地 Tool/Capability 依赖。
+- 无效或不完整发布包明确失败，不降级为 SKILL.md-only。
+
+## 3. 非目标
+
+- 不调用 Compiler Check/Build/Inspect/Verify。
+- 不导入 Assurance 作者源 YAML 作为运行时 Artifact。
+- 不增加 Skill Admission、Owner Trust 或生产级授权。
+
+## 4. 依赖与前置条件
+
+SR-002；外部依赖为 ca-skills 作者格式与 ca-skill-compiler 发布契约。
+
+进入 READY 前必须确认所有前置 SR 已 VERIFIED，或在 SR 中明确记录并批准并行实施理由；外部依赖必须有可核对的版本、接口和可用证据。
+
+## 5. 验收条件
+
+1. SKILL.md-only 包无需 Compiler 即可导入，且只能 LLM-guided。
+2. 有效发布 Artifact 包可以导入并解析本地依赖。
+3. 缺文件、格式不支持、路径越界、类型数据错误和未解析依赖均明确失败。
+4. Agent 代码和进程不调用 Compiler。
+
+验收时必须引用演示验收基线中的对应 Acceptance ID，并记录真实执行命令、测试结果、Example 和覆盖范围。未执行项保持 NOT_RUN。
+
+## 6. 实施关联
+
+| 项目 | 当前值 |
+|---|---|
+| 实施仓库 | ca-agent-next |
+| GitHub Issue | 未创建 |
+| 实施 PR | 未创建 |
+| Commit | 无 |
+| 实施状态 | NOT_STARTED |
+| 验收证据 | NOT_RUN |
+
+ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在此标记实施完成。
+
+## 7. 变更与替代关系
+
+- supersedes：无
+- superseded by：无
+- 影响分析：初始分解；等待设计基线评审。
+- 本 SR 的范围和验收条件在进入 READY 后冻结。后续发生语义变化时创建新的 SR 并引用本 SR，不覆盖历史要求。
+
+## 修订记录
+
+| 日期 | 版本 | 修订内容 | 原因 | 影响 SR |
+|---|---|---|---|---|
+| 2026-11-25 | 0.1.0 | 建立初始需求草案 | 从当前架构、设计说明书和 Acceptance 分解 | SR-004 |
