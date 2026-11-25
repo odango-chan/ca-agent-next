@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.1.5  
+> 文档版本：0.1.6  
 > 状态：DRAFT  
 > 创建日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -55,6 +55,14 @@ Go 静态编译另拒绝了未知字段和另一共享 descriptor 文件中未�
 
 **候选映射失败。** Python 动态 proto2 scalar message 中，传入 `count=None` 与省略 count 都令 `HasField("count")` 为 false。因此单一 optional scalar 映射不能承载 G.4 的显式 null 与缺失区别。AC-013-01 仍未通过。下一次验证应提出保留缺失、显式 null 与原始标量的候选表示，并同时证明 Go 静态类型与两端求值保持一致。未经该证据，不冻结新 Artifact 契约。该探针使用简化的 kind 字段和手工 descriptor，当前未验证正式 Event 对象、Schema Registry 生成路径、double 边界及产品级 Lock 隔离。
 
+### Nullable 候选表示实跑与实现差异
+
+使用同一 Go/Python 环境，将 nullable int64 表示为可缺失的消息字段，其 oneof 在已提供字段时区分显式 null 与 int64 分支。Go 导出实际 CheckedExpr Any 和同一 FileDescriptorSet，Python 直接反序列化。缺失时外层 `has` 为 false；显式 null 时外层 `has` 为 true、标量分支 `has` 为 false；int64 最大值按 int64 比较，两端结果一致。缺失 kind 的求值仍失败。该实验未使用 DynType，且未改变正式规范。
+
+同一描述符直接编译原始作者表达式 `has(input.count) && input.count != null && input.count == 1` 失败：`_==_` 无 `(ac013.NullableInt, int)` 重载。已跑通的是手工写出的等价 wire 表达式。Compiler 固定基线的 `internal/compiler/cel_check.go` 也注明缺失 optional/null 守卫证明。因此 AC-013-01 仍未通过，且 AC-013-02 需要落实守卫检查。输入和输出格式仍待定稿。
+
+下一步先用正式 G.4 规则实现并验证 Schema-aware 源表达式守卫检查，再在同一 Compiler Core 内验证从已检查的作者表达式到 typed wire AST 的转换。先覆盖 `has`、`== null`、`!= null`、安全标量读取和缺守卫拒绝，再扩至 G.4 允许的布尔组合、嵌套路径、有限 double 与跨 Skill 隔离。严禁以 wire 表达式替换作者语法、允许 DynType 或依赖运行时异常代替静态拒绝。候选 SHA 的证据按各自范围记录，由 Compiler Owner 在完整 PoC 通过后裁定 Artifact API。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订内容 | 原因 | 影响 SR |
@@ -65,3 +73,4 @@ Go 静态编译另拒绝了未知字段和另一共享 descriptor 文件中未�
 | 2026-11-25 | 0.1.3 | 固定正式规范 SHA | ca-skills #89 已合并 | SR-013 |
 | 2026-11-25 | 0.1.4 | 记录实跑环境与 CheckedExpr Any 交换探针 | 提供 AC-013-01 的可复用起点 | SR-013 |
 | 2026-11-25 | 0.1.5 | 记录 typed Go/Python 结果和 null 映射反例 | 缩小 AC-013-01 剩余验证范围 | SR-013 |
+| 2026-11-25 | 0.1.6 | 记录 nullable oneof 候选和作者语法转换缺口 | 明确 AC-013-01/02 的下一项实验 | SR-013 |
