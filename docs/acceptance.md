@@ -125,8 +125,8 @@ The Event Plugin declares only normalized Event types and Schemas. There is no E
 ## 5. Compiler and Tool Plugin integration
 
 - Python invokes the canonical CA-SL Compiler interface for Assurance source Check/Build and Artifact Inspect/Verify. Do not copy Go Compiler source or reimplement its semantics.
-- At this document revision, Compiler support for refreshed CA-SL v1alpha5 contract.when and its portable checked Artifact representation must be verified against the Compiler owner. The SKILL.md-only import path is implemented by Next's Skill Importer and must not invoke Compiler. See [SkillCatalog and Compiler integration requirements](integration/skill-catalog-compiler-contract.md). Do not silently strip when or claim an unsupported Compiler release works.
-- The Compiler parses/type-checks when once at import/update. Python Runtime evaluates the admitted compiled program for each fresh Event; it must not parse/type-check raw CEL on the hot path.
+- Compiler v2.1.0 does not yet establish refreshed CA-SL v1alpha5 contract.when support. [Compiler Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) tracks the new Development Artifact Manifest v1alpha2 and cel-go → cel-expr-python CheckedExpr interoperability. SKILL.md-only import is Next-owned and bypasses Compiler. See [技能目录与编译器运行时接口设计说明书](集成设计/技能目录与编译器运行时接口设计说明书.md). Do not silently strip when or claim an unsupported release works.
+- Target behavior: Compiler parses/type-checks when once and emits CheckedExpr + DescriptorSet; Python Runtime deserializes once and evaluates the same program for every fresh Event. No raw CEL parsing/type-checking on the Event hot path.
 - Importing a compiled Artifact invokes Inspect/Verify and Host Admission but not Build.
 - The Echo Tool Interface Package is consumed from its canonical Compiler-owned format. Do not duplicate ToolCatalog or calculate an additional Host-side package digest.
 - The Tool Plugin process is loaded through the unified Plugin Manager. A temporary adapter may consume ca-client-tools.provider/v2 behind the same manager.
@@ -173,7 +173,7 @@ Keep basic YAML/Schema/version/reference validation, path containment, clear err
 | Dependency | State on 2026-11-25 | Required before claiming the corresponding gate |
 |---|---|---|
 | ca-skills PR #88 | OPEN, not merged; proposes same-identifier CA-SL v1alpha5 optional Assurance and contract.when | Merge/review the language refresh and align the three existing MAS Skills' when fields. |
-| ca-skill-compiler v2.1.0 | Released; new contract.when support not established | Compiler owner verifies/implements parsing, CEL validation and boolean typing for refreshed v1alpha5. SKILL.md-only import remains Host-owned and does not invoke Compiler. |
+| ca-skill-compiler v2.1.0 | Released; refreshed contract.when not supported/verified | [Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) defines Development Artifact v1alpha2 and CheckedExpr/DescriptorSet handoff. SKILL.md-only import remains Host-owned and bypasses Compiler. |
 | ca-client-tools v1.2.0 | Released; Provider v2 process | Integrate through the unified Plugin Manager adapter; separately verify real SBI multipart Artifact use through the Provider channel. |
 | ca-client-tools PR #39 | OPEN; Phase B final pass, Phase C not started | Merge/release and complete consumer integration for the exact codec calls used. NAS: 8 qualified; N2: 7 scoped qualified; NGAP: 0 CA-qualified full PDUs. |
 | ca-agent-demo PR #246 | OPEN; synthetic G5 22 passed; real G6 NOT_RUN/BLOCKED; G7 PARTIAL | Treat only as reusable evidence. Run the new Host + Plugin + Provider + real Owner path independently. |
