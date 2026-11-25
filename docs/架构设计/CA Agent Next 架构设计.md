@@ -2,7 +2,7 @@
 
 > 文档类型：总体架构设计  
 > 状态：目标架构基线；PR #1 已合并；架构所定义的 Next Host/Runtime/Plugin Manager 尚未实现、尚未验收    
-> 文档版本：0.4.0
+> 文档版本：0.4.1
 > 修订日期：2026-11-25  
 > 适用范围：ca-agent-next 通用 Agent Core、Host、Runtime、Skill 与 Plugin 公共机制  
 > 权威边界：本文是本仓唯一总体架构文档；字段级契约见规范，机制细节见设计说明书  
@@ -174,7 +174,7 @@ SBI 不限于 JSON。Event Plugin 负责 HTTP/SBI 外层解析、JSON、multipar
 1. Event/Delivery Plugin ↔ Host：通过 Host 创建的本地 inbound/outbound staging directory 和相对 stagingPath 描述符交接。Host 校验 slot、路径边界和真实 byteLength，再导入 ArtifactStore。
 2. Host/Runtime ↔ Tool Plugin：Tool 只能访问当前 Invocation 授权的 Artifact。其二进制传输依赖独立 Host Artifact Store Channel，不得使用 Event stagingPath，也不得把原始 bytes/Base64 塞进 NDJSON。
 
-**当前限制：** F03.05 引用的 ca-host.artifact-store/v1 Channel 尚未发布。Provider initialize 未配置 artifactChannel 时，所有 artifact-bearing binding 必须 NOT_CONFIGURED，并在任何远端 I/O 前拒绝。不得自行发明 Provider 私有文件路径协议。
+**当前限制：** `ca-host.artifact-store/v1` 已冻结（contract pin `2c0b07f`）；ca-client-tools Provider v1.2.0 已实现 consumer 与共享 fixtures；ca-agent Go Host main `447d0cc` 的 P1 外部参考验收为 43/43（read-only 11/11），real-NF multipart 仍 NOT_VERIFIED。Next Python Host 的 channel server/adapter 尚未实现；在 SR-010 完成并通过共享 fixtures 前，所有 artifact-bearing Provider binding 必须 NOT_CONFIGURED，并在任何远端 I/O 前拒绝。不得自行发明 Provider 私有文件路径协议。
 
 Codec 不作为 Agent Core 的内置能力。Skill 不需要协议内部字段时，直接把授权 artifactRef 交给业务 Tool；需要结构化字段时，按需调用 ca-client-tools tools Extension 中正式发布的 Codec Callable。Codec 解码结果不能替换原始字节。Event Plugin 只允许为共享 SBI Operation 提取最小必要 NAS discriminator 来规范化 Event，不承担完整协议解码或 Skill 选择。只声明实际发布和测试过的 NAS/NGAP 消息子集。
 
@@ -277,3 +277,4 @@ sequenceDiagram
 | 2026-11-25 | 0.3.2 | Codex | §6 | 澄清已声明 Assurance Artifact 缺失的失败条件 | 对齐既有 Skill 导入规则 | SR-004；PR #1 |
 | 2026-11-25 | 0.3.3 | Codex / GPT-6 | §3 | 提出集中设计与分仓交付边界 | IR-006 设计移交 | IR-006 |
 | 2026-11-25 | 0.4.0 | GPT-6.2（ChatGPT） | §3、§8、§10、§13–14 | 纳入 EC01～EC07/REF/TARGET/G01 职责，补齐 F03.05、Artifact Channel 未发布边界、最新外部 PR/Release 状态和完整设计入口 | 纠正外部域遗漏、过期依赖快照和 Provider/Artifact 边界 | Issue #12；SR-015～SR-023 |
+| 2026-11-25 | 0.4.1 | GPT-6.2（ChatGPT） | §10、外部依赖快照 | 纠正 Host Artifact Store Channel 生命周期；同步 Provider v1.2.0、Go Host P1 外部参考与 Next Python Host 未实现状态；区分 Mock AMF Codec C1 | 统一总体架构、F05、Plugin IPC 和验收基线中的协议状态 | Issue #12；SR-009、SR-010、SR-011、SR-015 |
