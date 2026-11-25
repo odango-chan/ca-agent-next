@@ -249,12 +249,12 @@ Manifest 对每个有 when 的 Skill 至少记录：
 Compiler 产品回归命令以 Compiler 仓库当前脚本和 CI 为准，SR-013 固定以下必需门禁：
 
 ~~~bash
-GOWORK=off go test ./... -count=1
-GOWORK=off go vet ./...
-CGO_ENABLED=0 GOWORK=off go build ./...
-CGO_ENABLED=0 GOOS=js GOARCH=wasm GOWORK=off go build -o dist/skillc.wasm ./cmd/skillc-wasm
-GOWORK=off go test ./cmd/skillc -count=1 -run TestCLIEndToEnd -v
-CHROMIUM_PARITY=1 GOWORK=off go test ./internal/parity -count=1 -run TestChromiumWorkerParity -v
+GOTOOLCHAIN=go1.27.4 GOWORK=off go test ./... -count=1
+GOTOOLCHAIN=go1.27.4 GOWORK=off go vet ./...
+GOTOOLCHAIN=go1.27.4 CGO_ENABLED=0 GOWORK=off go build ./...
+GOTOOLCHAIN=go1.27.4 CGO_ENABLED=0 GOOS=js GOARCH=wasm GOWORK=off go build -o dist/skillc.wasm ./cmd/skillc-wasm
+GOTOOLCHAIN=go1.27.4 GOWORK=off go test ./cmd/skillc -count=1 -run TestCLIEndToEnd -v
+GOTOOLCHAIN=go1.27.4 GOWORK=off node scripts/chromium-parity.mjs
 git diff --check
 ~~~
 
