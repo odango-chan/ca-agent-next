@@ -1,14 +1,14 @@
 # Runtime 执行设计说明书
 
 > 文档类型：机制设计说明书  
-> 文档版本：0.3.0  
+> 文档版本：0.3.1  
 > 状态：Next 目标设计；现有 Python/Go Runtime 仅作为参考实现，Next 自身执行链尚待实施验收  
 > 功能归属：F04 — Runtime 执行  
 > 关联 SR：SR-007、SR-022  
 > 修订日期：2026-11-25  
 > 适用范围：统一 Action Boundary、Deterministic / LLM-guided、Run / Wait / Resume / Replay、Outcome / Evidence / Reconcile
 
-关联需求见 IR-003、IR-004。既有 ca-runtime 与 ca-agent-demo 设计原文见 §12。
+关联需求见 IR-003、IR-004、IR-006。既有 ca-runtime 与 ca-agent-demo 设计原文见 §12。Tool Interface / Provider 契约消费见 [F03.05](../F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md)。
 
 ## 1. 设计目标
 
@@ -52,6 +52,8 @@ CREATED -> RUNNING -> WAITING -> RUNNING -> TERMINAL
 ~~~
 
 TERMINAL 之后的业务结果仍可能是 COMMITTED、NOT_COMMITTED、UNKNOWN 或明确的非 mutation 失败。Run 已结束不等于 Owner mutation 已提交。
+
+Runtime 对公开 Callable、Capability、Effect、Schema、Owner Contract 和 Provider 私有映射的消费关系，遵循 [F03.05 Tool Interface 与 Provider 集成设计](../F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md)；Runtime 不解析 Provider 私有 Backend Binding Catalog，也不把 backendOperationId 暴露给 Skill 或模型。
 
 ## 4. 统一 Runtime Action Boundary
 
@@ -211,3 +213,4 @@ Replay 不是重新执行所有动作。Host/Runtime 应按 Run 与 Invocation i
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
 |---|---|---|---|---|---|
 | 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | 全文 | 从 CA-SL v1alpha5、ca-runtime 与 ca-agent-demo 原始设计重建 Next Runtime 目标，并区分外部参考实现与 Next 实现 | Issue #12；SR-007、SR-022 |
+| 2026-11-25 | 0.3.1 | GPT-6.2（ChatGPT） | §1、§4 | 关联 F03.05 的公开 Tool/Owner/Provider 契约边界，避免 Runtime 消费 Provider 私有映射 | Issue #12；SR-015 |
