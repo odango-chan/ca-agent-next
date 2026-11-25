@@ -1,0 +1,68 @@
+# SR-003：统一 Plugin Manager 与 Extension IPC
+
+> 文档类型：软件需求（SR）  
+> SR 版本：0.1.0  
+> 状态：DRAFT；设计基线待评审，不允许实施  
+> 创建日期：2026-11-25  
+> 所属阶段：Phase B  
+> 设计依据：插件管理与通信设计说明书 §3～§10；插件包与进程通信协议规范 §1～§12  
+> Acceptance：EX-02、EX-03、EX-18  
+> 全局评审范围：继承根目录 Agent.md 的 review_scope  
+> 本文局部非目标：见第 3 节
+
+## 1. 目标
+
+实现唯一 Plugin Manager，统一管理独立 Plugin 进程、Package、IPC 和 event.ingress / event.delivery / tools Extension。
+
+## 2. 实施范围
+
+- 加载 Plugin Package v1alpha1 YAML Manifest 并执行基础字段、Schema、路径和版本检查。
+- 实现 Plugin 进程启动、握手、NDJSON IPC、消息关联、超时和关闭。
+- 同一 Plugin 可导出多个 Extension 和多个 Tool Operation。
+- 为现有 provider/v2 提供位于同一 Plugin Manager 内的过渡 Driver。
+
+## 3. 非目标
+
+- 不建立第二 Provider Manager、Tool Registry、Codec Manager 或第二套 IPC。
+- 不在 Plugin Manager 中做 Skill 选择、Callable Scope 授权或 Owner outcome 推断。
+
+## 4. 依赖与前置条件
+
+SR-002。
+
+进入 READY 前必须确认所有前置 SR 已 VERIFIED，或在 SR 中明确记录并批准并行实施理由；外部依赖必须有可核对的版本、接口和可用证据。
+
+## 5. 验收条件
+
+1. 一个 Plugin 进程完成启动、握手、请求/响应关联和关闭。
+2. 同一 Plugin 进程可暴露 Event、Delivery、Tools；只有一个 Manager 负责发现与分发。
+3. 错误版本、畸形 Manifest、重复/未知字段、路径逃逸和关联错误均有拒绝测试。
+4. Tool 调用前的 Callable Scope 检查由 Runtime 执行，而非 Manager。
+
+验收时必须引用演示验收基线中的对应 Acceptance ID，并记录真实执行命令、测试结果、Example 和覆盖范围。未执行项保持 NOT_RUN。
+
+## 6. 实施关联
+
+| 项目 | 当前值 |
+|---|---|
+| 实施仓库 | ca-agent-next |
+| GitHub Issue | 未创建 |
+| 实施 PR | 未创建 |
+| Commit | 无 |
+| 实施状态 | NOT_STARTED |
+| 验收证据 | NOT_RUN |
+
+ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在此标记实施完成。
+
+## 7. 变更与替代关系
+
+- supersedes：无
+- superseded by：无
+- 影响分析：初始分解；等待设计基线评审。
+- 本 SR 的范围和验收条件在进入 READY 后冻结。后续发生语义变化时创建新的 SR 并引用本 SR，不覆盖历史要求。
+
+## 修订记录
+
+| 日期 | 版本 | 修订内容 | 原因 | 影响 SR |
+|---|---|---|---|---|
+| 2026-11-25 | 0.1.0 | 建立初始需求草案 | 从当前架构、设计说明书和 Acceptance 分解 | SR-003 |
