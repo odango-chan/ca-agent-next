@@ -1,12 +1,13 @@
 # 业务接入与 OpenAMSM 集成设计说明书
 
 > 文档类型：功能设计说明书  
-> 文档版本：0.1.2  
+> 文档版本：0.1.3<br>
 > 功能归属：F06 — 业务接入与集成  
 > 关联 SR：SR-009、SR-010、SR-011  
 > 状态：目标集成设计；真实隔离 E2E 尚未完成  
 > 修订日期：2026-11-25  
-> 全局评审范围：继承根目录 Agent.md 的 review_scope
+> 全局评审范围：继承根目录 Agent.md 的 review_scope<br>
+> 本文局部非目标：全量 3GPP 协议资格认证和生产级 DFX
 
 关联需求项见 [IR-005](../../IR/IR%20总登记册.md#ir-005)。
 
@@ -35,6 +36,18 @@ EC04 ca-openamsm-plugin 负责：
 该 Plugin 不负责 Skill 选择、Owner Tool、RunStore、Wait/Resume、Runtime、完整 NAS/NGAP 业务解码或业务状态机。
 
 共享 UpdateSMContext 只允许提取已资格化的最小 NAS discriminator，用于区分 Modify 与 UE-requested Release。畸形、歧义或不支持的消息必须显式失败；不得把业务选择逻辑藏进 Plugin。
+
+### 3.1 EC04 实施前须定版的接口
+
+当前 [EC04 main](https://github.com/odango-chan/ca-openamsm-plugin/tree/eb83c8f2e83dbcdc56b484126b2acf9e8f2a7397) 只有 README。[候选架构](https://github.com/odango-chan/ca-openamsm-plugin/blob/e7027c805fedcd986e8f756d43fd997245ca6504/docs/architecture.md)与[候选验收](https://github.com/odango-chan/ca-openamsm-plugin/blob/e7027c805fedcd986e8f756d43fd997245ca6504/docs/acceptance.md)来自仍为 Draft 的 EC04 PR #1。其 Next 旧评审分支链接不作为实施输入。公共信封、握手和消息类型以[插件包与进程通信协议规范](../../规范/插件包与进程通信协议规范.md) §3～9 为准，暂存及响应义务以 [F05](../F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) §3～10 为准。
+
+| 未定项 | 评审时须提交的证据 |
+|---|---|
+| SBI 与 Event 映射（OM-03、OM-14、OM-15） | 对照固定 OpenAMSM 源码、部署配置和 OpenAPI，逐操作登记方向、方法、路径、operationId、Event type、payload Schema 和字段来源。定清 Namf 方向及适用子集。共享 UpdateSMContext 须有 0xC9、0xD1 和拒绝 fixture，并明确 0xD4 是续接；AMF/网络发起 ReleaseSMContext 与 UE-requested Release 分开处理。 |
+| 最小分类器依赖（OM-15） | 候选 OAP-16 要求使用共享 Codec，而候选架构与公共契约把 Callable Codec 留给 Runtime。须明确 Go Plugin 使用的最小、已资格化读取接口或共享库、版本和测试证据；不得让 Plugin 在 Skill 选择前调用 Runtime Tool。候选的 Callable Codec 与真实 E2E 验收分别按 SR-010、SR-011 取证。 |
+| 二进制与响应（OM-05、OM-06） | 对每个操作登记 JSON 引用、Content-ID 对应关系、F05 slot 必选性、出站 HTTP 状态/头/体与媒体类型，以及缺失、重复、未知引用和无授权产物的失败路径。以逐字节往返与跨义务拒绝 fixture 核验。 |
+| 重试、续接与失败（OM-07、OM-08） | 给出每个操作稳定 externalRequestId 的协议字段来源、重试不变性、冲突行为，以及续接字段与原 Run/Wait、SUPI/PSI、generation 的关系。HTTP/2 stream ID 和 IPC messageId 不作为逻辑身份。缺少可验证来源时该项保持未通过。 |
+| 可执行入口（OM-01～03、OM-05～08、OM-14～15） | 固定实现仓、基线 SHA、Go 版本、计划的包/入口与 fixture 位置、运行命令和预期结果。先用 Host 对偶验证 Plugin 协议，再用真实通用 Host 分别取得 Skill 选择、ArtifactStore、续接及响应义务证据。 |
 
 ## 4. 协议与契约归属
 
@@ -103,3 +116,4 @@ Create、Modify、Release 的详细业务 Procedure 由 ca-skills 作者源和�
 | 2026-11-25 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 建立 F06 业务接入与 OpenAMSM 集成设计 | 将 SBI、Tool、Owner 和业务 E2E 统一到一个集成边界，不在 Core 中复制业务逻辑 | F06；SR-009～011；EC01～EC05；PR #1 |
 | 2026-11-25 | 0.1.1 | 刷新需求追踪、目录或证据引用 | 对齐最新分支与 IR/SR 基线 | 见关联 SR |
 | 2026-11-25 | 0.1.2 | Codex / GPT-6 | OpenAMSM Owner 与仿真对端 | 合并有效边界与分仓证据入口 | 跨仓设计移交 | IR-006 |
+| 2026-11-25 | 0.1.3 | Codex | §3.1 | 固定 EC04 来源并登记接口定版所需证据 | 明确既有 OM 验收的未决项，需求语义不变 | F06、SR-009、SR-017、[Next Issue #10](https://github.com/odango-chan/ca-agent-next/issues/10) |

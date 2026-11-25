@@ -1,12 +1,12 @@
 # SR-009：OpenAMSM SBI 事件插件与二进制产物交接
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.2  
+> SR 版本：0.1.3<br>
 > 状态：DRAFT；设计基线待评审，不允许实施  
 > 创建日期：2026-11-25  
 > 所属阶段：Phase G  
 > 上游需求：[IR-005](../IR/IR%20总登记册.md#ir-005)  
-> 设计依据：[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.2.1 §1～6、8～10；[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.1.1 §2～5；[插件包与进程通信协议规范](../规范/插件包与进程通信协议规范.md) v0.1.1 §6～8  
+> 设计依据：[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.2.1 §1～6、8～10；[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.1.3 §2～5；[插件包与进程通信协议规范](../规范/插件包与进程通信协议规范.md) v0.1.1 §6～8<br>
 > Acceptance：OM-01～OM-03、OM-05～OM-08、OM-14、OM-15（见[演示验收基线](../验收与实施/演示验收基线.md)）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：见第 3 节
@@ -35,6 +35,8 @@ SR-008、SR-003；外部依赖为 ca-openamsm-plugin 设计/实现契约。
 
 进入 READY 前必须确认所有前置 SR 已 VERIFIED，或在 SR 中明确记录并批准并行实施理由；外部依赖必须有可核对的版本、接口和可用证据。
 
+本记录的现有验收同时涉及 Next Host 与独立 Go Plugin，而登记的实施仓只有 Next。按 SR 管理规范 §7、§8.1，须先评审拆分方案，再登记单仓实施 SR、替代关系和验收归属。SR-017 仅覆盖设计移交。拆分未获确认前，本记录保持 DRAFT，不能作为目标插件仓的实施授权。
+
 ## 5. 验收条件
 
 1. 严格使用 Plugin Package/IPC v1alpha1。
@@ -50,7 +52,8 @@ SR-008、SR-003；外部依赖为 ca-openamsm-plugin 设计/实现契约。
 | 项目 | 当前值 |
 |---|---|
 | 实施仓库 | ca-agent-next |
-| GitHub Issue | 未创建 |
+| 文档核查 Issue | [Next Issue #10](https://github.com/odango-chan/ca-agent-next/issues/10) |
+| 实施 Issue | 未创建 |
 | 实施 PR | 未创建 |
 | Commit | 无 |
 | 实施状态 | NOT_STARTED |
@@ -72,3 +75,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-25 | 0.1.0 | 建立初始需求草案 | 从当前架构、设计说明书和 Acceptance 分解 | SR-009 |
 | 2026-11-25 | 0.1.1 | 中文化 SR 标题和文件名；需求范围及验收条件未变 | 落实中文文档命名规范 | SR-009 |
 | 2026-11-25 | 0.1.2 | 补齐 IR、设计章节与验收追踪 | 对齐最新分支与 IR/SR 基线 | SR-009 |
+| 2026-11-25 | 0.1.3 | Codex 更新 §4、§6 与 F06 设计版本 | 记录实施仓归属冲突；原范围、依赖和验收状态保留 | SR-009、SR-017、[Next Issue #10](https://github.com/odango-chan/ca-agent-next/issues/10) |
