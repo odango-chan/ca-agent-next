@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.1.4  
+> 文档版本：0.1.5  
 > 状态：DRAFT  
 > 创建日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -40,6 +40,21 @@ Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/6
 - 下一步按正式规范补完整 AC-013-01：Go 导出同一 typed when 的 Any 和 FileDescriptorSet；Python 用同一 DescriptorSet 构造 DescriptorPool；记录两端的 true/false/error、optional 与 null、数值边界和多 Skill 隔离。同一工具版本下重跑直接包装失败与标准类型成功的对照。仍须验证类型和语义字段在转换前后完整保留，由 Compiler Owner 据此定冻结的新 Artifact 字段。
 - 本次是隔离工作区探针，未写入 Compiler 仓。AC-013-01 尚无完整验收证据。明确区分环境/常量探针通过、旧 Type URL 失败和 typed fixture 尚未运行。
 
+### 已运行的 typed fixture 与未通过的 null 表示
+
+使用同一组固定工具版本。Go 用 proto2 optional int64 构造 `ac013.Input.count`，静态编译 `kind == "create" && has(input.count) && input.count == 9223372036854775807`，导出实际 `cel.expr.CheckedExpr` Any 和 `FileDescriptorSet`。Python 以该文件构造 DescriptorPool、反序列化 Go 产物并调用同一表达式。Go 与 Python 均返回以下结果。
+
+| 输入 | 预期与实际 |
+|---|---|
+| create，count 为 int64 最大值 | true |
+| modify，count 为 int64 最大值 | false |
+| create，count 缺失 | false |
+| kind 缺失 | 求值失败；Python 返回 UNKNOWN，不能作为匹配 |
+
+Go 静态编译另拒绝了未知字段和另一共享 descriptor 文件中未声明的字段。仅验证独立声明类型，实际 Compiler 多 Skill Lock 尚未验收。
+
+**候选映射失败。** Python 动态 proto2 scalar message 中，传入 `count=None` 与省略 count 都令 `HasField("count")` 为 false。因此单一 optional scalar 映射不能承载 G.4 的显式 null 与缺失区别。AC-013-01 仍未通过。下一次验证应提出保留缺失、显式 null 与原始标量的候选表示，并同时证明 Go 静态类型与两端求值保持一致。未经该证据，不冻结新 Artifact 契约。该探针使用简化的 kind 字段和手工 descriptor，当前未验证正式 Event 对象、Schema Registry 生成路径、double 边界及产品级 Lock 隔离。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订内容 | 原因 | 影响 SR |
@@ -49,3 +64,4 @@ Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/6
 | 2026-11-25 | 0.1.2 | 更新设计评审引用 | 跟踪 #88 修订复审 | SR-013 |
 | 2026-11-25 | 0.1.3 | 固定正式规范 SHA | ca-skills #89 已合并 | SR-013 |
 | 2026-11-25 | 0.1.4 | 记录实跑环境与 CheckedExpr Any 交换探针 | 提供 AC-013-01 的可复用起点 | SR-013 |
+| 2026-11-25 | 0.1.5 | 记录 typed Go/Python 结果和 null 映射反例 | 缩小 AC-013-01 剩余验证范围 | SR-013 |
