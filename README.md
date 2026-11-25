@@ -8,7 +8,7 @@ CA Agent Next 是下一代通用 Agent 的独立实现仓。目标是以最小�
 
 ## 从这里开始
 
-1. [CA Agent Next 架构设计](docs/架构设计/CA%20Agent%20Next架构设计.md)
+1. [CA Agent Next 架构设计](docs/架构设计/CA%20Agent%20Next%20架构设计.md)
 2. [文档总目录与索引](docs/治理/文档总目录与索引.md)
 3. [现有文档盘点与收敛计划](docs/治理/现有文档盘点与收敛计划.md)
 4. [文档编写与治理规范](docs/规范/文档编写与治理规范.md)
