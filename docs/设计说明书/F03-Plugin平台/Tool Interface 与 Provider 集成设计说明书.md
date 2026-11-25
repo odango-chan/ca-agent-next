@@ -191,7 +191,7 @@ ProviderV2 Driver 必须按 ca-client-tools.provider/v2 的精确字段消费，
 |---|---|---|
 | initialize | hostInstanceId、providerInstanceId、limits；可选 artifactChannel | providerId、providerVersion、buildDigest、backendBindingCatalogDigest、catalogVersion、effective limits；有 artifact channel 时回报有效 bounds |
 | catalog | backendOperationIds：唯一的精确 ID 数组 | supported、unsupported（NOT_IMPLEMENTED / NOT_CONFIGURED）、catalogVersion、仅 supported IDs 的 bindings 描述符；保持请求顺序 |
-| invoke | backendOperationId、arguments、invocation（invocationId、producerInvocationId、deadline）；仅 typed MAS 可选 hostInvocation | Provider result envelope；不得把 Owner Outcome 映射成 COMMITTED |
+| invoke | backendOperationId、arguments、invocation（invocationId、producerInvocationId、deadline）；仅 typed MAS 可选 hostInvocation | Provider result envelope；MUTATION 只能走 typed MAS handler，genericSBI MUTATION 在远端 I/O 前拒绝；不得把 Owner Outcome 映射成 COMMITTED |
 | cancel | targetRequestId | CANCEL_REQUESTED / ALREADY_COMPLETED / NOT_FOUND；取消不等于远端 mutation 回滚 |
 
 initialize 的 limits 至少约束 maxFrameBytes、maxInFlight 和 maxCallDurationMs。可选 artifactChannel 是关闭对象，字段为 baseUrl、processToken、requestTimeoutMs、maxArtifactBytes、maxAggregateBytes、maxAttachments；缺失 channel 时 artifact-bearing binding 为 NOT_CONFIGURED，且必须在远端 I/O 前拒绝。原始二进制通过 ca-host.artifact-store/v1 channel 传输，不进入 NDJSON。
@@ -249,7 +249,8 @@ Provider 内部基础 Catalog 的 identity 为 ca-client-tools.provider-bindings
 - serviceKey 只是可信部署配置查找键；Catalog 不携带 URL、origin 或凭据。
 - source pin 固定 OpenAPI/Owner 源 Commit、文件路径和 Git blob identity。
 - handler 选择 Go 中固定的执行 profile；genericSBI 只能使用其闭合 schema，不得携带任意 origin/header/token。
-- Provider 启动时把 31 个 typed MAS Callables 和 2 个 evidence handlers 追加到基础 11 个 READ bindings，并把扩展后的 catalog digest 返回给 Host。
+- genericSBI Catalog 中即使声明 MUTATION，也必须在远端 I/O 前以 BACKEND_OPERATION_UNSUPPORTED / MUTATION_GATED 拒绝；只有 separately registered typed openamsmMASInvoke handler 是业务 MUTATION dispatch path，并要求配置 private endpoint 与 Host 提供的 occurrence scope。
+- Provider 启动时把 31 个 typed MAS Callables 和 2 个 evidence handlers 追加到基础 11 个 READ bindings，并把扩展后的 catalog digest 返回给 Host。Receipt Query 和 Reconcile 是两个只读 evidence resources，不重新派发 mutation。
 - Host 不读取或复制 Provider 内部 Catalog；Host 只通过 catalog 方法核对 provider.yaml 与 Runtime Bindings 已明确声明的 backendOperationIds。
 
 ## 7. Tool Invocation 端到端流程
