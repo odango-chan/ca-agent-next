@@ -18,8 +18,8 @@
 | Mechanism | Current evidence | State | Next disposition |
 |---|---|---|---|
 | Intent/Agent model boundary | `src/ca_agent_host/agent/intent/{interpreter,model_adapter,stub}.py`; `agent/model_adapter.py`, `model_request.py`; `tests/unit/test_intent_ingress.py` | Implemented in Demo | Reuse/adapt Python model boundary; keep model loop in Host/Agent |
-| Formal search and plan binding | `agent/formal/{search,grounding,operators,ranking,resolver,strategy}.py`; `tests/unit/test_runtime_preconditions.py`, `test_skill_context.py` | Implemented, but selection layers differ from target | Reuse formal machinery selectively; add explicit package/Skill applicability Resolver |
-| Root/Skill eligibility | `agent/host/root_eligibility.py`, `routing.py`, `root_routing_profile.py`; `tests/unit/test_resident_deployment_routing.py` | Implemented with deployment routing | Reuse eligibility concepts; replace structured Event→Root routing with package-owned applicability |
+| Formal search and plan binding | `agent/formal/{search,grounding,operators,ranking,resolver,strategy}.py`; `tests/unit/test_runtime_preconditions.py`, `test_skill_context.py` | Implemented, but selection layers differ from target | Reuse formal machinery selectively; implement optional assurance/contract.yaml.when plus SKILL.md semantic candidates |
+| Root/Skill eligibility | `agent/host/root_eligibility.py`, `routing.py`, `root_routing_profile.py`; `tests/unit/test_resident_deployment_routing.py` | Implemented with deployment routing | Reuse eligibility concepts; replace structured Event→Root routing with Assurance contract.when and unguarded SKILL.md semantic selection |
 | LLM ambiguity selection | `agent/host/routing.py` (`SkillRoutingChooser`) and `agent/semantic/chooser.py` | Partly implemented | Adapt to strict Formal-first candidate restriction and exact identity validation |
 | Context/Observation | `agent/context/{base,loader,projection,requirements,observation_resolver}.py`; `runtime/observation/{model,source}.py`; `tests/unit/test_skill_context.py` | Implemented | Reuse types/resolver ideas; simplify provenance model for next |
 | Skill Artifact admission | `runtime/admission.py`, `runtime/compiler_artifact.py`, `runtime/compiler_skill.py`, `runtime/skill_assets.py` | Implemented Host-side checks | Reuse/adapt artifact admission and exact identity; align to Compiler v2.1.0 package/artifact contracts |
@@ -41,7 +41,7 @@
 
 - **EVIDENCE:** `agent/host/root_routing_profile.py` parses a deployment-owned `StructuredEventRoute` with contract version/message type/request type; `root_eligibility.py` calls `match_structured_route()` before building eligible Roots.
 - **INFERENCE:** This is a structured Event→Root route, even if the Skill itself is not hardcoded in Plugin code. It does not implement the desired package-owned Skill applicability model.
-- **PROPOSAL:** In next, Event package declares business-contract reference + payload Schema; Skill package declares supported contract/applicability. Formal Resolver matches packages and filters candidates. No per-event Host mapping table.
+- **PROPOSAL (superseded target):** In next, Event Plugin declares normalized Event type + payload Schema only. Every Skill has SKILL.md; optional assurance/contract.yaml.when provides a pure CEL selector. Skills without when are semantic candidates from SKILL.md. No Domain Contract Package, business-contract reference registry or per-event Host mapping table.
 
 ### 3.2 Current Agent-first Plugin proposal conflicts with Skill-first
 
@@ -71,7 +71,7 @@ PR #246 review identifies the new generic Python loader modules under `providers
 ## 5. Reuse map
 
 - **Reuse/adapt:** Python Agent/model adapter, Formal search/grounding, Context Loader, Skill Artifact admission, generic Tool contract validation, Outcome/Evidence semantics, minimal Run/Artifact store.
-- **Refactor:** Skill selection to package applicability; Tool dispatch to Plugin Tool extension; Runtime/Host split; Context provenance.
+- **Refactor:** Skill selection to optional Assurance contract.when plus SKILL.md semantic candidates; Tool dispatch to Plugin Tool extension; Runtime/Host split; Context provenance.
 - **Do not copy wholesale:** `integrations/fivegc/`, NsmfRunExecutor, current structured Event routing, `MockCompiler` as a real compiler, `MockRuntime` as an assumed final engine.
 - **Do not migrate external Go projects into Python:** `ca-skill-compiler` and `ca-client-tools` remain independent executables/packages.
 
