@@ -84,7 +84,7 @@ If implementation and documentation disagree, stop and report the exact conflict
 - LLM-created/edited Skill source follows the same import path as user-authored source.
 - An individual LLM Action proposal is not Skill source and is validated by Runtime Action Boundary. Do not compile it, create a temporary Procedure or invoke the Compiler for each Action.
 - Do not copy the Go Compiler or reimplement its parsing/linking semantics in Python. Consume its canonical CLI/API.
-- Current Compiler support for refreshed v1alpha5 contract.when and Assurance-free SKILL.md import must be verified. If unsupported, report the exact dependency blocker; never silently strip the field or claim support.
+- Current Compiler support for the refreshed v1alpha5 contract.when Artifact must be verified. The SKILL.md-only import path is owned by Next's Skill Importer and must not invoke Compiler. If the Compiler lacks the refreshed when support, report the exact dependency blocker; never silently strip the field or claim support.
 - The Compiler Artifact must expose a portable, statically checked `when` program and its CEL profile/type bindings for the Python Runtime. Do not make Python reparse/type-check the source expression per Event; follow [the SkillCatalog/Compiler integration requirements](docs/integration/skill-catalog-compiler-contract.md).
 
 ## 7. Execution modes and Runtime
