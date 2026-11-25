@@ -86,7 +86,7 @@ Event-specific declarations decide which slots are required or optional. A Plugi
 
 ### 5.1 Optional Codec Tool use
 
-This handoff preserves and transports bytes; it does not require every N1/N2 artifact to be decoded.
+This handoff preserves and transports bytes; it does not require every N1/N2 artifact to be fully decoded. Before Skill selection, the Event Plugin may extract only the minimum protocol discriminator required to normalize an ambiguous shared SBI operation (for example, the NAS message type for UpdateSMContext). This is a narrow protocol-to-Event classification step, not a full decode or business decision; it must reuse the shared codec implementation and preserve the original artifact.
 
 - If the selected Skill does not need inner protocol fields, it may pass the original `artifactRef` directly to the appropriate business Tool. No Codec invocation is required.
 - If the Skill needs NAS/NGAP fields, it invokes the corresponding Codec Tool exported by the `ca-client-tools` Tool Plugin through the normal Runtime Action Boundary.
