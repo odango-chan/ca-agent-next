@@ -1,7 +1,7 @@
 # 业务接入与 OpenAMSM 集成设计说明书
 
 > 文档类型：功能设计说明书  
-> 文档版本：0.1.5
+> 文档版本：0.1.6
 > 功能归属：F06 — 业务接入与集成  
 > 关联 SR：SR-009、SR-010、SR-011  
 > 状态：目标集成设计；真实隔离 E2E 尚未完成  
@@ -109,3 +109,4 @@ UE-requested Release Event 绑定 Release Skill。N1 Release Complete（0xD4）�
 | 2026-11-25 | 0.1.3 | GPT-6.2（ChatGPT） | §4 | 区分公开 Provider Interface、Owner Contract Package 和 Provider Runtime Bindings，并链接 F03.05 集成设计 | 对齐 EC03 v1.2.0 与 Owner v1alpha4 的实际发布边界 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.1.4 | GPT-6.2（ChatGPT） | §4、§5 | 将 Create/Modify/Release Skill-facing Callable 来源明确为 Owner Contract Package，并链接 ca-skills 当前 MAS 作者源 | 修正业务操作并非由 ca-client-tools 11-READ Interface Package 导出的误解 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.1.5 | GPT-6.2（ChatGPT） | §4、§5 | 更正 `dependencies.mas` 是 stable ID 引用而非 Artifact 内 snapshotDigest 锁；明确 Owner 版本由 Provider sidecar / 部署配置固定 | 对齐冻结 v1alpha5 Artifact 的 dependencyClosure 实际字段 | IR-006 · SR-015 · Issue #12 |
+| 2026-11-25 | 0.1.6 | GPT-6.2（ChatGPT） | §4、§5 | 补充 provider.yaml interfaceSnapshotDigest 固定 Provider Interface snapshot，与 Owner sidecar 的 deployment pin 区分 | 完整说明 Create/Modify/Release 的两类工具依赖部署边界 | IR-006 · SR-015 · Issue #12 |
