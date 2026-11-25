@@ -194,9 +194,9 @@ skills/<skill-name>/compiled/when.types.pb
 每个声明 Contract.requestSchema 的 Skill 增加 requestSchema 元数据对象，至少记录：
 
 1. sourceRef：Contract.requestSchema 的作者相对路径。
-2. rootSchemaId：经 Compiler 解析的根 Schema 精确 $id。
-3. rootPath：Artifact 内根 Schema 文件路径。
-4. resources[]：闭包中每个精确 schemaId 与对应 Artifact path；必须覆盖完整、无循环的 G.4 $ref 闭包。
+2. rootPath：Artifact 内根 Schema 文件路径。
+3. rootSchemaId：若根 Schema 声明 $id，则记录其精确值；未声明时省略，不得为其虚构 URI 身份，根以 sourceRef + rootPath 标识。
+4. resources[]：闭包中每个已解析资源的精确 schemaId 与 Artifact path，覆盖完整、无循环的 G.4 $ref 闭包；根 Schema 若声明 $id，也纳入资源映射。
 
 requestSchema 对象与 when 是否存在无关；Host 依照 CA-SL v1alpha5 M.3 使用它验证 Event payload。所有根/资源文件同时进入该 Skill 的 compiledFiles[] 和 Manifest outputFiles[]。
 
@@ -305,3 +305,4 @@ Chromium parity 脚本使用真实 Headless Chrome；若默认路径不可用，
 | 2026-11-25 | 0.1.8 | Codex | §5–7 | 更新隔离 PoC 入口 | 为 AC-013-01 提供可复现起点 | SR-013 |
 | 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 全文 | 补齐 Contract.when AST、G.4、Schema/Guard/Nullable lowering、CheckedExpr/DescriptorSet、新版 Artifact、Build/Verify、测试与发布边界；修正旧提示词和过期状态 | AC-013-01 已产生真实隔离 PoC 结果，后续阶段需要达到 Harness low-effort 可执行粒度 | Issue #14、SR-013、Compiler #61、F02、F08 |
 | 2026-11-25 | 0.2.1 | GPT-6.2（ChatGPT） | §2–7 | 补充 Contract.requestSchema 的独立运行期发布快照，区分 G.4 Schema 验证与 CEL DescriptorSet；明确 event.type-only when 不要求 requestSchema | 对齐 CA-SL v1alpha5 M.2/M.3，修复 Host 运行期缺少 Request Schema 数据的发布契约缺口 | Issue #14、SR-013、Compiler #61、F02、F08 |
+| 2026-11-25 | 0.2.2 | GPT-6.2（ChatGPT） | §5.3 | 明确根 Schema 未声明 $id 时使用 sourceRef/rootPath，不虚构 Schema URI；仅真实声明的 $id 进入资源映射 | 避免将 G.4 非强制的根 $id 变成额外作者约束 | Issue #14、SR-013、Compiler #61 |
