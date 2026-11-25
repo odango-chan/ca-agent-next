@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：目标设计，待实现和验收  
-> 文档版本：0.3.0
+> 文档版本：0.3.1
 > 功能归属：F03 — Plugin 平台  
 > 关联 SR：SR-003、SR-010    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -39,6 +39,7 @@
 | Tool Interface Package | 公共 Callable ID、输入/输出 Schema、Effect、Capability membership | 进程生命周期、Provider 私有 backend 映射 |
 | Owner Contract Package | Owner Callable、Owner Outcomes、Receipt、Commit Proof、Reconcile | Provider 进程和私有 handler |
 | Provider Runtime Bindings | 公开/Owner Callable 到私有 backendOperationId 的映射、HostInvocation 和 privateArguments 来源 | 公开 Tool 契约、Capability 授权和 Owner 语义 |
+| Provider Backend Binding Catalog v2 | Provider 内部 backendOperationId 到 handler、serviceKey、source、Effect 和参数 Schema 的执行映射 | Provider 进程内部 | 不公开 Callable/Capability/Owner Outcome，不授权 Skill |
 
 ## 4. 包与进程模型
 
@@ -93,7 +94,7 @@ messageId、correlationId、eventId、invocationId、deliveryId、responseObliga
 
 ca-client-tools v1.2.0 当前发布的是独立 Provider 包，进程协议为 ca-client-tools.provider/v2（长生命周期 NDJSON）。Next 由唯一 Plugin Manager 内部的 ProviderV2 Tools Extension Driver 消费现有 provider.yaml 和 runtime-bindings.yaml，并把 Provider v2 的 initialize/catalog/invoke/cancel 适配为统一 Tools Extension 调用。Driver 只负责进程与协议适配，不得演变为永久 Provider Manager、第二套 Tool Registry 或第二条授权路径。Native Plugin 仍使用本仓统一 Plugin IPC v1alpha1。
 
-Plugin Manager 只转发 Runtime 已检查的调用。公开 Callable/Schema/Effect/Capability 来自锁定的 Tool Interface Package；Owner Outcomes、Receipt、Commit Proof 和 Reconcile 来自 Owner Contract Package；Provider Runtime Bindings 只提供 backendOperationId、HostInvocation/privateArguments 来源和 Provider observation 定位。三者不得合并成一份 Next 自维护 Catalog。
+Plugin Manager 只转发 Runtime 已检查的调用。公开 Callable/Schema/Effect/Capability 来自锁定的 Tool Interface Package；Owner Outcomes、Receipt、Commit Proof 和 Reconcile 来自 Owner Contract Package；Provider Runtime Bindings 只提供 backendOperationId、HostInvocation/privateArguments 来源和 Provider observation 定位。三类跨组件契约不得合并成一份 Next 自维护 Catalog；Provider Backend Binding Catalog v2 只在 Provider 进程内部使用，Host 通过显式 catalog 请求核对映射，不解析或复制它。
 
 Tool Plugin 返回的传输成功不等于 Owner 业务 COMMITTED。Runtime 必须按 Owner Contract 验证 Receipt 与 Commit Proof；UNKNOWN 保持 UNKNOWN，并按原 Invocation 执行 exact-original Reconcile。
 
@@ -132,7 +133,7 @@ Plugin Package/IPC v1alpha1 是 PR #1 中的目标契约，不等于已完成实
 
 ### Tool Interface 与 Provider
 
-F03.05 的详细设计见 [Tool Interface 与 Provider 集成设计说明书](Tool%20Interface%20与%20Provider%20集成设计说明书.md)。该子设计固定三层边界：公开 Tool Interface Package、Owner Contract Package、Provider Runtime Bindings；并定义 ca-client-tools v1.2.0 的 ProviderV2 Driver 如何纳入唯一 Plugin Manager。EC03 的 Go 实现、发布物和运行说明仍由 ca-client-tools 维护；Next 不复制其机器契约或实现代码。详见[分仓证据](../../参考与审计/跨仓设计资产迁移与一致性审计.md)。
+F03.05 的详细设计见 [Tool Interface 与 Provider 集成设计说明书](Tool%20Interface%20与%20Provider%20集成设计说明书.md)。该子设计固定三类跨组件契约：公开 Tool Interface Package、Owner Contract Package、Provider Runtime Bindings，并界定 Provider Backend Binding Catalog v2 的内部边界；同时定义 ca-client-tools v1.2.0 的 ProviderV2 Driver 如何纳入唯一 Plugin Manager。EC03 的 Go 实现、发布物和运行说明仍由 ca-client-tools 维护；Next 不复制其机器契约或实现代码。详见[分仓证据](../../参考与审计/跨仓设计资产迁移与一致性审计.md)。
 
 
 ## 修订记录
@@ -144,3 +145,4 @@ F03.05 的详细设计见 [Tool Interface 与 Provider 集成设计说明书](To
 | 2026-11-25 | 0.2.1 | 刷新需求追踪、目录或证据引用 | 对齐最新分支与 IR/SR 基线 | 见关联 SR |
 | 2026-11-25 | 0.2.2 | Codex / GPT-6 | Tool Interface 与 Provider | 合并有效边界与分仓证据入口 | 跨仓设计移交 | IR-006 |
 | 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | 第 3、5、7、10、11 章 | 拆分 Interface Package、Owner Contract Package 与 Provider Runtime Bindings；固定 Provider v2 迁移 Driver 和 F03.05 子设计入口 | 消除 Owner 结果权威与 Provider 私有映射混淆，按 ca-client-tools v1.2.0 和 ca-agent-demo main 校准 | IR-006 · SR-015 · Issue #12 |
+| 2026-11-25 | 0.3.1 | GPT-6.2（ChatGPT） | 第 3、7、11 章 | 增加 Provider Backend Binding Catalog v2 的内部边界，并引用 11/25/31/44 库存闭合 | 防止将 Provider 私有目录误当作第二份公开 Tool Catalog | IR-006 · SR-015 · Issue #12 |
