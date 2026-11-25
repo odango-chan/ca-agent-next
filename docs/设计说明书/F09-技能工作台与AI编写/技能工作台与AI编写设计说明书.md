@@ -58,7 +58,7 @@ Skill Studio 的依赖导入负责**获取、验证和固定原始包快照**，
 
 项目另预加载 `ca-client`，其 Package ID 为 `urn:wtlab:ca-client-tools:openamsm-sbi-interface`，来自已发布 `ca-client-tools_interface_1.1.0.zip`。它导出十一项 public READ Tools / 两个 Capabilities，用于只读 SBI Query IntelliSense；它**不是** `mas` Owner contract，也不是 `ca-context`，当前 Contract 未声明它为根。Studio/Compiler 不得推断替换。
 
-要让当前 MAS Example 使用 Compiler v2.1.0 Development Build，Owner 与 Host 必须分别发布正式 `connectionagent.io/interface-package/v1alpha1` 包。发布任务分别归入 [SR-015](../../SR/SR-015-工具契约设计移交.md)（MAS Owner）和 [SR-024](../../SR/SR-024-Host%20Context%20Interface%20Package%20Publisher.md)（Host Context）；Studio 只导入发布物，不代替 Publisher 组包。
+要让当前 MAS Example 使用 Compiler v2.1.0 Development Build，Owner 与 Host 必须分别发布正式 `connectionagent.io/interface-package/v1alpha1` 包。MAS Owner Publisher 由 [SR-025](../../SR/SR-025-MAS%20Owner%20Interface%20Package%20Publisher.md) 负责；Host Context Publisher 由 [SR-024](../../SR/SR-024-Host%20Context%20Interface%20Package%20Publisher.md) 负责；Studio 只导入发布物，不代替 Publisher 组包。
 
 ### 4.5 两个 Contract root 的正式 Publisher 输出
 
@@ -148,7 +148,7 @@ Package Explorer、LSP、Problems 与 AI Workbench 必须区分源码诊断、�
 | Compiler v2.1.0 Node/Browser Worker | OPEN / DRAFT / STALE | [Studio #276](https://github.com/odango-chan/ca-skill-studio-demo/pull/276)，测试 HEAD `7d6adeb`，落后 #272 base 9 commits |
 | Package Audit Development Build cutover | NOT_IMPLEMENTED | [Studio #269](https://github.com/odango-chan/ca-skill-studio-demo/issues/269) |
 | AI Authoring exact-candidate Development Build gate | NOT_IMPLEMENTED | [Studio #269](https://github.com/odango-chan/ca-skill-studio-demo/issues/269) |
-| MAS / Host Context formal Interface Package publication | BLOCKED | 当前锁定 kind 分别为 `tool-catalog` / `schema-bundle`；Publisher 设计与验收归入 SR-015 / SR-024，尚未发布 |
+| MAS / Host Context formal Interface Package publication | BLOCKED | 当前锁定 kind 分别为 `tool-catalog` / `schema-bundle`；MAS Owner Publisher 归 SR-025，Host Context Publisher 归 SR-024；两个 package.version 的 SemVer 映射待用户确认，发布物尚未产生 |
 | Host fixture provenance in Studio lock | NOT_IMPLEMENTED | #267 已持久化 ZIP source metadata（upload/contentDigest/packageId/version/publisher），但尚未写入 `source.sourceStatus`；由 SR-016 / Studio #269 补齐 |
 | Real released ca-client-tools v1.1.0 as Compiler root | NOT_RUN | 需显式 `ca-client` synthetic Contract 正例 |
 | No-root UI state | NOT_IMPLEMENTED | 不调用 Compiler、无 Artifact、无 `NOT_ADMITTED` |
