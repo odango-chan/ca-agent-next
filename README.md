@@ -33,6 +33,7 @@ For the next major redesign after promotion, create a fresh ca-agent-next. Keep 
 - [SkillCatalog and Compiler integration](docs/integration/skill-catalog-compiler-contract.md) — import/update lifecycle, hot-path residency, Catalog generations and portable compiled when requirement.
 - [Plugin Package v1alpha1](docs/plugin-package.md) — YAML manifest, extensions and complete common IPC contract.
 - [Plugin Artifact Handoff](docs/plugin-artifact-handoff.md) — Host-owned N1/N2 staging, custody and delivery.
+- [SkillCatalog / Compiler Integration](docs/integration/skill-catalog-compiler-contract.md) — import-once, in-memory Catalog, compile-once and when evaluation per Event.
 - [Demo audit](docs/audit/ca-agent-demo.md) — current source inventory and evidence.
 - [Reuse and feasibility](docs/audit/reuse-and-feasibility.md) — copy vs adapt vs external dependency decisions.
 - [DeepSeek Harness plan](docs/implementation/deepseek-harness-plan.md) — staged implementation task package.
