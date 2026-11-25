@@ -162,9 +162,9 @@ PoC 中复用 Development Schema/Lock fixture 只证明共享 Schema 解析机�
 
 ### 5.1 版本决策
 
-设计推荐候选 API：Artifact 为 connectionagent.io/compiler-artifact/v2alpha1，BuildResult 为 connectionagent.io/compiler-build-result/v2alpha1。BuildRequest 保持 connectionagent.io/compiler-build-request/v1alpha5，DependencyInspection 保持 connectionagent.io/compiler-dependency-inspection/v1alpha5，除非实际 DTO 审计证明需要升级。languageTarget 仍为 connectionagent.io/v1alpha5。
+设计推荐候选 API：Artifact 为 connectionagent.io/compiler-artifact/v2alpha1，BuildResult 为 connectionagent.io/compiler-build-result/v2alpha1。新 Runtime Build 复用 BuildRequest connectionagent.io/compiler-build-request/v1alpha5；DependencyInspection 保持 connectionagent.io/compiler-dependency-inspection/v1alpha5，除非实际 DTO 审计证明需要升级。languageTarget 仍为 connectionagent.io/v1alpha5。
 
-新 Compiler 版本采用固定 API 集，不在同一二进制中双轨支持旧/新 BuildResult，不增加版本 dispatch、fallback 或兼容路由；旧 v2.1.0 Release 保留冻结 Artifact/BuildResult v1alpha5 历史行为。
+新 Compiler Runtime Build 只产生 v2alpha1 BuildResult / Artifact，VerifyBuildResult 只接受该新结果契约；不在同一二进制中双轨支持旧/新 Runtime BuildResult，不增加版本 dispatch、fallback 或兼容路由。旧 v2.1.0 Release 保留冻结 Artifact/BuildResult v1alpha5 历史行为；Development Build 继续使用独立 v1alpha1 API/Artifact 家族。
 
 **Owner Gate：** Compiler Owner 必须在 AC-013-03 代码实施前确认 Artifact 与 BuildResult 两个 API 名称。若拒绝，先在 EC02 / SR-013 中更新决策及理由；Harness 不得自行改用 v1alpha6、Development v1alpha2 或其他临时名字。
 
@@ -215,7 +215,7 @@ when.checked.pb 与 when.types.pb 同时进入该 Skill 的 compiledFiles[] 和 
 - 验证所有类型引用可解析，Request Schema identity 与该 Skill 一致。
 - 验证 SourcePath、表达式位置、程序文件与 Manifest 一致。
 - 验证不存在跨 Skill Descriptor 引用。
-- 新版 BuildResult 使用唯一的 v2alpha1 Verify 路径，执行完整重建和逐文件比较或 Compiler Owner 批准的等价确定性复验；现有 CLI 写盘前 Verify 的不变量必须保留。旧 v1alpha5 Verify 行为由旧 v2.1.0 Release 保持，不在新二进制内兼容路由。
+- 新 Runtime Build 复用 BuildRequest v1alpha5，返回唯一的 BuildResult v2alpha1；VerifyBuildResult 只接受该新结果并验证 Artifact v2alpha1，执行完整重建和逐文件比较或 Compiler Owner 批准的等价确定性复验。旧 v1alpha5 Runtime Verify 行为由旧 v2.1.0 Release 保持，不在新二进制内兼容路由；Development Verify 继续使用独立 Development API v1alpha1。现有 CLI 写盘前 Verify 的不变量必须保留。
 - 新版失败行为不改变冻结 v1alpha5 与 Development v1alpha1 的 Verify。
 
 ### 6.3 必跑命令
