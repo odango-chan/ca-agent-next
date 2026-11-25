@@ -34,7 +34,7 @@
 1. CA-SL 语言标识保持 \`connectionagent.io/v1alpha5\`，不增加 v1alpha6，不做旧版本兼容。
 2. 冻结 v1alpha5 Build/Verify API 与 Artifact 字节完全不变。
 3. Development Build v1alpha1 的五份冻结机器契约不原地修改。
-4. 推荐只新增 Development Artifact Manifest \`connectionagent.io/compiler-development-artifact/v1alpha2\`；BuildRequest / BuildResult / Interface Package / Dependency Lock 仍使用现有 v1alpha1。若发现 BuildResult DTO 确实必须变化，先提供证据和版本化方案，暂停等待审查。
+4. 不修改冻结的发布 Artifact `compiler-artifact/v1alpha5` 和 Development Artifact v1alpha1。新增 Compiler-owned 的版本化发布运行时 Artifact 契约，具体 Artifact API 版本由 Compiler Owner 决定；CA-SL languageTarget 仍是 v1alpha5。Development Artifact 不作为 Agent 运行包。
 5. SkillCatalog 属于 Python Agent Core / Host，不属于 Plugin Manager。
 6. SKILL.md-only Skill 由 Next Importer 直接导入，不调用 Compiler。
 7. 存在 Assurance 时必须有完整 \`contract.yaml\`、\`procedure.yaml\`、\`predicates.yaml\`；无效 Assurance 是导入失败，不得降级。
@@ -103,8 +103,8 @@
 4. Manifest 为每个 Skill 记录选择程序文件路径、Descriptor 文件路径、Request Schema 精确身份、源码路径和位置。
 5. Manifest 继续使用现有 \`files[]\` 文件清单与 Artifact 自校验；不增加独立哈希或签名机制。
 6. 无 when 的 Assurance Skill 不生成选择程序文件；SKILL.md-only Skill 不进入 Compiler。
-7. \`BuildDevelopment\` / \`VerifyDevelopment\` 对新 Artifact 完整重建、逐文件字节比较；失败不返回部分 Artifact。
-8. \`executionStatus\` 仍为 \`NOT_ADMITTED\`。
+7. 使用 Compiler 的发布 Build / Verify 路径对新运行时 Artifact 完整重建、逐文件比较；失败不返回部分 Artifact。
+8. 新发布运行时 Artifact 不增加 `executionStatus=NOT_ADMITTED`、`hostAdmission` 或 Skill Admission 字段。Development v1alpha1 原契约保持不变，但不用于 Agent 运行。
 9. Native、WASM、Chromium Worker 对新 Artifact 文件字节保持一致。
 
 ### 六、Phase 3：Compiler 完整验收与发布
@@ -127,14 +127,14 @@ git diff --check
 
 ### 七、Phase 4：Next SkillCatalog 基础设施
 
-Compiler Artifact 契约有可用的实现分支和明确的文件布局后，在 \`ca-agent-next\` 独立实施分支开发：
+Compiler 发布运行时 Artifact 契约有可用的实现分支和明确的文件布局后，在 `ca-agent-next` 独立实施分支开发：
 
 1. 实现 Core-owned immutable SkillCatalog / CatalogGeneration。
 2. 导入时读取所有 SKILL.md，缓存完整文本和语义候选元数据。
 3. SKILL.md-only 直接入 Catalog，不调用 Compiler。
 4. Agent 只接受发布包：SKILL.md + Compiler 生成并在发布前 Verify 的运行时 Artifact（如果有 Assurance）。Agent 不导入 Assurance source YAML。
 5. Agent 不调用 Compiler Check/Build/Inspect/Verify；只检查 Artifact 格式、Manifest、必需文件、路径/引用、CEL/type 数据可解析性，并解析本机 Plugin Tool/Capability 依赖。
-6. 读取 Artifact v1alpha2 的 CheckedExpr Any / DescriptorSet；使用 \`cel-expr-python\` 反序列化一次并保留 Expression、DescriptorPool、Schema/type bindings。
+6. 读取 Compiler 新版发布运行时 Artifact 中的 CheckedExpr Any / DescriptorSet；使用 `cel-expr-python` 反序列化一次并保留 Expression、DescriptorPool、Schema/type bindings。
 7. 对每个 fresh Event 构造当前 activation 并求值；不缓存布尔结果，不读取磁盘，不启动 Compiler。
 8. Runtime false/error fail-closed，排除 Skill；多个 true 只在精确集合内消歧。
 9. SKILL.md 全文从内存提供；references/ 大型知识资产懒加载。
@@ -148,7 +148,7 @@ Compiler Artifact 契约有可用的实现分支和明确的文件布局后，�
 
 - EX-21：Catalog 同时登记 SKILL.md-only 和 Assurance Skill。
 - EX-22：Event 热路径没有 Skill 文件读取、目录扫描或 Compiler 调用。
-- EX-23：when 编译/加载一次，不同 Event 独立求值。
+- EX-23：Compiler 在发布时编译一次，Agent 导入时加载一次，不同 Event 独立求值。
 - EX-24：重复 Event 和 continuation 不重复选择。
 - EX-25：Catalog 原子更新，失败回滚。
 - EX-26：Invocation 代际固定。
