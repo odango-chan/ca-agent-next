@@ -1,48 +1,67 @@
 # CA-SL 语言基线与版本规范
 
-> 文档类型：规范  
-> 文档版本：0.1.3  
-> 状态：待评审  
+> 文档类型：语言版本与运行时消费规范  
+> 文档版本：0.2.0  
+> 状态：CA-SL v1alpha5 FROZEN / RELEASED；Compiler when 运行时 Artifact 尚未完成  
 > 修订日期：2026-11-25  
+> 关联 IR：IR-003、IR-006；SR-023、SR-013  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
-> 本文局部非目标：生产级准入、签名、完整性体系和 Trust Registry  
+> 本文局部非目标：旧版兼容、Agent 内置 Compiler、Skill Admission、签名、Trust Registry 和额外 SHA-256
 
-关联 [IR-006](../IR/IR%20总登记册.md#ir-006)、IR-003。
+## 1. 当前正式语言基线
 
-## 1. 发布与候选
+当前唯一语言目标为 connectionagent.io/v1alpha5，不引入旧版兼容映射或新的 v1alpha6。
 
-现行语言版本为 `connectionagent.io/v1alpha5`。2026-11-25 同版本刷新已冻结并发布；[规范正文](https://github.com/odango-chan/ca-skills/blob/18d8184367982ccbc835756136c4a53f9096c3a0/docs/skill-language-spec.v1alpha5.zh-CN.md)固定在提交 `18d8184367982ccbc835756136c4a53f9096c3a0`，见[发布记录](https://github.com/odango-chan/ca-skills/blob/main/docs/releases/ca-sl-v1alpha5.md)。IngressCatalog 与诊断注册沿用各自冻结版本，2026-11-17 基线按发布记录保留。
+完整规范正文已迁入 Next：[CA-SL v1alpha5 完整语言规范](CA-SL%20v1alpha5完整语言规范.md)。迁移来源是 ca-skills 发布规范提交 18d8184367982ccbc835756136c4a53f9096c3a0；ca-skills PR #88（规范刷新）和 PR #89（发布记录固定）均已合并。
 
-[ca-skills #88](https://github.com/odango-chan/ca-skills/pull/88) 已合入并成为正式发布来源。发布版 §11.3、§12.8、附录 M 对应 SA-001～SA-012。移交时保留完整发布规范、引用、原提交和修订历史。正式切换前由 SR-023 核验源文件完整性、章节引用、Schema、示例、规范锁及发布入口。本稿仅建立中央版本登记与变更边界。
+权威来源：
+- [ca-skills PR #88](https://github.com/odango-chan/ca-skills/pull/88) — 2026-11-25 09:08 UTC MERGED。
+- [ca-skills PR #89](https://github.com/odango-chan/ca-skills/pull/89) — 2026-11-25 09:10 UTC MERGED。
+- [固定发布规范提交](https://github.com/odango-chan/ca-skills/blob/18d8184367982ccbc835756136c4a53f9096c3a0/docs/skill-language-spec.v1alpha5.zh-CN.md)。
+- [发布记录](https://github.com/odango-chan/ca-skills/blob/main/docs/releases/ca-sl-v1alpha5.md)。
 
-## 2. Next 技能作者与执行边界
+源仓当前 main 的规范文件头部仍有 Proposed Refresh / Normative Candidate 表述，而 Release Record 已记录正式发布。为避免误用，本仓以 Release Record 指向的不可变提交作为规范发布身份；源仓头部状态不一致列为待清理项，不改变已合并 PR 和 Release Record 的事实。
 
-[技能与确定性保障格式规范](技能与确定性保障格式规范.md) 定义 Next 作者源及消费包边界。SKILL.md 必需；可选 Assurance 包含 contract、procedure 和 predicates。Contract 顶层可选 `when` 为已发布作者语义。存在 Assurance 时校验失败须拒绝。节点 Precondition、Operation、Observation、Postcondition 与执行期 Predicate 的冻结语义仍沿用语言发布基线。
+## 2. Next 作者与运行时消费边界
 
-发布版 §12.8 中的作者源导入与构建适用于作者工具；Next 运行时产品只导入正式发布包。中央语言刷新须明确这两个产品边界并验证对应入口。
+- SKILL.md 必需。
+- Assurance 可选；不存在 Assurance 的 Skill 可用于 LLM-guided，不要求 Compiler。
+- Assurance 存在时必须整体有效；导入失败不得降级成 SKILL.md-only。
+- 有效发布 Assurance Artifact 可用于 Deterministic 和 LLM-guided。
+- Contract 位于 assurance/contract.yaml；when 是可选顶层字段。
+- predicates.yaml 只描述执行期 Predicate；when 只负责新 Event 的 Skill 选择。
+- Node 阶段、Wait、Observation、Operation、Postcondition 及 Procedure Graph 语义以完整 CA-SL v1alpha5 规范为准。
+- Next Agent 只导入正式发布 Bundle，不读取作者源进行运行时编译，不内置或调用 Compiler。
 
-## 3. 候选规范评审与 DSH 恢复输入
+## 3. when 的发布与运行时依赖
 
-对照 [ca-skills #88 的固定候选](https://github.com/odango-chan/ca-skills/blob/2eedf4231075b6c589212d7d25576c7abbe6a5d9/docs/skill-language-spec.v1alpha5.zh-CN.md#m4-skill-import-与编译边界) 评审以下改动。下表保留评审输入。最终条款与交接状态见 §3.1。
+when 的作者语义已进入 CA-SL v1alpha5 正式发布。它使用 Event 与 Skill requestSchema 类型环境，必须在发布阶段完成 CEL 解析、静态类型检查和 G.4 限制检查。
 
-| 候选条款 | 拟澄清的行为 | 验收输入与可观察结果 |
-|---|---|---|
-| M.4、SA-002／003 | 作者工具校验完整 Assurance，调用外部 Compiler 构建和验证，再交由发布流程。Next 运行时接受 SKILL.md-only 或正式发布的 Assurance Bundle。 | 有效作者源生成可验证产物；缺失或无效 Assurance 失败。向 Next 导入作者源包应失败，不能降级成 SKILL.md-only。 |
-| M.4、SA-009 | Next Importer 对正式发布 Bundle 做受支持版本、结构、文件、引用和类型检查。Compiler 的构建与验证在发布流程完成。 | 有效 Bundle 导入成功且两个模式可选。损坏、路径无效或类型数据不可解码的 Bundle 导入失败。两组都验证 Host 无 Compiler 调用。 |
-| M.4、SA-011 | AI 编辑走与用户编辑相同的作者校验、编译和发布路径。已运行的 Catalog generation 直到显式导入成功后才切换。 | 只编辑未发布的 Assurance 源，当前 Run 和生效目录不变；导入新发布 Bundle 后，新事件使用新 generation。 |
-| M.2／M.3、SA-008 | 建议在新事件上，将声明了 requestSchema 但 payload 不匹配的 Assurance Skill 排除在两个候选集合之外。保留 Schema 不匹配诊断，区分 CEL 求值错误。 | A 无 when 且 requestSchema 要求整数 requestType，B 为 SKILL.md-only。输入 requestType 为字符串且无显式匹配，候选只含 B。把输入改为整数后，A、B 均进入语义候选。规范负责人需确认此预期。 |
+但语言规范发布不等于 Compiler 发布物已完成：
+- ca-skill-compiler Issue #61 当前 OPEN。
+- Compiler v2.1.0 当前 ContractAST 尚无 when 节点。
+- 冻结 Artifact v1alpha5 不得原地添加 when 字段/文件。
+- Development Artifact v1alpha1 保持 NOT_ADMITTED，不可作为 Next 可运行 Skill Bundle。
+- 新版发布 Artifact、CheckedExpr、DescriptorSet 和 Python cel-expr-python 互操作必须由 Issue #61 的后续实现和 Release 证明。
 
-**DSH 恢复证据**包括正式语言规范 SHA 与发布记录、对上表各项的规范决议或采用的替代语义，以及 READY 的 SR-013。规范确认后，将对应正反例纳入 AC-013-01 的跨语言 fixture 或 SR-004～006 的 Host fixture，按职责分别取证。正式发布证据已核对。SR-013 的 READY 审查和环境、授权检查仍待完成。
+Next 不得通过重新解析 CEL 原文、DynType 或自制 evaluator 绕过该依赖。Compiler 产物未发布前，带 when 的 Assurance Bundle 不得声称跨语言运行时互操作 PASS。
 
-### 3.1 正式发布复核
+## 4. 规范变更规则
 
-[固定发布正文](https://github.com/odango-chan/ca-skills/blob/18d8184367982ccbc835756136c4a53f9096c3a0/docs/skill-language-spec.v1alpha5.zh-CN.md)的 M.4／SA-002、009、011 区分作者编译与 Agent Bundle 导入，运行时消费不调用 Compiler，也无需独立 Admission。M.3／SA-012 规定请求 Schema 失配时排除该 Skill、记录诊断且跳过 CEL。Go/Python 互操作与 Host fixture 验收仍为 NOT_RUN。
+CA-SL 语义变化必须：
+1. 在 ca-skills 对应设计和规范中提出。
+2. 明确 languageTarget、Schema/fixture、示例和迁移影响。
+3. 通过规范评审和正式发布记录。
+4. 更新 Next 完整规范副本、F02/F08/F09 设计、SR-023/SR-013 和文档索引。
+5. 对旧冻结 Artifact 采取新版本契约，不原地改变字节或语义。
+
+## 5. 非目标
+
+不引入旧版兼容、Agent 内置 Compiler、运行期编译、独立 Skill Admission、审批、签名、Trust Registry、额外 SHA-256 或第二套选择条件语言。
 
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
 |---|---|---|---|---|---|
-| 2026-11-25 | 0.1.0 | Codex / GPT-6 | 全文 | 整合已核对的跨仓基线和候选变更，建立分仓验收入口。 | F02 · IR-003 / IR-006 · SR-023 |
-| 2026-11-25 | 0.1.1 | Codex / GPT-6 | §3 | 固定候选冲突、拟澄清语义与正反例，明确 DSH 恢复输入 | F02 · SR-013 · SR-023 |
-| 2026-11-25 | 0.1.2 | Codex / GPT-6 | §1、§3.1 | 固定已澄清候选与正式发布门槛 | SR-013、SR-023 |
-| 2026-11-25 | 0.1.3 | Codex | §1–3 | 固定已发布 SHA，复核导入和候选资格条款 | #5、SR-013、SR-023 |
+| 2026-11-25 | 0.1.3 | 原记录 | 全文 | 建立 CA-SL v1alpha5 发布登记 | IR-006 |
+| 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | §1–5 | 核对 #88/#89 合并状态，迁入完整规范正文，明确源仓状态差异与 Compiler #61 未完成边界 | Issue #12；SR-023；SR-013 |
