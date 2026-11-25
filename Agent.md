@@ -7,7 +7,7 @@
 ## 1. 任务开始流程
 
 1. 阅读 README.md、本文和 docs/治理/功能树与需求追踪基线.md。
-2. 根据用户任务、Issue 或 PR 变更识别 Feature / SR。
+2. 根据用户任务、Issue 或 PR 变更识别仓库、Feature / IR / SR。
 3. 检查 SR 状态、依赖和 Acceptance；DRAFT / BLOCKED 不得直接实施。
 4. 只读取对应功能设计说明书、相关规范、外部 EC 权威文档和验收要求。
 5. 实施前核对仓库、分支、HEAD、工作区和外部依赖当前状态。
@@ -21,7 +21,7 @@
 - 独立 Plugin 可以使用 Go；Go Plugin 不代表 Go Host。
 - ca-agent-demo 是既有 Python 实现和测试证据来源，只能逐文件选择性复用，不得整体复制。
 - ca-skill-compiler、ca-skills、ca-client-tools、ca-openamsm-plugin、env-openamsm 等为独立权威仓。
-- 未经用户明确授权，不修改兄弟仓库，不合并 PR，不发布 Release。
+- 所有项目群任务从本仓进入。用户已授权在任务范围内修改协作仓；任何跨仓变更必须先在本仓登记对应 SR，确认目标仓和验收，达到 READY 后实施，再回填目标仓 PR、Commit 和验收证据。合并 PR 和发布 Release 需要单独授权。
 
 ## 3. 不可违反的架构约束
 
