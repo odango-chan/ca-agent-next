@@ -44,7 +44,7 @@ qualification, Runtime readiness, authorization, or live 5GC execution.
 
 ## Purpose and current presentation
 
-The original C4 implementation introduced a Package Overview inventory as a domain-specific TreeView. Its initial Activity Bar placement and inventory-only role are superseded by [ADR-0004](../decisions/0004-package-first-workspace.md). In the target workbench, this inventory is the **Skills** section of the default Package Explorer, composed with Plugin-managed Dependencies and actual Compiler Build Artifacts.
+The original C4 implementation introduced a Package Overview inventory as a domain-specific TreeView. Its initial Activity Bar placement and inventory-only role are superseded by [ADR-0004](../../../决策记录/EC06-ADR-0004-Package优先工作区.md). In the target workbench, this inventory is the **Skills** section of the default Package Explorer, composed with Plugin-managed Dependencies and actual Compiler Build Artifacts.
 
 - The native Files view remains the general-purpose physical workspace file tree.
 - Package Explorer provides Package-aware Source operations, but delegates physical file creation / rename / move / delete to the host filesystem API; it does not implement a second filesystem.
