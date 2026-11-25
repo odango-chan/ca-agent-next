@@ -10,7 +10,8 @@ For every non-trivial task, read:
 2. docs/architecture.md
 3. docs/plugin-package.md
 4. docs/plugin-artifact-handoff.md
-5. docs/audit/ca-agent-demo.md
+5. docs/integration/skill-catalog-compiler-contract.md
+6. docs/audit/ca-agent-demo.md
 5. docs/audit/reuse-and-feasibility.md
 6. docs/acceptance.md
 7. docs/implementation/deepseek-harness-plan.md
