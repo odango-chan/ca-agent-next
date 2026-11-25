@@ -84,6 +84,16 @@ Initial slot vocabulary:
 
 Event-specific declarations decide which slots are required or optional. A Plugin must never fabricate an absent N1/N2 part.
 
+### 5.1 Optional Codec Tool use
+
+This handoff preserves and transports bytes; it does not require every N1/N2 artifact to be decoded.
+
+- If the selected Skill does not need inner protocol fields, it may pass the original `artifactRef` directly to the appropriate business Tool. No Codec invocation is required.
+- If the Skill needs NAS/NGAP fields, it invokes the corresponding Codec Tool exported by the `ca-client-tools` Tool Plugin through the normal Runtime Action Boundary.
+- The Host binds the Run-owned artifact to the specific Tool invocation and transfers it through the existing Host-to-Provider artifact channel. The Codec Tool returns a structured JSON projection; it does not replace or mutate the original artifact.
+- An Encode Tool may return an output artifact reference. Host stages that artifact for the exact response obligation and the Event Plugin performs SBI multipart/Content-ID encoding.
+- Codec Tool operations must be declared in the canonical Tool Interface Package and limited to the message subset actually implemented and tested. The current pure `protocol/nas5gsm` library is not automatically callable by a Skill.
+
 Expected Skill inputs:
 
 | Skill | Initial input |
