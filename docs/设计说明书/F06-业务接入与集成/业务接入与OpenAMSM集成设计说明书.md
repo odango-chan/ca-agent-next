@@ -1,7 +1,7 @@
 # 业务接入与 OpenAMSM 集成设计说明书
 
 > 文档类型：功能设计说明书  
-> 文档版本：0.1.3  
+> 文档版本：0.1.3
 > 功能归属：F06 — 业务接入与集成  
 > 关联 SR：SR-009、SR-010、SR-011  
 > 状态：目标集成设计；真实隔离 E2E 尚未完成  
@@ -48,7 +48,7 @@ EC04 ca-openamsm-plugin 负责：
 | Provider 私有 backendOperationId / HostInvocation / privateArguments | ca-client-tools Provider Runtime Bindings v1 | 唯一 Plugin Manager 内部 ProviderV2 Driver 消费；不暴露给 Skill |
 | Plugin Manifest / IPC | ca-agent-next Plugin 规范 | Event Plugin 对齐本仓契约 |
 
-不把完整 3GPP OpenAPI 或 NAS/NGAP Schema 复制进 SKILL.md 的 requestSchema；不在 Next 重定义 Owner 契约。
+Provider 进程、Tool Interface、Owner Contract 与 Provider Runtime Bindings 的 Next 消费边界见 [F03.05 Tool Interface 与 Provider 集成设计说明书](../F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md)。本说明书只负责 OpenAMSM 业务接入、Event/Delivery 与 Create/Modify/Release 的业务组合，不定义通用 Provider Manager。\n\n不把完整 3GPP OpenAPI 或 NAS/NGAP Schema 复制进 SKILL.md 的 requestSchema；不在 Next 重定义 Owner 契约。
 
 ## 5. Create、Modify 与 UE-requested Release
 
@@ -104,4 +104,4 @@ Create、Modify、Release 的详细业务 Procedure 由 ca-skills 作者源和�
 | 2026-11-25 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 建立 F06 业务接入与 OpenAMSM 集成设计 | 将 SBI、Tool、Owner 和业务 E2E 统一到一个集成边界，不在 Core 中复制业务逻辑 | F06；SR-009～011；EC01～EC05；PR #1 |
 | 2026-11-25 | 0.1.1 | 刷新需求追踪、目录或证据引用 | 对齐最新分支与 IR/SR 基线 | 见关联 SR |
 | 2026-11-25 | 0.1.2 | Codex / GPT-6 | OpenAMSM Owner 与仿真对端 | 合并有效边界与分仓证据入口 | 跨仓设计移交 | IR-006 |
-| 2026-11-25 | 0.1.3 | GPT-6.2（ChatGPT） | §4 | 区分公开 Provider Interface、Owner Contract Package 和 Provider Runtime Bindings | 对齐 EC03 v1.2.0 与 Owner v1alpha4 的实际发布边界 | IR-006 · SR-015 · Issue #12 |
+| 2026-11-25 | 0.1.3 | GPT-6.2（ChatGPT） | §4 | 区分公开 Provider Interface、Owner Contract Package 和 Provider Runtime Bindings，并链接 F03.05 集成设计 | 对齐 EC03 v1.2.0 与 Owner v1alpha4 的实际发布边界 | IR-006 · SR-015 · Issue #12 |
