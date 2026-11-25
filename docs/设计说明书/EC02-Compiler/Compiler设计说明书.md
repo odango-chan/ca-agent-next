@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.1.2  
+> 文档版本：0.1.3  
 > 状态：待评审；IR-006 / SR-012 / #2  
 > 修订日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -45,7 +45,7 @@ Native CLI 与 Go/WASM Worker 调用同一个 Go Core。Check 返回诊断，Ins
 ~~~text
 /goal 推进 CA-SL v1alpha5 已检查 when 的 Compiler → Python Runtime 交付，直至目标 SR 的必需验收全部有可复核证据，或已完成所有可独立推进的工作且具体外部门槛仍阻塞。保持冻结 v1alpha5 Build/Verify 与 Development v1alpha1 的契约、字节和行为。未经用户授权不得合并 PR 或发布版本。
 
-入口：odango-chan/ca-agent-next PR #3 的 EC02 Compiler 设计说明书、Agent.md 的 review_scope、功能树 EC02/F02、SR-012、SR-004/005 和《跨仓互操作实施任务说明》。上游追踪 odango-chan/ca-skills PR #88、odango-chan/ca-skill-compiler Issue #61。以本文 §6 的阶段输入与证据包作为交接清单。执行前逐仓记录目标 ref、HEAD SHA、工作区状态、目标 SR 和 Acceptance ID。
+入口：odango-chan/ca-agent-next PR #3 的 EC02 Compiler 设计说明书、Agent.md 的 review_scope、功能树 EC02/F02、SR-012、SR-013、SR-004/005 和《跨仓互操作实施任务说明》。上游追踪 odango-chan/ca-skills PR #88、odango-chan/ca-skill-compiler Issue #61。以本文 §6 的阶段输入与证据包作为交接清单。执行前逐仓记录目标 ref、HEAD SHA、工作区状态、目标 SR 和 Acceptance ID。
 
 1. 先做只读预检。复核语言规范是否已合入并发布、#61 的范围与依赖、目标 SR 是否 READY、目标仓写入授权、可运行环境与固定输入。逐项记录阻塞、解除条件、权威链接和可独立推进的工作。无写入权限或目标 SR 未 READY 时保留源码与治理状态，继续只读核对。不得把上游 PR 打开、历史 PASS 或设计文档当作当前验收。
 2. 已获授权且门槛满足后，固定正式语言规范 SHA 及 Go/Python/CEL/protobuf 版本。先执行 Go cel-go → CheckedExpr Any + FileDescriptorSet → cel-expr-python 的最小 PoC。用实际输出验证 true/false/error、未知字段、缺失与 null、数值边界以及共享 Lock 下的多 Skill 类型隔离。发现语义差异，保存最小复现与证据并暂停依赖该 PoC 的阶段。
@@ -56,7 +56,7 @@ Native CLI 与 Go/WASM Worker 调用同一个 Go Core。Check 返回诊断，Ins
 
 ## 6. 实施输入与验收交接
 
-以[跨仓互操作实施任务说明](../../验收与实施/跨仓互操作实施任务说明.md)的阶段步骤、[演示验收基线](../../验收与实施/演示验收基线.md)和对应 READY SR 的验收 ID 为准。以下证据包用于阶段间交接。归档 SR-012 的权限范围只覆盖文档收敛，Compiler 实施须有独立的 Next SR 覆盖实际代码和测试改动。
+以[跨仓互操作实施任务说明](../../验收与实施/跨仓互操作实施任务说明.md)的阶段步骤、[演示验收基线](../../验收与实施/演示验收基线.md)和对应 READY SR 的验收 ID 为准。以下证据包用于阶段间交接。归档 SR-012 的权限范围只覆盖文档收敛，Compiler 实施由 [SR-013](../../SR/SR-013-Compiler已检查when与发布产物.md) 覆盖实际代码和测试改动。
 
 | 阶段 | 必需输入 | 可继续的条件 | 必交证据 |
 |---|---|---|---|
@@ -78,3 +78,4 @@ PoC 至少覆盖：同一程序对多个 Event 分别得到 true、false 和运�
 | 2026-11-25 | 0.1.0 | Codex | 全文 | 建立 EC02 设计基线 | 集中维护及验证交接 | IR-006、SR-012、#2 |
 | 2026-11-25 | 0.1.1 | Codex | §5 | 加入 Goal 的实施门槛、恢复点和完成判据 | 支持分阶段执行及阻塞后恢复 | IR-006、SR-012、#2、PR #3 |
 | 2026-11-25 | 0.1.2 | Codex | §5–6 | 明确分阶段输入、退出条件、证据包及实施 SR 边界 | 降低 Harness 自主执行时的裁量 | IR-006、SR-012、#2、PR #3、Compiler #61 |
+| 2026-11-25 | 0.1.3 | Codex | §5–6 | 绑定 Compiler 实施 SR | 明确 Goal 执行及验收入口 | SR-013、Compiler #61 |
