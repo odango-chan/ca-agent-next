@@ -1,102 +1,137 @@
 # MVP acceptance
 
-**Status:** architecture documented; implementation **NOT_STARTED**; acceptance **NOT_RUN**.  
-**Language:** Python Agent Core; independent Go Example Plugin.  
-**Scope:** Demo-level mechanism proof only.
+**Status:** architecture documented; implementation NOT_STARTED; acceptance NOT_RUN.
+**Language:** Python Agent Core; independent Go Example Plugin.
+**Scope:** Demo-level mechanism proof only, not Production Qualification.
 
 ## 1. Example-first rule
 
-Every new externally observable mechanism must add a new runnable Example case and automated Acceptance Test in the same change set. Examples live under `examples/`; no separate `ca-example` repository.
+Every new externally observable mechanism must add a runnable Example case and an automated Acceptance Test in the same change set. Examples live under examples/; no separate ca-example repository.
 
 Examples consume the public Plugin/Skill/Runtime boundaries and must not import Agent Core internals. An internal refactor with no new externally observable mechanism does not need a new Example.
 
 ## 2. First vertical Example: Echo
 
-One independently running Go Plugin exposes both an Event extension and a Tool extension. The Python Agent Core consumes the Event, selects a Skill formally, then executes the same Skill in two modes.
+One independently running Go Plugin exposes Event ingress, Delivery and at least one Tool operation through the same Plugin Manager and process.
+
+The Example contains:
+- one Assurance-backed Echo Skill that can run in both Deterministic and LLM-guided modes;
+- one SKILL.md-only Echo guidance Skill that is LLM-guided only;
+- source and compiled-Artifact import cases;
+- a deterministic fake Model client for selection and LLM-guided Action tests.
 
 Suggested layout (adapt to actual code; do not create empty folders):
 
-```text
+~~~text
 examples/echo/
-  contracts/             # Echo-owned business contract and Event payload schema
-  plugin/                # standalone Go Plugin: event.ingress + event.delivery + tools
-  skill/                 # one Echo Skill; declares business-contract applicability
-  interface/             # Echo Tool Interface Package and Schemas
+  plugin/
+    plugin.yaml
+    schemas/
+  skills/
+    echo-assured/
+      SKILL.md
+      assurance/
+        contract.yaml
+        procedure.yaml
+        predicates.yaml
+    echo-guidance/
+      SKILL.md
+  interface/                 # Compiler-owned Echo Tool Interface Package
   scenarios/
-    deterministic/       # same Skill, validated static Procedure
-    llm-guided/          # same Skill, model proposes next Action
-    selection/           # 0 / 1 / ambiguous N candidate cases
+    deterministic/
+    llm-guided/
+    import-source/
+    import-artifact/
+    selection/
+    authoring/
 tests/
   acceptance/
     test_echo_plugin.py
-```
+    test_skill_import.py
+    test_skill_selection.py
+    test_runtime_action_boundary.py
+~~~
 
-The Plugin manifest references the Echo-owned business contract and its Event Schema. It does not name the Echo Skill. The Skill declares that it supports the Echo business contract and declares the Echo Tool Capability. The Plugin exports the Echo Tool operation; it does not authorize its own invocation.
-
-Use a deterministic fake Model client in tests. A real-model smoke test is optional and is not a gate for the first mechanism proof.
+The Plugin manifest declares Event types and Schemas; it does not name a Skill or business Contract Package. The Skill's optional Assurance declares Goal, request/context requirements, Capabilities and optional when. The Plugin exports the Echo Tool; it does not authorize its invocation.
 
 ## 3. Required acceptance cases
 
 | ID | Mechanism | Required proof |
 |---|---|---|
-| EX-01 | Python Host | Host, Agent loop, Resolver and Runtime run as Python modules; no Go Agent Core is introduced. |
-| EX-02 | Plugin lifecycle | Python Plugin Manager starts one independent Go Plugin process, completes handshake, correlates frames and shuts it down. |
-| EX-03 | Unified extensions | The same Plugin process exposes Event ingress/delivery and Tool invocation; one manager discovers and routes both. |
-| EX-04 | Event contract import | Host loads the Plugin-owned Event manifest/Schema and validates a normalized Event. No event-specific Host handler. |
-| EX-05 | Skill package discovery | Host discovers imported Skill packages and matches business-contract references against Skill applicability; no central business registry or Event→Skill map. |
-| EX-06 | Formal-first Skill selection | Exercise every case in the selection table, including out-of-set model results. |
-| EX-07 | Execution mode | Mode is selected only after exact Skill binding and is constrained by that Skill's supported modes. |
-| EX-08 | Deterministic execution | Compiler-validated Artifact/Variant is executed by the deterministic Procedure Engine. |
-| EX-09 | LLM-guided execution | Agent receives Skill-scoped Context and proposes Actions; cannot call Plugin directly or widen Capability. |
-| EX-10 | Shared Action boundary | Both modes enter the same Runtime Action Request, authorization, Tool Plugin dispatch and outcome path. |
-| EX-11 | READ Observation provenance | READ Tool result becomes an Observation with Tool/Package/Invocation/Result provenance; it is not confused with model text. |
-| EX-12 | Mutation outcome | A MUTATION Tool cannot become COMMITTED from HTTP success or LLM text; Owner Receipt/Commit Proof is required where its Interface Package says so. |
-| EX-13 | End-to-end delivery | Event → Task → Skill → Run → Tool Plugin → result/evidence → Host response → originating Plugin delivery succeeds in both modes. |
-| EX-14 | Plugin package | Load a valid installed Echo package. Reject a malformed manifest, escaping entry point, changed snapshot and handshake mismatch without registering extensions. |
-| EX-15 | Continuation | Resume the exact pending Run with original bindings. Duplicate and invalid deliveries cause no new selection or execution advance. |
-| EX-16 | Business neutrality | Add a second independently owned Event/Skill/Interface fixture by installing packages and changing deployment inputs only. Validate exact contract matching, candidate isolation and Capability-scoped dispatch with the same Host build. |
-| EX-17 | Lightweight Skill | A lightweight Contract can carry `when` and execute LLM-guided with trusted session authorization. Check that its route grants no Tool permissions. Verify an unchanged legacy Skill and a complete Contract with `when` against the declared compatibility path. |
+| EX-01 | Python Host | Host, Agent loop, Skill Importer, Resolver and Runtime run as Python modules; no Go Agent Core is introduced. |
+| EX-02 | Plugin lifecycle | One Python Plugin Manager starts one independent Go Plugin process, completes handshake, correlates frames and shuts it down. |
+| EX-03 | Unified extensions | The same Plugin process exposes Event ingress, Delivery and Tool invocation; one manager discovers and routes all extensions. |
+| EX-04 | Event Schema | Host validates the normalized Event type and payload against the Plugin-owned Event Schema. The Event contains no Skill ID or business Contract Package reference. |
+| EX-05 | SKILL.md-only import | A package containing SKILL.md and no assurance directory imports directly without invoking the Compiler and is LLM-guided only. |
+| EX-06 | Assurance source import | A source package with assurance/ invokes the CA-SL Compiler automatically; only successful Build/Inspect/Verify and Host Admission make it available. |
+| EX-07 | Compiled Artifact import | An already compiled Skill Artifact is inspected, verified and admitted directly; no rebuild/recompile command is invoked. |
+| EX-08 | Invalid Assurance | An incomplete, malformed or compiler-rejected Assurance package fails import. It is never downgraded to SKILL.md-only. |
+| EX-09 | when selection | A valid assurance/contract.yaml when is statically checked and evaluated against event.type and input; true/false/error and multiple-match behavior follow §4. |
+| EX-10 | Semantic selection | Skills without when, including SKILL.md-only Skills, are selected semantically from their imported SKILL.md descriptions; no CEL field is added to SKILL.md. |
+| EX-11 | Mode derivation | No Assurance means LLM-guided only. Valid Assurance permits both modes. No supportedModes field exists. |
+| EX-12 | LLM Skill Authoring | LLM-created/edited SKILL.md-only content imports directly. LLM-created/edited Assurance source follows the normal Compiler import path before deterministic use. |
+| EX-13 | LLM Action proposal | An individual LLM Action proposal is validated by Runtime Action Boundary and does not invoke the Compiler or create a temporary Procedure. |
+| EX-14 | Shared Action boundary | Deterministic and LLM-guided modes submit the same Runtime Action Request, authorization, Tool Plugin dispatch and outcome path. |
+| EX-15 | READ Observation provenance | READ Tool result becomes an Observation with Tool/Interface/Invocation/Result provenance; it is not confused with model text. |
+| EX-16 | Mutation outcome | A MUTATION Tool cannot become COMMITTED from HTTP success or LLM text; Owner Receipt/Commit Proof is required where its Interface Package says so. UNKNOWN remains UNKNOWN. |
+| EX-17 | End-to-end delivery | Event → Task → Skill → Run → Tool Plugin → result/Evidence → Host response → originating Plugin delivery succeeds. |
+| EX-18 | Plugin package | Load a valid YAML plugin.yaml. Reject malformed YAML, duplicate/unknown fields, unsupported versions, invalid Schema references, path escape and handshake mismatch without registering extensions. No package signature or extra SHA-256 snapshot is required. |
+| EX-19 | Continuation | Resume the exact pending Run with original bindings. Duplicate and invalid deliveries cause no new selection or execution advance. |
+| EX-20 | Business neutrality | Add a second independently owned Event/Skill/Interface fixture by installing its Plugin and Skill assets and changing deployment inputs only. The same Host, Resolver, Runtime and Plugin Manager build works without business-specific Core code. |
 
-## 4. Selection and mode behavior
+## 4. Skill selection and mode behavior
 
-### Skill Selection
+### 4.1 Skill selection
 
-| Formal outcome | Required behavior |
+| Candidate state | Required behavior |
 |---|---|
-| One eligible explicit true match | Select directly with no model call |
-| Multiple eligible explicit true matches | Offer only exact matching candidates to the model |
-| Zero explicit true matches | Offer only eligible unguarded candidates, including a singleton |
-| Empty applicable tier | Stop or request missing input |
-| False, malformed CEL or evaluation error | Exclude the guarded Skill and report errors |
-| Continuation | Resume the original Run before selection or return an appropriate invalid/duplicate result |
+| Assurance Skill with when = true; exactly one match | Select directly without an LLM call |
+| Assurance Skills with when = true; multiple matches | Offer only those exact matches for LLM disambiguation |
+| No true when matches | Offer only unguarded Skills (no when) for semantic selection from SKILL.md |
+| No unguarded candidate | Stop or request missing input |
+| when = false | Exclude the guarded Skill; do not reintroduce it as an unguarded candidate |
+| when runtime evaluation error | Fail closed, exclude the Skill and record a diagnostic |
+| malformed/non-boolean/ill-typed when | Compiler rejects the Assurance source |
+| LLM returns an unoffered Skill identity | Reject the result |
+| Continuation | Resume the original Run before fresh selection |
 
-### Execution mode
+The Event Plugin declares only normalized Event types and Schemas. There is no Event→Skill or Event→Mode mapping table. when belongs only to assurance/contract.yaml. predicates.yaml remains execution-time business evaluation.
 
-- Skill is always selected first.
-- Deterministic and LLM-guided are the only two execution modes.
-- LLM-assisted Skill selection does not imply LLM-guided execution.
-- The selected Skill's declared supported modes constrain the choice.
-- Both modes use the same Runtime Action Boundary and Tool Plugin.
+### 4.2 Execution mode
 
-### Procedure source
+- Skill selection always precedes mode selection.
+- No Assurance: LLM-guided only.
+- Valid Assurance: Deterministic and LLM-guided.
+- Invalid present Assurance: import failure; no downgrade.
+- No supportedModes declaration.
+- Both modes use the same Runtime Action Boundary and Tool Plugin path.
 
-The first Demo gate covers `STATIC`. Add a runnable Example and acceptance test with each subsequent Procedure source. All executable Procedures pass deterministic validation, Compiler build and exact Artifact/Variant binding.
+### 4.3 Procedure and Action source
+
+- Deterministic mode executes only a Compiler-validated and admitted Procedure Artifact.
+- An LLM-proposed individual Action is not a Procedure and is not compiled.
+- LLM-created/edited Assurance source is compiled through the Skill Importer before deterministic execution.
+- The first Demo gate covers a static Procedure. Additional Procedure-generation/patch mechanisms require their own Example and acceptance tests.
 
 ## 5. Compiler and Tool Plugin integration
 
-- Python invokes a pinned `skillc v2.1.0` executable for check/build/verify; no Go Compiler source is copied.
-- Echo Tool Interface Package is consumed by Compiler and Runtime from the same immutable package bytes.
-- Tool Plugin process is loaded through the unified Plugin Manager.
-- During initial integration, a Tool-Plugin driver may adapt `ca-client-tools.provider/v2`; it must not introduce a separate permanent Provider Manager or Tool authorization path.
+- Python invokes the canonical CA-SL Compiler interface for Assurance source Check/Build and Artifact Inspect/Verify. Do not copy Go Compiler source or reimplement its semantics.
+- At this document revision, support for refreshed CA-SL v1alpha5 contract.when and the Assurance-free SKILL.md import path must be verified against the Compiler owner. Do not silently strip when or claim an unsupported Compiler release works.
+- Importing a compiled Artifact invokes Inspect/Verify and Host Admission but not Build.
+- The Echo Tool Interface Package is consumed from its canonical Compiler-owned format. Do not duplicate ToolCatalog or calculate an additional Host-side package digest.
+- The Tool Plugin process is loaded through the unified Plugin Manager. A temporary adapter may consume ca-client-tools.provider/v2 behind the same manager.
+- No separate Provider Manager, Tool registry or authorization path.
 
-The Echo example may use its own tiny Go Tool Plugin. It does not require a live OpenAMSM deployment or production Provider credentials.
+The Echo Plugin may be a tiny Go process. It does not require a live OpenAMSM deployment or production Provider credentials.
 
 ## 6. Definition of Demo acceptance
 
-Accept the architecture MVP only when EX-01 through EX-17 pass, the same Skill runs in both modes, the same Plugin process supports both Event and Tool extensions, and no business-specific Agent Core code is needed to add the Example.
+Accept the architecture MVP only when EX-01 through EX-20 pass, the Assurance-backed Echo Skill runs in both modes, the SKILL.md-only Skill runs without Compiler invocation, the same Plugin process supports Event/Delivery/Tools, source and compiled-Artifact import behave differently as specified, and a second business works without business-specific Core changes.
 
 This does not claim live OpenAMSM qualification, production readiness or complete 3GPP protocol parity.
 
 ## 7. Explicit non-goals
 
-Do not add production HA, distributed failover, complex multi-tenant/security governance, Marketplace, central business registry, distributed Event Bus, separate artifact database, complex compensation orchestration, broad legacy compatibility or elaborate DFX merely to pass the Demo.
+Do not add extra SHA-256 package/event snapshot hashing, package signatures, Trust Registry, Domain/Task Contract Packages, a second Skill descriptor, supportedModes, legacy compatibility, Marketplace, installer, automatic download, hot reload, production HA, distributed failover, complex multi-tenant/security governance, central business registry, distributed Event Bus, separate artifact database, complex compensation orchestration or elaborate DFX merely to pass the Demo.
+
+Keep basic YAML/Schema/version/reference validation, path containment, clear errors, minimal correlation and truthful test evidence.
