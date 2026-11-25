@@ -1,0 +1,159 @@
+# Context 与 Artifact 管理设计说明书
+
+> 文档类型：机制设计说明书  
+> 状态：目标 Host/Plugin 契约设计；真实 OpenAMSM multipart Provider binding 尚未验证  
+> 文档版本：0.2.1  
+> 功能归属：F05 — Context 与 Artifact 管理  
+> 关联 SR：SR-009    
+> 全局评审范围：继承根目录 Agent.md 的 review_scope    
+> 本文局部非目标：以本文范围与非目标章节为准；无额外扩展  
+> 修订日期：2026-11-25  
+> 适用范围：Event ingress、SBI JSON/multipart、Content-ID、Host ArtifactStore、Delivery 和按需 Codec
+
+关联需求项见 [IR-005](../../IR/IR%20总登记册.md#ir-005)。
+
+## 1. 设计目标与所有权
+
+Event Plugin 负责外部协议接入、解析和规范化；Host 负责 Event 接收、Run 关联、ArtifactStore 托管和响应义务；Runtime 决定哪些 Action 可以读取或生成 Artifact。原始二进制不进入 NDJSON，也不作为模型可见文本传递。
+
+| 内容 | 所有者 |
+|---|---|
+| 外部 HTTP/SBI 解析、multipart、Content-ID、原始字节提取/编码 | Event/Delivery Plugin |
+| 暂存目录、ArtifactStore、opaque artifactRef、Run 关联、访问授权与清理 | Host |
+| 哪个 Action 可以读取或生成 Artifact | Runtime |
+| Tool 输入输出中的 Artifact Reference 契约 | Tool Interface Package |
+| NAS/NGAP 等协议深度解码 | 被调用的 Codec Tool；不属于 Host 深度解析 |
+
+## 2. 两种二进制交接边界
+
+必须区分 Event/Delivery Plugin 与 Host 之间的本地暂存交接，以及 Host/Runtime 与 Tool Plugin 之间的 Tool 输入输出交接。前者负责外部 SBI multipart 原始字节进入 Host-owned ArtifactStore、以及响应字节交付；后者遵循 Tool Interface Package 和现有 Provider/Tool 进程契约，把当前 Invocation 已授权的 Artifact 交给具体 Tool。两者不是同一条 IPC，也不合并成新的通用二进制服务。Event Plugin 不直接访问 Tool Provider，Tool Plugin 也不直接访问外部 SBI 响应通道。
+
+## 3. 本地暂存协议
+
+当 Plugin 声明二进制 Event 或 Delivery slot 时，host.initialize 提供两个由 Host 创建的目录：
+
+~~~json
+{
+  "artifactStaging": {
+    "inboundDirectory": "/host-managed/plugin/openamsm/inbound",
+    "outboundDirectory": "/host-managed/plugin/openamsm/outbound"
+  }
+}
+~~~
+
+路径是当前进程的配置，不是可移植的包内值。Plugin 只在 inboundDirectory 下写入入站文件；Host 只在 outboundDirectory 下写入出站文件；Plugin 不得选择目录根。
+
+每个 IPC Artifact 描述符使用相对 stagingPath，不得使用绝对路径：
+
+~~~json
+{
+  "slot": "n1.request",
+  "mediaType": "application/vnd.3gpp.5gnas",
+  "contentId": "n1SmMsg",
+  "stagingPath": "event-123/n1.bin",
+  "byteLength": 48
+}
+~~~
+
+必需字段：slot、mediaType、stagingPath、byteLength。源协议提供 multipart Content-ID 时必须附带 contentId；否则省略。路径必须留在对应方向的 staging 根目录内。绝对路径、路径穿越、符号链接逃逸、文件缺失以及声明长度与真实字节长度不一致均必须拒绝。
+
+不增加校验和或额外 SHA-256 摘要。Host 在接受 Event 前读取真实文件字节。
+
+## 4. 入站流程
+
+1. Host 创建并拥有 inbound/outbound staging 目录，并通过 host.initialize 交给 Plugin。
+2. Plugin 解析外部 SBI Body，将每个声明的二进制部分按相对路径写入 inboundDirectory。
+3. Plugin 发送 ingress.event，包含规范化 JSON payload 和 Artifact 描述符；不发送原始字节或 Base64。
+4. Host 校验 Event Schema、slot 声明、media type、路径边界和真实字节长度。
+5. Host 将字节导入现有 ArtifactStore，把 opaque artifactRef 关联到 Event/Run。
+6. 全部成功后才返回 ingress.ack，并由 Host 返回 artifactRef。Plugin 不创建或选择 artifactRef。
+7. 导入或校验失败时拒绝 Event，不启动业务 Run。
+
+## 5. 出站流程
+
+1. Runtime 通过已检查的 Action/Tool 产生或引用 Artifact。
+2. Host 验证当前 responseObligation 是否允许该输出 slot，并把精确字节写入 outboundDirectory。
+3. Host 发送 delivery.dispatch，包含 responseObligationId 和 slot、mediaType、contentId（如适用）、相对 stagingPath、byteLength、artifactRef。
+4. Plugin 只读取本次交付声明的文件，按外部协议构造 SBI multipart/Content-ID 响应，并返回 delivery.result。
+5. Host 记录 delivered / failed / unknown，并清理暂存文件。交付状态 UNKNOWN 不改变 Owner 业务 outcome。
+
+Plugin 不能请求任意 ArtifactStore 读取，只能访问本次 Delivery 已暂存的文件。
+
+## 6. OpenAMSM slot 约定
+
+Media Type：
+
+- NAS / 5GSM：application/vnd.3gpp.5gnas
+- NGAP / N2：application/vnd.3gpp.ngap
+
+初始 slot 词汇：
+
+| Slot | 方向 | 含义 |
+|---|---|---|
+| n1.request | 入站 | SBI 请求中的原始 N1 NAS 消息 |
+| n2.request | 入站 | SBI 请求中存在时的原始 N2 SM 信息 |
+| n1.confirmation | 入站 | 后续 ingress 中的 N1 continuation/confirmation，例如 PDU Session Release Complete（0xD4） |
+| n2.confirmation | 入站 | 后续 ingress 中的 N2 continuation/confirmation，例如 PDU Session Resource Release Response |
+| n1.response | 出站 | Owner/Host 为当前响应义务生成的 N1 NAS 响应 |
+| n2.response | 出站 | Owner/Host 为当前响应义务生成的 N2 NGAP 响应 |
+
+具体 Event 决定 slot 必需或可选。Plugin 不得伪造缺失的 N1/N2 部分。
+
+## 7. Codec 按需调用
+
+本设计负责保留和传输字节，不要求所有 N1/N2 Artifact 都被完整解码。Skill 不需要内部协议字段时，可将原始 artifactRef 直接交给相应业务 Tool，不调用 Codec。
+
+Skill 需要 NAS/NGAP 字段时，通过统一 Runtime Action Boundary 调用 ca-client-tools Tool Plugin 导出的 Codec Tool。Codec 返回结构化 JSON 投影或输出 Artifact Reference，不替换或修改原始 Artifact。Encode Tool 如生成新字节，由 Host 为精确 responseObligation 暂存，Event Plugin 负责 SBI multipart/Content-ID 编码。
+
+Codec Operation 必须在权威 Tool Interface Package 中声明，且仅覆盖实际实现并测试的消息子集。当前 protocol/nas5gsm 纯 Go 库本身不是 Agent 可调用 Tool。
+
+Event Plugin 可以在 Skill 选择前提取共享 SBI Operation 所需的最小 NAS discriminator（例如 UpdateSMContext 中区分 Modify 和 UE-requested Release 的消息类型），但这只是协议到 Event 的最小规范化，不是完整解码或业务决策。必须复用共享 Codec 实现并保留原始字节。
+
+## 8. Skill 输入与 Event 关联
+
+| Skill 场景 | 初始输入 |
+|---|---|
+| Establish | n1.request；仅当实际 SBI Operation 携带时才有 n2.request |
+| Modify | n1.request，原始 PDU Session Modification Request（0xC9） |
+| UE-requested Release | n1.request，原始 PDU Session Release Request（0xD1） |
+| Release continuation | n1.confirmation 和/或 n2.confirmation，由 Host 关联到原始 Run 和 generation |
+
+Native Manifest 在 event.ingress.events[].artifacts.input 和 event.delivery.responses[].artifacts.output 声明 slot、mediaType 和 required。初始 Event type 为 nsmf.create-sm-context、nsmf.update-sm-context 和 nsmf.update-sm-context.continuation。Modify 与 UE-requested Release 从已验证的 UpdateSMContext 字段中区分；continuation Event 恢复原 Run 并跳过新 Skill 选择。
+
+真实实现前，必须对照当前 OpenAMSM OpenAPI 和现有 Host 行为核对 SBI Operation ID、multipart part name、NAS discriminator 字段、requiredness 和响应映射。UE-requested PDU Session Release 不等同于 AMF/network-initiated ReleaseSMContext。
+
+## 9. Run、重试与响应义务
+
+- Host 在 Event 校验通过后分配 Run ID 和 responseObligationId。
+- Plugin 只提供协议中真实存在且稳定的 externalRequestId；不得把 HTTP/2 stream ID 当作 Run 身份。
+- 相同稳定请求的重试可为原 Run 关联新的 response obligation，不得重复 Owner mutation。
+- externalRequestId 被不同规范化内容或不同真实 Artifact 字节复用时，必须冲突失败。
+- Release continuation Artifact 必须关联同一个原始 Run、SUPI、PSI 和 Session generation；过期确认不得唤醒新的 Run。
+- 如果无法证明某个 Operation 的稳定重试身份或 continuation 关联，真实 E2E gate 保持 NOT_RUN，不得宣称安全重放。
+
+本设计不增加 Event 内容摘要、包摘要或 Artifact checksum。
+
+## 10. 清理与 Demo 边界
+
+- 成功导入后 Host 清理入站 staging 文件。
+- Delivery result 返回或进程关闭后 Host 清理出站 staging 文件。
+- 进程重启时 Host 可清理自己 staging 根下的残留文件，不增加 Plugin 数据库或恢复协议。
+- 保留路径边界与文件长度校验；不建设通用沙箱、远程 Artifact 服务、分布式存储、内容寻址存储或生产级 DFX。
+
+## 11. 当前验收状态
+
+该文档是目标设计，不代表真实 OpenAMSM multipart Provider binding 已经通过。真实链路必须证明：Event Plugin 原始字节暂存、Host ArtifactStore 导入、Run 关联、Runtime Callable Scope 检查、ca-client-tools 调用和 SBI Delivery 的端到端一致性。
+
+
+
+## 12. 功能归属与需求追踪
+
+本说明书属于 F05，主要需求为 SR-009；OpenAMSM 业务映射与真实 E2E 由 F06/SR-011 承载。Tool 输入输出中的 Artifact Reference 语义以 EC03 Tool Interface Package 为准；SBI multipart 和 Content-ID 解析以 EC04 Plugin 与 REF02 协议标准为准。
+
+## 修订记录
+
+| 日期 | 版本 | 修订者/模型 | 章节 | 修订内容 | 原因 | 关联 |
+|---|---|---|---|---|---|---|
+| 2026-11-25 | 0.1.0 | 历史修订者/模型未记录 | 原始设计全文 | 既有 Event 与二进制 Handoff 设计基线；逐章历史记录未建立 | 原文档未记录历史作者，本轮不臆造 | PR #1 |
+| 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 第 1～12 章 | 归入 F05，明确 Context、ArtifactStore、Codec 与外部契约关系 | 按功能维护完整设计基线 | F05；SR-009；EC03/EC04；PR #1 |
+| 2026-11-25 | 0.2.1 | 刷新需求追踪、目录或证据引用 | 对齐最新分支与 IR/SR 基线 | 见关联 SR |
