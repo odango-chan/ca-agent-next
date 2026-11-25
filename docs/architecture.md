@@ -373,3 +373,56 @@ Do not add:
 - production HA, complex multi-tenant governance, distributed Event Bus, broad DFX or production qualification machinery.
 
 Keep basic YAML/Schema/version/reference validation, path containment, clear errors, explicit process configuration, minimal correlation and runnable acceptance Examples. Existing Compiler/Interface Package identities remain governed by their owning contracts; do not add a second Host-side digest or integrity system.
+
+
+## 12. OpenAMSM integration boundary and current dependencies
+
+This section makes the target boundary explicit for the joint ca-agent-next / ca-openamsm-plugin implementation. The authoritative native Plugin Package and IPC contract is [Plugin Package v1alpha1](plugin-package.md); binary handoff is [Plugin Artifact Handoff](plugin-artifact-handoff.md). The corresponding OpenAMSM adapter proposal is [ca-openamsm-plugin PR #1](https://github.com/odango-chan/ca-openamsm-plugin/pull/1), which must follow this contract rather than define a parallel one.
+
+### 12.1 Skill-first OpenAMSM flow
+
+Every fresh OpenAMSM business Event binds a Skill before execution. The Event Plugin publishes only the normalized SBI operation, validated input and artifact references. It never selects or names a Skill.
+
+The existing CA-SL packages are the business source:
+
+- establish-pdu-session-mas;
+- modify-pdu-session-mas;
+- release-pdu-session-mas.
+
+Their optional assurance/contract.yaml.when fields are the only formal selectors. Create, Modify and UE-requested Release must be distinguished from normalized Event metadata and validated request fields. In particular, UE-requested PDU Session Release must not be confused with AMF/network-initiated ReleaseSMContext. The exact SBI operation, NAS discriminator and Event Schema field mapping must be verified against the current OpenAMSM OpenAPI and existing Host ingress before implementation; do not guess a route or duplicate business rules in the Plugin.
+
+The Host resolves the Skill, then derives the mode from Assurance presence/validity. No Assurance means LLM-guided only; valid Assurance enables Deterministic or LLM-guided; invalid Assurance is an import failure. Both modes use the same Runtime Action Boundary.
+
+### 12.2 Ownership
+
+| Concern | Owner |
+|---|---|
+| Nsmf/Namf HTTP/2 listener, multipart and Content-ID parsing, protocol normalization and SBI response encoding | ca-openamsm-plugin |
+| Plugin lifecycle, common IPC, Event Schema validation and dispatch | One Python Plugin Manager in ca-agent-next |
+| Skill import, when evaluation, Skill selection and mode derivation | Python Host / Skill Resolver |
+| Run identity, continuation, retry/replay, response obligations and resource/alias mapping | Python Host / Runtime |
+| N1/N2 staging, ArtifactStore custody, Run association and authorization | Python Host / Runtime |
+| Callable IDs, IO Schemas, Effects, Capability membership, private bindings and Owner calls | ca-client-tools |
+| SM Context identity, actual business state and authoritative mutation result | OpenAMSM Owner / SMF |
+| CA-SL syntax and compiled Artifact | ca-skills specification + ca-skill-compiler |
+
+ca-openamsm-plugin is not a Tool Provider, Owner client, Skill Resolver, RunStore, Runtime or Artifact database. ca-client-tools is represented as the tools extension behind the same Plugin Manager. Its current provider/v2 process protocol is adapted inside that manager; it does not create a second Provider Manager.
+
+### 12.3 Binary handoff
+
+N1/N2 bytes move through the Host-owned local staging and ArtifactStore contract. They are not Base64-encoded in IPC and are not persisted by the Plugin. Host imports inbound files before accepting an Event, returns opaque artifactRefs, authorizes each Runtime/Tool use, stages outbound bytes for a specific response obligation and cleans temporary files. No extra Plugin/Event/Artifact SHA-256 or content digest is introduced.
+
+### 12.4 Dependency and evidence status — 2026-11-25
+
+| Dependency / evidence | Current state | Consequence |
+|---|---|---|
+| ca-skills PR #88 | OPEN; same-identifier CA-SL v1alpha5 refresh proposes optional Assurance and contract.when | Normative language refresh is not merged. Keep the dependency explicit. |
+| ca-skill-compiler v2.1.0 | Released for CA-SL v1alpha5; support for the proposed contract.when field is not established by current evidence | Deterministic Assurance source import is blocked until the Compiler owner verifies/implements the refreshed field. SKILL.md-only import is Host behavior and does not require Compiler support. |
+| ca-client-tools v1.2.0 | Released Tool Interface Package and Provider runtime bindings; existing process protocol is provider/v2 | Reuse through the single Plugin Manager's Tool adapter. Do not copy the Tool catalog or Owner bindings into the Event Plugin. |
+| ca-client-tools PR #39 | OPEN; Phase B final pass, Phase C consumer migration not started | Codec is not yet a merged/released dependency. NAS has 8 qualified message types; N2 has 7 qualified roots within evidenced scope; NGAP has 0 CA-qualified full PDUs. |
+| ca-agent-demo PR #246 | OPEN; G5 synthetic Owner E2E reports 22 passing tests; real isolated Scheme C G6 is NOT_RUN/BLOCKED and G7 is PARTIAL | Reuse generic Provider implementation evidence selectively; do not treat synthetic G5 as real OpenAMSM E2E. |
+| ca-openamsm-plugin PR #1 | OPEN/DRAFT; design only | Align the proposal with this contract before Go implementation. |
+
+The ca-client-tools Provider's existing Host-to-Provider artifact channel has acceptance-fixture evidence, but the production catalog does not yet prove a generic real-NF SBI multipart binding. Keep real OpenAMSM binary/multipart Provider consumption as a separate E2E gate; do not infer it from the Plugin-to-Host staging contract.
+
+No Production Qualification is claimed.
