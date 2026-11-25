@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.1.9  
+> 文档版本：0.1.10  
 > 状态：DRAFT  
 > 创建日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -14,7 +14,7 @@
 
 | 验收 ID | 通过条件 | 当前证据 |
 |---|---|---|
-| AC-013-01 | Go 生成的 CheckedExpr Any 与 FileDescriptorSet 被固定版本 Python 直接加载；G.4 跨语言 fixture 对 true/false/error、缺失/null 与数值边界一致 | 预检已有证据；完整验收 NOT_RUN |
+| AC-013-01 | Go 生成的 CheckedExpr Any 与 FileDescriptorSet 被固定版本 Python 直接加载；G.4 跨语言 fixture 对 true/false/error、缺失/null 与数值边界一致 | 隔离 PoC PASS（18/18，见「AC-013-01 隔离 PoC 执行结果」）；产品实现 NOT_RUN |
 | AC-013-02 | #61 的静态正负例、诊断位置和多 Skill 共享 Lock 时的类型隔离全部符合预期 | NOT_RUN |
 | AC-013-03 | 新版 Build/Verify 确定、损坏时 fail-closed；冻结机器契约及两条冻结产物路径对基准的 Golden 字节一致 | NOT_RUN |
 | AC-013-04 | #61 指定的 Go 测试、vet、Native/WASM 构建、CLI E2E、真实 Chromium Worker parity 与 diff check 全部通过 | NOT_RUN |
@@ -27,15 +27,7 @@ Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/6
 ### AC-013-01 环境预检与最小交换实验
 
 - Compiler 源：`255ab85fa5abb4b0bf36656bf64250cafebf45cb`。Windows amd64，Go 1.26.6，cel-go 0.33.2，cel.dev/expr 0.25.1，Go protobuf 1.36.10；隔离环境 CPython 3.14.6，cel-expr-python 0.1.4，protobuf 7.36.2。
-- `GOWORK=off go test ./internal/compiler -run '^
-
-| 日期 | 版本 | 修订内容 | 原因 | 影响 SR |
-|---|---|---|---|---|
-| 2026-11-25 | 0.1.0 | Codex 登记 Compiler 实施及验收范围 | 建立 #61 的 Next 实施与交接入口 | SR-013、SR-004/005 |
-| 2026-11-25 | 0.1.1 | 登记 M.4 / SA 的规范一致性门槛 | 防止消费端被要求调用 Compiler 或做 Admission | SR-013 |
-| 2026-11-25 | 0.1.2 | 更新设计评审引用 | 跟踪 #88 修订复审 | SR-013 |
-| 2026-11-25 | 0.1.3 | 固定正式规范来源及仍待核验的启动条件 | #5 | SR-013 |
-` 退出 0，仅验证 Compiler 包能编译。Python 使用 `from cel_expr_python import cel` 与 `cel.NewEnv()`，可加载自己生成的表达式。
+- `GOWORK=off go test ./internal/compiler -run '^$' -count=1` 退出 0，仅验证 Compiler 包能编译。Python 使用 `from cel_expr_python import cel` 与 `cel.NewEnv()`，可加载自己生成的表达式。
 - 用 Go 编译常量 `true`。直接 `anypb.New(AstToCheckedExpr(...))` 产生 `type.googleapis.com/google.api.expr.v1alpha1.CheckedExpr`；Python `Env.deserialize` 拒绝，报告 INVALID_ARGUMENT。将 Go CheckedExpr protobuf 序列化，再解码为 `cel.dev/expr.CheckedExpr` 并用 `anypb.New` 包装，得到 `type.googleapis.com/cel.expr.CheckedExpr`；Python 直接加载该文件并求值为 true。以真实类型构造 Any，避免只替换类型 URL。
 - 下一步按正式规范补完整 AC-013-01：Go 导出同一 typed when 的 Any 和 FileDescriptorSet；Python 用同一 DescriptorSet 构造 DescriptorPool；记录两端的 true/false/error、optional 与 null、数值边界和多 Skill 隔离。同一工具版本下重跑直接包装失败与标准类型成功的对照。仍须验证类型和语义字段在转换前后完整保留，由 Compiler Owner 据此定冻结的新 Artifact 字段。
 - 本次是隔离工作区探针，未写入 Compiler 仓。AC-013-01 尚无完整验收证据。明确区分环境/常量探针通过、旧 Type URL 失败和 typed fixture 尚未运行。
@@ -71,6 +63,25 @@ Go 静态编译另拒绝了未知字段和另一共享 descriptor 文件中未�
 
 原型仅验证一个固定字段及有限运算。OR 负例是原型对该分支的拒绝，未证明通用 OR 分析。正式验收仍须覆盖 Schema Registry 闭包、嵌套路径、完整 G.4 布尔组合、有限 double、精确源诊断和实际多 Skill Lock。该原型作为 DSH 的复现输入，产品实现须在同一 Compiler Core 中复用现有 AST 和语义检查；不得将此固定字段原型并入产品。
 
+### AC-013-01 隔离 PoC 执行结果（PASS）
+
+在 Compiler `255ab85` 的隔离副本内，复用真实 `buildSchemaRegistry` / `resolveReferenceFrom` / `resolveSchemaRoot` 与多 Skill 共享 Lock fixture，为两个 Skill 各生成 Request Schema 的 `FileDescriptorSet`；`[T,"null"]` 用 oneof `{ value, is_null }` 包装，保持缺失、显式 null 与原始标量三态。作者表达式经 `has`、`== null`、`!= null` 与 AND/OR/NOT 短路事实检查后降级为 wire 表达式，再由 cel-go 编译并导出 `cel.expr.CheckedExpr` Any。Python 仅 `env.deserialize` 该产物，不解析源表达式。
+
+| 项目 | 结果 |
+|---|---|
+| `GOWORK=off go vet ./internal/compiler` | 退出 0 |
+| `GOWORK=off go test ./internal/compiler -run '^TestAC013PocGenerate$' -count=1 -v` | 退出 0 |
+| `python_verify.py artifacts`（CPython 3.14.6 / cel-expr-python 0.1.4 / protobuf 7.36.2） | 退出 0，18/18 一致 |
+| 缺失 / 显式 null / 有效值 | PASS：同一 optional+nullable 字段缺失为 false、显式 null 时 `== null` 为 true |
+| AND / OR / NOT、嵌套路径、int64 与 finite double 边界 | PASS |
+| 未知字段、缺 `has`、缺非 null 守卫、int/double 混用、不安全 OR、跨 Skill 借用 | 6/6 静态拒绝 |
+| 求值错误 | PASS（缺 `event` 返回 UNKNOWN，不当作匹配） |
+| 多 Skill Lock 隔离 | PASS（第二 Skill 使用自己的 Schema；跨 Skill 字段被拒） |
+
+**AC-013-01 在隔离 PoC 范围内 PASS。** 证据：`.agent-tmp/ac-013-01-poc/EVIDENCE.md`、`go-test.log`、`python.log`、`artifacts/`（含 `cases.json` 与逐用例 `.checked.pb` / `.types.pb`）。本结论不外推为产品实现：`ContractAST.when`、Schema-aware 静态检查、发布 Artifact 字段与 Build/Verify 仍为 NOT_RUN；深层可选祖先、数组、枚举、完整布尔组合与 AC-013-02 待后续。新 Artifact API 仍由 Compiler Owner 定稿。
+
+证据产物已改用确定性序列化：默认 `proto.Marshal` 对 `CheckedExpr` 的 `reference_map` / `type_map` 不稳定，同一输入两次运行会产生不同字节。该问题不影响求值语义，但未来发布 Artifact 若要求字节确定性，必须显式使用确定性序列化，供 AC-013-03 参考。
+
 ## AC-013-01 阶段执行单
 
 **隔离 PoC 阶段：READY。** 本轮依据项目负责人委托处理到可执行位置，对隔离 PoC 作技术放行。SR-013 整体仍为 DRAFT。执行范围仅为本地临时副本的代码、fixture、测试与证据，Compiler 产品仓远程写入、契约定稿、合并、发布和 Next 消费实现各自沿用原门槛。
@@ -94,3 +105,4 @@ Go 静态编译另拒绝了未知字段和另一共享 descriptor 文件中未�
 | 2026-11-25 | 0.1.7 | 记录可复跑的源 AST 转换试验 | 为完整 Schema-aware 实施提供验收起点 | SR-013 |
 | 2026-11-25 | 0.1.8 | 放行隔离 AC-013-01 与记录既有 Schema/Lock 测试 | 提供明确的 DSH 下一步 | SR-013 |
 | 2026-11-25 | 0.1.9 | 保留正式规范来源与分阶段执行条件 | 合并 main 的治理更新 | SR-013、PR #7 |
+| 2026-11-25 | 0.1.10 | 回填隔离 PoC 的 Go/Python 一致结果并修复损坏的证据块 | 完成 AC-013-01 隔离阶段验收 | SR-013 |
