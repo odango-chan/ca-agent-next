@@ -49,16 +49,59 @@ extensions:
       - type: nsmf.create-sm-context
         description: Normalized Nsmf CreateSMContext request.
         requestSchema: schemas/create-sm-context.request.schema.yaml
+        artifacts:
+          input:
+            - slot: n1.request
+              mediaType: application/vnd.3gpp.5gnas
+              required: true
+            - slot: n2.request
+              mediaType: application/vnd.3gpp.ngap
+              required: false
 
       - type: nsmf.update-sm-context
-        description: Normalized Nsmf UpdateSMContext request.
+        description: Normalized Nsmf UpdateSMContext request carrying Modify or UE-requested Release.
         requestSchema: schemas/update-sm-context.request.schema.yaml
+        artifacts:
+          input:
+            - slot: n1.request
+              mediaType: application/vnd.3gpp.5gnas
+              required: true
+
+      - type: nsmf.update-sm-context.continuation
+        description: Normalized continuation input for an existing UpdateSMContext Run.
+        requestSchema: schemas/update-sm-context.continuation.schema.yaml
+        artifacts:
+          input:
+            - slot: n1.confirmation
+              mediaType: application/vnd.3gpp.5gnas
+              required: false
+            - slot: n2.confirmation
+              mediaType: application/vnd.3gpp.ngap
+              required: false
 
   event.delivery:
     responses:
       - eventType: nsmf.create-sm-context
         responseSchema: schemas/response.schema.yaml
+        artifacts:
+          output:
+            - slot: n1.response
+              mediaType: application/vnd.3gpp.5gnas
+              required: false
+            - slot: n2.response
+              mediaType: application/vnd.3gpp.ngap
+              required: false
       - eventType: nsmf.update-sm-context
+        responseSchema: schemas/response.schema.yaml
+        artifacts:
+          output:
+            - slot: n1.response
+              mediaType: application/vnd.3gpp.5gnas
+              required: false
+            - slot: n2.response
+              mediaType: application/vnd.3gpp.ngap
+              required: false
+      - eventType: nsmf.update-sm-context.continuation
         responseSchema: schemas/response.schema.yaml
 ~~~
 
@@ -69,6 +112,7 @@ Manifest rules:
 - process.executable is relative to the installed package root. process.args is passed as an argument vector without shell interpretation.
 - extensions contains one or more of event.ingress, event.delivery and tools. A Plugin may expose all three in one process.
 - Event schemas describe the normalized Event payload. They do not contain Skill IDs, business Goals, execution modes or authorization grants.
+- An Event may declare artifacts.input slots; a delivery response may declare artifacts.output slots. Each slot has an exact slot name, mediaType and required flag. The Event Schema and OpenAMSM operation mapping determine conditional requirements; undeclared slots are rejected.
 - event.delivery pairs a response schema with the originating event type. Host records the response obligation; Plugin does not choose which Run or response to deliver.
 - tools.interfacePackage points to the canonical Tool Interface Package. Callable IDs, input/output Schemas, Effects, Capability membership and Owner outcome semantics remain owned by that package.
 - Unknown fields, duplicate YAML keys, missing fields, unsupported versions, invalid Schema references and paths escaping the package root fail Plugin loading with an actionable diagnostic.
