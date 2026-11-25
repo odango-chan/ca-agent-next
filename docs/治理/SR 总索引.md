@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.2.7  
+> 文档版本：0.2.8  
 > 状态：待评审；全部 SR 当前为 DRAFT，不允许直接实施  
 > 修订日期：2026-11-25  
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -60,6 +60,9 @@
 - Phase G：SR-009、SR-010。
 - Phase H：SR-011。
 
+- EC02 Compiler 发布链：SR-013，按 AC-013-01 → 02 → 03 → 04 → 05 顺序实施；AC-013-01 当前只有隔离 PoC 报告 PASS，独立证据复核待完成。SR-013 整体保持 DRAFT，达到 READY 且目标仓授权后才可实施。
+- SR-004/005/006 是 Next 消费端，依赖 SR-013 的正式 Runtime Artifact 发布输入；其运行时导入/选择验收不归入 SR-013。ca-skills Bundle CI 由 SR-023 负责。
+
 阶段顺序是建议依赖顺序；每个 SR 只有达到 READY 且依赖满足后才能进入实施。
 
 ## 4. 当前基线说明
@@ -67,7 +70,9 @@
 - 设计来源：ca-agent-next PR #1 的架构、设计、规范和 Acceptance 文档。
 - PR #1：已合并；只代表设计文档变更。
 - Next Runtime：README 声明尚无已验收 Runtime 实现。
-- 所有 SR：DRAFT；Issue、实现 PR、Commit 和测试证据均未建立。
+- 所有 SR：DRAFT；没有 SR 被标记为 IMPLEMENTED 或 VERIFIED。
+- SR-013 已有 AC-013-01 隔离 PoC 的用户报告（18/18 Go/Python 一致），证据提交 78dddd5 仍在本地，尚未独立复核；这不是 Compiler 产品实现 PR，也不是 Next Runtime 实施证据。
+- Compiler #61 仍 OPEN；正式 when、Runtime Artifact、Build/Verify 产品 PR 和 Release 尚未完成。
 - ca-agent-demo、ca-client-tools、ca-skill-compiler、ca-skills 和 ca-openamsm-plugin 的现有代码/PR 只能作为外部复用或依赖证据，不能自动算作 Next SR 已实施。
 
 ## 修订记录
@@ -82,3 +87,4 @@
 | 2026-11-25 | 0.2.5 | 更新 EC02 归档与追踪 | 对齐中央设计及 Compiler #61 | SR-012 |
 | 2026-11-25 | 0.2.6 | Codex 登记 Compiler 实施 SR | 对齐跨仓实施门槛 | SR-013 |
 | 2026-11-25 | 0.2.6 | Codex / GPT-6 · §1–4 · 登记分仓 SR 与真实基线状态 | 跨仓设计移交 | IR-006 |
+| 2026-11-25 | 0.2.8 | GPT-6.2（ChatGPT） | §3–4 | 补充 SR-013 的 EC02 实施依赖顺序和 AC-013-01 隔离 PoC 状态边界 | 对齐最新证据，区分 Compiler 与 Next 消费端验收 | Issue #14、SR-013、Compiler #61 |
