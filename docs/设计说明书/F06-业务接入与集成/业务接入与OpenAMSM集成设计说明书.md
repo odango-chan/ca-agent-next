@@ -80,9 +80,9 @@ SBI requestSchema 是业务 Skill 输入契约，不应复制完整 3GPP multipa
 
 ## 5. CreateSMContext
 
-Create 的新 Event 来自 Nsmf CreateSMContext。Event Plugin 提取 HTTP/JSON 请求字段和 N1/N2 multipart slots，形成 nsmf.create-sm-context Event。F02 根据 requestType、Event type 和可选 contract.when 选择建立 PDU Session 的 Skill。
+Create 的新 Event 来自 Nsmf CreateSMContext。Event Plugin 提取 HTTP/JSON 请求字段和 N1/N2 multipart slots，形成 nsmf.create-sm-context Event。F02 根据 requestType、Event type 和可选 contract.when 选择建立 PDU Session 的 Skill。当前 ca-skills 的 Owner-linked v1alpha5 MAS 作者源位于 examples/skills/establish-pdu-session-mas；不要与 skills/establish-pdu-session-mas 下的早期独立示例混淆。
 
-Skill 按 CA-SL Procedure 调用 Owner Callable，完成订阅校验、SM Context、UECM、Policy、UP Anchor、地址、Charging、UP Session 等步骤。每一步输入输出来自 Owner Tool Interface Package；Agent 不在 Core 中硬编码 5GC 流程。
+Skill 按 CA-SL Procedure 调用 Owner Callable，完成订阅校验、SM Context、UECM、Policy、UP Anchor、地址、Charging、UP Session 等步骤。当前 Owner-linked 作者源为 examples/skills/establish-pdu-session-mas。每一步输入输出来自 Owner Tool Interface Package；Agent 不在 Core 中硬编码 5GC 流程。
 
 成功响应由 Host 汇总 Runtime/Owner 结果并交给 Delivery Plugin。只有 Owner 有效 Receipt/Commit Proof 证明的 mutation 才能作为提交成功。
 
