@@ -1,12 +1,12 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.1.7  
+> 文档版本：0.1.8  
 > 状态：DRAFT  
 > 创建日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：Next 消费端实施、生产准入、Owner Trust 治理及自动发布。
 
-上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.1.7 §1–7 和 [Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) §1–5。SR-012 负责归档。
+上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.1.8 §1–7 和 [Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) §1–5。SR-012 负责归档。
 
 目标仓：`odango-chan/ca-skill-compiler`。范围覆盖 Go/Python 互操作 PoC、Compiler Contract AST 与语义检查、新版 Artifact Schema、Build/Verify、fixture、Golden 和产品门禁。保持单一 Go Core、语言 v1alpha5、冻结发布 Artifact v1alpha5 及 Development v1alpha1；Development 继续 `NOT_ADMITTED`。Next SR-004/005 消费实际发布 Bundle，运行时无 Compiler 或 Skill Admission。
 
@@ -71,6 +71,15 @@ Go 静态编译另拒绝了未知字段和另一共享 descriptor 文件中未�
 
 原型仅验证一个固定字段及有限运算。OR 负例是原型对该分支的拒绝，未证明通用 OR 分析。正式验收仍须覆盖 Schema Registry 闭包、嵌套路径、完整 G.4 布尔组合、有限 double、精确源诊断和实际多 Skill Lock。该原型作为 DSH 的复现输入，产品实现须在同一 Compiler Core 中复用现有 AST 和语义检查；不得将此固定字段原型并入产品。
 
+## AC-013-01 阶段执行单
+
+**隔离 PoC 阶段：READY。** 本轮依据项目负责人委托处理到可执行位置，对隔离 PoC 作技术放行。SR-013 整体仍为 DRAFT。执行范围仅为本地临时副本的代码、fixture、测试与证据，Compiler 产品仓远程写入、契约定稿、合并、发布和 Next 消费实现各自沿用原门槛。
+
+- 规范固定为 ca-skills `18d8184367982ccbc835756136c4a53f9096c3a0`，Compiler 目标为 `odango-chan/ca-skill-compiler` 的 `255ab85fa5abb4b0bf36656bf64250cafebf45cb` 的隔离副本。原型来源为 Next PR #7 固定提交 `5702e2c3dc19445cc807a598376451d10d61391d`。Go/Python 环境采用 AC-013-01 预检的固定版本。
+- 先复跑 §作者表达式转换原型的文件和命令。Compiler 原仓基线已实跑 `GOWORK=off go test ./internal/compiler -count=1 -run 'TestDevelopmentMultiSkill|TestDevelopment.*Schema'`，退出 0。该结果仅覆盖现有 Schema/Lock，不覆盖新 `when`。
+- 在隔离副本内利用 `buildSchemaRegistry`、`resolveReferenceFrom` 和 `resolveSchemaRoot` 获取每 Skill 的 Request Schema；使用 `TestDevelopmentMultiSkillSharedLockPasses` 的实际 Lock fixture 扩展两个 Skill 的独立 Schema。以注册表结果生成 DescriptorSet，保持每 Skill 的解析范围；拒绝跨 Skill 借用另一个 Schema 的字段。将固定字段原型替换为按 Schema 驱动的短路检查与转换，并从声明了真实 `event.type` 的作者表达式开始运行。
+- 通过条件为重跑后 Go、Python 对同一实际产物的正负例一致，覆盖缺失/显式 null/有效值、AND/OR/NOT 守卫、嵌套路径、`int64` 和 finite double 边界、未知字段与无守卫拒绝、求值错误和多 Skill Lock 隔离。保留发布契约前的原始证据。缺少任一项时不写完整 PASS；将最小反例、失败命令、受测 SHA 和下一项可执行步骤记入证据单。完整 PASS 后交由 Compiler Owner 定稿新 Artifact API。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订内容 | 原因 | 影响 SR |
@@ -83,3 +92,4 @@ Go 静态编译另拒绝了未知字段和另一共享 descriptor 文件中未�
 | 2026-11-25 | 0.1.5 | 记录 typed Go/Python 结果和 null 映射反例 | 缩小 AC-013-01 剩余验证范围 | SR-013 |
 | 2026-11-25 | 0.1.6 | 记录 nullable oneof 候选和作者语法转换缺口 | 明确 AC-013-01/02 的下一项实验 | SR-013 |
 | 2026-11-25 | 0.1.7 | 记录可复跑的源 AST 转换试验 | 为完整 Schema-aware 实施提供验收起点 | SR-013 |
+| 2026-11-25 | 0.1.8 | 放行隔离 AC-013-01 与记录既有 Schema/Lock 测试 | 提供明确的 DSH 下一步 | SR-013 |

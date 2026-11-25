@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.1.7  
+> 文档版本：0.1.8  
 > 状态：待评审；IR-006 / SR-012 / #2  
 > 修订日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -47,6 +47,7 @@ Native CLI 与 Go/WASM Worker 调用同一个 Go Core。Check 返回诊断，Ins
 
 入口：odango-chan/ca-agent-next PR #3 的 EC02 Compiler 设计说明书、Agent.md 的 review_scope、功能树 EC02/F02、SR-012、SR-013、SR-004/005 和《跨仓互操作实施任务说明》。上游追踪 odango-chan/ca-skills PR #88、odango-chan/ca-skill-compiler Issue #61。以本文 §6 的阶段输入与证据包作为交接清单。执行前逐仓记录目标 ref、HEAD SHA、工作区状态、目标 SR 和 Acceptance ID。
 
+0. AC-013-01 隔离 PoC 阶段按 SR-013 的阶段执行单为 READY。可在隔离副本直接执行该阶段；下列各产品阶段仍逐项核对 READY 与授权。
 1. 先做只读预检。复核语言规范是否已合入并发布、#61 的范围与依赖、目标 SR 是否 READY、目标仓写入授权、可运行环境与固定输入。逐项记录阻塞、解除条件、权威链接和可独立推进的工作。无写入权限或目标 SR 未 READY 时保留源码与治理状态，继续只读核对。不得把上游 PR 打开、历史 PASS 或设计文档当作当前验收。
 2. 已获授权且门槛满足后，固定正式语言规范 SHA 及 Go/Python/CEL/protobuf 版本。先执行 Go cel-go → CheckedExpr Any + FileDescriptorSet → cel-expr-python 的最小 PoC。用实际输出验证 true/false/error、未知字段、缺失与 null、数值边界以及共享 Lock 下的多 Skill 类型隔离。发现语义差异，保存最小复现与证据并暂停依赖该 PoC 的阶段。
 3. PoC 通过后，按 #61 实施版本化发布 Artifact。复用同一 Compiler Core，冻结产物保留原字节，Development 继续 NOT_ADMITTED。发布产物和 SR-004/005 门槛满足后，Next 仅消费外部发布 Bundle，执行结构、引用和 callable scope 检查并加载已检查程序。Agent 不调用 Compiler，不引入 Skill Admission、Owner Trust Registry 或第二套 CEL 实现。
@@ -88,6 +89,8 @@ PoC 至少覆盖：同一程序对多个 Event 分别得到 true、false 和运�
 
 AC-013-01 的 Windows 环境和常量交换已预检。Go 默认 CheckedExpr Any 类型标识在 Python 下被拒绝；使用 `cel.expr.CheckedExpr` 重新构造 Any 后常量求值通过。完整 typed fixture 未执行，见 SR-013 的预检记录。
 
+AC-013-01 的隔离 PoC 已可启动，正式产品实施仍按 SR-013 的后续阶段条件执行。先执行 SR-013 的阶段执行单。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者 | 章节 | 修改内容 | 原因 | 关联 |
@@ -100,3 +103,4 @@ AC-013-01 的 Windows 环境和常量交换已预检。Go 默认 CheckedExpr Any
 | 2026-11-25 | 0.1.5 | Codex | §7 | 复审 #88 修订并更新发现状态 | 区分候选文本已解决与正式实施门槛 | SR-013、ca-skills #88 |
 | 2026-11-25 | 0.1.6 | Codex | §6–7 | 固定已发布规范 SHA | ca-skills #89 已合并 | SR-013 |
 | 2026-11-25 | 0.1.7 | Codex | §7 | 回链实跑预检 | 记录已验证的交换路径和剩余范围 | SR-013 |
+| 2026-11-25 | 0.1.8 | Codex | §5–7 | 更新 Goal 的隔离 PoC 入口 | 供 DSH 独立开展 AC-013-01 | SR-013 |
