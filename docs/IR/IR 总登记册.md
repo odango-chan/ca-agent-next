@@ -1,7 +1,7 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录  
-> 文档版本：0.1.3  
+> 文档版本：0.1.4  
 > 状态：新增跨仓需求待评审  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级需求管理平台
@@ -36,7 +36,7 @@ IR 编号稳定。GitHub Issue 用于讨论、分派和跟踪，一个 IR 可关
 
 使用发布产物导入、选择及续跑，保留跨语言语义与代际一致性。
 
-- 协作 Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)（EC02 外部实现）；[Next #14](https://github.com/odango-chan/ca-agent-next/issues/14) 仅跟踪本轮中央设计文档刷新。
+- 协作 Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)（EC02 外部实现）；[Next #14](https://github.com/odango-chan/ca-agent-next/issues/14) 跟踪中央设计文档刷新；[PR #16](https://github.com/odango-chan/ca-agent-next/pull/16) 为对应 Draft 文档评审，不代表实施。
 - 实施分解：[SR-004](../SR/SR-004-已发布技能包导入.md)、[SR-005](../SR/SR-005-技能目录与条件程序消费.md)、[SR-006](../SR/SR-006-技能解析器与续跑选择.md)。
 - 架构、设计和规范：[Skill管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md)、[技能与确定性保障格式规范](../规范/技能与确定性保障格式规范.md)、[Runtime执行设计说明书](../设计说明书/F04-Runtime执行/Runtime执行设计说明书.md)。
 - 完成依据：对应 SR 的必需验收全部 VERIFIED；当前均为 DRAFT，证据未执行。
@@ -93,3 +93,4 @@ Compiler 实施沿用 [SR-013](../SR/SR-013-Compiler已检查when与发布产物
 | 2026-11-25 | 0.1.2 | Codex 登记 Compiler 实施 SR | 对齐跨仓实施门槛 | SR-013 |
 | 2026-11-25 | 0.1.2 | Codex / GPT-6 · IR-006 · 登记十项分仓 SR | 跨仓设计移交 | IR-006 |
 | 2026-11-25 | 0.1.3 | GPT-6.2（ChatGPT） | IR-003 | 明确 Compiler #61 为外部实现 Issue、Next #14 为文档刷新 Issue；不改变 SR-004/005/006 的消费端职责 | 区分外部实现和中央设计治理 | Issue #14、SR-013、Compiler #61 |
+| 2026-11-25 | 0.1.4 | GPT-6.2（ChatGPT） | IR-003 | 登记 PR #16 为中央设计 Draft PR，明确不计入产品实施 | 使需求、设计 PR 和实施 Issue 状态一致 | Issue #14、PR #16、Compiler #61 |
