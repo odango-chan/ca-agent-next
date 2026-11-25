@@ -1,13 +1,13 @@
 # Tool Interface 与 Provider 集成设计说明书
 
-> 文档类型：功能子模块设计说明书  
-> 文档版本：0.1.0  
-> 状态：目标设计；待评审  
-> 功能归属：F03.05 — Tool Plugin 集成  
-> 交叉功能：F03.01～F03.04、F04.01、F04.05、F05.02、F06  
-> 关联 SR：SR-003、SR-007、SR-010、SR-015  
-> 全局评审范围：继承根目录 Agent.md 的 review_scope。  
-> 本文局部非目标：不实施 Provider/Host 代码迁移，不修改外部仓库，不完成 Codec Phase C，不声明生产资格。  
+> 文档类型：功能子模块设计说明书
+> 文档版本：0.1.0
+> 状态：目标设计；待评审
+> 功能归属：F03.05 — Tool Plugin 集成
+> 交叉功能：F03.01～F03.04、F04.01、F04.05、F05.02、F06
+> 关联 SR：SR-003、SR-007、SR-010、SR-015
+> 全局评审范围：继承根目录 Agent.md 的 review_scope。
+> 本文局部非目标：不实施 Provider/Host 代码迁移，不修改外部仓库，不完成 Codec Phase C，不声明生产资格。
 > 修订日期：2026-11-25
 
 本文定义 CA Agent Next 如何消费 Tool Interface Package、Owner Contract Package 和 Provider Runtime Bindings，并将 Provider 作为唯一 Plugin Manager 管理的 Tools Extension 接入。本文是 **Next 消费侧架构与集成行为的权威设计**；外部包的实际字段、发布物和实现仍由各自所有者维护，Next 不复制其完整 Catalog 或 Schema。
