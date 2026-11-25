@@ -125,7 +125,7 @@ CheckedExpr、google.protobuf.Any、FileDescriptorSet、DescriptorPool、字段�
 ## 9. 外部依赖与状态边界
 
 - ca-skills PR #88：已合并；正式 CA-SL v1alpha5 来源固定为 18d8184367982ccbc835756136c4a53f9096c3a0，发布记录见 [ca-skills release record](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs/releases/ca-sl-v1alpha5.md)。
-- ca-skill-compiler Issue #61：新版发布运行时 Artifact 与 CheckedExpr/DescriptorSet 格式；详细互操作方案见[Skill管理与选择设计说明书](Skill管理与选择设计说明书.md) §11。
+- ca-skill-compiler Issue #61：新版发布运行时 Artifact 与 CheckedExpr/DescriptorSet 格式；Compiler 侧详见 [EC02 Compiler 设计说明书 §3–7](../EC02-Compiler/Compiler设计说明书.md) 和 [SR-013](../../SR/SR-013-Compiler已检查when与发布产物.md)。
 - ca-agent-next：只负责已发布包的消费、Catalog、选择和 Runtime，不调用 Compiler。
 - cel-expr-python：作为 Python Runtime 的 CEL 反序列化/求值依赖，版本固定并以跨语言 fixtures 验收。
 
@@ -163,7 +163,7 @@ Agent 不调用 Compiler Check/Build/Inspect/Verify，不导入 Assurance 作者
 
 ### 11.2 CheckedExpr 与类型环境
 
-Compiler 负责在发布前对 when 进行解析、类型检查和 CheckedExpr 生成。发布 Artifact 必须提供 Python Runtime 可消费的标准 checked program 表示，以及求值所需类型环境（例如 DescriptorSet）。精确 Artifact 版本、Manifest 字段、文件名和 Any 类型 URL 由 EC02 正式契约定义；Next 不自造文件名或字段。
+Compiler 负责在发布前对 when 进行解析、类型检查和 CheckedExpr 生成。发布 Artifact 必须提供 Python Runtime 可消费的标准 checked program 表示，以及求值所需类型环境（例如 DescriptorSet）。精确 Artifact 版本、Manifest 字段、文件名和 Any 类型 URL 由 [EC02 Compiler 设计说明书 §5–6](../EC02-Compiler/Compiler设计说明书.md) 与 Compiler Owner 批准后的版本化契约定义；Next 不自造文件名或字段。
 
 Next 在 Skill 导入时反序列化已检查程序和类型环境，建立运行时 Program。Event 热路径不解析 CEL 源、不执行类型检查、不编译，也不调用 Compiler。
 
