@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.1.5  
+> 文档版本：0.1.6  
 > 状态：待评审；IR-006 / SR-012 / #2  
 > 修订日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -69,7 +69,7 @@ PoC 至少覆盖：同一程序对多个 Event 分别得到 true、false 和运�
 
 验收记录每行至少包含 `stage | SR/Acceptance | repository@SHA | fixture/source | command | environment | expected | actual/exit_code | result | evidence`。门槛缺失且尚未运行时记录 `BLOCKED` 并附解除条件。未运行且无外部阻塞的检查记 `NOT_RUN`。只对实跑并符合预期的记录写 `PASS`。需要 Owner 裁定 Artifact API、评审 READY 或授权发布时，保留已通过的独立阶段证据及第一个恢复步骤。
 
-截至 2026-11-25，Next PR #3 为草案，ca-skills #88 未合并，Compiler #61 开放，尚无经本轮复核的正式 when 规范、互操作 PASS 或已发布的新 Artifact。当前可执行阶段为只读门禁预检。
+正式 CA-SL v1alpha5 规范固定为 `18d8184367982ccbc835756136c4a53f9096c3a0`，见 [ca-skills 正式发布记录](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs/releases/ca-sl-v1alpha5.md)。此门槛已满足。Next PR #3 已合并；SR-013 的实施范围与验收仍待负责人确认，AC-013-01 为进入 READY 后的首项验收。
 
 ## 7. 技术评审与 READY 判定
 
@@ -84,7 +84,7 @@ PoC 至少覆盖：同一程序对多个 Event 分别得到 true、false 和运�
 
 以上为首轮评审记录。复审 [ca-skills #88 修订提交](https://github.com/odango-chan/ca-skills/commit/697246a967067cdeddb01c2f43b11a3e56afa480) 后，M.4 与 SA-002/009/011 已明确外部编译发布与 Agent 导入的职责。§12.8、M.3 和 SA-012 已明确 Request Schema 不符时排除候选并记录诊断。两项评审发现已在候选文本中解决。该提交的 source-hygiene PASS；AC-013-01 仍为 NOT_RUN。
 
-SR-013 保持 DRAFT，待 #88 正式发布并固定规范 SHA、负责人确认实施范围与 READY 后执行 AC-013-01。PoC 通过后由 Compiler Owner 裁定新版 Artifact API。
+正式规范门槛已解除。SR-013 保持 DRAFT，待负责人确认实施范围与 READY 后执行 AC-013-01。PoC 通过后由 Compiler Owner 裁定新版 Artifact API。
 
 ## 修订记录
 
@@ -96,3 +96,4 @@ SR-013 保持 DRAFT，待 #88 正式发布并固定规范 SHA、负责人确认�
 | 2026-11-25 | 0.1.3 | Codex | §5–6 | 绑定 Compiler 实施 SR | 明确 Goal 执行及验收入口 | SR-013、Compiler #61 |
 | 2026-11-25 | 0.1.4 | Codex | §7 | 登记规范与 Next 的职责冲突及 READY 判定 | 防止 DSH 误执行 M.4 | SR-013、ca-skills #88 |
 | 2026-11-25 | 0.1.5 | Codex | §7 | 复审 #88 修订并更新发现状态 | 区分候选文本已解决与正式实施门槛 | SR-013、ca-skills #88 |
+| 2026-11-25 | 0.1.6 | Codex | §6–7 | 固定已发布规范 SHA | ca-skills #89 已合并 | SR-013 |

@@ -1,12 +1,12 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.1.2  
+> 文档版本：0.1.3  
 > 状态：DRAFT  
 > 创建日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：Next 消费端实施、生产准入、Owner Trust 治理及自动发布。
 
-上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.1.5 §1–7 和 [Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) §1–5。SR-012 负责归档。
+上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.1.6 §1–7 和 [Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) §1–5。SR-012 负责归档。
 
 目标仓：`odango-chan/ca-skill-compiler`。范围覆盖 Go/Python 互操作 PoC、Compiler Contract AST 与语义检查、新版 Artifact Schema、Build/Verify、fixture、Golden 和产品门禁。保持单一 Go Core、语言 v1alpha5、冻结发布 Artifact v1alpha5 及 Development v1alpha1；Development 继续 `NOT_ADMITTED`。Next SR-004/005 消费实际发布 Bundle，运行时无 Compiler 或 Skill Admission。
 
@@ -22,6 +22,8 @@
 
 Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)。规范依赖：[ca-skills #88](https://github.com/odango-chan/ca-skills/pull/88)。设计 PR：[Next #3](https://github.com/odango-chan/ca-agent-next/pull/3)。实施 PR、Commit、实际命令、环境、受测 SHA 和证据待回填。替代关系：无。
 
+正式 CA-SL v1alpha5 规范固定为 `18d8184367982ccbc835756136c4a53f9096c3a0`，见 [ca-skills 正式发布记录](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs/releases/ca-sl-v1alpha5.md)。此门槛已满足。Next PR #3 已合并；SR-013 的实施范围与验收仍待负责人确认，AC-013-01 为进入 READY 后的首项验收。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订内容 | 原因 | 影响 SR |
@@ -29,3 +31,4 @@ Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/6
 | 2026-11-25 | 0.1.0 | Codex 登记 Compiler 实施及验收范围 | 建立 #61 的 Next 实施与交接入口 | SR-013、SR-004/005 |
 | 2026-11-25 | 0.1.1 | 登记 M.4 / SA 的规范一致性门槛 | 防止消费端被要求调用 Compiler 或做 Admission | SR-013 |
 | 2026-11-25 | 0.1.2 | 更新设计评审引用 | 跟踪 #88 修订复审 | SR-013 |
+| 2026-11-25 | 0.1.3 | 固定正式规范 SHA | ca-skills #89 已合并 | SR-013 |
