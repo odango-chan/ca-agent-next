@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.1.2  
+> 文档版本：0.1.3  
 > 状态：DRAFT  
 > 创建日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -10,7 +10,7 @@
 
 目标仓：`odango-chan/ca-skill-compiler`。范围覆盖 Go/Python 互操作 PoC、Compiler Contract AST 与语义检查、新版 Artifact Schema、Build/Verify、fixture、Golden 和产品门禁。保持单一 Go Core、语言 v1alpha5、冻结发布 Artifact v1alpha5 及 Development v1alpha1；Development 继续 `NOT_ADMITTED`。Next SR-004/005 消费实际发布 Bundle，运行时无 Compiler 或 Skill Admission。
 
-启动条件：本 SR 经评审达到 READY，ca-skills #88 的 M.4 与 SA 导入职责已与 Next 对齐、正式发布且固定规范 SHA，具备目标仓写入授权和可运行 Go/Python 环境。PoC 为本 SR 的第一段验收；通过后再要求 Compiler Owner 确认新版 Artifact API 版本和布局。合并或发布另行授权。
+启动条件：本 SR 经评审达到 READY，ca-skills #88 的 M.4 与 SA 导入职责已与 Next 对齐、正式发布且固定规范 SHA，具备目标仓写入授权和可运行 Go/Python 环境。发布输入已核对：[规范正文](https://github.com/odango-chan/ca-skills/blob/18d8184367982ccbc835756136c4a53f9096c3a0/docs/skill-language-spec.v1alpha5.zh-CN.md)及[发布记录](https://github.com/odango-chan/ca-skills/blob/main/docs/releases/ca-sl-v1alpha5.md)。SR 仍为 DRAFT，READY 审查、目标仓实施授权和 Go/Python 环境须分别确认。PoC 为本 SR 的第一段验收；通过后再要求 Compiler Owner 确认新版 Artifact API 版本和布局。合并或发布另行授权。
 
 | 验收 ID | 通过条件 | 当前证据 |
 |---|---|---|
@@ -29,3 +29,4 @@ Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/6
 | 2026-11-25 | 0.1.0 | Codex 登记 Compiler 实施及验收范围 | 建立 #61 的 Next 实施与交接入口 | SR-013、SR-004/005 |
 | 2026-11-25 | 0.1.1 | 登记 M.4 / SA 的规范一致性门槛 | 防止消费端被要求调用 Compiler 或做 Admission | SR-013 |
 | 2026-11-25 | 0.1.2 | 更新设计评审引用 | 跟踪 #88 修订复审 | SR-013 |
+| 2026-11-25 | 0.1.3 | 固定正式规范来源及仍待核验的启动条件 | #5 | SR-013 |
