@@ -306,7 +306,7 @@ Provider 内部基础 Catalog 的 identity 为 ca-client-tools.provider-bindings
 Runtime 在任何 Plugin IPC / Provider invoke 之前必须完成：
 
 1. 当前 Run 已绑定精确 Skill Artifact 与其依赖闭包；Owner Callable 必须解析到部署固定且与 Provider sidecar 一致的 Owner Contract snapshot，并满足 Artifact 的 stablePackageId / required exports；Provider READ Callable 必须解析到对应 Interface Package。Continuation 继续使用原 Run，不重新选 Skill。
-2. Callable ID 属于该 Skill Artifact 锁定的 Callable / Capability 依赖闭包。
+2. Callable ID 属于该 Skill Artifact 声明的 Callable / Capability 依赖闭包，并且其 stablePackageId / required exports 与部署选定的契约快照一致。
 3. Capability / Callable Scope 属于当前 Run 的精确 allowlist；不得用“Provider 已安装”代替授权。
 4. 输入符合该 Callable 实际所属契约源（Provider Interface Package 或 Owner Contract Package）的 Schema；未知字段、缺失字段、类型/范围错误均拒绝。
 5. Effect 与发布契约一致；Provider 实际声明与 Owner Contract 不一致时 fail-closed。
