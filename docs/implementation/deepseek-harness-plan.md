@@ -88,7 +88,7 @@ Tasks:
 - Do not add Host-side SHA-256 package hashing or signature verification. Retain only the identity checks already required by the Compiler/Interface Package contracts.
 - Build an immutable candidate SkillCatalog generation from successfully imported packages. Include SKILL.md-only entries; keep full SKILL.md text and compiled Assurance selection metadata in memory. A failed package update must not partially mutate the active generation.
 
-**External dependency gate:** the refreshed CA-SL v1alpha5 contract.when field and Assurance-free SKILL.md package path must be supported by the Compiler contract/release before this phase can pass. If current skillc does not support them, record the precise missing behavior and stop; do not silently strip when or claim the old release is compatible.
+**External dependency gate:** the refreshed CA-SL v1alpha5 contract.when grammar and portable compiled Artifact representation must be supported by the Compiler contract/release before Assurance import/Resolver conformance can pass. SKILL.md-only import is a Next-owned Importer path and does not invoke Compiler, so it can be implemented and tested independently. If current skillc lacks when support, record the precise missing behavior and stop; do not silently strip when or claim the old release is compatible.
 
 **Acceptance:** SKILL.md-only import succeeds without Compiler invocation; Assurance source invokes Compiler and is admitted only after success; compiled Artifact is inspected/admitted without Build; invalid Assurance fails closed; import/update produces a candidate Catalog generation but does not expose it until atomic activation. Phase C remains blocked on the Compiler-owned when Artifact contract described in docs/integration/skill-catalog-compiler-contract.md.
 
@@ -132,7 +132,7 @@ Implement:
 **Allowed changes:** ca-agent-next only.
 
 1. Make Echo a runnable Example under examples/.
-2. Add automated Acceptance Tests for EX-01 through EX-29.
+2. Add Echo Acceptance Tests for EX-01 through EX-19 and EX-21 through EX-29. Reserve EX-20 for Phase G's second-business proof.
 3. Exercise Event → Skill import/selection → Run → Tool → Outcome/Evidence → response delivery.
 4. Exercise SKILL.md-only import, Assurance source import, compiled Artifact import, and LLM Skill Authoring.
 5. Exercise Catalog residency, no per-Event file reads/Compiler calls, compile-once/evaluate-per-Event behavior, duplicate/continuation bypass, atomic update, failed-update rollback, generation pinning and lazy references (EX-21–EX-28).
@@ -141,7 +141,7 @@ Implement:
 8. Remove unused scaffolding, duplicated registries and obsolete adapters.
 9. Update docs and record exact test commands/results.
 
-**Acceptance:** all Echo tests pass without external credentials; Python Core remains business-neutral; one Plugin process supports Event, Delivery and Tools; EX-01–EX-29 pass or are explicitly BLOCKED by the external Compiler Artifact contract.
+**Acceptance:** Echo cases EX-01–EX-19 and EX-21–EX-29 pass or are explicitly BLOCKED by the external Compiler Artifact contract; Python Core remains business-neutral; one Plugin process supports Event, Delivery and Tools. EX-20 is completed in Phase G.
 
 ## 8. Phase G — Second independent business
 
@@ -161,7 +161,7 @@ Start only after Echo and second-business mechanism acceptance.
 - Use ca-openamsm-plugin as Event Plugin for SBI ingress/delivery.
 - Use ca-client-tools v1.2.0 as Tool Plugin through the unified Plugin Manager; adapt its current Provider v2 protocol rather than copying its Go code.
 - Consume ca-skills Create/Modify/Release CA-SL packages.
-- Invoke the Compiler release that supports the refreshed v1alpha5 contract.when compiled Artifact representation and SKILL.md-only import boundary. Python Runtime consumes the portable checked program specified by the Compiler-owned Artifact contract.
+- Invoke the Compiler release that supports the refreshed v1alpha5 contract.when compiled Artifact representation. SKILL.md-only packages remain on Next's direct Importer path and never invoke Compiler. Python Runtime consumes the portable checked program specified by the Compiler-owned Artifact contract.
 - Keep Nsmf Run lifecycle, resource mapping, Host Artifact Store and Runtime outside the Event Plugin.
 - Preserve Owner Receipt, Commit Proof, UNKNOWN and exact-original Reconcile semantics.
 - Do not claim live Scheme C or Production Qualification unless the isolated real environment gate is executed.
