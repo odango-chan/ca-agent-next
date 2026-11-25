@@ -14,7 +14,7 @@
 | ca-agent-next | New, isolated Python implementation. Reorganize and simplify mechanisms against the agreed target architecture. |
 | ca-agent | Current stable implementation and eventual promotion target. It is not the source tree for this redesign. |
 | ca-skill-compiler | Independent Go Compiler; consume its released executable/API. Do not copy its Go implementation into next. |
-| ca-client-tools | Independent Go Tool Plugin for OpenAMSM; consume its released package/process. Do not port or copy its implementation into Python. |
+| ca-client-tools | Independent Go OpenAMSM Tool implementation; consume its released package/process through the unified Plugin Manager tools extension. Do not port or copy its implementation into Python. |
 | ca-openamsm-plugin | Independent Go Event Plugin for OpenAMSM protocol ingress/delivery. |
 | ca-skills | CA-SL v1alpha5 language and published business Skill sources. Same-version refresh proposal [PR #88](https://github.com/odango-chan/ca-skills/pull/88) adds optional Assurance and contract.when; not yet merged. |
 
@@ -31,7 +31,8 @@ For the next major redesign after promotion, create a fresh ca-agent-next. Keep 
 - [Agent instructions](Agent.md) — mandatory rules for coding agents and VibeCoding.
 - [Architecture](docs/architecture.md) — Python Core, optional Assurance, Core-owned in-memory SkillCatalog, Skill import/selection, unified Plugin and Runtime boundary.
 - [SkillCatalog and Compiler integration](docs/integration/skill-catalog-compiler-contract.md) — import/update lifecycle, hot-path residency, Catalog generations and portable compiled when requirement.
-- [Plugin Package v1alpha1](docs/plugin-package.md) — YAML manifest, extensions and common IPC.
+- [Plugin Package v1alpha1](docs/plugin-package.md) — YAML manifest, extensions and complete common IPC contract.
+- [Plugin Artifact Handoff](docs/plugin-artifact-handoff.md) — Host-owned N1/N2 staging, custody and delivery.
 - [Demo audit](docs/audit/ca-agent-demo.md) — current source inventory and evidence.
 - [Reuse and feasibility](docs/audit/reuse-and-feasibility.md) — copy vs adapt vs external dependency decisions.
 - [DeepSeek Harness plan](docs/implementation/deepseek-harness-plan.md) — staged implementation task package.
