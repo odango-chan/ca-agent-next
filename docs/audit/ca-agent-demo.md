@@ -49,6 +49,12 @@
 - **EVIDENCE:** User's current target requires Skill selection first, Formal-first; only unresolved candidate ambiguity falls back to LLM; execution mode is selected after Skill binding.
 - **PROPOSAL:** Do not copy PR #249's Agent-default/Skill-optional execution flow into next. Reuse its useful generic Event/Plugin/Artifact ideas only after adapting the flow to Skill-first.
 
+### 3.4 SkillCatalog residency is a Next-owned mechanism
+
+- **EVIDENCE:** The audited Demo source identifies reusable Formal Resolver, Root/Skill eligibility, Skill Artifact admission and Host/Resident lifecycle components. This audit did not establish an immutable, Core-owned in-memory SkillCatalog with compile-on-import when programs, atomic generation swaps and Invocation generation pinning.
+- **DECISION:** Reuse the existing candidate/exclusion and Resolver primitives selectively, but implement the SkillCatalog read model in ca-agent-next. Do not put it under Plugin Manager and do not assume every Event should rescan Skill package files.
+- **TARGET:** Import/update loads SKILL.md and Assurance once, validates/compiles, then publishes an immutable in-memory generation. Each fresh Event evaluates precompiled when programs against its own data; SKILL.md-only Skills are in the same Catalog. Full SKILL.md is served from memory after selection, references are lazy-loaded, and each Invocation pins its Catalog generation.
+
 ### 3.3 Current Runtime and Compiler naming is not proof of real compiler integration
 
 - **EVIDENCE:** `skill_toolchain/compiler.py` defines `MockCompiler`; `runtime/engine.py` defines `MockRuntime`. `agent/host/orchestrator.py` imports both in its current orchestration path.
