@@ -1,13 +1,13 @@
 # SR-025：MAS Owner Development Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.2
+> SR 版本：0.1.3
 > 状态：DRAFT
 > 创建日期：2026-11-25
 > 所属阶段：外部 Publisher 实施移交
 > 上游需求：[IR-006](../IR/IR%20总登记册.md#ir-006)
 > 功能：F03.05 / EC03（消费方关联 F09.07）
-> 设计依据：[F03.05 Tool Interface / Provider 设计](../../docs/设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) v0.3.5；[F09 §4.5](../../docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md#45-两个-contract-root-的正式-publisher-输出) v0.3.5；[SR-015](SR-015-工具契约设计移交.md)；[Compiler v2.1.0 Development BuildRequest](https://github.com/odango-chan/ca-skill-compiler/blob/v2.1.0/internal/compiler/development_request.go)
+> 设计依据：[F03.05 Tool Interface / Provider 设计](../../docs/设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) v0.3.6；[F09 §4.5](../../docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md#45-两个-contract-root-的正式-publisher-输出) v0.3.6；[SR-015](SR-015-工具契约设计移交.md)；[Compiler v2.1.0 Development BuildRequest](https://github.com/odango-chan/ca-skill-compiler/blob/v2.1.0/internal/compiler/development_request.go)
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：Provider v2 重构、Runtime Binding 重构、Owner Contract 语义修改、生产级 Trust/Admission/签名或额外包完整性体系
 
@@ -106,7 +106,7 @@
 
 ## 6. 依赖与启动条件
 
-- 依赖 F03.05 v0.3.5、F09 §4.5 v0.3.5、Compiler v2.1.0 Development Interface Package schema/Linker 。AC-025-07 用显式 mas root 的最小 Development BuildRequest 独立验收；两包在真实 MAS Example 的组合消费由 SR-016 验收。
+- 依赖本 SR 设计依据所列 F03.05、F09 §4.5、Compiler v2.1.0 Development Interface Package schema/Linker。AC-025-07 用显式 mas root 的最小 Development BuildRequest 独立验收；两包在真实 MAS Example 的组合消费由 SR-016 验收。
 - ca-client-tools 当前 main 与 v1.2.0 tag 的 Owner source 59/59 blobs 相同；若实施时 source Revision 已变化，必须重新核对 source manifest、buildIdentity、exports 和 schema closure，不得静默更新基线。
 - 包版本已确定为 `1.0.0`。仅将 Owner source version `v1alpha4` 用于定位源材料。
 - 本 SR 保持 DRAFT；同一设计提交评审通过后进入 READY，再创建 ca-client-tools 实施 Issue。不得提前提供 DeepSeek Harness Goal。
@@ -126,3 +126,4 @@
 
 | 2026-11-25 | 0.1.1 | GPT-6.2（ChatGPT） | §2～7 | 补齐 AC-025-01～08，明确 package.version SemVer 决策门槛、导出闭包、负向测试和既有 Release 流程 | 让 ca-client-tools Publisher 达到可评审、可执行的 SR 粒度；不在决策确认前生成实施提示词 | Issue #12；F03.05；F09；SR-015、SR-016、SR-024 |
 | 2026-11-25 | 0.1.2 | Codex / GPT-6 | 正文 | §2、4～6 固定 MAS 包身份，解除 Publisher 对下游 Studio 的循环前置 | Issue #12 SR-025 |
+| 2026-11-25 | 0.1.3 | Codex / GPT-6 | 正文 | §6 明确发布者独立验收输入；同步所引权威设计版本；清理重复基线指针 | Issue #12 SR-025 |

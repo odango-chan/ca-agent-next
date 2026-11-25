@@ -1,12 +1,12 @@
 # SR-002：Python 核心与宿主基础骨架
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.3\
+> SR 版本：0.1.4\
 > 状态：DRAFT；设计基线待评审，不允许实施  
 > 创建日期：2026-11-25  
 > 所属阶段：Phase A  
 > 上游需求：[IR-002](../IR/IR%20总登记册.md#ir-002)  
-> 设计依据：[CA Agent Next 架构设计](../架构设计/CA%20Agent%20Next%20架构设计.md) v0.4.1 §3～5；[通用Agent核心与Host设计说明书](../设计说明书/F01-通用Agent核心与Host/通用Agent核心与Host设计说明书.md) v0.2.0 §2～6\
+> 设计依据：[CA Agent Next 架构设计](../架构设计/CA%20Agent%20Next%20架构设计.md) v0.4.2 §3～5；[通用Agent核心与Host设计说明书](../设计说明书/F01-通用Agent核心与Host/通用Agent核心与Host设计说明书.md) v0.2.0 §2～6\
 > Acceptance：EX-01（见[演示验收基线](../验收与实施/演示验收基线.md)）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：见第 3 节
@@ -42,6 +42,12 @@
 
 验收时必须引用演示验收基线中的对应 Acceptance ID，并记录真实执行命令、测试结果、Example 和覆盖范围。未执行项保持 NOT_RUN。
 
+### 实施位置与复验入口
+
+以下路径为本 SR 的目标交付物。在 ca-agent-next 仓根运行，测试通过公开入口调用受测组件。目标位置为 `src/ca_agent_next/__main__.py`、`host.py`、`model_loop.py`。以 CPython 3.14 为本批测试解释器。从仓根运行 `python -m pip install -e .`，再运行 `python -m ca_agent_next --smoke`。由 Host 装配进程内 Fake Model，一次输入得到一次模型提议，正常退出为 0；无网络或业务 Plugin 时仍可运行。这个入口只验证 F01 骨架，返回值不得产生 Owner outcome。
+
+验收命令为 `python -m unittest discover -s tests -p test_host.py -v`。必须发现并执行本节正反例；发现 0 个测试或跳过必需用例时，退出码 0 也不能计入 PASS。逐个 Acceptance ID 回填受测 SHA、命令、预期与实测值及日志位置。
+
 ## 6. 实施关联
 
 | 项目 | 当前值 |
@@ -70,3 +76,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-25 | 0.1.1 | 中文化 SR 标题和文件名；需求范围及验收条件未变 | 落实中文文档命名规范 | SR-002 |
 | 2026-11-25 | 0.1.2 | 补齐 IR、设计章节与验收追踪 | 对齐最新分支与 IR/SR 基线 | SR-002 |
 | 2026-11-25 | 0.1.3 | 校正当前设计依据版本 | 核对 Issue #12 与固定提交 | SR-002 |
+| 2026-11-25 | 0.1.4 | Codex / GPT-6 · §5 固定目标代码位置、复验入口及可观察断言；同步所引权威设计版本 | 对齐当前架构与实施门禁 | Issue #12 SR-002 |

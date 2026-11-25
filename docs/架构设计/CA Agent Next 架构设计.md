@@ -2,7 +2,7 @@
 
 > 文档类型：总体架构设计  
 > 状态：目标架构基线；PR #1 已合并；架构所定义的 Next Host/Runtime/Plugin Manager 尚未实现、尚未验收    
-> 文档版本：0.4.1
+> 文档版本：0.4.2
 > 修订日期：2026-11-25  
 > 适用范围：ca-agent-next 通用 Agent Core、Host、Runtime、Skill 与 Plugin 公共机制  
 > 权威边界：本文是本仓唯一总体架构文档；字段级契约见规范，机制细节见设计说明书  
@@ -135,9 +135,9 @@ SkillCatalog 由 Core/Host 拥有，是进程内不可变快照。启动或显�
 1. 校验并去重 Event。
 2. 精确 continuation 优先，恢复原 Run，不重新选择 Skill。
 3. 固定当前 Catalog 代际。
-4. 对声明 assurance/contract.yaml.when 的 Skill，使用发布 Artifact 中已检查的 CEL 程序评估当前 Event。
+4. 先以每个 Assurance Skill 声明的完整 requestSchema 校验规范化输入；失配时记录诊断并排除该 Skill。对合格且声明 when 的 Skill 使用发布 Artifact 中已检查的 CEL 程序求值。
 5. 一个显式匹配直接选择；多个显式匹配只允许在精确匹配集合内消歧。
-6. 没有显式匹配时，只对没有声明 when 的 Skill 使用 SKILL.md 语义选择。
+6. 没有显式匹配时，只对 SKILL.md-only 和已通过适用 Schema 校验且没有声明 when 的 Skill 使用 SKILL.md 语义选择。
 7. when=false 或运行期错误的 Skill 不得重新进入无条件语义候选。
 8. 无候选则澄清或拒绝，不允许无 Skill 绑定地回退到 Generic Agent。
 
@@ -278,3 +278,4 @@ sequenceDiagram
 | 2026-11-25 | 0.3.3 | Codex / GPT-6 | §3 | 提出集中设计与分仓交付边界 | IR-006 设计移交 | IR-006 |
 | 2026-11-25 | 0.4.0 | GPT-6.2（ChatGPT） | §3、§8、§10、§13–14 | 纳入 EC01～EC07/REF/TARGET/G01 职责，补齐 F03.05、Artifact Channel 未发布边界、最新外部 PR/Release 状态和完整设计入口 | 纠正外部域遗漏、过期依赖快照和 Provider/Artifact 边界 | Issue #12；SR-015～SR-023 |
 | 2026-11-25 | 0.4.1 | GPT-6.2（ChatGPT） | §10、外部依赖快照 | 纠正 Host Artifact Store Channel 生命周期；同步 Provider v1.2.0、Go Host P1 外部参考与 Next Python Host 未实现状态；区分 Mock AMF Codec C1 | 统一总体架构、F05、Plugin IPC 和验收基线中的协议状态 | Issue #12；SR-009、SR-010、SR-011、SR-015 |
+| 2026-11-25 | 0.4.2 | Codex / GPT-6 | 正文 | §7 对齐 M.3 输入校验与候选排除顺序 | 消除执行歧义并同步中央设计 | Issue #12 |

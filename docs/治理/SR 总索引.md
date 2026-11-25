@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.4\
+> 文档版本：0.3.5\
 > 状态：待评审；全部 SR 当前为 DRAFT，不允许直接实施  
 > 修订日期：2026-11-25  
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -71,7 +71,7 @@
 
 ### 3.2 Next 实施阶段
 
-- 治理自动化：SR-001，可独立实施；依赖设计基线评审通过。
+- 治理自动化：SR-001，与产品阶段独立；交付门禁、实际 Issue 和当前设计提交评审通过后方可启动。
 - Phase A：SR-002。
 - Phase B：SR-003。
 - Phase C：SR-004。
@@ -91,7 +91,7 @@
 - Next Runtime：README 声明尚无已验收 Runtime 实现。
 - 24 项 SR 当前均为 DRAFT；[PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)已核对 58 个文件与 SHA256SUMS；归档报告为 Go/Python 18/18，当前审计复跑 NOT_RUN，不改变 SR-013 总体 DRAFT 状态。SR-009 仅覆盖 Event/Delivery Plugin 与本地 staging；SR-010 还覆盖 Next Host ArtifactStore、ca-host.artifact-store/v1 channel server、Provider v2 Driver 和 Codec 消费。
 - Issue #12 追踪本轮中央设计资产恢复；PR #11/#13/#15/#16/#18 均在独立分支 OPEN/DRAFT，恢复分支已同步可复用的最新文档内容但尚未创建 PR；PR 状态不等于 SR 实施状态。
-- 本分支 docs/restore-original-designs-20261125 尚未创建 PR；文档静态链接门禁和跨仓完整审查尚未通过。
+- 本分支 docs/restore-original-designs-20261125 尚未创建 PR；现行入口的相对路径和锚点已复核；各 SR 的正式资产、环境与交付门禁分开判断。
 - ca-agent-demo、ca-client-tools、ca-skill-compiler、ca-skills 和 ca-openamsm-plugin 的现有代码/PR 只能作为外部复用或依赖证据，不能自动算作 Next SR 已实施。
 
 ## 修订记录
@@ -114,3 +114,4 @@
 
 | 2026-11-25 | 0.3.3 | GPT-6.2（ChatGPT） | §2～4 | 新增 ca-client-tools MAS Owner Development Interface Package Publisher SR-025，并将其置于 SR-015 设计之后、SR-024 Host Publisher 之前 | 按目标仓分离 Owner 与 Host Publisher，避免把中央设计 SR 当作外部代码实施 SR | Issue #12；SR-015、SR-016、SR-024、SR-025 |
 | 2026-11-25 | 0.3.4 | Codex / GPT-6 · 同步 Publisher 身份、版本和验收边界 | 对齐当前架构与实施门禁 | Issue #12 |
+| 2026-11-25 | 0.3.5 | Codex / GPT-6 · §3～4 区分文档检查、实现和独立审批条件 | 对齐当前架构与实施门禁 | Issue #12 |

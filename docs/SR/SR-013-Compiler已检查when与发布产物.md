@@ -1,13 +1,13 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.5\
+> 文档版本：0.2.6\
 > 状态：DRAFT（设计补充待评审；不得据此启动产品实施）  
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：Next 消费端实现、生产准入、Owner Trust 治理、自动发布及真实 5GC/MAS 资格。
 
-上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。功能归属：EC02 Compiler、F08 技能编译与发布；消费端关联 F02。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.2、[F08 技能编译与发布设计说明书](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.2、[F02 Skill 管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md) §7/§11、CA-SL v1alpha5 正式来源 SHA 18d8184367982ccbc835756136c4a53f9096c3a0。
+上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。功能归属：EC02 Compiler、F08 技能编译与发布；消费端关联 F02。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.5、[F08 技能编译与发布设计说明书](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.5、[F02 Skill 管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md) §7/§11、CA-SL v1alpha5 正式来源 SHA 18d8184367982ccbc835756136c4a53f9096c3a0。
 
 目标仓：odango-chan/ca-skill-compiler。实施 Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)。文档刷新 Issue：[Next #14](https://github.com/odango-chan/ca-agent-next/issues/14)。目标代码基线：Compiler v2.1.0，commit 255ab85fa5abb4b0bf36656bf64250cafebf45cb。规范依赖：[ca-skills #88](https://github.com/odango-chan/ca-skills/pull/88) 已合并，正式发布身份见 [ca-skills release record](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs/releases/ca-sl-v1alpha5.md)。
 
@@ -360,3 +360,4 @@ SR-013 只有 AC-013-01～05 均达到各自通过条件，Compiler Release 有�
 | 2026-11-25 | 0.2.3 | GPT-6.2（ChatGPT） | §1～9 | 合并 PR #16 的完整 when/Request Schema/Compiler Artifact 设计；保留 AC-013-01 Go/Python 18/18 的隔离 PoC 报告，同时明确证据 commit 78dddd5 未在远端仓库找到、独立复核 NOT_RUN | 设计范围与阶段 PoC 证据分开，防止将报告结果升级为 Compiler 产品 PASS 或 SR VERIFIED | Issue #14；PR #16/#18；IR-003；F02 v0.2.7；F08 v0.3.3；EC02 Compiler v0.2.3 |
 | 2026-11-25 | 0.2.4 | GPT-6.2（ChatGPT） | §1～9 | 同步 F02/F08/Compiler 设计版本引用；保留 AC-013-01 18/18 报告结果并明确证据未归档、独立复核未运行 | 避免不同文件引用不同版本或把报告状态升级为完整 SR 验收 | Issue #14；PR #16/#18 |
 | 2026-11-25 | 0.2.5 | Codex | 正文 | 固定 PoC 归档并记录本轮完整性复核 | 核对 Issue #12 与固定提交 | Issue #12 |
+| 2026-11-25 | 0.2.6 | Codex / GPT-6 | 正文 | 同步所引权威设计版本 | 消除执行歧义并同步中央设计 | Issue #12 SR-013 |
