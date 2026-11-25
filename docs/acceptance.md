@@ -125,7 +125,7 @@ The Event Plugin declares only normalized Event types and Schemas. There is no E
 ## 5. Compiler and Tool Plugin integration
 
 - Python invokes the canonical CA-SL Compiler interface for Assurance source Check/Build and Artifact Inspect/Verify. Do not copy Go Compiler source or reimplement its semantics.
-- At this document revision, support for refreshed CA-SL v1alpha5 contract.when, its portable checked Artifact representation, and the Assurance-free SKILL.md import path must be verified against the Compiler owner. See [SkillCatalog and Compiler integration requirements](integration/skill-catalog-compiler-contract.md). Do not silently strip when or claim an unsupported Compiler release works.
+- At this document revision, Compiler support for refreshed CA-SL v1alpha5 contract.when and its portable checked Artifact representation must be verified against the Compiler owner. The SKILL.md-only import path is implemented by Next's Skill Importer and must not invoke Compiler. See [SkillCatalog and Compiler integration requirements](integration/skill-catalog-compiler-contract.md). Do not silently strip when or claim an unsupported Compiler release works.
 - The Compiler parses/type-checks when once at import/update. Python Runtime evaluates the admitted compiled program for each fresh Event; it must not parse/type-check raw CEL on the hot path.
 - Importing a compiled Artifact invokes Inspect/Verify and Host Admission but not Build.
 - The Echo Tool Interface Package is consumed from its canonical Compiler-owned format. Do not duplicate ToolCatalog or calculate an additional Host-side package digest.
