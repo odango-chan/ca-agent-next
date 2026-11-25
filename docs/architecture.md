@@ -177,8 +177,8 @@ flowchart TB
 
   subgraph EXEC["Python Agent Core and unified Plugin mechanism"]
     EXT["External requester / AMF"]
-    EPLUGIN["Go Event Plugin"]
-    PM["Python Plugin Manager<br/>one lifecycle + IPC + extension registry"]
+    EPLUGIN["Go Event Plugin<br/>event.ingress + event.delivery"]
+    PM["Python Plugin Manager<br/>one lifecycle + IPC + event.ingress / event.delivery / tools"]
     EVENT["Normalized Event<br/>business contract ref + payload + correlation"]
     HOST["Python Host<br/>validate + create/correlate Task"]
     RES["Formal Skill Resolver"]
