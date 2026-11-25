@@ -1,12 +1,12 @@
-# Architecture baseline — Python Core, unified Plugin extensions
+# Architecture baseline — Python Core, unified Plugin, optional Assurance
 
-**Status:** target architecture for `ca-agent-next`; implementation **NOT_STARTED**.  
-**Audit source:** `ca-agent-demo` main `57e277ff9094dad93543df46910a12a1dbbaf560` plus open PR #246 / #249 reviewed on 2026-11-25.  
+**Status:** target architecture for ca-agent-next; implementation NOT_STARTED.
+**Audit source:** ca-agent-demo main 57e277ff9094dad93543df46910a12a1dbbaf560 plus open PR #246 / #249 reviewed on 2026-11-25.
 **Scope:** Demo-level mechanism implementation, not Production Qualification.
 
 ## 1. Repository evolution and language
 
-```text
+~~~text
 ca-agent-demo (primary source: existing Python mechanisms + tests)
        |
        | selective reuse, simplification and redesign
@@ -16,241 +16,307 @@ ca-agent-next (new Python Agent Core / Host / Runtime)
        | acceptance complete, promotion review
        v
 ca-agent (stable implementation target; not source for this redesign)
-```
+~~~
 
-- Agent Core, Host, Agent Model Loop, Skill Resolver and Runtime in next are **Python**.
-- Plugins are independent processes. Go is appropriate for OpenAMSM/Tool Plugin implementations; it is not the Agent Core language.
-- `ca-skill-compiler`, `ca-client-tools`, `ca-skills` and Plugin repositories remain independent package owners. Do not copy their implementation into next.
+- Agent Core, Host, Agent Model Loop, Skill Importer, Skill Resolver and Runtime in next are Python.
+- Plugins are independent processes. Go is appropriate for OpenAMSM and Tool Plugin implementations; it is not the Agent Core language.
+- ca-skill-compiler, ca-client-tools, ca-skills and Plugin repositories remain independent package owners. Do not copy their implementations into next.
 
-## 2. One extension mechanism: Plugin
+## 2. Skill package and execution modes
 
-A Plugin is the generic extension unit: one package/process, one lifecycle and one Host-managed IPC connection. It may expose one or more extension kinds.
+Every Skill package has one required Agent-facing SKILL.md. Deterministic execution is optional and is introduced only by the presence of a valid assurance directory.
 
-| Plugin extension | Direction | Purpose |
+~~~text
+skills/<skill-name>/
+├── SKILL.md
+├── assurance/                 # Optional; enables Deterministic execution
+│   ├── contract.yaml
+│   ├── procedure.yaml
+│   └── predicates.yaml        # Present when the Procedure uses Predicate definitions
+├── schemas/                   # Skill-owned request and other schemas
+├── scripts/                   # Skill-owned deterministic scripts
+└── references/                # Optional Agent knowledge material
+~~~
+
+| Package shape | LLM-guided | Deterministic |
+|---|---:|---:|
+| SKILL.md only; no assurance directory | Yes | No |
+| SKILL.md + valid assurance source | Yes | Yes |
+| SKILL.md + imported compiled Assurance Artifact | Yes | Yes |
+| Assurance directory exists but is incomplete or invalid | Import fails | Import fails |
+
+Normative rules:
+
+1. SKILL.md is required for every Skill and contains the Agent-facing description, usage guidance and natural-language applicability.
+2. The assurance directory is optional. Its contract.yaml belongs inside assurance; it is not a mandatory file for every Skill.
+3. A valid Assurance enables both execution modes. The selected mode is chosen after exact Skill selection.
+4. If assurance is absent, the Skill is LLM-guided only. The Agent follows SKILL.md and the common Runtime Action Boundary.
+5. If assurance is present but malformed, incomplete, unsupported or fails compilation/admission, reject the Skill import. Never silently downgrade it to SKILL.md-only.
+6. Do not add supportedModes, a second LLM Contract, a separate applicability.yaml, activation.yaml, constraint.yaml or another Skill descriptor.
+7. predicates.yaml is for execution-time business predicates only. It does not select Skills.
+
+## 3. Skill source and Artifact import lifecycle
+
+The Skill Importer recognizes three inputs. It does not implement a second Compiler or package manager.
+
+| Input | Import path | Compiler behavior |
 |---|---|---|
-| `event.ingress` | Plugin → Host | Publish normalized external Event/Task input |
-| `event.delivery` | Host → Plugin | Deliver a validated response to the originating protocol |
-| `tools` | Host → Plugin | Export callable Tool operations invoked through Runtime |
-| optional combined | both | One process may expose Event and Tool extensions together |
+| SKILL.md-only source package | Parse basic Skill metadata and import Agent guidance | No Compiler invocation |
+| Source package with assurance/ | Validate package shape, invoke CA-SL Compiler, then inspect/admit the generated Artifact | Automatically compile before admission |
+| Already compiled Skill Artifact | Inspect, verify and admit the supplied Artifact | Do not rebuild or recompile |
 
-**Tool is not another process/runtime abstraction.** A Tool is a callable operation exported by a Plugin. A Tool Plugin is a Plugin that exports Tools. One Plugin can export many Tools; one process per Tool is not required.
+Additional rules:
 
-### 2.1 Unified manager and protocol
+- The Compiler owns CA-SL parsing, semantic checks, linking and Artifact generation. Python invokes the released Compiler interface; it must not reimplement Compiler semantics.
+- Source with Assurance is not executable until the Compiler succeeds and Host admission succeeds.
+- An imported compiled Artifact is not recompiled. The Host uses the Compiler's Inspect/Verify contract and then performs its own deployment/Capability admission.
+- A failed build, verify or admission is a hard error. Do not strip assurance files, ignore an unknown field or fall back to LLM-guided mode.
+- Editing only SKILL.md updates the Agent-facing guidance; it does not require rebuilding an unchanged Assurance Artifact.
+- Editing contract.yaml, procedure.yaml, predicates.yaml or another Assurance source dependency triggers a new Compiler build and Artifact admission.
+- LLM-created or LLM-edited Skill source follows this same import path. Creating a source file does not itself make it executable.
+- An individual LLM Action proposal is not Skill source and does not invoke the Compiler.
 
-- One Python Plugin Manager loads declared Plugin packages/processes, owns lifecycle, handshake, message correlation, shutdown and extension discovery.
-- One generic Plugin IPC envelope carries lifecycle and extension messages. The common mechanism defines only generic frame identity/correlation and extension operations.
-- Tool invocation is a Plugin extension method. Event ingress/delivery are different extension methods on the same mechanism.
-- The existing `ca-client-tools.provider/v2` is an already released Tool process protocol. It may initially be consumed by a small Tool-Plugin driver inside the unified Plugin Manager. This is a migration adapter, **not** a second Provider Manager or a second Runtime. Do not rewrite or copy the Go implementation just to rename the protocol.
-- Converge new Plugin implementations on the shared Plugin mechanism after the Echo Example proves the boundary. Do not maintain two permanent process managers, registries, catalogs or authorization paths.
+## 4. Skill-first selection and optional contract.when
 
-Native packages use the [Plugin Package v1alpha1 contract](plugin-package.md). Deployment pins package identity and imported snapshots before activation.
+Every fresh business request binds a Skill before execution. Exact continuations are resolved against the original pending Run before fresh Skill selection.
 
-### 2.2 Tool contract is still package-owned
+### 4.1 Selection declarations
 
-The Plugin mechanism does not become a global ToolCatalog.
+- A Skill with Assurance may declare the optional top-level contract.yaml field when.
+- when is a pure CEL boolean used only during Skill selection.
+- Its input environment is the normalized Event metadata, including event.type, and the Event payload exposed as input.
+- The Event Plugin validates the normalized payload against its Event Schema. A candidate Assurance requestSchema, when declared, must also accept the same input before its when expression is evaluated.
+- when may inspect only the declared Event metadata and input fields. It cannot query Tools, inspect runtime Observations, read mutable Host state or perform side effects.
+- SKILL.md natural-language usage guidance is used for semantic selection of unguarded Skills. It does not gain a second CEL field.
+- predicates.yaml remains exclusively for execution-time business facts.
 
-- The Tool-owning Interface Package defines public Callable ID, input/output Schema, Effect, Capability membership and Owner outcome/receipt/reconcile contract.
-- The Tool Plugin package carries or references that exact Interface Package and its digest, plus private implementation/runtime binding.
-- The Plugin manifest references the Interface Package; it must not duplicate its Tool definitions.
-- The Runtime builds its available Tool registry from imported Interface Packages and loaded Tool Plugin bindings. The selected Skill's Capability requirements determine the invocation-scoped allowlist.
-- Registration/availability is not authorization. Only the selected Skill + Host/Runtime admission grants the action.
+Example:
 
-This preserves the Compiler-compatible Interface Package already published by `ca-client-tools` and prevents a second Tool contract authority.
+~~~yaml
+# assurance/contract.yaml
+when: 'event.type == "nsmf.create-sm-context" && input.requestType == 1'
+~~~
 
-### 2.3 Existing repositories as Plugin types
+### 4.2 Candidate resolution
 
-| Repository | Plugin role | Boundary |
+1. Validate the Event envelope and payload. Resolve an exact continuation first; a continuation never re-enters fresh Skill selection.
+2. Load available Skill packages. A package with invalid Assurance is rejected at import and is not a candidate.
+3. Evaluate when for each imported Assurance Skill that declares it. A true result is an explicit match. False excludes that Skill. A runtime evaluation error fails closed, excludes the Skill and records a diagnostic. A statically invalid expression prevents Assurance compilation/admission.
+4. If one explicit true match exists, select it without an LLM call. If multiple explicit true matches exist, the LLM may disambiguate only within that exact set; validate the returned Skill identity.
+5. If there are no explicit true matches, form the unguarded semantic candidate set from Skills without when. This includes SKILL.md-only Skills and valid Assurance Skills whose contract omits when. Use their SKILL.md descriptions for semantic selection; the LLM cannot invent a Skill outside the imported set.
+6. If the applicable candidate set is empty, stop or request the missing information. A Skill whose when evaluated false or errored is not reintroduced as an unguarded candidate.
+7. Bind the exact selected Skill package and, when Assurance exists, its exact admitted Artifact and Capability requirements.
+8. Select Deterministic or LLM-guided mode only after Skill binding.
+
+There is no Event-to-Skill table, Event-to-mode table, business-contract package registry or domain-specific Host route. The Plugin does not name a Skill.
+
+## 5. One extension mechanism: Plugin
+
+A Plugin is the generic extension/package/process unit managed by one Python Plugin Manager. One Plugin process may expose one or more extension kinds.
+
+| Extension | Direction | Responsibility |
 |---|---|---|
-| `ca-openamsm-plugin` | Event Plugin | SBI listener, protocol decoding/normalization, Event publication and SBI response delivery. No Skill selection, RunStore, Runtime or Owner Tool implementation. |
-| `ca-client-tools` | Tool Plugin | OpenAMSM Tool operations, Provider process, private backend binding and Owner calls. No Agent Model Loop, Skill selection or Runtime authorization. |
-| Echo Example | Combined Plugin | Minimal Event ingress/delivery plus one or more Tools to prove the common extension mechanism. |
+| event.ingress | Plugin → Host | Publish a normalized Event |
+| event.delivery | Host → Plugin | Deliver a structured response to the originating protocol |
+| tools | Host → Plugin | Export callable Tool operations |
 
-The two OpenAMSM projects remain independent because they own different work. They share one Plugin mechanism, not one business implementation. Do not move MAS Owner calls from `ca-client-tools` into `ca-openamsm-plugin`.
+A Tool is an operation exported by a Plugin, not a process, manager or Runtime. A Tool Plugin is simply a Plugin that exports Tools. A Plugin may expose Event ingress, delivery and Tools together.
 
-## 3. Contract ownership: mechanism public, business package-owned
+### 5.1 One Plugin Manager and IPC
 
-| Contract/data | Owner | Imported/consumed by |
+- One Python Plugin Manager owns process start/stop, handshake, IPC, correlation, extension discovery and dispatch.
+- One Plugin IPC envelope and one process lifecycle serve all extension kinds.
+- Event, Tool and Delivery are extension methods, not separate managers or protocols.
+- The existing ca-client-tools.provider/v2 process may initially be adapted by a Tool-extension driver inside the unified Plugin Manager. This is a migration adapter, not a permanent Provider Manager.
+- Do not create a second Tool registry, Provider Manager, authorization path or Runtime.
+- The Plugin Manager transports calls. It does not select Skills, authorize business actions or decide whether an Owner mutation committed.
+
+Native package format and the minimal Demo IPC are defined in [Plugin Package v1alpha1](plugin-package.md).
+
+### 5.2 Extension ownership
+
+| Repository / package | Extension role | Responsibility |
 |---|---|---|
-| Plugin lifecycle, IPC, extension method envelopes | Shared mechanism contract (initially documented/versioned in next) | Host and all Plugins |
-| Event type, event meaning, request payload Schema, response Schema, protocol artifact declarations | Event Plugin/domain package | Host Event intake and Skill Resolver |
-| Business Goal/intent meaning shared across packages | Owning domain contract package | Plugin and applicable Skills |
-| Skill applicability, Goal, Context Requirements, Capability declarations, Procedures, Predicates and completion conditions | Skill package | Formal Resolver, Compiler, Runtime |
-| Tool Callable ID, input/output Schema, Effect, Capability membership, Owner Receipt/Commit/Reconcile semantics | Owner Interface Package | Compiler and Runtime |
-| Tool implementation and private runtime binding | Tool Plugin package/release | Plugin Manager and Runtime |
-| CA-SL syntax and compiler artifact format | `ca-skills` / `ca-skill-compiler` | Skill authoring/build/admission |
+| ca-openamsm-plugin | Event ingress + delivery | Protocol decoding/normalization and protocol response encoding |
+| ca-client-tools | Tools | OpenAMSM callable operations, private bindings and Owner-facing calls |
+| Echo Example Plugin | Combined | Minimal Event ingress/delivery and one or more Tools |
+
+ca-openamsm-plugin and ca-client-tools remain independently owned projects. Do not move MAS Owner calls into the Event Plugin. Neither Plugin chooses the Skill or owns Runtime authorization.
+
+## 6. Contract and schema ownership
+
+| Material | Owner | Rule |
+|---|---|---|
+| Plugin identity, process and extension declarations | Plugin package | One YAML manifest |
+| Normalized Event type and Event payload Schema | Event Plugin package | No business Contract Package and no Skill ID |
+| Agent-facing usage and semantic guidance | SKILL.md | Required for every Skill |
+| Goal, request/context requirements, dependencies, Capability Grants, when | assurance/contract.yaml | Present only for deterministic-capable Skills |
+| Procedure graph and execution predicates | Assurance source | CA-SL Compiler validates them |
+| Tool IDs, input/output Schemas, Effects, Capability membership and Owner outcome contracts | Tool Interface Package | Existing canonical authority; do not duplicate ToolCatalog |
+| Tool implementation and private runtime binding | Tool Plugin | Executable implementation only |
+| Runtime authorization, Outcomes and Evidence | Python Runtime | One common boundary for both modes |
 
 Rules:
 
-- No central business Goal Registry.
-- No Event → Skill mapping table.
-- No Event → execution-mode mapping.
-- Plugin Event Contract carries a business-contract reference and payload, not a Skill ID.
-- Structured Skill declarations use exact business-contract identities. The Resolver scopes lightweight fallback to the package and session rules in §4.
-- Host configuration may choose package sources, available Plugin processes and a generic default execution mode. It must not encode business-specific routing.
+- Do not add Domain Contract Package, TaskContract Package or another business-contract layer.
+- The Event Plugin declares event.type and its normalized payload Schema. It does not publish a business Goal or a Skill mapping.
+- The normalized Event payload is the input offered to Skill selection. The selected Skill's requestSchema, if present, must accept it. Do not invent a generic business projection layer.
+- The Skill Contract is part of Assurance, not a global registry and not a required file for ordinary Skills.
+- Tool Interface Package remains the sole authority for callable contracts. Plugin manifests reference it; they do not duplicate its Tool definitions.
 
-No new `ca-contracts` repository is required for the Demo. Keep the generic Plugin mechanism contract small and versioned; keep business contracts beside their owners.
-
-## 4. Skill-first, Formal-first selection
-
-Every fresh business request binds a Skill before execution. After validating the incoming Event, Host first resolves continuations against an exact pending Run. A valid continuation uses its original bindings. Invalid or duplicate deliveries do not advance the Run or enter selection.
-
-1. Form the static eligible set using exact business-contract identity where declared, validated input, package availability and known deployment capability constraints. Scope any semantic fallback to imported packages and the trusted Host session. Resolve runtime-dependent Context and execution preconditions after selection.
-2. Evaluate optional top-level `contract.yaml.when` as a pure CEL boolean over validated `event` metadata and normalized `input`. A malformed or statically non-boolean expression makes the Skill unavailable at load time. False and request-time evaluation errors exclude that Skill. Retain diagnostics for errors.
-3. One explicit true match selects directly. Multiple true matches restrict the LLM to those exact candidates. With zero true matches, offer only eligible Skills without `when` for semantic selection. An empty tier stops or requests input. Validate the exact returned identity against the offered set.
-4. Bind the exact Skill package snapshot, select a supported mode and admit its mode-specific Artifact/Variant and invocation capabilities before execution. Both modes use one Runtime Action Boundary.
-
-Keep `SKILL.md` generic and `predicates.yaml` for execution-time checks. The intended authoring contract supports a complete assurance form and a lightweight form that can carry `when`. Validated assurance assets enable Deterministic execution. Lightweight Skills use LLM-guided execution and explicit trusted Host session authorization. Complete Skills may also declare LLM-guided support. Pin the CEL source to the selected Skill snapshot.
-
-The canonical `ca-skills` source rules and Compiler compatibility must be verified before adopting the new authoring forms. The frozen CA-SL v1alpha5 and pinned `skillc v2.1.0` have no verified support for them in this baseline.
-
-## 5. Procedure and execution-mode selection
-
-### 5.1 Procedure selection/source resolution
-
-Within the selected Skill, use Formal-first Procedure selection. LLM may help only when more than one formally eligible candidate remains ambiguous; it cannot create a new candidate outside the selected Skill's declared Procedure surface.
-
-Procedure sources may include `STATIC`, `LLM_PROPOSAL`, `FALLBACK` and `PATCH-DERIVED`. Every source must converge through deterministic schema/semantic validation, Compiler build/verify and exact Artifact/Variant binding before execution.
-
-Fallback may select only a published deterministic Procedure explicitly marked fallback-eligible. UNKNOWN facts, unresolved predicates or missing required Context remain unresolved; do not silently convert them to PASS.
-
-### 5.2 Two execution modes
-
-- **Deterministic:** the Runtime Procedure Engine advances the selected, validated Procedure.
-- **LLM-guided:** Host/Agent runs the model loop and proposes the next Action inside the selected Skill's declared constraints.
-
-Both modes submit the same conceptual `RuntimeActionRequest` to the same Runtime Action Boundary. No direct Plugin call from the LLM and no second Tool dispatcher.
-
-## 6. Runtime boundary
+## 7. Runtime and Action boundary
 
 | Component | Owns | Does not own |
 |---|---|---|
-| Python Host | Plugin Manager, package loading, Task/Run orchestration, Formal Resolver, model loop orchestration, Context assembly, response coordination | business truth or a second authorization mechanism |
-| Python Agent | Intent understanding, constrained ambiguity resolution, LLM-guided next-action proposal | direct Plugin invocation, Capability grants, authoritative commit status |
-| Skill | Business Goal, applicability, required Context, Capabilities, Procedures, Predicates and completion conditions | Plugin lifecycle or Tool implementation |
-| Python Runtime | Skill Run state, exact Artifact/Capability binding, common Action Request, admission/authorization, Tool dispatch through Plugin Manager, Effect/Outcome/Evidence, Wait/Resume/Reconcile | LLM Model Loop or Plugin protocol parsing |
-| Deterministic Procedure Engine | Validated Procedure progression and Action derivation | independent Tool dispatch/authorization |
-| Plugin Manager | Plugin process lifecycle, IPC, extension discovery, Event ingress/delivery, Tool invocation transport | Skill selection, business authorization, business outcome |
-| Tool Plugin | Tool implementation and Owner-facing calls; return Tool result/receipt | Skill selection, Runtime authorization, Owner truth beyond its actual receipt |
-| Event Plugin | Protocol decoding/normalization and protocol response encoding | Skill selection, Run lifecycle, business Tool calls |
-| Owner | Authoritative business state and commit result | Agent reasoning |
+| Python Host / Agent | Model loop, reasoning, Skill discovery/selection, Context assembly, Skill import orchestration | Direct Tool invocation or authoritative business truth |
+| Skill | SKILL.md guidance; optional Assurance contract and Procedure | Plugin lifecycle or Tool implementation |
+| CA-SL Compiler | Assurance source validation, linking and Artifact generation/inspection | LLM Action execution or business Runtime |
+| Python Runtime | Run state, admission, Capability authorization, Action validation, Tool dispatch, Outcomes/Evidence, Wait/Resume/Reconcile | LLM Model Loop or Plugin protocol parsing |
+| Deterministic Procedure Engine | Advance a validated Procedure and derive the next Action | Independent Tool dispatch or authorization |
+| Plugin Manager | Process lifecycle, IPC and extension dispatch | Skill selection, authorization or Owner truth |
+| Tool Plugin | Execute the requested Tool and return its result/receipt | Granting itself permission or inventing Owner outcomes |
+| Owner | Authoritative external business state and commit result | Agent reasoning |
 
-The Runtime may contain the deterministic Procedure Engine. It does not contain the LLM Model Loop.
+### 7.1 Four distinct flows
 
-## 7. Context and Observation provenance
+**A. Import SKILL.md-only source**
 
-Context is a Host-assembled view of facts, not a new authority.
+~~~text
+SKILL.md
+   |
+   v
+Skill Importer
+   |
+   v
+LLM-guided Skill available
+~~~
 
-| Context item | Origin | Semantics |
-|---|---|---|
-| External request/Event | Event Plugin | Push input; retain event/package/schema/correlation reference |
-| Current business state | Tool Plugin READ operation | Pull Observation; retain Tool ID, Interface Package digest, invocation/result reference and freshness when supplied |
-| Execution result / Owner Receipt / Commit Proof | Runtime + Tool Plugin/Owner | authoritative execution Evidence; validate exact scope and identity |
-| Context requirements and business constraints | Selected Skill package | tells Host what facts are required |
-| Available actions | Selected Skill + admitted Interface Package/Plugin binding | declared Capability surface, not a model grant |
+No Assurance and no Compiler invocation.
 
-A model-generated sentence is not an Observation. A successful transport response is not automatically COMMITTED. READ and MUTATION both use the same Tool Plugin dispatch boundary, but their Effects and outcome semantics differ.
+**B. Import source with Assurance**
+
+~~~text
+SKILL.md + assurance source
+   |
+   v
+Skill Importer
+   |
+   v
+CA-SL Compiler: Check / Build
+   |
+   v
+Artifact Inspect / Verify
+   |
+   v
+Host Admission
+   |
+   v
+Skill available in both modes
+~~~
+
+**C. Import a compiled Artifact**
+
+~~~text
+SKILL.md + compiled Skill Artifact
+   |
+   v
+Skill Importer
+   |
+   v
+Artifact Inspect / Verify
+   |
+   v
+Host Admission
+   |
+   v
+Skill available in both modes
+~~~
+
+No rebuild.
+
+**D. LLM Action vs Skill Authoring**
+
+- An LLM-proposed individual Action is validated by the Runtime Action Boundary. It is not compiled into a temporary Procedure.
+- An LLM-created or LLM-edited SKILL.md-only package follows the ordinary no-Assurance import path.
+- An LLM-created or LLM-edited Assurance source follows the source import and Compiler path before it can be used deterministically.
+
+### 7.2 Shared Action path
+
+- Deterministic mode derives an Action from the admitted Procedure.
+- LLM-guided mode proposes an Action from Skill-scoped Context.
+- Both submit the same conceptual RuntimeActionRequest to the same Runtime Action Boundary.
+- Runtime validates Schema, selected Skill scope, Capability, Effect, budget and admission before dispatching through the Plugin Manager.
+- LLM cannot call Plugins directly, widen Capability grants, fabricate Evidence or declare an Owner mutation COMMITTED.
+- READ results remain Observations with provenance. MUTATION results follow their Owner Receipt/Commit Proof contract; UNKNOWN remains UNKNOWN.
 
 ## 8. End-to-end flow
 
-Solid arrows are runtime data flow. Dashed arrows are package/contract imports.
-
-```mermaid
+~~~mermaid
 flowchart TB
-  subgraph SUPPLY["Package and contract supply"]
-    MC["Mechanism contract<br/>Plugin IPC / Event / Action / Delivery"]
-    EPKG["Event Plugin package<br/>manifest + Event schemas + business contract ref"]
-    DPKG["Domain contract package<br/>business meaning + payload schema"]
-    SPKG["Skill package<br/>applicability + context + capabilities + procedures"]
-    IPKG["Tool Interface Package<br/>Callable + IO schemas + Effect + Capability + Owner outcomes"]
-    TPKG["Tool Plugin package<br/>implementation + private runtime binding"]
-    COMP["ca-skill-compiler<br/>validated Artifact / Variant / Lock"]
-  end
+  EXT[External Event / User Task] --> EP[Event Plugin]
+  EP --> PM[One Python Plugin Manager]
+  PM --> HOST[Python Host / Agent]
+  HOST --> CONT{Exact continuation?}
+  CONT -->|yes| RESUME[Resume original Run]
+  CONT -->|no| IMPORT[Skill Importer]
+  IMPORT --> SOURCE{Input kind}
+  SOURCE -->|SKILL.md only| GUIDANCE[LLM-guided Skill]
+  SOURCE -->|Assurance source| COMP[CA-SL Compiler]
+  SOURCE -->|Compiled Artifact| VERIFY[Artifact Inspect / Verify]
+  COMP --> VERIFY
+  VERIFY --> ADMIT[Host Admission]
+  ADMIT --> RESOLVER[Skill Resolver]
+  GUIDANCE --> RESOLVER
+  RESOLVER --> WHEN{Assurance when matches?}
+  WHEN -->|explicit match| SELECT[Bind exact Skill]
+  WHEN -->|no explicit match| SEMANTIC[Semantic candidates from SKILL.md]
+  SEMANTIC --> SELECT
+  SELECT --> MODE{Execution mode}
+  MODE -->|Deterministic| PROC[Validated Procedure]
+  MODE -->|LLM-guided| LOOP[LLM Model Loop]
+  PROC --> ACTION[RuntimeActionRequest]
+  LOOP --> ACTION
+  ACTION --> RT[One Runtime Action Boundary]
+  RESUME --> RT
+  RT --> PM
+  PM --> TOOL[Tool Plugin]
+  TOOL --> OWNER[Owner]
+  OWNER --> RESULT[Tool Result / Receipt]
+  RESULT --> RT
+  RT --> RESPONSE[Structured Host Response]
+  RESPONSE --> PM
+  PM --> EP
+~~~
 
-  subgraph EXEC["Python Agent Core and unified Plugin mechanism"]
-    EXT["External requester / AMF"]
-    EPLUGIN["Go Event Plugin<br/>event.ingress + event.delivery"]
-    PM["Python Plugin Manager<br/>one lifecycle + IPC + event.ingress / event.delivery / tools"]
-    EVENT["Normalized Event<br/>business contract ref + payload + correlation"]
-    HOST["Python Host<br/>validate + create/correlate Task"]
-    ENTRY{"Fresh request or continuation?"}
-    RES["Static eligibility + CEL when"]
-    CAND{"Explicit true matches"}
-    FALLBACK["Eligible Skills without when"]
-    STOP["Stop / request input"]
-    LLMSEL["LLM chooses from offered tier"]
-    SKILL["Exact Skill package binding"]
-    RESUME["Resume exact pending Run"]
-    MODE{"Mode after Skill selection"}
-    PROC["Formal Procedure Resolver<br/>source resolution + Compiler validation"]
-    ENGINE["Deterministic Procedure Engine"]
-    CTX["Host Context Assembly<br/>Event + READ Observations + Evidence"]
-    LOOP["LLM Model Loop"]
-    PROPOSE["Constrained Action Proposal"]
-    ACTION["Shared Runtime Action Request"]
-    RT["Python Runtime Action Boundary<br/>Run + Admission + Authorization + Dispatch"]
-    TOOLPM["Plugin Manager Tool extension"]
-    TPLUGIN["Go Tool Plugin<br/>e.g. ca-client-tools"]
-    OWNER["OpenAMSM Owner"]
-    RESULT["Tool Result / Owner Receipt"]
-    EVID["Runtime Outcome / Evidence"]
-    RESPONSE["Host structured response"]
-    DELIVERY["Plugin Manager delivery extension"]
-    OUT["External protocol response"]
-
-    EXT --> EPLUGIN --> PM --> EVENT --> HOST --> ENTRY
-    ENTRY -->|fresh| RES --> CAND
-    ENTRY -->|exact continuation| RESUME --> RT
-    ENTRY -->|invalid or duplicate| RESPONSE
-    CAND -->|0| FALLBACK
-    FALLBACK -->|empty| STOP
-    FALLBACK -->|available| LLMSEL
-    CAND -->|1| SKILL
-    CAND -->|multiple| LLMSEL --> SKILL
-    SKILL --> MODE
-    MODE -->|Deterministic| PROC --> ENGINE --> ACTION
-    MODE -->|LLM-guided| CTX --> LOOP --> PROPOSE --> ACTION
-    ACTION --> RT --> TOOLPM --> TPLUGIN --> OWNER
-    OWNER --> RESULT --> TPLUGIN --> RT --> EVID
-    EVID -.-> CTX
-    EVID --> RESPONSE --> DELIVERY --> EPLUGIN --> OUT
-    STOP --> RESPONSE
-  end
-
-  MC -.-> PM
-  EPKG -.-> EPLUGIN
-  DPKG -.-> EVENT
-  DPKG -.-> RES
-  SPKG -.-> RES
-  SPKG -.-> SKILL
-  SPKG -.-> CTX
-  IPKG -.-> COMP
-  IPKG -.-> RT
-  TPKG -.-> TPLUGIN
-  COMP -.-> PROC
-```
-
-The Plugin does not name the Skill. The Host resolves exact continuations first. For fresh requests it applies the static and CEL eligibility rules before selecting the execution mode. Both execution modes enter the same Runtime Action Boundary.
+The diagram describes the target flow, not current implementation status. A Skill must be imported and admitted before selection. A Skill with invalid Assurance is not a fallback LLM-only Skill.
 
 ## 9. What is reused from ca-agent-demo
 
-The source audit is in [ca-agent-demo audit](audit/ca-agent-demo.md). The short version:
+- Reuse selected Python Agent/model adapter, Formal Resolver primitives, Context, Tool contract validation, Outcome/Evidence and Run mechanisms after dependency/test review.
+- Replace current deployment-owned structuredEventRoutes / Root Routing with Skill package selection using Assurance contract.when plus SKILL.md semantic candidates.
+- Do not copy the 5GC-specific Root routing profile or Nsmf orchestration into Core.
+- Use the generic Provider loader from PR #246 as implementation evidence, but absorb process management into the one Plugin Manager.
+- Use PR #249 Event/Delivery IPC ideas selectively; its Agent-default / Skill-optional execution model is not the target.
+- Do not reuse MockCompiler as the real Compiler or assume MockRuntime is the final Runtime.
 
-- Reuse selected Python Agent, Formal Resolver, Context, Runtime Tool boundary, Outcome/Evidence and Run mechanisms where dependency/tests prove they are generic.
-- Replace current structured Event → Root routing configuration with package-owned Skill applicability and Formal-first resolution; do not copy the mapping table.
-- Do not reuse `MockCompiler` as the compiler or `MockRuntime` as a production engine. Integrate the real Go Compiler and build the new shared Runtime boundary.
-- Use the generic Provider loader from PR #246 as implementation evidence/input, but absorb Tool process management into the unified Plugin Manager.
-- Do not move the entire `integrations/fivegc/` directory or any Nsmf Run executor into the Plugin.
+## 10. External reusable projects and known implementation gap
 
-## 10. External reusable projects
-
-- `ca-skill-compiler v2.1.0`: independent Go compiler; invoke its CLI from Python and consume immutable Artifacts. Host admission remains separate.
-- `ca-client-tools v1.2.0`: independent Go Tool Plugin; use its Interface Package and runtime bindings. The existing `ca-client-tools.provider/v2` can be bridged by a Tool-Plugin driver in the common Plugin Manager.
-- `ca-skills`: consume CA-SL v1alpha5 Skill packages, including the existing Create/Modify/Release examples.
-- `ca-openamsm-plugin`: Go Event Plugin, currently design-only; align its Agent-first/optional-Skill wording with Skill-first before implementation.
-- No external Go source tree is copied into Python next.
+- ca-skill-compiler v2.1.0: independent Go Compiler. Python consumes its CLI/API; do not copy its source or reimplement semantics.
+- ca-client-tools v1.2.0: independent Go Tool Plugin and Interface Package. Adapt provider/v2 behind the unified Plugin Manager initially.
+- ca-skills: canonical CA-SL Skill sources and language specification. The v1alpha5 refresh adds Assurance contract.when and clarifies optional Assurance.
+- ca-openamsm-plugin: independent Go Event Plugin. Align its contract before implementation.
+- **Known gate:** current compiler support for the refreshed contract.when and SKILL.md-only package import is not yet established by this documentation review. Do not claim support, strip the field or implement a second compiler in Python. The Compiler owner must deliver/verify the matching v1alpha5 behavior before deterministic source import can pass.
 
 ## 11. Demo-level non-goals
 
-Defer production HA/distributed failover, complex multi-tenant security governance, Marketplace, central business registry, distributed Event Bus, cross-Plugin delivery, separate event database, complex compensation orchestration, broad legacy compatibility and elaborate DFX.
+Do not add:
 
-Keep only the minimum for a credible Demo: package/Schema validation, clear errors, exact Skill/Artifact/Capability identity, basic correlation, one Plugin Manager, one Runtime Action Boundary and runnable acceptance Examples.
+- extra SHA-256 hashing for Plugin packages or Event snapshots;
+- package/file integrity frameworks, package signatures or a Trust Registry;
+- Domain Contract Packages, TaskContract Packages or a second Skill descriptor;
+- separate Provider Manager, Tool registry, Runtime or authorization path;
+- legacy format compatibility or automatic migration;
+- Marketplace, installer, hot reload or automatic package downloads;
+- production HA, complex multi-tenant governance, distributed Event Bus, broad DFX or production qualification machinery.
+
+Keep basic YAML/Schema/version/reference validation, path containment, clear errors, explicit process configuration, minimal correlation and runnable acceptance Examples. Existing Compiler/Interface Package identities remain governed by their owning contracts; do not add a second Host-side digest or integrity system.
