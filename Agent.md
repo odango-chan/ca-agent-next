@@ -6,6 +6,7 @@
 
 ## 1. 任务开始流程
 
+0. 创建或引用覆盖本批变更的 Issue，并按[治理规范](docs/规范/文档编写与治理规范.md#14-分支命名与生命周期)命名新分支。
 1. 阅读 README.md、本文和 docs/治理/功能树与需求追踪基线.md。
 2. 根据用户任务、Issue 或 PR 变更识别仓库、Feature / IR / SR。
 3. 检查 SR 状态、依赖和 Acceptance；DRAFT / BLOCKED 不得直接实施。
@@ -14,6 +15,8 @@
 6. 实施后回填 SR、Issue、PR、Commit、Test 和验收证据。
 
 不要要求每项任务阅读所有设计文档。跨功能任务才同时加载多个 Feature。
+
+DeepSeek Harness 默认使用 Goal 模式。按[SR 管理规范](docs/规范/SR%20管理规范.md#9-deepseek-harness-goal-与交付门禁)组批，并在文档门禁和所需审查通过后生成执行提示词。
 
 ## 2. 仓库与语言边界
 
@@ -154,4 +157,5 @@ review_scope:
 | 2026-11-25 | Codex | 第 2 节 | 明确跨仓写入须获当前任务授权 | 区分实施就绪与写入授权 | PR #1 |
 | 2026-11-25 | Codex | 第 5 节 | EC02 Compiler 设计集中归档 | 明确设计与机器契约所有权 | SR-012、#2 |
 | 2026-11-25 | Codex / GPT-6 | §2、§5 | 明确中央设计归属 | 跨仓设计移交 | IR-006 |
+| 2026-11-25 | Codex | §1 | 加入 Issue、分支命名和 Goal 入口 | 统一交接门禁 | [Issue #5](https://github.com/odango-chan/ca-agent-next/issues/5) |
 | 2026-11-25 | Codex | 第 2 节 | 引用固定 PR SHA 的分阶段实施规则 | 支持先验证再定稿 | SR-013、PR #7 |

@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.1.8  
+> 文档版本：0.1.9  
 > 状态：DRAFT  
 > 创建日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -10,7 +10,7 @@
 
 目标仓：`odango-chan/ca-skill-compiler`。范围覆盖 Go/Python 互操作 PoC、Compiler Contract AST 与语义检查、新版 Artifact Schema、Build/Verify、fixture、Golden 和产品门禁。保持单一 Go Core、语言 v1alpha5、冻结发布 Artifact v1alpha5 及 Development v1alpha1；Development 继续 `NOT_ADMITTED`。Next SR-004/005 消费实际发布 Bundle，运行时无 Compiler 或 Skill Admission。
 
-启动条件：本 SR 经评审达到 READY，ca-skills #88 的 M.4 与 SA 导入职责已与 Next 对齐、正式发布且固定规范 SHA，具备目标仓写入授权和可运行 Go/Python 环境。PoC 为本 SR 的第一段验收；通过后再要求 Compiler Owner 确认新版 Artifact API 版本和布局。合并或发布另行授权。
+产品实施启动条件：本 SR 经评审达到 READY，ca-skills #88 的 M.4 与 SA 导入职责已与 Next 对齐、正式发布且固定规范 SHA，具备目标仓写入授权和可运行 Go/Python 环境。本地隔离 PoC 按下方阶段执行单执行；通过后再要求 Compiler Owner 确认新版 Artifact API 版本和布局。合并或发布另行授权。
 
 | 验收 ID | 通过条件 | 当前证据 |
 |---|---|---|
@@ -34,7 +34,7 @@ Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/6
 | 2026-11-25 | 0.1.0 | Codex 登记 Compiler 实施及验收范围 | 建立 #61 的 Next 实施与交接入口 | SR-013、SR-004/005 |
 | 2026-11-25 | 0.1.1 | 登记 M.4 / SA 的规范一致性门槛 | 防止消费端被要求调用 Compiler 或做 Admission | SR-013 |
 | 2026-11-25 | 0.1.2 | 更新设计评审引用 | 跟踪 #88 修订复审 | SR-013 |
-| 2026-11-25 | 0.1.3 | 固定正式规范 SHA | ca-skills #89 已合并 | SR-013 |
+| 2026-11-25 | 0.1.3 | 固定正式规范来源及仍待核验的启动条件 | #5 | SR-013 |
 ` 退出 0，仅验证 Compiler 包能编译。Python 使用 `from cel_expr_python import cel` 与 `cel.NewEnv()`，可加载自己生成的表达式。
 - 用 Go 编译常量 `true`。直接 `anypb.New(AstToCheckedExpr(...))` 产生 `type.googleapis.com/google.api.expr.v1alpha1.CheckedExpr`；Python `Env.deserialize` 拒绝，报告 INVALID_ARGUMENT。将 Go CheckedExpr protobuf 序列化，再解码为 `cel.dev/expr.CheckedExpr` 并用 `anypb.New` 包装，得到 `type.googleapis.com/cel.expr.CheckedExpr`；Python 直接加载该文件并求值为 true。以真实类型构造 Any，避免只替换类型 URL。
 - 下一步按正式规范补完整 AC-013-01：Go 导出同一 typed when 的 Any 和 FileDescriptorSet；Python 用同一 DescriptorSet 构造 DescriptorPool；记录两端的 true/false/error、optional 与 null、数值边界和多 Skill 隔离。同一工具版本下重跑直接包装失败与标准类型成功的对照。仍须验证类型和语义字段在转换前后完整保留，由 Compiler Owner 据此定冻结的新 Artifact 字段。
@@ -93,3 +93,4 @@ Go 静态编译另拒绝了未知字段和另一共享 descriptor 文件中未�
 | 2026-11-25 | 0.1.6 | 记录 nullable oneof 候选和作者语法转换缺口 | 明确 AC-013-01/02 的下一项实验 | SR-013 |
 | 2026-11-25 | 0.1.7 | 记录可复跑的源 AST 转换试验 | 为完整 Schema-aware 实施提供验收起点 | SR-013 |
 | 2026-11-25 | 0.1.8 | 放行隔离 AC-013-01 与记录既有 Schema/Lock 测试 | 提供明确的 DSH 下一步 | SR-013 |
+| 2026-11-25 | 0.1.9 | 保留正式规范来源与分阶段执行条件 | 合并 main 的治理更新 | SR-013、PR #7 |
