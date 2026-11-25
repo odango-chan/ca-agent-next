@@ -66,7 +66,7 @@ Host assembles the Model-visible Context from these sources and retains lightwei
 ## 7. Example-first development
 
 - Keep Examples in `examples/`; do not create a separate `ca-example` repository at this stage.
-- Every new externally observable extension or execution mechanism must include at least one runnable Example and an automated Acceptance Test in the same change set.
+- Every new externally observable extension or execution mechanism must add a new runnable Example case and an automated Acceptance Test in the same change set.
 - Examples must consume public mechanism contracts and the same external package/IPC boundaries that a real extension uses.
 - Examples must not import Agent `internal` packages or require business-specific Agent Core changes.
 - Internal refactoring with no new externally observable mechanism does not require a new Example.
