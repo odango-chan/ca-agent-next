@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：目标设计，待实现和验收  
-> 文档版本：0.3.3
+> 文档版本：0.3.4
 > 功能归属：F04 — Runtime 执行  
 > 关联 SR：SR-007    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -57,6 +57,8 @@ Runtime 在分发前至少核对：
 ### 4.2 LLM-guided
 
 没有 Assurance Artifact 的 Skill 只能使用 LLM-guided。有有效 Assurance Artifact 的 Skill 也可以使用 LLM-guided，但仍然受该 Skill 的 Callable Scope、Context 和 Runtime Action Boundary 约束。LLM 提出的 Action 不编译成临时 Procedure，不为每个 Action 调用 Compiler。
+
+对于只有 SKILL.md、没有可验证 Callable 声明的包，模型可生成指导答复或请求澄清；该包的有效 Callable 集为空。模型文本、已安装的 ToolCatalog 和 Plugin 列表均不能赋予调用权限。若模型仍提出 Tool Action，Runtime 在 dispatch 前拒绝并记录诊断。Echo 的有 Tool 双模式正例使用同一份有效 Assurance Bundle。
 
 两种模式共享同一个 Runtime Action Boundary、Plugin Manager、Outcome 和 Evidence 解释路径。
 
@@ -120,3 +122,4 @@ Skill/Artifact 无效、Callable Scope 不匹配、Schema 不匹配、Plugin 不
 | 2026-11-25 | 0.3.1 | GPT-6.2（ChatGPT） | 第 3 章 | 明确 Provider Interface 与 Owner Contract 是两个 Callable/Schema 来源，MAS `mas::` 引用只从 Owner snapshot 解析 | 修正 Runtime 把 Owner Callable 误认为 Provider Interface Package 导出的歧义 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.3.2 | GPT-6.2（ChatGPT） | 第 3 章 | 明确冻结 v1alpha5 Artifact 不携带 dependency snapshotDigest，Owner version pin 由 Provider sidecar / 部署配置提供 | 防止 Runtime 宣称逐 Skill 字节级依赖锁 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.3.3 | GPT-6.2（ChatGPT） | 第 3 章 | 补充 provider.yaml interfaceSnapshotDigest 对 Provider Interface snapshot 的部署级校验 | 与 Owner sidecar 的部署 pin 一起闭合 Provider / Owner 两类依赖 | IR-006 · SR-015 · Issue #12 |
+| 2026-11-25 | 0.3.4 | Codex / GPT-6 | 正文 | §4.2 明确未声明 Callable 时的运行行为 | 消除执行歧义并同步中央设计 | Issue #12 |

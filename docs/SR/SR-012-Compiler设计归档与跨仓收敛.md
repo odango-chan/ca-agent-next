@@ -1,6 +1,6 @@
 # SR-012 Compiler 设计归档与跨仓收敛
 
-> 文档版本：0.1.0  
+> 文档版本：0.1.1  
 > 状态：DRAFT  
 > 上游 IR：IR-006  
 > 创建日期：2026-11-25  
@@ -10,7 +10,7 @@
 
 目标是让 Next EC02 成为现行 Compiler 机制设计入口。设计依据为 [EC02 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.1.0 §1–4。
 
-范围为 ca-agent-next 的归档与跟踪，以及 ca-skill-compiler 的设计入口、重复设计正文和受影响的文档链接或清单。保留机器契约、实现、测试、示例、运行说明和发布证据。其他协作仓仅在发现重复 EC02 设计后，通过覆盖目标仓的 SR 处理。语言规范仍由 ca-skills 管理。Compiler #61 的实现及版本发布单独追踪。
+本 SR 的唯一实施仓为 `odango-chan/ca-skill-compiler`。Next 上的 EC02、IR/SR 和审计属于中央设计输入与结果回填。以 Compiler `255ab85fa5abb4b0bf36656bf64250cafebf45cb` 的 README.md、README.zh-CN.md 为导航入口，对 `git ls-tree -r --name-only HEAD docs` 中的活动设计逐项比对 EC02。仅在可定位到已评审的中央章节时将重复正文改为链接；无法对应的条目列为差异并保留原文。用 `git diff --name-status` 检查变更仅落在已登记的文档，逐个验证新增的中央链接在 Next 默认分支可达。保留机器契约、实现、测试、示例、运行说明和发布证据。其他协作仓仅在发现重复 EC02 设计后，通过覆盖目标仓的 SR 处理。语言规范仍由 ca-skills 管理。Compiler #61 的实现及版本发布单独追踪。
 
 依赖：本设计完成评审并进入 Next main，中央链接可达，本 SR 达到 READY。跨仓实施按 Agent.md 执行。
 
@@ -27,3 +27,4 @@ Issue [Next #2](https://github.com/odango-chan/ca-agent-next/issues/2)；依赖�
 | 日期 | 版本 | 修订者 | 章节 | 修改内容 | 原因 | 关联 |
 |---|---|---|---|---|---|---|
 | 2026-11-25 | 0.1.0 | Codex | 全文 | 建立 EC02 设计基线 | 集中维护及验证交接 | IR-006、SR-012、#2 |
+| 2026-11-25 | 0.1.1 | Codex / GPT-6 | 正文 | 明确唯一实施仓与文档移交流程 | 消除执行歧义并同步中央设计 | Issue #12 SR-012 |

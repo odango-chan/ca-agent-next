@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.3\
+> 文档版本：0.3.4\
 > 状态：待评审；全部 SR 当前为 DRAFT，不允许直接实施  
 > 修订日期：2026-11-25  
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -57,7 +57,7 @@
 |---|---|---|---|---|
 | 1 | SR-023 | CA-SL v1alpha5、作者源与发布基线恢复 | ca-skills | 先固定语言、Skill 作者源与版本边界；Compiler #61 仍是外部 OPEN 依赖 |
 | 2 | SR-015 | Tool Interface / Provider / Codec 设计恢复 | ca-client-tools → Next F03.05 | 明确公开 Callable、Owner Contract、Provider v2 和单一 Plugin Manager 消费 |
-| 3 | SR-025 | MAS Owner Development Interface Package Publisher | ca-client-tools → Next F03.05 / F09 | 将 Owner v1alpha4 source 包装为 Compiler v2.1.0 Development Interface Package；package/source version 需先解决 SemVer 决策 |
+| 3 | SR-025 | MAS Owner Development Interface Package Publisher | ca-client-tools → Next F03.05 / F09 | 将 Owner v1alpha4 source 包装为 Compiler v2.1.0 Development Interface Package；package.version 固定为 `1.0.0` |
 | 4 | SR-024 | Host Context Interface Package Publisher | ca-agent-demo → Next F09 | 发布 Host Context Development fixture 的正式 Interface Package；不占用 SR-020 的参考宿主审计 ID |
 | 5 | SR-018 | OpenAMSM Owner 权威状态恢复 | env-openamsm | 固定 Callable、Receipt、Commit Proof、Reconcile 和 Modify/Release 边界 |
 | 6 | SR-019 | Mock AMF / 5GC 仿真对端恢复 | env-5gc-sim | 固定协议对端、World、进程和真实测试边界 |
@@ -113,3 +113,4 @@
 | 2026-11-25 | 0.3.2 | 同步当前权威设计或审计证据 | 核对 Issue #12 与固定提交 | 见就绪审计 |
 
 | 2026-11-25 | 0.3.3 | GPT-6.2（ChatGPT） | §2～4 | 新增 ca-client-tools MAS Owner Development Interface Package Publisher SR-025，并将其置于 SR-015 设计之后、SR-024 Host Publisher 之前 | 按目标仓分离 Owner 与 Host Publisher，避免把中央设计 SR 当作外部代码实施 SR | Issue #12；SR-015、SR-016、SR-024、SR-025 |
+| 2026-11-25 | 0.3.4 | Codex / GPT-6 · 同步 Publisher 身份、版本和验收边界 | 对齐当前架构与实施门禁 | Issue #12 |

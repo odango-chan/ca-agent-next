@@ -1,7 +1,7 @@
 # SR-009：OpenAMSM SBI 事件插件与二进制产物交接
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.5  
+> SR 版本：0.1.6  
 > 状态：DRAFT；设计基线待评审，不允许实施  
 > 创建日期：2026-11-25  
 > 所属阶段：Phase G  
@@ -31,7 +31,7 @@
 
 ## 4. 依赖与前置条件
 
-SR-008、SR-003；外部依赖为 ca-openamsm-plugin 设计/实现契约。
+SR-008、SR-003；输入是 SR-017 固定的候选设计及 F03/F05 正式接口，按阶段确认批准的设计 SHA。该仓现有实现不作为开发自身的前置。
 
 进入 READY 前必须确认所有前置 SR 已 VERIFIED，或在 SR 中明确记录并批准并行实施理由；外部依赖必须有可核对的版本、接口和可用证据。
 
@@ -44,6 +44,10 @@ SR-008、SR-003；外部依赖为 ca-openamsm-plugin 设计/实现契约。
 5. Delivery 只访问本次 responseObligation 授权的输出。
 
 验收时必须引用演示验收基线中的对应 Acceptance ID，并记录真实执行命令、测试结果、Example 和覆盖范围。未执行项保持 NOT_RUN。
+
+### Plugin 独立验收与组合证据
+
+建议实现位置为 `cmd/openamsm-plugin`，从插件仓根执行 `go test ./... -count=1` 和 `go build ./cmd/openamsm-plugin`。用测试 Host 经 stdin/stdout 握手驱动进程，回放 Create、0xC9、0xD1、截断与歧义 discriminator 的 SBI 样本，记录归一化 Event、slot、相对路径、字节比对及 delivery correlation。对重复请求使用同一协议身份。OM-02/05～08 中涉及选技、ArtifactStore、精确 Run 与去重的断言须另附 Next 组合证据；模拟 Host 的通过只覆盖 Plugin 一侧。
 
 ## 6. 实施关联
 
@@ -75,3 +79,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-25 | 0.1.3 | 更新 F05/F06/Plugin IPC 设计版本，并将 Go Event/Delivery Plugin 的实施目标仓更正为 ca-openamsm-plugin | 设计仓与实际代码仓分离；防止将插件实现错误归入 Next Host | Issue #12 |
 | 2026-11-25 | 0.1.4 | 更新 F05 至 v0.4.0，并将 Event/Delivery Plugin 的 staging 职责与 Next Host ArtifactStore / Tool Channel 明确分离 | 防止把 Host 实现责任错误计入 ca-openamsm-plugin；Host 侧由 SR-010 追踪 | Issue #12；SR-009、SR-010 |
 | 2026-11-25 | 0.1.5 | 更新 F05/F06/Plugin IPC 设计依据至当前版本；同步冻结的 Host Artifact Store v1 与 Codec Consumer 分层状态 | 避免 SR-009 继续指向过期设计版本，确保 Plugin staging 和 Host→Tool Channel 的实施边界一致 | Issue #12；F05 v0.4.1；F06 v0.2.2；Plugin IPC v0.2.2 |
+| 2026-11-25 | 0.1.6 | Codex / GPT-6 · §4～5 清除自依赖，区分协议组件和组合验收 | 对齐当前架构与实施门禁 | Issue #12 SR-009 |

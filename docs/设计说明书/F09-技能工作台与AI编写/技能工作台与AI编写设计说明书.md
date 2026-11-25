@@ -1,7 +1,7 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.5  
+> 文档版本：0.3.6  
 > 状态：待评审  
 > 修订日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -70,18 +70,18 @@ Compiler v2.1.0 Development Build 使用 `connectionagent.io/interface-package/v
 
 Compiler v2.1.0 的 `validDevelopmentVersion` 只接受 exact SemVer（`major.minor.patch[-prerelease][+build]`）；BuildRequest parser 会拒绝 `v1alpha4` 和 `v1`，诊断为 `DEVELOPMENT_SNAPSHOT_INVALID`，即使 Interface Package JSON Schema 的 `version` 属性本身只声明为字符串。当前 MAS Skill 的 `Contract.dependencies` 只声明 Package ID，不固定 package version，因此可以保持 Package ID 和源契约版本不变，为 Development Interface Package envelope 单独选择 SemVer。
 
-建议映射（**待用户明确确认；确认前 SR-024 / SR-025 均保持 DRAFT**）：
+两种包各自从首版 `1.0.0` 开始；锁与请求按完整 Package ID 和版本识别：
 
-| Contract root | 原始源版本 | Compiler Interface Package version（建议） |
+| Contract root | 原始源版本 | Compiler Interface Package version（确定值） |
 |---|---|---|
-| `urn:openamsm:mas:tool-contracts` | Owner source `v1alpha4` | `1.0.0-alpha.4` |
-| `urn:connectionagent:ca:host-context` | Subject Schema ID `v1` | `1.0.0-dev.1` |
+| `urn:openamsm:mas:tool-contracts` | Owner source `v1alpha4` | `1.0.0` |
+| `urn:connectionagent:ca:host-context` | Subject Schema ID `v1` | `1.0.0` |
 
-若必须让 Interface Package `version` 原样等于 `v1alpha4` / `v1`，则 Compiler v2.1.0 不满足要求，必须另行升级 Compiler 契约/实现；不得把非 SemVer 值塞入 v2.1.0 BuildRequest，也不得静默改写源版本。
+两个不同的 Package ID 可以使用相同的包版本。重开工程后 lock、snapshot key、package.json 三者应能按各自的身份相等匹配；原始 Owner version 与 Schema ID 单独核对。
 
 **MAS Owner Interface Package**
 
-- 固定 Package ID：`urn:openamsm:mas:tool-contracts`；Publisher：`openamsm.smf.mas`；Language Target：`connectionagent.io/v1alpha5`。源版本仍为 Owner v1alpha4；建议 Development Interface Package version 为 `1.0.0-alpha.4`，由 SR-025 实现。
+- 固定 Package ID：`urn:openamsm:mas:tool-contracts`；Publisher：`openamsm.smf.mas`；Language Target：`connectionagent.io/v1alpha5`。源版本仍为 Owner v1alpha4；Development Interface Package version 为 `1.0.0`，由 SR-025 实现。
 - Owner source manifest 的 `operations` 包含 **25 个已发布 contracts**（23 个业务 Callable + Receipt Query / Reconcile 两个 evidence operations）；`notPublished` 另列 7 个旧 Callable，不能把它们计入 25 个 published contracts。Provider 内部另有 8 个 legacy typed callable，其中 `UPN.MODIFY_QOS_FLOWS` 不属于 Owner ToolCatalog；两组排除清单不得混淆。
 - `CallableCatalog` exports 精确 25 项，来源为 Owner v1alpha4 原始 `tool-catalog.yaml`；Receipt Query 是受 Capability/Scope 约束的 READ Callable，Reconcile 是专用 Reconcile target，不得作为普通 `operation.tool` 调用。
 - Owner `capability-contracts.yaml` 是 `connectionagent.io/capability-contracts/v1alpha4`，结构为 `spec.capabilities[].callables[]`，不能直接作为 Compiler Development CapabilityCatalog。Publisher 生成唯一确定性投影 `capability-catalog.yaml`：24 个 Capability ID、25 个公开成员，结构为 `capabilities: [{id, members: [{callableId}]}]`；不包含 owner/effect/scopePolicyRef，不构成 Grant 或 Trust。
@@ -93,7 +93,7 @@ Compiler v2.1.0 的 `validDevelopmentVersion` 只接受 exact SemVer（`major.mi
 
 **Host Context Interface Package**
 
-- 固定 Package ID：`urn:connectionagent:ca:host-context`；Publisher：`urn:connectionagent:owner:ca-context`；Language Target：`connectionagent.io/v1alpha5`。Subject Schema 的 `$id` 版本仍为 `v1`；建议 Compiler Interface Package version 为 `1.0.0-dev.1`，由 SR-024 实现。
+- 固定 Package ID：`urn:connectionagent:ca:host-context`；Publisher：`urn:connectionagent:owner:ca-context`；Language Target：`connectionagent.io/v1alpha5`。Subject Schema 的 `$id` 版本仍为 `v1`；Compiler Interface Package version 为 `1.0.0`，由 SR-024 实现。
 - ZIP 仅含根 `package.json` 与原始 `subject.schema.json`；只导出一个 `Schema`，ID 精确为 `urn:connectionagent:ca:context:subject:v1`；`dependencies=[]`；`files[]` 只列出原始 Schema 文件的 SHA-256。不得重写或重新序列化 Schema。
 - Source Revision `57e277ff9094dad93543df46910a12a1dbbaf560` 与 Git blob `4faee66642b8bc5eb2e45c131be4688b982037d8` 固定在 SR-024 / Publisher 验收中；Studio lock 不重复保存 source Revision/Git blob。该包是 Development fixture，不是生产 Host Trust 或 Admission。
 
@@ -148,7 +148,7 @@ Package Explorer、LSP、Problems 与 AI Workbench 必须区分源码诊断、�
 | Compiler v2.1.0 Node/Browser Worker | OPEN / DRAFT / STALE | [Studio #276](https://github.com/odango-chan/ca-skill-studio-demo/pull/276)，测试 HEAD `7d6adeb`，落后 #272 base 9 commits |
 | Package Audit Development Build cutover | NOT_IMPLEMENTED | [Studio #269](https://github.com/odango-chan/ca-skill-studio-demo/issues/269) |
 | AI Authoring exact-candidate Development Build gate | NOT_IMPLEMENTED | [Studio #269](https://github.com/odango-chan/ca-skill-studio-demo/issues/269) |
-| MAS / Host Context formal Interface Package publication | BLOCKED | 当前锁定 kind 分别为 `tool-catalog` / `schema-bundle`；MAS Owner Publisher 归 SR-025，Host Context Publisher 归 SR-024；两个 package.version 的 SemVer 映射待用户确认，发布物尚未产生 |
+| MAS / Host Context formal Interface Package publication | BLOCKED | 当前锁定 kind 分别为 `tool-catalog` / `schema-bundle`；MAS Owner Publisher 归 SR-025，Host Context Publisher 归 SR-024；两个 Package ID 各自使用首版 `1.0.0`，发布物尚未产生 |
 | Host fixture provenance in Studio lock | NOT_IMPLEMENTED | #267 已持久化 ZIP source metadata（upload/contentDigest/packageId/version/publisher），但尚未写入 `source.sourceStatus`；由 SR-016 / Studio #269 补齐 |
 | Real released ca-client-tools v1.1.0 as Compiler root | NOT_RUN | 需显式 `ca-client` synthetic Contract 正例 |
 | No-root UI state | NOT_IMPLEMENTED | 不调用 Compiler、无 Artifact、无 `NOT_ADMITTED` |
@@ -174,3 +174,4 @@ EC06 历史决策已统一归档于中央仓：[ADR-0001 Source-first Visual](..
 | 2026-11-25 | 0.3.4 | GPT-6.2（ChatGPT） | §8 | 将 EC06 ADR-0001/0002 与 Plugin-managed/C4 原文纳入中央仓，并将 F09 历史决策和原始设计引用切换为 Next 内部链接 | 关闭原始设计缺失与跨仓引用断链；不改变历史决策内容 | Issue #12；EC06-ADR-0001～0005；SR-016、SR-024 |
 
 | 2026-11-25 | 0.3.5 | GPT-6.2（ChatGPT） | §4.5、§6～7 | 将 MAS Owner Publisher 独立归入 SR-025、Host Publisher 归入 SR-024；按 Compiler v2.1.0 修正 MAS exports 为 25/24/25/53；发现 v1alpha4/v1 非 SemVer，提出 package/source version 分离决策门槛 | 防止发布无法被 Development Build 接受的版本，同时保持 Owner/Host 源身份与 Studio lock 边界 | IR-006 · SR-015 · SR-016 · SR-024 · SR-025 · Studio #269 |
+| 2026-11-25 | 0.3.6 | Codex / GPT-6 | 正文 | 同步两个 Publisher 的 1.0.0 身份与消费边界 | Issue #12 |

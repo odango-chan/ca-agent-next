@@ -1,7 +1,7 @@
 # SR-024：Host Context Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.4
+> SR 版本：0.1.5
 > 状态：DRAFT
 > 创建日期：2026-11-25
 > 所属阶段：跨仓设计移交
@@ -18,7 +18,7 @@
 ## 2. 实施范围
 
 - 将 Host-owned subject Context Schema fixture 发布为 Compiler v2.1.0 可消费的正式 `connectionagent.io/interface-package/v1alpha1` 包，供 Contract root `ca-context: urn:connectionagent:ca:host-context` 使用。
-- 正式包身份固定为 `packageId=urn:connectionagent:ca:host-context`、`publisher=urn:connectionagent:owner:ca-context`、`languageTarget=connectionagent.io/v1alpha5`。Subject Schema `$id` 的源版本固定为 `v1`；Compiler v2.1.0 的 Interface Package `package.json.version` 必须是 exact SemVer，不能直接填 `v1`。建议 formal package version `1.0.0-dev.1`，待用户确认；若要求 package.version 原样为 `v1`，则必须升级 Compiler 契约/实现。
+- 正式包身份固定为 `packageId=urn:connectionagent:ca:host-context`、`publisher=urn:connectionagent:owner:ca-context`、`languageTarget=connectionagent.io/v1alpha5`。Subject Schema `$id` 的源版本固定为 `v1`；Compiler v2.1.0 的 Interface Package `package.json.version` 必须是 exact SemVer，不能直接填 `v1`。本包首版为 `1.0.0`，manifest 与 Development snapshot key 逐字一致。
 - 包内只包含原始 `subject.schema.json`，发布一个 `Schema` export：ID 精确等于 `$id=urn:connectionagent:ca:context:subject:v1`，路径为 `subject.schema.json`。Schema 原始字节不得重写或重新序列化。
 - 正式 `package.json` 严格遵循 Compiler v2.1.0 `contracts/development/v1alpha1/interface-package.schema.json`，其 `files[]` 对精确 Schema 字节计算 SHA-256；这是既有 Interface Package schema 要求的逐文件字段，不是 CA-SL Skill Artifact 的额外包级完整性机制。不得增加 manifest-level digest、签名、Trust Registry 或 Admission；无包依赖时 `dependencies: []`。若“无 SHA-256”约束也要求删除此既有字段，必须先由 Compiler Owner 修改并发布 schema，Publisher 不得自行省略。
 - 来源身份固定为 repository `odango-chan/ca-agent-demo`、ref `refs/heads/main`、path `tests/fixtures/compiler/mas-v1alpha5-scheme-c/trusted/snapshots/ca-context`、Revision `57e277ff9094dad93543df46910a12a1dbbaf560`、Git blob `4faee66642b8bc5eb2e45c131be4688b982037d8`。
@@ -38,11 +38,11 @@
 
 - 新增 `scripts/publish_host_context_interface_package.py`：读取本 SR 固定的 `subject.schema.json`；使用 Git blob 规则校验源文件 ID；以原始字节生成 `package.json` 和 ZIP；使用 Python 标准库 `json`、`hashlib`、`zipfile`，并复用仓库已有 `jsonschema` 依赖校验官方 schema。
 - 新增 `tests/test_host_context_interface_package.py`：覆盖源路径/Blob pin、manifest schema、固定身份、唯一 Schema export、原始字节、逐文件 `files[].sha256`、ZIP entries 和禁止字段。
-- 输出默认写入 `dist/interface-packages/ca-host-context-v1.zip`（`dist/` 已在仓库 `.gitignore` 中）；命令允许 `--out` 覆盖，不提交生成 ZIP，不创建 GitHub Release、Registry 或生产发布流程。
+- 输出默认写入 `dist/interface-packages/ca-host-context-1.0.0.zip`（`dist/` 已在仓库 `.gitignore` 中）；命令允许 `--out` 覆盖，不提交生成 ZIP，不创建 GitHub Release、Registry 或生产发布流程。
 
 ```bash
 SCHEMA="$(mktemp)"
-OUT="$(mktemp -d)/ca-host-context-v1.zip"
+OUT="$(mktemp -d)/ca-host-context-1.0.0.zip"
 curl -fsSL https://raw.githubusercontent.com/odango-chan/ca-skill-compiler/v2.1.0/contracts/development/v1alpha1/interface-package.schema.json -o "$SCHEMA"
 test "$(git hash-object "$SCHEMA")" = "f4cd831d21afd15665c92e99ffe2c3b31a3583df"
 uv run python scripts/publish_host_context_interface_package.py --schema "$SCHEMA" --out "$OUT"
@@ -56,11 +56,11 @@ make verify
 
 - AC-024-01：Publisher 从固定 source path 读取 `subject.schema.json`，Git blob 校验结果精确等于 `4faee66642b8bc5eb2e45c131be4688b982037d8`；源文件未重写、未重新序列化。
 - AC-024-02：Publisher 使用 Compiler v2.1.0 官方 schema（tag 与 Git blob pin 如 §3）验证 `package.json`；不得复制或自行扩展 schema。
-- AC-024-03：身份字段精确等于 `packageId=urn:connectionagent:ca:host-context`、`publisher=urn:connectionagent:owner:ca-context`、`languageTarget=connectionagent.io/v1alpha5`；`package.json.version` 必须为经用户确认的 exact SemVer（建议 `1.0.0-dev.1`），Schema `$id` 保持源版本 `v1`；`dependencies=[]`，只发布一个 `Schema` export。
+- AC-024-03：身份字段精确等于 `packageId=urn:connectionagent:ca:host-context`、`publisher=urn:connectionagent:owner:ca-context`、`languageTarget=connectionagent.io/v1alpha5`；`package.json.version` 必须为字符串 `1.0.0`，Schema `$id` 保持源版本 `v1`；`dependencies=[]`，只发布一个 `Schema` export。
 - AC-024-04：Schema export ID 精确等于原始 Schema `$id` `urn:connectionagent:ca:context:subject:v1`，路径为 `subject.schema.json`；`files[].sha256` 对原始文件字节计算且校验通过；`package.json` 不含 `sourceStatus` 或 schema 未声明的额外字段。
 - AC-024-05：ZIP 恰好包含 `package.json` 与 `subject.schema.json`；两次构建产生相同文件字节、entry 顺序和归一化元数据；不提交 ZIP，不创建 Release/Registry。
 - AC-024-06：`uv run pytest -q tests/test_host_context_interface_package.py` 与 `make verify` PASS。Studio #267 导入和 lock provenance、Compiler Build + VerifyDevelopment 的端到端消费验收由 SR-016 负责，不重复计入本 SR。
-- AC-024-07：Compiler v2.1.0 的 `validDevelopmentVersion` 拒绝字面版本 `v1`；本 SR 只有在用户确认 SemVer package version 映射后才能 READY。若用户要求 package.version 保持 `v1`，必须先升级 Compiler 契约/实现，不得把当前 Publisher 产物标记为可供 v2.1.0 Build。
+- AC-024-07：Compiler v2.1.0 的 `validDevelopmentVersion` 拒绝字面版本 `v1`；正例在 manifest 和 snapshot key 使用 `1.0.0`。负例分别使用源版本、带后缀版本和不匹配的 key，按 Publisher 身份或 Compiler 输入校验层分别断言失败。
 
 ## 5. 实施关联与执行门禁
 
@@ -78,3 +78,4 @@ make verify
 | 2026-11-25 | 0.1.3 | GPT-6.2（ChatGPT） | §1～5 | 同步 F09 v0.3.4 与中央归档的 CA-SL/EC06 源材料入口；Publisher 范围与验收不变 | 保持 SR 设计依据指向唯一中央版本 | Issue #12；F09 v0.3.4；SR-016 |
 
 | 2026-11-25 | 0.1.4 | GPT-6.2（ChatGPT） | §2～5 | 发现 Compiler v2.1.0 Development BuildRequest 要求 exact SemVer，`v1` 不能作为 package.version；保留 Schema `$id` v1，提出 `1.0.0-dev.1` package version 决策门槛 | 防止 Host Publisher 产出无法被 Compiler 接受的 Interface Package；不增加 Release、sidecar 或额外 Trust 机制 | Issue #12；F09 v0.3.5；SR-016 |
+| 2026-11-25 | 0.1.5 | Codex / GPT-6 | 正文 | §2～4 固定 Host 包版本、文件名与负例 | Issue #12 SR-024 |
