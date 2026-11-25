@@ -82,7 +82,7 @@ flowchart TB
 | Skill Importer | 读取 SKILL.md 和已发布 Artifact，检查基本结构/必需文件/依赖，生成 Catalog 候选代际 | 调用 Compiler、Build/Verify、Skill Admission |
 | SkillCatalog | 进程内 Skill 快照、缓存的 SKILL.md、候选元数据、已反序列化 when 程序和代际 | Plugin 生命周期、Tool 调度 |
 | Skill Resolver | 精确 continuation 优先；对新 Event 评估 when 并完成候选选择 | 执行 Procedure 或直接调用 Tool |
-| Runtime | Run 执行、Declared Callable Scope 检查、Action 分发、Outcome/Evidence、Wait/Resume/Reconcile | Compiler Admission、生产级授权、LLM Model Loop、外部 SBI 协议解析 |
+| Runtime | Run 执行、Declared Callable Scope 检查、Action 分发、Outcome/Evidence、Wait/Resume/Reconcile | Compiler 调用、Skill Admission、生产级授权、LLM Model Loop、外部 SBI 协议解析 |
 | Procedure Engine | 推进已发布 Artifact 中的确定性 Procedure 并提出 Action | 独立授权或直接调用 Plugin |
 | Plugin Manager | Plugin 进程生命周期、握手、IPC、关联与 Extension 分发 | Skill 选择、Action 授权、Owner 结果判断 |
 | Plugin | 实现声明的 Event、Delivery 或 Tool Extension | 选择 Skill、授予 Capability、改变 Owner 结果 |
