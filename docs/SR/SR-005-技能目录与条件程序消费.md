@@ -1,0 +1,69 @@
+# SR-005：SkillCatalog 与已检查 when 程序消费
+
+> 文档类型：软件需求（SR）  
+> SR 版本：0.1.0  
+> 状态：DRAFT；设计基线待评审，不允许实施  
+> 创建日期：2026-11-25  
+> 所属阶段：Phase D  
+> 设计依据：技能导入与选择设计说明书 §5、§7；发布产物与 CEL 运行时互操作设计说明书 §5～§8  
+> Acceptance：EX-21～EX-23、EX-25～EX-29  
+> 全局评审范围：继承根目录 Agent.md 的 review_scope  
+> 本文局部非目标：见第 3 节
+
+## 1. 目标
+
+实现 Core-owned 的进程内 SkillCatalog，导入时驻留 Skill 内容与已检查 when 程序，避免每个 Event 重读 Skill 文件或解析 CEL。
+
+## 2. 实施范围
+
+- 构建不可变 Catalog generation，保存 SKILL.md、候选元数据、Artifact 引用、已反序列化 when 程序和类型环境。
+- 显式导入/更新时构建候选 generation，成功后原子激活，失败保留旧 generation。
+- 每个新 Event 使用当前 input 独立求值，不缓存跨 Event 结果。
+- Invocation 固定其选择时的 Catalog generation。
+
+## 3. 非目标
+
+- 不建立独立 Skill Registry 服务、文件监视器、自动下载或通用热更新。
+- 不在 Event 热路径读取 SKILL.md/Artifact、扫描目录或调用 Compiler。
+
+## 4. 依赖与前置条件
+
+SR-004；外部依赖为 ca-skill-compiler 发布 CheckedExpr/DescriptorSet 格式及 Python CEL Runtime。
+
+进入 READY 前必须确认所有前置 SR 已 VERIFIED，或在 SR 中明确记录并批准并行实施理由；外部依赖必须有可核对的版本、接口和可用证据。
+
+## 5. 验收条件
+
+1. SKILL.md 全文和候选元数据从内存读取。
+2. when 在导入时反序列化一次，每个 Event 用当前 input 独立求值。
+3. Catalog 更新原子激活；失败保留旧 generation。
+4. Invocation 始终使用固定 generation。
+5. Go CheckedExpr 发布物与 Python Runtime 的真实互操作 fixtures 通过。
+
+验收时必须引用演示验收基线中的对应 Acceptance ID，并记录真实执行命令、测试结果、Example 和覆盖范围。未执行项保持 NOT_RUN。
+
+## 6. 实施关联
+
+| 项目 | 当前值 |
+|---|---|
+| 实施仓库 | ca-agent-next |
+| GitHub Issue | 未创建 |
+| 实施 PR | 未创建 |
+| Commit | 无 |
+| 实施状态 | NOT_STARTED |
+| 验收证据 | NOT_RUN |
+
+ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在此标记实施完成。
+
+## 7. 变更与替代关系
+
+- supersedes：无
+- superseded by：无
+- 影响分析：初始分解；等待设计基线评审。
+- 本 SR 的范围和验收条件在进入 READY 后冻结。后续发生语义变化时创建新的 SR 并引用本 SR，不覆盖历史要求。
+
+## 修订记录
+
+| 日期 | 版本 | 修订内容 | 原因 | 影响 SR |
+|---|---|---|---|---|
+| 2026-11-25 | 0.1.0 | 建立初始需求草案 | 从当前架构、设计说明书和 Acceptance 分解 | SR-005 |
