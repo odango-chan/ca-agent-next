@@ -1,7 +1,7 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录  
-> 文档版本：0.1.0  
+> 文档版本：0.1.1  
 > 状态：候选基线，待 PR #1 评审  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级需求管理平台
@@ -63,8 +63,19 @@ IR 编号稳定。GitHub Issue 用于讨论、分派和跟踪，一个 IR 可关
 - 架构、设计和规范：[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md)、[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md)、[插件包与进程通信协议规范](../规范/插件包与进程通信协议规范.md)、[Plugin平台设计说明书](../设计说明书/F03-Plugin平台/Plugin平台设计说明书.md)、[公共契约与所有权规范](../规范/公共契约与所有权规范.md)、[演示验收基线](../验收与实施/演示验收基线.md)。
 - 完成依据：对应 SR 的必需验收全部 VERIFIED；当前均为 DRAFT，证据未执行。
 
+## IR-006
+
+**Compiler 设计归档与跨仓收敛**
+
+集中维护 Compiler 机制与冻结决策，使 Harness 能依据已验证的依赖和验收门槛交接。
+
+- 协作 Issue：[Next #2](https://github.com/odango-chan/ca-agent-next/issues/2)、[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)（独立实现依赖）。
+- 实施分解：[SR-012](../SR/SR-012-Compiler设计归档与跨仓收敛.md)。设计：[EC02 Compiler 设计](../设计说明书/EC02-Compiler/Compiler设计说明书.md)。
+- 完成依据：AC-012-01～03。跨仓清理待 READY。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订内容 | 原因 | 影响 SR |
 |---|---|---|---|---|
 | 2026-11-25 | 0.1.0 | 登记五项 IR 及其实施分解 | 建立双向需求追踪 | SR-001～SR-011 |
+| 2026-11-25 | 0.1.1 | 更新 EC02 归档与追踪 | 对齐中央设计及 Compiler #61 | SR-012 |
