@@ -235,13 +235,21 @@ flowchart TB
     CLIENT["Original requester"]
 
     EXT --> PL --> EV --> HOST --> RES --> CAND
+    FORMAL_WIN["Formal rules resolve one candidate"]
     CAND -->|0| STOP
     CAND -->|1| ONE
-    CAND -->|N unresolved| AMB --> LLMSEL --> ID
-    ONE --> ID --> BIND --> MODE
+    CAND -->|N, formal rules resolve one| FORMAL_WIN
+    CAND -->|N unresolved| AMB
+    AMB --> LLMSEL --> ID
+    ONE --> ID
+    FORMAL_WIN --> ID
+    ID --> BIND --> MODE
     MODE -->|Deterministic| PROC --> PCAND
+    PFORMAL["Formal rules resolve one Procedure"]
     PCAND -->|Unique| SOURCE
+    PCAND -->|N, formal rules resolve one| PFORMAL
     PCAND -->|Ambiguous| PAMB --> SOURCE
+    PFORMAL --> SOURCE
     SOURCE --> VALID --> ART --> ENGINE
     MODE -->|LLM-guided| CTX --> AGENT --> PROPOSAL
     ENGINE -->|Procedure Action| ACTION
