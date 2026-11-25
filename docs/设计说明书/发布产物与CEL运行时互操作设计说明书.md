@@ -1,6 +1,7 @@
 # 发布产物与 CEL 运行时互操作设计说明书
 
 **文档状态：** 跨组件机制设计；Compiler 与 Python 互操作尚未实现、尚未验收  
+**文档版本：** 0.1.0  
 **适用范围：** CA-SL v1alpha5 作者源发布、Compiler 已检查程序 Artifact、Python CEL Runtime 消费接口  
 **关联任务：** [ca-skill-compiler Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)  
 **规范依赖：** [ca-skills PR #88](https://github.com/odango-chan/ca-skills/pull/88)，当前仍为 OPEN
@@ -166,3 +167,9 @@ Next 侧：
 - 不把 \`when\` 放入 \`predicates.yaml\`。
 - 不增加额外 SHA-256、签名、Trust Registry、分布式缓存、文件监听或自动下载。
 - 不在 Compiler 中执行 CEL，不让 Python 自行实现 CA-SL 静态语义。
+
+## 修订记录
+
+| 日期 | 版本 | 修订内容 | 原因 | 影响 SR |
+|---|---|---|---|---|
+| 2026-11-25 | 0.1.0 | 登记现有设计/规范/实施文档基线 | 纳入统一文档版本与 SR 追踪基线 | SR-005；Compiler Issue #61 为外部依赖 |
