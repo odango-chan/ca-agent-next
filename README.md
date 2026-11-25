@@ -16,7 +16,7 @@
 | ca-skill-compiler | Independent Go Compiler; consume its released executable/API. Do not copy its Go implementation into next. |
 | ca-client-tools | Independent Go Tool Plugin for OpenAMSM; consume its released package/process. Do not port or copy its implementation into Python. |
 | ca-openamsm-plugin | Independent Go Event Plugin for OpenAMSM protocol ingress/delivery. |
-| ca-skills | CA-SL v1alpha5 language and published business Skill sources. Assurance is optional; the refreshed v1alpha5 adds contract.when for Skill selection. |
+| ca-skills | CA-SL v1alpha5 language and published business Skill sources. Same-version refresh proposal [PR #88](https://github.com/odango-chan/ca-skills/pull/88) adds optional Assurance and contract.when; not yet merged. |
 
 Promotion flow:
 
