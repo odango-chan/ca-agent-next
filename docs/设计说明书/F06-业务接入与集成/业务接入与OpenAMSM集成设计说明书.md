@@ -48,7 +48,9 @@ EC04 ca-openamsm-plugin 负责：
 | Provider 私有 backendOperationId / HostInvocation / privateArguments | ca-client-tools Provider Runtime Bindings v1 | 唯一 Plugin Manager 内部 ProviderV2 Driver 消费；不暴露给 Skill |
 | Plugin Manifest / IPC | ca-agent-next Plugin 规范 | Event Plugin 对齐本仓契约 |
 
-Provider 进程、Tool Interface、Owner Contract 与 Provider Runtime Bindings 的 Next 消费边界见 [F03.05 Tool Interface 与 Provider 集成设计说明书](../F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md)。本说明书只负责 OpenAMSM 业务接入、Event/Delivery 与 Create/Modify/Release 的业务组合，不定义通用 Provider Manager。\n\n不把完整 3GPP OpenAPI 或 NAS/NGAP Schema 复制进 SKILL.md 的 requestSchema；不在 Next 重定义 Owner 契约。
+Provider 进程、Tool Interface、Owner Contract 与 Provider Runtime Bindings 的 Next 消费边界见 [F03.05 Tool Interface 与 Provider 集成设计说明书](../F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md)。本说明书只负责 OpenAMSM 业务接入、Event/Delivery 与 Create/Modify/Release 的业务组合，不定义通用 Provider Manager。
+
+不把完整 3GPP OpenAPI 或 NAS/NGAP Schema 复制进 SKILL.md 的 requestSchema；不在 Next 重定义 Owner 契约。
 
 ## 5. Create、Modify 与 UE-requested Release
 
