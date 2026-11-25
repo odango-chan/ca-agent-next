@@ -1,7 +1,7 @@
 # Tool Interface 与 Provider 集成设计说明书
 
 > 文档类型：功能子模块设计说明书
-> 文档版本：0.3.0
+> 文档版本：0.3.4
 > 状态：目标设计；待评审
 > 功能归属：F03.05 — Tool Plugin 集成
 > 交叉功能：F03.01～F03.04、F04.01、F04.05、F05.02、F06
@@ -19,7 +19,7 @@
 1. Tool 是 Plugin 导出的 Callable Operation，不是独立进程、Manager、Registry 或 Runtime。
 2. 所有 Tool Provider 均由唯一 Plugin Manager 管理；Runtime 是唯一 Action 调用与授权边界。
 3. Skill 只声明其依赖的 Capability / Callable，不接触 Provider 私有 backend ID、服务地址、凭据或私有 Host 参数。
-4. Compiler 与 Host 消费同一组精确锁定的契约依赖快照：Provider Interface Package 与业务 Owner Contract Package 各自独立。CA-SL v1alpha5 的 MAS Skill 通过 `mas` 依赖引用 Owner ToolCatalog；不得把 Owner 的 25 个合同误当成 ca-client-tools Interface Package 的导出。Provider Runtime Bindings 只把 Owner Runtime Operation 映射到 Provider 私有 backend 身份。
+4. Compiler 构建时使用精确的 Provider Interface / Owner Contract 依赖快照；冻结 v1alpha5 Artifact 仅记录 dependency alias、stablePackageId 和导出集合，不携带依赖版本或 snapshotDigest。Next 的 Demo 部署因此通过 provider.yaml 的 `interfacePackagePath` / `interfaceSnapshotDigest` 固定 Provider Interface snapshot，并通过 Provider Runtime Bindings 的 Owner stable ID、version、publicationDigest 和 manifestDigest 固定 Owner 发布物；不得宣称 Artifact 本身实现了逐 Skill 的字节级依赖锁。
 5. Owner 对业务状态、Receipt、Commit Proof 和 Reconcile 负责；Provider/IPC/HTTP 成功不构成业务提交证明。
 6. 复用 ca-agent-demo 已有的 Schema 校验、Effect 一致性、精确 Callable Scope、UNKNOWN 和 exact-original reconcile 机制，但不把 Demo 的手工注册、5GC 业务装配或第二份契约源搬进 Next。
 
@@ -103,7 +103,7 @@
 |---|---:|---|
 | Compiler Interface Package | 11 READ Tools | 8 个 SMF context query + 3 个 NF metrics list；2 Capabilities、4 Schemas；无 MUTATION 导出 |
 | Provider Backend Binding Catalog v2 基础部分 | 11 READ bindings | 与当前公开 Interface Package 对应的私有 backend 执行映射 |
-| Owner ToolCatalog v1alpha4 | 25 contracts | 21 MUTATION + 4 READ；其中 23 个业务 Callable（21 MUTATION + 2 READ）和 2 个 Runtime 内部 Owner evidence resources（Receipt Query、Reconcile），不得作为 Skill-authored Callable |
+| Owner ToolCatalog v1alpha4 | 25 contracts | 21 MUTATION + 4 READ；其中 23 个业务 Callable（21 MUTATION + 2 READ）和 2 个 Owner evidence operations（Receipt Query、Reconcile）；Receipt Query 是 ToolCatalog 中的 READ Callable，仍受其 Capability / Scope 约束；Reconcile 是专用 Reconcile target，不得作为普通 operation.tool 调用 |
 | Provider typed MAS invoke closure | 31 Callable | 29 MUTATION + 2 READ；全部是 Provider 私有执行身份，不直接成为 Skill 权限 |
 | Provider Runtime Bindings sidecar | 25 bindings | 与 Owner 发布面一致：23 个业务 Callable + 2 个 evidence resources；21 MUTATION + 4 READ |
 | Provider 进程内部 Catalog | 44 bindings | 11 个基础 READ + 31 个 typed MAS Callable + 2 个 evidence handlers |
@@ -121,18 +121,20 @@
 
 因此，ProviderV2 Driver 的显式 catalog 请求应使用 provider.yaml 的 11 个公开 Tool backend mappings 与 Runtime Bindings sidecar 的 25 个 Owner backend mappings 的去重并集（当前预期 36 个 ID）。Provider 内部另外存在的 8 个 legacy callable 不得加入请求集合。加载期必须验证每个公开/Owner Callable 都有唯一 backend 映射、Effect 一致，并能在 Provider catalog 中找到；任何缺失、重复或多余映射均 fail-closed。
 
-**CA-SL v1alpha5 的实际 Owner 依赖方式：** 当前 ca-skills MAS 作者源在 \`assurance/contract.yaml\` 声明 \`dependencies.mas: urn:openamsm:mas:tool-contracts\`，\`capabilities\` 列出 \`mas.*\` Capability ID；Procedure 使用 \`tool: mas::SC.CREATE_SM_CONTEXT\` 等精确 Callable。这里的 \`mas\` alias 指向 env-openamsm Owner v1alpha4 发布快照，不是 \`ca-client-tools_interface_1.2.0.zip\`。Owner \`tool-catalog.yaml\` 提供 25 个 contracts（23 个业务 Callable + Receipt Query / Reconcile 两个运行期 evidence resources）；\`capability-contracts.yaml\` 是独立的 Capability→Callable membership 来源，\`evidence-guarantees.yaml\` 与 Schema 同属 Owner 发布快照。
+**CA-SL v1alpha5 的实际 Owner 依赖方式：** 当前 ca-skills MAS 作者源在 `assurance/contract.yaml` 声明 `dependencies.mas: urn:openamsm:mas:tool-contracts`，`capabilities` 列出 `mas.*` Capability ID；Procedure 使用 `tool: mas::SC.CREATE_SM_CONTEXT` 等精确 Callable。这里的 `mas` alias 指向 env-openamsm Owner v1alpha4 发布快照，不是 `ca-client-tools_interface_1.2.0.zip`。Owner `tool-catalog.yaml` 提供 25 个 contracts（23 个业务 Callable + Receipt Query / Reconcile 两个 evidence operations）；Receipt Query 是显式 READ Callable，Reconcile 仅作为专用 Reconcile target 使用；`capability-contracts.yaml` 是独立的 Capability→Callable membership 来源，`evidence-guarantees.yaml` 与 Schema 同属 Owner 发布快照。
 
-对**冻结 CA-SL v1alpha5 Build**，Compiler 从 \`resolvedDependencies\` 的精确 Owner snapshot 索引 ToolCatalog/Schema，并由 \`trustedBuildContext.dependencyBindings\` 绑定 dependencyId、digest、stablePackageId 和 authorizedOwners；Owner \`CapabilityContracts\` 通过 \`trustedBuildContext.capabilityContracts\` 独立输入，并按其 DeploymentAuthorization 绑定校验。Development v1alpha1 的 \`package.json\` / Interface Package / Dependency Lock 是另一个 Build profile，不能反向假定当前 Owner v1alpha4 发布物已包装成该格式。Next Agent 只消费已发布 v1alpha5 Artifact，不在运行期调用 Compiler。
+对**冻结 CA-SL v1alpha5 Build**，Compiler 从 `resolvedDependencies` 的精确 Owner snapshot 索引 ToolCatalog/Schema，并由 `trustedBuildContext.dependencyBindings` 绑定 dependencyId、digest、stablePackageId 和 authorizedOwners；Owner `CapabilityContracts` 通过 `trustedBuildContext.capabilityContracts` 独立输入，并按其 DeploymentAuthorization 绑定校验。Development v1alpha1 的 `package.json` / Interface Package / Dependency Lock 是另一个 Build profile，不能反向假定当前 Owner v1alpha4 发布物已包装成该格式。Next Agent 只消费已发布 v1alpha5 Artifact，不在运行期调用 Compiler。
 
-运行期必须同时取得 Artifact dependency closure 所指向的精确 Owner snapshot 与 Provider 平台包：Runtime 用 Owner snapshot 解释 Skill-facing Callable、Capability、Schema、Outcome、Evidence 和 Reconcile；ProviderV2 Driver 用 provider.yaml 的 11 个 Provider Interface mappings 与 sidecar 的 25 个 Owner mappings 找到私有 backend。缺失任一来源、身份或映射时 fail-closed，不得用另一份 Catalog 推导补齐。
+**冻结 Artifact 的依赖身份限制必须显式保留：** v1alpha5 `manifest.json` 的 `dependencyClosure[]` 只有 `dependencyId`、`stablePackageId` 和 `exports[]`，没有 package version 或 snapshotDigest；编译时 `resolvedDependencies.digest` / `trustedBuildContext.dependencyBindings.digest` 不会写入该冻结 Artifact。故 Runtime 不能仅凭 Skill Artifact 证明“编译时依赖字节”与“运行时依赖字节”完全相同。当前 Demo 采用部署级单版本绑定：provider.yaml 的 `interfacePackagePath` / `interfaceSnapshotDigest` 固定 Provider Interface snapshot；Provider Runtime Bindings sidecar 的 `ownerContract` 固定 Owner stableId、version、publicationDigest、manifestDigest。Host 必须验证 Interface snapshot digest、已安装 Owner publication 与 sidecar 一致，并检查 Artifact dependencyClosure 所需的 exports / Schema 均存在。发布流程必须将 Skill Artifact 与该 Owner v1alpha4 publication 及匹配的 ca-client-tools v1.2.0 Provider package 配套交付；编译时使用的 Owner snapshot 与 sidecar 所引用的 Owner publication 必须由发布流程保持一致，这一配套关系不能仅凭冻结 Artifact 在运行时反向证明。若未来需要逐 Skill 的 package version/snapshotDigest pin，必须由新的 Compiler Artifact API/profile 提供；不得修改已冻结 v1alpha5，也不得把 Development v1alpha1（其 Artifact 带 Lock、但 executionStatus 固定 `NOT_ADMITTED`）当作当前 Agent 运行输入。
+
+运行期必须同时取得部署配置选定的 Owner publication 与 Provider 平台包：Runtime 用 Owner snapshot 解释 Skill-facing Callable、Capability、Schema、Outcome、Evidence 和 Reconcile；ProviderV2 Driver 用 provider.yaml 的 11 个 Provider Interface mappings 与 sidecar 的 25 个 Owner mappings 找到私有 backend。Host 校验 Provider Interface `interfaceSnapshotDigest` 与 provider.yaml 一致，Provider Interface stablePackageId / required exports 与 Artifact dependencyClosure 一致；Owner stable ID / required exports 与 Artifact dependencyClosure 一致，并校验 Owner version / publicationDigest / manifestDigest 与 sidecar 一致。缺失任一来源、身份或映射时 fail-closed，不得用另一份 Catalog 推导补齐。
 
 ### 4.3 Skill、Plugin 与部署配置
 
-- Skill Artifact 通过显式 dependency alias 锁定其实际 Callable 来源：Provider Interface Package 提供的 READ Callable，或 Owner Contract Package 提供的业务 Callable；MAS Skill 的 `mas` alias 指向 `urn:openamsm:mas:tool-contracts`。Artifact 不出现 backendOperationId、Provider handler、URL、服务地址或凭据。
+- Skill Artifact 通过显式 dependency alias 声明其 Callable 来源：Provider Interface Package 提供的 READ Callable，或 Owner Contract Package 提供的业务 Callable；MAS Skill 的 `mas` alias 指向 `urn:openamsm:mas:tool-contracts`。冻结 v1alpha5 Artifact 记录 stable package ID / exports，不记录依赖版本 / snapshotDigest；provider.yaml 固定 Provider Interface snapshot，Provider sidecar 固定 Owner publication。Artifact 不出现 backendOperationId、Provider handler、URL、服务地址或凭据。
 - Plugin Manifest 声明 Plugin 身份、进程入口、IPC 版本和 Extensions；不复制 Tool Schema、Capability Grant、Owner Outcome 或 Provider 私有字段。
 - 部署配置显式选择已安装的 Provider 包、进程参数和服务配置。凭据只由 Host/Provider 部署配置注入，不进入 Skill、Interface Package 或模型上下文。
-- Provider Runtime Bindings 是 Provider 发布包内的私有 sidecar，不是 Plugin Manifest 的第二份 Tool 定义；Owner Contract Package 独立安装/锁定，不被复制进 Provider Interface Package。
+- Provider Runtime Bindings 是 Provider 发布包内的私有 sidecar，不是 Plugin Manifest 的第二份 Tool 定义；Owner Contract Package 独立安装，并由 sidecar 的 Owner publication identity 固定部署版本，不被复制进 Provider Interface Package。
 
 ## 5. 组件职责
 
@@ -157,7 +159,7 @@ Plugin Manager 的部署配置为每个 Provider Extension 提供一个显式、
 
 - Provider provider.yaml；
 - provider.yaml 指定的 runtime-bindings.yaml；
-- Artifact dependency closure 指向的 Owner Contract Package 精确快照（例如 env-openamsm `urn:openamsm:mas:tool-contracts` v1alpha4），用于 Runtime 读取 Owner ToolCatalog / CapabilityContracts / Evidence / Schema；该快照不属于 Provider 包。
+- 与 Provider sidecar 所引用 Owner identity 一致的 Owner Contract Package 安装快照（当前为 env-openamsm `urn:openamsm:mas:tool-contracts` v1alpha4），用于 Runtime 读取 Owner ToolCatalog / CapabilityContracts / Evidence / Schema；该快照不属于 Provider 包。Provider 包内的 Interface snapshot 则由 provider.yaml 的 `interfacePackagePath` / `interfaceSnapshotDigest` 固定。v1alpha5 Artifact dependencyClosure 不含 dependency snapshotDigest，不能据此声称 per-Skill digest pin。
 - Provider 二进制；
 - 同版本包内的 interface/ 快照；
 - sidecar 引用的 Owner Contract 身份和 Schema 文件；
@@ -167,7 +169,7 @@ Plugin Manager 的部署配置为每个 Provider Extension 提供一个显式、
 
 1. **解析包入口。** 使用严格 YAML 解析；拒绝重复 key、未知字段、缺失必需字段和不支持的版本。
 2. **约束包内路径。** runtimeBindingsPath、Schema 文件和可执行文件必须解析在所选包根目录内；拒绝绝对路径、路径穿越和符号链接逃逸。
-3. **校验契约依赖快照。** 按已发布 Skill Artifact 的 dependency closure 解析精确 Provider Interface Package 与 Owner Contract Package；Owner snapshot 的 package identity/digest、ToolCatalog、CapabilityContracts、Evidence Guarantees 和 Schema 必须与编译时依赖闭包一致。不得把 Owner ToolCatalog 当成 Provider Interface Package，也不得自行生成缺失 Schema。
+3. **校验契约依赖快照。** 按已发布 Skill Artifact 的 dependency closure 解析 Provider Interface Package 与 Owner Contract Package；Provider Interface bytes 必须与 provider.yaml 的 `interfaceSnapshotDigest` 一致，且其 stablePackageId / required exports 必须与 Artifact dependencyClosure 一致；Owner stablePackageId 和 required exports 必须与 Artifact dependencyClosure 一致，Owner version / publicationDigest / manifestDigest 必须与 Provider Runtime Bindings sidecar 及部署配置一致。不得宣称 v1alpha5 Artifact 提供了依赖 snapshotDigest，也不得把 Owner ToolCatalog 当成 Provider Interface Package或自行生成缺失 Schema。
 4. **校验 Runtime Bindings sidecar。** 验证其精确 API identity、Provider ID/version、Owner Contract stable ID/version/publicationDigest/manifestDigest 引用、Schema 文件闭包和唯一 binding ID；Owner 引用必须与当前安装的 Owner snapshot 一致。
 5. **校验映射一致性。** 每个 Runtime Binding 的 ownerCallableId、runtimeOperationId、Effect、Schema 和 Capability 必须与所引用 Owner Contract 一致；每个 backendOperationId 必须能在 Provider 私有 catalog 中按精确 ID 找到，禁止由名称拼接、lowercase 或猜测生成。
 6. **启动 Provider。** 使用固定可执行文件和 argv（当前命令为 provider serve），不经 Shell 字符串解释。一个已选 Provider 包对应一个长生命周期进程。
@@ -212,9 +214,31 @@ invoke 的 invocation.deadline 是绝对 RFC3339 UTC 时间。对 200 等 JSON �
 
 错误代码至少包括 PROTOCOL_VERSION_UNSUPPORTED、PROTOCOL_FRAME_INVALID、PROTOCOL_FRAME_TOO_LARGE、PROTOCOL_METHOD_UNSUPPORTED、PROTOCOL_REQUEST_ID_INVALID、PROVIDER_NOT_INITIALIZED、PROVIDER_ALREADY_INITIALIZED、PROVIDER_CONFIGURATION_INVALID、PROVIDER_BINDING_CATALOG_INVALID、BACKEND_OPERATION_UNSUPPORTED、BACKEND_ARGUMENTS_INVALID、CALL_DEADLINE_EXCEEDED、CALL_CANCELLED、REMOTE_TRANSPORT_ERROR、REMOTE_RESPONSE_INVALID、ARTIFACT_REFERENCE_INVALID、ARTIFACT_TRANSFER_FAILED、PROVIDER_INTERNAL、PROVIDER_SHUTTING_DOWN。错误 message/detail 不得包含凭据、远端 body、SUPI 或调用者私有值。
 
-### 6.5 Runtime Bindings sidecar
+### 6.5 Provider package binding 与 Runtime Bindings sidecar
 
-provider.yaml 必须成对声明 runtimeBindingsPath 和 runtimeBindingsDigest。v1.2.0 sidecar 的 API identity 为 ca.tool-provider-runtime-bindings/v1，根对象包含：
+ca-client-tools v1.2.0 的 provider.yaml 是 Host 运行绑定，不是公开 Interface Package。它同时固定 Provider Interface snapshot 和私有 Runtime Bindings sidecar，并声明公开 Callable → 私有 backendOperationId 映射。当前关键字段如下（省略非本设计范围的其他字段）：
+
+~~~yaml
+apiVersion: ca.tool-provider-runtime-binding/v1
+providerId: ca-client-tools.sbi
+providerVersion: 1.2.0
+protocol: ca-client-tools.provider/v2
+backendCatalogDigest: sha256:<exact-embedded-catalog-digest>
+transport:
+  type: stdio
+  argv: [./ca-client-tools, provider, serve]
+interfacePackagePath: interface
+interfaceSnapshotDigest: sha256:<exact-interface-package-snapshot>
+runtimeBindingsPath: runtime-bindings.yaml
+runtimeBindingsDigest: sha256:<exact-runtime-bindings-file>
+bindings:
+  - publicCallableId: <exact-public-callable-id>
+    backendOperationId: <exact-private-backend-id>
+~~~
+
+`interfaceSnapshotDigest` 固定 Provider 包内 `interface/` 文件树；该树与独立 Compiler Interface Package ZIP 的未压缩字节一致。`runtimeBindingsDigest` 固定顶层 sidecar 文件。provider.yaml 的 11 个 public READ mappings 与 sidecar 的 25 个 Owner mappings 是两个不同身份空间；Host 显式 catalog 请求使用两者的私有 backendOperationId 去重并集。启动时 Host 校验 Interface snapshot、sidecar digest、Provider initialize identity/version/catalog digest，再校验显式 catalog 响应。provider.yaml 的 `backendCatalogDigest` 对应 initialize 返回的 `backendBindingCatalogDigest`，二者必须一致。
+
+v1.2.0 sidecar 的 API identity 为 ca.tool-provider-runtime-bindings/v1，根对象包含：
 
 ~~~yaml
 apiVersion: ca.tool-provider-runtime-bindings/v1
@@ -260,13 +284,13 @@ Provider 内部基础 Catalog 的 identity 为 ca-client-tools.provider-bindings
 - source pin 固定 OpenAPI/Owner 源 Commit、文件路径和 Git blob identity。
 - handler 选择 Go 中固定的执行 profile；genericSBI 只能使用其闭合 schema，不得携带任意 origin/header/token。
 - genericSBI Catalog 中即使声明 MUTATION，也必须在远端 I/O 前以 BACKEND_OPERATION_UNSUPPORTED / MUTATION_GATED 拒绝；只有 separately registered typed openamsmMASInvoke handler 是业务 MUTATION dispatch path，并要求配置 private endpoint 与 Host 提供的 occurrence scope。
-- Provider 启动时把 31 个 typed MAS Callables 和 2 个 evidence handlers 追加到基础 11 个 READ bindings，并把扩展后的 catalog digest 返回给 Host。Receipt Query 和 Reconcile 是两个只读 evidence resources，不重新派发 mutation。
+- Provider 启动时把 31 个 typed MAS Callables 和 2 个 evidence handlers 追加到基础 11 个 READ bindings，并把扩展后的 catalog digest 返回给 Host。Receipt Query 是只读 Owner evidence Callable；Reconcile 是专用只读 Reconcile target，均不重新派发 mutation。
 - Host 不读取或复制 Provider 内部 Catalog；Host 只通过 catalog 方法核对 provider.yaml 与 Runtime Bindings 已明确声明的 backendOperationIds。
 
 ## 7. Tool Invocation 端到端流程
 
 ~~~text
-已发布 Skill Artifact + 锁定 Interface Package / Owner Contract
+已发布 Skill Artifact + Provider Interface / 部署固定的 Owner Contract
                     |
               Skill 选择与 Run
                     |
@@ -303,8 +327,8 @@ Provider 内部基础 Catalog 的 identity 为 ca-client-tools.provider-bindings
 
 Runtime 在任何 Plugin IPC / Provider invoke 之前必须完成：
 
-1. 当前 Run 已绑定精确 Skill Artifact 与其依赖闭包；其中 Owner Callable 必须解析到 Artifact 锁定的 Owner Contract snapshot，Provider READ Callable 必须解析到对应 Interface Package。Continuation 继续使用原 Run，不重新选 Skill。
-2. Callable ID 属于该 Skill Artifact 锁定的 Callable / Capability 依赖闭包。
+1. 当前 Run 已绑定精确 Skill Artifact 与其依赖闭包；Owner Callable 必须解析到部署固定且与 Provider sidecar 一致的 Owner Contract snapshot，并满足 Artifact 的 stablePackageId / required exports；Provider READ Callable 必须解析到字节与 provider.yaml `interfaceSnapshotDigest` 一致的 Interface Package。Continuation 继续使用原 Run，不重新选 Skill。
+2. Callable ID 属于该 Skill Artifact 声明的 Callable / Capability 依赖闭包，并且其 stablePackageId / required exports 与部署选定的契约快照一致。
 3. Capability / Callable Scope 属于当前 Run 的精确 allowlist；不得用“Provider 已安装”代替授权。
 4. 输入符合该 Callable 实际所属契约源（Provider Interface Package 或 Owner Contract Package）的 Schema；未知字段、缺失字段、类型/范围错误均拒绝。
 5. Effect 与发布契约一致；Provider 实际声明与 Owner Contract 不一致时 fail-closed。
@@ -397,7 +421,7 @@ Runtime 在任何 Plugin IPC / Provider invoke 之前必须完成：
 后续实现至少应覆盖：
 
 - 一个 Native Plugin 与一个 Provider v2 Tools Extension 由同一 Plugin Manager 管理；不存在第二 Manager/Registry/Runtime。
-- Compiler 和 Host 使用相同 Interface Package 快照；Owner Contract 与 Provider Runtime Bindings 的版本/身份匹配。
+- Compiler 构建时使用精确依赖快照；冻结 v1alpha5 Artifact 不携带依赖版本/snapshotDigest。当前部署通过 provider.yaml 的 interfaceSnapshotDigest 固定 Provider Interface，通过 Runtime Bindings sidecar 的 Owner publication identity 固定 Owner Contract，并验证 Artifact 所需 stablePackageId / exports；不宣称逐 Skill byte-exact pin。
 - Provider 启动握手、精确 catalog 查询、requestId 关联、cancel/timeout 和进程退出有自动化测试。
 - 未知 Callable、未授权 Capability、Effect 不匹配、Schema 错误、backend 不存在和 Provider unavailable 均 fail-closed。
 - Skill/LLM 无法看到或构造 backendOperationId、服务 URL、凭据和 privateArguments。
@@ -407,7 +431,23 @@ Runtime 在任何 Plugin IPC / Provider invoke 之前必须完成：
 - Codec 只在正式 Callable/Runtime Binding 发布且资格范围明确后按需接入。
 - Echo 与 OpenAMSM 使用相同 Plugin Manager / Tools Extension 机制；新增业务不要求修改 Agent Core 的业务分支。
 
-### 11.1 当前外部证据边界
+### 11.1 Next 侧实现分解（逻辑模块）
+
+以下是后续代码 SR 必须落实的逻辑边界，不预设实现仓的文件路径；具体路径、分支、Issue、测试命令和 Owner 由代码实施 SR 指定。
+
+| 逻辑模块 | 唯一职责 | 输入 / 输出边界 | 必须覆盖的验收用例 |
+|---|---|---|---|
+| Provider Package Loader（Plugin Manager 内） | 解析已安装 Provider 包，校验 provider.yaml、interface snapshot、Runtime Bindings sidecar、Owner publication 引用和包内路径 | 输入包根目录、部署配置、部署选定 Owner snapshot；输出只读 ProviderPackageDescriptor（Provider identity/version、公开 mappings、sidecar mappings、digest） | 重复 YAML key、未知版本、路径穿越/符号链接逃逸、Interface snapshot digest 不匹配、sidecar digest 不匹配、Owner publication identity 不匹配均拒绝加载 |
+| ProviderV2 Driver（Plugin Manager 内 Tools Extension） | 管理单个长生命周期 Provider 进程；实现 initialize/catalog/invoke/cancel、requestId correlation、limits 和安全关闭 | 输入已验证 descriptor 与 Host 注入配置；输出统一 Tools Extension 调用结果；私有 backendOperationId 只在 Driver 内部 | 乱序响应关联、重复/非法 requestId、超大 frame、in-flight 超限、cancel、EOF drain、Provider 崩溃、stderr/stdout 分离、禁止自动重试 |
+| Contract Dependency Resolver（Runtime 内） | 解析 Skill Artifact dependencyClosure 的 Provider Interface / Owner Contract 来源；验证 stablePackageId、required exports 和部署级 pin | 输入已发布 v1alpha5 Artifact、provider.yaml、Runtime Bindings、Owner publication；输出 Skill 可见 Callable / Capability / Schema 解析结果 | mas alias 解析 Owner ToolCatalog；Provider Interface digest 匹配；Owner stable ID / version / publicationDigest / manifestDigest 匹配；缺失 export、重复 Callable、错误 Capability membership 均 fail-closed |
+| Runtime Action Boundary | 在 Provider IPC 前校验 Run/Skill Scope、Callable、Capability、Schema、Effect、HostInvocation、privateArguments 和 Artifact Reference | 输入 Runtime Action Request 与当前 Run Context；通过后输出 ProviderV2 Driver 的内部调用参数；拒绝时不发送 Provider 请求 | 未声明 Callable、未授权 Capability、Effect 不一致、Schema 错误、Host scope 不匹配、Artifact slot/direction 不匹配均在远端 I/O 前拒绝 |
+| Owner Outcome Resolver / Reconcile Coordinator（Runtime 内） | 按 Owner Contract 解释 Receipt、Commit Proof、UNKNOWN 和 exact-original Reconcile | 输入 Provider result、Owner snapshot、原始 Invocation 和 sidecar evidence binding；输出 Owner Outcome / Evidence / Reconcile 状态 | HTTP 2xx 不得单独 COMMITTED；Receipt/Proof 精确绑定才可 COMMITTED；UNKNOWN 不重发 mutation；Reconcile 使用原 originalInvocationId；重复 mutation 数为 0 |
+| Host Artifact Adapter | 通过 Host Artifact Store channel 交接原始二进制，执行引用、大小、数量和 slot 边界检查 | 输入 Host artifactRef 与 Provider artifactChannel；输出受限 Artifact transfer；不把原始字节放入 NDJSON | channel 缺失、引用越界、size/aggregate/attachments 超限均在远端 I/O 前拒绝；禁止 Base64 和任意本地路径 |
+| Plugin Manager Extension 注册 | 将 Native Plugin 和 ProviderV2 Driver 纳入同一 Manager 的生命周期与分发 | 输入唯一 Plugin Package/Extension descriptor；输出一个统一 Tools Extension 入口 | Native Plugin 与 Provider v2 并存；重复 Callable/冲突 mapping 拒绝；不存在第二 Manager、Registry、Runtime、授权路径或 fallback |
+
+逻辑调用顺序固定为：Package Loader → ProviderV2 Driver initialize/catalog → Contract Dependency Resolver → Runtime Action Boundary → ProviderV2 Driver invoke → Owner Outcome Resolver / Reconcile。Plugin Manager 只管理进程与 Extension；Runtime 只管理 Skill Scope、契约校验和 Owner 结果；Provider 不选择 Skill、不授权、不判断 COMMITTED。
+
+### 11.2 当前外部证据边界
 
 - ca-client-tools v1.2.0 已发布，Provider v2、公开 Interface Package 和 Runtime Bindings 是现行外部依赖。
 - ca-client-tools PR #39 OPEN；Phase C 未开始，不是当前可用 Codec 消费实现。
@@ -421,3 +461,7 @@ Runtime 在任何 Plugin IPC / Provider invoke 之前必须完成：
 | 2026-11-25 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 建立 Tool Interface、Owner Contract、Provider Runtime Bindings 与唯一 Plugin Manager 的集成设计基线 | 将 EC03 原始设计资产映射到 F03.05，并基于 ca-agent-demo main 进行选择性复用审计 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | §4、§6、§7、§11 | 补齐 Provider v2 wire contract、Runtime Bindings、内部 Backend Catalog 与 11/25/31/44 库存闭合 | 按 ca-client-tools v1.2.0 源码和 Owner v1alpha4 生成器核对实际映射，避免混淆公开/私有 Callable 数量 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | §1～7、§11 | 区分 Provider Interface Package 与 Owner Contract dependency snapshot，补齐 CA-SL v1alpha5 `mas` alias 和冻结 Compiler Owner Link 路径 | 依据 ca-skills main MAS 作者源、Compiler v2.1.0 v1alpha5 API 与 env-openamsm Owner v1alpha4 publication 交叉核对，修正把 Owner Callable 误归到 Provider Interface Package 的歧义 | IR-006 · SR-015 · Issue #12 |
+| 2026-11-25 | 0.3.1 | GPT-6.2（ChatGPT） | §1、§4、§6、§7 | 明确冻结 v1alpha5 Artifact dependencyClosure 不含 snapshotDigest；将 Owner version/publication/manifest digest 绑定定位到 Provider sidecar 与部署配置 | 防止把 Development v1alpha1 Lock 能力误认为 Agent 当前运行期能力，并记录 per-Skill pin 的未来边界 | IR-006 · SR-015 · Issue #12 |
+| 2026-11-25 | 0.3.2 | GPT-6.2（ChatGPT） | §1、§4、§6、§7 | 补齐 provider.yaml 的 interfaceSnapshotDigest、runtimeBindingsDigest、公开→私有映射与 initialize/catalog digest 对账；明确 Provider Interface 与 Owner 的双部署 pin | 闭合 Provider package 实际发布结构与冻结 Artifact dependencyClosure 限制，依据 v1.2.0 Go generator 和 Runtime Bindings v1 contract | IR-006 · SR-015 · Issue #12 |
+| 2026-11-25 | 0.3.3 | GPT-6.2（ChatGPT） | §4.2、§6.5～§7.4 | 校正 Receipt Query 与 Reconcile 两个 Owner evidence operation 的 Skill 可见边界；Receipt Query 是受 Scope 约束的 READ Callable，Reconcile 是专用 target | 对齐 Compiler v1alpha5 Owner Link 对 dedicated Reconcile 的实际限制，避免将两者错误地一概视为不可调用 | IR-006 · SR-015 · Issue #12 |
+| 2026-11-25 | 0.3.4 | GPT-6.2（ChatGPT） | §11 | 增加 Next 侧逻辑模块分解、输入/输出边界和最小自动化验收矩阵 | 使后续代码 SR 可直接按 Loader、Driver、Resolver、Action Boundary、Outcome/Reconcile、Artifact Adapter 和单一 Manager 分解实施 | IR-006 · SR-015 · Issue #12 |

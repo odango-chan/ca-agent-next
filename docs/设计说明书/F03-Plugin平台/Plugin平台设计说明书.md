@@ -1,254 +1,149 @@
 # Plugin 平台设计说明书
 
 > 文档类型：机制设计说明书  
-> 文档版本：0.3.1  
-> 状态：Next 目标设计；Plugin Package/IPC 规范已进入主线文档，运行时代码尚未完成  
+> 状态：目标设计，待实现和验收  
+> 文档版本：0.3.2
 > 功能归属：F03 — Plugin 平台  
-> 关联 SR：SR-003、SR-010、SR-015、SR-017  
+> 关联 SR：SR-003、SR-010    
+> 全局评审范围：继承根目录 Agent.md 的 review_scope    
+> 本文局部非目标：以本文范围与非目标章节为准；无额外扩展  
 > 修订日期：2026-11-25  
-> 适用范围：唯一 Python Plugin Manager、Native Plugin、Event/Delivery/Tools Extension 与 ca-client-tools 适配
+> 适用范围：Python Plugin Manager、独立进程 Plugin、Package、IPC 与 Extension 分发  
+> 对应规范：[插件包与进程通信协议规范](../../规范/插件包与进程通信协议规范.md)
 
-关联需求见 IR-002、IR-005、IR-006。外部原始架构及设计资产见本文件 §13。
+关联需求项见 [IR-002](../../IR/IR%20总登记册.md#ir-002)、[IR-005](../../IR/IR%20总登记册.md#ir-005)。
 
-## 1. 目标与边界
+## 1. 背景与目标
 
-Plugin 是 Host 管理的独立包/进程及生命周期单元。它是 Agent Core 对外部协议和可调用能力的统一扩展机制。Event ingress、response delivery、Tool invocation 都通过同一个 Plugin Manager、同一进程模型和同一 IPC 协议完成。
+将 Event ingress、Tool 调用和 Event delivery 统一为一种 Plugin 机制。Plugin 是独立包/进程和生命周期管理单元；Extension 是 Plugin 对 Host 暴露的能力接口。目标是避免为 Tool、Provider、Event、Delivery、Codec 分别建立 Manager、Registry、IPC 和授权路径。
 
-核心目标是：新增业务时，通过新增 Plugin、Skill、Tool Interface Package 和部署配置扩展，不在 Agent Core、Runtime 或 Plugin Manager 中增加业务专用分支。
+## 2. 设计原则
 
-### 1.1 范围
+1. 全系统只有一个 Plugin Manager。
+2. 一个 Plugin 进程可以导出一种或多种 Extension。
+3. Tool 是 Plugin 导出的可调用 Operation，不是独立进程。
+4. 一个 Plugin 可以导出多个 Capability，一个 Capability 可以包含多个 Operation。
+5. Plugin Manager 负责生命周期、握手、IPC 和 Extension 分发，不负责 Skill 选择、Action 授权或 Owner 结果判断。
+6. Provider Interface Package 负责 Provider 自身导出的 Callable 契约；业务 Owner Contract Package 负责 Owner Callable、Schema、Capability membership 和结果语义；Provider Runtime Bindings 只提供私有执行映射。当前 OpenAMSM MAS Skill 的 `mas::` Callable 来自 Owner Contract Package，不从 ca-client-tools 11-READ Interface Package 推导。Plugin Manifest 不复制 Tool 定义。
+7. ToolCatalog 只是可发现能力的只读视图，不管理生命周期，也不构成第二个 Registry。
 
-- 一个 Python Plugin Manager。
-- Native Plugin Manifest、包结构和进程生命周期。
-- stdio NDJSON IPC v1alpha1。
-- event.ingress、event.delivery、tools 三种 Extension。
-- Correlation、Error、Cancellation、Shutdown。
-- Tool Interface Package 引用与 ca-client-tools Provider v2 适配。
-- Plugin 与 Host Artifact Handoff 的边界。
-
-### 1.2 非目标
-
-不建立独立 Provider Manager、Tool Registry、Event Registry、Delivery Manager、Codec Manager 或第二套 IPC；不在 Plugin 中选择 Skill、创建 Run、决定执行模式、授权 Action 或判定 Owner 提交；不引入 Marketplace、自动下载、签名、Trust Registry、生产级自动恢复平台或跨进程数据库。
-
-## 2. 总体组件与所有权
-
-~~~text
-Python Host
-  ├─ Agent Core / Skill Resolver
-  ├─ Runtime Action Boundary
-  ├─ Plugin Manager                 [唯一]
-  │    ├─ Package / Manifest Loader
-  │    ├─ Process Supervisor
-  │    ├─ IPC Framer / Correlator
-  │    └─ Extension Dispatcher
-  └─ Host ArtifactStore
-       ↑                       ↓
-       │                       │ stdio NDJSON
-       │             Native Plugin Process
-       │               ├─ event.ingress
-       │               ├─ event.delivery
-       │               └─ tools
-       │
-       └─ opaque artifactRef / staging handoff
-~~~
+## 3. 组件职责
 
 | 组件 | 负责 | 不负责 |
 |---|---|---|
-| Plugin Manager | Manifest 校验、进程启动/停止、握手、IPC、Correlation、Extension 分发 | Skill 选择、Action 授权、Owner outcome |
-| Native Plugin | 实现声明的 Extension，持有外部协议连接和本地协议上下文 | 创建 Run、选择 Skill、扩大 Callable Scope |
-| Event Extension | 解析外部协议、规范化 Event、提取声明的二进制 slot | 业务路由和 Skill 选择 |
-| Delivery Extension | 按 Host 指令交付响应 | 选择响应义务或改变 Owner outcome |
-| Tool Extension | 执行 Interface Package 定义的 Callable | 自行授权、重写 Tool Schema、伪造提交证明 |
-| Runtime | 对 Action 做统一边界检查，解释 Tool/Owner 结果 | 管理 Plugin 进程 |
-| Host ArtifactStore | 原始字节托管、opaque refs、Run/Invocation 关联和授权 | 协议深度解码 |
+| Plugin Manager | 加载包、校验 Manifest、启动/停止进程、握手、IPC、关联、Extension 分发 | Skill 选择、授权、Owner Commit 判断 |
+| Plugin Process | 实现声明的 Extension，访问自己拥有的资源 | 选择 Skill、扩大 Capability |
+| Event Extension | 解析外部协议并发布规范化 Event | 业务 Skill 映射、Owner Tool 调用 |
+| Tool Extension | 执行 Runtime 已放行的公开 Callable / Owner Operation | 自行授权、声明业务提交 |
+| Delivery Extension | 按 Host 指令向外部协议响应方交付 | 选择 Run、改变 Owner outcome |
+| Tool Interface Package | Provider 自身导出的 Callable ID、输入/输出 Schema、Effect、Capability membership | Owner 业务 Callable、Owner 结果语义、Provider 私有 backend 映射 |
+| Owner Contract Package | Owner ToolCatalog Callable、Owner IO Schema、CapabilityContracts membership、Evidence Guarantee、Owner Outcomes、Receipt、Commit Proof、Reconcile | Provider 进程和私有 handler |
+| Provider Runtime Bindings | 公开/Owner Callable 到私有 backendOperationId 的映射、HostInvocation 和 privateArguments 来源 | 公开 Tool 契约、Capability 授权和 Owner 语义 |
+| Provider Backend Binding Catalog v2 | Provider 内部 backendOperationId 到 handler、serviceKey、source、Effect 和参数 Schema 的执行映射 | 不公开 Callable/Capability/Owner Outcome，不授权 Skill；Host 不解析或复制 |
 
-Tool 是 Plugin 导出的 Operation，不是独立进程或管理器。一个 Plugin 可以同时导出一种或多种 Extension。
+## 4. 包与进程模型
 
-## 3. Package 与 Manifest
-
-标准包布局：
+原生 Plugin 使用 YAML Manifest，包内包含 plugin.yaml、可执行文件和本包拥有的 Schema/资源。Manifest 的 apiVersion 固定为 connectionagent.io/plugin-package/v1alpha1；进程 IPC 使用 connectionagent.io/plugin-ipc/v1alpha1。Manifest 声明进程入口和 Extensions，不声明 Skill ID、业务 Goal、业务授权或 Tool 的完整 Schema。
 
 ~~~text
 plugins/<plugin-id>/
-  plugin.yaml
-  bin/<plugin-executable>
-  schemas/
-  resources/
+├── plugin.yaml
+├── bin/<plugin-executable>
+├── schemas/
+└── resources/
 ~~~
 
-Manifest 固定使用 connectionagent.io/plugin-package/v1alpha1；进程 IPC 固定使用 connectionagent.io/plugin-ipc/v1alpha1。Manifest 只声明身份、版本、进程入口和 Extension。Callable ID、输入输出 Schema、Effect、Capability、Artifact 参数和 Owner outcome 必须来自 Tool Interface Package，禁止在 Manifest 中复制。
+完整字段和示例以规范为准，不能在实现时另造别名或 fallback 版本。
 
-Manifest 校验至少包含：
-
-1. YAML 1.2 严格解析，拒绝重复 key、未知字段和不支持版本。
-2. pluginId、版本、可执行文件和 Extension 声明完整。
-3. executable、Schema、resources 路径解析后必须位于包根目录内；拒绝绝对路径、路径穿越和符号链接逃逸。
-4. Event Schema、Artifact slot、mediaType 和 requiredness 与 Host/3GPP 契约一致。
-5. tools.interfacePackage 精确引用已发布 Tool Interface Package。
-6. Manifest 声明的 Extension 必须与进程握手返回内容一致。
-
-Package 校验失败时 Plugin 不得启动为 READY，不得部分注册 Extension。
-
-## 4. 生命周期与启动顺序
-
-生命周期状态：
-
-~~~text
-CONFIGURED -> STARTING -> READY
-                       -> NOT_READY
-READY -> STOPPING -> STOPPED
-~~~
+## 5. 加载与生命周期
 
 启动顺序：
 
-1. Host 读取部署配置中的 Plugin 安装路径。
-2. Plugin Manager 读取并校验 Manifest 和包内资源。
-3. 解析 Tool Interface Package 引用和 Event Schema。
-4. 启动可执行文件；不经 Shell 拼接参数。
-5. 发送 host.initialize，包含 Plugin 身份、期望版本、IPC 版本、部署配置和必要的 Host staging 目录。
-6. 接收 plugin.ready，验证 pluginId、pluginVersion、ipcVersion 和实际 Extensions。
-7. 只有全部一致时才把 Plugin 置为 READY，并注册其 Extensions。
+1. 读取 plugin.yaml，使用安全 YAML 1.2 解析器，拒绝重复 YAML key。
+2. 校验 API 版本、Plugin 身份、Extension 结构和必填字段。
+3. 解析相对包根目录的可执行文件、Schema 和资源路径；拒绝绝对路径、路径穿越和逃逸包根的符号链接。
+4. 校验 Event Schema；对 Provider Tools Extension 按引用加载其 Tool Interface Package；对当前 Skill Artifact dependency closure 中的 Owner Contract Package 加载精确 Owner snapshot。Provider v2 包由 ProviderV2 Driver 另外读取 Runtime Bindings sidecar；该 sidecar 是私有执行映射，不替代 Provider Interface Package 或 Owner Contract Package。
+5. 启动独立进程，发送 host.initialize。
+6. 接收 plugin.ready，核对 Plugin ID、版本、IPC 版本和实际 Extension 列表。
+7. 只有握手匹配的 Extension 才进入可用状态；失败时该 Plugin 不可用并提供可诊断错误。
 
-Plugin 进程退出、握手超时、非法帧或版本不匹配时，Plugin 置为 NOT_READY；相关操作明确失败。Demo 阶段不要求自动重启、热升级或跨主机调度。配置变更通过显式部署配置和 Host 重启生效。
+Demo 使用显式安装路径和操作员提供的进程参数。修改 Plugin 后重启 Host 即可，不要求 Marketplace、自动下载、通用安装器、文件监视器或热更新。
 
-## 5. IPC 与消息关联
+## 6. IPC 与消息分发
 
-Native Plugin 使用 UTF-8 NDJSON over stdin/stdout。Host 写 stdin，Plugin 写 stdout；stdout 只能承载协议帧，诊断输出到 stderr。单进程连接承载 initialize、Event、Tool、Delivery、cancel 和 shutdown。
+Native Plugin 使用 UTF-8 NDJSON over stdin/stdout。stdout 仅承载协议帧，诊断信息写入 stderr。每帧有 apiVersion、messageId、可选 correlationId、type 和 payload。
 
-每帧包含 apiVersion、messageId、可选 correlationId、type 和 payload。以下 ID 不得混用：messageId、correlationId、eventId、externalRequestId、responseChannelId、runId、invocationId、deliveryId、responseObligationId、catalogGeneration。
-
-核心消息：
-
-| 方向 | 消息 | 作用 |
+| 方向 | 消息 | 用途 |
 |---|---|---|
-| Host → Plugin | host.initialize | 初始化进程与 Host-owned staging |
-| Plugin → Host | plugin.ready | 握手完成 |
+| Host → Plugin | host.initialize | 传入身份、版本、配置和 Artifact staging 目录 |
+| Plugin → Host | plugin.ready | 握手确认 |
 | Plugin → Host | ingress.event | 发布规范化 Event |
 | Host → Plugin | ingress.ack | 接收、重复关联、冲突或拒绝 |
-| Host → Plugin | tools.invoke | Runtime 已放行的 Callable 调用 |
-| Plugin → Host | tools.result | 返回 Interface Package 定义的结果或错误 |
-| Host → Plugin | delivery.dispatch | 按 responseObligationId 交付响应 |
-| Plugin → Host | delivery.result | 报告 delivered / failed / unknown |
+| Host → Plugin | tools.invoke | 调用已授权 Operation |
+| Plugin → Host | tools.result | 返回结果或错误 |
+| Host → Plugin | delivery.dispatch | 履行 Host 已记录的响应义务 |
+| Plugin → Host | delivery.result | 返回 delivered / failed / unknown |
 | Host → Plugin | host.cancel | 请求取消 |
-| Plugin → Host | plugin.cancelled | cancelled / too_late / unsupported |
-| Host → Plugin | host.shutdown | 请求优雅退出 |
-| Plugin → Host | plugin.stopped | 停止确认 |
+| Plugin → Host | plugin.cancelled | 报告取消结果 |
+| Host → Plugin | host.shutdown | 请求进程退出 |
+| Plugin → Host | plugin.stopped | 进程停止确认 |
 
-所有回复必须按 correlationId 关联原请求。未知消息、错误版本、缺失关联、重复 response 或非法 payload 必须 fail closed。一个进程可以并发处理多个 operation，但必须串行写 stdout，且每个响应准确匹配 invocationId/deliveryId。
+messageId、correlationId、eventId、invocationId、deliveryId、responseObligationId 和 Run ID 是不同身份，不得互相替代。详细消息字段、错误对象和状态机见规范。
 
-## 6. Event Ingress Extension
+## 7. ca-client-tools 的迁移适配
 
-Event Plugin 负责外部协议 framing、认证上下文、JSON/multipart 解析、Content-ID 关联、声明 slot 的原始字节提取和规范化 Event。Host 对 Event Schema 做最终校验，并由 Host 创建 Run 与 responseObligation。
+ca-client-tools v1.2.0 当前发布的是独立 Provider 包，进程协议为 ca-client-tools.provider/v2（长生命周期 NDJSON）。Next 由唯一 Plugin Manager 内部的 ProviderV2 Tools Extension Driver 消费现有 provider.yaml 和 runtime-bindings.yaml，并把 Provider v2 的 initialize/catalog/invoke/cancel 适配为统一 Tools Extension 调用。Driver 只负责进程与协议适配，不得演变为永久 Provider Manager、第二套 Tool Registry 或第二条授权路径。Native Plugin 仍使用本仓统一 Plugin IPC v1alpha1。
 
-规范化 Event 至少包含 eventId、ingressId、eventType、externalRequestId、responseChannelId、source、payload 和 artifacts。
+Plugin Manager 只转发 Runtime 已检查的调用。ca-client-tools Interface Package 当前提供 11 个 Provider READ Callable；OpenAMSM MAS Skill 通过 `mas` dependency alias 引用 Owner v1alpha4 ToolCatalog，Owner Contract Package 提供其业务 Callable、Schema、Capability membership、Outcome、Receipt、Commit Proof、Evidence 和 Reconcile。Provider Runtime Bindings 只提供 backendOperationId、HostInvocation/privateArguments 来源和 Provider observation 定位。三类跨组件契约不得合并成一份 Next 自维护 Catalog；Provider Backend Binding Catalog v2 只在 Provider 进程内部使用，Host 通过显式 catalog 请求核对映射，不解析或复制它。
 
-- eventId 是逻辑 Event 实例身份，不是 IPC messageId 或 HTTP/2 stream ID。
-- externalRequestId 使用外部协议定义的稳定重试身份；不得以瞬时 stream ID 代替。
-- responseChannelId 是 Plugin 的本地响应句柄，不是 Run ID。
-- payload 仅包含规范化 JSON，不包含 Skill ID、Goal、执行模式或 Capability Grant。
-- artifacts 只包含 Manifest 已声明的 slot 描述符。
+Tool Plugin 返回的传输成功不等于 Owner 业务 COMMITTED。Runtime 必须按 Owner Contract 验证 Receipt 与 Commit Proof；UNKNOWN 保持 UNKNOWN，并按原 Invocation 执行 exact-original Reconcile。
 
-Plugin 不选择 Skill。每个新业务 Event 必须先由 F02 Resolver 绑定 Skill，再进入 Runtime。无候选、输入冲突或未知 discriminator 时停止并产生诊断；不允许 unbound Generic Agent fallback。
+Codec Operation 如正式发布，也通过同一个 tools Extension 暴露，不建立独立 Codec Plugin/Manager。Codec 只有在正式 Callable/Runtime Binding 发布后才可调用；当前 ca-client-tools PR #39 的 Phase C Consumer Migration 未开始。
 
-相同 externalRequestId 的相同请求重试可关联原 Run 并建立新的 responseObligation；同 ID 不同 payload 或原始 Artifact 字节冲突必须拒绝。不能证明相同请求时不重放 mutation。
+## 8. 错误处理
 
-## 7. Event Delivery Extension
+- Manifest、Schema、版本或路径无效：Plugin 加载失败。
+- 握手身份或 Extension 不匹配：Plugin 不可用。
+- IPC 关联不一致、未知消息类型或畸形 Payload：受影响操作失败关闭。
+- Tool/Owner Callable 与其锁定 Interface/Owner Contract 不匹配：拒绝加载或调用。
+- Owner outcome UNKNOWN：保持 UNKNOWN，不得由 Plugin Manager 推断为 COMMITTED。
+- Plugin 传输成功：只代表 IPC 层成功，不代表业务 mutation 已提交。
 
-Host 在 Event 被接收时创建 responseObligation，记录原始 Run、Event、外部请求身份和 Plugin responseChannel。Runtime 完成后，Host 根据原 Run 的结果构造结构化响应，并发送 delivery.dispatch。
+Demo 不增加签名、Trust Registry、包完整性哈希或生产级密钥体系。
 
-Delivery Plugin 只负责将 Host 提供的响应编码为外部协议响应、附加允许的 N1/N2 Artifact，并向原 responseChannel 交付。它不得重新选择 Run、Skill 或 Owner Outcome。
+## 9. 验收要求
 
-delivery.result 只表示交付事实：
-- delivered：外部响应通道确认发送；
-- failed：明确未完成交付；
-- unknown：交付是否发生无法证明。
+- 一个 Plugin 进程可以同时暴露 Event、Delivery 和多个 Tool Operation。
+- Plugin Manager 是唯一生命周期和 IPC 入口。
+- Tool 调用必须经过 Runtime 的 Callable Scope 检查和统一 Manager。
+- 不存在独立 Provider Manager、Tool Registry 或 Codec Manager。
+- 错误版本、未知消息、错误关联、重复 YAML key、路径穿越均有自动化测试。
+- Echo 示例证明组合 Plugin 的启动、握手、Event、Tool 和 Delivery 完整链路。
 
-Delivery unknown 不得改变 Owner Receipt，也不得导致业务 mutation 重放。
+## 10. 当前实现状态
 
-## 8. Tools Extension 与 ca-client-tools
+Plugin Package/IPC v1alpha1 是 PR #1 中的目标契约，不等于已完成实现。ca-client-tools v1.2.0 已发布 Provider v2、Interface Package 与 Runtime Bindings；Next 侧 ProviderV2 Driver 仍是目标设计，尚未实现或验收。何时切换 Native IPC 需由真实集成验收决定。
 
-Tool Plugin 通过 tools Extension 导出 Callable。运行时调用链固定为：
 
-~~~text
-LLM / Procedure Engine
-  -> Runtime Action Request
-  -> Runtime checks Skill Callable Scope + schema + Run state
-  -> Plugin Manager
-  -> tools.invoke
-  -> Tool Plugin
-  -> tools.result
-  -> Runtime interprets typed result / Owner Receipt
-~~~
 
-ca-client-tools 是 Tool Interface Package、Provider、SBI client 和 Codec 能力的外部所有者。其当前 Provider v2 进程由 Next Plugin Manager 的 tools Extension Driver 适配；不复制 Owner Tool 实现，不建立第二个 Provider Manager。Provider v2 与 Next Plugin IPC 是不同协议，适配器只做字段/帧映射，不得改变 Callable、Effect、Schema 或 Owner Receipt 语义。
 
-Codec 如果正式发布，也作为同一个 tools Extension 中的普通 Callable，不新增 Codec Manager。ca-client-tools PR #39 当前仍 OPEN；Phase B worker/facade 不等于 Agent 消费集成完成，Phase C consumer integration 需单独验收。
+## 11. 功能归属与外部能力
 
-工具契约、Owner Contract、Provider Runtime Bindings、Provider v2 wire contract、Backend Binding Catalog 与 Next ProviderV2 Driver 的完整消费设计见 [F03.05 Tool Interface 与 Provider 集成设计说明书](Tool%20Interface%20与%20Provider%20集成设计说明书.md)。F03 只维护 Plugin 平台共性；F03.05 维护 Provider 消费细节，不复制第二套 Manager/Registry/授权边界。
+本说明书属于 F03。SR-003 定义唯一 Plugin Manager 与 Extension IPC；SR-010 定义 OpenAMSM Tool Plugin 与按需 Codec 集成；SR-015 负责将 EC03 的 Tool Interface / Provider / Codec 消费设计集中到 Next。OpenAMSM Event/Delivery Plugin 的内部实现以 EC04 ca-openamsm-plugin 为准。
 
-## 9. Artifact Handoff 与二进制边界
+### Tool Interface 与 Provider
 
-原始 N1/N2 不进入 NDJSON，不使用 Base64，不直接放入 LLM Context。
+F03.05 的详细设计见 [Tool Interface 与 Provider 集成设计说明书](Tool%20Interface%20与%20Provider%20集成设计说明书.md)。该子设计固定三类跨组件契约：公开 Tool Interface Package、Owner Contract Package、Provider Runtime Bindings，并界定 Provider Backend Binding Catalog v2 的内部边界；同时定义 ca-client-tools v1.2.0 的 ProviderV2 Driver 如何纳入唯一 Plugin Manager。EC03 的 Go 实现、发布物和运行说明仍由 ca-client-tools 维护；Next 不复制其机器契约或实现代码。详见[分仓证据](../../参考与审计/跨仓设计资产迁移与一致性审计.md)。
 
-- Event Plugin 从协议中提取原始字节，写入 Host 提供的 inbound staging directory。
-- Plugin 仅提交相对 stagingPath、slot、mediaType、contentId 和实际 byteLength 描述符。
-- Host 校验 staging path、slot、大小和本次 Event 关联后导入 Host-owned ArtifactStore，发放 opaque artifactRef。
-- Runtime 决定当前 Action 是否可以读取或生成该 Artifact。
-- Tool Plugin 仅接收当前 invocation 已授权的 artifactRef；具体字节通过 Host 的 invocation-scoped artifact stream 交接。
-- Delivery 输出由 Host 写入 outbound staging，Plugin 按 delivery.dispatch 读取并编码。
-- Plugin 不拥有 ArtifactStore、业务 Run 关联或持久化 Artifact 数据库。
-
-不增加额外 SHA-256、独立 Artifact Service 或生产级内容完整性机制。
-
-## 10. 错误、取消与重试
-
-统一错误对象包含 code、message、retryable 和可选 details。retryable 只是传输重试提示，不证明 mutation 未提交。
-
-| 场景 | 行为 |
-|---|---|
-| Manifest / Schema 无效 | Plugin 不启动 |
-| 握手不匹配 | Plugin NOT_READY，不注册 Extension |
-| IPC 帧损坏 / correlation 错误 | 当前 operation 失败关闭，记录诊断 |
-| Plugin 进程异常退出 | 未完成调用返回明确失败或 UNKNOWN；不伪造成功 |
-| Tool 超时 | Runtime 根据 Effect/Owner Receipt 判定；不能仅凭超时断言 NOT_COMMITTED |
-| Delivery 超时 | delivery unknown，保留 responseObligation 状态 |
-| Cancel too_late | 仅表示取消未能阻止 operation，不表示业务回滚 |
-| 同一外部请求重复 | 精确身份匹配时关联原 Run；冲突则拒绝 |
-
-Host 负责 Run/Invocation 的重试策略；Plugin 不得自行重新发起业务 mutation。
-
-## 11. Demo 部署与运维
-
-Plugin 由本地显式安装路径和部署配置加载。Host 启动时校验并启动进程；Plugin 独立日志输出到 stderr。Demo 只要求明确的启动失败、运行错误、关闭和可诊断状态。不建设 Marketplace、在线安装、自动升级、生产级隔离容器、HA 或多租户调度。
-
-## 12. 当前实现审计
-
-| 对象 | 当前状态 | 证据与限制 |
-|---|---|---|
-| Next Plugin Package/IPC 规范 | 文档已合入 Next main | Next PR #1 已合并；规范不等于运行时代码 |
-| Next Python Plugin Manager | NOT_IMPLEMENTED | 本轮仅恢复设计与规范 |
-| ca-client-tools Provider v2 | IMPLEMENTED / RELEASED | main 7bcb261；v1.2.0 已发布；尚需 Next ProviderV2 Driver |
-| ca-client-tools Codec Phase B | OPEN | PR #39 head eb1169f；未合并 |
-| ca-agent-demo Provider v1.1.0 runtime cutover | OPEN | PR #246 head 68a6f9e；不是 main 证据 |
-| ca-openamsm-plugin | NOT_IMPLEMENTED | main eb83c8f 只有 README；PR #1 为 OPEN/Draft 设计提案 |
-| Next Plugin / Echo / OpenAMSM E2E | NOT_RUN | 需在 Next Host 代码落地后执行 |
-
-## 13. 原始设计与来源
-
-- [ca-agent-demo Generic Host 架构原文](../../架构设计/参考实现/REF01-Python%20Generic%20Agent%20Host规范架构.md)
-- [ca-agent-demo v0.5 Plugin 下一版本架构原文](../../架构设计/参考实现/REF01-Plugin下一版本目标架构.md)
-- [ca-client-tools Tool/Provider 架构原文](../../架构设计/外部能力域/EC03-Tool与Provider架构原文.md)
-- [EC03 Provider Protocol v2 原文](../外部能力域/EC03-Tool%20Provider/Provider%20Protocol%20v2契约原文.md)
-- [EC03 Runtime Bindings 原文](../外部能力域/EC03-Tool%20Provider/Runtime%20Bindings设计原文.md)
-- [F03.05 Tool Interface 与 Provider 集成设计](Tool%20Interface%20与%20Provider%20集成设计说明书.md)
-- [EC04 OpenAMSM Plugin Draft 架构原文](../../架构设计/外部能力域/EC04-OpenAMSM%20Go%20Event%20Plugin架构提案原文.md)
-- [Plugin Package/IPC 规范](../../规范/插件包与进程通信协议规范.md)
-- [公共契约与所有权规范](../../规范/公共契约与所有权规范.md)
 
 ## 修订记录
 
-| 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
-|---|---|---|---|---|---|
-| 2026-11-25 | 0.2.2 | GPT-6.2（ChatGPT） | 全文 | 按 Next 唯一 Plugin Manager、Provider v2 适配和 ca-openamsm-plugin 候选设计恢复完整边界 | Issue #12；SR-015～017 |
-| 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | 全文 | 补齐 Manifest、生命周期、IPC、Event/Delivery/Tools、Artifact、错误与当前实现审计 | Issue #12 |
-| 2026-11-25 | 0.3.1 | GPT-6.2（ChatGPT） | §8、§12–13 | 将 Provider v2 消费细节下沉到 F03.05，更新 ca-client-tools v1.2.0 发布状态 | Issue #12；SR-015 |
+| 日期 | 版本 | 修订者/模型 | 章节 | 修订内容 | 原因 | 关联 |
+|---|---|---|---|---|---|---|
+| 2026-11-25 | 0.1.0 | 历史修订者/模型未记录 | 原始设计全文 | 既有功能机制设计基线；逐章历史记录未建立 | 原文档未记录历史作者，本轮不臆造 | PR #1 |
+| 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 第 1～10 章 | 归入对应 Feature 并补充外部能力边界 | 按 F03 归档，明确统一 Plugin Manager 与外部 Tool Interface 权威边界 | F03；SR-003/010；EC03/EC04；PR #1 |
+| 2026-11-25 | 0.2.1 | 刷新需求追踪、目录或证据引用 | 对齐最新分支与 IR/SR 基线 | 见关联 SR |
+| 2026-11-25 | 0.2.2 | Codex / GPT-6 | Tool Interface 与 Provider | 合并有效边界与分仓证据入口 | 跨仓设计移交 | IR-006 |
+| 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | 第 3、5、7、10、11 章 | 拆分 Interface Package、Owner Contract Package 与 Provider Runtime Bindings；固定 Provider v2 迁移 Driver 和 F03.05 子设计入口 | 消除 Owner 结果权威与 Provider 私有映射混淆，按 ca-client-tools v1.2.0 和 ca-agent-demo main 校准 | IR-006 · SR-015 · Issue #12 |
+| 2026-11-25 | 0.3.1 | GPT-6.2（ChatGPT） | 第 3、7、11 章 | 增加 Provider Backend Binding Catalog v2 的内部边界，并引用 11/25/31/44 库存闭合 | 防止将 Provider 私有目录误当作第二份公开 Tool Catalog | IR-006 · SR-015 · Issue #12 |
+| 2026-11-25 | 0.3.2 | GPT-6.2（ChatGPT） | 第 2、3、5、7 章 | 明确 Provider Interface 与 Owner Contract 分别提供不同 Skill-facing Callable；MAS `mas::` 依赖由 Owner snapshot 解析 | 对齐 ca-skills v1alpha5 作者源和 F03.05 契约依赖设计 | IR-006 · SR-015 · Issue #12 |
