@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.2.7  
+> 文档版本：0.2.8  
 > 状态：待评审；全部 SR 当前为 DRAFT，不允许直接实施  
 > 修订日期：2026-11-25  
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -48,7 +48,25 @@
 
 设计版本与章节、依赖、验收 ID、实施证据以各 SR 为准。
 
-## 3. 实施顺序
+## 3. 设计恢复与实施顺序
+
+### 3.1 中央设计恢复批次（当前均为 DRAFT，不可实施）
+
+| 顺序 | SR | 主要功能 | 目标仓 / 参考仓 | 依赖和产出 |
+|---|---|---|---|---|
+| 1 | SR-023 | CA-SL v1alpha5、作者源与发布基线恢复 | ca-skills | 先固定语言、Skill 作者源与版本边界；Compiler #61 仍是外部 OPEN 依赖 |
+| 2 | SR-015 | Tool Interface / Provider / Codec 设计恢复 | ca-client-tools → Next F03.05 | 明确公开 Callable、Owner Contract、Provider v2 和单一 Plugin Manager 消费 |
+| 3 | SR-018 | OpenAMSM Owner 权威状态恢复 | env-openamsm | 固定 Callable、Receipt、Commit Proof、Reconcile 和 Modify/Release 边界 |
+| 4 | SR-019 | Mock AMF / 5GC 仿真对端恢复 | env-5gc-sim | 固定协议对端、World、进程和真实测试边界 |
+| 5 | SR-017 | OpenAMSM Event/Delivery Plugin 恢复 | ca-openamsm-plugin | 依赖 F03/F05、EC05 Owner Contract；当前 PR #1 Draft |
+| 6 | SR-020 | Python Generic Host 参考实现审计 | ca-agent-demo | 为 F01/F03/F04/F05 提供可复用代码证据；不复制业务专用架构 |
+| 7 | SR-022 | ca-runtime 执行内核设计审计 | ca-runtime | 与 F04 对照，区分采用、简化和排除的机制 |
+| 8 | SR-016 | Skill Studio / AI Authoring 设计恢复 | ca-skill-studio-demo | 与 CA-SL、F08/F09 对齐；PR #258 已合并，部署状态独立验证 |
+| 9 | SR-021 | Go Native Host 晋级目标审计 | ca-agent | 最后对照，不能改变 Next 当前 Python Host 决策 |
+
+以上顺序是文档依赖和设计评审顺序，不是实施授权。每份 SR 必须完成设计章节、目标仓/固定 SHA、代码/测试差异、验收命令和非目标边界；评审通过后才可进入 READY。
+
+### 3.2 Next 实施阶段
 
 - 治理自动化：SR-001，可独立实施；依赖设计基线评审通过。
 - Phase A：SR-002。
@@ -59,15 +77,18 @@
 - Phase F：SR-008。
 - Phase G：SR-009、SR-010。
 - Phase H：SR-011。
+- Compiler 外部发布依赖：SR-012、SR-013；SR-013 的 AC-013-01 隔离 PoC 阶段状态按 SR-013 阶段执行单单独维护，不代表完整 SR VERIFIED。
 
-阶段顺序是建议依赖顺序；每个 SR 只有达到 READY 且依赖满足后才能进入实施。
+阶段顺序是建议依赖顺序；每个 SR 只有达到 READY 且依赖满足后才能进入实施。Goal 模式可将同一依赖批次中的多个 READY SR 合并执行，但不得跨越未满足的依赖或把 DRAFT SR 当成可执行任务。
 
 ## 4. 当前基线说明
 
 - 设计来源：ca-agent-next PR #1 的架构、设计、规范和 Acceptance 文档。
 - PR #1：已合并；只代表设计文档变更。
 - Next Runtime：README 声明尚无已验收 Runtime 实现。
-- 所有 SR：DRAFT；Issue、实现 PR、Commit 和测试证据均未建立。
+- 22 项 SR 当前均为 DRAFT；SR-013 的 AC-013-01 是独立阶段状态，不改变 SR 总体状态。
+- Issue #12 追踪本轮中央设计资产恢复；PR #13 是 SR-015 的设计文档 PR（OPEN），不是实现 PR。
+- 本分支 docs/restore-original-designs-20261125 尚未创建 PR；文档静态链接门禁和跨仓完整审查尚未通过。
 - ca-agent-demo、ca-client-tools、ca-skill-compiler、ca-skills 和 ca-openamsm-plugin 的现有代码/PR 只能作为外部复用或依赖证据，不能自动算作 Next SR 已实施。
 
 ## 修订记录
@@ -82,3 +103,4 @@
 | 2026-11-25 | 0.2.5 | 更新 EC02 归档与追踪 | 对齐中央设计及 Compiler #61 | SR-012 |
 | 2026-11-25 | 0.2.6 | Codex 登记 Compiler 实施 SR | 对齐跨仓实施门槛 | SR-013 |
 | 2026-11-25 | 0.2.6 | Codex / GPT-6 · §1–4 · 登记分仓 SR 与真实基线状态 | 跨仓设计移交 | IR-006 |
+| 2026-11-25 | 0.2.8 | GPT-6.2（ChatGPT） | §3–4 | 将 SR-015～SR-023 按功能依赖排序，区分文档恢复批次与 Next 实施阶段；记录 PR #13 与 Issue #12 的真实边界 | 避免 DRAFT 被误判为可执行 | Issue #12；SR-015～SR-023 |
