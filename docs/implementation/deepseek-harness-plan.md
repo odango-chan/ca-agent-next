@@ -8,7 +8,7 @@
 
 ## 0. Mandatory preflight
 
-Read README.md, Agent.md, docs/architecture.md, docs/audit/ca-agent-demo.md, docs/audit/reuse-and-feasibility.md, docs/plugin-package.md, docs/acceptance.md and [the SkillCatalog/Compiler integration requirements](../integration/skill-catalog-compiler-contract.md).
+Read README.md, Agent.md, docs/architecture.md, docs/audit/ca-agent-demo.md, docs/audit/reuse-and-feasibility.md, docs/plugin-package.md, docs/plugin-artifact-handoff.md, docs/acceptance.md and [the SkillCatalog/Compiler integration requirements](../integration/skill-catalog-compiler-contract.md).
 
 Before coding:
 
@@ -18,7 +18,7 @@ Before coding:
 4. Treat ca-agent-demo as read-only source. Do not modify it.
 5. Treat ca-skill-compiler, ca-client-tools, ca-skills, ca-openamsm-plugin and ca-agent as read-only dependencies unless the user separately authorizes a cross-repository change.
 6. Do not start OpenAMSM/Nsmf migration. The first target is Echo.
-7. Read the current CA-SL v1alpha5 and Compiler release contracts. If the refreshed when field or required import behavior is not supported, stop that subtask and report the exact external blocker. Do not strip fields, fake Compiler success or implement a second Compiler in Python.
+7. Read the current CA-SL v1alpha5 and Compiler release contracts. If the refreshed when grammar or Compiler-owned portable checked-program representation is not supported, stop the Assurance/Resolver subtask and report the exact external blocker. SKILL.md-only import is Host-owned and must bypass Compiler. Do not strip fields, fake Compiler success or implement a second Compiler in Python.
 
 ## 1. Fixed target architecture
 
@@ -132,7 +132,7 @@ Implement:
 **Allowed changes:** ca-agent-next only.
 
 1. Make Echo a runnable Example under examples/.
-2. Add Echo Acceptance Tests for EX-01 through EX-19 and EX-21 through EX-29. Reserve EX-20 for Phase G's second-business proof.
+2. Add Echo Acceptance Tests for EX-01 through EX-19 and EX-21 through EX-29. Reserve EX-20 for Phase G's OpenAMSM second-business proof.
 3. Exercise Event → Skill import/selection → Run → Tool → Outcome/Evidence → response delivery.
 4. Exercise SKILL.md-only import, Assurance source import, compiled Artifact import, and LLM Skill Authoring.
 5. Exercise Catalog residency, no per-Event file reads/Compiler calls, compile-once/evaluate-per-Event behavior, duplicate/continuation bypass, atomic update, failed-update rollback, generation pinning and lazy references (EX-21–EX-28).
@@ -143,30 +143,38 @@ Implement:
 
 **Acceptance:** Echo cases EX-01–EX-19 and EX-21–EX-29 pass or are explicitly BLOCKED by the external Compiler Artifact contract; Python Core remains business-neutral; one Plugin process supports Event, Delivery and Tools. EX-20 is completed in Phase G.
 
-## 8. Phase G — Second independent business
+## 8. Phase G — OpenAMSM Plugin contract and integration
 
-Start after Echo acceptance and review.
+Start only after the Generic Echo vertical E2E passes. OpenAMSM is the second independent business used to prove that the same Core accepts a new Plugin/Skill/Tool package without business-specific Core code.
 
-1. Add an independent second business Event Plugin, Skill package and Tool Interface Package.
-2. Include at least one SKILL.md-only Skill or Assurance-backed Skill to prove the package model is not Echo-specific.
-3. Change only package assets and deployment configuration.
-4. Do not add business-specific code to Agent Core, Skill Resolver, Runtime or Plugin Manager.
+Tasks:
 
-**Acceptance:** EX-20 passes with the same Host build. The second business works without modifying Python Core, Resolver, Runtime or Plugin Manager.
+1. Align ca-openamsm-plugin with docs/plugin-package.md and docs/plugin-artifact-handoff.md. The Next documents are the sole target contract; do not reuse ca-agent-demo's ca-agent-host.plugin/v0 protocol.
+2. Implement only SBI ingress, normalized Event publication, multipart/Content-ID parsing and response Delivery in the independent Go Plugin.
+3. Use ca-client-tools v1.2.0 as the OpenAMSM Tool implementation through the one Plugin Manager tools extension adapter. Keep its provider/v2 translation inside that manager; do not create a second Provider Manager.
+4. Import the existing Establish, Modify and UE-requested Release Skills from ca-skills. Do not copy business procedures into the Plugin or Agent Core.
+5. Freeze the exact mapping from OpenAMSM OpenAPI operations and normalized Event fields to Skill when selectors. In particular, distinguish UE-requested PDU Session Release from network-initiated ReleaseSMContext.
+6. Implement Host-owned inbound/outbound N1/N2 staging using docs/plugin-artifact-handoff.md. Do not use Base64, a Plugin database, extra SHA-256 or a new Artifact service.
+7. Preserve Host Run lifecycle, response obligations, resource mapping, Owner Receipt/Commit Proof, UNKNOWN and exact-original Reconcile semantics.
 
-## 9. Phase H — OpenAMSM integration (later, not part of Echo MVP)
+**External gates:** ca-skills PR #88 is OPEN. Compiler v2.1.0 support for the proposed v1alpha5 contract.when and portable checked-program representation is not established. ca-client-tools PR #39 is OPEN with Phase B final pass and Phase C not started. Do not claim a dependency is merged/released or a codec message is qualified unless the exact evidence exists.
 
-Start only after Echo and second-business mechanism acceptance.
+**Acceptance:** OM-01 through OM-10 pass on fixtures and exact protocol vectors before live E2E. The OpenAMSM Plugin contains no Skill selection, Owner operation map, RunStore, Runtime or authorization logic.
 
-- Use ca-openamsm-plugin as Event Plugin for SBI ingress/delivery.
-- Use ca-client-tools v1.2.0 as Tool Plugin through the unified Plugin Manager; adapt its current Provider v2 protocol rather than copying its Go code.
-- Consume ca-skills Create/Modify/Release CA-SL packages.
-- Invoke the Compiler release that supports the refreshed v1alpha5 contract.when compiled Artifact representation. SKILL.md-only packages remain on Next's direct Importer path and never invoke Compiler. Python Runtime consumes the portable checked program specified by the Compiler-owned Artifact contract.
-- Keep Nsmf Run lifecycle, resource mapping, Host Artifact Store and Runtime outside the Event Plugin.
-- Preserve Owner Receipt, Commit Proof, UNKNOWN and exact-original Reconcile semantics.
-- Do not claim live Scheme C or Production Qualification unless the isolated real environment gate is executed.
+## 9. Phase H — Real OpenAMSM Create → Modify → Release E2E
 
-Cross-repository implementation changes require separate authorization and PRs.
+Run only after Phase G contract and integration tests pass.
+
+1. Use one real isolated OpenAMSM Owner/SMF and one UE/PSI.
+2. Run Create, then Modify, then UE-requested Release through the new Next Host and Go Plugin.
+3. Preserve the original N1/N2 bytes and Content-ID associations through Host ArtifactStore and Provider invocation.
+4. Prove the Release continuation resumes the exact original Run and generation using N1 Release Complete (0xD4) and N2 PDU Session Resource Release Response where applicable.
+5. Verify Owner Receipt/Commit Proof/Reconcile, terminal state, response Location/status and no duplicate mutation.
+6. Keep synthetic Owner acceptance separate from real isolated Owner evidence.
+
+**Acceptance:** OM-11 passes with a real isolated Owner. Synthetic G5 or offline fixture tests do not satisfy this gate. No Production Qualification is claimed.
+
+The current authorization covers documentation alignment in ca-agent-next and ca-openamsm-plugin. Cross-repository implementation code changes require their own explicit phase authorization.
 
 ## 10. Explicit prohibitions
 
@@ -183,7 +191,7 @@ Cross-repository implementation changes require separate authorization and PRs.
 - Do not compile individual LLM Action proposals or wrap each one in a temporary Procedure.
 - Do not let LLM invoke Plugins directly or declare Owner commit.
 - Do not move NsmfRunExecutor, Owner claims, Receipt/Reconcile or Skill Runtime into ca-openamsm-plugin.
-- Do not start OpenAMSM before Echo and second-business acceptance.
+- Do not start OpenAMSM implementation before Echo acceptance. OpenAMSM itself is the second-business zero-Core-change proof.
 - Do not claim a test PASS unless the command was actually run and its output recorded.
 
 ## 11. Final report required from each phase
