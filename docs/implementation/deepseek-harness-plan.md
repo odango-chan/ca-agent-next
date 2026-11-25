@@ -153,11 +153,11 @@ Tasks:
 2. Implement SBI HTTP/2 ingress, normalized Event publication, multipart/Content-ID parsing, raw N1/N2 artifact handoff and response Delivery in the independent Go Plugin. Do not eagerly deep-decode every NAS/NGAP IE for business reasoning.
 3. Use ca-client-tools v1.2.0 as the OpenAMSM Tool Plugin through the one Plugin Manager tools extension adapter. Keep its provider/v2 translation inside that manager; do not create a second Provider Manager.
 4. Add Codec Tool operations to that existing tools extension only after the operation and Schema are published in the canonical Interface Package. Reuse the accepted Go codec package/Worker/Facade; do not create a separate Codec Plugin/Manager or duplicate decoding in Host/Event Plugin.
-4. Import the existing Establish, Modify and UE-requested Release Skills from ca-skills. Do not copy business procedures into the Plugin or Agent Core.
-5. Freeze the exact mapping from OpenAMSM OpenAPI operations and normalized Event fields to Skill when selectors. In particular, distinguish UE-requested PDU Session Release from network-initiated ReleaseSMContext.
-6. Implement Host-owned inbound/outbound N1/N2 staging using docs/plugin-artifact-handoff.md. Do not use Base64, a Plugin database, extra SHA-256 or a new Artifact service.
-7. Preserve Host Run lifecycle, response obligations, resource mapping, Owner Receipt/Commit Proof, UNKNOWN and exact-original Reconcile semantics.
-8. Make Codec invocation Skill-driven: no-decode Skills pass original artifactRefs to business Tools; Skills needing protocol fields call Codec through the common Runtime Action Boundary. Keep the original bytes unchanged for forwarding and response composition.
+5. Import the existing Establish, Modify and UE-requested Release Skills from ca-skills. Do not copy business procedures into the Plugin or Agent Core.
+6. Freeze the exact mapping from OpenAMSM OpenAPI operations and normalized Event fields to Skill when selectors. In particular, distinguish UE-requested PDU Session Release from network-initiated ReleaseSMContext.
+7. Implement Host-owned inbound/outbound N1/N2 staging using docs/plugin-artifact-handoff.md. Do not use Base64, a Plugin database, extra SHA-256 or a new Artifact service.
+8. Preserve Host Run lifecycle, response obligations, resource mapping, Owner Receipt/Commit Proof, UNKNOWN and exact-original Reconcile semantics.
+9. Make Codec invocation Skill-driven: no-decode Skills pass original artifactRefs to business Tools; Skills needing protocol fields call Codec through the common Runtime Action Boundary. Keep the original bytes unchanged for forwarding and response composition.
 
 **External gates:** ca-skills PR #88 is OPEN. Compiler v2.1.0 support for the proposed v1alpha5 contract.when and portable checked-program representation is not established. ca-client-tools PR #39 is OPEN with Phase B final pass and Phase C not started. Do not claim a dependency is merged/released or a codec message is qualified unless the exact evidence exists.
 
