@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.2.3  
+> 文档版本：0.2.4  
 > 状态：设计补充待评审；Compiler 实施由 SR-013 跟踪  
 > 修订日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -283,7 +283,7 @@ Chromium parity 脚本使用真实 Headless Chrome；若默认路径不可用，
 ## 9. 当前状态与 SR-013 阶段关系
 
 - CA-SL v1alpha5 规范来源和语言标识已固定。
-- AC-013-01 隔离 PoC：用户报告 Go/Python 18/18 一致，见 SR-013 §3；本地证据尚未推送，独立复核仍待完成。
+- AC-013-01 隔离 PoC：用户报告 Go/Python 18/18 一致，见 SR-013 §3；报告引用的 evidence commit `78dddd5` 未在 ca-skill-compiler 远端找到，EVIDENCE.md / artifacts 未归档，独立复核 NOT_RUN。
 - AC-013-02 正式 Contract.when 编译：NOT_RUN。
 - AC-013-03 新版 Runtime Artifact Schema/API：待 Compiler Owner 对 §5.1 候选版本作明确确认。
 - AC-013-04 Build/Verify 与产品门禁：NOT_RUN。
@@ -307,3 +307,4 @@ Chromium parity 脚本使用真实 Headless Chrome；若默认路径不可用，
 | 2026-11-25 | 0.2.1 | GPT-6.2（ChatGPT） | §2–7 | 补充 Contract.requestSchema 的独立运行期发布快照，区分 G.4 Schema 验证与 CEL DescriptorSet；明确 event.type-only when 不要求 requestSchema | 对齐 CA-SL v1alpha5 M.2/M.3，修复 Host 运行期缺少 Request Schema 数据的发布契约缺口 | Issue #14、SR-013、Compiler #61、F02、F08 |
 | 2026-11-25 | 0.2.2 | GPT-6.2（ChatGPT） | §5.3 | 明确根 Schema 未声明 $id 时使用 sourceRef/rootPath，不虚构 Schema URI；仅真实声明的 $id 进入资源映射 | 避免将 G.4 非强制的根 $id 变成额外作者约束 | Issue #14、SR-013、Compiler #61 |
 | 2026-11-25 | 0.2.3 | GPT-6.2（ChatGPT） | §1～9 | 同步 F02/F08/SR-013 新版本，并将 AC-013-01 证据状态明确为报告 PASS、远端证据未归档、独立复核未运行 | 防止隔离 PoC 报告被误认作 Compiler 产品发布或完整 SR 验收 | Issue #14；PR #16/#18；SR-013 |
+| 2026-11-25 | 0.2.4 | GPT-6.2（ChatGPT） | §1～9 | 同步 F02/F08/SR-013 最新版本引用，明确 AC-013-01 证据 commit 远端不可检索、证据未归档 | 防止报告 PASS 被误报为独立复核或产品实现 PASS | Issue #14；PR #16/#18；SR-013 |

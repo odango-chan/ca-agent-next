@@ -1,13 +1,13 @@
-# SR-024：参考宿主设计移交
+# SR-024：Host Context Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.2.0
+> SR 版本：0.1.1
 > 状态：DRAFT
 > 创建日期：2026-11-25
 > 所属阶段：跨仓设计移交
 > 上游需求：[IR-006](../IR/IR%20总登记册.md#ir-006)
-> 功能：F01/F04
-> 设计依据：[F01/F04 设计](../../docs/设计说明书/F01-通用Agent核心与Host/通用Agent核心与Host设计说明书.md) v0.1.2；[F09 Publisher 输出要求](../设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md#45-两个-contract-root-的正式-publisher-输出)；[迁移审计 §3.3](../参考与审计/跨仓依赖与可行性审计.md#33-skill-studio作者导入compiler-request-与产品集成)
+> 功能：F09
+> 设计依据：[F09 Publisher 输出要求](../设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md#45-两个-contract-root-的正式-publisher-输出) v0.3.2；[EC02 Development Build](../设计说明书/EC02-Compiler/Development%20Build设计.md) §2–4；[迁移审计 §3.6](../参考与审计/跨仓依赖与可行性审计.md#36-skill-studio作者导入compiler-request-与产品集成)
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：生产级资格认证、Host Admission 授权与无关 Runtime 重构
 
@@ -17,11 +17,10 @@
 
 ## 2. 实施范围
 
-- 保留当前参考宿主的运行方式和既有演示证据；逐项核对复用，与历史 admission 和 v0.5 未交付方案分离。
 - 将 Host-owned subject Context Schema fixture 发布为 Compiler v2.1.0 可消费的正式 `connectionagent.io/interface-package/v1alpha1` 包，供 Contract root `ca-context: urn:connectionagent:ca:host-context` 使用。
 - 正式包身份固定为 `packageId=urn:connectionagent:ca:host-context`、`version=v1`、`publisher=urn:connectionagent:owner:ca-context`、`languageTarget=connectionagent.io/v1alpha5`。
 - 包内只包含原始 `subject.schema.json`，发布一个 `Schema` export：ID 精确等于 `$id=urn:connectionagent:ca:context:subject:v1`，路径为 `subject.schema.json`。Schema 原始字节不得重写或重新序列化。
-- 正式 `package.json` 严格遵循 Compiler v2.1.0 `contracts/development/v1alpha1/interface-package.schema.json`，其 `files[]` 对精确 Schema 字节计算 SHA-256；无包依赖时 `dependencies: []`。
+- 正式 `package.json` 严格遵循 Compiler v2.1.0 `contracts/development/v1alpha1/interface-package.schema.json`，其 `files[]` 对精确 Schema 字节计算 SHA-256；这是既有 Interface Package schema 要求的逐文件字段，不是 CA-SL Skill Artifact 的额外包级完整性机制。不得增加 manifest-level digest、签名、Trust Registry 或 Admission；无包依赖时 `dependencies: []`。若“无 SHA-256”约束也要求删除此既有字段，必须先由 Compiler Owner 修改并发布 schema，Publisher 不得自行省略。
 - 来源身份固定为 repository `odango-chan/ca-agent-demo`、ref `refs/heads/main`、path `tests/fixtures/compiler/mas-v1alpha5-scheme-c/trusted/snapshots/ca-context`、Revision `57e277ff9094dad93543df46910a12a1dbbaf560`、Git blob `4faee66642b8bc5eb2e45c131be4688b982037d8`。
 - `sourceStatus=DEVELOPMENT_FIXTURE` 只保留在 Studio `skillc.lock/v0.1` 的 source provenance；不得添加到正式 `package.json`（冻结 schema 不允许未知字段）。Compiler BuildRequest 使用 `profile=DEVELOPMENT`。Package publisher 声明和 Build PASS 均不构成 Host Trust 或 Admission。
 
@@ -41,15 +40,15 @@
 - AC-024-05：Studio 导入后，`skillc.lock/v0.1` 继续记录精确 Revision、Git blob、Package ID、version、publisher 和 `sourceStatus=DEVELOPMENT_FIXTURE`；不创建第二份项目 Lock。
 - AC-024-06：独立 synthetic Skill 显式声明 `ca-context` root，完成官方 Compiler v2.1.0 Build + VerifyDevelopment；成功状态为 `VALIDATED / LINKED / BUILT / NOT_ADMITTED`，不得解释为 Host Admission 或 Production Qualification。
 
-## 5. 实施关联
+## 5. 实施关联与执行门禁
 
-- Studio #269：OPEN；消费正式 Host Context Interface Package 并集成 Compiler v2.1.0。
-- 实施 PR / Commit：无。实施：NOT_STARTED。验收：NOT_RUN。替代关系：无。
+- [Studio Issue #269](https://github.com/odango-chan/ca-skill-studio-demo/issues/269)：OPEN；消费正式 Host Context Interface Package 并集成 Compiler v2.1.0。
+- 实施 Issue：NOT_CREATED；实施 PR / Commit：无。实施：NOT_STARTED。验收：NOT_RUN。替代关系：无。
+- 本 SR 保持 DRAFT。必须先创建并关联 ca-agent-demo 实施 Issue、完成设计评审和文档门禁，之后才能生成 DeepSeek Harness Goal 提示词。
 
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
 |---|---|---|---|---|---|
-| 2026-11-25 | 0.1.0 | Codex / GPT-6 | §1–5 | 记录目标仓、基线、依赖和验收。 | IR-006 · SR-024 |
-| 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | §1–5 | 明确 Host Context Development fixture 的正式 Interface Package 身份、Schema export、原始字节和 sourceStatus provenance 边界。 | IR-006 · F09 · Studio #269 |
-| 2026-11-25 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 从 PR #15 的重复 SR-020 内容中独立拆出 Host Context Interface Package Publisher；固定源 Schema、包身份、Export、原始字节、Studio provenance 与 Development Build 验收 | SR-020 已用于参考宿主架构恢复/差异审计，不能重复占用同一 SR ID；Publisher 单独归入 SR-024 | Issue #12；IR-006；F09 v0.3.1；SR-015、SR-016、SR-024；Studio #269 |
+| 2026-11-25 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 从重复占用 SR-020 的 Host Context Publisher 设计中建立独立 SR-024；固定源 Schema、包身份、Export、原始字节、Studio provenance 与 Development Build 验收 | IR-006；F09；SR-015、SR-016、SR-024；Studio #269 |
+| 2026-11-25 | 0.1.1 | GPT-6.2（ChatGPT） | §1～5 | 修正 SR 标题/功能归属/相对链接，明确只使用 schema-required files[].sha256，不新增包级摘要、签名、Trust Registry 或 Admission；补充实施 Issue 与提示词门禁 | Issue #12；SR-020 保留参考宿主审计；SR-024 独立发布 Host Context Package |

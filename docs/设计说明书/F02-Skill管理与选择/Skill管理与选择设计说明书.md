@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：目标机制设计；Artifact 互操作部分依赖外部 Compiler 发布  
-> 文档版本：0.2.7
+> 文档版本：0.2.8
 > 功能归属：F02 — Skill 管理与选择  
 > 关联 SR：SR-004、SR-005、SR-006    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -206,3 +206,4 @@ Next 在 Skill 导入时反序列化已检查程序和类型环境，建立运�
 | 2026-11-25 | 0.2.5 | GPT-6.2（ChatGPT） | §4、§5、§9 | 更正冻结 v1alpha5 Artifact 不含 dependency snapshotDigest 的事实，明确 Owner version pin 由 Provider sidecar / 部署配置提供 | 避免把 Development v1alpha1 Lock 能力误认为当前 Agent 运行期能力 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.2.6 | GPT-6.2（ChatGPT） | §4、§9 | 补充 provider.yaml interfaceSnapshotDigest 对 Provider Interface snapshot 的部署级固定 | 与 Owner Contract sidecar pin 一起覆盖当前 Tools 依赖的两种外部契约 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.2.7 | GPT-6.2（ChatGPT） | §7、§11、§12 | 保留 F02 v0.2.6 已有的 when/Request Schema 语义与 Provider pin，刷新 Compiler/F08/SR-013 的最新设计引用 | 与 SR-013、F08、EC02 Compiler 新设计保持同一版本基线 | Issue #12；IR-003；SR-013 |
+| 2026-11-25 | 0.2.8 | GPT-6.2（ChatGPT） | §7、§11、§12 | 同步 F08、EC02 Compiler 与 SR-013 最新设计版本引用，保留 F02 已冻结的 when/Request Schema 语义 | 统一 Compiler 设计闭环版本 | Issue #14；IR-003；SR-013 |
