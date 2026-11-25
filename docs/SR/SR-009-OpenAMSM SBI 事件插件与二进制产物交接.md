@@ -1,7 +1,7 @@
 # SR-009：OpenAMSM SBI 事件插件与二进制产物交接
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.2  
+> SR 版本：0.1.3  
 > 状态：DRAFT；设计基线待评审，不允许实施  
 > 创建日期：2026-11-25  
 > 所属阶段：Phase G  
@@ -49,7 +49,7 @@ SR-008、SR-003；外部依赖为 ca-openamsm-plugin 设计/实现契约。
 
 | 项目 | 当前值 |
 |---|---|
-| 实施仓库 | ca-agent-next |
+| 实施仓库 | ca-openamsm-plugin |
 | GitHub Issue | 未创建 |
 | 实施 PR | 未创建 |
 | Commit | 无 |
@@ -72,3 +72,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-25 | 0.1.0 | 建立初始需求草案 | 从当前架构、设计说明书和 Acceptance 分解 | SR-009 |
 | 2026-11-25 | 0.1.1 | 中文化 SR 标题和文件名；需求范围及验收条件未变 | 落实中文文档命名规范 | SR-009 |
 | 2026-11-25 | 0.1.2 | 补齐 IR、设计章节与验收追踪 | 对齐最新分支与 IR/SR 基线 | SR-009 |
+| 2026-11-25 | 0.1.3 | 更新 F05/F06/Plugin IPC 设计版本，并将 Go Event/Delivery Plugin 的实施目标仓更正为 ca-openamsm-plugin | 设计仓与实际代码仓分离；防止将插件实现错误归入 Next Host | Issue #12 |
