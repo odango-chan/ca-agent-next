@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.1.6  
+> 文档版本：0.1.7  
 > 状态：DRAFT  
 > 创建日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -63,6 +63,14 @@ Go 静态编译另拒绝了未知字段和另一共享 descriptor 文件中未�
 
 下一步先用正式 G.4 规则实现并验证 Schema-aware 源表达式守卫检查，再在同一 Compiler Core 内验证从已检查的作者表达式到 typed wire AST 的转换。先覆盖 `has`、`== null`、`!= null`、安全标量读取和缺守卫拒绝，再扩至 G.4 允许的布尔组合、嵌套路径、有限 double 与跨 Skill 隔离。严禁以 wire 表达式替换作者语法、允许 DynType 或依赖运行时异常代替静态拒绝。候选 SHA 的证据按各自范围记录，由 Compiler Owner 在完整 PoC 通过后裁定 Artifact API。
 
+### 作者表达式转换原型
+
+[Go 原型](../参考与审计/fixtures/ac-013-01/lowering.go)读取原始 CEL，用 cel-go AST 对本样例的左到右短路守卫做检查，将 non-null guard 转成 scalar 分支存在检查，再用同一 CEL 库检查生成的表达式。直接加载其 CheckedExpr 和 DescriptorSet 的 [Python 验证](../参考与审计/fixtures/ac-013-01/lowering.py)实测与 Go 一致。缺少存在守卫、缺少非空守卫、错误的 OR 保护及 int/double 混用均被原型拒绝。Python 未重新编译源码。
+
+复跑时固定 Compiler 到 `255ab85fa5abb4b0bf36656bf64250cafebf45cb`。将 Go 文件和 Python 文件复制到绝对路径的隔离证据目录。从 Compiler 源目录以 `GOWORK=off` 运行 `go run <证据目录>/lowering.go <证据目录>`，再用本节固定版本的 Python 运行同目录的 `lowering.py`。Go 生成 `lowered.checked.pb` 与 `lowered.types.pb`。
+
+原型仅验证一个固定字段及有限运算。OR 负例是原型对该分支的拒绝，未证明通用 OR 分析。正式验收仍须覆盖 Schema Registry 闭包、嵌套路径、完整 G.4 布尔组合、有限 double、精确源诊断和实际多 Skill Lock。该原型作为 DSH 的复现输入，产品实现须在同一 Compiler Core 中复用现有 AST 和语义检查；不得将此固定字段原型并入产品。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订内容 | 原因 | 影响 SR |
@@ -74,3 +82,4 @@ Go 静态编译另拒绝了未知字段和另一共享 descriptor 文件中未�
 | 2026-11-25 | 0.1.4 | 记录实跑环境与 CheckedExpr Any 交换探针 | 提供 AC-013-01 的可复用起点 | SR-013 |
 | 2026-11-25 | 0.1.5 | 记录 typed Go/Python 结果和 null 映射反例 | 缩小 AC-013-01 剩余验证范围 | SR-013 |
 | 2026-11-25 | 0.1.6 | 记录 nullable oneof 候选和作者语法转换缺口 | 明确 AC-013-01/02 的下一项实验 | SR-013 |
+| 2026-11-25 | 0.1.7 | 记录可复跑的源 AST 转换试验 | 为完整 Schema-aware 实施提供验收起点 | SR-013 |
