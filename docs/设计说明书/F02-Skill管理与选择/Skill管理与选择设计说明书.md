@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：目标机制设计；Artifact 互操作部分依赖外部 Compiler 发布  
-> 文档版本：0.2.2  
+> 文档版本：0.2.3  
 > 功能归属：F02 — Skill 管理与选择  
 > 关联 SR：SR-004、SR-005、SR-006    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -92,13 +92,15 @@ Agent 不实现文件监视器、自动下载、分布式缓存或通用 Plugin 
 1. 校验并去重 Event。
 2. 精确 continuation 优先，恢复原 Run，不重新选择 Skill。
 3. 对新 Event 固定当前 Catalog generation。
-4. 对声明 when 的已发布 Assurance Skill，使用 Artifact 中已检查的 CEL 程序求值。
+4. 对新 Event，按各已发布 Assurance Skill 声明的 `requestSchema` 验证规范化 payload。失败时记录关联 Skill 和失败原因的输入校验诊断，在两个候选集合之外处理该 Skill，跳过 CEL。通过或无需 Schema 校验的 Skill 若声明 `when`，使用 Artifact 中已检查的 CEL 程序求值。
 5. when=true 形成显式候选；when=false 排除；运行期求值错误 fail-closed 并排除该 Skill。
 6. 一个显式候选直接选择；多个显式候选只允许在精确候选集合内由 LLM 消歧，并校验返回的 Skill ID。
-7. 没有显式候选时，只对没有声明 when 的 Skill 进行 SKILL.md 语义选择。
+7. 没有显式候选时，只对 SKILL.md-only 和通过前述 Schema 资格检查、未声明 when 的 Assurance Skill 做 SKILL.md 语义选择。
 8. when=false 或求值错误的 Skill 不得重新进入无条件语义候选集合。
 9. 无候选时澄清或拒绝；不得无 Skill 绑定地回退到 Generic Agent。
 10. 精确绑定 Skill 后，才选择 Deterministic 或 LLM-guided 模式。
+
+无规范化 Event 的直接用户任务只走未声明 when 的语义候选路径。上面的 Event 资格规则取自 [CA-SL v1alpha5 候选 M.3／SA-012](../../规范/CA-SL语言基线与版本规范.md#31-候选复核结果)，实施以正式发布版本为准。
 
 when 只能读取规范化 Event 的 event.type 和 Contract.requestSchema 声明的 input 字段，不得访问 Tool、Observation、Runtime Context、时钟或可变 Host 状态。读取 input 成员必须由作者源 Contract 声明 requestSchema，并由外部 Compiler 在发布前静态检查。
 
@@ -197,3 +199,4 @@ Next 在 Skill 导入时反序列化已检查程序和类型环境，建立运�
 | 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 第 11 章及全文归属 | 合并 CEL 互操作设计，明确 EC01/EC02 权威和 Next 消费边界 | 避免 Skill 功能拆成多份设计说明书 | F02；SR-004～006；EC01/EC02；PR #1 |
 | 2026-11-25 | 0.2.1 | 刷新需求追踪、目录或证据引用 | 对齐最新分支与 IR/SR 基线 | 见关联 SR |
 | 2026-11-25 | 0.2.2 | Codex / GPT-6 | §12 | 记录中央规范与 Compiler/Studio/Next 分工 | 跨仓设计移交 | IR-006 |
+| 2026-11-25 | 0.2.3 | Codex / GPT-6 | §6 | 明确 Event Request Schema 资格与诊断次序 | 对齐 CA-SL 候选 M.3／SA-012 | IR-003、SR-006、EX-10 |
