@@ -93,7 +93,7 @@ Expected Skill inputs:
 | UE-requested Release | n1.request containing the original PDU Session Release Request (0xD1) |
 | Release continuation | n1.confirmation and/or n2.confirmation, correlated by Host to the exact original Run and generation |
 
-The actual SBI operation IDs, multipart part names, optionality and response mapping must be checked against the current OpenAMSM OpenAPI and existing ca-agent-demo Host behavior before T3 implementation. In particular, UE-requested PDU Session Release is not interchangeable with AMF/network-initiated ReleaseSMContext.
+The native manifest declares these slots under event.ingress.events[].artifacts.input and event.delivery.responses[].artifacts.output, with slot, mediaType and required. The initial normalized Event types are nsmf.create-sm-context, nsmf.update-sm-context and nsmf.update-sm-context.continuation. Modify and UE-requested Release are distinguished from validated fields on UpdateSMContext; continuation Events resume the original Run and bypass fresh Skill selection. The actual SBI operation IDs, multipart part names, NAS discriminator field, optionality and response mapping must be checked against the current OpenAMSM OpenAPI and existing ca-agent-demo Host behavior before T3 implementation. In particular, UE-requested PDU Session Release is not interchangeable with AMF/network-initiated ReleaseSMContext.
 
 ## 6. Run and retry semantics
 
