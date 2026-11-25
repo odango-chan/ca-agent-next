@@ -85,7 +85,7 @@ Every fresh business request binds a Skill before execution. Exact continuations
 - A Skill with Assurance may declare the optional top-level contract.yaml field when.
 - when is a pure CEL boolean used only during Skill selection.
 - Its input environment is the normalized Event metadata, including event.type, and the Event payload exposed as input.
-- The Event Plugin validates the normalized payload against its Event Schema. A candidate Assurance requestSchema, when declared, must also accept the same input before its when expression is evaluated.
+- The Event Plugin validates the normalized payload against its Event Schema. If `when` reads any `input` member, the Assurance Contract MUST declare `requestSchema`; the Compiler statically checks those fields against that Schema. Host validates the same normalized input against a declared candidate `requestSchema` before evaluating `when`.
 - when may inspect only the declared Event metadata and input fields. It cannot query Tools, inspect runtime Observations, read mutable Host state or perform side effects.
 - SKILL.md natural-language usage guidance is used for semantic selection of unguarded Skills. It does not gain a second CEL field.
 - predicates.yaml remains exclusively for execution-time business facts.
@@ -100,8 +100,8 @@ when: 'event.type == "nsmf.create-sm-context" && input.requestType == 1'
 ### 4.2 Candidate resolution
 
 1. Validate the Event envelope and payload. Resolve an exact continuation first; a continuation never re-enters fresh Skill selection.
-2. Load available Skill packages. A package with invalid Assurance is rejected at import and is not a candidate.
-3. Evaluate when for each imported Assurance Skill that declares it. A true result is an explicit match. False excludes that Skill. A runtime evaluation error fails closed, excludes the Skill and records a diagnostic. A statically invalid expression prevents Assurance compilation/admission.
+2. Pin the active in-memory SkillCatalog generation for this fresh Event. A package with invalid Assurance was rejected at import and is not a candidate; do not scan package directories on this path.
+3. Evaluate the precompiled `when` program for each eligible Assurance Skill that declares it, using this Event's current values. A true result is an explicit match. False excludes that Skill. A runtime evaluation error fails closed, excludes that Skill and records a diagnostic. A statically invalid expression prevents Assurance compilation/admission.
 4. If one explicit true match exists, select it without an LLM call. If multiple explicit true matches exist, the LLM may disambiguate only within that exact set; validate the returned Skill identity.
 5. If there are no explicit true matches, form the unguarded semantic candidate set from Skills without when. This includes SKILL.md-only Skills and valid Assurance Skills whose contract omits when. Use their SKILL.md descriptions for semantic selection; the LLM cannot invent a Skill outside the imported set.
 6. If the applicable candidate set is empty, stop or request the missing information. A Skill whose when evaluated false or errored is not reintroduced as an unguarded candidate.
@@ -109,6 +109,44 @@ when: 'event.type == "nsmf.create-sm-context" && input.requestType == 1'
 8. Select Deterministic or LLM-guided mode only after Skill binding.
 
 There is no Event-to-Skill table, Event-to-mode table, business-contract package registry or domain-specific Host route. The Plugin does not name a Skill.
+
+### 4.3 Core-owned in-memory SkillCatalog
+
+SkillCatalog is a Python Agent Core / Host mechanism. It is deliberately separate from Plugin Manager: Plugin Manager owns Plugin lifecycle, IPC and Event/Delivery/Tool extension dispatch; it neither owns Skill assets nor performs Skill selection.
+
+The Catalog is an immutable, process-local snapshot built at startup and on an explicit Skill import/update operation. It is the active read model for Skill discovery and selection; package files remain the source of truth, not the Catalog itself.
+
+Each Catalog entry retains, as applicable:
+
+- Skill identity and package/source reference;
+- the full imported SKILL.md text plus lightweight candidate metadata derived from it;
+- Assurance presence/validity and the admitted Artifact reference;
+- the precompiled `when` program and its CEL profile/type environment;
+- the validated Request Schema/type information needed by selection;
+- the Capability requirements and other admission metadata needed after selection.
+
+Residency and loading rules:
+
+1. Read and parse SKILL.md once when importing/updating a package. Keep its full text in memory. Semantic selection uses bounded candidate metadata derived from that in-memory content; after selection, provide the full SKILL.md text from memory, not by rereading disk.
+2. Compile and statically type-check `when` once during Assurance import/update. Keep the compiled program and its type environment in memory. Do not parse or compile CEL on the Event hot path.
+3. Every fresh Event evaluates the cached program against that Event's current `event.type` and `input`. Do not cache a prior Event's true/false/error result: two Events for the same Skill may have different payloads. Duplicate Event handling and exact continuation resolution happen before fresh selection, so a replay/continuation does not cause a new evaluation.
+4. Register SKILL.md-only Skills in the same Catalog. They have no `when` program and remain semantic candidates when the explicit-match set is empty.
+5. Keep small Skill metadata, SKILL.md text, CEL programs, Schema/type information and Artifact admission handles resident. Load `references/` and large knowledge assets only when the selected Skill needs them. A large Procedure payload may be materialized after selection and cached for that Catalog generation; it must not trigger per-Event package scans.
+6. Build a candidate generation off-path. An explicit update activates it with one atomic snapshot swap only after the requested package changes validate. If the update fails, retain the previous active generation. No filesystem watcher or automatic package hot reload is required.
+7. A fresh Invocation pins the Catalog generation used for selection. Its Skill text, Artifact and Capability bindings remain from that generation even after a newer generation is activated. Retain an old generation while any Invocation still references it, then reclaim it.
+8. Use a simple process-local monotonically increasing generation number for this Demo. Do not add a distributed cache, Redis, content digest, package signature or another integrity mechanism.
+
+The Event hot path is therefore: validate/deduplicate Event → resolve exact continuation (if any) → pin active Catalog generation for a fresh Event → evaluate in-memory `when` programs → perform semantic selection only among unguarded in-memory candidates if there is no explicit match → bind Skill → select execution mode. It does not read SKILL.md, scan Skill directories or invoke Compiler.
+
+### 4.4 Compiler-to-Runtime `when` Artifact boundary
+
+CA-SL v1alpha5 Appendix M defines the author expression and static typing rules. In particular, `event.type` is a string, `input` is typed from `Contract.requestSchema`, and a `when` expression that accesses `input` members requires `requestSchema`. The Compiler owns parsing, CEL G.4 static checking and generation of the compiled selection program; the Python Resolver owns per-Event evaluation and candidate resolution.
+
+The Compiler-owned Artifact contract must provide a portable, already checked representation of `when`, not merely the source string. It must bind that program to the CA-SL CEL profile and the exact static type environment (`event.type: string` and the declared Request Schema/type for `input`), preserve useful source-location diagnostics, and be consumable by the Python Runtime without reparsing or re-type-checking the source expression on every Event. The Runtime evaluates only against the current normalized `event.type` and `input`; true matches, false exclusions and runtime-error fail-closed behavior follow Appendix M.
+
+The exact wire field names and serialization are owned by the Compiler's versioned Artifact Contract, not invented by ca-agent-next. Do not mutate the already frozen Compiler Artifact contract in place. If its current format cannot carry this representation, the Compiler owner must publish and test a compatible versioned Artifact contract/release before Next's Assurance import/Resolver phase can pass. Do not create a Python-only CEL parser, a second CEL dialect or a per-Event Compiler subprocess.
+
+See [SkillCatalog and Compiler integration requirements](integration/skill-catalog-compiler-contract.md) for the cross-language contract and acceptance gates.
 
 ## 5. One extension mechanism: Plugin
 
@@ -188,7 +226,10 @@ SKILL.md
 Skill Importer
    |
    v
-LLM-guided Skill available
+Build candidate Catalog generation
+   |
+   v
+Atomically publish active generation
 ~~~
 
 No Assurance and no Compiler invocation.
@@ -211,7 +252,10 @@ Artifact Inspect / Verify
 Host Admission
    |
    v
-Skill available in both modes
+Build candidate Catalog generation
+   |
+   v
+Atomically publish active generation
 ~~~
 
 **C. Import a compiled Artifact**
@@ -229,7 +273,10 @@ Artifact Inspect / Verify
 Host Admission
    |
    v
-Skill available in both modes
+Build candidate Catalog generation
+   |
+   v
+Atomically publish active generation
 ~~~
 
 No rebuild.
@@ -253,26 +300,31 @@ No rebuild.
 
 ~~~mermaid
 flowchart TB
+  PKG[Configured Skill Packages / Artifacts] --> IMPORT[Skill Importer: startup or explicit update]
+  IMPORT --> SOURCE{Input kind}
+  SOURCE -->|SKILL.md only| GUIDANCE[Load guidance; no Compiler]
+  SOURCE -->|Assurance source| COMP[CA-SL Compiler Check / Build]
+  SOURCE -->|Compiled Artifact| VERIFY[Inspect / Verify]
+  COMP --> VERIFY
+  VERIFY --> ADMIT[Host Admission]
+  GUIDANCE --> CANDIDATE[Build candidate SkillCatalog generation]
+  ADMIT --> CANDIDATE
+  CANDIDATE --> SWAP[Atomic activate immutable Catalog generation]
+
   EXT[External Event / User Task] --> EP[Event Plugin]
   EP --> PM[One Python Plugin Manager]
   PM --> HOST[Python Host / Agent]
   HOST --> CONT{Exact continuation?}
-  CONT -->|yes| RESUME[Resume original Run]
-  CONT -->|no| IMPORT[Skill Importer]
-  IMPORT --> SOURCE{Input kind}
-  SOURCE -->|SKILL.md only| GUIDANCE[LLM-guided Skill]
-  SOURCE -->|Assurance source| COMP[CA-SL Compiler]
-  SOURCE -->|Compiled Artifact| VERIFY[Artifact Inspect / Verify]
-  COMP --> VERIFY
-  VERIFY --> ADMIT[Host Admission]
-  ADMIT --> RESOLVER[Skill Resolver]
-  GUIDANCE --> RESOLVER
-  RESOLVER --> WHEN{Assurance when matches?}
+  CONT -->|yes| RESUME[Resume original Run with pinned generation]
+  CONT -->|no| PIN[Pin active SkillCatalog generation]
+  PIN --> RESOLVER[Skill Resolver: in-memory only]
+  RESOLVER --> WHEN{Precompiled Assurance when matches?}
   WHEN -->|explicit match| SELECT[Bind exact Skill]
-  WHEN -->|no explicit match| SEMANTIC[Semantic candidates from SKILL.md]
+  WHEN -->|no explicit match| SEMANTIC[Semantic candidates from cached SKILL.md metadata]
   SEMANTIC --> SELECT
-  SELECT --> MODE{Execution mode}
-  MODE -->|Deterministic| PROC[Validated Procedure]
+  SELECT --> GUIDANCELOAD[Use full SKILL.md from memory]
+  GUIDANCELOAD --> MODE{Execution mode}
+  MODE -->|Deterministic| PROC[Admitted Procedure Artifact]
   MODE -->|LLM-guided| LOOP[LLM Model Loop]
   PROC --> ACTION[RuntimeActionRequest]
   LOOP --> ACTION
@@ -305,7 +357,7 @@ The diagram describes the target flow, not current implementation status. A Skil
 - ca-client-tools v1.2.0: independent Go Tool Plugin and Interface Package. Adapt provider/v2 behind the unified Plugin Manager initially.
 - ca-skills: canonical CA-SL Skill sources and language specification. Same-version v1alpha5 refresh proposal [PR #88](https://github.com/odango-chan/ca-skills/pull/88) adds optional Assurance and contract.when; Compiler support remains a separate dependency gate.
 - ca-openamsm-plugin: independent Go Event Plugin. Align its contract before implementation.
-- **Known gate:** current compiler support for the refreshed contract.when and SKILL.md-only package import is not yet established by this documentation review. Do not claim support, strip the field or implement a second compiler in Python. The Compiler owner must deliver/verify the matching v1alpha5 behavior before deterministic source import can pass.
+- **Known gate:** current Compiler v2.1.0 support for the refreshed `contract.when` compiled Artifact representation and the SKILL.md-only package import path is not established. The CA-SL refresh [PR #88](https://github.com/odango-chan/ca-skills/pull/88) is still OPEN. Do not claim support, strip the field or implement a second Compiler in Python. The Compiler owner must deliver/verify the versioned Artifact representation described in [the integration requirements](integration/skill-catalog-compiler-contract.md) before Assurance source import and `when`-based selection can pass.
 
 ## 11. Demo-level non-goals
 
@@ -316,7 +368,7 @@ Do not add:
 - Domain Contract Packages, TaskContract Packages or a second Skill descriptor;
 - separate Provider Manager, Tool registry, Runtime or authorization path;
 - legacy format compatibility or automatic migration;
-- Marketplace, installer, hot reload or automatic package downloads;
+- Marketplace, installer, automatic package downloads, filesystem watchers or generic Plugin hot reload. Explicit Skill import/update with atomic SkillCatalog generation activation is allowed and required;
 - production HA, complex multi-tenant governance, distributed Event Bus, broad DFX or production qualification machinery.
 
 Keep basic YAML/Schema/version/reference validation, path containment, clear errors, explicit process configuration, minimal correlation and runnable acceptance Examples. Existing Compiler/Interface Package identities remain governed by their owning contracts; do not add a second Host-side digest or integrity system.
