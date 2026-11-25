@@ -1,12 +1,12 @@
 # SR-011：真实 OpenAMSM 创建修改释放端到端验证
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.4  
+> SR 版本：0.1.5  
 > 状态：DRAFT；设计基线待评审，不允许实施  
 > 创建日期：2026-11-25  
 > 所属阶段：Phase H  
 > 上游需求：[IR-005](../IR/IR%20总登记册.md#ir-005)  
-> 设计依据：[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.2.1 §5～10；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.1 §2～12；[演示验收基线](../验收与实施/演示验收基线.md) v0.2.4 §2～10  
+> 设计依据：[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.2.2 §5～10；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.1 §2～12；[演示验收基线](../验收与实施/演示验收基线.md) v0.2.5 §2～10  
 > Acceptance：EX-20、OM-09、OM-11、OM-12（见[演示验收基线](../验收与实施/演示验收基线.md)）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：见第 3 节
@@ -72,3 +72,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-25 | 0.1.2 | 补齐 IR、设计章节与验收追踪 | 对齐最新分支与 IR/SR 基线 | SR-011 |
 | 2026-11-25 | 0.1.3 | 更新 F05/F06 与 Acceptance 基线版本引用 | 对齐最新 OpenAMSM 业务设计和 Artifact 边界 | Issue #12 |
 | 2026-11-25 | 0.1.4 | 更新 F05 设计依据至 v0.4.1；同步 Host Artifact Store v1 已冻结、Next Host 未实现和 Codec Consumer 分层状态 | 避免 SR-011 继续引用已被替代的 F05 v0.3.0 | Issue #12；F05 v0.4.1；SR-009、SR-010 |
+| 2026-11-25 | 0.1.5 | 更新 F06 与 Acceptance 基线版本至 v0.2.2 / v0.2.5；同步 F05 v0.4.1 | 保证 SR-011 的集成目标、Artifact 边界和验收入口引用同一轮设计基线 | Issue #12；F05 v0.4.1；F06 v0.2.2；Acceptance v0.2.5 |
