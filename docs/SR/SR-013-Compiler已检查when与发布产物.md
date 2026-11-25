@@ -14,7 +14,7 @@
 
 | 验收 ID | 通过条件 | 当前证据 |
 |---|---|---|
-| AC-013-01 | Go 生成的 CheckedExpr Any 与 FileDescriptorSet 被固定版本 Python 直接加载；G.4 跨语言 fixture 对 true/false/error、缺失/null 与数值边界一致 | 隔离 PoC PASS（18/18，见「AC-013-01 隔离 PoC 执行结果」）；产品实现 NOT_RUN |
+| AC-013-01 | Go 生成的 CheckedExpr Any 与 FileDescriptorSet 被固定版本 Python 直接加载；G.4 跨语言 fixture 对 true/false/error、缺失/null 与数值边界一致 | 隔离 PoC 报告 PASS（18/18，见下文）；独立复核 NOT_RUN；产品实现 NOT_RUN |
 | AC-013-02 | #61 的静态正负例、诊断位置和多 Skill 共享 Lock 时的类型隔离全部符合预期 | NOT_RUN |
 | AC-013-03 | 新版 Build/Verify 确定、损坏时 fail-closed；冻结机器契约及两条冻结产物路径对基准的 Golden 字节一致 | NOT_RUN |
 | AC-013-04 | #61 指定的 Go 测试、vet、Native/WASM 构建、CLI E2E、真实 Chromium Worker parity 与 diff check 全部通过 | NOT_RUN |
@@ -80,7 +80,9 @@ Go 静态编译另拒绝了未知字段和另一共享 descriptor 文件中未�
 
 **AC-013-01 在隔离 PoC 范围内 PASS。** 证据：`.agent-tmp/ac-013-01-poc/EVIDENCE.md`、`go-test.log`、`python.log`、`artifacts/`（含 `cases.json` 与逐用例 `.checked.pb` / `.types.pb`）。本结论不外推为产品实现：`ContractAST.when`、Schema-aware 静态检查、发布 Artifact 字段与 Build/Verify 仍为 NOT_RUN；深层可选祖先、数组、枚举、完整布尔组合与 AC-013-02 待后续。新 Artifact API 仍由 Compiler Owner 定稿。
 
-证据产物已改用确定性序列化：默认 `proto.Marshal` 对 `CheckedExpr` 的 `reference_map` / `type_map` 不稳定，同一输入两次运行会产生不同字节。该问题不影响求值语义，但未来发布 Artifact 若要求字节确定性，必须显式使用确定性序列化，供 AC-013-03 参考。
+据执行者报告，证据生成器已改用确定性序列化：默认 `proto.Marshal` 对 `CheckedExpr` 的 `reference_map` / `type_map` 不稳定，同一输入两次运行会产生不同字节；改用 `proto.MarshalOptions{Deterministic: true}`（包括 `anypb.MarshalFrom`）后，连续两次生成的 36 个 `.pb` 哈希一致，Python 求值结果不变。该问题不影响求值语义，但新版发布 Artifact 的重复 Build 必须覆盖 protobuf map 字段的确定性序列化。
+
+**独立复核边界：** 当前 PR 只提交本文件。`EVIDENCE.md`、`go-test.log`、`python.log`、`cases.json`、36 个 `.pb` 产物、`ac013_poc_test.go` 和 Python 验证脚本仍位于隔离工作区，未纳入当前仓库。评审者不能仅凭本 PR 独立复跑 Go/Python 测试、核对逐文件 SHA-256 或检查确定性序列化实现。因此，本节 18/18、哈希一致和序列化修复均为执行者报告结果，**独立复核状态为 NOT_RUN**。该发现应进入 AC-013-03 的产品验收，不代表 Compiler 产品代码已实现或通过。
 
 ## AC-013-01 阶段执行单
 
@@ -106,3 +108,4 @@ Go 静态编译另拒绝了未知字段和另一共享 descriptor 文件中未�
 | 2026-11-25 | 0.1.8 | 放行隔离 AC-013-01 与记录既有 Schema/Lock 测试 | 提供明确的 DSH 下一步 | SR-013 |
 | 2026-11-25 | 0.1.9 | 保留正式规范来源与分阶段执行条件 | 合并 main 的治理更新 | SR-013、PR #7 |
 | 2026-11-25 | 0.1.10 | 回填隔离 PoC 的 Go/Python 一致结果并修复损坏的证据块 | 完成 AC-013-01 隔离阶段验收 | SR-013 |
+| 2026-11-25 | 0.1.11 | 区分执行者报告结果与独立复核状态；记录原始证据未随 PR 归档及确定性序列化修复尚不可独立检查 | 防止将本地 PoC 报告误读为 PR 可复现证据或 Compiler 产品验收 | SR-013、AC-013-01、AC-013-03 |
