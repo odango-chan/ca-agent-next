@@ -1,146 +1,97 @@
-# Agent.md — Repository instructions
+# Agent.md — 仓库协作指引
 
-These instructions apply to every coding agent, automation and VibeCoding session working in this repository.
+本文是 ca-agent-next 的自动化与 AI 编码协作入口。所有正文使用中文；代码、API、字段名和标准术语保留原文。
 
-## 1. Read before changing anything
+## 1. 开始任务前必须阅读
 
-For every non-trivial task, read:
+非简单任务开始前，按顺序阅读：
 
-1. README.md
-2. docs/architecture.md
-3. docs/plugin-package.md
-4. docs/plugin-artifact-handoff.md
-5. docs/集成设计/技能目录与编译器运行时接口设计说明书.md
-6. docs/audit/ca-agent-demo.md
-7. docs/audit/reuse-and-feasibility.md
-8. docs/acceptance.md
-9. docs/implementation/deepseek-harness-plan.md
-10. The relevant source, package contracts and tests.
+1. README.md。
+2. docs/治理/文档总目录与索引.md。
+3. docs/规范/文档编写与治理规范.md。
+4. docs/架构设计/CA Agent Next 架构设计.md。
+5. 与任务相关的设计说明书和规范。
+6. docs/验收与实施/Demo 验收基线.md。
+7. docs/验收与实施/实施路线与阶段门槛.md。
+8. 相关实现、外部接口、测试和当前 PR/Issue。
 
-If implementation and documentation disagree, stop and report the exact conflict. Do not silently invent a third design.
+如果实现与规范不一致，停止并报告具体文件、接口和差异，不得自行创造第三套定义。
 
-## 2. Language and repository lineage — mandatory
+## 2. 仓库与语言边界
 
-- Agent Core, Host, Agent loop, Skill Importer, Skill Resolver and Runtime in ca-agent-next are Python. Do not implement or migrate Agent Core to Go.
-- Go is appropriate for independently running Plugin executables. A Go Plugin does not imply a Go Host.
-- ca-agent-demo is the primary source/evidence repository. Audit and selectively reuse its Python implementation.
-- ca-agent-next is a clean, isolated Python implementation, not a wholesale copy of ca-agent-demo.
-- ca-agent is the stable implementation and eventual promotion target, not the source tree for this redesign.
-- Keep all implementation changes in ca-agent-next unless the user explicitly authorizes another repository.
+- Agent Core、Host、Agent Model Loop、Skill Importer、Skill Resolver 和 Runtime 使用 Python。
+- 独立 Plugin 可以使用 Go；Go Plugin 不代表 Go Host。
+- ca-agent-demo 是既有 Python 实现和测试证据来源，只能逐文件选择性复用。
+- ca-agent-next 是独立的新实现，不整体复制 ca-agent-demo。
+- ca-skill-compiler、ca-client-tools、ca-skills、ca-openamsm-plugin 和 ca-agent 是独立权威仓。
+- 未经用户明确授权，不修改兄弟仓库。
 
-## 3. Unified Plugin mechanism — mandatory direction
+## 3. Skill 与发布 Artifact 约束
 
-- A Plugin is the generic extension/package/process unit managed by exactly one Plugin Manager. Native packages follow Plugin Package v1alpha1 in docs/plugin-package.md.
-- A Plugin may expose event.ingress, event.delivery, tools, or any combination of these extensions in one process.
-- A Tool is a callable operation exported by a Plugin, not a process. A Tool Plugin is a Plugin that exports Tools. Do not require one process per Tool.
-- Tool input/output Schemas, Effects, Capability membership and Owner outcome/receipt semantics remain in the owning Interface Package.
-- Do not create separate permanent Plugin Manager and Provider Manager subsystems, separate Tool registries, or separate authorization/dispatch paths.
-- Runtime Action dispatch goes through the Plugin Manager to the selected Tool extension. Runtime remains the sole authorization and outcome authority.
-- During migration, an adapter may speak the existing ca-client-tools.provider/v2 process protocol. Keep it behind the unified Plugin Manager; do not fork/copy the Go Provider or establish a second Runtime.
-- ca-openamsm-plugin is an Event Plugin; ca-client-tools is the Tool implementation consumed through the same Plugin Manager tools extension. They remain independently owned and must not duplicate each other's business implementation.
-- Native Event/Delivery Plugins use the exact Package/IPC contract in docs/plugin-package.md. Binary Event/Delivery data uses docs/plugin-artifact-handoff.md; do not invent another wire protocol.
-- Plugin manifests are YAML-first. Do not introduce a second JSON manifest format.
+- 每个 Skill 必须有 SKILL.md。
+- Assurance 是可选的；没有 Assurance Artifact 时仅 LLM-guided。
+- 有效发布 Assurance Artifact 支持 Deterministic 和 LLM-guided。
+- 发布 Artifact 缺失、无效、格式不支持、必需文件不全或依赖无法解析时，导入失败，不得静默降级。
+- 作者源中的 assurance/ 包含 contract.yaml、procedure.yaml、predicates.yaml；无 Predicate 时使用空 PredicateSet。
+- Contract 位于可选 assurance/contract.yaml；when 是其中唯一正式 Skill 选择表达式。
+- when 是发布前由外部 Compiler 静态检查的纯 CEL；predicates.yaml 只用于执行期业务判断。
+- Agent 只消费外部发布的 Runtime Artifact；不调用 Compiler Check/Build/Inspect/Verify，不重写 Compiler 语义，不设置 Skill Admission。
+- Agent 只做发布包基本结构、必需文件、格式、路径、类型数据和 Tool/Capability 依赖检查。
+- SKILL.md-only 包直接导入，不调用 Compiler。
+- LLM 创建或修改 Assurance 作者源后，必须经过外部发布流程生成 Artifact，才能作为确定性 Skill 使用。
+- Skill 选择先于模式选择；精确 continuation 先恢复原 Run。
+- when=true 的一个候选直接选择；多个候选只在精确集合内消歧；没有 true 时只对无 when 的 Skills 做 SKILL.md 语义选择；false/error 的 Skill 不得重新加入语义候选。
+- SkillCatalog 属于 Python Core/Host，不属于 Plugin Manager。显式导入/更新读取 Skill 包并构建候选 generation，成功后原子激活；在途 Invocation 固定 generation。
+- when 程序导入时反序列化一次，每个新 Event 使用当前 input 独立求值，不缓存跨 Event 结果。
+- 不增加 activation.yaml、constraint.yaml、supportedModes、第二份 LLM Contract、Domain Contract Package、TaskContract Package 或 Event→Skill 表。
 
-## 4. Skill package and optional Assurance — mandatory
+## 4. 统一 Plugin 机制
 
-- Every Skill package has one required `SKILL.md`.
-- `assurance/` is optional in the authoring source. When present, it contains the complete CA-SL source trio: `contract.yaml`, `procedure.yaml` and `predicates.yaml` (an empty PredicateSet when unused).
-- The Agent runtime does not import Assurance source YAML and does not contain or invoke a Compiler. Assurance Skills are published with a Compiler-generated runtime Artifact; the published package contains the required compiled files and `SKILL.md`.
-- No Assurance / no compiled Assurance Artifact means the published Skill is LLM-guided only. A valid compiled Assurance Artifact enables both Deterministic and LLM-guided execution.
-- A published package that declares Assurance but omits required compiled files, has an unsupported Artifact format, malformed type data, or unresolved Tool/Capability dependencies fails import with an explicit diagnostic. It is never silently downgraded to SKILL.md-only.
-- The Importer performs only basic package/manifest/path/reference/type-data checks and local Plugin/Tool dependency resolution. This is not Skill Admission, trust evaluation, approval or production authorization.
-- Do not add supportedModes, a second LLM Contract, Domain Contract Package, TaskContract Package, applicability.yaml, activation.yaml, constraint.yaml or another Skill descriptor.
-- `SKILL.md` is Agent-facing natural-language guidance. It is not a deterministic Procedure or a second CEL contract.
-- `predicates.yaml` is execution-time business evaluation only; it does not select Skills.
+- 全系统只有一个 Plugin Manager。
+- Plugin 是由统一 Manager 管理的独立包/进程，可导出 event.ingress、event.delivery、tools 中一种或多种 Extension。
+- Tool 是 Plugin 的 Callable Operation，不是独立进程或 Manager。
+- Tool Plugin 是导出 tools Extension 的 Plugin；一个 Plugin 可以暴露多个 Tool。
+- Tool Interface Package 是 Callable ID、输入/输出 Schema、Effect、Capability 和 Owner outcome/receipt 语义的唯一权威来源。
+- 不创建独立 Provider Manager、Tool Registry、Codec Manager 或第二套 IPC。
+- ca-client-tools 通过同一个 Plugin Manager tools Extension 接入；provider/v2 适配只能作为 Manager 内部过渡 Driver。
+- ca-openamsm-plugin 只负责 SBI Event ingress/Delivery，不选择 Skill，不实现 Owner Tools、RunStore 或 Runtime。
+- Plugin Manifest 使用 YAML；不引入第二种 JSON Manifest。
 
-## 5. Skill selection — mandatory
+## 5. Runtime 与 Owner 结果边界
 
-- Every fresh business request resolves and binds a Skill before execution. Exact continuations resume the original Run before fresh selection.
-- An Assurance Skill may declare optional top-level contract.yaml.when. It is a pure CEL boolean over normalized event.type and input, used only during Skill selection.
-- when is not a Predicate, not an execution-time business check, and not a field in SKILL.md.
-- A true when result creates an explicit candidate. False excludes the Skill. Runtime evaluation error fails closed and excludes it with a diagnostic. A malformed/non-boolean/ill-typed expression is a Compiler error.
-- One explicit true match selects directly. Multiple explicit true matches may be disambiguated by the LLM only within that exact candidate set.
-- If there are no explicit true matches, semantic candidates are the imported Skills without when. This includes SKILL.md-only Skills and Assurance Skills whose Contract omits when. The Agent uses SKILL.md guidance and may choose only among imported candidates.
-- A false/error guarded Skill must never be reintroduced into the unguarded semantic set.
-- Resolve fresh Events from the Core-owned in-memory SkillCatalog; do not scan Skill directories or reread SKILL.md/Assurance files on the Event hot path.
-- No Event→Skill mapping table, Event→Mode table, Domain Contract Package or business-specific Host routing.
+- Deterministic Procedure Engine 与 LLM Model Loop 都必须经过同一个 Runtime Action Boundary。
+- Runtime 检查当前 Skill 声明的 Callable Scope、Callable ID、输入 Schema、Effect、Artifact 引用和 Run 状态。
+- LLM 不得直接调用 Plugin、扩大 Callable Scope、伪造 Observation/Evidence 或声明 Owner mutation 已提交。
+- READ Tool 结果作为带来源的 Observation。
+- MUTATION 结果按 Owner Receipt/Commit Proof 契约解释。
+- HTTP 200、IPC 成功和 Delivery 成功不能替代 Owner Commit Proof。
+- UNKNOWN 不得映射为 COMMITTED。
 
-### 5.1 SkillCatalog residency and generation — mandatory
+## 6. SBI 与二进制 Artifact
 
-- SkillCatalog is owned by Python Agent Core / Host, not by the Plugin Manager. Plugin Manager owns Plugin process lifecycle, IPC and extension dispatch only.
-- On startup and every explicit Skill import/update, read the published Skill package once, validate its basic structure and references, resolve its declared Tool/Capability dependencies against locally installed Plugins, load the compiled Assurance Artifact if present, and build a new immutable Catalog generation.
-- Every Skill, including SKILL.md-only Skills, is registered in the Catalog. Keep full SKILL.md text, selection metadata, schema/type environment, deserialized `when` program and published Artifact reference available in memory.
-- For each fresh Event, evaluate the already deserialized `when` program against that Event's current `event.type` and `input`. Reuse the program; never cache the previous Event's boolean result.
-- Semantic selection uses candidate metadata derived from the imported SKILL.md. After selection, supply the full SKILL.md text from memory; do not reread the package file.
-- Load `references/` and large knowledge assets only when the selected Skill actually needs them. Large Procedure payloads may be loaded after selection and cached per Catalog generation; they must not cause per-Event package scans.
-- Build updates off to the side and atomically activate the new immutable generation only after the requested package's basic structure, Artifact references and local dependencies have been checked. Failed updates leave the active generation unchanged. In-flight Invocations retain their pinned generation until completion.
-- Use a simple process-local monotonic generation number. Do not add Redis, a distributed cache, content digests or a new integrity system. No filesystem watcher or automatic package hot reload is required; explicit Skill import/update is the supported activation path.
+- SBI 可能包含 JSON、multipart/related 和二进制。
+- Event Plugin 负责协议解析、Content-ID 关联和原始字节提取/编码。
+- Host 拥有 staging 目录、ArtifactStore、opaque artifactRef、Run 关联和访问控制。
+- 原始二进制不进入 NDJSON 或模型 Context；不使用 Base64 传输。
+- Codec 按需作为 ca-client-tools 的 tools Extension Operation 调用；不得创建独立 Codec Manager 或复制 Codec 实现。
+- Event Plugin 仅允许提取规范化 Event 所需的最小协议 discriminator，不做完整业务解码或 Skill 选择。
 
-## 6. Skill Import and published Artifact — mandatory
+## 7. Demo 禁止项
 
-- The Agent accepts published Skill packages only. It does not accept Assurance source packages as runtime input.
-- SKILL.md-only published packages import directly without invoking a Compiler.
-- A Skill with Assurance must be compiled and verified by the independent Compiler before publication. Its published package contains SKILL.md and the compiled runtime Artifact; source YAML is not required by the Agent and is not compiled by the Agent.
-- The Agent Importer never invokes Compiler Check, Build, Inspect or Verify. It checks only the published Artifact's supported format/version, required files, safe relative paths, referenced-file presence, parseability of CheckedExpr/type descriptors, and resolvability of declared Tool/Capability dependencies against locally installed Plugins.
-- A package declaring Assurance but missing its compiled Artifact, containing malformed/incompatible compiled data, or referring to unavailable Tools/Capabilities fails import with a clear error. Never silently downgrade it to LLM-guided.
-- A published Artifact is loaded as-is; the Agent does not rebuild it, recompile it or independently perform Compiler release verification.
-- Editing SKILL.md updates Agent guidance. Editing Assurance source happens in the authoring/release workflow and requires a new external Compiler Build/Verify and publication before the updated Artifact is imported.
-- LLM-created/edited Assurance source is not executable in the Agent. It must go through the external Skill publishing workflow before import.
-- An individual LLM Action proposal is not Skill source and is validated by the common Runtime Action Boundary. Do not compile it, create a temporary Procedure or invoke a Compiler for each Action.
-- Do not copy the Go Compiler or reimplement its parsing/linking semantics in Python. The Compiler is an independent authoring/release toolchain and is not an Agent dependency or process.
+不增加额外 SHA-256 包/事件摘要、包签名、Trust Registry、生产级安全上下文、密钥管理、高可用、灾备、复杂分布式总线、Marketplace、自动下载、文件监视器、通用 Plugin 热更新或生产 SLA。
 
-## 7. Execution modes and Runtime
+以下属于功能正确性，不能以 Demo 为由省略：输入/版本/Schema 校验、路径边界、契约不匹配时报错、失败时 fail-closed、UNKNOWN 不得变成 COMMITTED、重复/过期 continuation 不得唤醒错误 Run。
 
-- Choose execution mode only after a Skill is selected and bound.
-- No Assurance: LLM-guided only. Valid Assurance: Deterministic or LLM-guided. Invalid Assurance: import failure.
-- Python Host/Agent owns model loop, reasoning, Context assembly, Skill selection orchestration and Action proposal.
-- Python Runtime owns Skill Run, common Action Request boundary, declared Capability/callable scope checks, Plugin Tool dispatch, Effects, Outcomes/Evidence and Wait/Resume/Reconcile. There is no Skill Admission or production trust/approval mechanism in the Demo.
-- The deterministic Procedure Engine may live inside Runtime. The LLM Model Loop must not.
-- Both modes use exactly the same Runtime Action Boundary and Tool Plugin path.
-- LLM cannot call a Plugin directly, widen Capability, fabricate Evidence or declare an Owner mutation committed.
+## 8. 文档变更规则
 
-## 8. Context and provenance
+- 架构边界变化：更新唯一架构设计、总目录和收敛计划。
+- 机制行为变化：更新对应设计说明书。
+- 文件/字段/协议变化：更新 docs/规范/ 对应规范，并检查所有消费者。
+- 验收变化：更新 Demo 验收基线和实施路线。
+- 外部实现变化：更新参考与审计，记录准确仓库、Commit/PR、测试命令和状态。
+- 新增文档必须使用中文文件名并登记到文档总目录。
+- 不得把设计目标写成实现 PASS，不得把 Demo PASS 写成 Production Qualification。
 
-- Plugin Event is external Push input.
-- Tool READ result is a Pull Observation.
-- Runtime/Owner Receipt and Commit Proof are execution Evidence.
-- Selected Skill supplies SKILL.md guidance and, when Assurance exists, Context Requirements and declared Capabilities.
-- Host assembles Model-visible Context and keeps lightweight source references. Model-generated text is not an Observation; a Tool response is not automatically a committed outcome.
-- SBI Events may carry JSON and binary attachments. Event Plugins use the Host-owned Plugin Artifact Handoff; raw bytes stay outside NDJSON and Model-visible Context.
-- The Event Plugin may extract only the minimum protocol discriminator needed to normalize an Event for a shared SBI operation (for example, NAS message type for UpdateSMContext). This is protocol-to-Event classification, not Skill selection or full business decoding; reuse the shared codec implementation and do not duplicate a parser.
-- Deeper protocol decoding is optional. A selected Skill calls a Codec Tool through the existing Tool Plugin only when it needs structured fields; otherwise it passes the original artifactRef to the business Tool. A decoded projection never replaces the original bytes.
+## 9. 测试与交付
 
-## 9. External projects: reuse, do not copy
-
-- ca-skill-compiler: consume the canonical Go skillc executable/API. Python may wrap the CLI and admit the exact Artifact. Do not copy Go Compiler source or reimplement its semantics.
-- ca-client-tools: consume the released Go Tool Plugin process and Interface Package. Do not copy/translate its Go implementation into Python.
-- ca-skills: consume CA-SL v1alpha5 Skill packages. Same-version refresh proposal [PR #88](https://github.com/odango-chan/ca-skills/pull/88) adds optional Assurance and contract.when; until merged, do not assume the released Compiler supports the proposal. Do not create a competing CA-SL.
-- ca-openamsm-plugin: consume as an independent Go Event Plugin after its contract is aligned with the unified Plugin mechanism and Skill-first flow.
-- Reuse Python code from ca-agent-demo selectively, only after file-level dependency and test review.
-
-## 10. Demo-level prohibitions and workflow
-
-Do not add:
-
-- extra SHA-256 hashing for Plugin packages/Event snapshots or a parallel package-integrity framework;
-- package signatures or a Trust Registry;
-- Domain Contract Packages, TaskContract Packages or a second Skill descriptor;
-- supportedModes or a second LLM Contract;
-- legacy format compatibility or automatic migration;
-- Marketplace, installer, automatic package download, filesystem watchers or generic Plugin hot reload (explicit SkillCatalog import/update with atomic generation activation is allowed);
-- separate Provider Manager, Tool registry, Runtime or authorization path;
-- a separate Codec Plugin/Manager, second ArtifactStore or new binary-reference protocol; reuse ca-client-tools' existing Tool extension and the Host Artifact Handoff;
-- duplicate NAS/NGAP/PFCP codec implementations in Agent Core or the OpenAMSM Event Plugin;
-- production HA, complex multi-tenant governance, distributed Event Bus or elaborate DFX.
-
-Keep basic YAML/Schema/version/reference validation, path containment, clear errors, simple package loading, minimal Task/Event correlation and useful logs. Existing Compiler/Interface Package identity rules remain owned by their canonical contracts; do not add another Host-side hashing system.
-
-For each change:
-
-1. Name the mechanism and its runnable Example.
-2. Implement the smallest vertical slice.
-3. Add the Example and automated Acceptance Test in the same change set.
-4. Run focused Python tests; build/test any Go Example Plugin separately.
-5. Record exact commands/results and distinguish DESIGN, IMPLEMENTED and PASS.
-6. Update canonical docs when behavior or ownership changes.
-7. Do not modify sibling repositories unless explicitly instructed.
+真实执行测试并记录命令和结果。未执行写 NOT_RUN，环境阻断写 BLOCKED，失败写 FAIL。不要猜测测试状态，不要自动合并 PR 或发布 Release。
