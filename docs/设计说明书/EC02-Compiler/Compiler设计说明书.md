@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.1.4  
+> 文档版本：0.1.5  
 > 状态：待评审；IR-006 / SR-012 / #2  
 > 修订日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -82,7 +82,9 @@ PoC 至少覆盖：同一程序对多个 Event 分别得到 true、false 和运�
 | 待验证 | #88 M.2 继承 G.4，声明唯一字段、bool、纯表达式及 Request Schema 类型来源。SA-004/005 有编译正负例；缺失、显式 null、has 守卫与数值边界仍需 AC-013-01 的真实 Go/Python 输入输出验证。 | 按正式规范为同一 fixture 固定输入、预期及错误阶段；不得以文档校验代替运行证据。 |
 | NON_BLOCKING | 编译单核与发布边界与 Next 方向一致；两种 Verify 的具体行为已分别列出。 | 历史样例、机器 Schema 和 release evidence 保留固定 SHA。 |
 
-建议 SR-013 保持 DRAFT。复审顺序为：先解决 M.4/SA 职责冲突并固定正式规范 SHA，再确认 SR-013 的实施边界与 AC-013-01 可执行，由负责人推进 READY。后续 Artifact API 命名仍由 Compiler Owner 在 PoC 通过后裁定。
+以上为首轮评审记录。复审 [ca-skills #88 修订提交](https://github.com/odango-chan/ca-skills/commit/697246a967067cdeddb01c2f43b11a3e56afa480) 后，M.4 与 SA-002/009/011 已明确外部编译发布与 Agent 导入的职责。§12.8、M.3 和 SA-012 已明确 Request Schema 不符时排除候选并记录诊断。两项评审发现已在候选文本中解决。该提交的 source-hygiene PASS；AC-013-01 仍为 NOT_RUN。
+
+SR-013 保持 DRAFT，待 #88 正式发布并固定规范 SHA、负责人确认实施范围与 READY 后执行 AC-013-01。PoC 通过后由 Compiler Owner 裁定新版 Artifact API。
 
 ## 修订记录
 
@@ -93,3 +95,4 @@ PoC 至少覆盖：同一程序对多个 Event 分别得到 true、false 和运�
 | 2026-11-25 | 0.1.2 | Codex | §5–6 | 明确分阶段输入、退出条件、证据包及实施 SR 边界 | 降低 Harness 自主执行时的裁量 | IR-006、SR-012、#2、PR #3、Compiler #61 |
 | 2026-11-25 | 0.1.3 | Codex | §5–6 | 绑定 Compiler 实施 SR | 明确 Goal 执行及验收入口 | SR-013、Compiler #61 |
 | 2026-11-25 | 0.1.4 | Codex | §7 | 登记规范与 Next 的职责冲突及 READY 判定 | 防止 DSH 误执行 M.4 | SR-013、ca-skills #88 |
+| 2026-11-25 | 0.1.5 | Codex | §7 | 复审 #88 修订并更新发现状态 | 区分候选文本已解决与正式实施门槛 | SR-013、ca-skills #88 |
