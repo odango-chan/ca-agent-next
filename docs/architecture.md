@@ -158,7 +158,7 @@ A Plugin is the generic extension/package/process unit managed by one Python Plu
 | event.delivery | Host → Plugin | Deliver a structured response to the originating protocol |
 | tools | Host → Plugin | Export callable Tool operations |
 
-A Tool is an operation exported by a Plugin, not a process, manager or Runtime. A Tool Plugin is simply a Plugin that exports Tools. A Plugin may expose Event ingress, delivery and Tools together.
+A Tool is a callable operation exported by a Plugin's `tools` extension, not a process, package/import unit, manager or Runtime. A Tool Plugin is a Plugin that exposes the `tools` extension and may export one or more Tool operations. A Plugin may expose Event ingress, Delivery and Tools together. All Tool operations are discovered and dispatched through the same Plugin Manager and their owning Interface Package; there is no separate Tool registry or lifecycle.
 
 ### 5.1 One Plugin Manager and IPC
 
