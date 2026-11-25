@@ -106,9 +106,9 @@ The Event Plugin declares only normalized Event types and Schemas. There is no E
 ### 4.2 Execution mode
 
 - Skill selection always precedes mode selection.
-- No Assurance: LLM-guided only.
-- Valid Assurance: Deterministic and LLM-guided.
-- Invalid present Assurance: import failure; no downgrade.
+- No published Assurance Artifact: LLM-guided only.
+- Valid published Assurance Artifact: Deterministic and LLM-guided.
+- Assurance source or invalid/missing compiled Artifact in a package that declares Assurance: import failure; no downgrade.
 - No supportedModes declaration.
 - Both modes use the same Runtime Action Boundary and Tool Plugin path.
 
@@ -116,13 +116,13 @@ The Event Plugin declares only normalized Event types and Schemas. There is no E
 
 - Deterministic mode executes only a Compiler-built and verified published Procedure Artifact.
 - An LLM-proposed individual Action is not a Procedure and is not compiled.
-- LLM-created/edited Assurance source is compiled through the Skill Importer before deterministic execution.
+- LLM-created/edited Assurance source is not compiled by Agent; it must be compiled and published externally before its Artifact can be imported for deterministic execution.
 - The first Demo gate covers a static Procedure. Additional Procedure-generation/patch mechanisms require their own Example and acceptance tests.
 
 ## 5. Compiler and Tool Plugin integration
 
-- Python invokes the canonical CA-SL Compiler interface for Assurance source Check/Build and Artifact Inspect/Verify. Do not copy Go Compiler source or reimplement its semantics.
-- Compiler v2.1.0 does not yet establish refreshed CA-SL v1alpha5 contract.when support. [Compiler Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) tracks the new Development Artifact Manifest v1alpha2 and cel-go → cel-expr-python CheckedExpr interoperability. SKILL.md-only import is Next-owned and bypasses Compiler. See [技能目录与编译器运行时接口设计说明书](集成设计/技能目录与编译器运行时接口设计说明书.md). Do not silently strip when or claim an unsupported release works.
+- CA-SL Compiler is an independent authoring/release toolchain. It performs source Check/Build/Verify before publication; Agent never invokes Compiler. Do not copy Go Compiler source or reimplement its semantics.
+- Compiler v2.1.0 does not yet establish refreshed CA-SL v1alpha5 contract.when support. [Compiler Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) tracks a new versioned published runtime Artifact and cel-go → cel-expr-python CheckedExpr interoperability. The Agent imports published bundles only and never invokes Compiler. See [技能目录与编译器运行时接口设计说明书](集成设计/技能目录与编译器运行时接口设计说明书.md). Do not silently strip when or claim an unsupported release works.
 - Target behavior: external Compiler parses/type-checks when once before publication and emits CheckedExpr + DescriptorSet; Python Runtime deserializes once on import and evaluates the same program for every fresh Event. No raw CEL parsing/type-checking on the Event hot path.
 - Importing a compiled Artifact does not invoke any Compiler command or Skill Admission. The Agent performs only basic structural/reference checks and local dependency resolution.
 - The Echo Tool Interface Package is consumed from its canonical Compiler-owned format. Do not duplicate ToolCatalog or calculate an additional Host-side package digest.
@@ -133,7 +133,7 @@ The Echo Plugin may be a tiny Go process. It does not require a live OpenAMSM de
 
 ## 6. Definition of Demo acceptance
 
-Accept the architecture MVP only when EX-01 through EX-29 pass, the Assurance-backed Echo Skill runs in both modes, the SKILL.md-only Skill runs without Compiler invocation, the same Plugin process supports Event/Delivery/Tools, source and compiled-Artifact import behave differently as specified, SkillCatalog residency/generation tests pass, and a second business works without business-specific Core changes.
+Accept the architecture MVP only when EX-01 through EX-29 pass, the Assurance-backed Echo Skill runs in both modes, the SKILL.md-only Skill runs without Compiler invocation, the same Plugin process supports Event/Delivery/Tools, SKILL.md-only and published compiled-Assurance imports behave as specified, SkillCatalog residency/generation tests pass, and a second business works without business-specific Core changes.
 
 This does not claim live OpenAMSM qualification, production readiness or complete 3GPP protocol parity.
 
@@ -171,7 +171,7 @@ Keep basic YAML/Schema/version/reference validation, path containment, clear err
 | Dependency | State on 2026-11-25 | Required before claiming the corresponding gate |
 |---|---|---|
 | ca-skills PR #88 | OPEN, not merged; proposes same-identifier CA-SL v1alpha5 optional Assurance and contract.when | Merge/review the language refresh and align the three existing MAS Skills' when fields. |
-| ca-skill-compiler v2.1.0 | Released; refreshed contract.when not supported/verified | [Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) defines Development Artifact v1alpha2 and CheckedExpr/DescriptorSet handoff. SKILL.md-only import remains Host-owned and bypasses Compiler. |
+| ca-skill-compiler v2.1.0 | Released; refreshed contract.when not supported/verified | [Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) defines a versioned published runtime Artifact and CheckedExpr/DescriptorSet handoff. Agent imports published Artifacts only and never invokes Compiler. |
 | ca-client-tools v1.2.0 | Released; Provider v2 process | Integrate through the unified Plugin Manager adapter; separately verify real SBI multipart Artifact use through the Provider channel. |
 | ca-client-tools PR #39 | OPEN; Phase B final pass, Phase C not started | Merge/release and complete consumer integration for the exact codec calls used. NAS: 8 qualified; N2: 7 scoped qualified; NGAP: 0 CA-qualified full PDUs. |
 | ca-agent-demo PR #246 | OPEN; synthetic G5 22 passed; real G6 NOT_RUN/BLOCKED; G7 PARTIAL | Treat only as reusable evidence. Run the new Host + Plugin + Provider + real Owner path independently. |
