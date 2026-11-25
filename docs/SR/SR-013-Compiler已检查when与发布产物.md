@@ -186,7 +186,7 @@ request-schema 根与完整 G.4 $ref 资源闭包只要 Contract 声明 requestS
 
 ### 5.3 Manifest 必需语义
 
-Manifest 保留现有 v1alpha5 顶层字段语义。每个声明 requestSchema 的 Skill 必须有 requestSchema 对象，记录 sourceRef、rootSchemaId、rootPath 和完整 resources[]（schemaId/path）；该对象与 when 是否存在无关，供 Host 按 CA-SL M.3 验证 Event payload。根与资源文件同时进入 compiledFiles[] 和 Manifest outputFiles[]。
+Manifest 保留现有 v1alpha5 顶层字段语义。每个声明 requestSchema 的 Skill 必须有 requestSchema 对象，记录 sourceRef、rootPath、可选 rootSchemaId（仅根 Schema 声明 $id 时记录）和完整 resources[]（schemaId/path）；该对象与 when 是否存在无关，供 Host 按 CA-SL M.3 验证 Event payload。根与资源文件同时进入 compiledFiles[] 和 Manifest outputFiles[]。
 
 每个有 when 的 Skill 增加 when 对象，记录 checkedExprPath、descriptorSetPath、sourcePath 和 sourceRange（startLine/startColumn/endLine/endColumn）；仅当表达式引用 input 时，额外记录 requestSchemaRef 与 resolvedRequestSchemaPath，并与同一 Skill 的 requestSchema 元数据一致。when.checked.pb 与 when.types.pb 同时进入 compiledFiles[] 和 Manifest outputFiles[]。逐文件 sha256 复用既有 outputFiles 机制，不增加额外摘要字段。Any type URL 固定为 type.googleapis.com/cel.expr.CheckedExpr；payload 为标准 cel.dev/expr.CheckedExpr。DescriptorSet 是标准 google.protobuf.FileDescriptorSet，只承担 CEL 类型描述，不替代 G.4 Schema 验证数据。
 
@@ -356,3 +356,4 @@ SR-013 只有 AC-013-01～05 均达到各自通过条件，Compiler Release 有�
 | 2026-11-25 | 0.1.9 | Codex | 全文 | 固定正式 CA-SL v1alpha5 规范 SHA 和阶段门槛 | 合并 Next PR #7 / #9 相关基线 | SR-013、PR #7、PR #9 |
 | 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 全文 | 回填 AC-013-01 18/18 隔离 PoC 报告；明确本地证据和独立复核边界；修复旧证据块；细化 AC-013-02～05 的实现、Artifact、Build/Verify、发布、测试和恢复门禁 | 使 SR-013 达到 DeepSeek Harness low-effort 可执行粒度 | Next Issue #14、Compiler #61、IR-003 |
 | 2026-11-25 | 0.2.1 | GPT-6.2（ChatGPT） | §4–7 | 增加 Request Schema 运行期投影与发布闭包，明确 event.type-only when 的合法路径、CEL 与 Schema 诊断边界和 AC 组合测试 | 对齐 CA-SL v1alpha5 M.2/M.3，补齐 Host 运行期验证所需的发布数据 | Next Issue #14、Compiler #61、F02、F08 |
+| 2026-11-25 | 0.2.2 | GPT-6.2（ChatGPT） | §5.3 | 明确根 Schema 的 $id 可选，根身份可由作者 sourceRef 与 Artifact rootPath 确定 | 避免对 CA-SL 未要求的 Schema $id 增加新约束 | Next Issue #14、Compiler #61 |
