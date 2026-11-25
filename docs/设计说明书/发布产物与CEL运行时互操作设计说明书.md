@@ -2,6 +2,8 @@
 
 **文档状态：** 跨组件机制设计；Compiler 与 Python 互操作尚未实现、尚未验收  
 **文档版本：** 0.1.0  
+**全局评审范围：** 继承根目录 Agent.md 的 review_scope  
+**本文局部非目标：** 以本文范围与非目标章节为准；无额外扩展  
 **适用范围：** CA-SL v1alpha5 作者源发布、Compiler 已检查程序 Artifact、Python CEL Runtime 消费接口  
 **关联任务：** [ca-skill-compiler Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)  
 **规范依赖：** [ca-skills PR #88](https://github.com/odango-chan/ca-skills/pull/88)，当前仍为 OPEN
@@ -173,3 +175,5 @@ Next 侧：
 | 日期 | 版本 | 修订内容 | 原因 | 影响 SR |
 |---|---|---|---|---|
 | 2026-11-25 | 0.1.0 | 登记现有设计/规范/实施文档基线 | 纳入统一文档版本与 SR 追踪基线 | SR-005；Compiler Issue #61 为外部依赖 |
+
+| 2026-11-25 | 0.1.1 | 补齐全局评审范围与本文局部非目标声明 | 落实正式文档评审范围继承规则 | SR-005；Compiler Issue #61 为外部依赖 |
