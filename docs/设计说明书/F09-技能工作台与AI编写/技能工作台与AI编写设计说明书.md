@@ -62,31 +62,38 @@ Skill Studio 的依赖导入负责**获取、验证和固定原始包快照**，
 
 ### 4.5 两个 Contract root 的正式 Publisher 输出
 
-两个包的 `package.json` 必须严格符合 Compiler v2.1.0 的 [interface-package.schema.json](https://github.com/odango-chan/ca-skill-compiler/blob/v2.1.0/contracts/development/v1alpha1/interface-package.schema.json)：`apiVersion`、`packageId`、`version`、`languageTarget`、`publisher`、`dependencies`、`exports`、`files` 为完整字段集合；Schema `additionalProperties: false`，不得添加 `sourceStatus` 等自定义字段。`files[]` 的 SHA-256 必须针对实际包内的精确文件字节计算。新生成的 `package.json` 是正式 Interface Package envelope；它不能冒充或覆盖 Owner 原有的 `manifest.json`。
+要让当前 MAS Example 使用 Compiler v2.1.0 Development Build，Owner 与 Host 必须分别发布正式 `connectionagent.io/interface-package/v1alpha1` 包。发布任务分别归入 [SR-015](../../SR/SR-015-工具契约设计移交.md)（MAS Owner）和 [SR-020](../../SR/SR-020-参考宿主设计移交.md)（Host Context）；Studio 只导入发布物，不代替 Publisher 组包。
+
+两个包的 `package.json` 必须严格符合 Compiler v2.1.0 的 [interface-package.schema.json](https://github.com/odango-chan/ca-skill-compiler/blob/v2.1.0/contracts/development/v1alpha1/interface-package.schema.json)：`apiVersion`、`packageId`、`version`、`languageTarget`、`publisher`、`dependencies`、`exports`、`files` 为完整字段集合；Schema `additionalProperties: false`，不得添加 `sourceStatus` 等自定义字段。正式 `package.json` 是新的 Interface Package envelope；它不能冒充或覆盖 Owner 原有的 `manifest.json`。包内 `files[]` 的 SHA-256 针对实际包内精确文件字节计算。
 
 **MAS Owner 包**
 
 - 固定身份：`packageId=urn:openamsm:mas:tool-contracts`、`version=v1alpha4`、`publisher=openamsm.smf.mas`、`languageTarget=connectionagent.io/v1alpha5`。
-- 权威来源：`odango-chan/ca-client-tools` tag `v1.2.0`，目录 `contracts/owner/openamsm-mas/v1alpha4`，解析 Revision `fc44c3a745c68443fcfb12054c7eadf0ed7cc3f7`，Owner source `buildIdentity=sha256:ac834080f31ff0fa91b9eb846fa47c889a94837fc1f37ec2034190e4e83085c0`。
-- `CallableCatalog` exports 从 `tool-catalog.yaml` 的正式 `spec.contracts[].id` 逐项生成；`CapabilityCatalog` exports 从 `capability-contracts.yaml` 的 capability ID 生成；`EvidenceDescriptor` exports 从 `evidence-guarantees.yaml` 的 fact ID 生成；`Schema` exports 覆盖这些公开接口及其 `$ref` 闭包中的精确 Schema `$id`。Export ID 必须取自源契约，不得由 Studio 猜测。
-- 保留上述公开契约文件及 Schema 文件的原始字节；先按 Owner source `manifest.json` 校验来源工件，再由 Publisher 生成正式 `package.json`。`manifest.json` 的 `connectionagent.io/toolcatalog/v1alpha4` 是 Owner source manifest，不是 Interface Package manifest。
-- `deployment-binding.yaml` 及其部署私有数据、Runtime-only Provider bindings 不得进入公开 exports 或包文件闭包；仅导出 Skill/Compiler 静态链接实际需要的公开接口。不得把 `ca-client-tools#37` 的 private Runtime-only bindings 包装成 public Callable。
+- 权威来源：`odango-chan/ca-client-tools` tag `v1.2.0`，目录 `contracts/owner/openamsm-mas/v1alpha4`，resolved Revision `fc44c3a745c68443fcfb12054c7eadf0ed7cc3f7`，Owner source `buildIdentity=sha256:ac834080f31ff0fa91b9eb846fa47c889a94837fc1f37ec2034190e4e83085c0`。
+- Owner source `manifest.json` 是 `connectionagent.io/toolcatalog/v1alpha4` source manifest，不是正式 Interface Package manifest。它记录 25 个操作，其中 7 个位于 `notPublished`；正式包只导出其余 **18 个公开 Callable ID**。`tool-catalog.yaml` 保持原始字节不变，`package.json.exports` 只声明这 18 个 ID。Compiler Development Linker 只索引声明的 export ID，不会因未导出的条目仍存在于文件中而将其暴露为 Skill Callable。
+- `CallableCatalog` exports：逐个使用上述 18 个公开 `spec.contracts[].id`，路径为原始 `tool-catalog.yaml`。不得导出 `manifest.json` 中的 7 个 `notPublished` 操作。
+- `CapabilityCatalog` exports：**不得直接把 Owner 的 `capability-contracts.yaml` 当作 Compiler Development CapabilityCatalog**。Owner 源格式是 `connectionagent.io/capability-contracts/v1alpha4`，结构为 `spec.capabilities[].callables[]`，含 owner/effect/scopePolicyRef；Compiler v2.1.0 Development Linker 接受的逻辑格式则是 `capabilities[].members[].callableId`（member 可选 `dependencyAlias`），不接受前述字段。Publisher 必须新增确定性投影文件 `capability-catalog.yaml`：从权威 `capability-contracts.yaml` 读取能力成员，只保留上述 18 个公开 Callable 对应的成员，输出 `capabilities: [{id, members: [{callableId}]}]`，并只导出至少包含一个公开成员的 Capability ID。不得把 owner/effect/scopePolicyRef 投影为授权；该文件只用于 Development 静态成员链接，不是 Capability Grant 或 Host Trust。
+- `EvidenceDescriptor` exports：原始 `evidence-guarantees.yaml` 是 Compiler v2.1.0 可读取的顶层 fact-ID mapping；只导出上述公开 Callable 实际提供/引用的 Evidence fact ID，路径为原始文件。
+- `Schema` exports：从 18 个公开 Callable 的 input/query/output/receipt/commit-proof 等字段计算完整 Schema `$ref` 闭包；每个 export ID 必须精确等于原始 Schema 的 `$id`。公开 ToolCatalog、EvidenceDescriptor 和 Schema 文件保持原始字节；`capability-catalog.yaml` 是唯一按冻结 Development 逻辑格式生成的确定性投影文件。
+- Publisher 先按 Owner source `manifest.json` 校验源工件摘要，再构造正式包。不得将 `deployment-binding.yaml`、部署私有数据或 Runtime-only Provider bindings 放入公开包；`deployment-binding.schema.json` 仅在其确实进入公开 Schema 闭包时才可纳入。不得把 ca-client-tools#37 的 private Runtime-only bindings 转成 public Callable。
+- 现有两个 ZIP 均不可替代本包：`ca-client-tools_interface_1.1.0.zip` 是 Provider v2 的 READ Interface Package；`openamsm-mas-compiler-contract-v0.3.0.zip` 来自 `contracts/mas-owner-candidate/v0.3.0`，声明的 Package ID 为 `wtlab:packages:openamsm:mas-compiler-contract`、owner 为 `wtlab`，且 `compilerLinkable=false`、`deployable=false`，不是 `urn:openamsm:mas:tool-contracts`。
+- 当前 `cmd/ca-client-tools-release generate` / `internal/interfacepkg` 生成的是 Provider `provider-bindings/v2` 对应的 `ca-client` 包，不是 MAS Owner ToolCatalog。必须新增独立 Owner Publisher（建议 `internal/ownerinterfacepkg` 与 `cmd/ca-client-tools-owner-interface-release` 的 generate/verify 命令），不能改变现有 READ 包的源语义。
+- 发布资产名固定为 `ca-client-tools_mas-owner_interface_v1alpha4.zip`；在当前 `v1.2.0` 之后的下一次 Publisher 代码发布中附带（若实施时无新版本，目标 tag 为 `v1.2.1`）。Interface Package 自身版本仍为 `v1alpha4`；Studio provenance 同时记录发布 tag/asset digest、Owner source Revision 和 source buildIdentity。
 
 **Host Context Development fixture 包**
 
 - 固定身份：`packageId=urn:connectionagent:ca:host-context`、`version=v1`、`publisher=urn:connectionagent:owner:ca-context`、`languageTarget=connectionagent.io/v1alpha5`。
-- 权威来源：`odango-chan/ca-agent-demo` Revision `57e277ff9094dad93543df46910a12a1dbbaf560`，目录 `tests/fixtures/compiler/mas-v1alpha5-scheme-c/trusted/snapshots/ca-context`，文件 `subject.schema.json`，Git blob `4faee66642b8bc5eb2e45c131be4688b982037d8`。
-- 发布一个 `Schema` export，ID 精确等于 Schema `$id` `urn:connectionagent:ca:context:subject:v1`，路径为包内原始 `subject.schema.json`；不得重写或重新序列化 Schema 字节。
-- `sourceStatus=DEVELOPMENT_FIXTURE` 保留在 Studio `skillc.lock/v0.1` 的 `source` provenance 中；不得写入 `package.json`。Compiler BuildRequest 的 `profile=DEVELOPMENT` 表示构建档位，二者都不授予 Host Admission。
+- 权威来源：`odango-chan/ca-agent-demo` 当前基线 Revision `57e277ff9094dad93543df46910a12a1dbbaf560`，目录 `tests/fixtures/compiler/mas-v1alpha5-scheme-c/trusted/snapshots/ca-context`，文件 `subject.schema.json`，Git blob `4faee66642b8bc5eb2e45c131be4688b982037d8`。
+- 发布一个 `Schema` export，ID 精确等于 Schema `$id=urn:connectionagent:ca:context:subject:v1`，路径为包内原始 `subject.schema.json`；不得重写或重新序列化 Schema 字节。正式包仅包含 `package.json` 与 `subject.schema.json`。
+- 在 Host 仓新增确定性构建脚本 `scripts/build_host_context_interface_package.py`，输出 `dist/ca-agent-demo_host-context_interface_v1.zip`；`package.json.dependencies=[]`，`files[]` 只列出精确的 `subject.schema.json` SHA-256。
+- 当前 `ca-agent-demo` 的 `pyproject.toml` 版本为 `0.4.0`；若实施时无新版本，下一次发布使用 `v0.4.1`，在既有 `release-request.yml` / `release.yml` 中生成并发布上述 ZIP。两个 Workflow 均须将 ZIP 纳入 `SHA256SUMS`、预检 artifact 和发布后下载校验；Host Release tag 版本与 Interface Package 自身的 `v1` 版本是两个独立版本。
+- `sourceStatus=DEVELOPMENT_FIXTURE` 只保留在 Studio `skillc.lock/v0.1` 的 source provenance 中；不得写入正式 `package.json`。Compiler BuildRequest 的 `profile=DEVELOPMENT` 表示构建档位，二者都不授予 Host Admission。Studio lock 同时固定 Host Release tag/asset digest、Schema source blob 与 resolved Revision。
 
 **共同边界**
 
-- 两个 Publisher 都只生成正式静态 Interface Package；`publisher` 是声明身份，不是 Host 已验证的 Owner Trust。
-- `dependencies` 只列出实际 Interface Package 依赖；无依赖时使用空数组。不得通过 Studio 重写包字节、改 Package ID、猜测 Export ID 或合成 Owner/Host 授权。
-- Compiler v2.1.0 Development BuildRequest 不接受 `trustedBuildContext`、Owner attestation、Deployment Grant 或 Provider binding。成功结果仍是 `VALIDATED / LINKED / BUILT / NOT_ADMITTED`；Host Admission 与 Runtime Execution 继续独立处理。
-
-`ca-client-tools_interface_1.1.0.zip` 仍应作为独立的真实发布包正例：使用一个 Contract 明确声明 `ca-client` alias 与精确 Package ID 的 synthetic Skill 验证 Compiler v2.1.0。该测试证明真实 ZIP 与 Compiler 契约互操作，不代表 MAS Create/Modify/Release Example 已链接或 Qualified。
-
+- 两个 Publisher 都只生成正式静态 Interface Package；`publisher` 是声明身份，不是 Host-verified Owner Trust。
+- `dependencies` 只列出实际 Interface Package 依赖；无依赖时使用空数组。不得由 Studio 重写包字节、改 Package ID、猜测 Export ID 或合成 Owner/Host 授权。
+- Compiler v2.1.0 Development BuildRequest 不接受 `trustedBuildContext`、Owner attestation、Deployment Grant、live Evidence 或 Provider binding。成功结果仍是 `VALIDATED / LINKED / BUILT / NOT_ADMITTED`；Host Admission 与 Runtime Execution 继续独立处理。
 ## 5. Compiler Development Build 与状态投影
 
 ### 5.1 单一 Build 路径
@@ -151,4 +158,4 @@ Package Explorer、LSP、Problems 与 AI Workbench 必须区分源码诊断、�
 |---|---|---|---|---|---|
 | 2026-11-25 | 0.1.0 | Codex / GPT-6 | 全文 | 整合已核对的跨仓基线和候选变更，建立分仓验收入口。 | F09 · IR-006 · SR-016 |
 | 2026-11-25 | 0.2.0 | GPT-6 | §4–7 | 明确 Studio 项目锁与 Compiler Lock 的边界、当前 MAS roots 的 package-kind 不匹配、no-root 行为、统一 Development Build gate 和当前 PR 新鲜度门禁。 | Studio #261、#267、#269、#270、#272、#276；EC02 Development Build |
-| 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | §3–7 | 明确 when 位于 `assurance/contract.yaml`；补齐 MAS Owner / Host Context Interface Package 的 Publisher 字段、导出闭包、精确来源与 Development provenance 边界，并关联 SR-015 / SR-020。 | IR-006 · SR-015 · SR-016 · SR-020 · Studio #269 |
+| 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | §3–7 | 明确 when 位于 `assurance/contract.yaml`；补齐 MAS Owner / Host Context Interface Package 的 Publisher 字段、18 项公开 Callable 白名单、CapabilityCatalog 确定性投影、非链接候选排除、Release asset 与 Development provenance 边界。 | IR-006 · SR-015 · SR-016 · SR-020 · Studio #269 |
