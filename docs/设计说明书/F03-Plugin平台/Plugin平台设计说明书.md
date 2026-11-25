@@ -39,7 +39,7 @@
 | Tool Interface Package | 公共 Callable ID、输入/输出 Schema、Effect、Capability membership | 进程生命周期、Provider 私有 backend 映射 |
 | Owner Contract Package | Owner Callable、Owner Outcomes、Receipt、Commit Proof、Reconcile | Provider 进程和私有 handler |
 | Provider Runtime Bindings | 公开/Owner Callable 到私有 backendOperationId 的映射、HostInvocation 和 privateArguments 来源 | 公开 Tool 契约、Capability 授权和 Owner 语义 |
-| Provider Backend Binding Catalog v2 | Provider 内部 backendOperationId 到 handler、serviceKey、source、Effect 和参数 Schema 的执行映射 | Provider 进程内部 | 不公开 Callable/Capability/Owner Outcome，不授权 Skill |
+| Provider Backend Binding Catalog v2 | Provider 内部 backendOperationId 到 handler、serviceKey、source、Effect 和参数 Schema 的执行映射 | 不公开 Callable/Capability/Owner Outcome，不授权 Skill；Host 不解析或复制 |
 
 ## 4. 包与进程模型
 
