@@ -1,7 +1,7 @@
 # Plugin 平台设计说明书
 
 > 文档类型：机制设计说明书  
-> 文档版本：0.3.0  
+> 文档版本：0.3.1  
 > 状态：Next 目标设计；Plugin Package/IPC 规范已进入主线文档，运行时代码尚未完成  
 > 功能归属：F03 — Plugin 平台  
 > 关联 SR：SR-003、SR-010、SR-015、SR-017  
@@ -184,6 +184,8 @@ ca-client-tools 是 Tool Interface Package、Provider、SBI client 和 Codec 能
 
 Codec 如果正式发布，也作为同一个 tools Extension 中的普通 Callable，不新增 Codec Manager。ca-client-tools PR #39 当前仍 OPEN；Phase B worker/facade 不等于 Agent 消费集成完成，Phase C consumer integration 需单独验收。
 
+工具契约、Owner Contract、Provider Runtime Bindings、Provider v2 wire contract、Backend Binding Catalog 与 Next ProviderV2 Driver 的完整消费设计见 [F03.05 Tool Interface 与 Provider 集成设计说明书](Tool%20Interface%20与%20Provider%20集成设计说明书.md)。F03 只维护 Plugin 平台共性；F03.05 维护 Provider 消费细节，不复制第二套 Manager/Registry/授权边界。
+
 ## 9. Artifact Handoff 与二进制边界
 
 原始 N1/N2 不进入 NDJSON，不使用 Base64，不直接放入 LLM Context。
@@ -225,7 +227,7 @@ Plugin 由本地显式安装路径和部署配置加载。Host 启动时校验�
 |---|---|---|
 | Next Plugin Package/IPC 规范 | 文档已合入 Next main | Next PR #1 已合并；规范不等于运行时代码 |
 | Next Python Plugin Manager | NOT_IMPLEMENTED | 本轮仅恢复设计与规范 |
-| ca-client-tools Provider v2 | IMPLEMENTED / RELEASED | main 7bcb261；Provider v1.1.0；尚需 Next adapter |
+| ca-client-tools Provider v2 | IMPLEMENTED / RELEASED | main 7bcb261；v1.2.0 已发布；尚需 Next ProviderV2 Driver |
 | ca-client-tools Codec Phase B | OPEN | PR #39 head eb1169f；未合并 |
 | ca-agent-demo Provider v1.1.0 runtime cutover | OPEN | PR #246 head 68a6f9e；不是 main 证据 |
 | ca-openamsm-plugin | NOT_IMPLEMENTED | main eb83c8f 只有 README；PR #1 为 OPEN/Draft 设计提案 |
@@ -238,6 +240,7 @@ Plugin 由本地显式安装路径和部署配置加载。Host 启动时校验�
 - [ca-client-tools Tool/Provider 架构原文](../../架构设计/外部能力域/EC03-Tool与Provider架构原文.md)
 - [EC03 Provider Protocol v2 原文](../外部能力域/EC03-Tool%20Provider/Provider%20Protocol%20v2契约原文.md)
 - [EC03 Runtime Bindings 原文](../外部能力域/EC03-Tool%20Provider/Runtime%20Bindings设计原文.md)
+- [F03.05 Tool Interface 与 Provider 集成设计](Tool%20Interface%20与%20Provider%20集成设计说明书.md)
 - [EC04 OpenAMSM Plugin Draft 架构原文](../../架构设计/外部能力域/EC04-OpenAMSM%20Go%20Event%20Plugin架构提案原文.md)
 - [Plugin Package/IPC 规范](../../规范/插件包与进程通信协议规范.md)
 - [公共契约与所有权规范](../../规范/公共契约与所有权规范.md)
@@ -248,3 +251,4 @@ Plugin 由本地显式安装路径和部署配置加载。Host 启动时校验�
 |---|---|---|---|---|---|
 | 2026-11-25 | 0.2.2 | GPT-6.2（ChatGPT） | 全文 | 按 Next 唯一 Plugin Manager、Provider v2 适配和 ca-openamsm-plugin 候选设计恢复完整边界 | Issue #12；SR-015～017 |
 | 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | 全文 | 补齐 Manifest、生命周期、IPC、Event/Delivery/Tools、Artifact、错误与当前实现审计 | Issue #12 |
+| 2026-11-25 | 0.3.1 | GPT-6.2（ChatGPT） | §8、§12–13 | 将 Provider v2 消费细节下沉到 F03.05，更新 ca-client-tools v1.2.0 发布状态 | Issue #12；SR-015 |
