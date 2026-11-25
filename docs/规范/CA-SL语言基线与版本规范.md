@@ -1,7 +1,7 @@
 # CA-SL 语言基线与版本规范
 
 > 文档类型：规范  
-> 文档版本：0.1.0  
+> 文档版本：0.1.1  
 > 状态：待评审  
 > 修订日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -21,8 +21,22 @@
 
 候选 §12.8 中的作者源导入与构建适用于作者工具；Next 运行时产品只导入正式发布包。中央语言刷新须明确这两个产品边界并验证对应入口。
 
+## 3. 候选规范评审与 DSH 恢复输入
+
+对照 [ca-skills #88 的固定候选](https://github.com/odango-chan/ca-skills/blob/2eedf4231075b6c589212d7d25576c7abbe6a5d9/docs/skill-language-spec.v1alpha5.zh-CN.md#m4-skill-import-与编译边界) 评审以下改动。此节记录待规范负责人确认的语义及验收预期。
+
+| 候选条款 | 拟澄清的行为 | 验收输入与可观察结果 |
+|---|---|---|
+| M.4、SA-002／003 | 作者工具校验完整 Assurance，调用外部 Compiler 构建和验证，再交由发布流程。Next 运行时接受 SKILL.md-only 或正式发布的 Assurance Bundle。 | 有效作者源生成可验证产物；缺失或无效 Assurance 失败。向 Next 导入作者源包应失败，不能降级成 SKILL.md-only。 |
+| M.4、SA-009 | Next Importer 对正式发布 Bundle 做受支持版本、结构、文件、引用和类型检查。Compiler 的构建与验证在发布流程完成。 | 有效 Bundle 导入成功且两个模式可选。损坏、路径无效或类型数据不可解码的 Bundle 导入失败。两组都验证 Host 无 Compiler 调用。 |
+| M.4、SA-011 | AI 编辑走与用户编辑相同的作者校验、编译和发布路径。已运行的 Catalog generation 直到显式导入成功后才切换。 | 只编辑未发布的 Assurance 源，当前 Run 和生效目录不变；导入新发布 Bundle 后，新事件使用新 generation。 |
+| M.2／M.3、SA-008 | 建议在新事件上，将声明了 requestSchema 但 payload 不匹配的 Assurance Skill 排除在两个候选集合之外。保留 Schema 不匹配诊断，区分 CEL 求值错误。 | A 无 when 且 requestSchema 要求整数 requestType，B 为 SKILL.md-only。输入 requestType 为字符串且无显式匹配，候选只含 B。把输入改为整数后，A、B 均进入语义候选。规范负责人需确认此预期。 |
+
+**DSH 恢复证据**包括正式语言规范 SHA 与发布记录、对上表各项的规范决议或采用的替代语义，以及 READY 的 SR-013。规范确认后，将对应正反例纳入 AC-013-01 的跨语言 fixture 或 SR-004～006 的 Host fixture，按职责分别取证。规范发布和 READY 仍为外部评审门槛。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
 |---|---|---|---|---|---|
 | 2026-11-25 | 0.1.0 | Codex / GPT-6 | 全文 | 整合已核对的跨仓基线和候选变更，建立分仓验收入口。 | F02 · IR-003 / IR-006 · SR-023 |
+| 2026-11-25 | 0.1.1 | Codex / GPT-6 | §3 | 固定候选冲突、拟澄清语义与正反例，明确 DSH 恢复输入 | F02 · SR-013 · SR-023 |
