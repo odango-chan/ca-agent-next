@@ -2,18 +2,31 @@
 
 **Audit date:** 2026-11-25.  
 **Target:** Python Agent Core in `ca-agent-next`; independent Go Plugins.  
-**Rule:** preserve independently owned mature projects as dependencies; reuse Python source from `ca-agent-demo` selectively.
+**Rule:** preserve independently owned mature projects as dependencies; reuse Python source from ca-agent-demo selectively.
+
+## Current target decisions (supersede earlier proposals in this audit)
+
+This audit records repository evidence as observed on 2026-11-25. The following target decisions are authoritative for next and supersede any earlier proposal below that conflicts:
+
+- Every Skill has SKILL.md. assurance/ is optional and contains CA-SL deterministic execution assets; contract.yaml stays inside assurance/.
+- No Assurance means LLM-guided only. Valid Assurance supports both Deterministic and LLM-guided. Invalid present Assurance is an import error, never a downgrade.
+- Optional assurance/contract.yaml.when is the only formal Skill-selection expression. predicates.yaml remains execution-time business evaluation. Skills without when, including SKILL.md-only Skills, are semantic candidates from SKILL.md.
+- Skill source with Assurance is automatically compiled before admission. SKILL.md-only source imports without Compiler. A compiled Artifact is inspected/verified/admitted without rebuilding.
+- Individual LLM Actions go through the common Runtime Action Boundary and are not compiled. LLM-created/edited Assurance source follows the normal source-import/Compiler path.
+- One Plugin Manager owns Event ingress, Delivery and Tools extensions. Tools are a Plugin extension, not a separate Provider Manager.
+- No Domain Contract Package, TaskContract Package, extra Plugin-package SHA-256 hashing, package signatures or Trust Registry.
+- The CA-SL v1alpha5 refresh and matching Compiler support are a dependency gate, not an already completed implementation.
 
 ## 1. Repository snapshot
 
 | Repository | Observed baseline | Language / release | Current evidence | Decision |
 |---|---|---|---|---|
 | `ca-agent-demo` | main `57e277ff9094dad93543df46910a12a1dbbaf560` | Python; `ca-agent-host 0.4.0` per main README | Existing Python Agent/Host/Runtime/Resident/Context; PR #246 adds generic Provider path; PR #249 is Plugin design only | Primary source for selective Python reuse |
-| `ca-agent-next` | main `952a23f8303f5f6cfaff4a88e63de214d856252b`; PR #1 head `9c55d3cb01cb1721ec6f10bfbb06ba5baf48ed77` | Target Python; currently docs-only | No implementation files on main | New Python implementation workspace |
+| `ca-agent-next` | main `952a23f8303f5f6cfaff4a88e63de214d856252b`; PR #1 branch `docs/architecture-baseline-20261125` | Target Python; documentation-only PR | No implementation files on main; PR #1 refreshes the target architecture and Harness handoff | New Python implementation workspace |
 | `ca-agent` | main `447d0cce7e42c7c1184b11fb2563792eead68d51` | Go | Stable existing implementation | Promotion target, not source |
 | `ca-skill-compiler` | main `255ab85fa5abb4b0bf36656bf64250cafebf45cb` | Go; latest release **v2.1.0** | Stateless compiler; CLI + Go/WASM Worker; CA-SL v1alpha5; Build/Verify and Development Build/Verify | Direct external executable/API dependency; do not copy |
 | `ca-client-tools` | main `7bcb2614aa3615d8358df31eecefd0909e894e40` | Go; latest release **v1.2.0** | Provider v2 process, one Go-owned Tool source, Compiler Interface Package, runtime binding sidecar | Tool Plugin dependency; do not copy |
-| `ca-skills` | main `b06f72baae3eb3d578c489f950a325e2d63d556f` | CA-SL v1alpha5 sources/spec and Python validation tests | Contains Establish, Modify and Release MAS Skill examples and lifecycle/compiler-gate tests | Import/use Skill packages; no business logic copied to Host |
+| `ca-skills` | main `b06f72baae3eb3d578c489f950a325e2d63d556f` | CA-SL v1alpha5 sources/spec and Python validation tests | Contains Establish, Modify and Release MAS Skill examples; v1alpha5 refresh for optional Assurance and contract.when is a separate required change | Import/use Skill packages; no business logic copied to Host |
 | `ca-openamsm-plugin` | main `eb83c8f2e83dbcdc56b484126b2acf9e8f2a7397` | No implementation language detected; README only | PR #1 is OPEN/DRAFT design proposal, head `7940f733`; no Go implementation files on main | Future Go Event Plugin; implementation not started |
 | `ca-agent-demo` PR #246 | head `68a6f9e7723a0c2da1aebf5047c23ae96c5d237f` | Python Host + Go Provider | G5 synthetic Owner 22 passed; G6 live Scheme C NOT_RUN/BLOCKED | Review/adapt the generic loader; do not assume merged |
 | `ca-agent-demo` PR #249 | head `dfbcc33467a1ea3b6fa45d661ac2e77bfd71423a` | Docs-only | Proposed Plugin Contract v0 and Event path | Reuse concepts, not Agent-default/Skill-optional flow |
@@ -32,8 +45,8 @@
 
 **DECISION — direct dependency, no code copy**
 
-- Python Host invokes a pinned `skillc` executable as a subprocess for check/build/inspect/verify.
-- Pass exact source roots, Interface Package snapshots and Dependency Lock; capture structured output and exit status.
+- Python Skill Importer invokes the canonical `skillc` executable for Assurance source Check/Build and Artifact Inspect/Verify. SKILL.md-only source does not invoke Compiler; an already compiled Artifact is inspected/verified without rebuilding.
+- Pass the exact Assurance source root and the dependency inputs required by the Compiler contract; capture structured output and exit status.
 - Host separately admits the exact Artifact/Variant and binds Capability requirements to the selected Run.
 - Do not copy Go Compiler packages into next; do not reimplement compiler linking/validation in Python.
 - Existing Demo `runtime/compiler_artifact.py` and `runtime/compiler_skill.py` are candidate Python Host-side Artifact admission/lowering adapters, not a replacement Compiler. Audit/adapt them against v2.1.0 output before reuse.
@@ -53,7 +66,7 @@
 **DECISION — Tool Plugin, do not copy or translate**
 
 - Treat `ca-client-tools` as a Plugin exporting the `tools` extension.
-- Plugin manifest references the exact Interface Package and runtime binding package/digest; it does not duplicate ToolCatalog.
+- Plugin YAML manifest references the Interface Package using its canonical package contract; it does not duplicate ToolCatalog or invent an additional Plugin-level digest.
 - Use the existing Go executable and published package. No Go-to-Python translation.
 - Initial next implementation may adapt `ca-client-tools.provider/v2` behind the unified Plugin Manager's Tool extension driver. This avoids rewriting a mature released protocol while preventing a separate Provider Manager/Runtime.
 - Keep the Interface Package as the Tool contract authority and Runtime as the only authorization/outcome authority.
@@ -61,7 +74,7 @@
 
 **Current integration caveat:** ca-agent-demo PR #246 is still OPEN. It reports G5 synthetic Owner 22 passed, but live Scheme C G6 remains NOT_RUN/BLOCKED; its generic Provider loader is a branch input, not mainline accepted code.
 
-### 2.3 ca-skills — package import, not Host code
+### 2.3 ca-skills — optional Assurance source, not Host code
 
 **EVIDENCE**
 
@@ -71,9 +84,11 @@
 
 **DECISION**
 
-- Consume Skill packages through the generic package/Compiler path.
-- Do not copy Create/Modify/Release business logic into Agent Core.
-- Echo is the first mechanism proof; OpenAMSM Skills are a later real-domain integration.
+- Every package has SKILL.md. Packages with assurance/ contain contract.yaml, procedure.yaml and the Predicate definitions they use; packages without assurance/ are LLM-guided only.
+- Source packages with Assurance are compiled before admission. SKILL.md-only packages import without Compiler. Already compiled Artifacts are inspected/verified/admitted without rebuilding.
+- The optional top-level assurance/contract.yaml.when is used for Skill selection; predicates.yaml remains execution-time business evaluation.
+- The v1alpha5 refresh is not yet evidence that the released Compiler supports when or Assurance-free package import. Verify the matching Compiler behavior before implementation claims.
+- Do not copy Create/Modify/Release business logic into Agent Core. Echo is the first mechanism proof; OpenAMSM Skills are a later real-domain integration.
 
 ### 2.4 ca-openamsm-plugin — Event Plugin, not a Tool Provider
 
@@ -98,8 +113,8 @@ The following means selective Python source reuse after tests/import review, not
 | Demo source | Recommendation | Why / work |
 |---|---|---|
 | `agent/intent/`, model adapter/request types | **COPY + ADAPT (S)** | Python Agent boundary already exists; strip Demo-specific composition |
-| `agent/formal/{search,grounding,operators,ranking}` | **COPY + ADAPT (M)** | Useful deterministic reasoning primitives; new package-applicability resolver still required |
-| `agent/host/root_eligibility.py`, `routing.py` | **ADAPT (M)** | Reuse candidate/exclusion types; replace structured Event→Root mapping and enforce LLM candidate restriction |
+| `agent/formal/{search,grounding,operators,ranking}` | **COPY + ADAPT (M)** | Useful deterministic reasoning primitives; adapt selection to Assurance contract.when plus semantic SKILL.md candidates |
+| `agent/host/root_eligibility.py`, `routing.py` | **ADAPT (M)** | Reuse candidate/exclusion types; replace structured Event→Root mapping with optional contract.when and unguarded SKILL.md semantic candidates |
 | `agent/context/`, `runtime/observation/` | **COPY + ADAPT (M)** | Useful read-only resolver and fact/provenance model; simplify |
 | `runtime/tool_contract.py`, `runtime/outcomes.py` | **COPY + ADAPT (M)** | Strong existing shared Tool validation and outcome boundary; dispatch target becomes Plugin Tool extension |
 | `runtime/compiler_artifact.py`, `runtime/compiler_skill.py` | **ADAPT (M)** | Host Artifact admission, not Compiler; verify against v2.1.0 |
@@ -126,18 +141,18 @@ The following means selective Python source reuse after tests/import review, not
 
 ## 5. Feasibility and critical gaps
 
-**Overall: FEASIBLE**, with staged implementation. The external Compiler and Tool Provider are already independent release artifacts; Python Core can orchestrate them without sharing language/runtime.
+**Overall: FEASIBLE**, with staged implementation. The external Compiler and Tool Plugin are independent release artifacts; Python Core can orchestrate them without sharing language/runtime. The refreshed CA-SL/Compiler behavior is a prerequisite gate for Assurance source import, not an assumption that v2.1.0 already supports the new field.
 
 Critical work:
 
 1. **Unify Plugin/Tool extension management.** Current PR #246 has a generic Provider Manager/ToolComposition; PR #249 proposes a separate Plugin Manager. Next should have one Plugin Manager with Event and Tool extension kinds.
-2. **Resolve Skill-first conflict.** PR #249 and ca-openamsm-plugin PR #1 currently describe Agent-default/Skill-optional. Next must implement Formal-first Skill selection for every business Event.
-3. **Replace Event→Root mapping.** Current Demo `structuredEventRoutes` is not the target package-owned applicability model.
-4. **Integrate real Compiler.** Demo's `MockCompiler` is not enough; call skillc v2.1.0 and admit exact Artifacts.
+2. **Resolve Skill-first conflict.** PR #249 and ca-openamsm-plugin PR #1 currently describe Agent-default/Skill-optional. Next must bind a Skill first for every fresh business Event.
+3. **Replace Event→Root mapping.** Current Demo structuredEventRoutes is not the target. Use optional Assurance contract.when for explicit matches and SKILL.md semantic selection for unguarded Skills.
+4. **Refresh CA-SL and Compiler support.** The v1alpha5 spec must define contract.when and optional Assurance; the Compiler must support that grammar and the Assurance-free import boundary. Demo MockCompiler is not a substitute.
 5. **Simplify Resident/Runtime.** Current Demo includes Nsmf-specific execution and durable recovery; Echo should prove the common mechanism without copying all of it.
 6. **Respect current gate state.** PR #246 is OPEN; synthetic G5 22 passed does not equal live Scheme C G6. Do not migrate OpenAMSM until the generic Echo mechanism is accepted.
 
-The largest architectural risk is not Python↔Go interop. Both existing Go executables already use long-lived stdio/NDJSON. The main risk is accidentally preserving two extension managers and two business selection paths. One Plugin Manager and one Runtime Action Boundary keep this tractable.
+The largest architectural risk is not Python↔Go interop. Both existing Go executables already use long-lived stdio/NDJSON. The main risks are preserving two extension managers, reintroducing business Contract Packages, or compiling individual LLM Actions. One Plugin Manager, one Skill Importer and one Runtime Action Boundary keep this tractable.
 
 ## 6. Status vocabulary
 
