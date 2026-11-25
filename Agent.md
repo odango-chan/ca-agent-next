@@ -96,7 +96,7 @@ If implementation and documentation disagree, stop and report the exact conflict
 
 - ca-skill-compiler: consume the canonical Go skillc executable/API. Python may wrap the CLI and admit the exact Artifact. Do not copy Go Compiler source or reimplement its semantics.
 - ca-client-tools: consume the released Go Tool Plugin process and Interface Package. Do not copy/translate its Go implementation into Python.
-- ca-skills: consume CA-SL v1alpha5 Skill packages. The refreshed v1alpha5 adds contract.when and clarifies optional Assurance; do not create a competing CA-SL.
+- ca-skills: consume CA-SL v1alpha5 Skill packages. Same-version refresh proposal [PR #88](https://github.com/odango-chan/ca-skills/pull/88) adds optional Assurance and contract.when; until merged, do not assume the released Compiler supports the proposal. Do not create a competing CA-SL.
 - ca-openamsm-plugin: consume as an independent Go Event Plugin after its contract is aligned with the unified Plugin mechanism and Skill-first flow.
 - Reuse Python code from ca-agent-demo selectively, only after file-level dependency and test review.
 
