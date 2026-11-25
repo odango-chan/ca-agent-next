@@ -22,9 +22,9 @@
 | Root/Skill eligibility | `agent/host/root_eligibility.py`, `routing.py`, `root_routing_profile.py`; `tests/unit/test_resident_deployment_routing.py` | Implemented with deployment routing | Reuse eligibility concepts; replace structured Event→Root routing with Assurance contract.when and unguarded SKILL.md semantic selection |
 | LLM ambiguity selection | `agent/host/routing.py` (`SkillRoutingChooser`) and `agent/semantic/chooser.py` | Partly implemented | Adapt to strict Formal-first candidate restriction and exact identity validation |
 | Context/Observation | `agent/context/{base,loader,projection,requirements,observation_resolver}.py`; `runtime/observation/{model,source}.py`; `tests/unit/test_skill_context.py` | Implemented | Reuse types/resolver ideas; simplify provenance model for next |
-| Skill Artifact admission | `runtime/admission.py`, `runtime/compiler_artifact.py`, `runtime/compiler_skill.py`, `runtime/skill_assets.py` | Implemented Host-side checks | Reuse/adapt artifact admission and exact identity; align to Compiler v2.1.0 package/artifact contracts |
-| Compiler implementation | `skill_toolchain/compiler.py` defines `MockCompiler`; `runtime/compiler_artifact.py` loads/admit artifacts | External compiler not embedded in this Python package | Do not treat MockCompiler as production compiler; invoke released Go skillc |
-| Procedure linking | `runtime/linker.py`, `runtime/frozen.py`, `runtime/casl_adapter.py`; `tests/unit/test_compiler_skill_graph.py` | Implemented in Demo | Reuse only the generic runtime lowering/linking pieces needed after real Compiler artifact admission |
+| Published Artifact loading | `runtime/admission.py`, `runtime/compiler_artifact.py`, `runtime/compiler_skill.py`, `runtime/skill_assets.py` | Implemented Host-side loading/check helpers | Reuse only basic format/file/reference loading and local dependency resolution; do not carry over a Skill Admission stage or trust/approval policy |
+| Compiler implementation | `skill_toolchain/compiler.py` defines `MockCompiler`; `runtime/compiler_artifact.py` loads published artifacts | External compiler not embedded in this Python package | Do not treat MockCompiler as real Compiler; Agent imports prebuilt artifacts and never invokes skillc |
+| Procedure linking | `runtime/linker.py`, `runtime/frozen.py`, `runtime/casl_adapter.py`; `tests/unit/test_compiler_skill_graph.py` | Implemented in Demo | Reuse only generic runtime lowering/linking pieces needed after importing a published Compiler Artifact |
 | Runtime execution | `runtime/engine.py` defines `MockRuntime`; `runtime/outcomes.py`, `runtime/evidence_wait.py`, `runtime/durable.py` | Demo implementation with mock-named engine and durable semantics | Reuse semantic boundaries and tests; build/simplify next's one Runtime rather than copy all code blindly |
 | Tool Action boundary | `runtime/tool_contract.py` (`ToolContractRegistry`, `ToolBoundOperationBackend`); main test `tests/unit/test_unified_resident_action.py`. `test_tool_composition.py` is added on PR #246's open branch. | Implemented generic boundary | Strong reuse candidate; refactor backend target from Provider adapter to unified Plugin Tool extension |
 | Host/Resident lifecycle | `resident/{host,service,invocation,delivery,ingress}.py` | Implemented | Reuse basic lifecycle/API; avoid copying 5GC composition and overgrown recovery machinery |
@@ -51,16 +51,16 @@
 
 ### 3.4 SkillCatalog residency is a Next-owned mechanism
 
-- **EVIDENCE:** The audited Demo source identifies reusable Formal Resolver, Root/Skill eligibility, Skill Artifact admission and Host/Resident lifecycle components. This audit did not establish an immutable, Core-owned in-memory SkillCatalog with compile-on-import when programs, atomic generation swaps and Invocation generation pinning.
+- **EVIDENCE:** The audited Demo source identifies reusable Formal Resolver, Root/Skill eligibility, published Skill Artifact loading and Host/Resident lifecycle components. This audit did not establish an immutable, Core-owned in-memory SkillCatalog with precompiled published when programs, atomic generation swaps and Invocation generation pinning.
 - **DECISION:** Reuse the existing candidate/exclusion and Resolver primitives selectively, but implement the SkillCatalog read model in ca-agent-next. Do not put it under Plugin Manager and do not assume every Event should rescan Skill package files.
 - **TARGET:** Import/update loads SKILL.md and Assurance once, validates/compiles, then publishes an immutable in-memory generation. Each fresh Event evaluates precompiled when programs against its own data; SKILL.md-only Skills are in the same Catalog. Full SKILL.md is served from memory after selection, references are lazy-loaded, and each Invocation pins its Catalog generation.
-- **COMPILER DEPENDENCY:** v2.1.0 does not yet parse Contract.when or emit a Python-consumable checked program. [Compiler Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) tracks the Development Artifact v1alpha2 / CheckedExpr Any / DescriptorSet contract. Do not treat Demo MockCompiler as an implementation substitute.
+- **COMPILER DEPENDENCY:** v2.1.0 does not yet parse Contract.when or emit a Python-consumable checked program. [Compiler Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) tracks a new versioned published runtime Artifact contract carrying CheckedExpr Any / DescriptorSet. Do not treat Demo MockCompiler as an implementation substitute.
 
 ### 3.3 Current Runtime and Compiler naming is not proof of real compiler integration
 
 - **EVIDENCE:** `skill_toolchain/compiler.py` defines `MockCompiler`; `runtime/engine.py` defines `MockRuntime`. `agent/host/orchestrator.py` imports both in its current orchestration path.
 - **INFERENCE:** These are valuable mechanism prototypes, but not substitutes for the released Go Compiler or a fully separated production runtime implementation.
-- **PROPOSAL:** Integrate `skillc v2.1.0` as an external tool; keep Python Host admission and Runtime semantics separate.
+- **PROPOSAL:** Keep Compiler entirely in the external Skill authoring/release workflow. Agent imports the published runtime Artifact and does not call Compiler or implement Skill Admission.
 
 ## 4. PR/Issue evidence and status
 
@@ -77,7 +77,7 @@ PR #246 review identifies the new generic Python loader modules under `providers
 
 ## 5. Reuse map
 
-- **Reuse/adapt:** Python Agent/model adapter, Formal search/grounding, Context Loader, Skill Artifact admission, generic Tool contract validation, Outcome/Evidence semantics, minimal Run/Artifact store.
+- **Reuse/adapt:** Python Agent/model adapter, Formal search/grounding, Context Loader, published Artifact loading/structural checks, generic Tool contract validation, Outcome/Evidence semantics, minimal Run/Artifact store.
 - **Refactor:** Skill selection to optional Assurance contract.when plus SKILL.md semantic candidates; Tool dispatch to Plugin Tool extension; Runtime/Host split; Context provenance.
 - **Do not copy wholesale:** `integrations/fivegc/`, NsmfRunExecutor, current structured Event routing, `MockCompiler` as a real compiler, `MockRuntime` as an assumed final engine.
 - **Do not migrate external Go projects into Python:** `ca-skill-compiler` and `ca-client-tools` remain independent executables/packages.
