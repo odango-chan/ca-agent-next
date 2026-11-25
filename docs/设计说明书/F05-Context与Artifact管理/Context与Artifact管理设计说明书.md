@@ -1,8 +1,8 @@
 # Context 与 Artifact 管理设计说明书
 
 > 文档类型：机制设计说明书  
-> 文档版本：0.3.0  
-> 状态：Next 目标设计已重建；Next Host 实现 NOT_IMPLEMENTED；Host→Tool 二进制 Channel 契约待独立冻结  
+> 文档版本：0.4.0  
+> 状态：目标设计已重建；ca-host.artifact-store/v1 已冻结并由 Provider v1.2.0 消费；ca-agent Go Host P1 已验收；Next Python Host / ArtifactStore / Channel NOT_IMPLEMENTED  
 > 功能归属：F05 — Context 与 Artifact 管理  
 > 关联 SR：SR-009；交叉 SR：SR-007、SR-010、SR-011、SR-015、SR-017  
 > 关联 IR：IR-004、IR-005、IR-006  
@@ -126,7 +126,7 @@ Host 拥有唯一 ArtifactStore。其逻辑职责：
 1. artifactRef 是不透明引用，不编码文件路径、外部 URI、Content-ID 或内容摘要。
 2. Host 不把 artifactRef 作为业务事实；它只表示 Host 能定位并授权访问的材料。
 3. Artifact 元数据与原始 bytes 分离。任何调用者不得通过猜测 ref 或路径读取其他 Run 的文件。
-4. 本 Demo 不引入内容寻址、去重摘要、额外 SHA-256、独立数据库或远程 Artifact Service。
+4. artifactRef 不采用内容寻址或摘要身份；不引入去重、独立数据库或远程 Artifact Service。Host→Tool channel 仅使用 ca-host.artifact-store/v1 规定的逐 Artifact SHA-256 传输校验；它不是 artifactRef 身份、内容寻址或额外包完整性体系。不得增加第二套摘要、签名或 Trust Registry。
 5. 本地文件存储可以作为 Host 内部实现；对 Plugin/Tool 暴露的仍是受控引用，不暴露宿主文件系统路径。
 6. ArtifactStore 不是 Evidence Store；原始协议字节不能自动被解释为业务已提交。
 
@@ -155,7 +155,19 @@ Host 拥有唯一 ArtifactStore。其逻辑职责：
 
 Tool 只接收当前 Invocation 已授权的 artifactRef 和声明的 slot，不接收任意本地路径。二进制通过独立 Host Artifact Store Channel 交接，不进入 NDJSON、不使用 Base64。
 
-**当前边界：** F03.05 引用的 ca-host.artifact-store/v1 Channel 尚未发布；Provider initialize 中没有配置 artifactChannel 时，artifact-bearing binding 必须为 NOT_CONFIGURED，并在任何远端 I/O 前拒绝。不得自行发明 Provider 私有的文件路径协议或把 Event stagingPath 直接传给 Provider。该 Channel 必须由独立契约变更冻结后，才能实施跨进程二进制调用。
+**协议基线（已冻结）：** `ca-host.artifact-store/v1` 是 Host→Tool 二进制交接的唯一 wire contract，完整原文见 [TARGET01 Go Host Artifact Store 契约原文](../目标参考/TARGET01-Go%20Host%20Artifact%20Store契约原文.md)。契约冻结版本为 ca-agent commit `2c0b07f2eaff3bc1020bfc6775ef9bf09e3052ae`；当前 Go Host 实现基线为 `447d0cce7e42c7c1184b11fb2563792eead68d51`。Provider v1.2.0（ca-client-tools main `7bcb2614aa3615d8358df31eecefd0909e894e40`）已包含共享 fixtures 和 `internal/artifactchannel` / `internal/providerapp/artifacts.go`；Go Host P1 验收为 43/43（read-only 子集 11/11），但 real-NF multipart 仍 NOT_VERIFIED，详见 [ca-agent P1 验收记录](https://github.com/odango-chan/ca-agent/blob/447d0cce7e42c7c1184b11fb2563792eead68d51/docs/evidence/host-artifact-store-p1-20261118.md)。以上均为外部契约/实现证据，不代表 Next Python Host 已实现。
+
+**引用与绑定：** Provider 只接受闭合 JSON 对象 `{"artifactRef":"art_<43 base64url characters>"}`。该 token 由 Host 使用 CSPRNG 生成（32 random bytes），并绑定当前 `invocationId`、`direction`（input/output）和声明的 `slot`；对象不得附带 path、URL、mediaType、size、digest 或其他字段。Provider 不解析、不生成、不持久化该 token，也不得把它当作授权凭据；Runtime 仍须先完成 Skill/Capability/Invocation 授权。
+
+**Channel bootstrap：** Host 为每个 Provider 进程创建 loopback HTTP/1.1 listener（仅 `127.0.0.1`、ephemeral port），在 Provider `initialize` 中传入可选的闭合 `artifactChannel` 对象：`baseUrl`、`processToken`、`requestTimeoutMs`、`maxArtifactBytes`、`maxAggregateBytes`、`maxAttachments`。不得把 channel URL/token 放入进程 argv、环境变量或日志。`baseUrl` 只能是 `http://127.0.0.1:<port>`。
+
+**传输方向：** Input 由 Provider 对 `{baseUrl}/v1/artifacts/{artifactRef}` 发起 GET，并携带 Bearer process token、`X-CA-Invocation`、`X-CA-Slot`；Host 返回声明的 media type、精确 Content-Length、`X-CA-Artifact-Sha256` 和原始 bytes。Output 由 Provider 对 `{baseUrl}/v1/artifacts` 发起 POST，携带相同的 invocation/slot 绑定、media type、Content-Length 和可选 `X-CA-Artifact-Sha256`；Host 自行计算并验证摘要，返回 staged reference。
+
+**发布与清理：** Provider 输出引用在 invoke result 通过 Host 的 slot/reference/result validation 之前只能处于 staging；只有整个结果有效时，Host 才一次性发布全部必需输出。任何超时、取消、Provider 退出、无效结果、重复 slot 或传输错误都必须丢弃本次 Invocation 的 staged outputs；不得部分发布。引用/字节按契约执行 per-artifact 1 MiB、per-invocation 4 MiB、最多 8 attachments、channel request timeout 3 s、发布后 10 min expiry（Host 可采用更严格的部署上限）。
+
+**摘要语义：** SHA-256 是 v1 wire contract 对精确字节的传输完整性校验：Host 在接收时计算、在 GET 时返回，Provider 验证收到的 bytes；它不进入 artifactRef，不用于公开内容寻址或去重。Next 只实现这一既有协议要求，不增加额外 package hash、签名、Trust Registry 或第二套完整性机制。
+
+**未配置行为：** 缺少 `artifactChannel` 时，Provider catalog 必须将 artifact-bearing binding 标记 `NOT_CONFIGURED`；任何此类 invoke 必须在远端 SBI I/O 前拒绝。Next Python Host 当前尚未实现该 channel server，因此在 SR-010 完成并通过共享 v1 conformance fixtures 前，不得启用 artifact-bearing Provider binding。不得发明 Provider 私有文件路径协议，也不得把 Event/Delivery `stagingPath` 直接传给 Provider。
 
 ## 7. 本地 staging 协议
 
@@ -186,7 +198,7 @@ Tool 只接收当前 Invocation 已授权的 artifactRef 和声明的 slot，不
 
 必需字段：slot、mediaType、stagingPath、byteLength。源协议提供 multipart Content-ID 时必须附带 contentId，否则省略。路径必须留在对应 staging 根目录内。绝对路径、路径穿越、符号链接逃逸、文件缺失、空文件（若该 slot 不允许空值）以及声明长度与真实长度不一致均必须拒绝。
 
-Host 必须读取真实文件长度；不使用额外校验和或 SHA-256。具体最大文件尺寸由 Host 部署配置约束，不在此重复建立第二份全局数值常量。
+Host 必须读取真实文件长度；Plugin→Host 本地 staging 边界不计算额外摘要或 SHA-256。后续 Host→Tool 独立 channel 必须按 ca-host.artifact-store/v1 校验传输摘要。具体最大文件尺寸由 Host 部署配置约束，不在此重复建立第二份全局数值常量。
 
 ## 8. 入站流程
 
@@ -270,7 +282,7 @@ Host 必须维护以下关联：
 | Event Schema / slot 无效 | 拒绝 Event，不创建 Run |
 | stagingPath 越界、符号链接逃逸、文件缺失或 byteLength 不匹配 | 拒绝导入并清理本次临时文件 |
 | Artifact ref 不属于当前 Run / Invocation | Runtime 拒绝 Action |
-| Tool Artifact Channel 未配置 | artifact-bearing binding 标记 NOT_CONFIGURED，远端 I/O 前失败 |
+| Next Host 未配置 artifactChannel | artifact-bearing binding 标记 NOT_CONFIGURED，远端 I/O 前失败；不尝试备用 URL、文件路径或 Provider |
 | Tool 返回未知 Artifact ref | Runtime 拒绝结果，不生成成功 Observation |
 | 原始 bytes 不支持当前 Codec | 返回明确 unsupported，不改变原 Artifact |
 | Owner/Provider mutation 结果 UNKNOWN | 保持 UNKNOWN，按 F04 exact-original Reconcile |
@@ -281,7 +293,7 @@ Host 必须维护以下关联：
 
 Demo 必须具备：本地 Host-owned ArtifactStore、精确 slot、相对路径校验、byteLength 校验、Run/Invocation/response obligation 关联、按需 Codec 和明确失败行为。
 
-不要求生产级 HA/DR、远程对象存储、分布式 Artifact Service、内容寻址、去重、额外 SHA-256、Artifact Marketplace、通用沙箱或跨地域生命周期管理。允许 Host 内部使用本地文件持久化；不要求所有 Artifact 只存内存。
+不要求生产级 HA/DR、远程对象存储、分布式 Artifact Service、内容寻址、去重、额外 package hash/签名、Artifact Marketplace、通用沙箱或跨地域生命周期管理。Host→Tool channel 必须实现既有 v1 contract 的逐 Artifact SHA-256 传输校验，但不扩展为引用身份、内容寻址或去重机制。允许 Host 内部使用本地文件持久化；不要求所有 Artifact 只存内存。
 
 不把 ca-agent-demo 的 PlanningContext / ContextRequirement / ContextOffer 全套规划机制复制进 Next。Next 仅采用必要的事实来源、只读 Observation、显式可见性和 Run 绑定；不建设独立 Planning Runtime。
 
@@ -293,10 +305,12 @@ Demo 必须具备：本地 Host-owned ArtifactStore、精确 slot、相对路径
 | Next Host ArtifactStore / Plugin staging | NOT_IMPLEMENTED | F05 为目标设计，未有 Next 代码和 E2E |
 | ca-agent-demo Context Fact / Resolver / Projection | IMPLEMENTED（参考仓 main） | main 57e277ff；agent/context/base.py、loader.py、observation_resolver.py、projection.py、requirements.py；测试 test_context_loader.py、test_context_observation_resolver.py |
 | ca-agent-demo Skill Context Loader | IMPLEMENTED（参考仓 main） | agent/host/skill_context.py；测试 test_skill_context.py；精确 Skill identity 与按需 reference |
-| ca-agent-demo Host ArtifactStore | IMPLEMENTED（参考仓 main） | resident/artifact_store.py；测试 test_host_artifact_store.py。现实现使用 artifact:sha256 内容寻址与摘要校验；该内部实现不直接移植到 Next，因为 Next Demo 明确不增加额外 SHA-256 / 内容寻址 |
+| ca-agent-demo Host ArtifactStore | IMPLEMENTED（参考仓 main） | resident/artifact_store.py；测试 test_host_artifact_store.py。其 `artifact:sha256` 内容寻址与 ca-host.artifact-store/v1 的随机 opaque token 是两套不同模型；不移植前者，但 Next channel 必须实现后者的传输校验 |
 | ca-runtime Skill Context Identity | 参考设计 | REF02 Skill Context 原文；是 Go RuntimeHost 参考，不是 Next Python 契约 |
-| ca-agent Go Host Artifact Store | 参考契约 | TARGET01 Host Artifact Store 原文；不代表 Next 采用 Go Host |
-| Host→Tool Artifact Channel | DESIGN DEPENDENCY / NOT_PUBLISHED | F03.05 引用的 ca-host.artifact-store/v1 尚未发布；artifact-bearing Provider binding 必须 NOT_CONFIGURED |
+| ca-agent Go Host Artifact Store | IMPLEMENTED / VERIFIED（外部参考） | main 447d0cc；ca-host.artifact-store/v1；P1 acceptance 43/43（read-only 11/11）；real-NF multipart NOT_VERIFIED；仅证明 Go Host 参考实现 |
+| ca-host.artifact-store/v1 契约 | FROZEN / ACCEPTED | TARGET01 原文；contract pin 2c0b07f；Provider v1.2.0 固定 fixtures；artifactRef 为随机 opaque token，SHA-256 仅用于逐 Artifact 传输校验 |
+| ca-client-tools Provider Artifact Channel | IMPLEMENTED（Provider v1.2.0） | main 7bcb261；`contracts/host-artifact-store/v1/`、`internal/artifactchannel/`、`internal/providerapp/artifacts.go`；缺少 artifactChannel 时 fail-closed |
+| Next Host→Tool Artifact Channel | NOT_IMPLEMENTED | Next Python Host 尚无 server/adapter；SR-010 实施；通过 ca-host.artifact-store/v1 共享 fixtures 前保持 NOT_CONFIGURED |
 | ca-client-tools Codec Phase B | OPEN / NOT_MERGED | PR #39；Phase C Consumer Migration NOT_STARTED |
 | Next Artifact / OpenAMSM E2E | NOT_RUN | 不得以外部仓的测试 PASS 代替 |
 
@@ -313,6 +327,8 @@ Demo 必须具备：本地 Host-owned ArtifactStore、精确 slot、相对路径
 - [ca-agent-demo 当前实现基线原文](../../参考与审计/实现证据/REF01-ca-agent-demo当前实现基线原文.md)
 - [ca-runtime Skill Context 原文](../参考实现/REF02-Skill%20Context设计原文.md)
 - [ca-agent Host Artifact Store 契约原文](../目标参考/TARGET01-Go%20Host%20Artifact%20Store契约原文.md)
+- [ca-agent Go Host P1 Artifact Store 验收证据](https://github.com/odango-chan/ca-agent/blob/447d0cce7e42c7c1184b11fb2563792eead68d51/docs/evidence/host-artifact-store-p1-20261118.md)
+- [ca-client-tools Host integration](https://github.com/odango-chan/ca-client-tools/blob/7bcb2614aa3615d8358df31eecefd0909e894e40/docs/host-integration.md)
 - [F03 Plugin 平台设计](../F03-Plugin平台/Plugin平台设计说明书.md)
 - [F03.05 Tool Interface / Provider 集成设计](../F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md)
 - [F04 Runtime 执行设计](../F04-Runtime执行/Runtime执行设计说明书.md)
@@ -326,18 +342,18 @@ Demo 必须具备：本地 Host-owned ArtifactStore、精确 slot、相对路径
 - Event / Run / Invocation / responseObligation / Artifact identity 不混用。
 - Event Plugin 与 Host staging 只传相对路径描述符；绝不将原始 bytes/Base64 放入 NDJSON。
 - Host 校验 staging 根目录、路径穿越、符号链接、真实 byteLength 和 slot requiredness。
-- Artifact ref 为 Host-owned opaque ref；不包含路径、外部 URI 或额外 SHA-256。
+- Artifact ref 为 Host-owned opaque token；不包含路径、外部 URI 或内容摘要。Host→Tool v1 channel 的 SHA-256 仅按协议用于精确字节传输校验，不用于引用身份或内容寻址。
 - Runtime 对 Artifact refs 执行 Run/Invocation 级授权；Tool 不能任意读取 Host 文件。
 - Model projection 不包含原始 bytes、stagingPath、Provider 私有参数或未授权事实。
 - Observation 必须来自 READ 能力；Evidence 必须符合 Owner Contract；UNKNOWN 不得提升。
-- Host→Tool Artifact Channel 未发布前，所有 artifact-bearing Provider binding 必须在远端 I/O 前拒绝。
+- Next Host 尚未实现 ca-host.artifact-store/v1 channel 前，所有 artifact-bearing Provider binding 必须 NOT_CONFIGURED，并在远端 I/O 前拒绝；实现后必须通过共享 v1 fixtures，覆盖引用/slot/direction、字节长度与摘要、配额、过期、取消、清理和输出原子发布。
 - Codec 只按正式发布 Callable 和已验证消息子集调用；原始 Artifact 不被修改。
 - Duplicate Event、Continuation、Delivery retry 和 Host restart 不产生伪成功或重复 mutation。
 - 所有测试分别记录 Next / ca-agent-demo / ca-runtime 的仓库、SHA、命令和范围；外部参考仓 PASS 不算 Next PASS。
 
 ## 17. 功能归属与需求追踪
 
-本说明书属于 F05。主要需求由 SR-009 承载；Tool Artifact 消费交叉 SR-010/SR-015；真实 OpenAMSM E2E 由 SR-011 承载。F06 负责业务事件、Create/Modify/Release 映射；F03/F03.05 负责 Plugin 与 Provider IPC/Channel；F04 负责 Action 授权和 Owner outcome。
+本说明书属于 F05。SR-009 仅承载 ca-openamsm-plugin 的 Event/Delivery 与本地 staging；SR-010 承载 Next Host ArtifactStore、ca-host.artifact-store/v1 channel server、Provider v2 Driver 和 Codec 消费；SR-015 负责 Tool Interface / Provider 设计移交；真实 OpenAMSM E2E 由 SR-011 承载。F06 负责业务事件、Create/Modify/Release 映射；F03/F03.05 负责 Plugin 与 Provider IPC/Channel；F04 负责 Action 授权和 Owner outcome。
 
 ## 修订记录
 
@@ -346,3 +362,4 @@ Demo 必须具备：本地 Host-owned ArtifactStore、精确 slot、相对路径
 | 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 全文 | 归入 F05，明确 Context、ArtifactStore、Codec 与外部契约关系 | F05；SR-009；EC03/EC04；PR #1 |
 | 2026-11-25 | 0.2.1 | GPT-6.2（ChatGPT） | §1–12 | 补充 Event/Delivery staging、OpenAMSM slot、Run/Artifact 关联与失败处理 | IR-005；SR-009 |
 | 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | 全文 | 从未实现视角重建 Context/Artifact 目标；核对 ca-agent-demo Context/ArtifactStore 代码与测试；明确不移植 content-addressed SHA256，并冻结 Host→Tool Channel 未发布边界 | Issue #12；SR-009、SR-010、SR-015 |
+| 2026-11-25 | 0.4.0 | GPT-6.2（ChatGPT） | §5、§6.2、§7、§12～17 | 将 Host Artifact Store v1 从“未发布”纠正为已冻结契约；区分 Provider/Go Host 外部实现与 Next Python Host 未实现；明确随机 artifactRef 与逐字节 SHA-256 传输校验的不同语义，并把 SR-009/SR-010 的 Host/Plugin 责任拆清 | ca-agent contract pin 2c0b07f、ca-agent main 447d0cc P1 证据、ca-client-tools v1.2.0 源码/fixtures；避免沿用 ca-agent-demo 旧注释和内容寻址实现误判协议状态 | Issue #12；SR-009、SR-010、SR-015 |

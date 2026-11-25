@@ -42,7 +42,7 @@ DeepSeek Harness 默认使用 Goal 模式。按[SR 管理规范](docs/规范/SR%
 - Deterministic 与 LLM-guided 共用 Runtime Action Boundary；LLM 不得直接调用 Plugin 或扩大 Callable Scope。
 - Owner Receipt / Commit Proof 是 mutation 结果权威；HTTP 200、IPC 成功或 Delivery 成功不能替代；UNKNOWN 不得变成 COMMITTED。
 - SBI 可携带 JSON、multipart 和二进制。Event Plugin 处理协议；Host 管理 ArtifactStore；Codec 按需作为现有 Tool Plugin 的 Operation 调用。
-- Event/Delivery Plugin 的本地 staging 与 Host→Tool Artifact Channel 是两条不同路径。ca-host.artifact-store/v1 尚未发布；artifact-bearing Provider binding 未配置 artifactChannel 时必须 NOT_CONFIGURED，并在远端 I/O 前拒绝。不得把 Event stagingPath 传给 Provider，不得将原始 bytes/Base64 放入 NDJSON。
+- Event/Delivery Plugin 本地 staging 与 Host→Tool Artifact Channel 是两条不同路径。ca-host.artifact-store/v1 已冻结；ca-client-tools Provider v1.2.0 已实现消费，ca-agent Go Host main 447d0cc 有 P1 验收证据。Next Python Host 的 ArtifactStore / Channel 尚未实现，因此 Next 的 artifact-bearing Provider binding 仍必须 NOT_CONFIGURED，并在远端 I/O 前拒绝。必须遵循 v1 的随机 opaque artifactRef、Invocation/direction/slot 绑定、loopback HTTP/1.1 通道、大小/生命周期限制、逐 Artifact SHA-256 传输校验和原子发布；该 SHA-256 不是引用身份或内容寻址。不得把 Event stagingPath 传给 Provider，不得将原始 bytes/Base64 放入 NDJSON。
 - 不增加 activation.yaml、constraint.yaml、supportedModes、Domain/Task Contract Package、第二份 Skill Descriptor、旧版兼容、额外 SHA-256、签名或 Trust Registry。
 
 ## 4. Demo DFX 边界
@@ -164,3 +164,4 @@ review_scope:
 | 2026-11-25 | Codex / GPT-6 | §2、§5 | 明确中央设计归属 | 跨仓设计移交 | IR-006 |
 | 2026-11-25 | Codex | §1 | 加入 Issue、分支命名和 Goal 入口 | 统一交接门禁 | [Issue #5](https://github.com/odango-chan/ca-agent-next/issues/5) |
 | 2026-11-25 | Codex | 第 2 节 | 引用固定 PR SHA 的分阶段实施规则 | 支持先验证再定稿 | SR-013、PR #7 |
+| 2026-11-25 | GPT-6.2（ChatGPT） | 第 3、4、7 节 | 更正 ca-host.artifact-store/v1 已冻结、Provider/Go Host 外部实现已存在、Next Python Host 尚未实现的三层状态；明确 SHA-256 仅为既有协议传输校验 | 消除 F05、F03.05 与源仓实现状态冲突，避免把外部 PASS 计入 Next | F05、F03.05、SR-009、SR-010；Issue #12 |
