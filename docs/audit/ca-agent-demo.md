@@ -54,6 +54,7 @@
 - **EVIDENCE:** The audited Demo source identifies reusable Formal Resolver, Root/Skill eligibility, Skill Artifact admission and Host/Resident lifecycle components. This audit did not establish an immutable, Core-owned in-memory SkillCatalog with compile-on-import when programs, atomic generation swaps and Invocation generation pinning.
 - **DECISION:** Reuse the existing candidate/exclusion and Resolver primitives selectively, but implement the SkillCatalog read model in ca-agent-next. Do not put it under Plugin Manager and do not assume every Event should rescan Skill package files.
 - **TARGET:** Import/update loads SKILL.md and Assurance once, validates/compiles, then publishes an immutable in-memory generation. Each fresh Event evaluates precompiled when programs against its own data; SKILL.md-only Skills are in the same Catalog. Full SKILL.md is served from memory after selection, references are lazy-loaded, and each Invocation pins its Catalog generation.
+- **COMPILER DEPENDENCY:** v2.1.0 does not yet parse Contract.when or emit a Python-consumable checked program. [Compiler Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) tracks the Development Artifact v1alpha2 / CheckedExpr Any / DescriptorSet contract. Do not treat Demo MockCompiler as an implementation substitute.
 
 ### 3.3 Current Runtime and Compiler naming is not proof of real compiler integration
 
