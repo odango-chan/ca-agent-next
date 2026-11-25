@@ -17,7 +17,7 @@ This audit records repository evidence as observed on 2026-11-25. The following 
 - No Domain Contract Package, TaskContract Package, extra Plugin-package SHA-256 hashing, package signatures or Trust Registry.
 - SBI Event Plugins own JSON/multipart and Content-ID parsing; Host owns binary artifact custody; Skills invoke Codec Tools from ca-client-tools only when they need decoded protocol fields.
 - SkillCatalog is owned by Python Agent Core/Host, not Plugin Manager. It is an immutable in-memory snapshot containing all imported Skills, cached SKILL.md text/selection metadata and precompiled Assurance when programs.
-- when is compiled/type-checked once on import/update and evaluated for every fresh Event using current input; do not cache event-specific results. Semantic candidates come from the same Catalog; references remain lazy-loaded.
+- when is compiled/type-checked once by the external Compiler before publication, deserialized once by Agent on import/update, and evaluated for every fresh Event using current input; do not cache event-specific results. Semantic candidates come from the same Catalog; references remain lazy-loaded.
 - Explicit Skill import/update builds a candidate Catalog generation and atomically activates it on success. Each Invocation pins its generation; failed updates preserve the active generation. No watcher, distributed cache or generic Plugin hot reload.
 - The CA-SL v1alpha5 refresh and matching Compiler when Artifact support are a dependency gate, not an already completed implementation.
 
@@ -145,7 +145,7 @@ The following means selective Python source reuse after tests/import review, not
 | Asset | Action |
 |---|---|
 | Python Agent Core from ca-agent-demo | Selective source copy/adaptation into next |
-| ca-skill-compiler Go source | **Do not copy**; invoke pinned release binary |
+| ca-skill-compiler Go source | **Do not copy into Agent**; used only by the external Skill authoring/release toolchain; Agent imports its published Artifact |
 | ca-client-tools Go source | **Do not copy**; load pinned Tool Plugin release |
 | ca-skills business Skill sources | Import/package; only create Echo Skill under next examples for first mechanism proof |
 | ca-openamsm-plugin | Keep independent; align contract before implementation |
@@ -153,7 +153,7 @@ The following means selective Python source reuse after tests/import review, not
 
 ## 5. Feasibility and critical gaps
 
-**Overall: FEASIBLE**, with staged implementation. The external Compiler and Tool Plugin are independent release artifacts; Python Core can orchestrate them without sharing language/runtime. The refreshed CA-SL/Compiler behavior is a prerequisite gate for published Assurance Artifact import, not an assumption that v2.1.0 already supports contract.when and its portable checked-program representation. SKILL.md-only import is Host behavior, not a Compiler feature.
+**Overall: FEASIBLE**, with staged implementation. The external Compiler and Tool Plugin are independent release artifacts; Python Core consumes the published Skill Artifact and Tool Plugin without embedding the Compiler. The refreshed CA-SL/Compiler behavior is a prerequisite gate for published Assurance Artifact import, not an assumption that v2.1.0 already supports contract.when and its portable checked-program representation. SKILL.md-only import is Agent Importer behavior, not a Compiler feature.
 
 Critical work:
 
@@ -165,7 +165,7 @@ Critical work:
 6. **Simplify Resident/Runtime.** Current Demo includes Nsmf-specific execution and durable recovery; Echo should prove the common mechanism without copying all of it.
 7. **Respect current gate state.** PR #246 is OPEN; synthetic G5 22 passed does not equal live Scheme C G6. Do not migrate OpenAMSM until the generic Echo mechanism is accepted.
 
-The largest architectural risk is not Python↔Go interop. Both existing Go executables already use long-lived stdio/NDJSON. The main risks are preserving two extension managers, reintroducing business Contract Packages, or compiling individual LLM Actions. One Plugin Manager, one Skill Importer and one Runtime Action Boundary keep this tractable.
+The largest architectural risk is not Python↔Go interop. The Agent should not even have a Compiler process dependency; Go/Python CEL interoperability is a publication/runtime Artifact contract concern. The main risks are preserving two extension managers, reintroducing business Contract Packages, or compiling individual LLM Actions. One Plugin Manager, one Skill Importer and one Runtime Action Boundary keep this tractable.
 
 ## 6. Status vocabulary
 
