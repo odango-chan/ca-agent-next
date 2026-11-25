@@ -140,13 +140,13 @@ The Event hot path is therefore: validate/deduplicate Event → resolve exact co
 
 ### 4.4 Compiler-to-Runtime `when` Artifact boundary
 
-CA-SL v1alpha5 Appendix M defines the author expression and static typing rules. In particular, `event.type` is a string, `input` is typed from `Contract.requestSchema`, and a `when` expression that accesses `input` members requires `requestSchema`. The Compiler owns parsing, CEL G.4 static checking and generation of the compiled selection program; the Python Resolver owns per-Event evaluation and candidate resolution.
+CA-SL v1alpha5 Appendix M defines the author expression and static typing rules. `event.type` is string; `input` is typed from the exact `Contract.requestSchema`; accessing an input member without `requestSchema` is `CEL_INVALID`. Compiler owns G.4 static validation and checked-program generation; Python Resolver owns per-Event evaluation.
 
-The Compiler-owned Artifact contract must provide a portable, already checked representation of `when`, not merely the source string. It must bind that program to the CA-SL CEL profile and the exact static type environment (`event.type: string` and the declared Request Schema/type for `input`), preserve useful source-location diagnostics, and be consumable by the Python Runtime without reparsing or re-type-checking the source expression on every Event. The Runtime evaluates only against the current normalized `event.type` and `input`; true matches, false exclusions and runtime-error fail-closed behavior follow Appendix M.
+Compiler v2.1.0 and its Development v1alpha1 contracts are already released/frozen. The proposed contract is tracked by [ca-skill-compiler Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61): keep Development BuildRequest/BuildResult v1alpha1 and add a separately versioned Development Artifact Manifest v1alpha2. Frozen v1alpha5 Build/Verify bytes and Development v1alpha1 contracts must remain unchanged.
 
-The exact wire field names and serialization are owned by the Compiler's versioned Artifact Contract, not invented by ca-agent-next. Do not mutate the already frozen Compiler Artifact contract in place. If its current format cannot carry this representation, the Compiler owner must publish and test a compatible versioned Artifact contract/release before Next's Assurance import/Resolver phase can pass. Do not create a Python-only CEL parser, a second CEL dialect or a per-Event Compiler subprocess.
+The preferred interchange is a standard `google.api.expr.CheckedExpr` wrapped in `google.protobuf.Any`, plus a `google.protobuf.FileDescriptorSet` for the exact Event and Request Schema type environment. Go `cel-go` produces the checked expression; Python `cel-expr-python` deserializes and evaluates the same program. This is a target, not a PASS claim: Compiler must first prove Go-to-Python round-trip and G.4 optional/null semantics with real fixtures. Do not substitute `DynType`, a Python-only parser, a custom CEL interpreter or a per-Event Compiler subprocess.
 
-See [SkillCatalog and Compiler integration requirements](integration/skill-catalog-compiler-contract.md) for the cross-language contract and acceptance gates.
+See [技能目录与编译器运行时接口设计说明书](集成设计/技能目录与编译器运行时接口设计说明书.md) for the detailed contract, PoC and stop conditions.
 
 ## 5. One extension mechanism: Plugin
 
@@ -374,7 +374,7 @@ The diagram describes the target flow, not current implementation status. A Skil
 - ca-client-tools v1.2.0: independent Go Tool Plugin and Interface Package. Adapt provider/v2 behind the unified Plugin Manager initially.
 - ca-skills: canonical CA-SL Skill sources and language specification. Same-version v1alpha5 refresh proposal [PR #88](https://github.com/odango-chan/ca-skills/pull/88) adds optional Assurance and contract.when; Compiler support remains a separate dependency gate.
 - ca-openamsm-plugin: independent Go Event Plugin. Align its contract before implementation.
-- **Known gate:** current Compiler v2.1.0 support for the refreshed `contract.when` compiled Artifact representation is not established. The CA-SL refresh [PR #88](https://github.com/odango-chan/ca-skills/pull/88) is still OPEN. The SKILL.md-only import path is owned by Next's Skill Importer and does not involve Compiler. Do not claim Compiler support, strip the field or implement a second Compiler in Python. The Compiler owner must deliver/verify the versioned Artifact representation described in [the integration requirements](integration/skill-catalog-compiler-contract.md) before Assurance source import and `when`-based selection can pass.
+- **Known gate:** ca-skills PR #88 is OPEN; Compiler implementation is tracked by [Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61). Compiler v2.1.0 does not yet establish refreshed `contract.when` support or Python CheckedExpr interoperability. SKILL.md-only import is Next-owned and bypasses Compiler. Assurance source import / `when` selection remains blocked until the Compiler Artifact v1alpha2 contract, Go/Python PoC and release are verified. See [the Chinese integration design](集成设计/技能目录与编译器运行时接口设计说明书.md).
 
 ## 11. Demo-level non-goals
 
