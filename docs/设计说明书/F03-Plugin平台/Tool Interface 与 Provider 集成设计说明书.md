@@ -19,7 +19,7 @@
 1. Tool 是 Plugin 导出的 Callable Operation，不是独立进程、Manager、Registry 或 Runtime。
 2. 所有 Tool Provider 均由唯一 Plugin Manager 管理；Runtime 是唯一 Action 调用与授权边界。
 3. Skill 只声明其依赖的 Capability / Callable，不接触 Provider 私有 backend ID、服务地址、凭据或私有 Host 参数。
-4. Compiler 构建时使用精确的 Provider Interface / Owner Contract 依赖快照；冻结 v1alpha5 Artifact 仅记录 dependency alias、stablePackageId 和导出集合，不携带依赖版本或 snapshotDigest。Next 的 Demo 部署因此通过 provider.yaml 的 `interfacePackagePath` / `interfaceSnapshotDigest` 固定 Provider Interface snapshot，并通过 Provider Runtime Bindings 的 Owner stable ID、version、publicationDigest 和 manifestDigest 固定 Owner 发布物；不得宣称 Artifact 本身实现了逐 Skill 的字节级依赖锁。
+4. Compiler 构建时使用精确的 Provider Interface / Owner Contract 依赖快照；冻结 v1alpha5 Artifact 仅记录 dependency alias、stablePackageId 和导出集合，不携带依赖版本、snapshotDigest 或 Skill Capability ID。Next 的目标部署设计通过 provider.yaml 的 `interfacePackagePath` / `interfaceSnapshotDigest` 固定 Provider Interface snapshot，并通过 Provider Runtime Bindings 的 Owner stable ID、version、publicationDigest 和 manifestDigest 固定 Owner 发布物；这不是 ca-agent-demo main 已实现的 package loader，也不得宣称 Artifact 本身实现了逐 Skill 的字节级依赖锁。
 5. Owner 对业务状态、Receipt、Commit Proof 和 Reconcile 负责；Provider/IPC/HTTP 成功不构成业务提交证明。
 6. 复用 ca-agent-demo 已有的 Schema 校验、Effect 一致性、精确 Callable Scope、UNKNOWN 和 exact-original reconcile 机制，但不把 Demo 的手工注册、5GC 业务装配或第二份契约源搬进 Next。
 
@@ -70,7 +70,7 @@
 1. **一个 Plugin Manager。** Tool Provider 是 Plugin Manager 管理的 Tools Extension 提供者；Tool 是其导出的 Operation。不得为 Provider、Tool 或 Codec 增设独立 Manager。
 2. **区分 Provider Interface 与 Owner Contract。** Provider Interface Package 提供 Provider 自身导出的 Callable（当前 ca-client-tools v1.2.0 为 11 个 READ）；业务 Owner Contract Package 提供 Owner 业务 Callable、Effect、Schema、Outcome、Evidence 和 Capability membership（OpenAMSM v1alpha4）。MAS Skill 的 `mas::` 调用来自 Owner Contract Package，不从 Provider Interface Package 推导。私有 backendOperationId 只存在于 Provider Runtime Bindings / Provider 内部 Catalog。
 3. **Owner 结果语义单独归属。** Owner Contract Package 是业务 Callable、Owner Outcomes、Receipt、Commit Proof 和 exact-original Reconcile 的权威来源；Provider Runtime Bindings 只能引用和定位这些语义，不能重新定义。
-4. **安装不等于授权。** Plugin Manager 加载一个 Provider，不会授予任何 Skill 调用权限。Runtime 按当前 Skill 发布 Artifact 的精确 Capability / Callable Scope 检查每次调用。
+4. **安装不等于授权。** Plugin Manager 加载一个 Provider，不会授予任何 Skill 调用权限。Runtime 按当前 Skill 发布 Artifact 的精确 operation/observation Callable export Scope 检查每次调用；Capability 声明由 Compiler Build-time 校验，冻结 v1alpha5 Runtime Artifact 不携带 Capability ID。
 5. **Provider catalog 不授权、不扩权。** Provider 的 initialize/catalog/invoke 是执行与可用性协议；catalog 只报告显式请求的私有 backend binding 是否支持/可用，不产生公开 Callable，也不产生 Grant。
 6. **Provider v2 是迁移适配。** ca-client-tools v1.2.0 使用既有 ca-client-tools.provider/v2 NDJSON 协议。Next 在唯一 Plugin Manager 内提供 ProviderV2 Tools Extension Driver；它是进程/协议适配器，不是第二个 Manager、Registry 或授权路径。Native Plugin 仍使用 Plugin IPC v1alpha1。
 7. **不复制 Demo 的手工注册。** Next 从发布包和部署配置加载明确的 Provider 包与运行时映射；不复制 tools/registrations/default.yaml、Python ToolImplementationCatalog 或 MAS 专用 adapter。
@@ -395,7 +395,8 @@ Next Runtime 必须从 sidecar 中所有 Mutation 的 `commitProof.reconcile.bin
 | Provider 包、Manifest、Interface Package 或 sidecar 结构无效 | Plugin Manager 加载期 | Provider Extension 不可用；明确报错，不降级、不 fallback |
 | Owner Contract 版本或发布身份不匹配 | 包加载/Runtime 绑定校验 | 拒绝绑定；不得用相似字段或旧版映射补齐 |
 | backendOperationId 不存在或 Provider catalog 返回 unsupported | ProviderV2 Driver | 对应 binding unavailable；不得重构 ID 或调用其他 backend |
-| Skill 未声明 Callable / Capability | Runtime Action Boundary | 发送前拒绝；Plugin Manager 不得自行放行 |
+| 作者源 Capability 声明不符合 Owner CapabilityContracts | Compiler Build | Build-time 拒绝；Runtime 不从冻结 v1alpha5 Artifact 推断 Capability ID |
+| Callable 不在 Artifact export closure 或命中 internal-only Reconcile target | Runtime Action Boundary | 发送前拒绝；Plugin Manager 不得自行放行 |
 | Input Schema / Effect / Artifact Scope 不匹配 | Runtime Action Boundary | 发送前拒绝；不触发远端操作 |
 | Provider 未配置服务或 Artifact Channel | Provider / Driver | NOT_CONFIGURED；不尝试备用 URL 或其他 Provider |
 | READ 返回 Schema 无效或关联 ID 错误 | Runtime | 不生成成功 Observation，返回明确失败 |
@@ -434,7 +435,7 @@ Next Runtime 必须从 sidecar 中所有 Mutation 的 `commitProof.reconcile.bin
 - 一个 Native Plugin 与一个 Provider v2 Tools Extension 由同一 Plugin Manager 管理；不存在第二 Manager/Registry/Runtime。
 - Compiler 构建时使用精确依赖快照；冻结 v1alpha5 Artifact 不携带依赖版本/snapshotDigest。当前部署通过 provider.yaml 的 interfaceSnapshotDigest 固定 Provider Interface，通过 Runtime Bindings sidecar 的 Owner publication identity 固定 Owner Contract，并验证 Artifact 所需 stablePackageId / exports；不宣称逐 Skill byte-exact pin。
 - Provider 启动握手、精确 catalog 查询、requestId 关联、cancel/timeout 和进程退出有自动化测试。
-- 未知 Callable、未授权 Capability、Effect 不匹配、Schema 错误、backend 不存在和 Provider unavailable 均 fail-closed。
+- 未导出 Callable、internal-only Reconcile 普通调用、Owner membership/Effect 不匹配、Schema 错误、backend 不存在和 Provider unavailable 均 fail-closed；Capability ID / Capability Grant 不作为冻结 v1alpha5 Runtime Artifact 字段。
 - Skill/LLM 无法看到或构造 backendOperationId、服务 URL、凭据和 privateArguments。
 - READ 输出经过 Schema 与来源校验；MUTATION 只有有效 Owner Receipt + Commit Proof 才能 COMMITTED。
 - UNKNOWN 使用原始 Invocation identity 进行 Reconcile，零重复 mutation。
@@ -478,3 +479,4 @@ Next Runtime 必须从 sidecar 中所有 Mutation 的 `commitProof.reconcile.bin
 | 2026-11-25 | 0.3.3 | GPT-6.2（ChatGPT） | §4.2、§6.5～§7.4 | 校正 Receipt Query 与 Reconcile 两个 Owner evidence operation 的 Skill 可见边界；Receipt Query 是受 Scope 约束的 READ Callable，Reconcile 是专用 target | 对齐 Compiler v1alpha5 Owner Link 对 dedicated Reconcile 的实际限制，避免将两者错误地一概视为不可调用 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.3.4 | GPT-6.2（ChatGPT） | §11 | 增加 Next 侧逻辑模块分解、输入/输出边界和最小自动化验收矩阵 | 使后续代码 SR 可直接按 Loader、Driver、Resolver、Action Boundary、Outcome/Reconcile、Artifact Adapter 和单一 Manager 分解实施 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.3.5 | GPT-6.2（ChatGPT） | §1～§11 | 纠正冻结 v1alpha5 Capability 序列化边界；明确 Reconcile 由 Runtime 根据 sidecar mutation reference 强制 internal-only；拆分 Provider 安装加载与 per-Skill Resolver；补齐 interfacePackagePath 路径校验、initialize 后 catalog 检查、Host executable buildDigest、Artifact Store 固定来源及 Demo main/PR 状态 | 依据 Owner v1alpha4、Compiler v2.1.0、ca-client-tools v1.2.0、ca-agent-demo main 和 ca-host.artifact-store/v1 固定来源交叉核对，修复 PR #13 评审发现 | IR-006 · SR-015 · Issue #12 |
+| 2026-11-25 | 0.3.6 | GPT-6.2（ChatGPT） | §1.1、§6.2、§9、§11.1 | 进一步校正 Next 目标部署设计与 Demo main 的区别；把 Capability invalid 归为 Compiler Build-time 错误，把 Runtime failure 收敛到 Artifact export Scope 和 internal-only Reconcile | 避免将冻结 Artifact 不携带的 Capability ID 误作 Runtime Action Boundary 输入 | IR-006 · SR-015 · Issue #12 |
