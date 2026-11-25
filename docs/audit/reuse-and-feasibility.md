@@ -103,7 +103,7 @@ This audit records repository evidence as observed on 2026-11-25. The following 
 
 - Main `eb83c8f2` contains only README (one tree entry); no implementation code.
 - PR #1 is OPEN/DRAFT, head `7940f733`, and proposes a standalone Go Event Plugin using `ca-agent-host.plugin/v0`, SBI ingress, protocol normalization and response delivery.
-- Its current PR description says Generic LLM Agent is default and CA-SL Skill is optional. That conflicts with the user's latest Skill-first rule and must be corrected before implementation.
+- Its original PR description proposed Generic LLM Agent as default and CA-SL Skill as optional. The refreshed design replaces that with the Next Skill-first rule; the old proposal is not authoritative.
 - PR #1 currently says `ca-client-tools` remains the sole Tool Provider; the next target architecture proposes representing it as a Tool Plugin under the same Plugin Manager.
 
 **DECISION**
@@ -148,7 +148,7 @@ The following means selective Python source reuse after tests/import review, not
 
 ## 5. Feasibility and critical gaps
 
-**Overall: FEASIBLE**, with staged implementation. The external Compiler and Tool Plugin are independent release artifacts; Python Core can orchestrate them without sharing language/runtime. The refreshed CA-SL/Compiler behavior is a prerequisite gate for Assurance source import, not an assumption that v2.1.0 already supports the new field.
+**Overall: FEASIBLE**, with staged implementation. The external Compiler and Tool Plugin are independent release artifacts; Python Core can orchestrate them without sharing language/runtime. The refreshed CA-SL/Compiler behavior is a prerequisite gate for Assurance source import, not an assumption that v2.1.0 already supports contract.when and its portable checked-program representation. SKILL.md-only import is Host behavior, not a Compiler feature.
 
 Critical work:
 
@@ -168,3 +168,14 @@ The largest architectural risk is not Python↔Go interop. Both existing Go exec
 - **INFERENCE:** architectural conclusion from the evidence.
 - **PROPOSAL:** target next implementation decision.
 - `NOT_RUN` / `NOT_VERIFIED`: no evidence was available; do not infer PASS.
+
+
+## 7. Joint implementation gates refreshed on 2026-11-25
+
+- ca-agent-next PR #1 is the single target specification for Plugin Package v1alpha1, Plugin IPC v1alpha1, Skill-first selection and Host Artifact Handoff. It remains OPEN and is not yet merged or implemented.
+- ca-openamsm-plugin PR #1 is design-only and must reference the Next contract. It must not retain the old ca-agent-demo plugin/v0 protocol or Generic-Agent-default flow.
+- ca-skills PR #88 is OPEN and proposes the same-identifier v1alpha5 Assurance/when refresh. Compiler v2.1.0 is released, but the new when field and portable checked-program representation are not yet evidenced as supported. The SKILL.md-only path is owned by the Next Host importer and bypasses Compiler.
+- ca-client-tools v1.2.0 is the Tool implementation. Its Provider v2 process is adapted behind the one Plugin Manager. The production Provider catalog's real-NF SBI multipart binding remains NOT_VERIFIED even though the Host-to-Provider Artifact channel has fixture evidence.
+- ca-client-tools PR #39 is OPEN: Phase B final pass; Phase C consumer migration NOT_STARTED. NAS has 8 CA-qualified message types, N2 has 7 scoped qualified roots, and NGAP has 0 CA-qualified full PDUs.
+- ca-agent-demo PR #246 is OPEN: synthetic Owner G5 reports 22 passing tests; real isolated Scheme C G6 is NOT_RUN/BLOCKED and G7 is PARTIAL. This is not real OpenAMSM E2E evidence.
+- The three OpenAMSM MAS Skills already exist in ca-skills. Their when selectors and live integration against the exact refreshed source revision remain to be completed.
