@@ -162,9 +162,11 @@ PoC 中复用 Development Schema/Lock fixture 只证明共享 Schema 解析机�
 
 ### 5.1 版本决策
 
-设计推荐候选 API：Artifact 为 connectionagent.io/compiler-artifact/v2alpha1，BuildResult 为 connectionagent.io/compiler-build-result/v2alpha1。这两个 API 与冻结的 v1alpha5 API 分别版本化；languageTarget 仍为 connectionagent.io/v1alpha5。
+设计推荐候选 API：Artifact 为 connectionagent.io/compiler-artifact/v2alpha1，BuildResult 为 connectionagent.io/compiler-build-result/v2alpha1。BuildRequest 保持 connectionagent.io/compiler-build-request/v1alpha5，DependencyInspection 保持 connectionagent.io/compiler-dependency-inspection/v1alpha5，除非实际 DTO 审计证明需要升级。languageTarget 仍为 connectionagent.io/v1alpha5。
 
-**Owner Gate：** Compiler Owner 必须在 AC-013-03 代码实施前确认两个 API 名称。若拒绝，先在 EC02 / SR-013 中更新决策及理由；Harness 不得自行改用 v1alpha6、Development v1alpha2 或其他临时名字。
+新 Compiler 版本采用固定 API 集，不在同一二进制中双轨支持旧/新 BuildResult，不增加版本 dispatch、fallback 或兼容路由；旧 v2.1.0 Release 保留冻结 Artifact/BuildResult v1alpha5 历史行为。
+
+**Owner Gate：** Compiler Owner 必须在 AC-013-03 代码实施前确认 Artifact 与 BuildResult 两个 API 名称。若拒绝，先在 EC02 / SR-013 中更新决策及理由；Harness 不得自行改用 v1alpha6、Development v1alpha2 或其他临时名字。
 
 ### 5.2 候选文件
 
@@ -188,7 +190,7 @@ when.checked.pb 与 when.types.pb 同时进入该 Skill 的 compiledFiles[] 和 
 
 ### 5.4 AC-013-03 验收
 
-- 新 Artifact API 与 BuildResult API、JSON Schema、Go DTO/Assembler/Verifier 和文件布局经 Compiler Owner 确认；建议 Schema 路径为 contracts/v2alpha1/artifact-manifest.schema.json 与 contracts/v2alpha1/build-result.schema.json。
+- 新 Artifact API 与 BuildResult API、JSON Schema、Go DTO/Assembler/Verifier 和文件布局经 Compiler Owner 确认；建议 Schema 路径为 contracts/v2alpha1/artifact-manifest.schema.json 与 contracts/v2alpha1/build-result.schema.json。BuildRequest 维持现有 v1alpha5，除非有实际输入契约变更；新 Compiler 不做旧/新 BuildResult 双版本 dispatch。
 - 有 when 与无 when 两类 Skill 的 Manifest 正确。
 - CheckedExpr / DescriptorSet 文件路径、Schema identity、SourcePath 和源码位置闭合。
 - 多 Skill 文件与 Descriptor 归属无冲突。
@@ -213,7 +215,7 @@ when.checked.pb 与 when.types.pb 同时进入该 Skill 的 compiledFiles[] 和 
 - 验证所有类型引用可解析，Request Schema identity 与该 Skill 一致。
 - 验证 SourcePath、表达式位置、程序文件与 Manifest 一致。
 - 验证不存在跨 Skill Descriptor 引用。
-- 新版 BuildResult 使用对应版本化 Verify 路径，执行完整重建和逐文件比较或 Compiler Owner 批准的等价确定性复验；现有 CLI 写盘前 Verify 的不变量必须保留。
+- 新版 BuildResult 使用唯一的 v2alpha1 Verify 路径，执行完整重建和逐文件比较或 Compiler Owner 批准的等价确定性复验；现有 CLI 写盘前 Verify 的不变量必须保留。旧 v1alpha5 Verify 行为由旧 v2.1.0 Release 保持，不在新二进制内兼容路由。
 - 新版失败行为不改变冻结 v1alpha5 与 Development v1alpha1 的 Verify。
 
 ### 6.3 必跑命令
