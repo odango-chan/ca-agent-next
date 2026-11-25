@@ -12,7 +12,8 @@
 4. docs/规范/文档编写与治理规范.md、docs/规范/文件结构规范.md。
 5. 与任务对应的规范和设计说明书。
 6. docs/验收与实施/演示验收基线.md、docs/验收与实施/实施路线与阶段门槛.md。
-7. 相关实现、测试、外部仓库接口和当前 PR/Commit 证据。
+7. docs/验收与实施/ 中与本次任务相关的 SR。
+8. 相关实现、测试、外部仓库接口和当前 PR/Commit 证据。
 
 如果实现与规范不一致，先报告具体文件、接口和差异，不得自行创造第三套定义。状态快照必须在实施前重新核对。
 
@@ -92,3 +93,108 @@ Demo 阶段不建设生产级可靠性与安全 DFX，不增加额外 SHA-256/�
 - 所有文档使用中文正文和中文主题文件名；代码、字段、标准术语保留精确原文。
 - 新增、移动、废弃文档必须同步更新文档总目录和收敛台账。
 - 设计、实现、测试通过是三种不同状态，不得混写。
+
+
+## 十、评审范围与边界
+
+- 项目级目标、必须范围、始终必须满足的正确性要求、非目标和评审策略，以本文件末尾唯一的 review_scope 区块为准。
+- 必须遵守 docs/规范/文档编写与治理规范.md 中的统一评审规则。
+- 本次 SR/PR/Acceptance 可以缩小全局范围，不得自行扩大；默认只评审本次变更及其直接依赖。
+- 明确排除的生产级能力缺失，不得单独认定为当前缺陷、P0/P1 或合并阻塞。
+- 基本输入/Schema/版本/路径校验、fail-closed、Runtime Capability/callable scope、Owner Receipt/Commit Proof、UNKNOWN、Continuation、原始二进制载荷保真和必需 Example/Acceptance 始终属于当前正确性要求。
+- 如果认为某项非目标是当前目标成立的必要条件，标记 SCOPE_DECISION_REQUIRED，给出证据并等待用户确认；不得自行修改范围或要求实施 Agent 扩建。
+- BLOCKER 必须追溯到具体要求并给出可复核证据；生产最佳实践、未来风险或个人偏好本身不足以构成 BLOCKER。
+- 分类使用 BLOCKER、NON_BLOCKING、OUT_OF_SCOPE、DEFERRED、UNVERIFIED、SCOPE_DECISION_REQUIRED。分类与 P0/P1/P2 优先级分开判断。
+- 如果 CI 已生成评审上下文，评审 Agent 必须使用；如果生成物不存在，必须手动读取本区块，不得假设自动注入已完成。
+
+<!-- REVIEW_SCOPE:BEGIN -->
+~~~yaml
+review_scope:
+  schema_version: 1
+  profile: demo_prototype
+  target:
+    description: >-
+      建设业务中立的 Python Agent Core，通过可导入 Skill、Plugin 和 Tool Interface Package 扩展业务；
+      以 Generic Echo 验证公共机制，再以 OpenAMSM 作为第二个独立业务，验证不修改 Core 即可接入，
+      最终完成真实 OpenAMSM Create、Modify、UE-requested Release 的 Demo E2E。
+    sequence:
+      - generic_echo_vertical_e2e
+      - openamsm_second_business_without_core_business_changes
+      - real_openamsm_create_modify_release_e2e
+  in_scope:
+    - id: generic_agent_core
+      description: Python Agent Core/Host/Runtime 保持业务中立，新增业务不要求修改 Core 业务路由或状态机。
+    - id: unified_plugin
+      description: 唯一 Plugin Manager、Plugin Package、IPC 和 Event/Delivery/Tools Extension 分发。
+    - id: skill_import_selection
+      description: 已发布 Skill 包导入、Core-owned SkillCatalog、when 选择和 Continuation 优先。
+    - id: published_assurance
+      description: 消费外部 Compiler 发布的 Assurance Artifact；Agent 不内置、不调用 Compiler。
+    - id: runtime_action_boundary
+      description: Deterministic 与 LLM-guided 共用 Runtime Action Boundary 和 Tool Plugin 路径。
+    - id: owner_outcome_semantics
+      description: Receipt、Commit Proof、Outcome、UNKNOWN、Wait/Resume/Reconcile 的正确语义。
+    - id: event_binary_handoff
+      description: SBI JSON/multipart、Content-ID、N1/N2 原始二进制与 Host-owned Artifact Handoff。
+    - id: business_neutrality_e2e
+      description: Echo 后接入 OpenAMSM，验证新增业务不要求修改 Agent Core，并完成声明的 Demo E2E。
+    - id: runnable_examples_acceptance
+      description: 新增外部可观察机制必须有可运行 Example 和自动化 Acceptance。
+  always_required:
+    - id: basic_validation
+      description: 基本输入、Schema、版本、Manifest、引用和路径校验；错误明确并 fail-closed。
+    - id: runtime_scope_checks
+      description: Runtime 必须检查所选 Skill 声明的 Capability/callable scope；LLM 不得绕过 Runtime 直接调用 Plugin。
+    - id: owner_commit_proof
+      description: 需要 Owner 提交证明的 mutation 不得由 HTTP/IPC 成功或模型文本判定为 COMMITTED；UNKNOWN 保持 UNKNOWN。
+    - id: continuation_and_replay
+      description: 重复 Event、Continuation 和旧消息不得导致重复 mutation 或推进错误 Run。
+    - id: binary_payload_fidelity
+      description: 原始 N1/N2 字节、Content-ID 关联和 artifactRef 的来源及传递边界必须正确。
+    - id: evidence_integrity
+      description: DESIGN、IMPLEMENTED、PASS、NOT_RUN、BLOCKED 必须按真实证据区分，不得虚报测试或 E2E。
+  non_goals:
+    - id: production_ha_dr
+      description: 生产级 HA、跨区域容灾、自动故障转移和灾难恢复。
+    - id: production_sla_capacity
+      description: 生产级容量规划、弹性扩缩容、性能 SLA/SLO 和多地域部署。
+    - id: enterprise_iam_governance
+      description: 企业级身份联邦、SSO、集中式生产 IAM 生命周期和复杂多租户治理；不包括 Runtime 基本 Capability/callable scope 检查。
+    - id: production_trust_admission
+      description: 独立 Skill Admission、生产审批、Owner Trust 治理和 Trust Registry。
+    - id: extra_package_integrity
+      description: 新增包签名、额外 SHA-256/Digest 或另一套包完整性体系；上游契约已有要求除外。
+    - id: production_key_management
+      description: 生产级密钥托管、轮换和生命周期管理平台。
+    - id: production_security_operations
+      description: SIEM、安全运营平台、生产级审计流水线和合规报表体系；不包括必要的诊断日志。
+    - id: marketplace_and_auto_install
+      description: Marketplace、通用安装器、自动下载、文件监听和通用 Plugin 热更新。
+    - id: full_protocol_qualification
+      description: 超出当前 Acceptance 声明子集的完整 3GPP 全量协议符合性。
+    - id: production_qualification
+      description: 生产发布准入、商业 SLA、正式 Production Qualification 和认证。
+  review_policy:
+    default_review_target: changed_files_and_direct_dependencies
+    blocker_requires_traceable_requirement: true
+    blocker_requires_verifiable_evidence: true
+    missing_non_goal_capability_is_blocking: false
+    production_best_practice_alone_is_defect: false
+    scope_change_requires_user_approval: true
+    unresolved_scope_conflict: SCOPE_DECISION_REQUIRED
+    findings_must_include_requirement_location_evidence_and_current_goal_impact: true
+  finding_classes:
+    - BLOCKER
+    - NON_BLOCKING
+    - OUT_OF_SCOPE
+    - DEFERRED
+    - UNVERIFIED
+    - SCOPE_DECISION_REQUIRED
+~~~
+<!-- REVIEW_SCOPE:END -->
+
+## 十一、修订记录
+
+| 日期 | 修订 | 说明 |
+|---|---|---|
+| 2026-11-25 | R2 | 增加机器可读项目评审范围、统一评审边界和 SR 追踪入口。 |
