@@ -167,6 +167,7 @@ Keep basic YAML/Schema/version/reference validation, path containment, clear err
 | OM-12 | Zero Core business coupling | After Echo acceptance, OpenAMSM is added through Plugin package, Skills and deployment configuration; no OpenAMSM-specific branch is added to Agent Core, Resolver, Runtime or Plugin Manager. |
 | OM-13 | On-demand Codec | A Skill that does not need protocol fields passes the original artifactRef without invoking Codec. A Skill that needs fields calls the published Codec Tool through the same Runtime Action Boundary and receives structured JSON. Decode never replaces the original N1/N2 bytes. |
 | OM-14 | Protocol Schema ownership | SBI request/response and multipart structure follow the applicable 3GPP OpenAPI; NAS/NGAP Codec structures follow the relevant 3GPP definitions. Skill requestSchema contains only the business fields the Skill consumes; no duplicate or rewritten 3GPP Schema is introduced. |
+| OM-15 | Minimal routing classifier | The shared Codec implementation can classify the exact NAS message discriminator needed for UpdateSMContext (including the qualified Modify and UE-requested Release message types). The Event Plugin uses only that minimal classifier; unsupported, malformed or ambiguous messages fail explicitly and are never mapped to a Skill by guesswork. No duplicate parser is added.
 
 ### 8.1 External dependency gates
 
@@ -188,4 +189,4 @@ The Provider's Host-to-Provider Artifact channel has acceptance-fixture evidence
 4. Freeze the OpenAMSM Event Schema, exact SBI operation mapping, externalRequestId and continuation correlation.
 5. Implement the Go OpenAMSM Event Plugin and Host Artifact Handoff.
 6. Integrate ca-client-tools v1.2.0 through the common Plugin Manager tools extension.
-7. Pass OM-01 through OM-14. Keep every unrun real-lab gate explicitly NOT_RUN.
+7. Pass OM-01 through OM-15. Keep every unrun real-lab gate explicitly NOT_RUN.
