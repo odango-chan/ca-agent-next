@@ -15,7 +15,10 @@ This audit records repository evidence as observed on 2026-11-25. The following 
 - Individual LLM Actions go through the common Runtime Action Boundary and are not compiled. LLM-created/edited Assurance source follows the normal source-import/Compiler path.
 - One Plugin Manager owns Event ingress, Delivery and Tools extensions. Tools are a Plugin extension, not a separate Provider Manager.
 - No Domain Contract Package, TaskContract Package, extra Plugin-package SHA-256 hashing, package signatures or Trust Registry.
-- The CA-SL v1alpha5 refresh and matching Compiler support are a dependency gate, not an already completed implementation.
+- SkillCatalog is owned by Python Agent Core/Host, not Plugin Manager. It is an immutable in-memory snapshot containing all imported Skills, cached SKILL.md text/selection metadata and precompiled Assurance when programs.
+- when is compiled/type-checked once on import/update and evaluated for every fresh Event using current input; do not cache event-specific results. Semantic candidates come from the same Catalog; references remain lazy-loaded.
+- Explicit Skill import/update builds a candidate Catalog generation and atomically activates it on success. Each Invocation pins its generation; failed updates preserve the active generation. No watcher, distributed cache or generic Plugin hot reload.
+- The CA-SL v1alpha5 refresh and matching Compiler when Artifact support are a dependency gate, not an already completed implementation.
 
 ## 1. Repository snapshot
 
@@ -42,11 +45,14 @@ This audit records repository evidence as observed on 2026-11-25. The following 
 - Supported CA-SL target is `connectionagent.io/v1alpha5`.
 - CLI provides frozen `check` / `build` / `inspect` / `verify` and Development `build-development` / `verify-development`.
 - Compiler validates static source, links supplied immutable Interface Packages and emits deterministic Artifacts. It does not execute Tools, grant Host admission or qualify Owner behavior.
+- CA-SL refresh proposal [ca-skills PR #88](https://github.com/odango-chan/ca-skills/pull/88) defines contract.when and explicitly delegates its physical compiled representation to a Compiler-owned Artifact Contract. Current v2.1.0 support for that refreshed representation is not established.
 
 **DECISION — direct dependency, no code copy**
 
 - Python Skill Importer invokes the canonical `skillc` executable for Assurance source Check/Build and Artifact Inspect/Verify. SKILL.md-only source does not invoke Compiler; an already compiled Artifact is inspected/verified without rebuilding.
 - Pass the exact Assurance source root and the dependency inputs required by the Compiler contract; capture structured output and exit status.
+- Compiler must parse/type-check when once and emit a portable checked program bound to the CA-SL CEL profile and the event.type/input type environment. Python Runtime evaluates that program per fresh Event; it must not reparse raw CEL on the hot path. The exact wire representation is a Compiler-owned, versioned Artifact contract; do not mutate a frozen contract in place.
+- SkillCatalog is a Next-owned Core mechanism: retain when programs and SKILL.md content in memory; the Compiler does not own Catalog residency, Event evaluation results or atomic generation swaps.
 - Host separately admits the exact Artifact/Variant and binds Capability requirements to the selected Run.
 - Do not copy Go Compiler packages into next; do not reimplement compiler linking/validation in Python.
 - Existing Demo `runtime/compiler_artifact.py` and `runtime/compiler_skill.py` are candidate Python Host-side Artifact admission/lowering adapters, not a replacement Compiler. Audit/adapt them against v2.1.0 output before reuse.
@@ -87,7 +93,8 @@ This audit records repository evidence as observed on 2026-11-25. The following 
 - Every package has SKILL.md. Packages with assurance/ contain contract.yaml, procedure.yaml and the Predicate definitions they use; packages without assurance/ are LLM-guided only.
 - Source packages with Assurance are compiled before admission. SKILL.md-only packages import without Compiler. Already compiled Artifacts are inspected/verified/admitted without rebuilding.
 - The optional top-level assurance/contract.yaml.when is used for Skill selection; predicates.yaml remains execution-time business evaluation.
-- The v1alpha5 refresh is not yet evidence that the released Compiler supports when or Assurance-free package import. Verify the matching Compiler behavior before implementation claims.
+- The v1alpha5 refresh is not yet evidence that the released Compiler supports the portable compiled when Artifact or Assurance-free package import. Verify the matching Compiler behavior before implementation claims.
+- The SkillCatalog/generation lifecycle is a new Next mechanism, not a proven reusable ca-agent-demo subsystem. Reuse Formal Resolver and admission primitives selectively; implement immutable Catalog snapshots and Invocation generation pinning in Next.
 - Do not copy Create/Modify/Release business logic into Agent Core. Echo is the first mechanism proof; OpenAMSM Skills are a later real-domain integration.
 
 ### 2.4 ca-openamsm-plugin — Event Plugin, not a Tool Provider
@@ -149,8 +156,9 @@ Critical work:
 2. **Resolve Skill-first conflict.** PR #249 and ca-openamsm-plugin PR #1 currently describe Agent-default/Skill-optional. Next must bind a Skill first for every fresh business Event.
 3. **Replace Event→Root mapping.** Current Demo structuredEventRoutes is not the target. Use optional Assurance contract.when for explicit matches and SKILL.md semantic selection for unguarded Skills.
 4. **Refresh CA-SL and Compiler support.** The v1alpha5 spec must define contract.when and optional Assurance; the Compiler must support that grammar and the Assurance-free import boundary. Demo MockCompiler is not a substitute.
-5. **Simplify Resident/Runtime.** Current Demo includes Nsmf-specific execution and durable recovery; Echo should prove the common mechanism without copying all of it.
-6. **Respect current gate state.** PR #246 is OPEN; synthetic G5 22 passed does not equal live Scheme C G6. Do not migrate OpenAMSM until the generic Echo mechanism is accepted.
+5. **Add the Core-owned SkillCatalog.** Build the immutable in-memory selection read model, compile when on import/update, evaluate it per fresh Event, atomically swap generations and pin each Invocation. This is a Next-owned mechanism; do not assume Demo has an equivalent reusable Catalog.
+6. **Simplify Resident/Runtime.** Current Demo includes Nsmf-specific execution and durable recovery; Echo should prove the common mechanism without copying all of it.
+7. **Respect current gate state.** PR #246 is OPEN; synthetic G5 22 passed does not equal live Scheme C G6. Do not migrate OpenAMSM until the generic Echo mechanism is accepted.
 
 The largest architectural risk is not Python↔Go interop. Both existing Go executables already use long-lived stdio/NDJSON. The main risks are preserving two extension managers, reintroducing business Contract Packages, or compiling individual LLM Actions. One Plugin Manager, one Skill Importer and one Runtime Action Boundary keep this tractable.
 
