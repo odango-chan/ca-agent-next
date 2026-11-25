@@ -2,7 +2,7 @@
 
 **Purpose:** an isolated workspace for the next-generation Agent architecture, its smallest runnable mechanisms, and their acceptance examples.
 
-**Current status:** architecture baseline is being documented. This repository was created empty; no Agent implementation or mechanism acceptance is claimed yet.
+**Current status:** architecture and repository instructions are documented on the review branch; implementation has not started and no mechanism acceptance is claimed yet.
 
 ## Repository roles
 
@@ -24,10 +24,7 @@ When the next implementation satisfies its acceptance baseline, it can be promot
 
 Examples live in this repository under `examples/`; a separate `ca-example` repository is not needed at this stage.
 
-Every new externally observable extension or execution mechanism must include, in the same change set:
-
-1. at least one runnable Example that consumes the public mechanism boundary; and
-2. an automated Acceptance Test proving that Example works.
+Every new externally observable extension or execution mechanism must add a new runnable Example case in the same change set. That Example must consume the public mechanism boundary and have an automated Acceptance Test proving it works.
 
 An Example must not import Agent `internal` packages or require business-specific changes to Agent Core. Internal refactoring that adds no externally observable mechanism does not require a new Example.
 
