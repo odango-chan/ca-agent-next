@@ -35,13 +35,17 @@ CA Agent Next 是下一代通用 Agent 的独立实现仓。目标是用尽可�
 | Agent Core / Host / Runtime | ca-agent-next | Python 新实现 |
 | Skill 作者规范与业务 Skill（EC01） | ca-skills | 消费 SKILL.md 与发布输入 |
 | CA-SL Compiler / Artifact 发布（EC02） | ca-skill-compiler | 只消费已发布 Runtime Artifact |
-| Tool Interface / Provider / Codec（EC03） | ca-client-tools | 通过唯一 Plugin Manager 的 tools Extension 调用 |
+| Tool Interface / Provider / Codec（EC03） | ca-client-tools | 通过唯一 Plugin Manager 的 tools Extension 调用；契约消费设计见 F03.05 |
 | OpenAMSM SBI Event / Delivery Plugin（EC04） | ca-openamsm-plugin | 消费统一 Plugin Package/IPC 和 Artifact Handoff |
 | OpenAMSM Owner（EC05） | env-openamsm 等 Owner 仓 | 消费权威 Receipt / Commit Proof |
-| 参考实现（REF01） | ca-agent-demo | 逐文件选择性复用代码和测试 |
+| Skill Studio（EC06） | ca-skill-studio-demo | 作者工作台、Source-first、LSP、AI Authoring，不执行 Skill |
+| 5GC Simulator / Mock AMF（EC07） | env-5gc-sim | 参考模拟器与协议测试对端，不拥有 OpenAMSM 会话状态 |
+| Python Host 参考实现（REF01） | ca-agent-demo | 逐文件选择性复用代码和测试 |
+| Go Runtime 参考（REF02） | ca-runtime | 仅用于 Runtime/Procedure/Predicate 语义对照，不是 Next 实现 |
+| 协议标准（REF03） | 3GPP / OpenAPI | 固定标准版本和消息子集，不重新定义标准 |
 | 后续晋级目标（TARGET01） | ca-agent | Next 验收后评估晋级 |
 
-Next 是项目群设计和规范的集中治理入口，各协作仓维护实现和发布。迁移状态见[跨仓设计资产迁移与一致性审计](docs/参考与审计/跨仓设计资产迁移与一致性审计.md)。
+Next 是项目群架构、设计、规范和治理规则的唯一集中入口。ca-skills、Compiler、Tool/Provider、OpenAMSM Plugin/Owner、Mock AMF、Skill Studio、Python/Go Runtime 等外部仓的架构、设计和规范原文均迁入本仓，并由功能树映射到权威设计；外部仓继续维护实现代码、测试、发布、部署、运行与故障排查资料，并链接回本仓对应设计。迁移状态见[原始架构与设计资产恢复清单](docs/参考与审计/原始架构与设计资产恢复清单.md)和[跨仓设计资产迁移与一致性审计](docs/参考与审计/跨仓设计资产迁移与一致性审计.md)。
 
 ## 架构要点
 
