@@ -166,8 +166,15 @@ Package Explorer does not absorb Inspector, Outline, Problems, Package Audit or 
 
 ## References
 
-- [Plugin-managed Configuration & Tool Integration v0.1](../architecture/plugin-managed-configuration-v0.1.md)
-- [ADR-0001 · Source-first Visual Editing](0001-source-first-visual.md)
-- [ADR-0003 · Native Workbench, Inspector and Markdown](0003-native-workbench-and-markdown.md)
-- [C4 · Package Overview baseline](../design/package-overview-c4.md)
+- [Plugin-managed Configuration & Tool Integration v0.1](../设计说明书/外部能力域/EC06-Skill%20Studio/Plugin-managed%20Configuration%20%26%20Tool%20Integration%20v0.1原文.md)
+- [ADR-0001 · Source-first Visual Editing](EC06-ADR-0001-Source-first-Visual.md)
+- [ADR-0003 · Native Workbench, Inspector and Markdown](EC06-ADR-0003-Theia原生工作台与Markdown.md)
+- [C4 · Package Overview baseline](../设计说明书/外部能力域/EC06-Skill%20Studio/C4%20Package%20Overview原文.md)
 - [Issue #173 · Package-first workspace implementation](https://github.com/odango-chan/ca-skill-studio-demo/issues/173)
+
+
+## 迁移修订记录
+
+| 日期 | 中央副本版本 | 修订者 | 修改内容 | 原因/影响 | 关联 |
+|---|---|---|---|---|---|
+| 2026-11-25 | 0.1.1 | GPT-6.2（ChatGPT） | 将 ADR-0001、ADR-0003、Plugin-managed Configuration 与 C4 Package Overview 的引用改为中央归档路径 | 原决策保持不变；修复迁移后失效的相对链接 | Issue #12；EC06-ADR-0001～0005；F09 |
