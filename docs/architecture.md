@@ -181,7 +181,7 @@ Native package format and the minimal Demo IPC are defined in [Plugin Package v1
 
 `ca-openamsm-plugin` and `ca-client-tools` remain independently owned projects. The Event Plugin is not a Tool Provider or Owner client. The Tool Plugin does not own SBI ingress, Skill selection or Runtime authorization. Neither Plugin chooses the Skill.
 
-The Event Plugin performs the protocol work required to parse and normalize the SBI request, including multipart and Content-ID handling. It does not eagerly decode every NAS/NGAP IE for business reasoning. The SBI operation identifies the current Event type; a Skill that needs inner protocol fields can call a Codec Tool through the existing `tools` extension.
+The Event Plugin performs the protocol work required to parse and normalize the SBI request, including multipart and Content-ID handling. It may extract only the minimum NAS discriminator needed to normalize an Event when one SBI operation is shared by multiple business cases (for example, distinguishing Modify from UE-requested Release on UpdateSMContext). This is protocol-to-Event classification, not Skill selection or full business decoding. The selected Skill is still chosen by the Host Resolver. Deeper NAS/NGAP fields remain on-demand through a Codec Tool in the existing `tools` extension.
 
 ### 5.3 On-demand protocol Codec Tools
 
