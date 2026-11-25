@@ -2,7 +2,7 @@
 
 **Status:** Next-side architecture/integration requirement; not a Compiler product contract and not an implementation claim.
 **Applies to:** CA-SL v1alpha5 refresh proposal, Python Agent Core / Host / Skill Resolver, and the canonical Go CA-SL Compiler.
-**Current dependency state:** ca-skills refresh [PR #88](https://github.com/odango-chan/ca-skills/pull/88) is OPEN. ca-skill-compiler v2.1.0 is released, but support for the proposed contract.when compiled Artifact representation and SKILL.md-only import boundary has not been established.
+**Current dependency state:** ca-skills refresh [PR #88](https://github.com/odango-chan/ca-skills/pull/88) is OPEN. ca-skill-compiler v2.1.0 is released, but support for the proposed contract.when compiled Artifact representation has not been established. SKILL.md-only import is a Next-owned Skill Importer behavior, not a Compiler capability.
 
 ## 1. Ownership
 
