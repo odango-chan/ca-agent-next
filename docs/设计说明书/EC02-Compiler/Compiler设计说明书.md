@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.1.3  
+> 文档版本：0.1.4  
 > 状态：待评审；IR-006 / SR-012 / #2  
 > 修订日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -71,6 +71,19 @@ PoC 至少覆盖：同一程序对多个 Event 分别得到 true、false 和运�
 
 截至 2026-11-25，Next PR #3 为草案，ca-skills #88 未合并，Compiler #61 开放，尚无经本轮复核的正式 when 规范、互操作 PASS 或已发布的新 Artifact。当前可执行阶段为只读门禁预检。
 
+## 7. 技术评审与 READY 判定
+
+复核基线：Next PR #3 的 `380092b6133140c05a087c63f848a17ab1850905`、ca-skills #88 的 `2eedf4231075b6c589212d7d25576c7abbe6a5d9`、Compiler #61 与 v2.1.0 冻结契约。以下为静态评审，产品验收未运行。
+
+| 结论 | 要求和证据 | 处理 |
+|---|---|---|
+| BLOCKER | [ca-skills #88 附录 M.4 / SA-002、009、011](https://github.com/odango-chan/ca-skills/blob/2eedf4231075b6c589212d7d25576c7abbe6a5d9/docs/skill-language-spec.v1alpha5.zh-CN.md#m4-skill-import-与编译边界) 将 Compiler Check/Build、Inspect/Verify 和 Host Admission 写成 Skill Importer 的 MUST；Next Agent.md 与 Compiler #61 排除 Agent Compiler 调用及独立 Skill Admission。 | 规范负责人应明确作者源编译与资格流程属于外部工具链或独立产品 profile，并明确 published Bundle 消费路径的必需行为。更新对应 SA 用例，明确 Next 可声明的符合范围。冲突解决并正式发布前，不把 M.4 导入要求下发给 DSH。 |
+| 待澄清 | #88 §12.8 / M.3 要求先校验 Request Schema，语义候选条款又以未声明 when 为条件；SA-008 未给出未声明 when 且 Request Schema 不匹配的预期。 | 在规范中补一条带具体 payload 的负例，明确其是否加入语义候选及诊断。DSH 不自行把 Request Schema 不符当作运行期 CEL error。 |
+| 待验证 | #88 M.2 继承 G.4，声明唯一字段、bool、纯表达式及 Request Schema 类型来源。SA-004/005 有编译正负例；缺失、显式 null、has 守卫与数值边界仍需 AC-013-01 的真实 Go/Python 输入输出验证。 | 按正式规范为同一 fixture 固定输入、预期及错误阶段；不得以文档校验代替运行证据。 |
+| NON_BLOCKING | 编译单核与发布边界与 Next 方向一致；两种 Verify 的具体行为已分别列出。 | 历史样例、机器 Schema 和 release evidence 保留固定 SHA。 |
+
+建议 SR-013 保持 DRAFT。复审顺序为：先解决 M.4/SA 职责冲突并固定正式规范 SHA，再确认 SR-013 的实施边界与 AC-013-01 可执行，由负责人推进 READY。后续 Artifact API 命名仍由 Compiler Owner 在 PoC 通过后裁定。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者 | 章节 | 修改内容 | 原因 | 关联 |
@@ -79,3 +92,4 @@ PoC 至少覆盖：同一程序对多个 Event 分别得到 true、false 和运�
 | 2026-11-25 | 0.1.1 | Codex | §5 | 加入 Goal 的实施门槛、恢复点和完成判据 | 支持分阶段执行及阻塞后恢复 | IR-006、SR-012、#2、PR #3 |
 | 2026-11-25 | 0.1.2 | Codex | §5–6 | 明确分阶段输入、退出条件、证据包及实施 SR 边界 | 降低 Harness 自主执行时的裁量 | IR-006、SR-012、#2、PR #3、Compiler #61 |
 | 2026-11-25 | 0.1.3 | Codex | §5–6 | 绑定 Compiler 实施 SR | 明确 Goal 执行及验收入口 | SR-013、Compiler #61 |
+| 2026-11-25 | 0.1.4 | Codex | §7 | 登记规范与 Next 的职责冲突及 READY 判定 | 防止 DSH 误执行 M.4 | SR-013、ca-skills #88 |
