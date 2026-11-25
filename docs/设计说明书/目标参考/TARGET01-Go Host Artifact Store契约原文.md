@@ -2,6 +2,7 @@
 > 固定源提交：447d0cce7e42c7c1184b11fb2563792eead68d51  
 > 原始状态：TARGET01 Go Host 当前设计/契约；仅作为后续晋级目标参考。  
 > 迁移追踪：ca-agent-next Issue #12。以下保留源文内容。
+> 当前状态复核：原文中的 `Accepted for implementation (draft PR)` 是源文历史状态；ca-agent main `447d0cce` 已包含 Go Host 实现与 P1 验收证据（43/43，read-only 11/11），real-NF multipart 仍 NOT_VERIFIED。契约冻结 pin 为 `2c0b07f2eaff3bc1020bfc6775ef9bf09e3052ae`；详见 [P1 evidence](https://github.com/odango-chan/ca-agent/blob/447d0cce7e42c7c1184b11fb2563792eead68d51/docs/evidence/host-artifact-store-p1-20261118.md)。
 
 ---
 

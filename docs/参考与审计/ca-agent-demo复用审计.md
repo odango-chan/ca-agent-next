@@ -1,7 +1,7 @@
 # ca-agent-demo 复用审计
 
 > 文档类型：既有实现审计与复用建议  
-> 文档版本：0.2.0  
+> 文档版本：0.2.1  
 > 状态：基于 main 57e277ff 和已合并 PR #219 的静态源码/证据审计；本轮未重新执行外部仓全量测试  
 > 审计日期：2026-11-25  
 > 主审基线：[ca-agent-demo main 57e277ff](https://github.com/odango-chan/ca-agent-demo/tree/57e277ff9094dad93543df46910a12a1dbbaf560)  
@@ -31,7 +31,7 @@ ca-agent-demo 是 Python Generic Agent Host 的参考实现，包含 Agent、Hos
 | Root / Skill Eligibility | agent/host/root_eligibility.py、routing.py、root_routing_profile.py | 只借鉴排除/候选结构；Next 不复制 Event→Root 业务路由 |
 | Context / Observation | agent/context/base.py、loader.py、observation_resolver.py、projection.py、requirements.py | 选择性复用来源、scope、freshness、只读 Observation 和显式模型投影；不复制完整 Planning Context 工作流 |
 | Skill Context | agent/host/skill_context.py；tests/unit/test_skill_context.py | 复用精确 Skill identity、按需读取声明 reference 的思路；Next 不预加载所有 references |
-| ArtifactStore | resident/artifact_store.py；tests/unit/test_host_artifact_store.py | 复用 Host-owned Artifact 生命周期概念；不直接复制 artifact:sha256 内容寻址、摘要校验和去重 |
+| ArtifactStore | resident/artifact_store.py；tests/unit/test_host_artifact_store.py | 复用 Host-owned 生命周期概念；不复制 `artifact:sha256` 内容寻址身份；Host→Tool 必须遵循独立的 ca-host.artifact-store/v1 随机 ref / 传输摘要契约 |
 | Tool Contract / Outcome | runtime/tool_contract.py、ToolContractRegistry、ToolBoundOperationBackend；tests/unit/test_unified_resident_action.py | 复用契约校验与统一 Action Boundary 思路；Callable 权威改为 F03.05 Tool Interface Package |
 | Runtime / Wait / Evidence | runtime/engine.py、outcomes.py、evidence_wait.py、durable.py | 只复用必要的状态语义和测试；Next 不复制复杂 Admission 或生产级恢复层 |
 | Provider Adapter | integrations/ca_client_tools/provider_v2.py、mas_typed.py | 作为 Provider v2 参考；必须经过唯一 Plugin Manager 的 ProviderV2 Driver |
@@ -50,7 +50,9 @@ ca-agent-demo 是 Python Generic Agent Host 的参考实现，包含 Agent、Hos
 
 Next 可复用事实来源、只读 Observation、显式模型可见性、精确 Skill identity 和 Host-owned Artifact ref 的概念；不直接复用其完整 PlanningContext / ContextRequirement / ContextOffer / Candidate Strategy 工作流。Next Demo 不新增独立 Planning Runtime 或 Context Service。
 
-ca-agent-demo ArtifactStore 使用 artifact:sha256 内容寻址。Next Demo 明确不引入额外 SHA-256、内容寻址或去重；允许 Host 内部用本地文件持久化，但对外仍是 opaque artifactRef。
+ca-agent-demo ArtifactStore 使用 `artifact:sha256` 内容寻址，属于该 Python 参考实现的内部模型，Next 不直接复制。它与 `ca-host.artifact-store/v1` 不同：v1 使用 Host CSPRNG 生成的随机 `art_...` opaque reference，并要求 Host/Provider 对精确传输字节执行 SHA-256 校验；摘要不进入 reference，不用于内容寻址或去重。Next 只实现已冻结 v1 wire contract 要求的传输校验，不增加额外 package hash、签名或 Trust Registry。
+
+**过期注释说明：** ca-agent-demo main `57e277ff` 的 `resident/artifact_store.py` 注释中仍称 `ca-host.artifact-store/v1` “尚未发布”；该状态文字已过期。当前 ca-agent main `447d0cc` 已有 Host 实现和 P1 证据，ca-client-tools v1.2.0 已有 Provider consumer 与 fixtures。本轮只修正 Next 中央审计，不修改 ca-agent-demo 源仓。
 
 ## 3. 与 Next 目标架构的主要差异
 
@@ -118,3 +120,4 @@ ca-agent-demo 为 Next 提供了可观的 Python 代码和测试资产，但 Nex
 |---|---|---|---|---|---|---|
 | 2026-11-25 | 0.1.0 | 历史修订记录未提供 | 全文 | 原始 ca-agent-demo 复用审计 | 作为 Next 参考实现输入 | SR-002～SR-008 |
 | 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 全文 | 更新 PR #219 合并证据、#246/#248/#249 OPEN 状态；加入 Context/Artifact 源码审计和 SHA-256 不复用决策 | 避免把历史 G5/PR 提案误报为当前 main 或 Next PASS | Issue #12；SR-020 |
+| 2026-11-25 | 0.2.1 | GPT-6.2（ChatGPT） | §2、§4～6 | 区分 ca-agent-demo 内容寻址 ArtifactStore 与 ca-host.artifact-store/v1 随机引用/传输摘要；记录源仓旧注释已过期 | 防止把参考实现内部模型误当成当前 Provider/Host wire contract | Issue #12；SR-010 |
