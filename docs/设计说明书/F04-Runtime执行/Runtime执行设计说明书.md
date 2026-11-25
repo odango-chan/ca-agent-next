@@ -35,13 +35,13 @@ Host 不直接调用 Tool Plugin。LLM 不得绕过 Runtime，也不得自行扩
 
 Deterministic 与 LLM-guided 都形成同一种概念上的 Runtime Action Request，并经过相同的校验和分发路径。Callable ID、输入/输出 Schema 和 Effect 来自 Skill Artifact dependencyClosure 声明的契约来源：Provider Interface Package 或业务 Owner Contract Package；Capability membership 来自对应契约的 Capability 定义。OpenAMSM MAS 的 `mas::CALLABLE` 来自 Owner Contract Package，而不是 ca-client-tools 的 11-READ Interface Package。Owner Outcomes、Receipt、Commit Proof 和 Reconcile 只来自 Owner Contract Package。Provider Runtime Bindings 只提供私有 backendOperationId、HostInvocation/privateArguments 来源和 observation 定位，不是公开 Tool 契约或授权来源。不得在 Agent Core 内维护重复 Tool 定义。
 
-冻结 CA-SL v1alpha5 Artifact 的 dependencyClosure 只携带 stablePackageId 与 required exports，不携带 Owner package version / snapshotDigest。当前 Demo 的 Runtime 因此使用 Provider Runtime Bindings sidecar 中的 Owner stableId、version、publicationDigest、manifestDigest 校验部署安装的 Owner publication；这属于部署级 Owner 版本固定，不是逐 Skill 字节级 pin。Runtime 必须同时验证 Artifact 所需 exports / Schema 存在且与 sidecar Owner identity 一致。
+冻结 CA-SL v1alpha5 Artifact 的 dependencyClosure 只携带 stablePackageId 与 required exports，不携带 Owner package version / snapshotDigest。当前 Demo 的 Runtime 因此使用 provider.yaml 的 `interfacePackagePath` / `interfaceSnapshotDigest` 校验 Provider Interface snapshot，并使用 Provider Runtime Bindings sidecar 中的 Owner stableId、version、publicationDigest、manifestDigest 校验部署安装的 Owner publication；这属于部署级依赖固定，不是逐 Skill 字节级 pin。Runtime 必须同时验证 Artifact 所需 exports / Schema 存在且与 sidecar Owner identity 一致。
 
 Runtime 在分发前至少核对：
 
 1. 当前 Run 是否绑定有效 Skill 和对应 Catalog generation。
 2. Action 是否属于当前 Skill 发布 Artifact 声明的 Callable Scope。
-3. Callable ID 是否存在，参数是否符合部署固定的 Provider Interface Package 或 Owner Contract Package Schema；Owner snapshot 的 stable ID / required exports 应与 Artifact dependencyClosure 一致，Owner version / publicationDigest / manifestDigest 应与 Provider sidecar 一致。
+3. Callable ID 是否存在，参数是否符合部署固定的 Provider Interface Package 或 Owner Contract Package Schema；Provider Interface bytes 应匹配 provider.yaml 的 `interfaceSnapshotDigest`；Owner snapshot 的 stable ID / required exports 应与 Artifact dependencyClosure 一致，Owner version / publicationDigest / manifestDigest 应与 Provider sidecar 一致。
 4. Effect 是否与该 Operation 的声明一致。
 5. Artifact Reference 是否由 Host 管理并关联到当前 Invocation。
 6. Action 是否满足当前 Run 的状态和 continuation 约束。
