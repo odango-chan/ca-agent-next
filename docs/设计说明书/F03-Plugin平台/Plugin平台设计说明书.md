@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
-> 文档版本：0.3.4
+> 文档版本：0.3.5
 > 功能归属：F03 — Plugin 平台  
 > 关联 SR：SR-003、SR-010    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -156,10 +156,11 @@ Capability 是 Skill-facing Package API；Callable 是 Compiler / Runtime / Prov
 |---|---|---|---|---|---|---|
 | 2026-11-25 | 0.1.0 | 历史修订者/模型未记录 | 原始设计全文 | 既有功能机制设计基线；逐章历史记录未建立 | 原文档未记录历史作者，本轮不臆造 | PR #1 |
 | 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 第 1～10 章 | 归入对应 Feature 并补充外部能力边界 | 按 F03 归档，明确统一 Plugin Manager 与外部 Tool Interface 权威边界 | F03；SR-003/010；EC03/EC04；PR #1 |
-| 2026-11-25 | 0.2.1 | 刷新需求追踪、目录或证据引用 | 对齐最新分支与 IR/SR 基线 | 见关联 SR |
+| 2026-11-25 | 0.2.1 | 未记录（历史资料） | 历史治理刷新 | 刷新需求追踪、目录或证据引用 | 对齐最新分支与 IR/SR 基线 | 见关联 SR |
 | 2026-11-25 | 0.2.2 | Codex / GPT-6 | Tool Interface 与 Provider | 合并有效边界与分仓证据入口 | 跨仓设计移交 | IR-006 |
 | 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | 第 3、5、7、10、11 章 | 拆分 Interface Package、Owner Contract Package 与 Provider Runtime Bindings；固定 Provider v2 迁移 Driver 和 F03.05 子设计入口 | 消除 Owner 结果权威与 Provider 私有映射混淆，按 ca-client-tools v1.2.0 和 ca-agent-demo main 校准 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.3.1 | GPT-6.2（ChatGPT） | 第 3、7、11 章 | 增加 Provider Backend Binding Catalog v2 的内部边界，并引用 11/25/31/44 库存闭合 | 防止将 Provider 私有目录误当作第二份公开 Tool Catalog | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.3.2 | GPT-6.2（ChatGPT） | 第 2、3、5、7 章 | 明确 Provider Interface 与 Owner Contract 分别提供不同 Skill-facing Callable；MAS `mas::` 依赖由 Owner snapshot 解析 | 对齐 ca-skills v1alpha5 作者源和 F03.05 契约依赖设计 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-26 | 0.3.3 | Codex / GPT-6 | 见本行变更 | §5、10 明确启动顺序与整包注册，消除依赖当前 Skill 的装载循环 | 对齐跨仓实现与独立复验 | Issue #12 |
 | 2026-11-26 | 0.3.4 | GPT-6（ChatGPT） | 新增 1.6.0 目标章节、状态及修订记录 | 移植一对一 Binding / Selector / Action 设计并标为待评审 | 无旧版兼容或产品完成承诺 | Issue #40；SR-029 |
+| 2026-11-26 | 0.3.5 | GPT-6（ChatGPT） | 历史修订表及修订记录 | 补齐历史缺失列为未记录，保留既有内容，不改历史业务断言 | 保证待审设计的表结构有效 | Issue #40；SR-029 |
