@@ -1,6 +1,6 @@
 {
   "pluginId": "example.echo",
-  "pid": 59728,
+  "pid": 65924,
   "state": "READY",
   "extensions": [
     "event.delivery",
@@ -50,8 +50,8 @@
   "terminalReadStatus": "result",
   "golden": {
     "path": "tests\\fixtures\\echo-12-frames.jsonl",
-    "sha256": "34ba393a3e67c79cd2a9f36eeb3c38e085d75302a6ff159fc665c0069fb113e2",
-    "provenanceSha256": "34ba393a3e67c79cd2a9f36eeb3c38e085d75302a6ff159fc665c0069fb113e2",
+    "sha256": "221a1305188cae1d4bcda74f3b03dfa05366b7af5b0d4421a4a4287b4606aa49",
+    "provenanceSha256": "221a1305188cae1d4bcda74f3b03dfa05366b7af5b0d4421a4a4287b4606aa49",
     "frames": 12
   },
   "frames": [
@@ -130,14 +130,47 @@
   ],
   "pendingAfterStop": 0,
   "acceptance": {
-    "testedCodeSha": "136a9403d68ba8e5ab0c84ce7db0e08cfb1b5cb4",
-    "pluginTestCommand": "python -m unittest discover -s tests -p test_plugin.py -v",
-    "pluginTestCount": 72,
+    "testedCodeSha": "504ec1b0a35fc761eba621149a94c83d1012626f",
+    "testedCodeShaHistory": [
+      "75195ef7c44b4c9d4988e4842f82d0c61ec8351f",
+      "136a9403d68ba8e5ab0c84ce7db0e08cfb1b5cb4",
+      "11df3825cb0e11809426d4411d885e6e3be0542a"
+    ],
+    "pluginTestCommand": "python -m unittest discover -s tests -p \"test_plugin.py\" -v",
+    "pluginTestCount": 87,
     "pluginTestResult": "PASS",
     "hostTestCommand": "python -m unittest discover -s tests -p \"test_host.py\" -v",
     "hostTestCount": 52,
     "hostTestResult": "PASS",
+    "hostTestScope": "SR-002 host suite, recorded separately from the SR-003 plugin suite",
     "compileall": "PASS",
+    "cleanCheckout": {
+      "verified": true,
+      "method": "git clone --depth 1 --branch feature/issue-28-sr-003-plugin-manager -c core.autocrlf=true",
+      "python": "CPython 3.14.6 (venv)",
+      "os": "Windows 10.0.26200",
+      "go": "go1.26.6 windows/amd64 (GOWORK=off)",
+      "install": "python -m pip install -e \".[plugins]\"",
+      "exitCodes": {
+        "clone": 0,
+        "pipInstall": 0,
+        "goBuild": 0,
+        "pluginTests": 0,
+        "hostTests": 0,
+        "compileall": 0,
+        "capture": 0
+      },
+      "log": "docs/验收与实施/证据/SR-003/clean-checkout.log"
+    },
+    "goldenSha256": "221a1305188cae1d4bcda74f3b03dfa05366b7af5b0d4421a4a4287b4606aa49",
+    "goldenSha256Note": "sha256 over CRLF-normalized UTF-8 bytes; the previous value 34ba393a... was the Windows CRLF working-tree digest, not the committed LF blob",
+    "systemEx": {
+      "EX-02": "NOT_RUN",
+      "EX-03": "NOT_RUN",
+      "EX-04": "NOT_RUN",
+      "EX-18": "NOT_RUN"
+    },
+    "providerV2WireContract": "NOT_RUN (assigned to SR-010)",
     "ci": "NOT_RUN"
   }
 }

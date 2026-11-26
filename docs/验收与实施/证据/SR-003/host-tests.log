@@ -1,8 +1,11 @@
-# SR-002 host regression tests
+# SR-003 host tests (SR-002 suite, recorded separately)
 # command: python -m unittest discover -s tests -p "test_host.py" -v
-# cwd: C:\Users\z00587616\Documents\ConnectionAgent\ca-agent-next\.agents\worktrees\feature\issue-28-sr-003-plugin-manager
+# cwd: C:\Users\z00587616\AppData\Local\Temp\sr003-clean-504ec1b
+# tested commit: 504ec1b0a35fc761eba621149a94c83d1012626f (clone --depth 1, core.autocrlf=true)
+# environment: CPython 3.14.6 (venv), Windows 10.0.26200, go1.26.6 windows/amd64, GOWORK=off
 # exit code: 0
 # --- stdout ---
+
 
 # --- stderr ---
 test_no_business_specific_domains (test_host.BusinessNeutralityTests.test_no_business_specific_domains) ... ok
@@ -59,6 +62,6 @@ test_invalid_factory_results_map_to_host_internal_error (test_host.RunIdFactoryT
 test_test_module_is_real (test_host.TestDiscoverySanityTests.test_test_module_is_real) ... ok
 
 ----------------------------------------------------------------------
-Ran 52 tests in 0.049s
+Ran 52 tests in 0.071s
 
 OK

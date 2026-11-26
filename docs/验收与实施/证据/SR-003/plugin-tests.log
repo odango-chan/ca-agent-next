@@ -1,16 +1,22 @@
 # SR-003 plugin acceptance tests
-# command: python -m unittest discover -s tests -p test_plugin.py -v
-# cwd: C:\Users\z00587616\Documents\ConnectionAgent\ca-agent-next\.agents\worktrees\feature\issue-28-sr-003-plugin-manager
+# command: python -m unittest discover -s tests -p "test_plugin.py" -v
+# cwd: C:\Users\z00587616\AppData\Local\Temp\sr003-clean-504ec1b
+# tested commit: 504ec1b0a35fc761eba621149a94c83d1012626f (clone --depth 1, core.autocrlf=true)
+# environment: CPython 3.14.6 (venv), Windows 10.0.26200, go1.26.6 windows/amd64, GOWORK=off
 # exit code: 0
 # --- stdout ---
+
 
 # --- stderr ---
 test_too_late_before_original_result_keeps_pending_and_accepts_result (test_plugin.CancellationOrderingTests.test_too_late_before_original_result_keeps_pending_and_accepts_result) ... ok
 test_unsupported_before_original_result_keeps_pending_and_accepts_result (test_plugin.CancellationOrderingTests.test_unsupported_before_original_result_keeps_pending_and_accepts_result) ... ok
-test_descriptor_deduplicates_backend_ids_in_order (test_plugin.DriverBoundaryTests.test_descriptor_deduplicates_backend_ids_in_order) ... ok
 test_driver_start_failure_rolls_back_registration (test_plugin.DriverBoundaryTests.test_driver_start_failure_rolls_back_registration) ... ok
-test_manager_owns_driver_lifecycle_and_dispatch (test_plugin.DriverBoundaryTests.test_manager_owns_driver_lifecycle_and_dispatch) ... ok
-test_provider_driver_contract_is_stable (test_plugin.DriverBoundaryTests.test_provider_driver_contract_is_stable) ... ok
+test_manager_dispatches_through_generic_driver_only (test_plugin.DriverBoundaryTests.test_manager_dispatches_through_generic_driver_only)
+ȱ�� SR-010 �ֶβ�Ӱ�� SR-003��ͨ�� Driver �������ȫ�����á� ... ok
+test_manager_does_not_reference_provider_v2_dtos (test_plugin.DriverBoundaryTests.test_manager_does_not_reference_provider_v2_dtos) ... ok
+test_provider_driver_is_an_extension_point_not_a_wire_contract (test_plugin.DriverBoundaryTests.test_provider_driver_is_an_extension_point_not_a_wire_contract) ... ok
+test_provider_driver_pins_protocol_and_tool_extension (test_plugin.DriverBoundaryTests.test_provider_driver_pins_protocol_and_tool_extension) ... ok
+test_public_driver_surface_has_no_provider_v2_wire_dtos (test_plugin.DriverBoundaryTests.test_public_driver_surface_has_no_provider_v2_wire_dtos) ... ok
 test_artifact_descriptors_rejected_without_mapping (test_plugin.EventIngressTests.test_artifact_descriptors_rejected_without_mapping) ... ok
 test_conflicting_event_identity_rejected (test_plugin.EventIngressTests.test_conflicting_event_identity_rejected) ... ok
 test_duplicate_event_is_attached_without_second_host_call (test_plugin.EventIngressTests.test_duplicate_event_is_attached_without_second_host_call) ... ok
@@ -36,11 +42,14 @@ test_start_registers_three_extensions_for_one_process (test_plugin.LifecycleIpcT
 test_unknown_correlation_id_does_not_complete (test_plugin.LifecycleIpcTests.test_unknown_correlation_id_does_not_complete) ... ok
 test_wrong_invocation_id_does_not_complete (test_plugin.LifecycleIpcTests.test_wrong_invocation_id_does_not_complete) ... ok
 test_duplicate_yaml_key_rejected (test_plugin.ManifestValidationTests.test_duplicate_yaml_key_rejected) ... ok
+test_dynamic_ref_falls_back_to_plain_anchor (test_plugin.ManifestValidationTests.test_dynamic_ref_falls_back_to_plain_anchor) ... ok
 test_handshake_extra_extension_rejected (test_plugin.ManifestValidationTests.test_handshake_extra_extension_rejected) ... ok
 test_handshake_missing_extension_rejected (test_plugin.ManifestValidationTests.test_handshake_missing_extension_rejected) ... ok
 test_handshake_timeout_rejected (test_plugin.ManifestValidationTests.test_handshake_timeout_rejected) ... ok
 test_invalid_request_schema_json_rejected (test_plugin.ManifestValidationTests.test_invalid_request_schema_json_rejected) ... ok
 test_invalid_response_schema_document_rejected (test_plugin.ManifestValidationTests.test_invalid_response_schema_document_rejected) ... ok
+test_missing_dynamic_ref_anchor_rejected (test_plugin.ManifestValidationTests.test_missing_dynamic_ref_anchor_rejected) ... ok
+test_missing_plain_anchor_ref_rejected (test_plugin.ManifestValidationTests.test_missing_plain_anchor_ref_rejected) ... ok
 test_missing_required_field_rejected (test_plugin.ManifestValidationTests.test_missing_required_field_rejected) ... ok
 test_path_traversal_in_executable_rejected (test_plugin.ManifestValidationTests.test_path_traversal_in_executable_rejected) ... ok
 test_path_traversal_in_schema_rejected (test_plugin.ManifestValidationTests.test_path_traversal_in_schema_rejected) ... ok
@@ -52,7 +61,10 @@ test_unknown_top_level_field_rejected (test_plugin.ManifestValidationTests.test_
 test_unresolvable_local_dynamic_ref_rejected (test_plugin.ManifestValidationTests.test_unresolvable_local_dynamic_ref_rejected) ... ok
 test_unresolvable_local_schema_ref_rejected (test_plugin.ManifestValidationTests.test_unresolvable_local_schema_ref_rejected) ... ok
 test_unsupported_ipc_protocol_rejected (test_plugin.ManifestValidationTests.test_unsupported_ipc_protocol_rejected) ... ok
+test_unsupported_local_fragment_form_rejected (test_plugin.ManifestValidationTests.test_unsupported_local_fragment_form_rejected) ... ok
 test_unsupported_package_api_version_rejected (test_plugin.ManifestValidationTests.test_unsupported_package_api_version_rejected) ... ok
+test_valid_dynamic_anchor_reference_accepted (test_plugin.ManifestValidationTests.test_valid_dynamic_anchor_reference_accepted) ... ok
+test_valid_local_json_pointer_ref_accepted (test_plugin.ManifestValidationTests.test_valid_local_json_pointer_ref_accepted) ... ok
 test_valid_manifest_loads_all_extensions (test_plugin.ManifestValidationTests.test_valid_manifest_loads_all_extensions) ... ok
 test_yaml_syntax_error_rejected (test_plugin.ManifestValidationTests.test_yaml_syntax_error_rejected) ... ok
 test_completed_request_does_not_remove_new_index (test_plugin.PendingRegistryTests.test_completed_request_does_not_remove_new_index) ... ok
@@ -67,10 +79,18 @@ test_bool_inflight_count_rejected (test_plugin.ShutdownConfirmationTests.test_bo
 test_duplicate_stopped_rejected (test_plugin.ShutdownConfirmationTests.test_duplicate_stopped_rejected) ... ok
 test_negative_inflight_count_rejected (test_plugin.ShutdownConfirmationTests.test_negative_inflight_count_rejected) ... ok
 test_nonzero_inflight_does_not_fake_success (test_plugin.ShutdownConfirmationTests.test_nonzero_inflight_does_not_fake_success) ... ok
+test_normal_shutdown_reports_no_divergence (test_plugin.ShutdownConfirmationTests.test_normal_shutdown_reports_no_divergence) ... ok
+test_reported_excess_without_host_pending_is_diagnostic_only (test_plugin.ShutdownConfirmationTests.test_reported_excess_without_host_pending_is_diagnostic_only) ... ok
+test_reported_zero_while_host_pending_stays_unknown (test_plugin.ShutdownConfirmationTests.test_reported_zero_while_host_pending_stays_unknown)
+Plugin �Ա� 0 ���ܱ����� Host ������������̬���ݡ� ... ok
+test_shutdown_timeout_keeps_unconfirmed_operations_unknown (test_plugin.ShutdownConfirmationTests.test_shutdown_timeout_keeps_unconfirmed_operations_unknown) ... ok
 test_shutdown_timeout_still_reliably_terminates (test_plugin.ShutdownConfirmationTests.test_shutdown_timeout_still_reliably_terminates) ... ok
 test_wrong_shutdown_correlation_rejected (test_plugin.ShutdownConfirmationTests.test_wrong_shutdown_correlation_rejected) ... ok
 test_non_json_config_fails_before_popen (test_plugin.StartupRollbackTests.test_non_json_config_fails_before_popen) ... ok
 test_post_popen_failure_terminates_process (test_plugin.StartupRollbackTests.test_post_popen_failure_terminates_process) ... ok
+test_same_plugin_id_can_be_restarted_after_failure (test_plugin.StartupRollbackTests.test_same_plugin_id_can_be_restarted_after_failure) ... ok
+test_start_failure_does_not_affect_other_plugins (test_plugin.StartupRollbackTests.test_start_failure_does_not_affect_other_plugins) ... ok
+test_start_failure_does_not_leave_registration (test_plugin.StartupRollbackTests.test_start_failure_does_not_leave_registration) ... ok
 test_delivery_correlates_response_obligation (test_plugin.ToolsDeliveryCancellationTests.test_delivery_correlates_response_obligation) ... ok
 test_late_result_does_not_complete_other_request (test_plugin.ToolsDeliveryCancellationTests.test_late_result_does_not_complete_other_request) ... ok
 test_pending_cancellation_and_late_result (test_plugin.ToolsDeliveryCancellationTests.test_pending_cancellation_and_late_result) ... ok
@@ -79,6 +99,6 @@ test_two_callables_share_one_pid_and_correlate_independently (test_plugin.ToolsD
 test_wrong_delivery_id_does_not_mark_delivered (test_plugin.ToolsDeliveryCancellationTests.test_wrong_delivery_id_does_not_mark_delivered) ... ok
 
 ----------------------------------------------------------------------
-Ran 72 tests in 65.651s
+Ran 87 tests in 97.959s
 
 OK
