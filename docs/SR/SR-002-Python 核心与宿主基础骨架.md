@@ -1,13 +1,13 @@
 # SR-002：Python 核心与宿主基础骨架
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.7  
+> SR 版本：0.2.8  
 > 修订日期：2026-11-26  
 > 状态：READY；独立设计评审 APPROVE_FOR_READY，代码实施尚未开始  
 > 创建日期：2026-11-25  
 > 所属阶段：Phase A  
 > 上游需求：[IR-002](../IR/IR%20总登记册.md#ir-002)  
-> 设计依据：[CA Agent Next 架构设计](../架构设计/CA%20Agent%20Next%20架构设计.md) v0.4.3 §3～5；[通用 Agent Core 与 Host 设计说明书](../设计说明书/F01-通用Agent核心与Host/通用Agent核心与Host设计说明书.md) v0.3.5 §2～5  
+> 设计依据：[CA Agent Next 架构设计](../架构设计/CA%20Agent%20Next%20架构设计.md) v0.4.3 §3～5；[通用 Agent Core 与 Host 设计说明书](../设计说明书/F01-通用Agent核心与Host/通用Agent核心与Host设计说明书.md) v0.3.6 §2～5  
 > Acceptance：AC-002-01～AC-002-08（本 SR 模块验收）；EX-01（系统级验收，不作为本 SR 的独立门禁，见[演示验收基线](../验收与实施/演示验收基线.md)）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：见第 3 节
@@ -55,7 +55,7 @@ include = ["ca_agent_next*"]
 
 ### 2.2 公共类型与调用边界
 
-F01 v0.3.5 §5.1～5.5 定义以下公开类型和方法，SR-002 按该定义实现，不自行改名或增加第二套契约：
+F01 v0.3.6 §5.1～5.5 定义以下公开类型和方法，SR-002 按该定义实现，不自行改名或增加第二套契约：
 
 - `JSONValue`：递归 JSON 值；允许 `None`、`bool`、`int`、有限 `float`、`str`、`list[JSONValue]` 和 `Mapping[str, JSONValue]`。拒绝非有限浮点数、非字符串对象键、循环容器、bytes、Path、Decimal 和任意 Python 对象；校验布尔值时不得将其误判为整数。
 - `Event`：冻结 dataclass；`event_id`、`ingress_id`、`event_type` 必须是非空且非全空白字符串；`payload` 必需且必须是 `Mapping[str, JSONValue]`；`source` 可省略，省略时默认为空 Mapping，显式提供时必须是 `Mapping[str, JSONValue]`；`external_request_id`、`response_channel_id` 可为 `None`，非空时必须是非空且非全空白字符串；`artifact_refs` 必须是 `tuple[str, ...]`，默认空 tuple，每项均为非空且非全空白字符串。
@@ -207,3 +207,4 @@ tests/
 | 2026-11-26 | 0.2.5 | GPT-6.2（ChatGPT） | §2.1～§2.2、§5.3～§5.4 | 将 HostError 唯一定义位置固定为 contracts.py，由 host.py 重导出；明确 CLI_USAGE_ERROR 不属于 HostError；同步 F01 v0.3.5。 | 消除 ModelLoop/Host 循环依赖和 CLI/Host 错误类型混淆。 | Issue #19；F01 v0.3.5；SR-003；PR #20 |
 | 2026-11-26 | 0.2.6 | GPT-6.2（ChatGPT） | §2.2、§5、§6 | 固定 SR-002 对 F01 v0.3.5 的精确版本引用，并增加 HostError 单一类型身份的导入/测试断言。 | 使模块重导出边界可由自动化测试验证，避免循环依赖或重复异常类。 | F01 v0.3.5；AC-002-06；Issue #19；PR #20 |
 | 2026-11-26 | 0.2.7 | GPT-6.2（ChatGPT） | §4、§5.1、§7 | 根据独立评审 APPROVE_FOR_READY 将 SR-002 转为 READY；明确 SR-003 的实施依赖与设计评审分离，并限定注入型 ModelClient 仅用于 CLI 失败路径测试；同步 PR #20 状态。 | 关闭 P2-01/P3-01/P3-02，不扩大 SR-002 范围；保持 AC/EX 未运行状态真实。 | IR-002；Issue #19；Issue #21；PR #20；评审 SHA `888b8ba` |
+| 2026-11-26 | 0.2.8 | GPT-6.2（ChatGPT） | 文档头部、§2 | 将当前设计依据和公共契约引用从 F01 v0.3.5 更新为 F01 v0.3.6；本次 F01 仅澄清 Smoke 注入测试边界，不改变 SR-002 类型契约。 | 确保 READY SR 引用当前权威设计版本，避免 Harness 读取过期版本号。 | Issue #19；Issue #21；F01 v0.3.6；PR #20 |
