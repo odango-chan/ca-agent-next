@@ -1,7 +1,7 @@
 # SR-002：Python 核心与宿主基础骨架
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.8  
+> SR 版本：0.2.9  
 > 修订日期：2026-11-26  
 > 状态：READY；独立设计评审 APPROVE_FOR_READY，代码实施尚未开始  
 > 创建日期：2026-11-25  
@@ -172,7 +172,7 @@ tests/
 | 设计修订 Issue | [ca-agent-next #19](https://github.com/odango-chan/ca-agent-next/issues/19) |
 | 设计评审 PR | [ca-agent-next #20](https://github.com/odango-chan/ca-agent-next/pull/20)（OPEN / Ready for review；base 为 docs/restore-original-designs-20261125） |
 | 治理规则 Issue | [ca-agent-next #21](https://github.com/odango-chan/ca-agent-next/issues/21)（阶段依赖与 AC/EX 门禁） |
-| 实施 Issue | READY 状态转换后创建独立实施 Issue，并在本 SR 与索引中回填 |
+| 实施 Issue | [ca-agent-next #22](https://github.com/odango-chan/ca-agent-next/issues/22)（独立实施任务；代码尚未开始） |
 | 独立设计评审 | APPROVE_FOR_READY；评审基线 `888b8ba01b505ab53404b91ccbe2e8f08960868b`；P0/P1 为 0，P2/P3 已按评审建议澄清/修正 |
 | 实施仓库 | ca-agent-next |
 | 实施 PR / Commit | 无 |
@@ -208,3 +208,4 @@ tests/
 | 2026-11-26 | 0.2.6 | GPT-6.2（ChatGPT） | §2.2、§5、§6 | 固定 SR-002 对 F01 v0.3.5 的精确版本引用，并增加 HostError 单一类型身份的导入/测试断言。 | 使模块重导出边界可由自动化测试验证，避免循环依赖或重复异常类。 | F01 v0.3.5；AC-002-06；Issue #19；PR #20 |
 | 2026-11-26 | 0.2.7 | GPT-6.2（ChatGPT） | §4、§5.1、§7 | 根据独立评审 APPROVE_FOR_READY 将 SR-002 转为 READY；明确 SR-003 的实施依赖与设计评审分离，并限定注入型 ModelClient 仅用于 CLI 失败路径测试；同步 PR #20 状态。 | 关闭 P2-01/P3-01/P3-02，不扩大 SR-002 范围；保持 AC/EX 未运行状态真实。 | IR-002；Issue #19；Issue #21；PR #20；评审 SHA `888b8ba` |
 | 2026-11-26 | 0.2.8 | GPT-6.2（ChatGPT） | 文档头部、§2 | 将当前设计依据和公共契约引用从 F01 v0.3.5 更新为 F01 v0.3.6；本次 F01 仅澄清 Smoke 注入测试边界，不改变 SR-002 类型契约。 | 确保 READY SR 引用当前权威设计版本，避免 Harness 读取过期版本号。 | Issue #19；Issue #21；F01 v0.3.6；PR #20 |
+| 2026-11-26 | 0.2.9 | GPT-6.2（ChatGPT） | §7 | 创建并登记独立 SR-002 实施 Issue #22，固定其与设计 Issue #19、治理 Issue #21 和设计 PR #20 的关系。 | 满足 READY 后先建实施 Issue、再交付 Harness Goal 的治理顺序，避免设计 Issue 被误作实施授权。 | Issue #19；Issue #21；Issue #22；PR #20 |

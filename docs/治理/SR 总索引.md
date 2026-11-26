@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.13
+> 文档版本：0.3.14
 > 状态：SR-002 READY；其余 25 项 SR 为 DRAFT；实施启动按 SR 管理规范 §6.1 检查阶段依赖  
 > 修订日期：2026-11-26  
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -87,7 +87,7 @@
 阶段顺序仅约束实际实施依赖，不限制独立设计评审。每个 SR 达到 READY 后，只有当前实施阶段的直接实施依赖满足才可启动；未满足的依赖只阻塞其消费者，不得阻塞独立 SR/AC。Goal 模式可将同一依赖批次中的多个 READY SR 合并执行，但不得跨越未满足的实施依赖或把 DRAFT SR 当成可执行任务。
 
 ## 4. 当前基线说明
-- SR-002 设计修订由 [Issue #19](https://github.com/odango-chan/ca-agent-next/issues/19) 和 [PR #20（Ready for review）](https://github.com/odango-chan/ca-agent-next/pull/20) 追踪；独立评审结论 APPROVE_FOR_READY，SR 已为 READY。AC-002-01～AC-002-08 与系统级 EX-01 均为 NOT_RUN；代码实施尚未开始。治理修订由 Issue #21 追踪。
+- SR-002 设计修订由 [Issue #19](https://github.com/odango-chan/ca-agent-next/issues/19) 和 [PR #20（Ready for review）](https://github.com/odango-chan/ca-agent-next/pull/20) 追踪；独立评审结论 APPROVE_FOR_READY，SR 已为 READY。AC-002-01～AC-002-08 与系统级 EX-01 均为 NOT_RUN；代码实施尚未开始。治理修订由 Issue #21 追踪；独立实施任务为 [Issue #22](https://github.com/odango-chan/ca-agent-next/issues/22)。
 
 - 设计来源：ca-agent-next PR #1 的架构、设计、规范和 Acceptance 文档。
 - PR #1：已合并；只代表设计文档变更。
@@ -126,3 +126,4 @@
 | 2026-11-26 | 0.3.12 | GPT-6.2（ChatGPT） | §2～§4 | 同步 SR-002 v0.2.6、SR-003 v0.2.4、F01 v0.3.5 与 Acceptance v0.3.7 | 使 SR 清单、依赖和验收状态与权威文档一致 | IR-002；SR-002；SR-003；Issue #19；PR #20 |
 | 2026-11-26 | 0.3.13 | GPT-6.2（ChatGPT） | §1～§4 | 同步 SR-002 READY、SR-003 实施依赖语义及 SR 管理规范阶段门禁；保持 AC/EX NOT_RUN。 | 让索引只反映真实直接依赖，不把系统 EX 或后续实现阻塞提前传递。 | Issue #19；Issue #21；PR #20；SR-002；SR-003 |
 | 2026-11-26 | 0.3.14 | GPT-6.2（ChatGPT） | §1～§4 | 修正 SR-002/SR-003 对 F01 的当前版本引用为 v0.3.6，并清理索引中“全部 SR 仍 DRAFT”的过期概括。 | 保持权威设计版本与当前 SR 状态一致。 | Issue #19；Issue #21；F01 v0.3.6；SR-002；SR-003；PR #20 |
+| 2026-11-26 | 0.3.14 | GPT-6.2（ChatGPT） | §3～§4 | 登记 SR-002 独立实施 Issue #22，并保持 SR-003 DRAFT、实施依赖 SR-002 VERIFIED 的边界。 | 完成 READY→实施 Issue 的追踪闭环，不把设计 Issue 当作代码任务。 | Issue #19；Issue #21；Issue #22；PR #20 |
