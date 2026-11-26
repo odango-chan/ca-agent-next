@@ -1,7 +1,7 @@
 # SR-025：MAS Owner 1.6.0 Capability-first Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.9
+> SR 版本：0.1.10
 > 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**；不授予实施 READY，产品验收原状态不变  
 > 创建日期：2026-11-25
 > 修订日期：2026-11-26  
@@ -74,7 +74,7 @@ Owner `v1alpha4` source 的 `tool-catalog.yaml` 含 25 published contracts、旧
 | AC-025-04 | 24/24 双向一对一；旧一对二 mas.se.events.emit、重复 Callable、Reconcile Skill-facing 反例 | 全部异常拒绝，正确拆分 + internal-only 保留 |
 | AC-025-05 | 两个不同 Event Schema/Guarantee、Receipt Query/Receipt Proof、Reconcile 原始 invocation | 两种事件不能互换；READ 与内部 Reconcile 不混用 |
 | AC-025-06 | 同一 Owner 输入重复构建 + 来源包缺失或损坏 | 输出稳定可重验；失败零部分可发布资产 |
-| AC-025-07 | **正式新 1.6.0** Compiler Schema/Build/Verify 使用一个 Capability-first MAS synthetic Skill | 通过新 Runtime/Development 允许的正式发布 CLI；历史 `build-development` / `verify-development` 不能算 PASS；记录精确命令、结果与诊断 |
+| AC-025-07 | **正式新 1.6.0** Compiler Schema/Build/Verify 使用一个 Capability-first MAS synthetic Skill | 通过**唯一新 1.6.0 Compiler** 的正式 Check/Build/Verify 接口；历史 `build-development` / `verify-development` 不能算 PASS；记录精确命令、结果与诊断 |
 | AC-025-08 | ca-client-tools 正式流水线发布、下载并复核新 Package | 记录授权 Release、资产路径、Owner SHA、Compiler API/tag、包版本、Verify 输出；无产品发布授权不得宣称通过 |
 
 未冻结的准确字段/CLI/Schema 名称由目标 Owner 通过独立 Issue/PR 明确，不由 DeepSeek Harness 猜测。系统 EX/MAS E2E 和运行时 Owner Outcome 不在本模块 AC 之内。
@@ -107,3 +107,5 @@ Owner `v1alpha4` source 的 `tool-catalog.yaml` 含 25 published contracts、旧
 
 | 2026-11-26 | 0.1.8 | GPT-6（ChatGPT） | 设计依据与新版本路径 | 刷新 1.6.0 正式目标设计引用：v0.4.0→v0.4.1、v0.3.10→v0.3.11、历史 F09 §4.5→新 §5-9 | Issue #12/#40；PR #46 |
 | 2026-11-26 | 0.1.9 | GPT-6（ChatGPT） | 文档头与 1.6.0 当前设计依据 | 修复 PR #46 Review Context 文档头检查及旧 Development Build 设计依据，更新新 Compiler/SR-013 正式入口 | Issue #12/#40；PR #46；CI #45837224652 |
+
+| 2026-11-26 | 0.1.10 | GPT-6（ChatGPT） | 最终一致性复评 / 规范性描述 | AC-025-07 明确唯一新 1.6.0 Compiler，不混用 Development profile | Issue #12/#40；PR #46 |

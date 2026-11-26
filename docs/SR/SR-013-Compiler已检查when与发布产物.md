@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.15\
+> 文档版本：0.2.16\
 > 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**；实施/产品验收未升级  
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-26  
@@ -181,7 +181,7 @@ request-schema 根与完整 G.4 $ref 资源闭包只要 Contract 声明 requestS
 
 ### 5.3 Manifest 必需语义
 
-新 Manifest **只由 1.6.0 的唯一正式 Schema 定义**；可复用有用字段的含义，但不得把 v1alpha5 Manifest 或旧 BuildResult 当成兼容输入。每个声明 requestSchema 的 Skill 必须有 requestSchema 对象，记录 sourceRef、rootPath、可选 rootSchemaId（仅根 Schema 声明 $id 时记录）和完整 resources[]（schemaId/path）；该对象与 when 是否存在无关，供 Host 按 CA-SL M.3 验证 Event payload。根与资源文件同时进入 compiledFiles[] 和 Manifest outputFiles[]。
+新 Manifest **只由 1.6.0 的唯一正式 Schema 定义**；可复用有用字段的含义，但不得把 v1alpha5 Manifest 或旧 BuildResult 当成兼容输入。每个声明 requestSchema 的 Skill 必须有 requestSchema 对象，记录 sourceRef、rootPath、可选 rootSchemaId（仅根 Schema 声明 $id 时记录）和完整 resources[]（schemaId/path）；该对象与 when 是否存在无关，供 Host 按正式 **CA-SL 1.6.0** Request Schema/when 契约验证 Event payload。根与资源文件同时进入 compiledFiles[] 和 Manifest outputFiles[]。
 
 每个有 when 的 Skill 增加 when 对象，记录 checkedExprPath、descriptorSetPath、sourcePath 和 sourceRange（startLine/startColumn/endLine/endColumn）；仅当表达式引用 input 时，额外记录 requestSchemaRef 与 resolvedRequestSchemaPath，并与同一 Skill 的 requestSchema 元数据一致。when.checked.pb 与 when.types.pb 同时进入 compiledFiles[] 和 Manifest outputFiles[]。逐文件 sha256 复用既有 outputFiles 机制，不增加额外摘要字段。Any type URL 固定为 type.googleapis.com/cel.expr.CheckedExpr；payload 为标准 cel.dev/expr.CheckedExpr。DescriptorSet 是标准 google.protobuf.FileDescriptorSet，只承担 CEL 类型描述，不替代 G.4 Schema 验证数据。
 
@@ -237,7 +237,8 @@ git diff --check
 - 新版 Build / Verify 正向、负向、损坏产物、缺文件、缺 Descriptor、错误 Any type URL、Request Schema 根/资源缺失或引用不闭合和多 Skill 隔离全部通过。
 - 覆盖 requestSchema/when 组合：无二者、仅 requestSchema、仅 event.type when、requestSchema + event.type when、requestSchema + input when；input when 无 requestSchema 必须 CEL_INVALID。
 - 新版重复 Build 字节确定。
-- 冻结 Artifact v1alpha5 的 Schema/Golden 与旧 v2.1.0 Release Verify 行为不变；新 Runtime Build 不提供旧 BuildResult v1alpha5 兼容路由。Development v1alpha1 的 Schema/Golden 和独立 Verify 行为不变，继续使用 Development 专用 API，不作为 Agent 发布包。
+- **零外部依赖 Assurance 正例**：Skill 有合法 Assurance、没有外部 Capability 引用，BuildRequest 接受空 package roots/闭包并产生不含外部 Tool Effect 的新 1.6.0 Artifact；**反例**：引用任何外部 Capability 却缺少显式依赖，静态报告 `CAPABILITY_UNRESOLVED` 并且 outputFiles 为空；以上必须由新 Compiler Owner 正式 Schema/Golden 冻结，而不是迁就旧 Development v1alpha1 的非空根限制。
+- 冻结 Artifact v1alpha5 的 Schema/Golden 与旧 v2.1.0 Release Verify 行为不变；新 Runtime Build 不提供旧 BuildResult v1alpha5 兼容路由。Development v1alpha1 的 Schema/Golden 和独立 Verify 行为只在**旧 v2.1.0 发布物**中保留，不作为新 Compiler 的兼容 API 或 Agent 发布包。
 - Native、WASM、CLI E2E、Chromium Worker parity 与 Python 互操作全部有真实执行日志。
 - 每项记录受测 SHA、环境、版本、命令、退出码、预期、实际和证据位置。
 
@@ -374,3 +375,5 @@ SR-013 只有 AC-013-01～05 均达到各自通过条件，Compiler Release 有�
 | 2026-11-26 | 0.2.14 | GPT-6（ChatGPT） | 核心规范与验收章节 | 重写 AC-013-02 新规范算法/正负矩阵，修复旧 BuildRequest/Parser/Manifest/Development 兼容冲突 | 收敛 CA-SL 1.6.0 单版本可评审契约；旧 PoC 只作证据 | Issue #12/#40；SR-013；SR-029；PR #46 |
 
 | 2026-11-26 | 0.2.15 | GPT-6（ChatGPT） | 设计依据与新版本路径 | 刷新 1.6.0 正式目标设计引用：v0.2.9→v0.2.10、v0.3.12→v0.3.13 | 避免旧 Compiler/Publisher 章节被当成新实施入口 | Issue #12/#40；PR #46 |
+
+| 2026-11-26 | 0.2.16 | GPT-6（ChatGPT） | 最终一致性复评 / 规范性描述 | 补齐零外部根依赖的 Build/Verify 正反验收、旧 Development 仅历史保留及 1.6.0 Request Schema 权威 | 消除 1.6.0 与历史 Development 的模糊措辞，修正后续评审的可执行门槛 | Issue #12/#40；PR #46 |
