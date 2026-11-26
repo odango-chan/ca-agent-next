@@ -1,11 +1,11 @@
 # SR-027：技能Bundle构建与发布
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.2  
+> SR 版本：0.1.3  
 > 状态：DRAFT；Compiler 新 Runtime Artifact API 与正式 Bundle 正例尚不可用，不允许实施发布路径  
 > 创建日期：2026-11-26  
 > 上游需求：IR-006  
-> 设计依据：F08 v0.3.7 §4、§6。  
+> 设计依据：F08 v0.3.8 §4、§6。  
 > 关联 Issue：ca-agent-next#12（设计）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：见 §4；本批限外部构建与发布。
@@ -53,3 +53,4 @@ CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验�
 | 2026-11-26 | 0.1.0 | Codex / GPT-6 | 见本行变更 | 首次登记两端交付、独立复验与就绪条件 | Issue #12 |
 | 2026-11-26 | 0.1.1 | Codex / GPT-6 | 见本行变更 | 补齐正式文档的评审范围与非目标；列明依赖设计版本；同步设计依据到本次复审的修订版本 | Issue #12 |
 | 2026-11-26 | 0.1.2 | GPT-6.2（ChatGPT） | 文档头、§4～6、修订记录 | 记录 CA-SL v1alpha5 固定源、Compiler v2.1.0 冻结 Artifact、Issue #61 未完成及 ca-skills 当前无正式 Bundle；防止将规范/Compiler Release/本地 Build 误报为 Published Skill Bundle，并为 SR-004 明确外部依赖 | Issue #43；SR-004；SR-013；SR-027 |
+| 2026-11-26 | 0.1.3 | GPT-6.2（ChatGPT） | 文档头、设计依据、修订记录 | 将 F08 设计依据更新至 v0.3.8 | 保持 SR-027 与发布端权威设计版本一致 | Issue #43；SR-004；SR-013；SR-027 |
