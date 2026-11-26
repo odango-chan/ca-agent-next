@@ -1,7 +1,7 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录  
-> 文档版本：0.1.20  
+> 文档版本：0.1.21  
 > 修订日期：2026-11-26  
 > 状态：7 项 IR；IR-007 登记 Python 工程工具链统一需求，SR-028 为 DRAFT。  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -18,7 +18,7 @@ IR 编号稳定。GitHub Issue 用于讨论、分派和跟踪，一个 IR 可关
 - 协作 Issue：[Issue #35](https://github.com/odango-chan/ca-agent-next/issues/35)（G01 §11.8 状态刷新；SR-001 代码修复仍由 Issue #27 跟踪）。
 - 实施分解：[SR-001](../SR/SR-001-评审上下文自动生成.md)。
 - 架构、设计和规范：[文档编写与治理规范](../规范/文档编写与治理规范.md)、[Agent](../../Agent.md)。
-- 完成依据：SR-001 的必需 AC 全部 PASS 且实施集成完成后方可关闭；当前设计 READY，PR [#32](https://github.com/odango-chan/ca-agent-next/pull/32) OPEN、未合并；最终 HEAD `9d061c0c06d5d2ebba4be3cde9143ec6db413a3e` 的 AC-REV-01～10 全部 PASS，真实 Workflow [Run 45793336377](https://github.com/odango-chan/ca-agent-next/actions/runs/45793336377) success，80 项测试通过，三份 Artifact 已核对；尚不宣称 IR 完成。
+- 完成依据：已满足。SR-001 v0.3.10 VERIFIED；[PR #32](https://github.com/odango-chan/ca-agent-next/pull/32) MERGED（`7a0fac41e573021207ab8201bbc718718c451e50`），AC-REV-01～10 PASS；最终代码 HEAD `9d061c0c06d5d2ebba4be3cde9143ec6db413a3e` 的 Workflow [45793590532](https://github.com/odango-chan/ca-agent-next/actions/runs/45793590532) success、80 项测试通过、三文件 Artifact 已核对。权威状态回填随 PR #36 集成，Issue #27 在回填合并后关闭。
 
 ## IR-002
 - 设计修订追踪：[Next Issue #19](https://github.com/odango-chan/ca-agent-next/issues/19)（CLOSED）；[设计 PR #20](https://github.com/odango-chan/ca-agent-next/pull/20)（MERGED，commit `281ccb957b9222e72175e210d1afed177aa8a14f`）；阶段门禁治理：[Issue #21](https://github.com/odango-chan/ca-agent-next/issues/21)（CLOSED）；父级中央设计恢复见 [Next Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12)。
@@ -124,3 +124,4 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 | 2026-11-26 | 0.1.18 | GPT-6.2（ChatGPT） | IR-001 | 回填 SR-001 最终 78 项测试、AC-REV-01～10 PASS 与真实 Workflow/Artifact 证据；保留 PR OPEN 的集成门禁 | 两个独立复核 BLOCKER 已修复，但未合并前不把需求标记完成 | Issue #27；PR #32；Run 45791388839；SR-001 v0.3.8 |
 | 2026-11-26 | 0.1.19 | GPT-6.2（ChatGPT） | IR-001 | 回填 SR-001 最终 80 项测试、代码块/注释/重复声明反例与 Run 45793336377；保留 PR OPEN 的集成门禁 | 将最新代码 HEAD、测试与 Artifact 证据同步至需求登记册，不把验收 PASS 误报为已集成 | Issue #27；PR #32；Run 45793336377；SR-001 v0.3.9 |
 | 2026-11-26 | 0.1.20 | GPT-6.2（ChatGPT） | IR-007 | 将 G02/SR-028 引用升级到 v0.1.2，记录精确 Python 文件内容、setup-uv 配置和可复现边界 | 使需求登记册指向最新可执行设计基线 | Issue #35；G02 v0.1.2；SR-028 v0.1.2 |
+| 2026-11-26 | 0.1.21 | GPT-6.2（ChatGPT） | IR-001 | 根据 PR #32 合并、80 项测试及 AC 证据更新 SR-001 完成依据 | 此前 PR OPEN 的历史状态已过期 | Issue #27；PR #32；PR #36 |
