@@ -903,6 +903,20 @@ class TestACREV08DocHeaders(RepoTestBase):
                 "> 本文局部非目标：无\n",
             ),
             (
+                "indented code declaration",
+                "# 示例\n\n"
+                "    > 全局评审范围：继承根目录 Agent.md 的 review_scope\n"
+                "> 本文局部非目标：无\n",
+            ),
+            (
+                "blockquote fenced declaration",
+                "# 示例\n\n"
+                "> ~~~text\n"
+                "> 全局评审范围：继承根目录 Agent.md 的 review_scope\n"
+                "> ~~~\n"
+                "> 本文局部非目标：无\n",
+            ),
+            (
                 "commented declaration",
                 "# 示例\n\n"
                 "<!--\n"
