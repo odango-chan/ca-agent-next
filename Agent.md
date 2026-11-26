@@ -2,14 +2,14 @@
 
 本文是 ca-agent-next 自动化与 AI 编码协作的入口规则，不是第二份架构文档。功能分类、需求、设计章节和外部能力导航以《功能树与需求追踪基线》为准。
 
-需求入口见[IR 总登记册](docs/IR/IR%20总登记册.md)和[SR 总索引](docs/治理/SR%20总索引.md)。实施批次先确认 IR、目标 SR、设计章节与 Acceptance ID。Next 仅启动 READY 且依赖满足的 SR。按 SR 回填实施 PR/Commit、受测 SHA、命令、环境及验收结果。
+需求入口见[IR 总登记册](docs/IR/IR%20总登记册.md)和[SR 总索引](docs/治理/SR%20总索引.md)。实施批次先确认 IR、目标 SR、设计章节与模块 Acceptance ID。Next 仅启动 READY 且当前实施阶段的实施依赖已满足的 SR。设计评审/READY 不得被下游实施依赖或系统级 EX 阻塞；依赖只阻塞实际消费它的阶段或 AC。模块 AC 与系统级 EX 分开管理，EX 不作为单个模块 SR 的默认实施前置条件。按 SR 回填实施 PR/Commit、受测 SHA、命令、环境及验收结果。
 
 ## 1. 任务开始流程
 
 0. 创建或引用覆盖本批变更的 Issue，并按[治理规范](docs/规范/文档编写与治理规范.md#14-分支命名与生命周期)命名新分支。
 1. 阅读 README.md、本文和 docs/治理/功能树与需求追踪基线.md。
 2. 根据用户任务、Issue 或 PR 变更识别仓库、Feature / IR / SR。
-3. 检查 SR 状态、依赖和 Acceptance；DRAFT / BLOCKED 不得直接实施。
+3. 检查 SR 状态、依赖类型（设计/实施/模块验收/系统集成）和本次要执行的阶段/Acceptance；只检查本阶段直接消费的依赖。DRAFT / BLOCKED 不得直接实施；READY 仍须通过当前阶段实施门禁。不得把功能阶段顺序、文档引用或系统级 EX 推断成未登记的前置依赖。
 4. 只读取对应功能设计说明书、相关规范、外部 EC 权威文档和验收要求。
 5. 实施前核对仓库、分支、HEAD、工作区和外部依赖当前状态。
 6. 实施后回填 SR、Issue、PR、Commit、Test 和验收证据。
@@ -25,7 +25,7 @@ DeepSeek Harness 默认使用 Goal 模式。按[SR 管理规范](docs/规范/SR%
 - ca-agent-demo 是既有 Python 实现和测试证据来源，只能逐文件选择性复用，不得整体复制。
 - ca-skills、ca-skill-compiler、ca-client-tools、ca-openamsm-plugin、env-openamsm、env-5gc-sim、ca-skill-studio-demo 等保有独立实现和发布职责；ca-runtime 与 ca-agent 是参考/目标仓，不是 Next 运行时依赖。
 - 项目群所有仓的架构设计、功能设计、协议规范和 ADR 统一集中在 ca-agent-next；其他实现仓保留源码、测试、发布、部署、运行和故障排查文档，并链接回本仓对应 Feature/设计章节。迁移原文必须保留源仓、源路径、固定 SHA 和原始状态，不能把历史提案改写成当前规范。
-- 所有项目群任务从本仓进入。修改协作仓须获得当前任务的授权，并在本仓登记覆盖目标仓、变更范围和验收的 SR。SR 达到 READY 且依赖满足后方可实施，再回填目标仓 PR、Commit 和验收证据。READY 仅表示具备实施条件，不授予写入权限。合并 PR 和发布 Release 需要单独授权。
+- 所有项目群任务从本仓进入。修改协作仓须获得当前任务的授权，并在本仓登记覆盖目标仓、变更范围和验收的 SR。SR 达到 READY 且当前实施阶段的实施依赖满足后方可实施，再回填目标仓 PR、Commit 和验收证据。设计/治理 Issue 与代码实施 Issue 分开；实施 Issue 必须在代码开始前创建。READY 仅表示具备实施条件，不授予写入权限。每批实现必须 Commit、Push 并核对远端 SHA；合并 PR 和发布 Release 需要单独授权。
 
 - 规范或设计尚在评审时，负责人可按 [SR 管理规范 §8.2](docs/规范/SR%20管理规范.md#82-使用评审中的固定提交开展受限实施)批准固定 PR SHA，供 READY 阶段实施和验收。按 SR 记录范围、授权和证据。正式发布、集成和主分支可达性按各阶段要求核对。
 
@@ -165,3 +165,4 @@ review_scope:
 | 2026-11-25 | Codex | §1 | 加入 Issue、分支命名和 Goal 入口 | 统一交接门禁 | [Issue #5](https://github.com/odango-chan/ca-agent-next/issues/5) |
 | 2026-11-25 | Codex | 第 2 节 | 引用固定 PR SHA 的分阶段实施规则 | 支持先验证再定稿 | SR-013、PR #7 |
 | 2026-11-25 | GPT-6.2（ChatGPT） | 第 3、4、7 节 | 更正 ca-host.artifact-store/v1 已冻结、Provider/Go Host 外部实现已存在、Next Python Host 尚未实现的三层状态；明确 SHA-256 仅为既有协议传输校验 | 消除 F05、F03.05 与源仓实现状态冲突，避免把外部 PASS 计入 Next | F05、F03.05、SR-009、SR-010；Issue #12 |
+| 2026-11-26 | GPT-6.2（ChatGPT） | 第 1、2、5 节 | 明确设计/实施/AC/EX 分阶段门禁，分离设计与实施 Issue，并要求实施 Commit/Push 后核对远端 SHA | 防止独立 SR 被无关下游依赖或系统级 EX 阻塞，并确保交付可追溯 | Issue #21；SR 管理规范 §6.1；PR #20 |

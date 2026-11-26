@@ -1,7 +1,7 @@
 # 通用 Agent Core 与 Host 设计说明书
 
 > 文档类型：功能设计说明书  
-> 文档版本：0.3.5  
+> 文档版本：0.3.6  
 > 状态：Next 目标设计；本仓实现状态需独立验收，不以参考仓 PASS 代替  
 > 功能归属：F01 — 通用 Agent Core 与 Host  
 > 关联 SR：SR-002、SR-020、SR-021  
@@ -229,6 +229,8 @@ Model Proposal 不会在 SR-002 内执行。它不会触发 Plugin、Tool、Runt
 
 成功退出码为 0，stderr 为空。所有失败均保持 stdout 为空，stderr 只输出一行紧凑 JSON：`{"schema_version":1,"error":{"code":"<ERROR_CODE>","message":"<SAFE_MESSAGE>"}}`。例如 ModelClient 失败为 `{"schema_version":1,"error":{"code":"MODEL_CLIENT_FAILED","message":"model client failed"}}`。CLI 参数错误退出 2，Host 运行错误退出 1；不得泄露 token、凭据、完整请求、异常文本或 traceback。
 
+成功 stdout JSON（含 `model_calls=1`）只适用于未注入 `model_client` 的默认 CLI Smoke；计数来自默认进程内 Fake 的调用记录。`main(..., model_client=custom_fake)` 的注入入口只用于 CLI 失败路径测试；注入型成功调用的 stdout 和计数不属于 CLI 公共契约。成功调用次数在 AgentLoop/Host 单元测试中直接断言测试 Fake 的记录，不要求 ModelClient Protocol 暴露 `calls` 或 `call_count`。
+
 复验命令：
 
 ```text
@@ -319,3 +321,4 @@ SR-002 的独立模块验收为 AC-002-01～AC-002-08，详见《演示验收基
 | 2026-11-26 | 0.3.3 | GPT-6.2（ChatGPT） | §5.2～5.4 | 明确 Event.source 可选、HostError 构造签名及默认 UUID run_id 的生成规则和时机 | 让 Host 公开契约和失败路径可直接实现与测试。 | Issue #19；SR-002；PR #20 |
 | 2026-11-26 | 0.3.4 | GPT-6.2（ChatGPT） | §5.1～§5.5 | 固定包元数据、公开导出、Event/Context/JSONValue 校验、HostError/CLI 错误语义和 Smoke 契约 | 形成可独立实施与复验的 Python Host 契约，并明确与后续模块的边界 | IR-002；SR-002；SR-003；AC-002-01～08；Issue #19；PR #20 |
 | 2026-11-26 | 0.3.5 | GPT-6.2（ChatGPT） | §5.1～5.4 | 固定 HostError 在 contracts.py 唯一定义、host.py 重导出，并将 CLI_USAGE_ERROR 明确为 CLI-only 诊断。 | 避免 ModelLoop/Host 循环导入及 CLI/Host 异常类型混淆。 | Issue #19；SR-002 v0.2.5；SR-003；PR #20 |
+| 2026-11-26 | 0.3.6 | GPT-6.2（ChatGPT） | §5.5 | 澄清默认 Smoke Fake 的成功输出与测试注入边界；注入型 ModelClient 只用于 CLI 失败路径测试，成功调用次数由 Fake 单元测试记录断言。 | 消除任意注入 Fake 的调用计数接口歧义，不新增生产 Protocol 或公共属性。 | Issue #19；Issue #21；SR-002 v0.2.7；AC-002-01～08；PR #20 |

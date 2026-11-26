@@ -1,9 +1,9 @@
 # SR-002：Python 核心与宿主基础骨架
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.6  
+> SR 版本：0.2.7  
 > 修订日期：2026-11-26  
-> 状态：DRAFT；本轮设计修订待评审，不允许代码实施  
+> 状态：READY；独立设计评审 APPROVE_FOR_READY，代码实施尚未开始  
 > 创建日期：2026-11-25  
 > 所属阶段：Phase A  
 > 上游需求：[IR-002](../IR/IR%20总登记册.md#ir-002)  
@@ -102,7 +102,7 @@ SR-002 不实现 Event 去重、Continuation、Skill 选择、Plugin 分发、Ar
 ## 4. 依赖与前置条件
 
 - SR-002 没有前置 SR 依赖；可独立实施和验收。
-- SR-003 依赖 SR-002 VERIFIED，并复用 F01 定义的 Event、Host.handle_event、HostResult 和 ModelClient 注入边界。
+- SR-003 对 SR-002 的依赖是**实施依赖**：SR-003 代码实施启动前须确认 SR-002 VERIFIED；SR-003 的设计评审和 READY 不因 SR-002 尚未实施/验收而阻塞。SR-003 复用 F01 定义的 Event、Host.handle_event、HostResult 和 ModelClient 注入边界。
 - EX-01 是系统级语言/装配门槛，需等待 SR-002、SR-004、SR-005、SR-006、SR-007 各自模块验收完成后联合执行；EX-01 不阻塞 SR-002 的独立验收。
 - ca-agent-demo 仅为只读参考：main SHA `57e277ff9094dad93543df46910a12a1dbbaf560`。可参考 `pyproject.toml` 的 src layout、`src/ca_agent_host/agent/model_adapter.py` 的同步 `ChatModelTransport` Protocol，以及 `tests/unit/chat_model_fakes.py` 中记录 HTTP 请求的 `FakeHttpClient.calls` 模式；Next 的 typed `ModelClient.propose` 是独立公共契约，不是对 `ChatModelTransport.complete` 的直接复制。不得复制其 distribution `ca-agent-host`、import package `ca_agent_host`、CLI `ca-plan`、完整 Resident/Runtime 或业务实现。参考仓 PASS 不计为 Next 验收证据。
 
@@ -142,8 +142,9 @@ python -m unittest discover -s tests -p "test_host.py" -v
 - CLI 使用自定义错误处理，不得让 argparse 默认用法文本或 traceback 混入 stderr。所有 CLI/Host 失败均只向 stderr 输出一行紧凑 JSON：`{"schema_version":1,"error":{"code":"<ERROR_CODE>","message":"<SAFE_MESSAGE>"}}`；失败时 stdout 为空。
 - Host 运行失败退出码为 1；CLI 参数错误退出码为 2。错误码及固定安全消息见 F01 §5.4。ModelClient 的任何 `Exception`（包括其抛出的 HostError）均映射为 `MODEL_CLIENT_FAILED`；不重试、不透传异常文本。无效 Proposal 映射为 `MODEL_PROPOSAL_INVALID`。
 - `__main__.py` 提供 `main(argv: Sequence[str] | None = None, *, model_client: ModelClient | None = None) -> int`；`model_client` 仅供单元测试注入，真实 CLI 不暴露 Provider 配置入口。正常 Smoke 未注入时使用进程内 Fake ModelClient。
+- 成功 stdout JSON 及 `model_calls=1` 只适用于默认 CLI Smoke（未注入 `model_client`）；`model_calls` 必须来自默认 Fake 的实际调用记录，不得由 Host 自报。
+- 测试注入的 `model_client` 仅用于 CLI 失败路径测试；注入型 `main()` 的成功输出及其 `model_calls` 不属于公开契约，不要求实现或断言。成功调用次数在 AgentLoop/Host 单元测试中直接读取测试 Fake 自身的调用记录。
 - 失败不得输出 traceback、凭据、token 或完整敏感请求内容。
-- `model_calls` 由 Fake ModelClient 的调用记录产生；必须等于 1。不得用 Host 自报计数替代 Fake 的实际调用记录。
 
 ## 6. 实施位置与复验入口
 
@@ -169,15 +170,17 @@ tests/
 | 项目 | 当前值 |
 |---|---|
 | 设计修订 Issue | [ca-agent-next #19](https://github.com/odango-chan/ca-agent-next/issues/19) |
-| 设计评审 PR | [ca-agent-next #20](https://github.com/odango-chan/ca-agent-next/pull/20)（Draft；base 为 docs/restore-original-designs-20261125） |
-| 实施 Issue | 尚未创建；SR-002 达到 READY 后再创建 |
+| 设计评审 PR | [ca-agent-next #20](https://github.com/odango-chan/ca-agent-next/pull/20)（OPEN / Ready for review；base 为 docs/restore-original-designs-20261125） |
+| 治理规则 Issue | [ca-agent-next #21](https://github.com/odango-chan/ca-agent-next/issues/21)（阶段依赖与 AC/EX 门禁） |
+| 实施 Issue | READY 状态转换后创建独立实施 Issue，并在本 SR 与索引中回填 |
+| 独立设计评审 | APPROVE_FOR_READY；评审基线 `888b8ba01b505ab53404b91ccbe2e8f08960868b`；P0/P1 为 0，P2/P3 已按评审建议澄清/修正 |
 | 实施仓库 | ca-agent-next |
 | 实施 PR / Commit | 无 |
 | 实施状态 | NOT_STARTED |
 | AC-002-01～AC-002-08 | NOT_RUN |
 | EX-01 系统级验收 | NOT_RUN |
 
-本轮文档修订、Issue 和设计 PR 不代表代码已实施。SR-002 在设计评审通过、范围/依赖/验收完整后才可转为 READY。
+本 SR 已依据独立评审报告转为 READY；该状态只表示设计、范围、依赖分类和模块验收条件具备实施条件，不代表代码已实施、AC 已通过、EX 已通过或 PR 已合并。AC-002-01～08 与 EX-01 继续保持 NOT_RUN，代码实施须通过独立实施 Issue 和当前阶段门禁。
 
 ## 8. 变更与替代关系
 
@@ -203,3 +206,4 @@ tests/
 | 2026-11-26 | 0.2.4 | GPT-6.2（ChatGPT） | §2.1～§2.3、§5.1、§6 | 固定 pyproject 元数据、公开导出、Event/Context/JSONValue 校验、HostError 与 CLI 诊断 | 消除包身份、输入验证和失败路径的实现猜测，使 Harness 可按同一契约实施 | IR-002；F01；AC-002-01～08；Issue #19；PR #20 |
 | 2026-11-26 | 0.2.5 | GPT-6.2（ChatGPT） | §2.1～§2.2、§5.3～§5.4 | 将 HostError 唯一定义位置固定为 contracts.py，由 host.py 重导出；明确 CLI_USAGE_ERROR 不属于 HostError；同步 F01 v0.3.5。 | 消除 ModelLoop/Host 循环依赖和 CLI/Host 错误类型混淆。 | Issue #19；F01 v0.3.5；SR-003；PR #20 |
 | 2026-11-26 | 0.2.6 | GPT-6.2（ChatGPT） | §2.2、§5、§6 | 固定 SR-002 对 F01 v0.3.5 的精确版本引用，并增加 HostError 单一类型身份的导入/测试断言。 | 使模块重导出边界可由自动化测试验证，避免循环依赖或重复异常类。 | F01 v0.3.5；AC-002-06；Issue #19；PR #20 |
+| 2026-11-26 | 0.2.7 | GPT-6.2（ChatGPT） | §4、§5.1、§7 | 根据独立评审 APPROVE_FOR_READY 将 SR-002 转为 READY；明确 SR-003 的实施依赖与设计评审分离，并限定注入型 ModelClient 仅用于 CLI 失败路径测试；同步 PR #20 状态。 | 关闭 P2-01/P3-01/P3-02，不扩大 SR-002 范围；保持 AC/EX 未运行状态真实。 | IR-002；Issue #19；Issue #21；PR #20；评审 SHA `888b8ba` |
