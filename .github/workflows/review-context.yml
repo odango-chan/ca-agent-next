@@ -25,9 +25,6 @@ jobs:
       BASE_SHA: ${{ github.event.pull_request.base.sha }}
       HEAD_SHA: ${{ github.event.pull_request.head.sha }}
       PR_NUMBER: ${{ github.event.pull_request.number }}
-      WORK_DIR: ${{ runner.temp }}/review-context
-      SUMMARY_FILE: ${{ runner.temp }}/review-context-summary.md
-      ARTIFACT_NAME: review-context-pr-${{ github.event.pull_request.number }}-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - name: Checkout PR head commit
         uses: actions/checkout@v4
@@ -67,32 +64,36 @@ jobs:
         id: generate
         run: |
           set -euo pipefail
+          work_dir="$RUNNER_TEMP/review-context"
+          summary_file="$RUNNER_TEMP/review-context-summary.md"
           python scripts/review_context.py \
             --base "$BASE_SHA" \
             --head "$HEAD_SHA" \
-            --out "$WORK_DIR" \
-            --summary "$SUMMARY_FILE" \
+            --out "$work_dir" \
+            --summary "$summary_file" \
             --event-path "$GITHUB_EVENT_PATH"
 
       - name: Write workflow summary
         if: success()
         run: |
           set -euo pipefail
+          summary_file="$RUNNER_TEMP/review-context-summary.md"
+          artifact_name="review-context-pr-${PR_NUMBER}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           {
-            cat "$SUMMARY_FILE"
+            cat "$summary_file"
             echo ""
             echo "### 入口"
             echo ""
             echo "- Workflow Run：${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             echo "- Artifact：${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts"
-            echo "  名称 \`$ARTIFACT_NAME\`"
+            echo "  名称 \`$artifact_name\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload review context artifacts
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_NAME }}
+          name: review-context-pr-${{ github.event.pull_request.number }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             ${{ runner.temp }}/review-context/review-scope.json
             ${{ runner.temp }}/review-context/评审上下文.md
