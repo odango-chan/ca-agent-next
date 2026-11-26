@@ -303,12 +303,13 @@ SR-002 的独立模块验收为 AC-002-01～AC-002-08，详见《演示验收基
 
 ## 修订记录
 
-| 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
-|---|---|---|---|---|---|
-| 2026-11-25 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 建立 Core/Host/Model Loop 和业务中立基线 | SR-002 |
-| 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 全文 | 补齐 Event/Run/Response、Action Boundary、配置、失败恢复和跨仓实现差异 | Issue #12；SR-020、SR-021 |
-| 2026-11-26 | 0.2.1 | Codex / GPT-6 | 见本行变更 | 公共 Callable 按权威源消费；补齐正式文档的评审范围与非目标 | Issue #12 |
-| 2026-11-26 | 0.3.0 | GPT-6.2（ChatGPT） | §2、§5、§11 | 固定 Next Python 包身份、Host/ModelClient 公共接口、Fake 注入、Smoke/错误契约和 SR-002/EX-01 验收分层；明确 SR-003 复用入口。使首个 Python Host 切片可独立实施和复验，且不复制 ca-agent-demo 的包身份或运行时。 | Issue #19；SR-002、SR-003；AC-002-01～08、EX-01 |
-| 2026-11-26 | 0.3.1 | GPT-6.2（ChatGPT） | §5.2～5.5 | 固定 JSONValue、Event/Context 字段约束、HostError 与安全错误映射，并让 Smoke Run ID 确定化；使实现与测试可以直接按字段和错误语义执行。 | Issue #19；SR-002；PR #20 |
-| 2026-11-26 | 0.3.2 | GPT-6.2（ChatGPT） | 修订记录 | 统一本次新增修订记录的六列格式，保持历史修改意图与关联追踪完整。 | Issue #19；PR #20 |
-| 2026-11-26 | 0.3.3 | GPT-6.2（ChatGPT） | §5.2～5.4 | 明确 Event.source 可选、HostError 构造签名及默认 UUID run_id 的生成规则和时机；让 Host 公开契约和失败路径可直接实现与测试。 | Issue #19；SR-002；PR #20 |
+| 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
+|---|---|---|---|---|---|---|
+| 2026-11-25 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 建立 Core/Host/Model Loop 和业务中立基线 | 历史记录未单独记录（原记录未区分修改内容与原因） | SR-002 |
+| 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 全文 | 补齐 Event/Run/Response、Action Boundary、配置、失败恢复和跨仓实现差异 | 历史记录未单独记录（原记录未区分修改内容与原因） | Issue #12；SR-020、SR-021 |
+| 2026-11-26 | 0.2.1 | Codex / GPT-6 | 见本行变更 | 公共 Callable 按权威源消费 | 补齐正式文档的评审范围与非目标 | Issue #12 |
+| 2026-11-26 | 0.3.0 | GPT-6.2（ChatGPT） | §2、§5、§11 | 固定 Next Python 包身份、Host/ModelClient 公共接口、Fake 注入、Smoke/错误契约和 SR-002/EX-01 验收分层 | 明确 SR-003 复用入口。使首个 Python Host 切片可独立实施和复验，且不复制 ca-agent-demo 的包身份或运行时。 | Issue #19；SR-002、SR-003；AC-002-01～08、EX-01 |
+| 2026-11-26 | 0.3.1 | GPT-6.2（ChatGPT） | §5.2～5.5 | 固定 JSONValue、Event/Context 字段约束、HostError 与安全错误映射，并让 Smoke Run ID 确定化 | 使实现与测试可以直接按字段和错误语义执行。 | Issue #19；SR-002；PR #20 |
+| 2026-11-26 | 0.3.2 | GPT-6.2（ChatGPT） | 修订记录 | 统一本次新增修订记录的六列格式 | 保持历史修改意图与关联追踪完整。 | Issue #19；PR #20 |
+| 2026-11-26 | 0.3.3 | GPT-6.2（ChatGPT） | §5.2～5.4 | 明确 Event.source 可选、HostError 构造签名及默认 UUID run_id 的生成规则和时机 | 让 Host 公开契约和失败路径可直接实现与测试。 | Issue #19；SR-002；PR #20 |
+| 2026-11-26 | 0.3.4 | GPT-6.2（ChatGPT） | §5.1～§5.5 | 固定包元数据、公开导出、Event/Context/JSONValue 校验、HostError/CLI 错误语义和 Smoke 契约 | 形成可独立实施与复验的 Python Host 契约，并明确与后续模块的边界 | IR-002；SR-002；SR-003；AC-002-01～08；Issue #19；PR #20 |
