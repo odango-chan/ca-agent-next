@@ -1,7 +1,7 @@
 # SR-028：Python 工程工具链与 uv 环境管理
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.1  
+> SR 版本：0.1.2  
 > 修订日期：2026-11-26  
 > 状态：DRAFT；设计待独立评审，不可实施  
 > 创建日期：2026-11-26  
@@ -25,7 +25,7 @@
 1. 在根 `pyproject.toml` 中固定 uv CLI 版本要求，并使用 PEP 735 dependency group 管理开发/测试依赖。
 2. 保留原有项目元数据、`requires-python >=3.11`、`setuptools.build_meta` 构建后端和空运行时依赖集合。
 3. 将 SR-001 所需 PyYAML 放入 `dev` 依赖组，不进入 `[project].dependencies`。
-4. 生成并提交 `uv.lock`；添加 `.python-version`（CPython 3.14.6）和 `.gitignore` 中的 `.venv/`。
+4. 生成并提交 `uv.lock`；添加纯文本 `.python-version`（内容仅为 `3.14.6`），并向 `.gitignore` 追加独立行 `.venv/`，保留既有规则。
 5. 统一本地和 CI 的安装、测试、Smoke、脚本执行命令为 `uv sync --locked` / `uv run --locked`。
 6. 在独立 worktree 中验证每个 checkout 使用自己的 `.venv/`，不共享 site-packages 或 editable distribution metadata。
 7. 在 SR-001 PR #32 集成到目标分支后，将 review-context Workflow 迁移为 uv；在真实 PR Workflow 中运行完整单元测试和上下文生成器。
@@ -61,12 +61,12 @@
 | ID | 验收条件 | 必需证据 |
 |---|---|---|
 | AC-028-01 | 根 pyproject 保留 `ca-agent-next`、版本 `0.1.0`、`requires-python >=3.11`、setuptools build backend、src package discovery 和空运行时依赖；仅增加 uv 与开发依赖配置 | pyproject diff；distribution metadata 检查；确认 PyYAML 不在 Requires-Dist runtime metadata |
-| AC-028-02 | `.python-version` 固定为 CPython 3.14.6；uv CLI 固定为 0.13.10；setup-uv action 使用 G02 指定的不可变版本 | `uv --version`、`python --version`、Workflow 日志和配置 |
+| AC-028-02 | `.python-version` 文件内容精确为 `3.14.6`；uv CLI 固定为 0.13.10；setup-uv 使用 v10.4.0 不可变 commit `1db35dd8eee11c5894872e0b383ae6c406cf738d` 并显式设置 version | 文件内容、`uv --version`、`python --version`、Workflow 日志和配置 |
 | AC-028-03 | PyYAML 位于 `[dependency-groups].dev`，不进入 Agent Core 运行时依赖 | pyproject/uv.lock；distribution metadata 测试 |
 | AC-028-04 | `uv.lock` 已提交且与 pyproject 一致；锁文件漂移时 `uv lock --check` / `uv sync --locked` 必须失败，不自动改写锁文件 | clean checkout 的 locked sync 与负例 |
-| AC-028-05 | 每个 worktree 使用独立 `.venv/`；`.venv/` 被 Git 忽略；两个并行 worktree 的 editable metadata 和测试互不污染 | 两个 worktree 的路径、distribution metadata 和测试输出 |
+| AC-028-05 | 每个 worktree 使用独立 `.venv/`；`.venv/` 被 Git 忽略（`git check-ignore .venv` 成功）；`uv sync` 将当前 checkout 项目安装到该环境；两个并行 worktree 的 editable metadata 和测试互不污染 | 两个 worktree 的 `.venv` 路径、ignore 结果、distribution metadata 和测试输出 |
 | AC-028-06 | 当前基线可用的完整 unittest 与 Host Smoke 使用 `uv run --locked --group dev` 通过；`scripts/review_context.py` 不属于本 AC，待 PR #32 集成后由 AC-028-07/08 覆盖 | 命令、CPython 3.14.6、完整测试结果和 Smoke 输出 |
-| AC-028-07 | PR #32 集成后，GitHub Actions 使用固定 setup-uv action、uv 0.13.10、`uv python install`、`uv sync --locked --group dev` 和 `uv run --locked`；运行完整 unittest/Smoke，不执行 pip 临时安装 | Workflow diff、真实 PR Run 和 Job 日志 |
+| AC-028-07 | PR #32 集成后，GitHub Actions 使用 G02 §3.7 固定 setup-uv YAML、uv 0.13.10、`uv python install`、`uv sync --locked --group dev` 和 `uv run --locked`；运行完整 unittest/Smoke，不执行 pip 临时安装 | Workflow diff、真实 PR Run 和 Job 日志；核对 action commit 与版本输入 |
 | AC-028-08 | SR-001 Workflow 已集成后，将其迁移到 uv；真实 `pull_request` Run 中上下文生成器成功，Artifact 恰含三份预期文件 | SR-001 集成基线 SHA、真实 Run URL、Summary 和下载核对后的 Artifact 文件清单 |
 | AC-028-09 | 不修改其他仓库、不改变运行时依赖和 setuptools backend、不引入额外签名/hash/Trust Registry 机制 | PR 文件清单、pyproject metadata、设计/实施边界审查 |
 
@@ -93,3 +93,4 @@ SR-028 当前为 DRAFT。G02/SR-028 的设计 PR 尚待独立评审；不得创�
 |---|---|---|---|---|---|---|
 | 2026-11-26 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 新建 Python 工程工具链与 uv 环境管理 SR，定义范围、阶段依赖、AC 和交付门禁 | 将 uv 迁移与 SR-001 实施修复分离，避免把工具链变更混入已有功能 PR | Issue #35；IR-007；G02 |
 | 2026-11-26 | 0.1.1 | GPT-6.2（ChatGPT） | §2、§4～§5 | 将 review_context.py 的执行前置明确绑定 PR #32 集成；把当前基线 unittest/Host Smoke 与后续 Workflow 迁移验收分离 | 保证 SR-028 的独立 I1 可先行实施，不要求引用尚未集成的脚本；避免 AC-028-06/07/08 重复或提前要求 | Issue #35；PR #32；G02 |
+| 2026-11-26 | 0.1.2 | GPT-6.2（ChatGPT） | §2、§5 | 补齐 `.python-version`、`.gitignore`、setup-uv action 固定配置、`uv sync` 项目安装与构建可复现边界的明确验收 | 使 DeepSeek Harness 可按固定文件内容/配置实现，并防止对 wheel 级可复现性作超范围承诺 | Issue #35；G02 v0.1.2 |

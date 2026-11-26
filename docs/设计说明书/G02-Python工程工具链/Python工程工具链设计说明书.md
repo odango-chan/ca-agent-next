@@ -1,7 +1,7 @@
 # G02：Python 工程工具链与环境管理设计说明书
 
 > 文档类型：工程治理功能设计说明书  
-> 文档版本：0.1.1  
+> 文档版本：0.1.2  
 > 状态：DRAFT；待独立设计评审，SR-028 不可实施  
 > 修订日期：2026-11-26  
 > 功能节点：G02 Python 工程工具链与环境管理  
@@ -48,7 +48,7 @@ build-backend = "setuptools.build_meta"
 ### 3.2 Python 版本
 
 - `pyproject.toml` 继续声明 `requires-python = ">=3.11"`，不改变 SR-002 已冻结的包元数据约束。
-- `.python-version` 首版固定为 `3.14.6`，作为本仓开发和 CI 的实际验收解释器。
+- `.python-version` 首版文件内容精确为 `3.14.6`（纯文本、无前缀/引号/注释），作为本仓开发和 CI 的实际验收解释器。
 - CI 记录实际 `python --version`。
 - `requires-python >=3.11` 不等于 3.11、3.12、3.13 等版本矩阵已通过；除非另有 Acceptance，不得宣称全版本兼容性已验证。
 - 改变 `.python-version` 属于工程基线变更，必须更新 SR-028 证据并执行完整测试，不允许因 uv 自动下载新版本而静默改变验收解释器。
@@ -87,8 +87,8 @@ required-version = "==0.13.10"
 
 ### 3.5 Worktree 环境隔离
 
-- 每个 Git worktree 在自己的工作目录创建独立 `.venv/`；不得让多个 worktree 指向同一个虚拟环境目录。
-- `.venv/` 必须加入仓库 `.gitignore`，不得提交。
+- 每个 Git worktree 在自己的工作目录创建独立 `.venv/`；不得让多个 worktree 指向同一个虚拟环境目录。`uv sync` 默认将当前项目安装到该环境（项目开发模式），因此 distribution metadata 必须来自当前 checkout。
+- `.venv/` 必须作为独立行追加到仓库 `.gitignore`，不得覆盖或删除现有 ignore 规则；不得提交 `.venv/`。实施时以 `git check-ignore .venv` 验证。
 - 不设置共享的 `UV_PROJECT_ENVIRONMENT`；项目命令不得使用 `--system`、`--active` 或其他绕过项目环境的选项。
 - 不得在系统 Python 中执行 `pip install -e .`，不得依赖另一 worktree 安装的 editable distribution。
 - uv 的下载缓存可由 uv 自身跨 worktree 复用；缓存不等于虚拟环境，不共享 site-packages。
@@ -126,6 +126,15 @@ uv lock --check
 
 ### 3.7 GitHub Actions
 
+setup-uv 的固定调用配置：
+
+```yaml
+- name: Set up uv
+  uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+  with:
+    version: "0.13.10"
+```
+
 - 使用官方 `astral-sh/setup-uv` action；本设计基线采用 action v10.4.0 的不可变 commit `1db35dd8eee11c5894872e0b383ae6c406cf738d`，并显式设置 `version: "0.13.10"`。
 - 使用 `uv python install` 从 `.python-version` 安装项目解释器。
 - 使用 `uv sync --locked --group dev` 安装当前项目及开发依赖。
@@ -133,7 +142,7 @@ uv lock --check
 - Workflow 不得通过 `pip install PyYAML`、`pip install -e .` 或全局 site-packages 临时补依赖。
 - 可使用 setup-uv 自带的缓存；不另写自定义包缓存协议。
 
-首版 CI 命令顺序：
+首版 CI 命令顺序（setup-uv action 已完成后）：
 
 ```bash
 uv python install
@@ -182,6 +191,7 @@ SR-028 的 Workflow 迁移阶段必须等 PR #32 修复 AC-REV-08/09、完成复
 - 不迁移 ca-agent-demo、ca-agent、ca-runtime、Compiler、Skill Studio 或其他仓库；其他仓库采用 uv 必须单独登记并核对其目标仓构建/发布边界。
 - 不新增 Docker/容器化开发环境、私有包代理、企业制品库、供应链安全平台、包签名、Trust Registry、生产级依赖扫描或多平台完整 Python 版本资格矩阵。
 - uv.lock 的标准锁定语义不是新增业务 Artifact 完整性机制；不得再造自定义 hash/signature 流程。
+- 本 SR 保证项目运行时/开发依赖解析与虚拟环境可复现；不承诺对 setuptools 等隔离构建环境依赖或 wheel 字节级产物提供可复现构建，也不新增构建供应链治理。
 
 ## 6. 实施阶段与依赖
 
@@ -211,3 +221,4 @@ I1 与 I3 可在 SR-028 实施 Issue 内按依赖顺序执行；I2 只在 SR-001
 |---|---|---|---|---|---|---|
 | 2026-11-26 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 新建 G02 Python 工程工具链与环境管理设计；固定 uv、锁文件、依赖分组、Python 基线、worktree 隔离、CI 入口和 SR-001 Workflow 阶段依赖 | 解决共享 Python 环境污染和 Workflow 临时安装未声明依赖的问题，同时保持 setuptools 与 Agent Core 运行时依赖边界 | Issue #35；IR-007；SR-028 |
 | 2026-11-26 | 0.1.1 | GPT-6.2（ChatGPT） | §3.6、§6 | 明确 review_context.py CLI 只在 PR #32 集成后可执行，避免将尚不存在于当前基线的脚本列为 I1 命令 | 消除 SR-028 独立 I1 可实施性与 SR-001 下游依赖之间的命令歧义 | Issue #35；PR #32；SR-028 |
+| 2026-11-26 | 0.1.2 | GPT-6.2（ChatGPT） | §3.2、§3.5、§3.7、§5 | 固定 `.python-version` 文件内容、`.gitignore` 追加方式、setup-uv 精确 YAML 调用和 `uv sync` 项目安装语义；限定可复现承诺边界 | 进一步消除 Harness 对文件内容、CI action 配置、worktree editable 安装及构建可复现范围的猜测 | Issue #35；IR-007；SR-028 |
