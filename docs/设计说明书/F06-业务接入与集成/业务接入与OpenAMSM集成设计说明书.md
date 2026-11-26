@@ -1,7 +1,7 @@
 # 业务接入与 OpenAMSM 集成设计说明书
 
 > 文档类型：业务集成设计说明书  
-> 文档版本：0.2.4  
+> 文档版本：0.2.5  
 > 状态：目标集成设计已重建；外部 Owner 能力已实现，Next Plugin/Host 端到端尚未验收  
 > 功能归属：F06 — 业务接入与集成；EC04、EC05、EC07  
 > 关联 IR：IR-004、IR-005、IR-006  
@@ -79,6 +79,8 @@ Plugin 不负责：
 | 原始二进制 Artifact refs | Next Host ArtifactStore | F05 |
 
 SBI requestSchema 是业务 Skill 输入契约，不应复制完整 3GPP multipart schema 或把原始 N1/N2 变成模型可见字符串。
+
+对于 MAS Skill，作者源 `contract.capabilities` 的 Capability ID 由 Compiler Build-time 对 Owner `CapabilityContracts` 校验；冻结 v1alpha5 Artifact 不序列化 Capability ID。Runtime 的实际 Callable allowlist 只从 Artifact `operation` / `observation` exports 建立，并按部署固定 Owner Contract 验证 Callable membership / Effect。`MAS.RECONCILE` 的 internal-only 约束由 F03.05 定义：Runtime 从 Mutation sidecar `commitProof.reconcile.bindingId` 派生目标集合，普通 Skill/LLM 调用必须在 Provider IPC 前拒绝；只有 Coordinator 内部入口可使用原 Invocation 查询。
 
 ## 5. CreateSMContext
 
@@ -223,6 +225,8 @@ ca-skills `780497a2` 的三个 MAS `examples/skills/*-pdu-session-mas/assurance/
 `ca-agent-demo@57e277ff/src/ca_agent_host/integrations/fivegc/nsmf_http.py::_create_request` 对 `INITIAL_REQUEST` 投影为 1，从 N1 解出 PDU Session Type 与 SSC mode，并拒绝客户端在 SBI JSON 中注入同名字段。它还交叉检查 N1 与 JSON 的 PSI。当前 MAS Create 又在选择前要求这些字段。仅移植最小 discriminator 不能满足该契约。应在 ca-skills 的作者契约和 Procedure 中区分选择输入与绑定后的业务读取，由已声明的 Owner/Codec READ 根据原始 Artifact 获取后者。实施前把每个字段的来源、读取操作、Schema 和消费者写入同一 fixture，以固定作者 revision 验证；若没有已发布的所需 READ，保留该依赖的 BLOCKED。稳定重试与共享 /modify 路径的分类可用独立 fixture 先验收。
 
 ## 修订记录
+
+| 2026-11-26 | 0.2.5 | GPT-6.2（ChatGPT） | §4、§8 | 同步冻结 v1alpha5 Capability Build-time / Runtime 边界及 MAS.RECONCILE internal-only 保证 | 让 OpenAMSM 业务集成流程引用 F03.05 的唯一 Tool/Provider Runtime 设计 | IR-006 · SR-015 · Issue #12 |
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
 |---|---|---|---|---|---|
