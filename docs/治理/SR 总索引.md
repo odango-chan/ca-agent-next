@@ -58,7 +58,7 @@
 | 顺序 | SR | 主要功能 | 目标仓 / 参考仓 | 依赖和产出 |
 |---|---|---|---|---|
 | 1 | SR-023 | CA-SL v1alpha5、作者源与发布基线恢复 | ca-skills | 先固定语言、Skill 作者源与版本边界；Compiler #61 仍是外部 OPEN 依赖 |
-| 2 | SR-015 | Tool Interface / Provider / Codec 设计恢复 | ca-client-tools → Next F03.05 | F03.05 v0.3.8；历史 5 项 P1 / 4 项 P2 修正已回填；Capability、Reconcile、Loader、buildDigest 边界已闭合；技术复核 APPROVE_FOR_READY，SR READY，等待文档 PR 集成 |
+| 2 | SR-015 | Tool Interface / Provider / Codec 设计恢复 | ca-client-tools → Next F03.05 | F03.05 v0.3.8；历史 5 项 P1 / 4 项 P2 修正已回填；Capability、Reconcile、Loader、buildDigest 边界已闭合；技术复核 APPROVE_FOR_READY，SR READY；文档 PR #37 OPEN，等待恢复分支集成 |
 | 3 | SR-025 | MAS Owner Development Interface Package Publisher | ca-client-tools → Next F03.05 / F09 | 将 Owner v1alpha4 source 包装为 Compiler v2.1.0 Development Interface Package；package.version 固定为 `1.0.0` |
 | 4 | SR-024 | Host Context Interface Package Publisher | ca-agent-demo → Next F09 | READY；实施 Issue [ca-agent-demo #252](https://github.com/odango-chan/ca-agent-demo/issues/252) 已登记；发布 Host Context Development fixture 的正式 Interface Package；不占用 SR-020 的参考宿主审计 ID |
 | 5 | SR-018 | OpenAMSM Owner 权威状态恢复 | env-openamsm | 固定 Callable、Receipt、Commit Proof、Reconcile 和 Modify/Release 边界 |
@@ -130,4 +130,4 @@
 | 2026-11-26 | 0.3.16 | GPT-6.2（ChatGPT） | §1～§4 | 将 SR-002 更新为 VERIFIED，回填 PR #20/#23 的合并状态和 AC-002-01～08 PASS；保持 SR-003 DRAFT 与 EX-01 NOT_RUN。 | 使 SR 索引反映模块实现和验收的真实状态，不把系统级 EX 或其他 SR 的未完成状态传播为 SR-002 阻塞。 | Issue #22；PR #20；PR #23；SR-002 v0.2.10 |
 | 2026-11-26 | 0.3.17 | GPT-6.2（ChatGPT） | §1～§4 | 将 SR-001/SR-003/SR-024 更新为 READY，并登记 Issue #27/#28/#252；同步 SR-002 VERIFIED 后的 SR-003 启动门槛 | 使索引反映最新设计审查、实施追踪和并行 SR-002 证据，不将系统 EX-01 混入模块门禁 | Issue #26～#28；ca-agent-demo #252；PR #25；PR #29 |
 | 2026-11-26 | 0.3.18 | GPT-6.2（ChatGPT） | §1～§3、§5 | 将 SR-003 实施状态从等待 PR #29 改为按最终恢复分支集成 SHA 启动；保留 SR-002 VERIFIED 与 1 VERIFIED / 3 READY / 22 DRAFT 统计。 | 消除已满足门禁的过期等待表述，并使实施入口绑定最终设计基线。 | Issue #26～#28；PR #29；SR-002、SR-003 |
-| 2026-11-26 | 0.3.19 | GPT-6.2（ChatGPT） | §1、§3 | 同步 SR-015 v0.3.7 / F03.05 v0.3.8 和恢复分支新 PR 入口；保留 SR-015 DRAFT 与 1 VERIFIED / 3 READY / 22 DRAFT 统计 | 区分文档修订完成、独立设计评审和代码实施，不提前提升 SR 状态 | Issue #12；SR-015；F03.05 v0.3.8 |
+| 2026-11-26 | 0.3.19 | GPT-6.2（ChatGPT） | §1、§3 | 同步 SR-015 v0.3.7 / F03.05 v0.3.8；SR-015 技术复核 APPROVE_FOR_READY 并转 READY；恢复分支集成 PR #37 OPEN；统计为 1 VERIFIED / 4 READY / 21 DRAFT | 区分设计 READY、文档 PR 集成和最终 VERIFIED，不提前宣称代码实现 | Issue #12；SR-015；F03.05 v0.3.8；PR #37 |
