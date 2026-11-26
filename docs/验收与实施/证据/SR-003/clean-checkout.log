@@ -1,0 +1,158 @@
+# SR-003 clean checkout verification
+# checkout: C:\Users\z00587616\Documents\ConnectionAgent\wt\can-sr003-final
+# commit: 225e3a798e68aa3d81063ace8c07f8a6940b47ff
+# interpreter: C:\Users\z00587616\Documents\ConnectionAgent\wt\can-sr003-final\.venv\Scripts\python.exe
+# environment: GOWORK=off; GOTMPDIR=<checkout>/.gotmp (host Temp ACL denial workaround)
+
+# command: go build -trimpath -o bin/echo-plugin.exe .
+# exit: 0
+
+
+
+# command: python -m unittest discover -s tests -p test_plugin.py -v
+# exit: 0
+
+test_too_late_before_original_result_keeps_pending_and_accepts_result (test_plugin.CancellationOrderingTests.test_too_late_before_original_result_keeps_pending_and_accepts_result) ... ok
+test_unsupported_before_original_result_keeps_pending_and_accepts_result (test_plugin.CancellationOrderingTests.test_unsupported_before_original_result_keeps_pending_and_accepts_result) ... ok
+test_descriptor_deduplicates_backend_ids_in_order (test_plugin.DriverBoundaryTests.test_descriptor_deduplicates_backend_ids_in_order) ... ok
+test_driver_start_failure_rolls_back_registration (test_plugin.DriverBoundaryTests.test_driver_start_failure_rolls_back_registration) ... ok
+test_manager_owns_driver_lifecycle_and_dispatch (test_plugin.DriverBoundaryTests.test_manager_owns_driver_lifecycle_and_dispatch) ... ok
+test_provider_driver_contract_is_stable (test_plugin.DriverBoundaryTests.test_provider_driver_contract_is_stable) ... ok
+test_artifact_descriptors_rejected_without_mapping (test_plugin.EventIngressTests.test_artifact_descriptors_rejected_without_mapping) ... ok
+test_conflicting_event_identity_rejected (test_plugin.EventIngressTests.test_conflicting_event_identity_rejected) ... ok
+test_duplicate_event_is_attached_without_second_host_call (test_plugin.EventIngressTests.test_duplicate_event_is_attached_without_second_host_call) ... ok
+test_empty_event_id_rejected (test_plugin.EventIngressTests.test_empty_event_id_rejected) ... ok
+test_host_failure_is_reported_without_internal_identity (test_plugin.EventIngressTests.test_host_failure_is_reported_without_internal_identity) ... ok
+test_ingress_id_mismatch_rejected (test_plugin.EventIngressTests.test_ingress_id_mismatch_rejected) ... ok
+test_invalid_source_peer_id_rejected (test_plugin.EventIngressTests.test_invalid_source_peer_id_rejected) ... ok
+test_invalid_source_protocol_rejected (test_plugin.EventIngressTests.test_invalid_source_protocol_rejected) ... ok
+test_missing_source_rejected (test_plugin.EventIngressTests.test_missing_source_rejected) ... ok
+test_payload_missing_required_property_rejected (test_plugin.EventIngressTests.test_payload_missing_required_property_rejected) ... ok
+test_payload_schema_violation_rejected (test_plugin.EventIngressTests.test_payload_schema_violation_rejected) ... ok
+test_undeclared_event_type_rejected_and_host_not_called (test_plugin.EventIngressTests.test_undeclared_event_type_rejected_and_host_not_called) ... ok
+test_unknown_ingress_field_rejected (test_plugin.EventIngressTests.test_unknown_ingress_field_rejected) ... ok
+test_valid_event_maps_to_f01_and_calls_host_once (test_plugin.EventIngressTests.test_valid_event_maps_to_f01_and_calls_host_once) ... ok
+test_duplicate_message_id_does_not_double_complete (test_plugin.LifecycleIpcTests.test_duplicate_message_id_does_not_double_complete) ... ok
+test_duplicate_terminal_frame_is_ignored (test_plugin.LifecycleIpcTests.test_duplicate_terminal_frame_is_ignored) ... ok
+test_golden_twelve_frames_replay (test_plugin.LifecycleIpcTests.test_golden_twelve_frames_replay) ... ok
+test_manager_golden_trajectory (test_plugin.LifecycleIpcTests.test_manager_golden_trajectory) ... ok
+test_out_of_order_replies_are_correlated (test_plugin.LifecycleIpcTests.test_out_of_order_replies_are_correlated) ... ok
+test_process_exit_clears_extensions (test_plugin.LifecycleIpcTests.test_process_exit_clears_extensions) ... ok
+test_shutdown_leaves_no_pending_requests (test_plugin.LifecycleIpcTests.test_shutdown_leaves_no_pending_requests) ... ok
+test_start_registers_three_extensions_for_one_process (test_plugin.LifecycleIpcTests.test_start_registers_three_extensions_for_one_process) ... ok
+test_unknown_correlation_id_does_not_complete (test_plugin.LifecycleIpcTests.test_unknown_correlation_id_does_not_complete) ... ok
+test_wrong_invocation_id_does_not_complete (test_plugin.LifecycleIpcTests.test_wrong_invocation_id_does_not_complete) ... ok
+test_duplicate_yaml_key_rejected (test_plugin.ManifestValidationTests.test_duplicate_yaml_key_rejected) ... ok
+test_handshake_extra_extension_rejected (test_plugin.ManifestValidationTests.test_handshake_extra_extension_rejected) ... ok
+test_handshake_missing_extension_rejected (test_plugin.ManifestValidationTests.test_handshake_missing_extension_rejected) ... ok
+test_handshake_timeout_rejected (test_plugin.ManifestValidationTests.test_handshake_timeout_rejected) ... ok
+test_invalid_request_schema_json_rejected (test_plugin.ManifestValidationTests.test_invalid_request_schema_json_rejected) ... ok
+test_invalid_response_schema_document_rejected (test_plugin.ManifestValidationTests.test_invalid_response_schema_document_rejected) ... ok
+test_missing_required_field_rejected (test_plugin.ManifestValidationTests.test_missing_required_field_rejected) ... ok
+test_path_traversal_in_executable_rejected (test_plugin.ManifestValidationTests.test_path_traversal_in_executable_rejected) ... ok
+test_path_traversal_in_schema_rejected (test_plugin.ManifestValidationTests.test_path_traversal_in_schema_rejected) ... ok
+test_remote_dynamic_ref_rejected (test_plugin.ManifestValidationTests.test_remote_dynamic_ref_rejected) ... ok
+test_remote_schema_ref_rejected (test_plugin.ManifestValidationTests.test_remote_schema_ref_rejected) ... ok
+test_symlink_escape_rejected (test_plugin.ManifestValidationTests.test_symlink_escape_rejected) ... ok
+test_unknown_nested_field_rejected (test_plugin.ManifestValidationTests.test_unknown_nested_field_rejected) ... ok
+test_unknown_top_level_field_rejected (test_plugin.ManifestValidationTests.test_unknown_top_level_field_rejected) ... ok
+test_unresolvable_local_dynamic_ref_rejected (test_plugin.ManifestValidationTests.test_unresolvable_local_dynamic_ref_rejected) ... ok
+test_unresolvable_local_schema_ref_rejected (test_plugin.ManifestValidationTests.test_unresolvable_local_schema_ref_rejected) ... ok
+test_unsupported_ipc_protocol_rejected (test_plugin.ManifestValidationTests.test_unsupported_ipc_protocol_rejected) ... ok
+test_unsupported_package_api_version_rejected (test_plugin.ManifestValidationTests.test_unsupported_package_api_version_rejected) ... ok
+test_valid_manifest_loads_all_extensions (test_plugin.ManifestValidationTests.test_valid_manifest_loads_all_extensions) ... ok
+test_yaml_syntax_error_rejected (test_plugin.ManifestValidationTests.test_yaml_syntax_error_rejected) ... ok
+test_completed_request_does_not_remove_new_index (test_plugin.PendingRegistryTests.test_completed_request_does_not_remove_new_index) ... ok
+test_duplicate_correlation_id_rejected (test_plugin.PendingRegistryTests.test_duplicate_correlation_id_rejected) ... ok
+test_duplicate_operation_identity_rejected (test_plugin.PendingRegistryTests.test_duplicate_operation_identity_rejected) ... ok
+test_manager_rejects_duplicate_invocation_id (test_plugin.PendingRegistryTests.test_manager_rejects_duplicate_invocation_id) ... ok
+test_same_operation_id_across_kinds_is_distinct (test_plugin.PendingRegistryTests.test_same_operation_id_across_kinds_is_distinct) ... ok
+test_cancel_timeout_terminates_process_and_aborts_tool (test_plugin.RequestTimeoutLifecycleTests.test_cancel_timeout_terminates_process_and_aborts_tool) ... ok
+test_delivery_timeout_terminates_process (test_plugin.RequestTimeoutLifecycleTests.test_delivery_timeout_terminates_process) ... ok
+test_timeout_aborts_other_pending_and_does_not_retry (test_plugin.RequestTimeoutLifecycleTests.test_timeout_aborts_other_pending_and_does_not_retry) ... ok
+test_bool_inflight_count_rejected (test_plugin.ShutdownConfirmationTests.test_bool_inflight_count_rejected) ... ok
+test_duplicate_stopped_rejected (test_plugin.ShutdownConfirmationTests.test_duplicate_stopped_rejected) ... ok
+test_negative_inflight_count_rejected (test_plugin.ShutdownConfirmationTests.test_negative_inflight_count_rejected) ... ok
+test_nonzero_inflight_does_not_fake_success (test_plugin.ShutdownConfirmationTests.test_nonzero_inflight_does_not_fake_success) ... ok
+test_shutdown_timeout_still_reliably_terminates (test_plugin.ShutdownConfirmationTests.test_shutdown_timeout_still_reliably_terminates) ... ok
+test_wrong_shutdown_correlation_rejected (test_plugin.ShutdownConfirmationTests.test_wrong_shutdown_correlation_rejected) ... ok
+test_non_json_config_fails_before_popen (test_plugin.StartupRollbackTests.test_non_json_config_fails_before_popen) ... ok
+test_post_popen_failure_terminates_process (test_plugin.StartupRollbackTests.test_post_popen_failure_terminates_process) ... ok
+test_delivery_correlates_response_obligation (test_plugin.ToolsDeliveryCancellationTests.test_delivery_correlates_response_obligation) ... ok
+test_late_result_does_not_complete_other_request (test_plugin.ToolsDeliveryCancellationTests.test_late_result_does_not_complete_other_request) ... ok
+test_pending_cancellation_and_late_result (test_plugin.ToolsDeliveryCancellationTests.test_pending_cancellation_and_late_result) ... ok
+test_too_late_keeps_original_terminal (test_plugin.ToolsDeliveryCancellationTests.test_too_late_keeps_original_terminal) ... ok
+test_two_callables_share_one_pid_and_correlate_independently (test_plugin.ToolsDeliveryCancellationTests.test_two_callables_share_one_pid_and_correlate_independently) ... ok
+test_wrong_delivery_id_does_not_mark_delivered (test_plugin.ToolsDeliveryCancellationTests.test_wrong_delivery_id_does_not_mark_delivered) ... ok
+
+----------------------------------------------------------------------
+Ran 72 tests in 63.168s
+
+OK
+
+
+# command: python -m unittest discover -s tests -p test_host.py -v
+# exit: 0
+
+test_no_business_specific_domains (test_host.BusinessNeutralityTests.test_no_business_specific_domains) ... ok
+test_no_network_provider_or_environment_initialization (test_host.BusinessNeutralityTests.test_no_network_provider_or_environment_initialization) ... ok
+test_package_has_expected_modules (test_host.BusinessNeutralityTests.test_package_has_expected_modules) ... ok
+test_proposal_is_only_returned_not_executed (test_host.BusinessNeutralityTests.test_proposal_is_only_returned_not_executed) ... ok
+test_invalid_proposal_via_injected_client (test_host.CliFailureTests.test_invalid_proposal_via_injected_client) ... ok
+test_model_client_failure_via_injected_client (test_host.CliFailureTests.test_model_client_failure_via_injected_client) ... ok
+test_no_traceback_on_host_failure (test_host.CliFailureTests.test_no_traceback_on_host_failure) ... ok
+test_default_smoke_is_deterministic (test_host.CliSmokeSuccessTests.test_default_smoke_is_deterministic) ... ok
+test_default_smoke_opens_no_network_socket (test_host.CliSmokeSuccessTests.test_default_smoke_opens_no_network_socket) ... ok
+test_default_smoke_success_contract (test_host.CliSmokeSuccessTests.test_default_smoke_success_contract) ... ok
+test_argv_none_uses_process_arguments (test_host.CliUsageTests.test_argv_none_uses_process_arguments) ... ok
+test_missing_unknown_or_extra_arguments (test_host.CliUsageTests.test_missing_unknown_or_extra_arguments) ... ok
+test_usage_error_is_not_host_error (test_host.CliUsageTests.test_usage_error_is_not_host_error) ... ok
+test_context_defaults_to_empty_mapping (test_host.ContractTypeTests.test_context_defaults_to_empty_mapping) ... ok
+test_event_payload_is_required (test_host.ContractTypeTests.test_event_payload_is_required) ... ok
+test_event_source_defaults_to_empty_mapping (test_host.ContractTypeTests.test_event_source_defaults_to_empty_mapping) ... ok
+test_host_error_accepts_only_fixed_codes_and_messages (test_host.ContractTypeTests.test_host_error_accepts_only_fixed_codes_and_messages) ... ok
+test_host_error_is_exception (test_host.ContractTypeTests.test_host_error_is_exception) ... ok
+test_public_dataclasses_are_frozen (test_host.ContractTypeTests.test_public_dataclasses_are_frozen) ... ok
+test_artifact_refs_must_be_non_blank_string_tuple (test_host.EventValidationTests.test_artifact_refs_must_be_non_blank_string_tuple) ... ok
+test_blank_identity_fields_are_rejected (test_host.EventValidationTests.test_blank_identity_fields_are_rejected) ... ok
+test_cyclic_containers_are_rejected (test_host.EventValidationTests.test_cyclic_containers_are_rejected) ... ok
+test_invalid_event_does_not_call_model_or_run_id_factory (test_host.EventValidationTests.test_invalid_event_does_not_call_model_or_run_id_factory) ... ok
+test_non_event_objects_are_rejected (test_host.EventValidationTests.test_non_event_objects_are_rejected) ... ok
+test_non_finite_floats_are_rejected (test_host.EventValidationTests.test_non_finite_floats_are_rejected) ... ok
+test_non_json_objects_are_rejected (test_host.EventValidationTests.test_non_json_objects_are_rejected) ... ok
+test_non_string_mapping_keys_are_rejected (test_host.EventValidationTests.test_non_string_mapping_keys_are_rejected) ... ok
+test_optional_ids_allow_none_or_non_blank_strings (test_host.EventValidationTests.test_optional_ids_allow_none_or_non_blank_strings) ... ok
+test_payload_must_be_mapping (test_host.EventValidationTests.test_payload_must_be_mapping) ... ok
+test_source_must_be_mapping_when_provided (test_host.EventValidationTests.test_source_must_be_mapping_when_provided) ... ok
+test_artifact_refs_are_passed_through_unchanged (test_host.HostSuccessTests.test_artifact_refs_are_passed_through_unchanged) ... ok
+test_context_is_created_empty_and_does_not_copy_event_fields (test_host.HostSuccessTests.test_context_is_created_empty_and_does_not_copy_event_fields) ... ok
+test_default_run_id_is_uuid4_hex (test_host.HostSuccessTests.test_default_run_id_is_uuid4_hex) ... ok
+test_each_handle_event_creates_one_run_and_one_call (test_host.HostSuccessTests.test_each_handle_event_creates_one_run_and_one_call) ... ok
+test_event_payload_is_not_mutated (test_host.HostSuccessTests.test_event_payload_is_not_mutated) ... ok
+test_handle_event_returns_result_and_calls_model_once (test_host.HostSuccessTests.test_handle_event_returns_result_and_calls_model_once) ... ok
+test_nested_json_payload_is_preserved (test_host.HostSuccessTests.test_nested_json_payload_is_preserved) ... ok
+test_client_exception_maps_to_model_client_failed_once (test_host.ModelClientBoundaryTests.test_client_exception_maps_to_model_client_failed_once) ... ok
+test_client_host_error_is_also_mapped_to_model_client_failed (test_host.ModelClientBoundaryTests.test_client_host_error_is_also_mapped_to_model_client_failed) ... ok
+test_client_is_not_retried_after_failure (test_host.ModelClientBoundaryTests.test_client_is_not_retried_after_failure) ... ok
+test_model_client_is_injected_and_request_is_recorded (test_host.ModelClientBoundaryTests.test_model_client_is_injected_and_request_is_recorded) ... ok
+test_canonical_module_paths_export_types (test_host.PackageIdentityTests.test_canonical_module_paths_export_types) ... ok
+test_distribution_metadata (test_host.PackageIdentityTests.test_distribution_metadata) ... ok
+test_host_error_is_single_type_defined_in_contracts (test_host.PackageIdentityTests.test_host_error_is_single_type_defined_in_contracts) ... ok
+test_import_package_uses_src_layout (test_host.PackageIdentityTests.test_import_package_uses_src_layout) ... ok
+test_public_exports_and_all_order (test_host.PackageIdentityTests.test_public_exports_and_all_order) ... ok
+test_invalid_proposal_values_are_rejected (test_host.ProposalValidationTests.test_invalid_proposal_values_are_rejected) ... ok
+test_valid_nested_proposal_is_returned_unchanged (test_host.ProposalValidationTests.test_valid_nested_proposal_is_returned_unchanged) ... ok
+test_factory_exception_maps_to_host_internal_error (test_host.RunIdFactoryTests.test_factory_exception_maps_to_host_internal_error) ... ok
+test_factory_is_called_exactly_once_after_validation (test_host.RunIdFactoryTests.test_factory_is_called_exactly_once_after_validation) ... ok
+test_invalid_factory_results_map_to_host_internal_error (test_host.RunIdFactoryTests.test_invalid_factory_results_map_to_host_internal_error) ... ok
+test_test_module_is_real (test_host.TestDiscoverySanityTests.test_test_module_is_real) ... ok
+
+----------------------------------------------------------------------
+Ran 52 tests in 0.047s
+
+OK
+
+
+# command: python -m compileall -q src tests
+# exit: 0
+
