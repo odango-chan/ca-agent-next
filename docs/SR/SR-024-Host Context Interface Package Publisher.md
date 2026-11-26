@@ -1,7 +1,7 @@
 # SR-024：Host Context Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.12
+> SR 版本：0.1.13
 > 状态：VERIFIED（AC-024-01～07 均有真实 PASS 证据；Publisher 已合并至 ca-agent-demo/main；GitHub Review 保持 COMMENTED、PR checks 为 SKIPPED，不将其冒记为 APPROVED/CI PASS；本地 AC-024-06 验收命令已 PASS）
 > 创建日期：2026-11-25
 > 所属阶段：跨仓设计移交
@@ -10,6 +10,7 @@
 > 设计依据：[F09 Publisher 输出要求](../设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md#45-两个-contract-root-的正式-publisher-输出) v0.3.7；[EC02 Development Build](../设计说明书/EC02-Compiler/Development%20Build设计.md) §2–4；[迁移审计 §3.6](../参考与审计/跨仓依赖与可行性审计.md#36-skill-studio作者导入compiler-request-与产品集成)
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：生产级资格认证、Host Admission 授权与无关 Runtime 重构
+> **历史范围声明：**本 SR 的 VERIFIED / AC-024-01～07 PASS 只适用于 CA-SL v1alpha5 + Compiler v2.1.0 Development v1alpha1 + Package 1.0.0。该发布物不兼容 CA-SL 1.6.0，不得被新 Compiler / Studio / Agent 接受。新 1.6.0 Schema-only Publisher 由 [SR-030](SR-030-Host%20Context%201.6.0%20Schema-only%20Interface%20Package%20Publisher.md) 负责。
 
 ## 1. 目标仓与基线
 
@@ -129,3 +130,5 @@ PR 检查记录（合并后审计）：
 | 2026-11-26 | 0.1.10 | GPT-6.2（ChatGPT） | 头部、§5～§5.2 | 回填 ca-agent-demo PR #253 的受测 Commit、AC-024-01～07 实测 PASS、ZIP 身份、测试环境与结果；将 SR 状态转为 IN_PROGRESS，并记录独立 Review、PR CI 与合并待办 | 代码已推送但 PR 未合并；按 SR 状态机区分受测 PASS、代码集成和 VERIFIED，不提前宣称完成 | Issue #12；ca-agent-demo #252/#253 |
 | 2026-11-26 | 0.1.11 | GPT-6.2（ChatGPT） | 头部、§5.1、§5.3 | 回填独立技术评审 Review #6070722615、AC-024-01～07 全 PASS 及 2,359 样例零差异；纠正 GitHub Review 身份为 PR 作者账号且状态仅 COMMENTED；登记 combined status pending、4 个 skipped checks、无 PR-triggered Run 和 branch-protection 读取限制 | 区分技术结论与 GitHub 独立身份审批、CI 门禁；合并前保持 IN_PROGRESS，不把 COMMENTED/SKIPPED 提升为 APPROVED/PASS | Issue #12；ca-agent-demo #252/#253；Review #6070722615；Issue comment #7186684869 |
 | 2026-11-26 | 0.1.12 | GPT-6.2（ChatGPT） | 头部、§5、§5.3 | 回填 PR #253 正常合并、merge commit/main HEAD `25168db`、Issue #252 completed；确认 AC-024-01～07 全部满足并将 SR 转为 VERIFIED；保留 COMMENTED 与 SKIPPED 的真实记录，不宣称正式 APPROVE 或 CI PASS | 按 SR 状态机区分集成与验收；所有模块 AC 已有真实通过证据，PR 合并后达到 VERIFIED；不将非 AC 的 skipped workflow 误判为失败 | Issue #12；ca-agent-demo #252/#253；merge `25168db031e996bfa4de440c4156ae94f4e19bce`；AC-024-01～07 |
+
+| 2026-11-26 | 0.1.13 | GPT-6（ChatGPT） | 1.6.0 Host Context Publisher / 依赖边界 | 标明 VERIFIED 仅覆盖旧 v1alpha5 Development Publisher，并建立 SR-030 1.6.0 successor 边界 | 避免旧 Development Package 被误认为新版正式输入 | Issue #12/#40；IR-006/008；SR-030 |
