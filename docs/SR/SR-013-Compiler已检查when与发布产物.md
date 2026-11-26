@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.16\
+> 文档版本：0.2.17\
 > 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**；实施/产品验收未升级  
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-26  
@@ -16,13 +16,13 @@
 本 SR 纳入 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12) 的中央设计评审批次。**SR 实施主状态依旧为 `DRAFT`；设计 `REVIEW_REQUESTED` 不等于独立 APPROVED、实施 READY 或产品 PASS。** 单版本决定见 [SR-029](SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) / [PR #45](https://github.com/odango-chan/ca-agent-next/pull/45)。
 
 - **本轮评审重点：**1.6.0 when、Request Schema、1:1 Capability Binding、Build/Verify、Runtime Artifact/Manifest 和 Golden 验收。
-- **阻塞/未验证：**旧 AC-013-01 PoC 不是新产品发布；正式 Schema/机器标识/DTO 未冻结，AC-013-02～05 NOT_RUN。
+- **阻塞/未验证：**旧 AC-013-01 PoC 不是新产品发布；正式 Schema/机器标识/DTO 未冻结，AC-013-02～06 NOT_RUN / BLOCKED（含 Schema-only Package 与零 Capability roots 规则）。
 - **通用架构约束：**新 CA-SL 作者源、Compiler API/Build DTO、Runtime Artifact、Bundle、Studio 与 Agent Importer/Runtime **只支持 1.6.0**；Skill 只选择 Capability ID，公开 Capability↔Callable 双向一对一。历史版本材料只读留档；不做别名、兼容、双轨、迁移或 fallback。机器字段/ID 必须等待发布者冻结，不猜测。
 - **评审输出：**逐项核对范围、非目标、外部 Owner、错误/状态语义、Acceptance 与证据路径。设计无独立结论写 `PENDING_REVIEW`；未发布依赖写 `BLOCKED`；未运行测试写 `NOT_RUN`。当前不得派发 DeepSeek Harness 实施任务。
 
 ## 1. 目标、范围与契约边界
 
-为下一正式 **CA-SL 1.6.0** 的可选 assurance/contract.yaml.when 提供 Compiler 发布阶段静态检查、跨语言 CheckedExpr、Request Schema 与 SR-029 唯一 Capability→Callable Binding，构建全新的单版本 BuildRequest/BuildResult、Runtime Artifact、Check/Build/Verify 和正式发布证据。历史 v1alpha5 PoC/发行物仅做审计，不能复用其 Build DTO 或计作新版产品验收。
+为下一正式 **CA-SL 1.6.0** 的可选 assurance/contract.yaml.when 提供 Compiler 发布阶段静态检查、跨语言 CheckedExpr、Request Schema、Schema-only Interface Package 依赖和 SR-029 唯一 Capability→Callable Binding，构建全新的单版本 BuildRequest/BuildResult、Runtime Artifact、Check/Build/Verify 和正式发布证据。历史 v1alpha5 PoC/发行物仅做审计，不能复用其 Build DTO 或计作新版产品验收。
 
 必须保持：
 
@@ -47,17 +47,18 @@
 | 合并 / 发布 | 必须单独授权；本轮不包含 |
 | 规范门槛 | **未满足**；CA-SL 1.6.0 规范/机器标识/Capability Binding 尚未正式发布；历史 v1alpha5 不能替代 |
 | PoC | [PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)已核对 58 个文件与 SHA256SUMS；归档报告为 Go/Python 18/18，当前审计复跑 NOT_RUN |
-| 产品实施 | AC-013-02～04 NOT_RUN；AC-013-05 BLOCKED |
+| 产品实施 | AC-013-02～04 NOT_RUN；AC-013-05/06 BLOCKED（依赖正式 Schema / Package Schema / 发布授权） |
 
 SR-013 整体仍为 DRAFT。AC-013-01 的隔离 PoC 完成不自动把 SR-013 提升为 READY，也不授权修改 Compiler 主线、合并 PR 或发布 Release。
 
 | AC | 当前状态 | 下一步 |
 |---|---|---|
-| AC-013-01 | PASS（已归档的隔离 PoC 报告）；本轮复跑 NOT_RUN | 固定归档 SHA；产品验收继续按 AC-013-02～05 取证 |
+| AC-013-01 | PASS（已归档的隔离 PoC 报告）；本轮复跑 NOT_RUN | 固定归档 SHA；产品验收继续按 AC-013-02～06 取证 |
 | AC-013-02 | NOT_RUN | 正式 Contract.when AST、G.4、Schema-aware Guard / Nullable lowering | 
 | AC-013-03 | BLOCKED（依赖 AC-013-02 和 Owner Gate） | Compiler Owner 确认新版 Artifact API 与 Manifest | 
 | AC-013-04 | NOT_RUN | 新版 Build / Verify、Go/Python、Native/WASM/Chromium 与旧契约回归 | 
-| AC-013-05 | BLOCKED（依赖 AC-013-01～04 和发布授权） | 经授权发布 Compiler Release 并记录资产和 smoke 证据 | 
+| AC-013-05 | BLOCKED（依赖 AC-013-01～04、AC-013-06 和发布授权） | 经授权发布 Compiler Release 并记录资产和 smoke 证据 |
+| AC-013-06 | BLOCKED（依赖 1.6.0 Package Schema / DependencyInspection / Golden） | 验证 Schema-only Package、Schema closure 与零 Capability roots 的分离语义；与 SR-030 AC-030-03 联合验收 | 
 
 ## 3. AC-013-01：Schema-aware Go/Python 隔离 PoC
 
@@ -237,7 +238,7 @@ git diff --check
 - 新版 Build / Verify 正向、负向、损坏产物、缺文件、缺 Descriptor、错误 Any type URL、Request Schema 根/资源缺失或引用不闭合和多 Skill 隔离全部通过。
 - 覆盖 requestSchema/when 组合：无二者、仅 requestSchema、仅 event.type when、requestSchema + event.type when、requestSchema + input when；input when 无 requestSchema 必须 CEL_INVALID。
 - 新版重复 Build 字节确定。
-- **零外部依赖 Assurance 正例**：Skill 有合法 Assurance、没有外部 Capability 引用，BuildRequest 接受空 package roots/闭包并产生不含外部 Tool Effect 的新 1.6.0 Artifact；**反例**：引用任何外部 Capability 却缺少显式依赖，静态报告 `CAPABILITY_UNRESOLVED` 并且 outputFiles 为空；以上必须由新 Compiler Owner 正式 Schema/Golden 冻结，而不是迁就旧 Development v1alpha1 的非空根限制。
+- **零 Capability roots 正例**：合法 Assurance 没有外部 Capability 引用时，BuildRequest 的 Capability roots 可以为空；若也没有外部 Schema 引用，Package dependency closure 可以为空，并产生不含外部 Tool Effect 的新 1.6.0 Artifact。若 Contract.contexts 显式引用 Schema-only Package，则 dependency closure 必须包含该 Package 的精确 Schema export / $ref 闭包，但 Capability roots、Callable bindings 仍为空；该组合由 AC-013-06 独立验收。**反例**：引用任何外部 Capability 却缺少显式依赖，静态报告 `CAPABILITY_UNRESOLVED` 且 outputFiles 为空；不得把“零 Capability roots”错误解释成“禁止 Schema-only 依赖”，也不得为旧非空根限制虚构 Tool / Callable。
 - 冻结 Artifact v1alpha5 的 Schema/Golden 与旧 v2.1.0 Release Verify 行为不变；新 Runtime Build 不提供旧 BuildResult v1alpha5 兼容路由。Development v1alpha1 的 Schema/Golden 和独立 Verify 行为只在**旧 v2.1.0 发布物**中保留，不作为新 Compiler 的兼容 API 或 Agent 发布包。
 - Native、WASM、CLI E2E、Chromium Worker parity 与 Python 互操作全部有真实执行日志。
 - 每项记录受测 SHA、环境、版本、命令、退出码、预期、实际和证据位置。
@@ -248,7 +249,7 @@ AC-013-05 只验收 Compiler 新版 Runtime Artifact 的正式 Release 输入，
 
 前置条件：
 
-- AC-013-01～04 均有可复核 PASS。
+- AC-013-01～04、AC-013-06 均有可复核 PASS。
 - Compiler Owner 确认 Release 版本、Artifact API 和资产清单。
 - 用户/项目负责人明确授权发布。
 
@@ -262,7 +263,37 @@ AC-013-05 只验收 Compiler 新版 Runtime Artifact 的正式 Release 输入，
 
 ca-skills 的 Skill Bundle 组装与发布由 SR-027 负责；Next 导入与运行时消费由 SR-004/005/006 负责。没有发布授权时保持 BLOCKED，不创建 Release。
 
-## 8. 依赖、实施顺序与停止条件
+## 8. AC-013-06：Schema-only Interface Package 与零 Capability roots
+
+本 AC 与 SR-030 AC-030-03 联合验收 Compiler 对 Host Context Schema-only Package 的消费能力。它是 Compiler 模块 AC，不是 Studio 导入验收，也不把 SR-030 Publisher 未运行的状态升级为 PASS。
+
+### 8.1 冻结语义
+
+- 正式 CA-SL 1.6.0 Interface Package Schema 必须允许合法的 Schema-only Package：至少一个显式 Schema export，Capability exports = 0，Callable exports = 0；不得要求 ToolCatalog、Evidence 或 Runtime Binding，也不得生成合成 Tool / Callable。
+- Schema-only Package 只有在 Skill 的 Contract.contexts 或其他正式声明的 Schema 引用实际指向该 Package 的 Schema export 时，才进入该 Skill 的显式依赖闭包；未声明依赖、未导出 Schema ID 或未闭合的 $ref 必须 fail-closed。
+- Compiler 必须区分 **Capability roots** 与 **Schema dependency closure**。零 Capability roots 是合法情况；Schema-only Package 可形成非空 Schema dependency closure，但不得产生 Capability grant、Callable binding、Tool allowlist 或外部 Tool Effect。
+- 只有当 Skill 没有任何外部 Capability 引用、也没有任何外部 Schema 引用时，整个 Package dependency closure 才为空。不得把空 Capability roots 与空 Package dependency closure 混为一谈。
+- 精确 Manifest / BuildRequest / DependencyInspection 字段由 Compiler Owner 在正式 1.6.0 Schema / Golden 中冻结；本 AC 只冻结上述语义，不预先发明 wire field 名称。
+
+### 8.2 独立验收矩阵
+
+| 场景 | 输入 | 预期 |
+|---|---|---|
+| 本地 Schema、零外部依赖 | Assurance 声明自己的 requestSchema，无外部 Capability / Schema 引用 | Capability roots 为空、Package dependency closure 为空；Build / Verify 成功，不产生外部 Tool Effect |
+| Host Context Schema-only 依赖 | Contract.contexts 显式引用 SR-030 包的唯一 Schema export；该 Package 有 Schema、0 Capability、0 Callable | Schema dependency closure 包含精确 Package / Schema / $ref 闭包；Capability roots 与 Callable bindings 仍为空；Build / Verify 成功 |
+| 缺少依赖声明 | contexts 指向未声明 Alias 或未导出的 Schema ID | 静态拒绝；不从无关项目 Package 推断；无 Artifact |
+| 非法 Schema-only Package | 0 Capability / 0 Callable 且没有 Schema export，或夹带 ToolCatalog / Evidence / Runtime Binding | Package Schema / Link 拒绝；不得合成 Callable |
+| 误把 Schema-only 当 Capability | Procedure 引用某 Capability，但唯一依赖只提供 Schema export | CAPABILITY_UNRESOLVED；无部分 Artifact |
+| 旧版或不匹配语言 | v1alpha5 / Development v1alpha1、错误 languageTarget、未知 Package Schema | 明确拒绝；无转换、fallback 或混合 Catalog |
+
+### 8.3 证据与跨宿主要求
+
+- 正例至少包含一个与 SR-030 AC-030-03 对应的固定 Host Context Package fixture；负例覆盖缺失 Alias、缺失 Schema export、零 Schema exports、伪造 Callable 和旧 languageTarget。
+- 同一固定输入在 Go Native、WASM Worker 与 Chromium Worker 得到一致的 Link / Build / Verify 结果和诊断。
+- 记录 Compiler 受测 SHA、正式 Package Schema / Golden SHA、命令、环境、输入 ZIP / Lock、预期与实测、Artifact 输出和日志位置。
+- AC-013-06 在 Compiler Owner 未冻结 Schema / DTO / Golden 前保持 BLOCKED / NOT_RUN；不得用 SR-024 历史 v1alpha5 Publisher 或 synthetic Package 代替正式新版正例。
+
+## 9. 依赖、实施顺序与停止条件
 
 ~~~text
 AC-013-01  隔离 PoC（归档报告 PASS；本轮复跑 NOT_RUN）
@@ -275,6 +306,9 @@ AC-013-03  新版 Runtime Artifact API / Manifest / 文件布局
      |
      v
 AC-013-04  Build / Verify / Native-WASM-Chromium / Python parity
+     |
+     v
+AC-013-06  Schema-only Package / Schema closure / zero Capability roots
      |
      v
 AC-013-05  经授权 Compiler Release
@@ -296,23 +330,24 @@ AC-013-05  经授权 Compiler Release
 
 恢复时先重新核对规范 SHA、Compiler HEAD、Issue #61、目标分支、权限和最后一个已通过 Acceptance；从第一个未通过阶段继续，不重跑或覆盖已通过证据。
 
-### 8.1 DeepSeek Harness Goal 执行约束
+### 9.1 DeepSeek Harness Goal 执行约束
 
 SR-013 达到 READY 且文档门禁通过后，实施使用一个连续 Goal，避免将 AC 拆成彼此失去上下文的零散任务：
 
 - 模式：DeepSeek Harness Goal。
 - 模型：DeepSeek 最新 Flash。
 - 推理强度：low。
-- 顺序：AC-013-01 证据复核 → AC-013-02 → AC-013-03 → AC-013-04 → AC-013-05。
+- 顺序：AC-013-01 证据复核 → AC-013-02 → AC-013-03 → AC-013-04 → AC-013-06 → AC-013-05。
 - 允许在同一个 Goal 内按依赖连续处理多个 AC；不得并行执行有依赖关系的阶段，不得跳过失败阶段。
 - 每个 AC 仍需独立记录 Issue #61 关联、提交、测试、受测 SHA 和证据；不得把一个总的 PASS 替代逐 AC 验收。
 - AC-013-03 只有在 Compiler Owner 已确认 Artifact API 后才可继续；没有确认就停在 Owner Gate，不得自行更换版本名。
+- AC-013-06 必须先有 Compiler Owner 正式 Schema/DTO/Golden 与 SR-030 对应 Package fixture；不支持 0 Capability / 0 Callable 时停止并修订中央 Package 契约，禁止生成合成 Tool/Callable。
 - AC-013-05 必须再次检查发布授权；没有明确授权时只完成 Release 前检查，不创建 Tag 或 Release。
 - 若无法读取固定的 PR #18 归档、EVIDENCE.md 或其 Artifact，必须标记证据不可访问并请求提供；不得假装已复核，也不得用聊天报告替代独立复核。
 - Compiler 代码变更在 ca-skill-compiler 仓执行；Next 仅维护中央设计、SR 和验收证据。ca-skills Bundle CI 与 Next Runtime 消费端仍按 SR-027、SR-004/005/006 分别处理。
 - 只有 G1～G10 文档门禁、SR READY、依赖检查和目标仓写入授权全部满足后，才生成一个完整可复制的 Goal 提示词。提示词必须包含固定文档 SHA、Issue #61、各 AC 顺序、精确命令、停止规则、非目标和证据格式。
 
-## 9. 非目标
+## 10. 非目标
 
 本 SR 不实施：
 
@@ -323,7 +358,7 @@ SR-013 达到 READY 且文档门禁通过后，实施使用一个连续 Goal，�
 - Development Artifact 作为发布 Bundle。
 - Agent Skill Admission、生产授权、签名、Trust Registry、额外 SHA-256、生产资格或 5GC/MAS 认证。
 
-## 10. READY 与完成定义
+## 11. READY 与完成定义
 
 SR-013 达到 READY 前必须：
 
@@ -332,11 +367,12 @@ SR-013 达到 READY 前必须：
 3. Compiler #61 仍开放且范围一致；Compiler 目标 SHA 和 Go/Python 环境可运行。
 4. 目标仓写入授权、分支和实施 Issue 明确。
 5. AC-013-03 的 Artifact API Owner Gate 有明确执行方式。
-6. 每项 AC 的 Acceptance、命令、退出条件、证据格式和停止/恢复条件完整。
+6. AC-013-06 的 Schema-only 正负例、零 Capability roots / Schema dependency closure 区分和跨宿主命令完整。
+7. 每项 AC 的 Acceptance、命令、退出条件、证据格式和停止/恢复条件完整。
 
-SR-013 只有 AC-013-01～05 均达到各自通过条件，Compiler Release 有授权且证据可复核，才可报告 Compiler 交付完成。SR-023、SR-004/005/006 的 Bundle/Agent 验收不得由 SR-013 代替。
+SR-013 只有 AC-013-01～06 均达到各自通过条件，Compiler Release 有授权且证据可复核，才可报告 Compiler 交付完成。SR-023、SR-004/005/006 的 Bundle/Agent 验收不得由 SR-013 代替。
 
-## 11. CA-SL 1.6.0 统一新接口与设计评审门槛
+## 12. CA-SL 1.6.0 统一新接口与设计评审门槛
 
 - 本 SR 的 **设计待评审** 不意味着 Compiler 已实现或 READY；AC-013-02～05 的新产品 Build/Verify/Golden / Release 必须独立通过。
 - 新版 Compiler 只处理 CA-SL 1.6.0 Capability-first 源码。Contract/Procedure 的 Capability ID 经 SR-029 定义的一对一约束绑定到唯一 Callable；严格校验 kind、Effect、Input/Output Schema、Owner/Provider Package identity，Artifact 保存已编译的 Binding。
@@ -377,3 +413,4 @@ SR-013 只有 AC-013-01～05 均达到各自通过条件，Compiler Release 有�
 | 2026-11-26 | 0.2.15 | GPT-6（ChatGPT） | 设计依据与新版本路径 | 刷新 1.6.0 正式目标设计引用：v0.2.9→v0.2.10、v0.3.12→v0.3.13 | 避免旧 Compiler/Publisher 章节被当成新实施入口 | Issue #12/#40；PR #46 |
 
 | 2026-11-26 | 0.2.16 | GPT-6（ChatGPT） | 最终一致性复评 / 规范性描述 | 补齐零外部根依赖的 Build/Verify 正反验收、旧 Development 仅历史保留及 1.6.0 Request Schema 权威 | 消除 1.6.0 与历史 Development 的模糊措辞，修正后续评审的可执行门槛 | Issue #12/#40；PR #46 |
+| 2026-11-26 | 0.2.17 | GPT-6（ChatGPT） | §1～§2、AC-013-04～06、依赖图、READY 与修订记录 | 新增 AC-013-06，定义 Schema-only Interface Package 与零 Capability roots / 非空 Schema dependency closure 的区别；修正 AC-013-04 对空 roots/closure 的表述 | SR-030 已要求 Host Context Schema-only Package，但 SR-013 原先缺少对应 Compiler AC；防止 Compiler 将零 Capability roots 错误解释为零 Schema dependencies，或虚构 Tool/Callable | Issue #12/#40；SR-029、SR-030；EC02；F08；PR #46 |
