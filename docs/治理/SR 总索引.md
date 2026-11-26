@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.30
+> 文档版本：0.3.31
 > 状态：3 VERIFIED（SR-001/SR-002/SR-024）；2 READY（SR-003 设计/SR-025）；1 IMPLEMENTED（SR-015）；21 DRAFT；SR-003 实施 IN_PROGRESS（PR #34 MERGED 到恢复分支，merge commit `32c7c1b`）；系统 EX NOT_RUN  
 > 修订日期：2026-11-26  
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -16,7 +16,7 @@
 - 本索引只汇总 ID、标题、设计依据、状态、依赖和实施入口。
 - 状态变化先更新 SR 文件，再更新本索引和[实施状态总览](实施状态总览.md)。
 - ca-agent-next PR #1 是文档/设计基线 PR，不是任何 SR 的实现 PR。
-- PR #1、PR #32 已合并；SR-001/SR-002/SR-024 VERIFIED；SR-003 设计 READY、实施 IN_PROGRESS；SR-015 设计移交 IMPLEMENTED。
+- PR #1、PR #32 已合并；SR-001/SR-002/SR-024 VERIFIED；SR-003 设计 READY、实施 IN_PROGRESS（PR #34 已 MERGED 到恢复分支，merge `32c7c1b`，post-merge exact verification NOT_RUN）；SR-015 设计移交 IMPLEMENTED；SR-025 设计 READY / ca-client-tools #43 OPEN。
 
 ## 2. SR 清单
 
@@ -143,3 +143,4 @@
 | 2026-11-26 | 0.3.28 | GPT-6（ChatGPT） | 文档头、§3.2、修订记录 | 保留 SR-024 VERIFIED 与 SR-003 设计 READY / 实施 IN_PROGRESS；回填 PR #34 Merge 候选 Base SHA | 与最新恢复分支一致，不能将历史 AC 结果升级为候选 Head PASS | Issue #28；PR #34 |
 | 2026-11-26 | 0.3.29 | GPT-6（ChatGPT） | 文档头、§3、修订记录 | 以新 Head 的 CI success 替换等待验证状态 | 不将模块测试等同系统验收 | Issue #28；PR #34；[CI #45814208662](https://github.com/odango-chan/ca-agent-next/actions/runs/45814208662) |
 | 2026-11-26 | 0.3.30 | GPT-6.2（ChatGPT） | 文档头、§2～§4 | SR-025 v0.1.7 设计 READY 并创建 ca-client-tools #43；更新 27 项 SR 统计为 3 VERIFIED / 2 READY / 1 IMPLEMENTED / 21 DRAFT；回填 PR #34 MERGED 到恢复分支 | 完成 SR READY → 目标仓 Issue 的交接，并纠正 PR #34、SR-025 和总统计的过期状态 | Issue #12、#28；IR-006；SR-003、SR-025；ca-client-tools #43；PR #34 |
+| 2026-11-26 | 0.3.31 | GPT-6.2（ChatGPT） | §1、§3 | 将 SR-025 版本同步为 v0.1.7；补齐 PR #34 MERGED 到恢复分支与 SR-025 READY/#43 OPEN 的索引摘要 | 保持 SR 清单、顶部摘要和目标仓 Issue 入口一致 | Issue #12、#28；IR-006；SR-003、SR-025；PR #34；ca-client-tools #43 |
