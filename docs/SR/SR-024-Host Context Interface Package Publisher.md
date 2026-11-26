@@ -1,8 +1,8 @@
 # SR-024：Host Context Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.10
-> 状态：IN_PROGRESS（设计 READY；目标仓实现已推送，PR #253 OPEN；AC-024-01～07 在受测 PR head 实测 PASS，等待独立评审与合并）
+> SR 版本：0.1.11
+> 状态：IN_PROGRESS（设计 READY；AC-024-01～07 PASS；技术评审结论 PASS，GitHub Review 为 COMMENTED 但 reviewer login 与 PR 作者相同；正式独立 Approval 与 CI/门禁确认待完成）
 > 创建日期：2026-11-25
 > 所属阶段：跨仓设计移交
 > 上游需求：[IR-006](../IR/IR%20总登记册.md#ir-006)
@@ -65,7 +65,7 @@ make verify
 ## 5. 实施关联与执行门禁
 
 - [Studio Issue #269](https://github.com/odango-chan/ca-skill-studio-demo/issues/269)：仍为 OPEN；下游消费端 BuildRequest / Compiler 集成及 `source.sourceStatus=DEVELOPMENT_FIXTURE` 的 Lock provenance 归 SR-016，不是 Publisher 生成 ZIP 的硬前置。PR #253 没有修改 Studio 或 Lock。
-- 实施 Issue：[ca-agent-demo #252](https://github.com/odango-chan/ca-agent-demo/issues/252)，保持 OPEN，等待独立评审和 PR 合并；固定设计 SHA：`0fdd991f203f8468be155c35d81254eb84cd8ce5`；目标仓启动基线：`57e277ff9094dad93543df46910a12a1dbbaf560`。
+- 实施 Issue：[ca-agent-demo #252](https://github.com/odango-chan/ca-agent-demo/issues/252)，保持 OPEN，等待正式独立 GitHub Approval 与合并；固定设计 SHA：`0fdd991f203f8468be155c35d81254eb84cd8ce5`；目标仓启动基线：`57e277ff9094dad93543df46910a12a1dbbaf560`。
 - 实施 PR：[ca-agent-demo #253](https://github.com/odango-chan/ca-agent-demo/pull/253)，OPEN、非 Draft、目标 `main`、`mergeable=true` / `mergeable_state=clean`；未合并。实施分支：`feature/issue-252-sr-024-host-context-publisher`。受测 Commit 与当前远端 head：`99b273136d24d0593038821ab52d613aee8743b0`。变更严格为本 SR 授权的两个文件：`scripts/publish_host_context_interface_package.py`、`tests/test_host_context_interface_package.py`。
 - **实施状态：IN_PROGRESS。** 代码已实现并推送，AC-024-01～07 均在受测 PR head 上有实际执行证据；PR 尚未合并，因此尚未达到 IMPLEMENTED。合并后复核集成基线，再按 SR 管理规范决定是否转 VERIFIED。替代关系：无。
 
@@ -93,14 +93,24 @@ make verify
 - Compiler v2.1.0 `git archive` 临时树中的实际版本校验及 `skillc build-development` 正/负例均已执行；未修改 Compiler 仓库。
 
 PR 门禁与剩余事项：
-- GitHub 当前未返回该 head 的 PR-triggered Workflow Run；可见的 Release-request `create` 事件运行及其 Jobs 均为 `SKIPPED`，不得记作 CI PASS。
-- PR 当前没有独立 Review。PR 作者不能批准自己的 PR；已在 PR #253 请求独立 Reviewer。未执行合并。
-- Issue #252 保持 OPEN；独立 Reviewer 正式审查/批准（如仓库规则要求）及所需 PR checks 是合并前事项。
+- 独立技术评审报告已提交为 [GitHub Review #6070722615](https://github.com/odango-chan/ca-agent-demo/pull/253#pullrequestreview-6070722615)，结论为架构、契约、AC-024-01～07、测试可信度、变更范围和治理符合性全部 PASS；AC-024-07 另有 2,359 个样例与 Compiler v2.1.0 行为对比、0 差异。对应 [Issue #252 评审回填](https://github.com/odango-chan/ca-agent-demo/issues/252#issuecomment-7186684869)。
+- **GitHub Review 状态为 COMMENTED，不是 APPROVED。** GitHub API 显示 review actor 为 \`odango-chan\`，与 PR 作者相同；因此该技术评审结论可作为技术证据，但不满足独立 GitHub Reviewer 身份和正式 Approval 门禁。PR 作者不能批准自己的 PR。
+- 受测 HEAD \`99b273136d24d0593038821ab52d613aee8743b0\` 的 combined status 为 \`pending\`、status contexts 数量为 0；关联 Check Suite \`123853096562\` 的 Workflow 为 Release request、事件为 \`create\`、结论为 \`skipped\`，4 个 jobs（preflight-linux、preflight-windows、tag-and-dispatch、cleanup）全部 \`skipped\`。没有 PR-triggered Workflow Run；这些结果不得记作 CI PASS。
+- 当前连接无法读取 main branch protection（GitHub API 返回 403），因此不能据此断言哪些 checks 是 required。维护者需确认仓库保护规则，并决定是否需要补跑有效 PR checks；不得把 SKIPPED 解释为成功，也不得绕过规则。
+- PR #253 未合并；Issue #252 保持 OPEN。尚缺 PR 作者之外的正式 GitHub Approval，以及维护者对 CI/required checks 的确认。
 
 ### 5.2 职责边界
 
-本 SR 仅完成 Host Context Interface Package Publisher。Studio ZIP Import 已由 Studio #267 完成，但 `source.sourceStatus=DEVELOPMENT_FIXTURE` 的 Lock provenance 和 BuildRequest / Compiler 消费集成仍归 SR-016 / Studio #269。不得把 PR #253 描述为 Studio 集成、Compiler 产品集成、Host Trust/Admission 或生产级发布完成。
+本 SR 仅完成 Host Context Interface Package Publisher。Studio ZIP Import 已由 Studio #267 完成，但 \`source.sourceStatus=DEVELOPMENT_FIXTURE\` 的 Lock provenance 和 BuildRequest / Compiler 消费集成仍归 SR-016 / Studio #269。不得把 PR #253 描述为 Studio 集成、Compiler 产品集成、Host Trust/Admission 或生产级发布完成。
 
+### 5.3 独立技术评审与正式合并门禁
+
+- 技术结论：独立技术评审报告未发现代码/契约阻断，AC-024-01～07 全部 PASS；评审绑定 HEAD \`99b273136d24d0593038821ab52d613aee8743b0\`。
+- GitHub 证据：[Review #6070722615](https://github.com/odango-chan/ca-agent-demo/pull/253#pullrequestreview-6070722615) 为 \`COMMENTED\`，review actor \`odango-chan\` 与 PR author 相同。报告虽由独立技术评审代理完成，但 GitHub 身份不是独立账号；不能将 COMMENTED 计为正式独立 Approval。
+- 验收证据补充：AC-024-07 以 Compiler v2.1.0 \`validDevelopmentVersion\` 做 2,359 个样例行为对比，0 差异；官方 Schema 首次下载遇到 TLS 瞬时失败，重试后 37 passed，错误关闭由固定 Git blob pin 保证。
+- CI 状态：combined status \`pending\` 且 0 status contexts；关联 Check Suite \`123853096562\` 来自 Release request \`create\` 事件，conclusion \`skipped\`，4 个 jobs 全部 skipped；未发现 PR-triggered Workflow Run。GitHub branch-protection API 对当前连接返回 403，required-check 规则尚未核实。
+- 合并前剩余事项：由 PR 作者之外的账号提交正式 Approval；由维护者确认 required checks，并按仓库规则补跑有效 PR checks 或记录获准的门禁处置。未满足前保持 PR #253 / Issue #252 OPEN，不合并。
+- Studio #269 / SR-016 的 Lock provenance、BuildRequest / Compiler 消费端与端到端 Build + VerifyDevelopment 仍未完成，不属于本 SR 本次 PASS 范围。
 
 ## 修订记录
 
@@ -117,3 +127,4 @@ PR 门禁与剩余事项：
 | 2026-11-26 | 0.1.8 | Codex / GPT-6 | §3、§5 | 记录固定输入的实测设计结论，分离设计 READY 与目标仓实施 Issue。 | 历史记录未拆分（原记录合并） | Issue #12、#21 |
 | 2026-11-26 | 0.1.9 | GPT-6.2（ChatGPT） | §5 | 登记 ca-agent-demo 实施 Issue #252，并固定设计候选 SHA、目标 main SHA、AC 范围和非目标边界 | 完成 READY→跨仓实施 Issue 的追踪闭环，保持产品 AC NOT_RUN | Issue #26；ca-agent-demo #252 |
 | 2026-11-26 | 0.1.10 | GPT-6.2（ChatGPT） | 头部、§5～§5.2 | 回填 ca-agent-demo PR #253 的受测 Commit、AC-024-01～07 实测 PASS、ZIP 身份、测试环境与结果；将 SR 状态转为 IN_PROGRESS，并记录独立 Review、PR CI 与合并待办 | 代码已推送但 PR 未合并；按 SR 状态机区分受测 PASS、代码集成和 VERIFIED，不提前宣称完成 | Issue #12；ca-agent-demo #252/#253 |
+| 2026-11-26 | 0.1.11 | GPT-6.2（ChatGPT） | 头部、§5.1、§5.3 | 回填独立技术评审 Review #6070722615、AC-024-01～07 全 PASS 及 2,359 样例零差异；纠正 GitHub Review 身份为 PR 作者账号且状态仅 COMMENTED；登记 combined status pending、4 个 skipped checks、无 PR-triggered Run 和 branch-protection 读取限制 | 区分技术结论与 GitHub 独立身份审批、CI 门禁；保持 IN_PROGRESS，不把 COMMENTED/SKIPPED 提升为 APPROVED/PASS | Issue #12；ca-agent-demo #252/#253；Review #6070722615；Issue comment #7186684869 |
