@@ -1,14 +1,24 @@
 # SR-027：技能Bundle构建与发布
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.6  
-> 状态：**DRAFT（设计待评审）**；CA-SL 1.6.0-only、完全不兼容旧版；**代码实施/发布 NOT_READY**，模块验收 NOT_RUN
+> SR 版本：0.1.7  
+> 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**；不授予实施 READY，产品验收原状态不变  
 > 创建日期：2026-11-26  
+> 修订日期：2026-11-26  
 > 上游需求：IR-006  
-> 设计依据：F08 v0.3.11 §4、§6；CA-SL 1.6.0 目标（Issue #40 / SR-029）。  
+> 设计依据：F08 v0.3.12 §4、§6；CA-SL 1.6.0 目标（Issue #40 / SR-029）。  
 > 关联 Issue：ca-agent-next#12（设计）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：见 §4；本批限外部构建与发布。
+
+## 0. 本轮设计评审入口（2026-11-26）
+
+本 SR 已提交 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12) 的中央设计审查；**主状态 `DRAFT` 与设计 `REVIEW_REQUESTED` 独立，实施 READY/产品 PASS 均未获得**。新语言架构见 [SR-029](SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) 和 [PR #45](https://github.com/odango-chan/ca-agent-next/pull/45)。
+
+- **本轮审查重点：**核查 ca-skills CI 基于正式 1.6.0 作者源、新 Compiler Build/Verify、Echo/MAS Bundle 原生发布与失败原子性。
+- **未发布/未证据项：**旧 compile_mas_v1alpha5.py、测试/Golden 仅留档；1.6.0 语言、Binding、Compiler 发行与新 Bundle 未发布，AC-027 NOT_RUN。
+- **统一目标：**CA-SL **1.6.0 ONLY**；Skill-facing 只有 Capability ID，公开 Capability↔Callable 严格双向一对一；旧语言、Compiler DTO、Artifact、Bundle、别名、fallback 与迁移兼容均禁止。旧源 Schema/fixture/发布身份只用于只读历史审计；新机器契约由发布者冻结，不得自行猜测。
+- **评审退出：**逐项核查范围/非目标、外部契约、失败语义和 AC；外部新合同未发布为 `BLOCKED`、产品未运行为 `NOT_RUN`。在独立评审通过前不得向 Harness 交付实施提示词。
 
 ## 1. 目标与前置
 
@@ -57,3 +67,4 @@ CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验�
 | 2026-11-26 | 0.1.4 | GPT-6.2（ChatGPT） | 文档头、§1、§5、修订记录 | 将后续 Skill Bundle 生产目标更新为 CA-SL 1.6.0，增加 SR-029 Capability Binding 与 Compiler #61 联合 Release 门槛；避免继续发布 v1alpha6 候选或旧 v1alpha5 作者源作为最新运行包 | Issue #40/#43；SR-029；SR-013；SR-027 |
 | 2026-11-26 | 0.1.5 | GPT-6.2（ChatGPT） | §2～3、修订记录 | 将旧 v1alpha5 构建脚本与测试从新版验收入口移除，仅保留历史审计；1.6.0 Bundle 必须原生编译/验证；严格无兼容、无旧构建管线的 1.6.0 单版本发布 | Issue #40/#43；SR-029；SR-027 |
 | 2026-11-26 | 0.1.6 | GPT-6（ChatGPT） | 文档头、设计依据/修订记录 | 对齐最新 1.6.0-only 待评审设计与发布门槛 | Issue #40/#43；SR-029 |
+| 2026-11-26 | 0.1.7 | GPT-6（ChatGPT） | 文档头、§0、设计依据 | 提交设计待评审、明确新旧契约/验收隔离并保留 DRAFT 主状态 | Issue #12；PR #45；SR-029 |

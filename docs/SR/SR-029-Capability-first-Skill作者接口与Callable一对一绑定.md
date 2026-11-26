@@ -1,9 +1,10 @@
 # SR-029：Capability-first Skill 作者接口与 Callable 一对一绑定
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.3  
-> 状态：待评审 / DESIGN_READY_FOR_REVIEW；非实施 READY；新版规范/产品 NOT_RELEASED
+> SR 版本：0.2.4  
+> 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**；不授予实施 READY，产品验收原状态不变  
 > 创建日期：2026-11-26  
+> 修订日期：2026-11-26  
 > 上游需求：[IR-008](../IR/IR%20总登记册.md#ir-008)；关联需求：[IR-003](../IR/IR%20总登记册.md#ir-003)  
 > 功能：F02、F03.05、F04、F06、F08、F09、EC02  
 > 设计 Issue：[ca-agent-next #40](https://github.com/odango-chan/ca-agent-next/issues/40)  
@@ -12,6 +13,15 @@
 > 固定设计基线：PR #44 Head 7f83bf6135d4572dca7d3d5bdb6243765440b0f6
 > 工作分支：docs/issue-40-casl-160-capability-design-review
 > 本 SR 性质：中央架构与规范设计；不授权修改任何下游实现仓
+
+### 0.1 统一设计评审批次（2026-11-26）
+
+本 SR 已提交 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12) 的中央设计审查；**主状态 `DRAFT` 与设计 `REVIEW_REQUESTED` 独立，实施 READY/产品 PASS 均未获得**。新语言架构见 [SR-029](SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) 和 [PR #45](https://github.com/odango-chan/ca-agent-next/pull/45)。
+
+- **本轮审查重点：**核查 CA-SL 1.6.0 Capability-first 作者语法、Capability↔Callable 双向一对一、Provider 8+3 私有 backend 选择和 Owner 原始成员差异。
+- **未发布/未证据项：**PR #45 仅设计候选，外部 Publisher、Compiler API、新 Artifact/Bundle/Studio 尚未发布，AC-029 产品 NOT_RUN。
+- **统一目标：**CA-SL **1.6.0 ONLY**；Skill-facing 只有 Capability ID，公开 Capability↔Callable 严格双向一对一；旧语言、Compiler DTO、Artifact、Bundle、别名、fallback 与迁移兼容均禁止。旧源 Schema/fixture/发布身份只用于只读历史审计；新机器契约由发布者冻结，不得自行猜测。
+- **评审退出：**逐项核查范围/非目标、外部契约、失败语义和 AC；外部新合同未发布为 `BLOCKED`、产品未运行为 `NOT_RUN`。在独立评审通过前不得向 Harness 交付实施提示词。
 
 ## 0. 设计评审与无兼容门槛
 
@@ -267,3 +277,4 @@ Create / Release 继续分别使用原有 Schema 与 Evidence Guarantee；Modify
 | 2026-11-26 | 0.2.1 | GPT-6（ChatGPT） | 版本隔离与修订记录 | 补齐 Studio 拒绝旧项目边界，设计待评审 | 避免历史代码/测试被视为新版有效输入 | Issue #40；SR-029 |
 | 2026-11-26 | 0.2.2 | GPT-6（ChatGPT） | 标题层级/修订记录 | 修正历史修订表列数与独立设计评审状态 | 满足 Markdown 设计评审门禁，避免编号或治理表歧义 | Issue #40；SR-029 |
 | 2026-11-26 | 0.2.3 | GPT-6（ChatGPT） | 文档头与修订记录 | 补齐 formal SR 正式 review_scope 与非目标声明 | 解除 PR #45 当前 Head Review Context formal-doc 校验失败 | Issue #40；PR #45 |
+| 2026-11-26 | 0.2.4 | GPT-6（ChatGPT） | 文档头、§0、设计依据 | 提交设计待评审、明确新旧契约/验收隔离并保留 DRAFT 主状态 | 统一中央评审批次，防止旧版发布证据冒充新版资格 | Issue #12；PR #45；SR-029 |
