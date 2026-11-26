@@ -517,6 +517,21 @@ func (p *plugin) handleShutdown(in frame) (stop bool) {
 		})
 		logf("FAULT shutdown-duplicate")
 		return true
+	case "shutdown-zero-inflight":
+		// 自报 0 但实际仍有挂起操作：用于验证 Host 不以 Plugin 自报计数
+		// 判定本地待决操作的终态。
+		p.sendWithID(messageID, in.MessageID, "plugin.stopped", map[string]any{
+			"inFlightCount": 0,
+		})
+		logf("FAULT shutdown-zero-inflight actual=%d", inFlight)
+		return true
+	case "shutdown-excess-inflight":
+		// 自报比实际更多：用于验证 Host 只记录诊断，不据此提升或伪造终态。
+		p.sendWithID(messageID, in.MessageID, "plugin.stopped", map[string]any{
+			"inFlightCount": inFlight + 1,
+		})
+		logf("FAULT shutdown-excess-inflight actual=%d", inFlight)
+		return true
 	}
 	p.sendWithID(messageID, in.MessageID, "plugin.stopped", map[string]any{"inFlightCount": inFlight})
 	logf("STOPPED_SENT inFlightCount=%d", inFlight)

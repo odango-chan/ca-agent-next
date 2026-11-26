@@ -1,35 +1,37 @@
 """唯一 Plugin Manager 内的 Tools Extension Driver 接口边界。
 
-本模块固定 Native Plugin 与 Provider v2 两种 Tools Extension 传输之间的稳定
-边界。它只定义接口与数据合同，不启动 Provider 进程、不读取 Provider 包、不
-实现 ``ca-client-tools.provider/v2`` 帧；实际 Provider v2 适配由 SR-010 按本
-接口独立实现。
+本模块只固定 SR-003 真正承诺的那条缝：**Manager 面向的通用 Driver 能力**。
+它不定义 Provider v2 的 wire contract。Provider v2 的 catalog descriptor、
+Effect、request/response media type、Schema、Source Pin、Artifact Slot、
+绝对 RFC3339 UTC deadline、``producerInvocationId``、typed MAS 可选
+``hostInvocation`` 等具体数据合同，由 SR-010 在 F03.05 设计门禁通过后定义
+并实现；本 SR 不提前冻结、也不伪实现它们。
 
 设计依据：
 
 - ``docs/设计说明书/F03-Plugin平台/Plugin平台设计说明书.md`` §3、§5；
 - ``docs/设计说明书/F03-Plugin平台/Tool Interface 与 Provider 集成设计说明书.md``
-  §3、§6.3～§6.4、§11.1（ProviderV2 Driver 与单一 Manager 边界）；
-- ``docs/SR/SR-003-统一插件管理器与扩展通信.md`` §2、§5（本 SR 只固定接口，
-  真实 Provider/Channel 互操作归 SR-010）。
+  v0.3.7 §3、§6.3～§6.4、§11.1——**该文档当前状态为“目标设计；待评审”**，
+  是后续 Provider 集成的目标设计输入，不是 SR-003 已冻结的实施契约；
+- ``docs/SR/SR-003-统一插件管理器与扩展通信.md`` §2、§5（本 SR 只固定 Manager
+  面向的 Driver 边界，真实 Provider v2 数据合同与适配归 SR-010）。
 
 边界规则：
 
 1. 只有一个 Plugin Manager；本接口不创建第二个 Manager、Registry 或授权路径。
-2. Driver 只做进程/协议适配；进程生命周期、超时、关闭与 pending 收敛仍由
+2. Manager 只依赖本模块的通用 Driver 能力，不依赖任何 Provider v2 私有 DTO。
+3. Driver 只做进程/协议适配；进程生命周期、超时、关闭与 pending 收敛仍由
    Manager/PluginProcess 拥有，Driver 不自行重试或伪造成功。
-3. 私有 ``backendOperationId`` 只在 Driver 内部使用，不进入 Runtime 或模型上下文。
-4. 同一 Callable 不得在两个 Driver 中注册后自动 fallback；部署只选择一个精确
+4. 私有 backend ID 只在 Driver 内部使用，不进入 Runtime 或模型上下文。
+5. 同一 Callable 不得在两个 Driver 中注册后自动 fallback；部署只选择一个精确
    包和 Driver。
 """
 
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from collections.abc import Mapping
 from enum import Enum
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol
 
 if TYPE_CHECKING:  # pragma: no cover - 仅用于类型检查，避免与 manager 循环导入
@@ -38,21 +40,17 @@ if TYPE_CHECKING:  # pragma: no cover - 仅用于类型检查，避免与 manage
 __all__ = [
     "PROVIDER_V2_PROTOCOL",
     "DriverProtocol",
-    "ProviderLimits",
-    "ProviderBinding",
-    "ProviderPackageDescriptor",
-    "ProviderInitializeResult",
-    "ProviderCatalogEntry",
-    "ProviderCatalogResult",
-    "ProviderInvocation",
-    "ProviderCancelResult",
     "ToolInvocationHandle",
     "ToolsExtensionDriver",
     "ProviderV2ToolsExtensionDriver",
 ]
 
 PROVIDER_V2_PROTOCOL = "ca-client-tools.provider/v2"
-"""Provider v2 的精确进程协议标识（F03.05 §6.3）。"""
+"""Provider v2 的精确进程协议标识（F03.05 §6.3）。
+
+SR-003 只固定这个协议标识字符串，使部署与 Manager 能区分“要不要把这个
+pluginId 当作 Provider v2 处理”。该协议的具体帧与字段由 SR-010 定义。
+"""
 
 
 class DriverProtocol(str, Enum):
@@ -60,103 +58,6 @@ class DriverProtocol(str, Enum):
 
     NATIVE_PLUGIN = "connectionagent.io/plugin-ipc/v1alpha1"
     PROVIDER_V2 = PROVIDER_V2_PROTOCOL
-
-
-@dataclass(frozen=True)
-class ProviderLimits:
-    """initialize 请求中的进程内 limits（F03.05 §6.4）。"""
-
-    max_frame_bytes: int
-    max_in_flight: int
-    max_call_duration_ms: int
-
-
-@dataclass(frozen=True)
-class ProviderBinding:
-    """一条已发布 Callable → Provider 私有 backend 的映射。"""
-
-    runtime_operation_id: str
-    backend_operation_id: str
-    effect: str
-
-
-@dataclass(frozen=True)
-class ProviderPackageDescriptor:
-    """SR-010 Provider Package Loader 的输出；本 SR 只固定只读形状。"""
-
-    provider_id: str
-    provider_version: str
-    package_root: Path
-    interface_snapshot_digest: str
-    runtime_bindings_digest: str
-    backend_catalog_digest: str
-    bindings: tuple[ProviderBinding, ...]
-
-    def backend_operation_ids(self) -> tuple[str, ...]:
-        """返回去重且保持发布顺序的私有 backend ID 集合。"""
-        seen: set[str] = set()
-        ordered: list[str] = []
-        for binding in self.bindings:
-            if binding.backend_operation_id in seen:
-                continue
-            seen.add(binding.backend_operation_id)
-            ordered.append(binding.backend_operation_id)
-        return tuple(ordered)
-
-    def binding_for(self, runtime_operation_id: str) -> ProviderBinding | None:
-        for binding in self.bindings:
-            if binding.runtime_operation_id == runtime_operation_id:
-                return binding
-        return None
-
-
-@dataclass(frozen=True)
-class ProviderInitializeResult:
-    """Provider initialize 响应的已校验投影。"""
-
-    provider_id: str
-    provider_version: str
-    build_digest: str
-    backend_catalog_digest: str
-    catalog_version: str
-    max_frame_bytes: int | None = None
-    max_in_flight: int | None = None
-    max_call_duration_ms: int | None = None
-
-
-@dataclass(frozen=True)
-class ProviderCatalogEntry:
-    """显式 catalog 请求中的单个 backend 结论。"""
-
-    backend_operation_id: str
-    supported: bool
-    code: str | None = None
-
-
-@dataclass(frozen=True)
-class ProviderCatalogResult:
-    """catalog 响应；supported/unsupported 必须恰好覆盖请求集合。"""
-
-    entries: tuple[ProviderCatalogEntry, ...]
-    catalog_version: str
-
-
-@dataclass(frozen=True)
-class ProviderInvocation:
-    """Provider invoke 的协议无关输入。"""
-
-    invocation_id: str
-    backend_operation_id: str
-    arguments: Mapping[str, Any]
-    deadline_ms: int | None = None
-
-
-@dataclass(frozen=True)
-class ProviderCancelResult:
-    """Provider cancel 的稳定结论（CANCEL_REQUESTED / ALREADY_COMPLETED / NOT_FOUND）。"""
-
-    target_request_id: str
-    disposition: str
 
 
 class ToolInvocationHandle(Protocol):
@@ -171,12 +72,18 @@ class ToolInvocationHandle(Protocol):
 
 
 class ToolsExtensionDriver(ABC):
-    """Tools Extension Driver 的稳定接口。
+    """Tools Extension Driver 的稳定接口（SR-003 唯一承诺的 Driver 缝）。
 
-    Manager 只依赖本接口；Native Plugin 由 ``PluginProcess`` 直接承担，Provider
-    v2 由 SR-010 实现 :class:`ProviderV2ToolsExtensionDriver`。Driver 的实现
+    Manager 只依赖本接口。Native Plugin 由 ``PluginProcess`` 直接承担；
+    Provider v2 由 SR-010 实现 :class:`ProviderV2ToolsExtensionDriver`。实现
     必须复用 Manager 的进程生命周期、超时和关闭语义，并返回统一的
     ``ToolOutcome`` / ``DeliveryOutcome`` / ``CancelledOutcome``。
+
+    本接口刻意保持协议无关：它不出现 Provider v2 的 catalog descriptor、
+    Effect、media type、Schema、Source Pin、Artifact Slot、绝对 deadline 等
+    字段。任何 Driver 只要实现下列成员即可被同一个 Manager 管理，因此
+    SR-010 补齐 Provider v2 数据合同时不需要改动本接口，也不会破坏其它
+    协议的 Driver。
     """
 
     @property
@@ -246,14 +153,28 @@ class ToolsExtensionDriver(ABC):
 
 
 class ProviderV2ToolsExtensionDriver(ToolsExtensionDriver):
-    """Provider v2 Tools Extension 的接口边界（SR-010 实现）。
+    """Provider v2 Tools Extension 的适配扩展点（具体实现归 SR-010）。
 
-    实现必须按 ``ca-client-tools.provider/v2`` 消费 initialize/catalog/invoke/
-    cancel，按 requestId 关联乱序响应，并由 Manager 统一管理进程生命周期。
-    Provider v2 的 NDJSON 帧由 Driver 编码/解析，但进程启动、超时、关闭和
-    pending 收敛必须复用本包的 Plugin Manager/PluginProcess 机制；不得在
-    Driver 内另建进程管理循环、第二 Manager 或凭据入口。本 SR 不提供真实
-    实现，也不改变 Native Plugin IPC。
+    SR-003 只承诺两件事：
+
+    1. Provider v2 也是 :class:`ToolsExtensionDriver`，因此由**同一个**
+       Plugin Manager 管理，不新增第二个 Manager、Registry 或 Provider
+       生命周期入口；
+    2. 协议标识固定为 :data:`PROVIDER_V2_PROTOCOL`，Extension 固定为
+       ``tools``。
+
+    本类**不再声明 Provider v2 专用的抽象方法**，因为这些方法的输入/输出
+    需要 F03.05 §6.4 的完整数据合同（catalog 的 supported/unsupported 分区
+    与每个 backend 的 descriptor、Effect、request/response media type、
+    Schema、Source Pin、Artifact Slot、绝对 RFC3339 UTC deadline、
+    ``producerInvocationId``、typed MAS 可选 ``hostInvocation`` 等），而
+    F03.05 v0.3.7 的文档状态仍是“目标设计；待评审”。在 SR-003 里预先冻结
+    这些字段会产生一个 SR-010 必须推翻的假契约。
+
+    因此：Provider v2 的 wire DTO、帧编码/解析、catalog 对账、deadline 与
+    artifact slot 语义由 **SR-010** 在其设计门禁完成后定义。SR-010 增加 v2
+    专用成员时必须保持本类的通用 Driver 语义不变，并继续由唯一 Manager
+    统一管理进程生命周期。
     """
 
     @property
@@ -263,41 +184,3 @@ class ProviderV2ToolsExtensionDriver(ToolsExtensionDriver):
     @property
     def extensions(self) -> frozenset[str]:
         return frozenset({"tools"})
-
-    @property
-    @abstractmethod
-    def descriptor(self) -> ProviderPackageDescriptor:
-        """已验证的 Provider 包描述符。"""
-
-    @property
-    @abstractmethod
-    def limits(self) -> ProviderLimits:
-        """initialize 使用的进程内 limits。"""
-
-    @abstractmethod
-    def initialize(
-        self,
-        *,
-        host_instance_id: str,
-        provider_instance_id: str,
-        artifact_channel: Mapping[str, Any] | None = None,
-    ) -> ProviderInitializeResult:
-        """发送 initialize 并校验 Provider 身份/版本/catalog digest。"""
-
-    @abstractmethod
-    def catalog(
-        self, backend_operation_ids: Sequence[str]
-    ) -> ProviderCatalogResult:
-        """对显式请求的 backend ID 做 catalog 对账。"""
-
-    @abstractmethod
-    def invoke_backend(
-        self, request: ProviderInvocation, *, timeout: float
-    ) -> "ToolOutcome":
-        """按 requestId 关联 Provider invoke 响应。"""
-
-    @abstractmethod
-    def cancel_backend(
-        self, target_request_id: str, *, timeout: float
-    ) -> ProviderCancelResult:
-        """发送 Provider cancel 并返回稳定结论。"""

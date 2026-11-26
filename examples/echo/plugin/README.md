@@ -92,7 +92,7 @@ stdout 写协议帧；诊断写入 stderr。可用 `--version` 查看版本。
 
 | 参数 | 用途 |
 |---|---|
-| `--fault=<mode>` | `no-ready`、`crash-after-ready`、`duplicate-result`、`duplicate-terminal`、`unknown-correlation-id`、`wrong-invocation-id`、`out-of-order`、`wrong-delivery-id` |
+| `--fault=<mode>` | `no-ready`、`crash-after-ready`、`duplicate-result`、`duplicate-terminal`、`unknown-correlation-id`、`wrong-invocation-id`、`out-of-order`、`wrong-delivery-id`、`cancel-no-reply`、`cancel-too-late-late-result`、`cancel-unsupported-late-result`、`shutdown-no-reply`、`shutdown-wrong-correlation`、`shutdown-bad-inflight`、`shutdown-negative-inflight`、`shutdown-duplicate`、`shutdown-zero-inflight`（自报 0 但仍有挂起）、`shutdown-excess-inflight`（自报比实际多 1） |
 | `--extensions=<a,b,c>` | 覆盖 `plugin.ready.extensions`，验证握手整包匹配 |
 | `--ingress=<json>` | 覆盖默认 `ingress.event` payload，可重复 |
 

@@ -9,6 +9,7 @@ Plugin 子进程执行；Manifest 负例在握手前被拒绝。运行方式：
 from __future__ import annotations
 
 import hashlib
+import inspect
 import json
 import subprocess
 import sys
@@ -35,14 +36,14 @@ from ca_agent_next.plugins import (  # noqa: E402
     PluginState,
     PluginTimeouts,
     PROVIDER_V2_PROTOCOL,
-    ProviderBinding,
-    ProviderPackageDescriptor,
     ProviderV2ToolsExtensionDriver,
     ToolOutcome,
     ToolStatus,
     ToolsExtensionDriver,
     load_manifest,
 )
+from ca_agent_next.plugins import driver as driver_module  # noqa: E402
+from ca_agent_next.plugins import manager as manager_module  # noqa: E402
 from ca_agent_next.plugins.ipc import PendingRegistry, PendingRequest  # noqa: E402
 
 BASE_MANIFEST = support.manifest_text()
@@ -278,6 +279,101 @@ class ManifestValidationTests(_ManagerTestCase):
             self.manager, package, PluginErrorCode.MANIFEST_SCHEMA_INVALID
         )
 
+    # -- P2-01：本地命名 Anchor 的存在性校验 ---------------------------------
+
+    def _write_request_schema(self, package: Path, document: object) -> None:
+        (package / "schemas" / "echo-request.json").write_text(
+            json.dumps(document), encoding="utf-8"
+        )
+
+    def test_valid_local_json_pointer_ref_accepted(self) -> None:
+        package = self._new_package()
+        self._write_request_schema(
+            package,
+            {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "$defs": {"textNode": {"type": "string"}},
+                "properties": {"text": {"$ref": "#/$defs/textNode"}},
+            },
+        )
+        manifest = load_manifest(package)
+        self.assertEqual(manifest.plugin_id, "example.echo")
+
+    def test_valid_dynamic_anchor_reference_accepted(self) -> None:
+        package = self._new_package()
+        self._write_request_schema(
+            package,
+            {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "$defs": {"textNode": {"$dynamicAnchor": "node", "type": "string"}},
+                "properties": {"text": {"$dynamicRef": "#node"}},
+            },
+        )
+        manifest = load_manifest(package)
+        self.assertEqual(manifest.plugin_id, "example.echo")
+
+    def test_dynamic_ref_falls_back_to_plain_anchor(self) -> None:
+        # Draft 2020-12 §8.2.3.2：动态作用域找不到同名 $dynamicAnchor 时，
+        # $dynamicRef 退回 $ref 语义，因此 $anchor 声明的名称同样可解析。
+        package = self._new_package()
+        self._write_request_schema(
+            package,
+            {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "$defs": {"textNode": {"$anchor": "plainNode", "type": "string"}},
+                "properties": {"text": {"$dynamicRef": "#plainNode"}},
+            },
+        )
+        manifest = load_manifest(package)
+        self.assertEqual(manifest.plugin_id, "example.echo")
+
+    def test_missing_dynamic_ref_anchor_rejected(self) -> None:
+        package = self._new_package()
+        self._write_request_schema(
+            package,
+            {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {"text": {"$dynamicRef": "#missing-anchor"}},
+            },
+        )
+        self.assert_rejected_without_registration(
+            self.manager, package, PluginErrorCode.MANIFEST_SCHEMA_INVALID
+        )
+
+    def test_missing_plain_anchor_ref_rejected(self) -> None:
+        package = self._new_package()
+        self._write_request_schema(
+            package,
+            {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {"text": {"$ref": "#missing-anchor"}},
+            },
+        )
+        self.assert_rejected_without_registration(
+            self.manager, package, PluginErrorCode.MANIFEST_SCHEMA_INVALID
+        )
+
+    def test_unsupported_local_fragment_form_rejected(self) -> None:
+        package = self._new_package()
+        self._write_request_schema(
+            package,
+            {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "$defs": {"textNode": {"$dynamicAnchor": "node", "type": "string"}},
+                "properties": {"text": {"$dynamicRef": "#node/child"}},
+            },
+        )
+        error = self.assert_rejected_without_registration(
+            self.manager, package, PluginErrorCode.MANIFEST_SCHEMA_INVALID
+        )
+        self.assertIn("unsupported local fragment", error.message)
+
     def test_path_traversal_in_schema_rejected(self) -> None:
         text = BASE_MANIFEST.replace(
             "requestSchema: schemas/echo-request.json",
@@ -320,15 +416,25 @@ class ManifestValidationTests(_ManagerTestCase):
             args=["serve", "--extensions=event.ingress,event.delivery"]
         )
         manager = self._fresh_manager()
-        error = self.assert_rejected_without_registration(
-            manager, package, PluginErrorCode.HANDSHAKE_MISMATCH
-        )
+        captured: dict[str, PluginProcess] = {}
+        original_start = PluginProcess.start
+
+        def capture(process: PluginProcess) -> PluginProcess:
+            captured["process"] = process
+            return original_start(process)
+
+        with mock.patch.object(PluginProcess, "start", capture):
+            error = self.assert_rejected_without_registration(
+                manager, package, PluginErrorCode.HANDSHAKE_MISMATCH
+            )
         self.assertIn("extensions", error.message)
-        process = manager.process("example.echo")
-        assert process is not None
+        process = captured["process"]
         self.assertNotEqual(process.state, PluginState.READY)
         self.assertEqual(process.extensions, frozenset())
         self.assertTrue(process.wait_for_exit(5.0))
+        # 握手失败同样不留下有效的 Manager-owned Process 注册。
+        self.assertIsNone(manager.process("example.echo"))
+        self.assertEqual(manager.plugin_ids(), ())
 
     def test_handshake_extra_extension_rejected(self) -> None:
         package = self._new_package(
@@ -1380,6 +1486,98 @@ class ShutdownConfirmationTests(_ManagerTestCase):
         finally:
             self.manager.stop("example.echo")
 
+    # -- P2-04：inFlightCount 语义边界 ---------------------------------------
+
+    def test_normal_shutdown_reports_no_divergence(self) -> None:
+        process = self._start()
+        try:
+            self.manager.stop("example.echo")
+            self.assertEqual(process.shutdown_in_flight, 0)
+            self.assertFalse(process.shutdown_in_flight_divergent)
+            self.assertFalse(
+                any(
+                    "SHUTDOWN_INFLIGHT_DIVERGENCE" in line
+                    for line in process.diagnostics
+                ),
+                process.diagnostics,
+            )
+            self.assertEqual(process.pending_count, 0)
+            self.assertEqual(process.protocol_violations, 0)
+        finally:
+            self.manager.stop("example.echo")
+
+    def test_reported_zero_while_host_pending_stays_unknown(self) -> None:
+        """Plugin 自报 0 不能被当作 Host 待决操作的终态依据。"""
+        package = self._new_package(args=["serve", "--fault=shutdown-zero-inflight"])
+        process = self.manager.start(package)
+        try:
+            waiting = self.manager.invoke_tool_async(
+                "example.echo",
+                "echo.wait",
+                {"text": "pending-with-zero-report"},
+                invocation_id="inv-zero-report",
+            )
+            self.assertTrue(process.wait_for(lambda p: p.pending_count == 1, 3.0))
+            self.manager.stop("example.echo")
+            stopped = [
+                record.frame
+                for record in process.frames
+                if record.frame["type"] == "plugin.stopped"
+            ]
+            self.assertEqual(len(stopped), 1)
+            self.assertEqual(stopped[0]["payload"], {"inFlightCount": 0})
+            self.assertEqual(process.shutdown_in_flight, 0)
+            self.assertTrue(process.shutdown_in_flight_divergent)
+            self.assertTrue(
+                any(
+                    "SHUTDOWN_INFLIGHT_DIVERGENCE plugin=0 host=1" in line
+                    for line in process.diagnostics
+                ),
+                process.diagnostics,
+            )
+            # 自报计数不一致只是诊断，不升级为协议违规。
+            self.assertEqual(process.protocol_violations, 0)
+            outcome = waiting.wait(3.0)
+            self.assertEqual(outcome.status, ToolStatus.UNKNOWN)
+            self.assertIsNone(outcome.result)
+            self.assertEqual(process.pending_count, 0)
+            self.assertEqual(process.state, PluginState.STOPPED)
+        finally:
+            self.manager.stop("example.echo")
+
+    def test_reported_excess_without_host_pending_is_diagnostic_only(self) -> None:
+        package = self._new_package(args=["serve", "--fault=shutdown-excess-inflight"])
+        process = self.manager.start(package)
+        try:
+            self.manager.stop("example.echo")
+            self.assertEqual(process.shutdown_in_flight, 1)
+            self.assertTrue(process.shutdown_in_flight_divergent)
+            self.assertEqual(process.protocol_violations, 0)
+            self.assertEqual(process.pending_count, 0)
+            self.assertEqual(process.state, PluginState.STOPPED)
+        finally:
+            self.manager.stop("example.echo")
+
+    def test_shutdown_timeout_keeps_unconfirmed_operations_unknown(self) -> None:
+        package = self._new_package(args=["serve", "--fault=shutdown-no-reply"])
+        manager = self._fresh_manager(shutdown=0.4)
+        process = manager.start(package)
+        try:
+            waiting = manager.invoke_tool_async(
+                "example.echo",
+                "echo.wait",
+                {"text": "pending-at-timeout"},
+                invocation_id="inv-timeout-unknown",
+            )
+            self.assertTrue(process.wait_for(lambda p: p.pending_count == 1, 3.0))
+            manager.stop("example.echo")
+            outcome = waiting.wait(3.0)
+            self.assertEqual(outcome.status, ToolStatus.UNKNOWN)
+            self.assertEqual(process.pending_count, 0)
+            self.assertEqual(process.state, PluginState.STOPPED)
+        finally:
+            manager.shutdown_all()
+
     def test_shutdown_timeout_still_reliably_terminates(self) -> None:
         package = self._new_package(args=["serve", "--fault=shutdown-no-reply"])
         manager = self._fresh_manager(shutdown=0.4)
@@ -1419,14 +1617,20 @@ class StartupRollbackTests(_ManagerTestCase):
         self.assertEqual(self.manager.extensions("example.echo"), frozenset())
 
     def test_post_popen_failure_terminates_process(self) -> None:
-        with mock.patch.object(
-            PluginProcess, "_write_outbound", side_effect=RuntimeError("boom")
-        ):
+        captured: dict[str, PluginProcess] = {}
+
+        def boom(process: PluginProcess, *args: object, **kwargs: object) -> None:
+            captured["process"] = process
+            raise RuntimeError("boom")
+
+        with mock.patch.object(PluginProcess, "_write_outbound", boom):
             with self.assertRaises(PluginError) as caught:
                 self.manager.start(self.package)
         self.assertEqual(caught.exception.code, PluginErrorCode.PROCESS_START_FAILED)
-        process = self.manager.process("example.echo")
-        assert process is not None
+        # P2-03：启动失败的对象不得继续作为有效的 Manager-owned Process 注册。
+        self.assertIsNone(self.manager.process("example.echo"))
+        self.assertEqual(self.manager.plugin_ids(), ())
+        process = captured["process"]
         self.assertEqual(process.state, PluginState.NOT_READY)
         self.assertEqual(process.extensions, frozenset())
         self.assertEqual(process.pending_count, 0)
@@ -1434,10 +1638,75 @@ class StartupRollbackTests(_ManagerTestCase):
         assert process._proc is not None
         self.assertIsNotNone(process._proc.poll())
 
+    def test_start_failure_does_not_leave_registration(self) -> None:
+        with mock.patch.object(
+            PluginProcess, "_write_outbound", side_effect=RuntimeError("boom")
+        ):
+            with self.assertRaises(PluginError):
+                self.manager.start(self.package)
+        self.assertEqual(self.manager.plugin_ids(), ())
+        self.assertIsNone(self.manager.process("example.echo"))
+        self.assertEqual(self.manager.total_tool_dispatches, 0)
+
+    def test_same_plugin_id_can_be_restarted_after_failure(self) -> None:
+        with mock.patch.object(
+            PluginProcess, "_write_outbound", side_effect=RuntimeError("boom")
+        ):
+            with self.assertRaises(PluginError):
+                self.manager.start(self.package)
+        self.assertEqual(self.manager.plugin_ids(), ())
+
+        process = self.manager.start(self.package)
+        try:
+            self.assertEqual(self.manager.plugin_ids(), ("example.echo",))
+            self.assertIs(self.manager.process("example.echo"), process)
+            self.assertEqual(
+                process.extensions,
+                frozenset({"event.ingress", "event.delivery", "tools"}),
+            )
+            outcome = self.manager.invoke_tool(
+                "example.echo", "echo.read", {"text": "after-restart"}
+            )
+            self.assertEqual(outcome.status, ToolStatus.RESULT)
+        finally:
+            self.manager.stop("example.echo")
+        self.assertEqual(process.state, PluginState.STOPPED)
+
+    def test_start_failure_does_not_affect_other_plugins(self) -> None:
+        host = support.FakeHost()
+        manager = PluginManager(host, timeouts=self.timeouts)
+        driver = _FakeToolsDriver("driver.healthy")
+        manager.register_driver(driver)
+        try:
+            with mock.patch.object(
+                PluginProcess, "_write_outbound", side_effect=RuntimeError("boom")
+            ):
+                with self.assertRaises(PluginError):
+                    manager.start(self.package)
+            self.assertEqual(manager.plugin_ids(), ("driver.healthy",))
+            self.assertIs(manager.driver("driver.healthy"), driver)
+            self.assertTrue(driver.started)
+            self.assertEqual(driver.state, "READY")
+            self.assertIsNone(manager.process("example.echo"))
+        finally:
+            manager.shutdown_all()
+        self.assertTrue(driver.closed)
+
 
 # ---------------------------------------------------------------------------
-# P1-06：Provider v2 Driver 接口边界
+# P1-06 / P1-A：Provider v2 Driver 契约边界（SR-003 只固定 Manager 面向的缝）
 # ---------------------------------------------------------------------------
+
+_PROVIDER_V2_ONLY_DTO_NAMES = (
+    "ProviderLimits",
+    "ProviderBinding",
+    "ProviderPackageDescriptor",
+    "ProviderInitializeResult",
+    "ProviderCatalogEntry",
+    "ProviderCatalogResult",
+    "ProviderInvocation",
+    "ProviderCancelResult",
+)
 
 
 class _FakeInvocation:
@@ -1460,10 +1729,15 @@ class _FakeInvocation:
 
 class _FakeToolsDriver(ToolsExtensionDriver):
     def __init__(
-        self, plugin_id: str = "driver.tools", *, fail_start: bool = False
+        self,
+        plugin_id: str = "driver.tools",
+        *,
+        fail_start: bool = False,
+        protocol: str = DriverProtocol.NATIVE_PLUGIN.value,
     ) -> None:
         self._plugin_id = plugin_id
         self._fail_start = fail_start
+        self._protocol = protocol
         self._state = "CONFIGURED"
         self.started = False
         self.closed = False
@@ -1474,7 +1748,7 @@ class _FakeToolsDriver(ToolsExtensionDriver):
 
     @property
     def protocol(self) -> str:
-        return DriverProtocol.NATIVE_PLUGIN.value
+        return self._protocol
 
     @property
     def extensions(self) -> frozenset[str]:
@@ -1529,57 +1803,81 @@ class _FakeToolsDriver(ToolsExtensionDriver):
 
 
 class DriverBoundaryTests(unittest.TestCase):
-    """P1-06：唯一 Manager 内的稳定 Driver 接口，不新增第二 Manager/Registry。"""
+    """P1-06 / P1-A：唯一 Manager 内的稳定 Driver 缝；不冻结 Provider v2 DTO。"""
 
-    def test_provider_driver_contract_is_stable(self) -> None:
+    def test_provider_driver_is_an_extension_point_not_a_wire_contract(self) -> None:
         self.assertEqual(PROVIDER_V2_PROTOCOL, "ca-client-tools.provider/v2")
         self.assertTrue(
             issubclass(ProviderV2ToolsExtensionDriver, ToolsExtensionDriver)
         )
-        self.assertTrue(
-            {"initialize", "catalog", "invoke_backend", "cancel_backend"}
-            <= set(ProviderV2ToolsExtensionDriver.__abstractmethods__)
+        # SR-003 不声明 Provider v2 专用操作：抽象方法集合只等于通用缝减去
+        # 本类固定实现的 protocol/extensions。
+        self.assertEqual(
+            ProviderV2ToolsExtensionDriver.__abstractmethods__,
+            ToolsExtensionDriver.__abstractmethods__ - {"protocol", "extensions"},
         )
+        self.assertNotIn("initialize", ToolsExtensionDriver.__dict__)
+        self.assertNotIn("catalog", ToolsExtensionDriver.__dict__)
         with self.assertRaises(TypeError):
             ProviderV2ToolsExtensionDriver()  # type: ignore[abstract]
 
-    def test_descriptor_deduplicates_backend_ids_in_order(self) -> None:
-        descriptor = ProviderPackageDescriptor(
-            provider_id="ca-client-tools.sbi",
-            provider_version="1.2.0",
-            package_root=Path("."),
-            interface_snapshot_digest="sha256:a",
-            runtime_bindings_digest="sha256:b",
-            backend_catalog_digest="sha256:c",
-            bindings=(
-                ProviderBinding("READ.A", "backend.a", "READ"),
-                ProviderBinding("OWNER.B", "backend.b", "MUTATION"),
-                ProviderBinding("READ.C", "backend.a", "READ"),
+    def test_provider_driver_pins_protocol_and_tool_extension(self) -> None:
+        class _Probe(ProviderV2ToolsExtensionDriver):
+            plugin_id = "probe.provider"  # type: ignore[assignment]
+            state = "READY"  # type: ignore[assignment]
+            pending_count = 0  # type: ignore[assignment]
+
+            def start(self) -> None: ...
+            def invoke_tool_async(self, *a, **k): ...  # type: ignore[override]
+            def dispatch_delivery(self, **k): ...  # type: ignore[override]
+            def cancel_operation(self, *a, **k): ...  # type: ignore[override]
+            def close(self) -> None: ...
+
+        probe = _Probe()
+        self.assertEqual(probe.protocol, PROVIDER_V2_PROTOCOL)
+        self.assertEqual(probe.extensions, frozenset({"tools"}))
+
+    def test_public_driver_surface_has_no_provider_v2_wire_dtos(self) -> None:
+        for name in _PROVIDER_V2_ONLY_DTO_NAMES:
+            self.assertNotIn(name, driver_module.__all__)
+            self.assertFalse(hasattr(driver_module, name), name)
+        self.assertEqual(
+            tuple(driver_module.__all__),
+            (
+                "PROVIDER_V2_PROTOCOL",
+                "DriverProtocol",
+                "ToolInvocationHandle",
+                "ToolsExtensionDriver",
+                "ProviderV2ToolsExtensionDriver",
             ),
         )
-        self.assertEqual(
-            descriptor.backend_operation_ids(), ("backend.a", "backend.b")
-        )
-        self.assertIsNotNone(descriptor.binding_for("OWNER.B"))
 
-    def test_manager_owns_driver_lifecycle_and_dispatch(self) -> None:
+    def test_manager_does_not_reference_provider_v2_dtos(self) -> None:
+        source = inspect.getsource(manager_module)
+        for name in _PROVIDER_V2_ONLY_DTO_NAMES:
+            self.assertNotIn(name, source)
+        # Manager 的公共导出同样不含 Provider v2 私有 DTO。
+        self.assertNotIn("ProviderPackageDescriptor", manager_module.__dict__)
+
+    def test_manager_dispatches_through_generic_driver_only(self) -> None:
+        """缺少 SR-010 字段不影响 SR-003：通用 Driver 即可完成全部调用。"""
         host = support.FakeHost()
         manager = PluginManager(host, timeouts=_timeouts())
-        driver = _FakeToolsDriver()
+        driver = _FakeToolsDriver("driver.generic")
         manager.register_driver(driver)
         try:
             self.assertTrue(driver.started)
-            self.assertIn("driver.tools", manager.plugin_ids())
+            self.assertIn("driver.generic", manager.plugin_ids())
             self.assertEqual(
-                manager.extensions("driver.tools"),
+                manager.extensions("driver.generic"),
                 frozenset({"tools", "event.delivery"}),
             )
-            outcome = manager.invoke_tool("driver.tools", "anything", {"x": 1})
+            outcome = manager.invoke_tool("driver.generic", "anything", {"x": 1})
             self.assertEqual(outcome.status, ToolStatus.RESULT)
-            cancelled = manager.cancel_operation("driver.tools", "inv-driver")
+            cancelled = manager.cancel_operation("driver.generic", "inv-driver")
             self.assertEqual(cancelled.disposition, "cancelled")
             delivery = manager.dispatch_delivery(
-                "driver.tools",
+                "driver.generic",
                 response_obligation_id="obl-d",
                 response_channel_id="ch-d",
                 event_type="driver.event",
@@ -1587,7 +1885,7 @@ class DriverBoundaryTests(unittest.TestCase):
             )
             self.assertEqual(delivery.status, "delivered")
             with self.assertRaises(PluginError):
-                manager.register_driver(_FakeToolsDriver())
+                manager.register_driver(_FakeToolsDriver("driver.generic"))
         finally:
             manager.shutdown_all()
         self.assertTrue(driver.closed)

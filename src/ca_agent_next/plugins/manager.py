@@ -187,6 +187,7 @@ class PluginProcess:
         self._shutdown_message_id: str | None = None
         self._stopped_seen = False
         self._shutdown_in_flight = 0
+        self._shutdown_inflight_divergent = False
         self._write_closed = False
         self._eof = False
         self._aborting = False
@@ -278,10 +279,21 @@ class PluginProcess:
 
     @property
     def shutdown_in_flight(self) -> int:
-        """最近一次 ``plugin.stopped`` 报告的在途操作数。"""
+        """最近一次 ``plugin.stopped`` 中 Plugin **自报**的进程内在途操作数。
+
+        这是 Plugin 侧诊断值，不是 Manager 待决计数的权威来源；Host 侧权威
+        计数是本进程的 ``PendingRegistry``（见 :attr:`pending_count`）。
+        """
 
         with self._lock:
             return self._shutdown_in_flight
+
+    @property
+    def shutdown_in_flight_divergent(self) -> bool:
+        """最近一次停止时 Plugin 自报计数是否与 Host 本地待决数不一致。"""
+
+        with self._lock:
+            return self._shutdown_inflight_divergent
 
     def tool_terminal(self, invocation_id: str) -> ToolOutcome | None:
         with self._lock:
@@ -404,6 +416,7 @@ class PluginProcess:
             self._state = PluginState.STOPPING
             self._stopped_seen = False
             self._shutdown_in_flight = 0
+            self._shutdown_inflight_divergent = False
         proc = self._proc
         if proc is not None and proc.poll() is None:
             try:
@@ -536,7 +549,19 @@ class PluginProcess:
             self._on_stopped(frame)
 
     def _on_stopped(self, frame: Frame) -> None:
-        """校验并处理 ``plugin.stopped``；错误关联/畸形 payload 均 fail closed。"""
+        """校验并处理 ``plugin.stopped``；错误关联/畸形 payload 均 fail closed。
+
+        ``inFlightCount`` 的语义边界（见 AR-003-03 与 IPC 规范 §5.1）：
+
+        - 它是 **Plugin 进程在停止瞬间自报的进程内在途操作数**，属于 Plugin
+          侧诊断值；协议只要求它是非负整数。
+        - 它不是 Manager 已知待决数的权威来源，也不是 Host 操作的终态依据。
+          Host 侧的权威计数是本进程的 ``PendingRegistry``。
+        - 两者不相等时只记录诊断 ``SHUTDOWN_INFLIGHT_DIVERGENCE``，不升级为
+          协议违规，也不改变任何操作的终态判定。
+        - 无论 Plugin 自报多少，Host 侧在 ``plugin.stopped`` 时仍未获终态的
+          Tool/Delivery 一律收敛为 ``UNKNOWN``：停止确认不能证明这些操作已完成。
+        """
         payload = frame.payload
         if _payload_keys(payload) != frozenset({"inFlightCount"}):
             self._note_protocol_violation("SHUTDOWN_PAYLOAD_INVALID", frame)
@@ -566,13 +591,16 @@ class PluginProcess:
                 return
             self._stopped_seen = True
             self._shutdown_in_flight = in_flight
-            if in_flight:
+            host_pending = len(self._pending)
+            if in_flight != host_pending:
+                self._shutdown_inflight_divergent = True
                 self._diagnostics.append(
-                    f"SHUTDOWN_IN_FLIGHT {in_flight}; pending operations stay UNKNOWN"
+                    "SHUTDOWN_INFLIGHT_DIVERGENCE "
+                    f"plugin={in_flight} host={host_pending}"
                 )
-        if in_flight:
-            # 不得把未完成的在途操作伪装为正常停止：立即给所有等待者明确终态。
-            self._abort_pending(ToolStatus.UNKNOWN)
+        # Host 侧 PendingRegistry 是权威：未被证实的操作不得提升为成功或
+        # 普通完成。这里不依赖 Plugin 自报计数是否为零。
+        self._abort_pending(ToolStatus.UNKNOWN)
         self._stopped_event.set()
 
     def _note_protocol_violation(self, reason: str, frame: Frame) -> None:
@@ -1343,6 +1371,9 @@ class PluginProcess:
             if self._eof:
                 return
             self._eof = True
+            # 优雅关闭尚未完成就退出时，仍待决的操作无法被证实，必须保持
+            # UNKNOWN；只有非关闭路径（崩溃/中断）才用 ABORTED 表示“确定未完成”。
+            shutting_down = self._state is PluginState.STOPPING
             if self._state is PluginState.STOPPING:
                 self._state = PluginState.STOPPED
             elif self._state is not PluginState.STOPPED:
@@ -1350,7 +1381,7 @@ class PluginProcess:
             self._extensions = frozenset()
             aborting = self._aborting
         self._abort_pending(
-            ToolStatus.UNKNOWN if aborting else ToolStatus.ABORTED
+            ToolStatus.UNKNOWN if (aborting or shutting_down) else ToolStatus.ABORTED
         )
         self._ready_event.set()
         self._stopped_event.set()
@@ -1506,8 +1537,18 @@ class PluginManager:
                 self._timeouts,
                 config=normalized_config,
             )
+            # 先占位再启动：启动期间并发的第二次 start 必须被拒绝，不能出现
+            # 两个进程争用同一 pluginId。
             self._processes[manifest.plugin_id] = process
-        process.start()
+        try:
+            process.start()
+        except BaseException:
+            # 启动失败不构成有效的 Manager-owned Process。仅当占位仍属于本次
+            # process 时回滚，避免误删并发启动成功后替换的注册。
+            with self._lock:
+                if self._processes.get(manifest.plugin_id) is process:
+                    del self._processes[manifest.plugin_id]
+            raise
         return process
 
     def process(self, plugin_id: str) -> PluginProcess | None:

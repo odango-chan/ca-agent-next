@@ -45,6 +45,8 @@ EXTENSION_KEYS = frozenset({"event.ingress", "event.delivery", "tools"})
 
 _PLUGIN_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]*$")
 _VERSION_RE = re.compile(r"^[0-9A-Za-z][0-9A-Za-z.+-]*$")
+# Draft 2020-12 §8.2.2：Anchor 名称必须是普通名称（plain-name）。
+_ANCHOR_NAME_RE = re.compile(r"^[A-Za-z_][-A-Za-z0-9._]*$")
 
 
 @dataclass(frozen=True)
@@ -505,10 +507,20 @@ def _check_local_refs(
 ) -> None:
     """拒绝远程/外部 ``$ref`` 与 ``$dynamicRef``，并要求文档内引用可解析。
 
-    Schema 校验必须完全离线；实现只接受同一文档内的 ``#`` 片段引用。
-    ``$dynamicRef`` 与 ``$ref`` 受同一离线边界约束，不能作为绕过入口；纯
-    ``#anchor`` 形式的动态引用交由 Draft 2020-12 的动态作用域解析，但其目标
-    仍必须留在同一文档内。
+    Schema 校验必须完全离线；实现只接受同一文档内的 ``#`` 片段引用，包括：
+
+    - 空片段 ``#``：指向文档根；
+    - JSON Pointer ``#/...``：按 RFC 6901 解析；
+    - 纯命名 Anchor ``#name``：必须由同一文档中的 ``$anchor`` 或
+      ``$dynamicAnchor`` 实际声明。
+
+    ``$dynamicRef`` 与 ``$ref`` 受同一离线边界约束，不能作为绕过入口。
+    Draft 2020-12 §8.2.3.2 规定：``$dynamicRef`` 先尝试动态作用域中的同名
+    ``$dynamicAnchor``，找不到时退回 ``$ref`` 语义——因此纯命名形式既可由
+    ``$dynamicAnchor`` 声明，也可由 ``$anchor`` 声明；但声明的名称必须真实
+    存在于本文档。既不是空片段、也不是 JSON Pointer、也不是合法 Anchor 名称
+    的片段形式（例如 ``#name/sub``、``#1abc``）视为不支持的 URI 形式，直接
+    拒绝，不得静默放行。
     """
     if isinstance(node, Mapping):
         for ref_key in ("$ref", "$dynamicRef"):
@@ -521,20 +533,79 @@ def _check_local_refs(
                     f"schema uses a non-local {ref_key}; offline validation is required",
                     details={"location": location, "keyword": ref_key},
                 )
-            if ref_key == "$ref" or ref.startswith("#/"):
-                if _resolve_pointer(root, ref) is _MISSING:
-                    raise PluginError(
-                        PluginErrorCode.MANIFEST_SCHEMA_INVALID,
-                        f"schema {ref_key} cannot be resolved inside the document",
-                        details={"location": location, "ref": ref},
-                    )
+            _check_local_ref_target(ref_key, ref, root, location)
         for key, value in node.items():
-            if key in ("$ref", "$dynamicRef"):
+            if key in ("$ref", "$dynamicRef", "$anchor", "$dynamicAnchor"):
                 continue
             _check_local_refs(value, root, location)
     elif isinstance(node, list):
         for item in node:
             _check_local_refs(item, root, location)
+
+
+def _check_local_ref_target(
+    ref_key: str, ref: str, root: Mapping[str, Any], location: str
+) -> None:
+    """校验单个本地引用；无法解析或不支持的片段形式一律拒绝。"""
+    fragment = ref[1:]
+    if fragment == "":
+        return  # ``#`` 指向文档根，恒可解析。
+    if fragment.startswith("/"):
+        if _resolve_pointer(root, ref) is _MISSING:
+            raise PluginError(
+                PluginErrorCode.MANIFEST_SCHEMA_INVALID,
+                f"schema {ref_key} cannot be resolved inside the document",
+                details={"location": location, "ref": ref},
+            )
+        return
+    name = urllib.parse.unquote(fragment)
+    if _ANCHOR_NAME_RE.match(name) is None:
+        raise PluginError(
+            PluginErrorCode.MANIFEST_SCHEMA_INVALID,
+            f"schema {ref_key} uses an unsupported local fragment form",
+            details={"location": location, "ref": ref},
+        )
+    static_anchors, dynamic_anchors = _collect_anchors(root)
+    if name in dynamic_anchors or name in static_anchors:
+        return
+    raise PluginError(
+        PluginErrorCode.MANIFEST_SCHEMA_INVALID,
+        f"schema {ref_key} cannot be resolved inside the document",
+        details={
+            "location": location,
+            "ref": ref,
+            "anchor": name,
+            "declaredAnchors": sorted(static_anchors),
+            "declaredDynamicAnchors": sorted(dynamic_anchors),
+        },
+    )
+
+
+def _collect_anchors(
+    document: Mapping[str, Any],
+) -> tuple[set[str], set[str]]:
+    """收集文档内声明的 ``$anchor`` 与 ``$dynamicAnchor`` 名称。
+
+    两者必须分开收集：``$dynamicAnchor`` 同时注册一个普通 Anchor，而
+    ``$anchor`` 不参与动态作用域解析。本函数只做名称存在性检查，不承担
+    完整的 JSON Schema Resolver 职责。
+    """
+    static_anchors: set[str] = set()
+    dynamic_anchors: set[str] = set()
+    stack: list[object] = [document]
+    while stack:
+        node = stack.pop()
+        if isinstance(node, Mapping):
+            anchor = node.get("$anchor")
+            if isinstance(anchor, str):
+                static_anchors.add(anchor)
+            dynamic_anchor = node.get("$dynamicAnchor")
+            if isinstance(dynamic_anchor, str):
+                dynamic_anchors.add(dynamic_anchor)
+            stack.extend(node.values())
+        elif isinstance(node, list):
+            stack.extend(node)
+    return static_anchors, dynamic_anchors
 
 
 _MISSING = object()
