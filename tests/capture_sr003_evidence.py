@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import sys
 import tempfile
@@ -76,7 +75,7 @@ def main() -> int:
             "terminalReadStatus": process.tool_terminal("inv1").status.value,
             "golden": {
                 "path": str(support.GOLDEN_PATH.relative_to(support.REPO_ROOT)),
-                "sha256": hashlib.sha256(support.GOLDEN_PATH.read_bytes()).hexdigest(),
+                "sha256": support.golden_sha256(),
                 "provenanceSha256": support.load_provenance()["sha256"],
                 "frames": len(support.load_golden()),
             },

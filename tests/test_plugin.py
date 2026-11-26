@@ -8,7 +8,6 @@ Plugin 子进程执行；Manifest 负例在握手前被拒绝。运行方式：
 
 from __future__ import annotations
 
-import hashlib
 import inspect
 import json
 import subprocess
@@ -500,7 +499,7 @@ class LifecycleIpcTests(_ManagerTestCase):
             host_ids,
         )
         provenance = support.load_provenance()
-        digest = hashlib.sha256(support.GOLDEN_PATH.read_bytes()).hexdigest()
+        digest = support.golden_sha256()
         self.assertEqual(digest, provenance["sha256"])
         self.assertEqual(provenance["frameCount"], 12)
 

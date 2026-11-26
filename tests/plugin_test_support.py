@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -121,6 +122,17 @@ def load_golden() -> list[dict[str, Any]]:
 
 def load_provenance() -> dict[str, Any]:
     return json.loads(PROVENANCE_PATH.read_text(encoding="utf-8"))
+
+
+def golden_sha256() -> str:
+    """golden fixture 的规范化字节摘要（CRLF 折叠为 LF）。
+
+    摘要必须与 checkout 的 ``core.autocrlf`` 设置无关：同一提交在 CRLF 与
+    LF 工作区必须得到相同结果，否则“逐帧一致”的证据会退化为平台相关的
+    行尾证据。``tests/fixtures/.gitattributes`` 另外固定该文件以 LF 检出。
+    """
+    data = GOLDEN_PATH.read_bytes().replace(b"\r\n", b"\n")
+    return hashlib.sha256(data).hexdigest()
 
 
 def compact_json(value: Any) -> str:
