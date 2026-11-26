@@ -1,0 +1,13 @@
+{
+  "caseId": "A06-ack-runid",
+  "description": "test-side outbound mutation injects runId=run-1 into ingress.ack",
+  "expected": "receiver plugin declares protocol violation; no Host identity accepted",
+  "outbound": [
+    {
+      "matchType": "ingress.ack",
+      "action": "set",
+      "path": ["payload", "runId"],
+      "value": "run-1"
+    }
+  ]
+}

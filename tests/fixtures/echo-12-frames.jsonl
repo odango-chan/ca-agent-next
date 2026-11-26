@@ -1,0 +1,12 @@
+{"apiVersion":"connectionagent.io/plugin-ipc/v1alpha1","messageId":"m1","type":"host.initialize","payload":{"pluginId":"example.echo","expectedVersion":"1.0.0","ipcVersion":"connectionagent.io/plugin-ipc/v1alpha1","config":{}}}
+{"apiVersion":"connectionagent.io/plugin-ipc/v1alpha1","messageId":"m2","correlationId":"m1","type":"plugin.ready","payload":{"pluginId":"example.echo","pluginVersion":"1.0.0","ipcVersion":"connectionagent.io/plugin-ipc/v1alpha1","extensions":["event.ingress","event.delivery","tools"]}}
+{"apiVersion":"connectionagent.io/plugin-ipc/v1alpha1","messageId":"m3","type":"ingress.event","payload":{"eventId":"evt1","ingressId":"example.echo","eventType":"echo.request","externalRequestId":"client-1","responseChannelId":"ch1","source":{"protocol":"echo","peerId":"test-peer"},"payload":{"text":"hello"},"artifacts":[]}}
+{"apiVersion":"connectionagent.io/plugin-ipc/v1alpha1","messageId":"m4","correlationId":"m3","type":"ingress.ack","payload":{"eventId":"evt1","disposition":"accepted"}}
+{"apiVersion":"connectionagent.io/plugin-ipc/v1alpha1","messageId":"m5","type":"tools.invoke","payload":{"invocationId":"inv1","callableId":"echo.read","arguments":{"text":"hello"},"invocationContext":{},"artifactRefs":[]}}
+{"apiVersion":"connectionagent.io/plugin-ipc/v1alpha1","messageId":"m6","correlationId":"m5","type":"tools.result","payload":{"invocationId":"inv1","result":{"text":"hello"}}}
+{"apiVersion":"connectionagent.io/plugin-ipc/v1alpha1","messageId":"m7","type":"delivery.dispatch","payload":{"deliveryId":"del1","responseObligationId":"obl1","responseChannelId":"ch1","eventType":"echo.request","statusCode":200,"headers":{},"body":{"text":"hello"},"artifacts":[]}}
+{"apiVersion":"connectionagent.io/plugin-ipc/v1alpha1","messageId":"m8","correlationId":"m7","type":"delivery.result","payload":{"deliveryId":"del1","disposition":"delivered","statusCode":200}}
+{"apiVersion":"connectionagent.io/plugin-ipc/v1alpha1","messageId":"m9","type":"host.cancel","payload":{"targetOperationId":"inv1","reason":"caller_cancelled"}}
+{"apiVersion":"connectionagent.io/plugin-ipc/v1alpha1","messageId":"m10","correlationId":"m9","type":"plugin.cancelled","payload":{"targetOperationId":"inv1","disposition":"too_late"}}
+{"apiVersion":"connectionagent.io/plugin-ipc/v1alpha1","messageId":"m11","type":"host.shutdown","payload":{"gracePeriodMs":1000}}
+{"apiVersion":"connectionagent.io/plugin-ipc/v1alpha1","messageId":"m12","correlationId":"m11","type":"plugin.stopped","payload":{"inFlightCount":0}}

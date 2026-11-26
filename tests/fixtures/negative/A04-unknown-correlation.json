@@ -1,0 +1,13 @@
+{
+  "caseId": "A04-unknown-correlation",
+  "description": "test-side inbound mutation rewrites tools.result.correlationId to unknown-corr",
+  "expected": "unknown correlationId rejected; original tools.invoke not completed",
+  "inbound": [
+    {
+      "matchType": "tools.result",
+      "action": "set",
+      "path": ["correlationId"],
+      "value": "unknown-corr"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "caseId": "A08-terminal-twice",
+  "description": "test-side inbound duplication emits tools.result twice for the same correlation",
+  "expected": "original operation completes exactly once; second terminal reply rejected",
+  "inbound": [
+    {
+      "matchType": "tools.result",
+      "action": "duplicate",
+      "secondMessageId": "m6b"
+    }
+  ]
+}

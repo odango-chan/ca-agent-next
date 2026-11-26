@@ -1,0 +1,13 @@
+{
+  "caseId": "A05-wrong-invocation",
+  "description": "test-side inbound mutation keeps correlationId=m5 but rewrites payload.invocationId to invX",
+  "expected": "operation identity mismatch rejected; original tools.invoke not completed",
+  "inbound": [
+    {
+      "matchType": "tools.result",
+      "action": "set",
+      "path": ["payload", "invocationId"],
+      "value": "invX"
+    }
+  ]
+}

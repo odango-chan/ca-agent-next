@@ -1,0 +1,13 @@
+{
+  "caseId": "A03-duplicate-messageid",
+  "description": "test-side inbound mutation rewrites tools.result.messageId to already-used m3",
+  "expected": "duplicate messageId rejected; original tools.invoke not completed",
+  "inbound": [
+    {
+      "matchType": "tools.result",
+      "action": "set",
+      "path": ["messageId"],
+      "value": "m3"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "caseId": "A07-delivery-wrong-id",
+  "description": "test-side inbound mutation rewrites delivery.result.deliveryId to delX",
+  "expected": "response obligation del1 not marked delivered",
+  "inbound": [
+    {
+      "matchType": "delivery.result",
+      "action": "set",
+      "path": ["payload", "deliveryId"],
+      "value": "delX"
+    }
+  ]
+}

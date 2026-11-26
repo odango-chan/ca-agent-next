@@ -1,0 +1,13 @@
+{
+  "caseId": "A02-ready-missing-extension",
+  "description": "test-side inbound mutation removes tools from plugin.ready.extensions",
+  "expected": "whole-package registration count = 0; handshake not accepted",
+  "inbound": [
+    {
+      "matchType": "plugin.ready",
+      "action": "remove_array_item",
+      "path": ["payload", "extensions"],
+      "value": "tools"
+    }
+  ]
+}
