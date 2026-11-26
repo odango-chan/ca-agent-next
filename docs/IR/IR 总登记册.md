@@ -27,7 +27,7 @@ IR 编号稳定。GitHub Issue 用于讨论、分派和跟踪，一个 IR 可关
 
 业务通过 Plugin 扩展，宿主保持 Python 和业务中立。
 
-- 实施协作 Issue：[SR-002 实施 Issue #22](https://github.com/odango-chan/ca-agent-next/issues/22)（实施 PR #23 已 MERGED，证据回填 PR #24 待合并）；[PR #23](https://github.com/odango-chan/ca-agent-next/pull/23) merge commit `49964464e19d13d219ea0b3513d2223fe81d2435`。SR-002 已 VERIFIED，AC-002-01～08 PASS；Issue #19 仅用于设计修订，Issue #21 仅用于治理修订。
+- 实施协作 Issue：[SR-002 实施 Issue #22](https://github.com/odango-chan/ca-agent-next/issues/22)（实施 PR #23 已 MERGED，证据回填 PR #25 待合并）；[PR #23](https://github.com/odango-chan/ca-agent-next/pull/23) merge commit `49964464e19d13d219ea0b3513d2223fe81d2435`。SR-002 已 VERIFIED，AC-002-01～08 PASS；Issue #19 仅用于设计修订，Issue #21 仅用于治理修订。
 - 实施分解：[SR-002](../SR/SR-002-Python%20核心与宿主基础骨架.md)、[SR-003](../SR/SR-003-统一插件管理器与扩展通信.md)。
 - 架构、设计和规范：[CA Agent Next 架构设计](../架构设计/CA%20Agent%20Next%20架构设计.md)、[通用Agent核心与Host设计说明书](../设计说明书/F01-通用Agent核心与Host/通用Agent核心与Host设计说明书.md)、[Plugin平台设计说明书](../设计说明书/F03-Plugin平台/Plugin平台设计说明书.md)、[插件包与进程通信协议规范](../规范/插件包与进程通信协议规范.md)。
 - 完成依据：对应 SR 的必需模块验收全部 VERIFIED；当前 SR-002 为 VERIFIED、SR-003 为 DRAFT，AC-002-01～08 PASS；EX-01 仍为系统级 NOT_RUN，因此 IR-002 尚未整体完成。
