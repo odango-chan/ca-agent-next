@@ -1,8 +1,8 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.15
-> 状态：SR-002 READY；其余 25 项 SR 为 DRAFT；实施启动按 SR 管理规范 §6.1 检查阶段依赖  
+> 文档版本：0.3.16
+> 状态：SR-002、SR-024 READY；其余 24 项 SR 为 DRAFT；实施启动按 SR 管理规范 §6.1 检查阶段依赖  
 > 修订日期：2026-11-26  
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
@@ -16,7 +16,7 @@
 - 本索引只汇总 ID、标题、设计依据、状态、依赖和实施入口。
 - 状态变化先更新 SR 文件，再更新本索引和[实施状态总览](实施状态总览.md)。
 - ca-agent-next PR #1 是文档/设计基线 PR，不是任何 SR 的实现 PR。
-- PR #1 已合并；SR-002 已 READY，其余 SR 仍按各自设计评审状态管理。
+- PR #1 已合并；SR-002、SR-024 已 READY，其余 SR 仍按各自设计评审状态管理。
 
 ## 2. SR 清单
 
@@ -44,16 +44,16 @@
 | [SR-021](../SR/SR-021-原生宿主设计移交.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 原生宿主设计移交 | DRAFT |
 | [SR-022](../SR/SR-022-执行内核设计移交.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 执行内核设计移交 | DRAFT |
 | [SR-023](../SR/SR-023-技能作者源与语言规范移交.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 技能作者源与语言规范移交 | DRAFT |
-| [SR-024](../SR/SR-024-Host%20Context%20Interface%20Package%20Publisher.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Host Context Interface Package Publisher | DRAFT |
+| [SR-024](../SR/SR-024-Host%20Context%20Interface%20Package%20Publisher.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Host Context Interface Package Publisher | READY |
 | [SR-025](../SR/SR-025-MAS%20Owner%20Interface%20Package%20Publisher.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | MAS Owner Development Interface Package Publisher | DRAFT |
 | [SR-026](../SR/SR-026-Codec公开工具发布.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Codec 公开工具发布 | DRAFT |
 | [SR-027](../SR/SR-027-技能Bundle构建与发布.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 技能 Bundle 构建与发布 | DRAFT |
 
-设计版本与章节、依赖、验收 ID、实施证据以各 SR 为准。逐项阻塞见[就绪审计](../参考与审计/跨仓设计资产迁移与一致性审计.md#8-设计就绪审计)。
+设计版本与章节、依赖、验收 ID、实施证据以各 SR 为准。本轮 26 项逐项结论见[按推荐顺序复核](../参考与审计/跨仓设计资产迁移与一致性审计.md#11-逐项设计与下一步门禁)。历史缺口见[就绪审计](../参考与审计/跨仓设计资产迁移与一致性审计.md#8-设计就绪审计)。
 
 ## 3. 设计恢复与实施顺序
 
-### 3.1 中央设计恢复批次（当前均为 DRAFT，不可实施）
+### 3.1 中央设计恢复与 Publisher 评审顺序
 
 | 顺序 | SR | 主要功能 | 目标仓 / 参考仓 | 依赖和产出 |
 |---|---|---|---|---|
@@ -92,7 +92,7 @@
 - 设计来源：ca-agent-next PR #1 的架构、设计、规范和 Acceptance 文档。
 - PR #1：已合并；只代表设计文档变更。
 - Next Runtime：README 声明尚无已验收 Runtime 实现。
-- 当前 26 项 SR 中 1 项 READY（SR-002）、25 项 DRAFT；[PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)已核对 58 个文件与 SHA256SUMS；归档报告为 Go/Python 18/18，当前审计复跑 NOT_RUN，不改变 SR-013 总体 DRAFT 状态。SR-009 仅覆盖 Event/Delivery Plugin 与本地 staging；SR-010 还覆盖 Next Host ArtifactStore、ca-host.artifact-store/v1 channel server、Provider v2 Driver 和 Codec 消费。
+- 当前 26 项 SR 中 2 项 READY（SR-002、SR-024）、24 项 DRAFT；[PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)已核对 58 个文件与 SHA256SUMS；归档报告为 Go/Python 18/18，当前审计复跑 NOT_RUN，不改变 SR-013 总体 DRAFT 状态。SR-009 仅覆盖 Event/Delivery Plugin 与本地 staging；SR-010 还覆盖 Next Host ArtifactStore、ca-host.artifact-store/v1 channel server、Provider v2 Driver 和 Codec 消费。
 - Issue #12 追踪本轮中央设计资产恢复；PR #11/#13/#15/#16/#18 均在独立分支 OPEN/DRAFT，恢复分支已同步可复用的最新文档内容但尚未创建 PR；PR 状态不等于 SR 实施状态。
 - 恢复分支 docs/restore-original-designs-20261125 尚未创建指向 main 的总 PR；SR-002 独立设计评审 [PR #20](https://github.com/odango-chan/ca-agent-next/pull/20) 已 APPROVE_FOR_READY，SR-002 为 READY；PR #20 仍 OPEN，尚未合并。SR READY 不代表代码实施或 AC/EX PASS。
 - ca-agent-demo、ca-client-tools、ca-skill-compiler、ca-skills 和 ca-openamsm-plugin 的现有代码/PR 只能作为外部复用或依赖证据，不能自动算作 Next SR 已实施。
@@ -127,3 +127,4 @@
 | 2026-11-26 | 0.3.13 | GPT-6.2（ChatGPT） | §1～§4 | 同步 SR-002 READY、SR-003 实施依赖语义及 SR 管理规范阶段门禁；保持 AC/EX NOT_RUN。 | 让索引只反映真实直接依赖，不把系统 EX 或后续实现阻塞提前传递。 | Issue #19；Issue #21；PR #20；SR-002；SR-003 |
 | 2026-11-26 | 0.3.14 | GPT-6.2（ChatGPT） | §1～§4 | 修正 SR-002/SR-003 对 F01 的当前版本引用为 v0.3.6，并清理索引中“全部 SR 仍 DRAFT”的过期概括。 | 保持权威设计版本与当前 SR 状态一致。 | Issue #19；Issue #21；F01 v0.3.6；SR-002；SR-003；PR #20 |
 | 2026-11-26 | 0.3.15 | GPT-6.2（ChatGPT） | §3～§4 | 登记 SR-002 独立实施 Issue #22，并保持 SR-003 DRAFT、实施依赖 SR-002 VERIFIED 的边界。 | 完成 READY→实施 Issue 的追踪闭环，不把设计 Issue 当作代码任务。 | Issue #19；Issue #21；Issue #22；PR #20 |
+| 2026-11-26 | 0.3.16 | Codex / GPT-6 | §2～4 | 同步 Host Publisher 的设计结论，并指定顺序审查入口。 | 使 Harness 能按当前阶段判定启动与验收条件 | Issue #12、#21 |

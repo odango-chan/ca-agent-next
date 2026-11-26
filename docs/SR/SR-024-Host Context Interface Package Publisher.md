@@ -1,8 +1,8 @@
 # SR-024：Host Context Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.7
-> 状态：DRAFT
+> SR 版本：0.1.8
+> 状态：READY（设计评审通过；产品验收 NOT_RUN）
 > 创建日期：2026-11-25
 > 所属阶段：跨仓设计移交
 > 上游需求：[IR-006](../IR/IR%20总登记册.md#ir-006)
@@ -66,7 +66,7 @@ make verify
 
 - [Studio Issue #269](https://github.com/odango-chan/ca-skill-studio-demo/issues/269)：OPEN；下游消费端集成，归 SR-016，不是 Publisher 生成 ZIP 的硬前置。
 - 实施 Issue：NOT_CREATED；实施 PR / Commit：无。实施：NOT_STARTED。验收：NOT_RUN。替代关系：无。
-- 本 SR 保持 DRAFT。必须先创建并关联 ca-agent-demo 实施 Issue、完成设计评审和文档门禁，之后才能生成 DeepSeek Harness Goal 提示词。
+- 本轮对设计基线 b9eb71d7671a75fc56e7d389e59aa9f7d6c0973b 的 §1～4 完成逐项审查。Compiler Schema 和 Host fixture 的 Git blob 均与 §3 相符。用原始 fixture 构造的 manifest 通过 Draft 2020-12 校验，添加 sourceStatus 后被拒绝；同一输入两次生成的两文件 ZIP 字节一致，解包后的 Schema 保持原始字节。目标仓已声明 jsonschema 依赖和 make verify 入口。设计 READY，AC-024-01～07 的产品执行保持 NOT_RUN。启动前在 ca-agent-demo 建立独立实施 Issue，按治理 §13 固定设计 SHA 与分支。
 
 ## 修订记录
 
@@ -74,10 +74,10 @@ make verify
 |---|---|---|---|---|---|
 | 2026-11-25 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 从重复占用 SR-020 的 Host Context Publisher 设计中建立独立 SR-024；固定源 Schema、包身份、Export、原始字节、Studio provenance 与 Development Build 验收 | IR-006；F09；SR-015、SR-016、SR-024；Studio #269 |
 | 2026-11-25 | 0.1.1 | GPT-6.2（ChatGPT） | §1～5 | 修正 SR 标题/功能归属/相对链接，明确只使用 schema-required files[].sha256，不新增包级摘要、签名、Trust Registry 或 Admission；补充实施 Issue 与提示词门禁 | Issue #12；SR-020 保留参考宿主审计；SR-024 独立发布 Host Context Package |
-| 2026-11-25 | 0.1.2 | GPT-6.2（ChatGPT） | §2～5 | 将 Studio lock 的 `source.sourceStatus` 明确归 SR-016；解除 #269 对 Publisher 的硬前置；补齐 ca-agent-demo 的目标文件、固定 Compiler schema blob、生成命令和测试门槛 | 让 Publisher 与 Studio 消费端职责分离，并使 SR 在评审通过后可由 Harness 按固定步骤实施 | Issue #12；F09 v0.3.3；SR-016；Studio #267/#269 |
-| 2026-11-25 | 0.1.3 | GPT-6.2（ChatGPT） | §1～5 | 同步 F09 v0.3.4 与中央归档的 CA-SL/EC06 源材料入口；Publisher 范围与验收不变 | 保持 SR 设计依据指向唯一中央版本 | Issue #12；F09 v0.3.4；SR-016 |
-
-| 2026-11-25 | 0.1.4 | GPT-6.2（ChatGPT） | §2～5 | 发现 Compiler v2.1.0 Development BuildRequest 要求 exact SemVer，`v1` 不能作为 package.version；保留 Schema `$id` v1，提出 `1.0.0-dev.1` package version 决策门槛 | 防止 Host Publisher 产出无法被 Compiler 接受的 Interface Package；不增加 Release、sidecar 或额外 Trust 机制 | Issue #12；F09 v0.3.5；SR-016 |
+| 2026-11-25 | 0.1.2 | GPT-6.2（ChatGPT） | §2～5 | 将 Studio lock 的 `source.sourceStatus` 明确归 SR-016；解除 #269 对 Publisher 的硬前置；补齐 ca-agent-demo 的目标文件、固定 Compiler schema blob、生成命令和测试门槛；让 Publisher 与 Studio 消费端职责分离，并使 SR 在评审通过后可由 Harness 按固定步骤实施 | Issue #12；F09 v0.3.3；SR-016；Studio #267/#269 |
+| 2026-11-25 | 0.1.3 | GPT-6.2（ChatGPT） | §1～5 | 同步 F09 v0.3.4 与中央归档的 CA-SL/EC06 源材料入口；Publisher 范围与验收不变；保持 SR 设计依据指向唯一中央版本 | Issue #12；F09 v0.3.4；SR-016 |
+| 2026-11-25 | 0.1.4 | GPT-6.2（ChatGPT） | §2～5 | 发现 Compiler v2.1.0 Development BuildRequest 要求 exact SemVer，`v1` 不能作为 package.version；保留 Schema `$id` v1，提出 `1.0.0-dev.1` package version 决策门槛；防止 Host Publisher 产出无法被 Compiler 接受的 Interface Package；不增加 Release、sidecar 或额外 Trust 机制 | Issue #12；F09 v0.3.5；SR-016 |
 | 2026-11-25 | 0.1.5 | Codex / GPT-6 | 正文 | §2～4 固定 Host 包版本、文件名与负例 | Issue #12 SR-024 |
 | 2026-11-25 | 0.1.6 | Codex / GPT-6 | 正文 | 同步所引权威设计版本 | Issue #12 SR-024 |
 | 2026-11-25 | 0.1.7 | Codex / GPT-6 | 正文 | 同步本轮受影响的现行设计依据 | Issue #12 SR-024 |
+| 2026-11-26 | 0.1.8 | Codex / GPT-6 | §3、§5 | 记录固定输入的实测设计结论，分离设计 READY 与目标仓实施 Issue。 | Issue #12、#21 |

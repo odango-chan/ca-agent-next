@@ -1,7 +1,7 @@
 # SR-010：OpenAMSM 工具插件与按需编解码集成
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.8  
+> SR 版本：0.1.9  
 > 状态：DRAFT；设计基线待评审，不允许实施  
 > 创建日期：2026-11-25  
 > 所属阶段：Phase G  
@@ -38,7 +38,7 @@
 
 SR-003、SR-007、SR-009；外部依赖为 ca-client-tools Provider v1.2.0 / Codec API、冻结的 ca-host.artifact-store/v1 契约与共享 conformance fixtures。ca-agent Go Host P1 仅作为外部参考证据，不计入 Next 验收。
 
-进入 READY 前必须确认所有前置 SR 已 VERIFIED，或在 SR 中明确记录并批准并行实施理由；外部依赖必须有可核对的版本、接口和可用证据。
+设计使用 Provider v2 与 F05 channel 契约。真实 Driver 分发消费 SR-003/007，Plugin 与 Host 的 staging 联调消费 SR-009。无 Codec 的已发布绑定可单测；只有 decode-required 的调用消费 SR-026 的公开发行物。逐条保留 OM-04/10/13 的实际环境和证据。 设计可按 SR 管理规范 §6.1 单独评审。
 
 ## 5. 验收条件
 
@@ -93,3 +93,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-25 | 0.1.6 | Codex / GPT-6 · §5 固定目标代码位置、复验入口及可观察断言；同步所引权威设计版本 | 对齐当前架构与实施门禁 | Issue #12 SR-010 |
 | 2026-11-26 | 0.1.7 | §5 对齐真实 Provider v2，分别验收消费与外部发布 | 对齐跨仓实现与独立复验 | Issue #12 |
 | 2026-11-26 | 0.1.8 | 同步设计依据到本次复审的修订版本 | 对齐跨仓实现与独立复验 | Issue #12 |
+| 2026-11-26 | 0.1.9 | Codex / GPT-6，§4～5。分别登记设计输入、实施接入和验收依赖。 | 使 Harness 能按当前阶段判定启动与验收条件 | Issue #12、#21 |
