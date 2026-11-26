@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.42
+> 文档版本：0.3.43
 > 状态：29 项 SR：4 VERIFIED、1 IMPLEMENTED、24 DRAFT（24 项设计均已提交待评审），SR-003 模块 AC PASS，系统 EX NOT_RUN
 > 修订日期：2026-11-26  
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -69,8 +69,8 @@
 | SR-010 | Provider/Codec 与 Artifact Channel | 待评审（REVIEW_REQUESTED） | DRAFT |
 | SR-011 | 真实 OpenAMSM Create/Modify/Release | 待评审（REVIEW_REQUESTED） | DRAFT |
 | SR-012 | Compiler 中央设计归档 | 待评审（REVIEW_REQUESTED） | DRAFT |
-| SR-013 | Compiler when、新 Artifact 与 Build API | 待评审（REVIEW_REQUESTED） | DRAFT |
-| SR-016 | Skill Studio 与 1.6.0 集成 | 待评审（REVIEW_REQUESTED） | DRAFT |
+| SR-013 | Compiler when、Request Schema、新 Artifact / Build API、Schema-only Package / zero Capability roots（AC-013-06） | 待评审（REVIEW_REQUESTED） | DRAFT |
+| SR-016 | Skill Studio 与 1.6.0 集成；零 Capability roots / Schema-only closure 消费 | 待评审（REVIEW_REQUESTED） | DRAFT |
 | SR-017 | OpenAMSM Event/Delivery Plugin 设计移交 | 待评审（REVIEW_REQUESTED） | DRAFT |
 | SR-018 | MAS Owner 权威契约移交 | 待评审（REVIEW_REQUESTED） | DRAFT |
 | SR-019 | Mock AMF 与仿真对端 | 待评审（REVIEW_REQUESTED） | DRAFT |
@@ -83,7 +83,7 @@
 | SR-027 | 1.6.0 技能 Bundle 发布 | 待评审（REVIEW_REQUESTED） | DRAFT |
 | SR-028 | uv Python 工程工具链 | 待评审（REVIEW_REQUESTED） | DRAFT |
 | SR-029 | 1.6.0 Capability-first 一对一绑定 | 待评审（REVIEW_REQUESTED） | DRAFT |
-| SR-030 | Host Context 1.6.0 Schema-only Publisher；0 Capability / 0 Callable，精确 Schema export | 待评审（REVIEW_REQUESTED） | DRAFT |
+| SR-030 | Host Context 1.6.0 Schema-only Publisher；0 Capability / 0 Callable，精确 Schema export；与 SR-013 AC-013-06 联合验收 | 待评审（REVIEW_REQUESTED） | DRAFT |
 
 上述专项评审按单版本 1.6.0 和 Capability↔Callable 一对一原则校核；历史 v1alpha5、Compiler v2.1.0、Owner v1alpha4 和 Provider v1.2.0 只可作迁移/审计来源。旧来源中的身份、Build DTO、Artifact、Bundle 或测试不得自动证明新版发布/可实施。SR-029 新契约尚未发布，Compiler #61、Publisher、Skill Bundle 等真实前置仍保持各自 BLOCKED/NOT_RUN；SR-028 的 uv 工具链设计可独立于这些外部发布审查。
 
@@ -195,3 +195,4 @@
 | 2026-11-26 | 0.3.40 | GPT-6（ChatGPT） | 文档头、设计评审、修订记录 | 为全部 23 项 DRAFT SR 建立独立设计待评审矩阵；实施状态统计仍为 4/1/23 | 明确评审请求与实施 READY 独立，不假设 1.6.0 外部产物已发布 | Issue #12/#40/#43；SR-004～SR-029 |
 | 2026-11-26 | 0.3.41 | GPT-6（ChatGPT） | 现行 1.6.0 权威设计与审核追踪 | 与 #46 实质设计整改一致，更新当前版本、Owner 1.6.0 Publisher 和模块 AC 边界 | 消除旧 Development 1.0.0 误导与设计/实施状态混淆 | Issue #12/#40；PR #46 |
 | 2026-11-26 | 0.3.42 | GPT-6（ChatGPT） | SR 清单、设计待评审矩阵、Publisher 顺序与修订记录 | 将新增 SR-030 纳入唯一 1.6.0 Host Context Schema-only Publisher；把 SR-024 明确标为历史 v1alpha5 Publisher；统计更新为 29 项 SR / 4 VERIFIED / 1 IMPLEMENTED / 24 DRAFT | 避免把旧 Development Publisher 的 VERIFIED 误认为新版 Schema-only Package 已发布 | Issue #12/#40；SR-024、SR-030；PR #46 |
+| 2026-11-26 | 0.3.43 | GPT-6（ChatGPT） | §2.1、SR-013/SR-016/SR-030 评审焦点、修订记录 | 将 Schema-only Package / zero Capability roots 的新 AC-013-06 纳入 SR-013 评审焦点，并明确 SR-016 消费与 SR-030 Publisher 的联合验收关系 | 让 24 项 DRAFT 的评审矩阵与 F08/EC02/SR-013/F09/SR-016 的最新闭环一致 | Issue #12/#40；SR-013、SR-016、SR-030；PR #46 |
