@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.2.11\
+> 文档版本：0.2.12\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 修订日期：2026-11-26  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -312,7 +312,7 @@ Compiler 对每个 Procedure Capability 使用点执行以下确定性步骤：
 7. 复用现有 Schema closure、Evidence、Scope identity / provenance、Mutation Receipt / Commit Proof / Reconcile 校验；Reconcile 不作为普通 Capability 导出。
 8. 对未被任何 Procedure 使用的 Grant 报 CAPABILITY_GRANT_UNUSED；不得因未使用而保留隐式授权。
 
-Schema-only 依赖规则：显式依赖闭包可以包含仅导出 Schema 的 Interface Package，其 Capability / Callable exports 均为零；Compiler 只将被 Contract.contexts 等正式 Schema 引用的 Schema export 与完整 $ref 闭包纳入 Schema dependency closure，不为该 Package 建立 Capability grant、Callable binding 或 Tool allowlist。零 Capability roots 不要求 Schema dependency closure 为空；只有不存在外部 Capability 和外部 Schema 引用时，Package dependency closure 才为空。
+Schema-only 依赖规则：显式依赖闭包可以包含仅导出 Schema 的 Interface Package，其 Capability / Callable exports 均为零；Compiler 只将被 Contract.contexts 显式引用的 Schema export 与完整 $ref 闭包纳入 Schema dependency closure，不为该 Package 建立 Capability grant、Callable binding 或 Tool allowlist。零 Capability roots 不要求 Schema dependency closure 为空；只有不存在外部 Capability 和外部 Schema 引用时，Package dependency closure 才为空。
 
 Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId。Provider 内部的多 handler 路由由 Callable 的封闭 Input Schema 决定。
 
@@ -386,4 +386,5 @@ Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId�
 | 2026-11-26 | 0.2.8 | GPT-6（ChatGPT） | 新增 1.6.0 目标章节、状态及修订记录 | 移植一对一 Binding / Selector / Action 设计并标为待评审 | 无旧版兼容或产品完成承诺 | Issue #40；SR-029 |
 | 2026-11-26 | 0.2.9 | GPT-6（ChatGPT） | §1、§5～7、修订记录 | 移除新 Compiler 复用 v1alpha5 BuildRequest/DependencyInspection/Verify 的旧假设，唯一目标为 1.6.0 DTO/Artifact，历史包在新版明确拒绝 | 贯彻 Issue #40 全链路无兼容、无双轨/迁移；准确机器标识待 Compiler Owner 冻结 | Issue #40；SR-029；SR-013 |
 | 2026-11-26 | 0.2.10 | GPT-6（ChatGPT） | 规范性设计与验收门槛 | 修复 Parser/Build/Manifest 的 v1alpha5 新实现要求，并补齐 1.6.0 空根与发布职责 | 修复新旧语言/能力运行时冲突 | Issue #12/#40；SR-013/025/029；PR #46 |
-| 2026-11-26 | 0.2.11 | GPT-6（ChatGPT） | §1、§9～§11、修订记录 | 明确 Schema-only Interface Package 可进入 Schema dependency closure，且零 Capability roots 与零 Package dependency closure 是不同概念；增加 SR-013 AC-013-06 / SR-030 AC-030-03 联合验收入口 | 防止 Compiler Linker 把 Schema-only Package 错误当成 Capability root，或要求虚构 Callable 满足旧结构 | Issue #12/#40；SR-013、SR-029、SR-030；PR #46 |
+| 2026-11-26 | 0.2.11 | GPT-6（ChatGPT） | §1、§9～§11、修订记录 | 明确 Schema-only Interface Package 仅由 Contract.contexts 引用并进入 Schema dependency closure，且零 Capability roots 与零 Package dependency closure 是不同概念；增加 SR-013 AC-013-06 / SR-030 AC-030-03 联合验收入口 | 防止 Compiler Linker 把 Schema-only Package 错误当成 Capability root，或要求虚构 Callable 满足旧结构 | Issue #12/#40；SR-013、SR-029、SR-030；PR #46 |
+| 2026-11-26 | 0.2.12 | GPT-6（ChatGPT） | §10.2、§11.1、修订记录 | 收紧 Schema-only Package 的引用入口为 Contract.contexts，requestSchema 仍由 Skill 自有 Schema 提供 | 与 CA-SL 1.6.0 / SR-030 的 Request Schema 与 Host Context Schema 所有权边界一致 | Issue #12/#40；CA-SL 1.6.0；SR-013、SR-030；PR #46 |
