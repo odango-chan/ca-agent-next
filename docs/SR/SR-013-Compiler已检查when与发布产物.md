@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.10\
+> 文档版本：0.2.11\
 > 状态：**DRAFT（设计待评审）**；CA-SL 1.6.0-only Compiler 新契约待 Owner 冻结；产品实施/发布 NOT_RUN  
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-26  
@@ -300,7 +300,7 @@ AC-013-05  经授权 Compiler Release
 
 恢复时先重新核对规范 SHA、Compiler HEAD、Issue #61、目标分支、权限和最后一个已通过 Acceptance；从第一个未通过阶段继续，不重跑或覆盖已通过证据。
 
-## 8.1 DeepSeek Harness Goal 执行约束
+### 8.1 DeepSeek Harness Goal 执行约束
 
 SR-013 达到 READY 且文档门禁通过后，实施使用一个连续 Goal，避免将 AC 拆成彼此失去上下文的零散任务：
 
@@ -340,7 +340,7 @@ SR-013 达到 READY 前必须：
 
 SR-013 只有 AC-013-01～05 均达到各自通过条件，Compiler Release 有授权且证据可复核，才可报告 Compiler 交付完成。SR-023、SR-004/005/006 的 Bundle/Agent 验收不得由 SR-013 代替。
 
-## 10. CA-SL 1.6.0 统一新接口与设计评审门槛
+## 11. CA-SL 1.6.0 统一新接口与设计评审门槛
 
 - 本 SR 的 **设计待评审** 不意味着 Compiler 已实现或 READY；AC-013-02～05 的新产品 Build/Verify/Golden / Release 必须独立通过。
 - 新版 Compiler 只处理 CA-SL 1.6.0 Capability-first 源码。Contract/Procedure 的 Capability ID 经 SR-029 定义的一对一约束绑定到唯一 Callable；严格校验 kind、Effect、Input/Output Schema、Owner/Provider Package identity，Artifact 保存已编译的 Binding。
@@ -373,3 +373,4 @@ SR-013 只有 AC-013-01～05 均达到各自通过条件，Compiler Release 有�
 | 2026-11-26 | 0.2.8 | Codex / GPT-6 | 见本行变更 | 将未发布 Runtime Artifact 与 BuildResult 的候选版本段改为纯数字 2，保留 Owner 冻结门禁 | 对齐跨仓实现与独立复验 | Issue #12 |
 | 2026-11-26 | 0.2.9 | GPT-6（ChatGPT） | 文档头、§1～2、§5～6、§10、修订记录 | 把 Compiler 新产品规范统一为 CA-SL 1.6.0-only，移除 v1alpha5 BuildRequest/DependencyInspection/Runtime 兼容入口并增加 SR-029 Binding 门槛 | 不把历史 PoC、冻结发布源或旧 Build DTO 当作当前产品设计完成 | Issue #40；SR-029；Compiler #61 |
 | 2026-11-26 | 0.2.10 | GPT-6（ChatGPT） | 文档互引与修订记录 | 刷新当前生效版本引用：Compiler 正式设计 F08 版本引用同步，1.6.0-only 未发布 | 防止待审文档引用旧版本 | Issue #40；SR-029 |
+| 2026-11-26 | 0.2.11 | GPT-6（ChatGPT） | 标题层级/修订记录 | 调整新增 §11 以及历史 §8.1 层级，移除重复二级标题 | 满足 Markdown 设计评审门禁，避免编号或治理表歧义 | Issue #40；SR-029 |
