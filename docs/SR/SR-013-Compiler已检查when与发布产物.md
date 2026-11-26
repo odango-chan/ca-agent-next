@@ -1,7 +1,7 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.12\
-> 状态：**DRAFT（设计待评审）**；CA-SL 1.6.0-only Compiler 新契约待 Owner 冻结；产品实施/发布 NOT_RUN  
+> 文档版本：0.2.13\
+> 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**；实施/产品验收未升级  
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-26  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -10,6 +10,15 @@
 上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。功能归属：EC02 Compiler、F08 技能编译与发布；消费端关联 F02。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.9、[F08 技能编译与发布设计说明书](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.12、[F02 Skill 管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md) §7/§11、CA-SL v1alpha5 正式来源 SHA 18d8184367982ccbc835756136c4a53f9096c3a0。
 
 目标仓：odango-chan/ca-skill-compiler。实施 Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)。文档刷新 Issue：[Next #14](https://github.com/odango-chan/ca-agent-next/issues/14)。目标代码基线：Compiler v2.1.0，commit 255ab85fa5abb4b0bf36656bf64250cafebf45cb。规范依赖：[ca-skills #88](https://github.com/odango-chan/ca-skills/pull/88) 已合并，正式发布身份见 [ca-skills release record](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs/releases/ca-sl-v1alpha5.md)。
+
+## 0. 本轮设计评审入口（2026-11-26）
+
+本 SR 纳入 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12) 的中央设计评审批次。**SR 实施主状态依旧为 `DRAFT`；设计 `REVIEW_REQUESTED` 不等于独立 APPROVED、实施 READY 或产品 PASS。** 单版本决定见 [SR-029](SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) / [PR #45](https://github.com/odango-chan/ca-agent-next/pull/45)。
+
+- **本轮评审重点：**1.6.0 when、Request Schema、1:1 Capability Binding、Build/Verify、Runtime Artifact/Manifest 和 Golden 验收。
+- **阻塞/未验证：**旧 AC-013-01 PoC 不是新产品发布；正式 Schema/机器标识/DTO 未冻结，AC-013-02～05 NOT_RUN。
+- **通用架构约束：**新 CA-SL 作者源、Compiler API/Build DTO、Runtime Artifact、Bundle、Studio 与 Agent Importer/Runtime **只支持 1.6.0**；Skill 只选择 Capability ID，公开 Capability↔Callable 双向一对一。历史版本材料只读留档；不做别名、兼容、双轨、迁移或 fallback。机器字段/ID 必须等待发布者冻结，不猜测。
+- **评审输出：**逐项核对范围、非目标、外部 Owner、错误/状态语义、Acceptance 与证据路径。设计无独立结论写 `PENDING_REVIEW`；未发布依赖写 `BLOCKED`；未运行测试写 `NOT_RUN`。当前不得派发 DeepSeek Harness 实施任务。
 
 ## 1. 目标、范围与契约边界
 
@@ -375,3 +384,4 @@ SR-013 只有 AC-013-01～05 均达到各自通过条件，Compiler Release 有�
 | 2026-11-26 | 0.2.10 | GPT-6（ChatGPT） | 文档互引与修订记录 | 刷新当前生效版本引用：Compiler 正式设计 F08 版本引用同步，1.6.0-only 未发布 | 防止待审文档引用旧版本 | Issue #40；SR-029 |
 | 2026-11-26 | 0.2.11 | GPT-6（ChatGPT） | 标题层级/修订记录 | 调整新增 §11 以及历史 §8.1 层级，移除重复二级标题 | 满足 Markdown 设计评审门禁，避免编号或治理表歧义 | Issue #40；SR-029 |
 | 2026-11-26 | 0.2.12 | GPT-6（ChatGPT） | 活跃版本互引与修订记录 | Compiler 实施设计引用 F08 新唯一 1.6.0 Build DTO 版本 | 不将旧基线或历史修订版本冒充当前待评审设计 | Issue #40；SR-029 |
+| 2026-11-26 | 0.2.13 | GPT-6（ChatGPT） | 文档头、§0、设计依据 | 登记统一 1.6.0 专项设计评审、阻塞与证据边界；不改变产品实施主状态 | 设计集中评审、避免历史来源冒充新发布 | Issue #12；SR-029；PR #45 |
