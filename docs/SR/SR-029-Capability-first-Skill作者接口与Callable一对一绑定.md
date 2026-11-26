@@ -1,7 +1,7 @@
 # SR-029：Capability-first Skill 作者接口与 Callable 一对一绑定
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.0  
+> SR 版本：0.2.1  
 > 状态：待评审 / DESIGN_READY_FOR_REVIEW；非实施 READY；新版规范/产品 NOT_RELEASED
 > 创建日期：2026-11-26  
 > 上游需求：[IR-008](../IR/IR%20总登记册.md#ir-008)；关联需求：[IR-003](../IR/IR%20总登记册.md#ir-003)  
@@ -190,7 +190,7 @@ Runtime 以 Capability ID 为 Skill / Procedure 作者侧 Action 入口，从当
 - Callable ID 只出现在内部 Binding 详情或编译诊断，不作为作者可选入口。
 - LSP 对 Contract.capabilities、operation.capability、observation.capability 提供补全、悬停、定义跳转和静态诊断；来源为已导入 Package，不是 Provider 动态 catalog。
 - AI Authoring 只能生成 Capability ID，不得生成 Callable ID 或 backendOperationId。
-- v1alpha5 项目快照保持原样，不自动迁移；1.6.0 使用唯一 languageTarget，不混合兼容解析。
+- **新 Studio 仅接受 1.6.0 项目**。v1alpha5 作者源码和旧项目快照只能作为历史审计资料保留，不能导入新版 Studio，不提供转换/自动迁移、双语法或混合语言项目。
 
 ## 10. OpenAMSM 示例映射
 
@@ -262,3 +262,4 @@ Create / Release 继续分别使用原有 Schema 与 Evidence Guarantee；Modify
 |---|---|---|---|---|---|---|
 | 2026-11-26 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 建立 Capability-first Skill 作者接口、一对一 Callable、Package cardinality 审计及 Compiler / Runtime / Studio 闭环 | 消除 Skill 源码与 Provider / Owner 内部 Callable ID 的耦合，并明确 v1alpha5 冻结与 1.6.0 候选边界 | IR-008、IR-003、Issue #40 |
 | 2026-11-26 | 0.2.0 | GPT-6（ChatGPT） | §0～15、修订记录 | 移植 Capability-first 与 Owner/Provider cardinality 审计，刷新为 1.6.0-only、无旧兼容，状态改为待独立评审 | Issue #40；SR-029；SR-004；SR-013；SR-027 |
+| 2026-11-26 | 0.2.1 | GPT-6（ChatGPT） | 版本隔离与修订记录 | 补齐 Studio 拒绝旧项目边界，设计待评审 | 避免历史代码/测试被视为新版有效输入 | Issue #40；SR-029 |
