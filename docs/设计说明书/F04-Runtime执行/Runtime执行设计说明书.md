@@ -114,16 +114,17 @@ Skill/Artifact 无效、Callable Scope 不匹配、普通 Skill 调用 internal-
 
 ## 修订记录
 
-| 2026-11-26 | 0.3.5 | GPT-6.2（ChatGPT） | §3、§6、§7 | 明确 frozen v1alpha5 Capability ID 不进入 Runtime Artifact/Scope，并补齐 sidecar Reconcile internal-only 的 Runtime 保证 | 对齐 F03.05 的 Callable allowlist、Owner membership/Effect 与 exact-original Reconcile 边界 | IR-006 · SR-015 · Issue #12 |
+
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修订内容 | 原因 | 关联 |
 |---|---|---|---|---|---|---|
 | 2026-11-25 | 0.1.0 | 历史修订者/模型未记录 | 原始设计全文 | 既有功能机制设计基线；逐章历史记录未建立 | 原文档未记录历史作者，本轮不臆造 | PR #1 |
 | 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 第 1～8 章 | 归入对应 Feature 并补充外部能力边界 | 按 F04 归档，固定两种执行模式共用的 Action Boundary、Run 和 Owner Outcome 语义 | F04；SR-007；EC03/EC05；PR #1 |
-| 2026-11-25 | 0.2.1 | 刷新需求追踪、目录或证据引用 | 对齐最新分支与 IR/SR 基线 | 见关联 SR |
+| 2026-11-25 | 0.2.1 | 未记录 | 全文 | 刷新需求追踪、目录或证据引用 | 对齐最新分支与 IR/SR 基线 | 见关联 SR |
 | 2026-11-25 | 0.2.2 | Codex / GPT-6 | 既有执行内核边界 | 合并有效边界与分仓证据入口 | 跨仓设计移交 | IR-006 |
 | 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | 第 3、6、9 章 | 区分公开 Interface Package、Owner Contract Package 与 Provider Runtime Bindings 的权威边界 | 对齐 ca-client-tools v1.2.0 与 Owner v1alpha4 的实际发布结构 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.3.1 | GPT-6.2（ChatGPT） | 第 3 章 | 明确 Provider Interface 与 Owner Contract 是两个 Callable/Schema 来源，MAS `mas::` 引用只从 Owner snapshot 解析 | 修正 Runtime 把 Owner Callable 误认为 Provider Interface Package 导出的歧义 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.3.2 | GPT-6.2（ChatGPT） | 第 3 章 | 明确冻结 v1alpha5 Artifact 不携带 dependency snapshotDigest，Owner version pin 由 Provider sidecar / 部署配置提供 | 防止 Runtime 宣称逐 Skill 字节级依赖锁 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.3.3 | GPT-6.2（ChatGPT） | 第 3 章 | 补充 provider.yaml interfaceSnapshotDigest 对 Provider Interface snapshot 的部署级校验 | 与 Owner sidecar 的部署 pin 一起闭合 Provider / Owner 两类依赖 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.3.4 | Codex / GPT-6 | 正文 | §4.2 明确未声明 Callable 时的运行行为 | 消除执行歧义并同步中央设计 | Issue #12 |
+| 2026-11-26 | 0.3.5 | GPT-6.2（ChatGPT） | §3、§6、§7 | 明确 frozen v1alpha5 Capability ID 不进入 Runtime Artifact/Scope，并补齐 sidecar Reconcile internal-only 的 Runtime 保证 | 对齐 F03.05 的 Callable allowlist、Owner membership/Effect 与 exact-original Reconcile 边界 | IR-006 · SR-015 · Issue #12 |
