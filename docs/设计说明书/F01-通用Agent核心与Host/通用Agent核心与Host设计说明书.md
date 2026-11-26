@@ -1,7 +1,7 @@
 # 通用 Agent Core 与 Host 设计说明书
 
 > 文档类型：功能设计说明书  
-> 文档版本：0.3.1  
+> 文档版本：0.3.2  
 > 状态：Next 目标设计；本仓实现状态需独立验收，不以参考仓 PASS 代替  
 > 功能归属：F01 — 通用 Agent Core 与 Host  
 > 关联 SR：SR-002、SR-020、SR-021  
@@ -279,5 +279,6 @@ SR-002 的独立模块验收为 AC-002-01～AC-002-08，详见《演示验收基
 | 2026-11-25 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 建立 Core/Host/Model Loop 和业务中立基线 | SR-002 |
 | 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 全文 | 补齐 Event/Run/Response、Action Boundary、配置、失败恢复和跨仓实现差异 | Issue #12；SR-020、SR-021 |
 | 2026-11-26 | 0.2.1 | Codex / GPT-6 | 见本行变更 | 公共 Callable 按权威源消费；补齐正式文档的评审范围与非目标 | Issue #12 |
-| 2026-11-26 | 0.3.0 | GPT-6.2（ChatGPT） | §2、§5、§11 | 固定 Next Python 包身份、Host/ModelClient 公共接口、Fake 注入、Smoke/错误契约和 SR-002/EX-01 验收分层；明确 SR-003 复用入口 | 使首个 Python Host 切片可独立实施和复验，不复制 ca-agent-demo 的包身份或运行时 | Issue #19；SR-002、SR-003；AC-002-01～08、EX-01 |
-| 2026-11-26 | 0.3.1 | GPT-6.2（ChatGPT） | §5.2～5.5 | 固定 JSONValue、Event/Context 字段约束、HostError 与安全错误映射，并让 Smoke Run ID 确定化 | 让实现与测试可以直接按字段和错误语义执行 | Issue #19；SR-002；PR #20 |
+| 2026-11-26 | 0.3.0 | GPT-6.2（ChatGPT） | §2、§5、§11 | 固定 Next Python 包身份、Host/ModelClient 公共接口、Fake 注入、Smoke/错误契约和 SR-002/EX-01 验收分层；明确 SR-003 复用入口。使首个 Python Host 切片可独立实施和复验，且不复制 ca-agent-demo 的包身份或运行时。 | Issue #19；SR-002、SR-003；AC-002-01～08、EX-01 |
+| 2026-11-26 | 0.3.1 | GPT-6.2（ChatGPT） | §5.2～5.5 | 固定 JSONValue、Event/Context 字段约束、HostError 与安全错误映射，并让 Smoke Run ID 确定化；使实现与测试可以直接按字段和错误语义执行。 | Issue #19；SR-002；PR #20 |
+| 2026-11-26 | 0.3.2 | GPT-6.2（ChatGPT） | 修订记录 | 统一本次新增修订记录的六列格式，保持历史修改意图与关联追踪完整。 | Issue #19；PR #20 |
