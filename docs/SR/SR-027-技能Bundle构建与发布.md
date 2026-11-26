@@ -1,8 +1,8 @@
 # SR-027：技能Bundle构建与发布
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.1  
-> 状态：DRAFT  
+> SR 版本：0.1.2  
+> 状态：DRAFT；Compiler 新 Runtime Artifact API 与正式 Bundle 正例尚不可用，不允许实施发布路径  
 > 创建日期：2026-11-26  
 > 上游需求：IR-006  
 > 设计依据：F08 v0.3.7 §4、§6。  
@@ -32,9 +32,24 @@ CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验�
 
 中央设计 Issue #12；ca-skills 实施 Issue、实施 PR、构建证据和正式发行资产尚未登记。READY 前固定首批作者源、Bundle 的具体文件清单、可用 Compiler 版本与匹配 Verify 命令；候选构建和正式发布分别登记。状态 DRAFT，测试 NOT_RUN。Next 不编译，Compiler 不负责组装 Bundle。无替代 SR。
 
-## 修订记录
+## 5. 当前外部输入与发布证据核对（2026-11-26）
+
+| 输入 | 当前可核对事实 | 对本 SR 的结论 |
+|---|---|---|
+| CA-SL v1alpha5 | ca-skills PR #88 MERGED；normative SHA `18d8184367982ccbc835756136c4a53f9096c3a0`；PR #89 将该 SHA 固定在 release record | 语言规范依赖已满足；不是 Skill Bundle |
+| Compiler v2.1.0 | [正式 Release](https://github.com/odango-chan/ca-skill-compiler/releases/tag/v2.1.0)；冻结 Artifact v1alpha5 和 Development Artifact v1alpha1；旧 Artifact 字节/语义不变 | 不能满足 F08 新 Runtime Artifact API 的 Request Schema/when 输出 |
+| Compiler when Artifact | [Compiler Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) OPEN；SR-013 AC-013-02～04 未完成，AC-013-05 BLOCKED | 新 Runtime Artifact API 尚未发布；本 SR 不得选择或猜测候选 API/Manifest 字段 |
+| ca-skills 作者源 | main `780497a2918ad3e7bdff554ab64b0ba627e867e0` 含 v1alpha5 MAS 作者源；`scripts/compile_mas_v1alpha5.py` 只对单 Skill 做 Check/Inspect/可选 Build | 现有脚本不是 Bundle assembler，也不证明正式 Bundle 已发布 |
+| ca-skills Release | 当前 Release 列表只有历史 v0.1.0；未发现与新 Runtime Artifact API 匹配的 Published Skill Bundle | 无可供 SR-004 使用的正式 Assurance 正例 |
+| ca-skills 仓库布局 | 当前 main 未发现 `published-skills/` / 新 Runtime Artifact Bundle 发布目录 | Bundle layout / Skill 与 Artifact 关联契约仍须由本 SR 和 F08 明确的生产端 SR 冻结 |
+
+**阶段结论：** 本 SR 仍为 DRAFT。SR-027 的设计可以继续固定发布流程和待定契约责任，但在 Compiler #61 冻结新 Runtime Artifact API 之前，不得猜测 Manifest；在正式 Bundle 发布之前，不得把本地编译目录或临时拼装包当作 AC-027-02/03 正例。SR-004 的 SKILL.md-only 路径可独立验证，但不提升 SR-027 或 Assurance Bundle 的状态。
+
+## 6. 修订记录
+
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 内容 | 关联 |
 |---|---|---|---|---|---|
 | 2026-11-26 | 0.1.0 | Codex / GPT-6 | 见本行变更 | 首次登记两端交付、独立复验与就绪条件 | Issue #12 |
 | 2026-11-26 | 0.1.1 | Codex / GPT-6 | 见本行变更 | 补齐正式文档的评审范围与非目标；列明依赖设计版本；同步设计依据到本次复审的修订版本 | Issue #12 |
+| 2026-11-26 | 0.1.2 | GPT-6.2（ChatGPT） | 文档头、§4～6、修订记录 | 记录 CA-SL v1alpha5 固定源、Compiler v2.1.0 冻结 Artifact、Issue #61 未完成、ca-skills 当前无正式 Bundle 的真实状态 | 防止将规范/Compiler Release/本地 Build 误报为 Published Skill Bundle；为 SR-004 明确外部实施依赖 | Issue #43；SR-004；SR-013；SR-027 |
