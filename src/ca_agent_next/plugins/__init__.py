@@ -7,6 +7,21 @@
 from __future__ import annotations
 
 from .errors import PluginError, PluginErrorCode
+from .driver import (
+    PROVIDER_V2_PROTOCOL,
+    DriverProtocol,
+    ProviderBinding,
+    ProviderCancelResult,
+    ProviderCatalogEntry,
+    ProviderCatalogResult,
+    ProviderInitializeResult,
+    ProviderInvocation,
+    ProviderLimits,
+    ProviderPackageDescriptor,
+    ProviderV2ToolsExtensionDriver,
+    ToolInvocationHandle,
+    ToolsExtensionDriver,
+)
 from .manifest import (
     EXTENSION_KEYS,
     IPC_API_VERSION,
@@ -51,4 +66,17 @@ __all__ = [
     "PACKAGE_API_VERSION",
     "IPC_API_VERSION",
     "EXTENSION_KEYS",
+    "PROVIDER_V2_PROTOCOL",
+    "DriverProtocol",
+    "ProviderLimits",
+    "ProviderBinding",
+    "ProviderPackageDescriptor",
+    "ProviderInitializeResult",
+    "ProviderCatalogEntry",
+    "ProviderCatalogResult",
+    "ProviderInvocation",
+    "ProviderCancelResult",
+    "ToolInvocationHandle",
+    "ToolsExtensionDriver",
+    "ProviderV2ToolsExtensionDriver",
 ]

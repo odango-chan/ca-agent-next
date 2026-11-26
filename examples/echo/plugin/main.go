@@ -179,8 +179,7 @@ func (p *plugin) handle(in frame) (stop bool) {
 	case "host.cancel":
 		p.handleCancel(in)
 	case "host.shutdown":
-		p.handleShutdown(in)
-		return true
+		return p.handleShutdown(in)
 	default:
 		p.violation("UNKNOWN_MESSAGE_TYPE", in.Type, in.MessageID)
 	}
@@ -294,6 +293,21 @@ func (p *plugin) handleInvoke(in frame) {
 			p.replyRead(second)
 			p.replyRead(first)
 		}
+		return
+	}
+
+	switch p.fault {
+	case "cancel-too-late-late-result", "cancel-unsupported-late-result":
+		// The operation is already complete on the plugin side. The host has not
+		// seen the terminal frame yet: host.cancel is answered first (too_late or
+		// unsupported), then the original tools.result is emitted. A correct host
+		// keeps the pending tool operation and still accepts this result.
+		p.pending[invocation] = &waitOperation{
+			messageID: in.MessageID,
+			text:      text,
+			emitLate:  false,
+		}
+		logf("COMPLETED_PENDING_BEFORE_CANCEL invocationId=%s", invocation)
 		return
 	}
 
@@ -412,7 +426,29 @@ func (p *plugin) handleCancel(in frame) {
 	if target == "" {
 		p.violation("CANCEL_TARGET_MISMATCH", "host.cancel", "")
 	}
+	if p.fault == "cancel-no-reply" {
+		logf("FAULT cancel-no-reply targetOperationId=%s", target)
+		return
+	}
 	if operation, ok := p.pending[target]; ok {
+		if p.fault == "cancel-too-late-late-result" || p.fault == "cancel-unsupported-late-result" {
+			disposition := "too_late"
+			if p.fault == "cancel-unsupported-late-result" {
+				disposition = "unsupported"
+			}
+			delete(p.pending, target)
+			p.send(p.nextID("c"), in.MessageID, "plugin.cancelled", map[string]any{
+				"targetOperationId": target,
+				"disposition":       disposition,
+			})
+			logf("CANCELLED_SENT targetOperationId=%s disposition=%s", target, disposition)
+			p.send(p.nextID("r"), operation.messageID, "tools.result", map[string]any{
+				"invocationId": target,
+				"result":       map[string]any{"text": operation.text},
+			})
+			logf("ORIGINAL_RESULT_SENT invocationId=%s", target)
+			return
+		}
 		delete(p.pending, target)
 		p.send(p.nextID("c"), in.MessageID, "plugin.cancelled", map[string]any{
 			"targetOperationId": target,
@@ -441,13 +477,50 @@ func (p *plugin) handleCancel(in frame) {
 	logf("CANCELLED_SENT targetOperationId=%s disposition=too_late", target)
 }
 
-func (p *plugin) handleShutdown(in frame) {
+func (p *plugin) handleShutdown(in frame) (stop bool) {
 	messageID := "m12"
 	if p.used("m12") {
 		messageID = p.nextID("s")
 	}
-	p.sendWithID(messageID, in.MessageID, "plugin.stopped", map[string]any{"inFlightCount": 0})
-	logf("STOPPED_SENT inFlightCount=0")
+	if p.fault == "shutdown-no-reply" {
+		logf("FAULT shutdown-no-reply")
+		return false
+	}
+	// inFlightCount 必须是真实挂起数；默认轨迹没有挂起操作，仍逐帧保持
+	// golden 的 inFlightCount=0。
+	inFlight := len(p.pending)
+	switch p.fault {
+	case "shutdown-wrong-correlation":
+		p.writeWithID(p.nextID("s"), "not-the-shutdown-message-id", "plugin.stopped", map[string]any{
+			"inFlightCount": inFlight,
+		})
+		logf("FAULT shutdown-wrong-correlation")
+		return true
+	case "shutdown-bad-inflight":
+		p.writeWithID(messageID, in.MessageID, "plugin.stopped", map[string]any{
+			"inFlightCount": true,
+		})
+		logf("FAULT shutdown-bad-inflight")
+		return true
+	case "shutdown-negative-inflight":
+		p.writeWithID(messageID, in.MessageID, "plugin.stopped", map[string]any{
+			"inFlightCount": -1,
+		})
+		logf("FAULT shutdown-negative-inflight")
+		return true
+	case "shutdown-duplicate":
+		p.sendWithID(messageID, in.MessageID, "plugin.stopped", map[string]any{
+			"inFlightCount": inFlight,
+		})
+		p.send(p.nextID("s"), in.MessageID, "plugin.stopped", map[string]any{
+			"inFlightCount": inFlight,
+		})
+		logf("FAULT shutdown-duplicate")
+		return true
+	}
+	p.sendWithID(messageID, in.MessageID, "plugin.stopped", map[string]any{"inFlightCount": inFlight})
+	logf("STOPPED_SENT inFlightCount=%d", inFlight)
+	return true
 }
 
 func (p *plugin) hasExtension(name string) bool {

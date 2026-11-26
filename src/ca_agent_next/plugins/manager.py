@@ -38,6 +38,7 @@ from enum import Enum
 from typing import Any
 
 from ..contracts import Event, HostError, is_json_value
+from .driver import ToolsExtensionDriver, ToolInvocationHandle
 from .errors import PluginError, PluginErrorCode
 from .ipc import Frame, PendingRequest, PendingRegistry, encode_frame, parse_frame
 from .manifest import IPC_API_VERSION, PluginManifest, load_manifest, validate_instance
@@ -74,6 +75,7 @@ class ToolStatus(str, Enum):
     CANCELLED = "cancelled"
     TIMEOUT = "timeout"
     ABORTED = "aborted"
+    UNKNOWN = "unknown"
 
 
 _DELIVERY_DISPOSITIONS = frozenset({"delivered", "failed", "unknown"})
@@ -81,6 +83,13 @@ _CANCEL_DISPOSITIONS = frozenset({"cancelled", "too_late", "unsupported"})
 _ACK_DISPOSITIONS = frozenset(
     {"accepted", "duplicate_attached", "conflict", "rejected"}
 )
+
+# 长期状态的实现级生命周期上限。它们不是 IPC 协议字段，只是防止单个进程的
+# 诊断/去重记录无限增长；超过上限时按插入顺序淘汰最旧条目。
+_MAX_FRAME_RECORDS = 4096
+_MAX_INBOUND_MESSAGE_IDS = 8192
+_MAX_EVENT_FINGERPRINTS = 4096
+_MAX_TERMINAL_RECORDS = 4096
 
 
 @dataclass(frozen=True)
@@ -175,15 +184,21 @@ class PluginProcess:
         self._handshake_done = False
         self._handshake_error: PluginError | None = None
         self._initialize_message_id: str | None = None
+        self._shutdown_message_id: str | None = None
+        self._stopped_seen = False
+        self._shutdown_in_flight = 0
         self._write_closed = False
         self._eof = False
+        self._aborting = False
         self._ready_event = threading.Event()
         self._stopped_event = threading.Event()
         self._exited_event = threading.Event()
         self._diagnostics: deque[str] = deque(maxlen=200)
-        self._frames: list[FrameRecord] = []
-        self._ingress_records: list[IngressRecord] = []
-        self._inbound_message_ids: set[str] = set()
+        self._frames: deque[FrameRecord] = deque(maxlen=_MAX_FRAME_RECORDS)
+        self._ingress_records: deque[IngressRecord] = deque(
+            maxlen=_MAX_FRAME_RECORDS
+        )
+        self._inbound_message_ids: dict[str, None] = {}
         self._event_fingerprints: dict[str, tuple[str, str]] = {}
         self._tool_terminals: dict[str, ToolOutcome] = {}
         self._delivery_terminals: dict[str, DeliveryOutcome] = {}
@@ -261,6 +276,13 @@ class PluginProcess:
     def protocol_violations(self) -> int:
         return self._protocol_violations
 
+    @property
+    def shutdown_in_flight(self) -> int:
+        """最近一次 ``plugin.stopped`` 报告的在途操作数。"""
+
+        with self._lock:
+            return self._shutdown_in_flight
+
     def tool_terminal(self, invocation_id: str) -> ToolOutcome | None:
         with self._lock:
             return self._tool_terminals.get(invocation_id)
@@ -280,6 +302,24 @@ class PluginProcess:
                     details={"pluginId": self.plugin_id, "state": self._state.value},
                 )
             self._state = PluginState.STARTING
+
+        # 在任何进程启动前完成 initialize 帧的构造与 JSON 编码；非法 config
+        # 或不可序列化的对象必须在这里失败，不能留下仍运行的 Plugin 进程。
+        initialize_message_id = self._next_message_id()
+        initialize_payload = {
+            "pluginId": self._manifest.plugin_id,
+            "expectedVersion": self._manifest.version,
+            "ipcVersion": IPC_API_VERSION,
+            "config": dict(self._config),
+        }
+        try:
+            initialize_data = encode_frame(
+                initialize_message_id, "host.initialize", initialize_payload
+            )
+        except PluginError:
+            with self._lock:
+                self._state = PluginState.NOT_READY
+            raise
 
         command = [str(self._manifest.executable_path), *self._manifest.args]
         kwargs: dict[str, Any] = {
@@ -301,35 +341,40 @@ class PluginProcess:
                 details={"reason": type(exc).__name__},
             ) from None
 
-        self._reader = threading.Thread(
-            target=self._read_stdout,
-            name=f"plugin-{self.plugin_id}-stdout",
-            daemon=True,
-        )
-        self._stderr_reader = threading.Thread(
-            target=self._read_stderr,
-            name=f"plugin-{self.plugin_id}-stderr",
-            daemon=True,
-        )
-        self._reader.start()
-        self._stderr_reader.start()
-
-        initialize_message_id = self._send(
-            "host.initialize",
-            {
-                "pluginId": self._manifest.plugin_id,
-                "expectedVersion": self._manifest.version,
-                "ipcVersion": IPC_API_VERSION,
-                "config": dict(self._config),
-            },
-        )
+        # Popen 成功之后的每条异常路径都必须回收进程、Reader Thread 注册表和
+        # 进程状态，避免 NOT_READY 但仍运行的孤儿进程。
         self._initialize_message_id = initialize_message_id
+        try:
+            self._reader = threading.Thread(
+                target=self._read_stdout,
+                name=f"plugin-{self.plugin_id}-stdout",
+                daemon=True,
+            )
+            self._stderr_reader = threading.Thread(
+                target=self._read_stderr,
+                name=f"plugin-{self.plugin_id}-stderr",
+                daemon=True,
+            )
+            self._reader.start()
+            self._stderr_reader.start()
+            self._write_outbound(
+                initialize_message_id,
+                "host.initialize",
+                initialize_payload,
+                data=initialize_data,
+            )
+        except Exception as exc:
+            self._abort_process("startup failure")
+            if isinstance(exc, PluginError):
+                raise
+            raise PluginError(
+                PluginErrorCode.PROCESS_START_FAILED,
+                "plugin process could not be initialized",
+                details={"reason": type(exc).__name__},
+            ) from None
 
         if not self._ready_event.wait(self._timeouts.start):
-            self._terminate()
-            with self._lock:
-                self._state = PluginState.NOT_READY
-                self._extensions = frozenset()
+            self._abort_process("startup timeout")
             raise PluginError(
                 PluginErrorCode.IPC_TIMEOUT,
                 "plugin did not complete the handshake before the startup timeout",
@@ -338,19 +383,13 @@ class PluginProcess:
 
         if self._handshake_error is not None:
             error = self._handshake_error
-            self._terminate()
-            with self._lock:
-                self._state = PluginState.NOT_READY
-                self._extensions = frozenset()
+            self._abort_process("handshake mismatch")
             raise error
         with self._lock:
             ready = self._state is PluginState.READY
         if not ready:
             # 进程在握手完成前退出（例如 startup fault）：不得视为已就绪。
-            self._terminate()
-            with self._lock:
-                self._state = PluginState.NOT_READY
-                self._extensions = frozenset()
+            self._abort_process("handshake incomplete")
             raise PluginError(
                 PluginErrorCode.IPC_TIMEOUT,
                 "plugin did not complete the handshake before the startup timeout",
@@ -363,10 +402,19 @@ class PluginProcess:
             if self._state is PluginState.STOPPED:
                 return
             self._state = PluginState.STOPPING
+            self._stopped_seen = False
+            self._shutdown_in_flight = 0
         proc = self._proc
         if proc is not None and proc.poll() is None:
             try:
-                self._send("host.shutdown", {"gracePeriodMs": self._timeouts.grace_ms})
+                shutdown_message_id = self._next_message_id()
+                # 先登记 messageId，再写帧：plugin.stopped 可能立刻到达。
+                self._shutdown_message_id = shutdown_message_id
+                self._write_outbound(
+                    shutdown_message_id,
+                    "host.shutdown",
+                    {"gracePeriodMs": self._timeouts.grace_ms},
+                )
             except PluginError:
                 pass
             self._stopped_event.wait(self._timeouts.shutdown)
@@ -375,6 +423,7 @@ class PluginProcess:
         with self._lock:
             self._state = PluginState.STOPPED
             self._extensions = frozenset()
+            self._shutdown_message_id = None
 
     def wait_for_exit(self, timeout: float | None = None) -> bool:
         return self._exited_event.wait(self._timeouts.terminate if timeout is None else timeout)
@@ -456,7 +505,9 @@ class PluginProcess:
                     f"DUPLICATE_INBOUND_MESSAGE_ID {frame.message_id} {frame.type}"
                 )
                 return
-            self._inbound_message_ids.add(frame.message_id)
+            self._inbound_message_ids[frame.message_id] = None
+            if len(self._inbound_message_ids) > _MAX_INBOUND_MESSAGE_IDS:
+                self._inbound_message_ids.pop(next(iter(self._inbound_message_ids)))
             handshake_done = self._handshake_done
 
         self._record_frame("plugin->host", frame.as_mapping())
@@ -482,8 +533,55 @@ class PluginProcess:
         elif frame.type == "plugin.cancelled":
             self._on_cancelled(frame)
         elif frame.type == "plugin.stopped":
-            self._stopped_event.set()
-            self._exited_event.set()
+            self._on_stopped(frame)
+
+    def _on_stopped(self, frame: Frame) -> None:
+        """校验并处理 ``plugin.stopped``；错误关联/畸形 payload 均 fail closed。"""
+        payload = frame.payload
+        if _payload_keys(payload) != frozenset({"inFlightCount"}):
+            self._note_protocol_violation("SHUTDOWN_PAYLOAD_INVALID", frame)
+            return
+        in_flight = payload["inFlightCount"]
+        if (
+            not isinstance(in_flight, int)
+            or isinstance(in_flight, bool)
+            or in_flight < 0
+        ):
+            self._note_protocol_violation("SHUTDOWN_INFLIGHT_INVALID", frame)
+            return
+        with self._lock:
+            expected = self._shutdown_message_id
+            if expected is None:
+                self._note_protocol_violation_locked(
+                    "SHUTDOWN_NOT_REQUESTED", frame
+                )
+                return
+            if frame.correlation_id != expected:
+                self._note_protocol_violation_locked(
+                    "SHUTDOWN_CORRELATION_MISMATCH", frame
+                )
+                return
+            if self._stopped_seen:
+                self._note_protocol_violation_locked("SHUTDOWN_DUPLICATE", frame)
+                return
+            self._stopped_seen = True
+            self._shutdown_in_flight = in_flight
+            if in_flight:
+                self._diagnostics.append(
+                    f"SHUTDOWN_IN_FLIGHT {in_flight}; pending operations stay UNKNOWN"
+                )
+        if in_flight:
+            # 不得把未完成的在途操作伪装为正常停止：立即给所有等待者明确终态。
+            self._abort_pending(ToolStatus.UNKNOWN)
+        self._stopped_event.set()
+
+    def _note_protocol_violation(self, reason: str, frame: Frame) -> None:
+        with self._lock:
+            self._note_protocol_violation_locked(reason, frame)
+
+    def _note_protocol_violation_locked(self, reason: str, frame: Frame) -> None:
+        self._protocol_violations += 1
+        self._diagnostics.append(f"PROTOCOL_VIOLATION {reason} {frame.type}")
 
     def _on_ready(self, frame: Frame) -> None:
         error: PluginError | None = None
@@ -623,6 +721,8 @@ class PluginProcess:
         # 先登记指纹，保证并发重复 ingress 不会重复调用 Host。
         with self._lock:
             self._event_fingerprints[event.event_id] = (fingerprint, "accepted")
+            if len(self._event_fingerprints) > _MAX_EVENT_FINGERPRINTS:
+                self._event_fingerprints.pop(next(iter(self._event_fingerprints)))
 
         host_called = False
         try:
@@ -888,6 +988,8 @@ class PluginProcess:
         )
         with self._lock:
             self._delivery_terminals.setdefault(obligation_id, outcome)
+            if len(self._delivery_terminals) > _MAX_TERMINAL_RECORDS:
+                self._delivery_terminals.pop(next(iter(self._delivery_terminals)))
         if not pending.future.done():
             pending.future.set_result(outcome)
 
@@ -926,7 +1028,10 @@ class PluginProcess:
         if not pending.future.done():
             pending.future.set_result(outcome)
 
-        if disposition == "unsupported":
+        # 只有明确的 ``cancelled`` 才终结原 Tool 操作。``too_late`` 与
+        # ``unsupported`` 只完成取消请求本身，原操作继续等待自身终态；随后到达
+        # 的原始 tools.result 仍必须能完成原 Invocation。
+        if disposition != "cancelled":
             return
         tool_pending = self._pending.pop_operation(target, "tools")
         if tool_pending is None:
@@ -945,6 +1050,8 @@ class PluginProcess:
     def _record_tool_terminal(self, outcome: ToolOutcome) -> None:
         with self._lock:
             self._tool_terminals.setdefault(outcome.invocation_id, outcome)
+            if len(self._tool_terminals) > _MAX_TERMINAL_RECORDS:
+                self._tool_terminals.pop(next(iter(self._tool_terminals)))
 
     # -- 出站请求 ----------------------------------------------------------
 
@@ -961,7 +1068,25 @@ class PluginProcess:
         correlation_id: str | None = None,
     ) -> str:
         message_id = self._next_message_id()
-        frame = {
+        self._write_outbound(
+            message_id, message_type, payload, correlation_id=correlation_id
+        )
+        return message_id
+
+    def _write_outbound(
+        self,
+        message_id: str,
+        message_type: str,
+        payload: Mapping[str, Any],
+        *,
+        correlation_id: str | None = None,
+        data: bytes | None = None,
+    ) -> None:
+        if data is None:
+            data = encode_frame(
+                message_id, message_type, payload, correlation_id=correlation_id
+            )
+        frame: dict[str, Any] = {
             "apiVersion": IPC_API_VERSION,
             "messageId": message_id,
         }
@@ -969,9 +1094,6 @@ class PluginProcess:
             frame["correlationId"] = correlation_id
         frame["type"] = message_type
         frame["payload"] = dict(payload)
-        data = encode_frame(
-            message_id, message_type, payload, correlation_id=correlation_id
-        )
         with self._write_lock:
             proc = self._proc
             if proc is None or proc.poll() is not None or self._write_closed:
@@ -1101,17 +1223,33 @@ class PluginProcess:
         outcome = self._await(pending, timeout)
         if outcome is None:
             popped = self._pending.pop_matching(pending.message_id, "delivery")
-            if popped is None and pending.future.done():
-                return pending.future.result()
-            timeout_outcome = DeliveryOutcome(
-                delivery_id=delivery_id,
-                response_obligation_id=response_obligation_id,
-                status="unknown",
-            )
+            if popped is None:
+                if pending.future.done():
+                    return pending.future.result()
+                timeout_outcome = DeliveryOutcome(
+                    delivery_id=delivery_id,
+                    response_obligation_id=response_obligation_id,
+                    status="unknown",
+                )
+            else:
+                timeout_outcome = DeliveryOutcome(
+                    delivery_id=delivery_id,
+                    response_obligation_id=response_obligation_id,
+                    status="unknown",
+                )
+                if not popped.future.done():
+                    popped.future.set_result(timeout_outcome)
             with self._lock:
                 self._delivery_terminals.setdefault(
                     response_obligation_id, timeout_outcome
                 )
+                if len(self._delivery_terminals) > _MAX_TERMINAL_RECORDS:
+                    self._delivery_terminals.pop(
+                        next(iter(self._delivery_terminals))
+                    )
+            # 请求超时后进程不得继续 READY：终止进程、注销 Extension，并把
+            # 其他 pending 收敛到明确终态；不重试已派发操作。
+            self._timeout_process("delivery.dispatch")
             return timeout_outcome
         return outcome
 
@@ -1126,6 +1264,7 @@ class PluginProcess:
             popped = self._pending.pop_matching(pending.message_id, "cancel")
             if popped is None and pending.future.done():
                 return pending.future.result()
+            self._timeout_process("host.cancel")
             raise PluginError(
                 PluginErrorCode.IPC_TIMEOUT,
                 "plugin did not answer host.cancel before the timeout",
@@ -1140,6 +1279,10 @@ class PluginProcess:
             return None
         return popped.future
 
+    def _timeout_process(self, request_kind: str) -> None:
+        """按 IPC §5.1 处理请求超时：终止进程并清理全部关联状态。"""
+        self._abort_process(f"request timeout ({request_kind})")
+
     @staticmethod
     def _await(pending: PendingRequest, timeout: float) -> Any | None:
         try:
@@ -1148,6 +1291,24 @@ class PluginProcess:
             return None
 
     # -- 进程终止清理 ------------------------------------------------------
+
+    def _abort_process(self, reason: str) -> None:
+        """强制进程离开 READY，终止子进程并收敛全部 pending。"""
+        with self._lock:
+            self._aborting = True
+            self._write_closed = True
+            if self._state is not PluginState.STOPPED:
+                self._state = PluginState.NOT_READY
+            self._extensions = frozenset()
+            self._diagnostics.append(f"PROCESS_ABORTED {reason}")
+        # 先收敛 pending（UNKNOWN），再终止进程；避免 Reader Thread 先看到 EOF
+        # 而把在途操作记成普通 ABORTED。
+        self._abort_pending(ToolStatus.UNKNOWN)
+        self._terminate()
+        self._abort_pending(ToolStatus.UNKNOWN)
+        self._ready_event.set()
+        self._stopped_event.set()
+        self._exited_event.set()
 
     def _terminate(self) -> None:
         proc = self._proc
@@ -1187,12 +1348,17 @@ class PluginProcess:
             elif self._state is not PluginState.STOPPED:
                 self._state = PluginState.NOT_READY
             self._extensions = frozenset()
-        self._abort_pending()
+            aborting = self._aborting
+        self._abort_pending(
+            ToolStatus.UNKNOWN if aborting else ToolStatus.ABORTED
+        )
         self._ready_event.set()
         self._stopped_event.set()
         self._exited_event.set()
 
-    def _abort_pending(self) -> None:
+    def _abort_pending(
+        self, tool_status: ToolStatus = ToolStatus.ABORTED
+    ) -> None:
         for pending in self._pending.pop_all():
             if pending.future.done():
                 continue
@@ -1200,20 +1366,27 @@ class PluginProcess:
                 outcome = ToolOutcome(
                     invocation_id=pending.operation_id,
                     callable_id=str(pending.context.get("callableId", "")),
-                    status=ToolStatus.ABORTED,
+                    status=tool_status,
                 )
                 self._record_tool_terminal(outcome)
                 pending.future.set_result(outcome)
             elif pending.kind == "delivery":
-                pending.future.set_result(
-                    DeliveryOutcome(
-                        delivery_id=pending.operation_id,
-                        response_obligation_id=str(
-                            pending.context.get("responseObligationId", "")
-                        ),
-                        status="unknown",
-                    )
+                outcome = DeliveryOutcome(
+                    delivery_id=pending.operation_id,
+                    response_obligation_id=str(
+                        pending.context.get("responseObligationId", "")
+                    ),
+                    status="unknown",
                 )
+                with self._lock:
+                    self._delivery_terminals.setdefault(
+                        outcome.response_obligation_id, outcome
+                    )
+                    if len(self._delivery_terminals) > _MAX_TERMINAL_RECORDS:
+                        self._delivery_terminals.pop(
+                            next(iter(self._delivery_terminals))
+                        )
+                pending.future.set_result(outcome)
             else:
                 pending.future.set_exception(
                     PluginError(
@@ -1266,6 +1439,8 @@ class ToolInvocation:
             self._process._record_tool_terminal(outcome)
             if not expired.done():
                 expired.set_result(outcome)
+            # Tool 请求超时同样必须终止进程并注销 Extension；已派发操作不重试。
+            self._process._timeout_process("tools.invoke")
             return outcome
         return future.result()
 
@@ -1286,6 +1461,7 @@ class PluginManager:
         self._config = dict(config or {})
         self._logger = logger or _LOG
         self._processes: dict[str, PluginProcess] = {}
+        self._drivers: dict[str, ToolsExtensionDriver] = {}
         self._lock = threading.RLock()
 
     @property
@@ -1300,9 +1476,25 @@ class PluginManager:
     ) -> PluginProcess:
         """校验整个 Manifest 后启动 Plugin 进程并完成握手。"""
         manifest = load_manifest(manifest_path)
+        config_value = self._config if config is None else config
+        if not isinstance(config_value, Mapping):
+            raise PluginError(
+                PluginErrorCode.INVALID_ARGUMENT,
+                "plugin config must be a JSON object",
+                details={"pluginId": manifest.plugin_id},
+            )
+        try:
+            normalized_config = dict(config_value)
+            json.dumps(normalized_config, allow_nan=False)
+        except (TypeError, ValueError):
+            raise PluginError(
+                PluginErrorCode.INVALID_ARGUMENT,
+                "plugin config must be JSON-serializable",
+                details={"pluginId": manifest.plugin_id},
+            ) from None
         with self._lock:
             existing = self._processes.get(manifest.plugin_id)
-            if existing is not None:
+            if existing is not None or manifest.plugin_id in self._drivers:
                 raise PluginError(
                     PluginErrorCode.INVALID_ARGUMENT,
                     "plugin is already managed by this manager",
@@ -1312,7 +1504,7 @@ class PluginManager:
                 manifest,
                 self._host,
                 self._timeouts,
-                config=self._config if config is None else config,
+                config=normalized_config,
             )
             self._processes[manifest.plugin_id] = process
         process.start()
@@ -1324,15 +1516,59 @@ class PluginManager:
 
     def plugin_ids(self) -> tuple[str, ...]:
         with self._lock:
-            return tuple(self._processes)
+            return tuple(self._processes) + tuple(
+                key for key in self._drivers if key not in self._processes
+            )
+
+    def register_driver(self, driver: ToolsExtensionDriver) -> None:
+        """把 Tools Extension Driver 纳入唯一 Manager 的生命周期。
+
+        Driver 不建立第二个 Manager 或 Callable Registry；Manager 只保存
+        ``pluginId -> driver`` 的进程内派发映射。重复 ``pluginId`` 明确拒绝。
+        """
+        plugin_id = getattr(driver, "plugin_id", None)
+        protocol = getattr(driver, "protocol", None)
+        if not _non_blank_str(plugin_id) or not _non_blank_str(protocol):
+            raise PluginError(
+                PluginErrorCode.INVALID_ARGUMENT,
+                "driver must expose a non-empty pluginId and protocol",
+            )
+        with self._lock:
+            if plugin_id in self._processes or plugin_id in self._drivers:
+                raise PluginError(
+                    PluginErrorCode.INVALID_ARGUMENT,
+                    "plugin is already managed by this manager",
+                    details={"pluginId": plugin_id},
+                )
+            self._drivers[plugin_id] = driver
+        try:
+            driver.start()
+        except Exception:
+            with self._lock:
+                self._drivers.pop(plugin_id, None)
+            try:
+                driver.close()
+            except Exception:  # pragma: no cover - 清理尽力而为
+                pass
+            raise
+
+    def driver(self, plugin_id: str) -> ToolsExtensionDriver | None:
+        with self._lock:
+            return self._drivers.get(plugin_id)
 
     def extensions(self, plugin_id: str) -> frozenset[str]:
         process = self.process(plugin_id)
-        return frozenset() if process is None else process.extensions
+        if process is not None:
+            return process.extensions
+        driver = self.driver(plugin_id)
+        return frozenset() if driver is None else driver.extensions
 
     def pending_count(self, plugin_id: str) -> int:
         process = self.process(plugin_id)
-        return 0 if process is None else process.pending_count
+        if process is not None:
+            return process.pending_count
+        driver = self.driver(plugin_id)
+        return 0 if driver is None else driver.pending_count
 
     @property
     def total_tool_dispatches(self) -> int:
@@ -1367,12 +1603,13 @@ class PluginManager:
         arguments: Mapping[str, Any],
         *,
         invocation_id: str | None = None,
-    ) -> ToolInvocation:
-        process = self._require_ready(plugin_id)
-        if "tools" not in process.extensions:
+    ) -> ToolInvocation | ToolInvocationHandle:
+        process = self.process(plugin_id)
+        driver = None if process is not None else self.driver(plugin_id)
+        if process is None and driver is None:
             raise PluginError(
                 PluginErrorCode.PLUGIN_NOT_READY,
-                "plugin does not export the tools extension",
+                "plugin is not managed by this manager",
                 details={"pluginId": plugin_id},
             )
         if not _non_blank_str(callable_id):
@@ -1391,6 +1628,32 @@ class PluginManager:
             raise PluginError(
                 PluginErrorCode.INVALID_ARGUMENT,
                 "invocationId must be a non-empty string",
+            )
+        if driver is not None:
+            if driver.state != PluginState.READY.value:
+                raise PluginError(
+                    PluginErrorCode.PLUGIN_NOT_READY,
+                    "driver is not READY",
+                    details={"pluginId": plugin_id, "state": driver.state},
+                )
+            if "tools" not in driver.extensions:
+                raise PluginError(
+                    PluginErrorCode.PLUGIN_NOT_READY,
+                    "driver does not export the tools extension",
+                    details={"pluginId": plugin_id},
+                )
+            return driver.invoke_tool_async(
+                callable_id,
+                arguments,
+                invocation_id=invocation_id,
+                timeout=self._timeouts.request,
+            )
+        assert process is not None
+        if "tools" not in process.extensions:
+            raise PluginError(
+                PluginErrorCode.PLUGIN_NOT_READY,
+                "plugin does not export the tools extension",
+                details={"pluginId": plugin_id},
             )
         pending = process.begin_tool(callable_id, arguments, invocation_id)
         return ToolInvocation(process, invocation_id, callable_id, pending)
@@ -1422,6 +1685,33 @@ class PluginManager:
         delivery_id: str | None = None,
         timeout: float | None = None,
     ) -> DeliveryOutcome:
+        driver = self.driver(plugin_id)
+        if driver is not None:
+            if driver.state != PluginState.READY.value:
+                raise PluginError(
+                    PluginErrorCode.PLUGIN_NOT_READY,
+                    "driver is not READY",
+                    details={"pluginId": plugin_id, "state": driver.state},
+                )
+            if "event.delivery" not in driver.extensions:
+                raise PluginError(
+                    PluginErrorCode.PLUGIN_NOT_READY,
+                    "driver does not export the event.delivery extension",
+                    details={"pluginId": plugin_id},
+                )
+            effective_timeout = (
+                self._timeouts.request if timeout is None else timeout
+            )
+            return driver.dispatch_delivery(
+                delivery_id=delivery_id or uuid.uuid4().hex,
+                response_obligation_id=response_obligation_id,
+                response_channel_id=response_channel_id,
+                event_type=event_type,
+                body=body,
+                status_code=status_code,
+                headers=dict(headers or {}),
+                timeout=effective_timeout,
+            )
         process = self._require_ready(plugin_id)
         if "event.delivery" not in process.extensions:
             raise PluginError(
@@ -1509,6 +1799,26 @@ class PluginManager:
         reason: str = "caller_cancelled",
         timeout: float | None = None,
     ) -> CancelledOutcome:
+        driver = self.driver(plugin_id)
+        if driver is not None:
+            if driver.state != PluginState.READY.value:
+                raise PluginError(
+                    PluginErrorCode.PLUGIN_NOT_READY,
+                    "driver is not READY",
+                    details={"pluginId": plugin_id, "state": driver.state},
+                )
+            if "tools" not in driver.extensions:
+                raise PluginError(
+                    PluginErrorCode.PLUGIN_NOT_READY,
+                    "driver does not export the tools extension",
+                    details={"pluginId": plugin_id},
+                )
+            effective_timeout = (
+                self._timeouts.cancel if timeout is None else timeout
+            )
+            return driver.cancel_operation(
+                invocation_id, reason=reason, timeout=effective_timeout
+            )
         process = self._require_ready(plugin_id)
         if "tools" not in process.extensions:
             raise PluginError(
@@ -1532,12 +1842,20 @@ class PluginManager:
 
     def stop(self, plugin_id: str) -> None:
         process = self.process(plugin_id)
-        if process is None:
+        if process is not None:
+            process.stop()
             return
-        process.stop()
+        with self._lock:
+            driver = self._drivers.pop(plugin_id, None)
+        if driver is not None:
+            driver.close()
 
     def shutdown_all(self) -> None:
         with self._lock:
             processes = list(self._processes.values())
+            drivers = list(self._drivers.values())
+            self._drivers.clear()
+        for driver in reversed(drivers):
+            driver.close()
         for process in reversed(processes):
             process.stop()

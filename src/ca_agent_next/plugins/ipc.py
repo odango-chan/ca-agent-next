@@ -217,9 +217,36 @@ class PendingRegistry:
             return len(self._pending)
 
     def register(self, correlation_id: str, request: PendingRequest) -> None:
+        """原子登记一条 pending request。
+
+        冲突（同一 correlationId 或同一 ``(kind, operationId)`` 已存在）时明确
+        拒绝，绝不覆盖已有索引；索引删除也因此不会误删其他请求。
+        """
         with self._lock:
+            if correlation_id in self._pending:
+                raise PluginError(
+                    PluginErrorCode.INVALID_ARGUMENT,
+                    "pending correlationId is already registered",
+                    details={
+                        "generatedMessageId": request.message_id,
+                        "correlationId": correlation_id,
+                        "kind": request.kind,
+                    },
+                )
+            key = (request.kind, request.operation_id)
+            if key in self._by_operation:
+                raise PluginError(
+                    PluginErrorCode.INVALID_ARGUMENT,
+                    "pending operation is already registered",
+                    details={
+                        "generatedMessageId": request.message_id,
+                        "correlationId": correlation_id,
+                        "kind": request.kind,
+                        "operationId": request.operation_id,
+                    },
+                )
             self._pending[correlation_id] = request
-            self._by_operation[(request.kind, request.operation_id)] = correlation_id
+            self._by_operation[key] = correlation_id
 
     def pop_matching(
         self, correlation_id: str, kind: str

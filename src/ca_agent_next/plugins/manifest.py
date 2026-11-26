@@ -503,27 +503,33 @@ def _load_schema(
 def _check_local_refs(
     node: object, root: Mapping[str, Any], location: str
 ) -> None:
-    """拒绝远程/外部 ``$ref``，并要求文档内引用可解析。
+    """拒绝远程/外部 ``$ref`` 与 ``$dynamicRef``，并要求文档内引用可解析。
 
     Schema 校验必须完全离线；实现只接受同一文档内的 ``#`` 片段引用。
+    ``$dynamicRef`` 与 ``$ref`` 受同一离线边界约束，不能作为绕过入口；纯
+    ``#anchor`` 形式的动态引用交由 Draft 2020-12 的动态作用域解析，但其目标
+    仍必须留在同一文档内。
     """
     if isinstance(node, Mapping):
-        ref = node.get("$ref")
-        if ref is not None:
+        for ref_key in ("$ref", "$dynamicRef"):
+            ref = node.get(ref_key)
+            if ref is None:
+                continue
             if not isinstance(ref, str) or not ref.startswith("#"):
                 raise PluginError(
                     PluginErrorCode.MANIFEST_SCHEMA_INVALID,
-                    "schema uses a non-local $ref; offline validation is required",
-                    details={"location": location},
+                    f"schema uses a non-local {ref_key}; offline validation is required",
+                    details={"location": location, "keyword": ref_key},
                 )
-            if _resolve_pointer(root, ref) is _MISSING:
-                raise PluginError(
-                    PluginErrorCode.MANIFEST_SCHEMA_INVALID,
-                    "schema $ref cannot be resolved inside the document",
-                    details={"location": location, "ref": ref},
-                )
+            if ref_key == "$ref" or ref.startswith("#/"):
+                if _resolve_pointer(root, ref) is _MISSING:
+                    raise PluginError(
+                        PluginErrorCode.MANIFEST_SCHEMA_INVALID,
+                        f"schema {ref_key} cannot be resolved inside the document",
+                        details={"location": location, "ref": ref},
+                    )
         for key, value in node.items():
-            if key == "$ref":
+            if key in ("$ref", "$dynamicRef"):
                 continue
             _check_local_refs(value, root, location)
     elif isinstance(node, list):

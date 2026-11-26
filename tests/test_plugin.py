@@ -13,9 +13,11 @@ import json
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 import uuid
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -24,14 +26,24 @@ import plugin_test_support as support  # noqa: E402
 from ca_agent_next.contracts import HostError  # noqa: E402
 from ca_agent_next.plugins import (  # noqa: E402
     CancelledOutcome,
+    DeliveryOutcome,
+    DriverProtocol,
     PluginError,
     PluginErrorCode,
     PluginManager,
+    PluginProcess,
     PluginState,
     PluginTimeouts,
+    PROVIDER_V2_PROTOCOL,
+    ProviderBinding,
+    ProviderPackageDescriptor,
+    ProviderV2ToolsExtensionDriver,
+    ToolOutcome,
     ToolStatus,
+    ToolsExtensionDriver,
     load_manifest,
 )
+from ca_agent_next.plugins.ipc import PendingRegistry, PendingRequest  # noqa: E402
 
 BASE_MANIFEST = support.manifest_text()
 
@@ -208,6 +220,41 @@ class ManifestValidationTests(_ManagerTestCase):
                     "$schema": "https://json-schema.org/draft/2020-12/schema",
                     "type": "object",
                     "properties": {"text": {"$ref": "https://example.com/remote.json"}},
+                }
+            ),
+            encoding="utf-8",
+        )
+        self.assert_rejected_without_registration(
+            self.manager, package, PluginErrorCode.MANIFEST_SCHEMA_INVALID
+        )
+
+    def test_remote_dynamic_ref_rejected(self) -> None:
+        package = self._new_package()
+        (package / "schemas" / "echo-request.json").write_text(
+            json.dumps(
+                {
+                    "$schema": "https://json-schema.org/draft/2020-12/schema",
+                    "type": "object",
+                    "properties": {
+                        "text": {
+                            "$dynamicRef": "https://example.com/remote-dynamic.json"
+                        }
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        self.assert_rejected_without_registration(
+            self.manager, package, PluginErrorCode.MANIFEST_SCHEMA_INVALID
+        )
+
+    def test_unresolvable_local_dynamic_ref_rejected(self) -> None:
+        package = self._new_package()
+        (package / "schemas" / "echo-response.json").write_text(
+            json.dumps(
+                {
+                    "$schema": "https://json-schema.org/draft/2020-12/schema",
+                    "$dynamicRef": "#/$defs/missing",
                 }
             ),
             encoding="utf-8",
@@ -498,7 +545,19 @@ class LifecycleIpcTests(_ManagerTestCase):
             self.assertEqual(outcome.status, ToolStatus.TIMEOUT)
             self.assertGreaterEqual(process.unmatched_replies, 1)
             self.assertEqual(process.pending_count, 0)
-            self.assertEqual(process.state, PluginState.READY)
+            # 请求超时后进程必须退出并注销 Extension，不能再保持 READY。
+            self.assertEqual(process.state, PluginState.NOT_READY)
+            self.assertEqual(process.extensions, frozenset())
+            self.assertEqual(self.manager.extensions("example.echo"), frozenset())
+            self.assertTrue(process.wait_for_exit(10.0))
+            self.assertIsNotNone(process._proc)
+            assert process._proc is not None
+            self.assertIsNotNone(process._proc.poll())
+            self.assertEqual(process.tool_dispatches, 1)
+            with self.assertRaises(PluginError):
+                self.manager.invoke_tool(
+                    "example.echo", "echo.read", {"text": "after-timeout"}
+                )
         finally:
             self.manager.stop("example.echo")
 
@@ -1019,6 +1078,520 @@ class ToolsDeliveryCancellationTests(_ManagerTestCase):
             self.assertEqual(process.pending_count, 0)
         finally:
             self.manager.stop("example.echo")
+
+
+# ---------------------------------------------------------------------------
+# P1-01：cancellation too_late / unsupported 不得终结原 Tool 操作
+# ---------------------------------------------------------------------------
+
+
+class CancellationOrderingTests(_ManagerTestCase):
+    """P1-01：取消回复与原操作终态分离。"""
+
+    def _cancel_before_result(self, fault: str, disposition: str) -> None:
+        package = self._new_package(args=["serve", f"--fault={fault}"])
+        process = self.manager.start(package)
+        try:
+            waiting = self.manager.invoke_tool_async(
+                "example.echo",
+                "echo.read",
+                {"text": "completed-before-cancel"},
+                invocation_id="inv-ordered",
+            )
+            self.assertTrue(process.wait_for(lambda p: p.pending_count == 1, 3.0))
+            cancelled = self.manager.cancel_operation("example.echo", "inv-ordered")
+            self.assertEqual(cancelled.disposition, disposition)
+            self.assertEqual(cancelled.target_operation_id, "inv-ordered")
+            outcome = waiting.wait(5.0)
+            self.assertEqual(outcome.status, ToolStatus.RESULT)
+            self.assertEqual(
+                dict(outcome.result or {}),
+                {"text": "completed-before-cancel"},
+            )
+            terminal = process.tool_terminal("inv-ordered")
+            assert terminal is not None
+            self.assertEqual(terminal.status, ToolStatus.RESULT)
+            self.assertEqual(process.pending_count, 0)
+            cancel_frames = [
+                record.frame
+                for record in process.frames
+                if record.frame["type"] == "plugin.cancelled"
+            ]
+            self.assertEqual(len(cancel_frames), 1)
+            self.assertEqual(
+                cancel_frames[0]["payload"]["disposition"], disposition
+            )
+        finally:
+            self.manager.stop("example.echo")
+
+    def test_too_late_before_original_result_keeps_pending_and_accepts_result(self) -> None:
+        self._cancel_before_result("cancel-too-late-late-result", "too_late")
+
+    def test_unsupported_before_original_result_keeps_pending_and_accepts_result(self) -> None:
+        self._cancel_before_result("cancel-unsupported-late-result", "unsupported")
+
+
+# ---------------------------------------------------------------------------
+# P1-02：请求超时必须终止进程、注销 Extension 并收敛其他 pending
+# ---------------------------------------------------------------------------
+
+
+class RequestTimeoutLifecycleTests(_ManagerTestCase):
+    """P1-02：所有请求超时路径都不得让 Plugin 继续 READY。"""
+
+    def test_delivery_timeout_terminates_process(self) -> None:
+        package = self._new_package(args=["serve", "--fault=wrong-delivery-id"])
+        process = self.manager.start(package)
+        try:
+            outcome = self.manager.dispatch_delivery(
+                "example.echo",
+                response_obligation_id="obl-timeout",
+                response_channel_id="ch-A",
+                event_type="echo.request",
+                body={"text": "bye"},
+                delivery_id="del-timeout",
+                timeout=0.6,
+            )
+            self.assertEqual(outcome.status, "unknown")
+            self.assertEqual(process.delivery_dispatches, 1)
+            self.assertEqual(process.state, PluginState.NOT_READY)
+            self.assertEqual(process.extensions, frozenset())
+            self.assertEqual(process.pending_count, 0)
+            self.assertTrue(process.wait_for_exit(10.0))
+            terminal = process.delivery_terminal("obl-timeout")
+            assert terminal is not None
+            self.assertEqual(terminal.status, "unknown")
+        finally:
+            self.manager.stop("example.echo")
+
+    def test_cancel_timeout_terminates_process_and_aborts_tool(self) -> None:
+        package = self._new_package(args=["serve", "--fault=cancel-no-reply"])
+        process = self.manager.start(package)
+        try:
+            waiting = self.manager.invoke_tool_async(
+                "example.echo",
+                "echo.wait",
+                {"text": "hold"},
+                invocation_id="inv-cancel-timeout",
+            )
+            self.assertTrue(process.wait_for(lambda p: p.pending_count == 1, 3.0))
+            with self.assertRaises(PluginError) as caught:
+                self.manager.cancel_operation(
+                    "example.echo", "inv-cancel-timeout", timeout=0.4
+                )
+            self.assertEqual(caught.exception.code, PluginErrorCode.IPC_TIMEOUT)
+            self.assertEqual(process.state, PluginState.NOT_READY)
+            self.assertEqual(process.extensions, frozenset())
+            self.assertEqual(process.pending_count, 0)
+            outcome = waiting.wait(3.0)
+            self.assertEqual(outcome.status, ToolStatus.UNKNOWN)
+            self.assertTrue(process.wait_for_exit(10.0))
+        finally:
+            self.manager.stop("example.echo")
+
+    def test_timeout_aborts_other_pending_and_does_not_retry(self) -> None:
+        package = self._new_package(args=["serve", "--fault=unknown-correlation-id"])
+        process = self.manager.start(package)
+        try:
+            blocked = self.manager.invoke_tool_async(
+                "example.echo",
+                "echo.wait",
+                {"text": "still-held"},
+                invocation_id="inv-blocked",
+            )
+            timed_out = self.manager.invoke_tool_async(
+                "example.echo",
+                "echo.read",
+                {"text": "no-correlation"},
+                invocation_id="inv-timeout",
+            )
+            self.assertTrue(process.wait_for(lambda p: p.pending_count == 2, 3.0))
+            first = timed_out.wait(2.0)
+            self.assertEqual(first.status, ToolStatus.TIMEOUT)
+            second = blocked.wait(3.0)
+            self.assertEqual(second.status, ToolStatus.UNKNOWN)
+            self.assertEqual(process.pending_count, 0)
+            self.assertEqual(process.state, PluginState.NOT_READY)
+            self.assertEqual(process.extensions, frozenset())
+            self.assertEqual(process.tool_dispatches, 2)
+            dispatches = [
+                record.frame
+                for record in process.frames
+                if record.frame["type"] == "tools.invoke"
+            ]
+            self.assertEqual(len(dispatches), 2)
+        finally:
+            self.manager.stop("example.echo")
+
+
+# ---------------------------------------------------------------------------
+# P1-03：PendingRegistry 身份唯一
+# ---------------------------------------------------------------------------
+
+
+class PendingRegistryTests(unittest.TestCase):
+    """P1-03：注册冲突原子拒绝，清理不误删其他请求索引。"""
+
+    def _request(self, kind: str, operation_id: str) -> PendingRequest:
+        return PendingRequest(
+            kind=kind, message_id=f"m-{operation_id}", operation_id=operation_id
+        )
+
+    def test_duplicate_correlation_id_rejected(self) -> None:
+        registry = PendingRegistry()
+        registry.register("c1", self._request("tools", "inv-1"))
+        with self.assertRaises(PluginError):
+            registry.register("c1", self._request("tools", "inv-2"))
+        self.assertEqual(len(registry), 1)
+        self.assertEqual(registry.operation_ids(), frozenset({("tools", "inv-1")}))
+
+    def test_duplicate_operation_identity_rejected(self) -> None:
+        registry = PendingRegistry()
+        registry.register("c1", self._request("tools", "inv-1"))
+        with self.assertRaises(PluginError):
+            registry.register("c2", self._request("tools", "inv-1"))
+        self.assertEqual(len(registry), 1)
+        original = registry.pop_operation("inv-1", "tools")
+        assert original is not None
+        self.assertEqual(original.message_id, "m-inv-1")
+
+    def test_same_operation_id_across_kinds_is_distinct(self) -> None:
+        registry = PendingRegistry()
+        registry.register("c1", self._request("tools", "inv-1"))
+        registry.register("c2", self._request("cancel", "inv-1"))
+        self.assertEqual(len(registry), 2)
+        self.assertIsNotNone(registry.pop_operation("inv-1", "cancel"))
+        self.assertIsNotNone(registry.pop_operation("inv-1", "tools"))
+
+    def test_completed_request_does_not_remove_new_index(self) -> None:
+        registry = PendingRegistry()
+        first = self._request("tools", "inv-reused")
+        registry.register("c1", first)
+        self.assertIsNotNone(registry.pop_matching("c1", "tools"))
+        second = PendingRequest(
+            kind="tools", message_id="m-second", operation_id="inv-reused"
+        )
+        registry.register("c2", second)
+        self.assertIsNone(registry.pop_matching("c1", "tools"))
+        self.assertEqual(len(registry), 1)
+        found = registry.pop_operation("inv-reused", "tools")
+        assert found is not None
+        self.assertEqual(found.message_id, "m-second")
+
+    def test_manager_rejects_duplicate_invocation_id(self) -> None:
+        host = support.FakeHost()
+        manager = PluginManager(host, timeouts=_timeouts())
+        tmp = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        package = support.copy_package(tmp / "example.echo")
+        process = manager.start(package)
+        try:
+            manager.invoke_tool_async(
+                "example.echo",
+                "echo.wait",
+                {"text": "first"},
+                invocation_id="inv-unique",
+            )
+            with self.assertRaises(PluginError) as caught:
+                manager.invoke_tool_async(
+                    "example.echo",
+                    "echo.wait",
+                    {"text": "second"},
+                    invocation_id="inv-unique",
+                )
+            self.assertEqual(caught.exception.code, PluginErrorCode.INVALID_ARGUMENT)
+            self.assertEqual(process.pending_count, 1)
+            cancelled = manager.cancel_operation("example.echo", "inv-unique")
+            self.assertEqual(cancelled.target_operation_id, "inv-unique")
+        finally:
+            manager.shutdown_all()
+
+
+# ---------------------------------------------------------------------------
+# P1-04：shutdown 确认关联与 inFlightCount 校验
+# ---------------------------------------------------------------------------
+
+
+class ShutdownConfirmationTests(_ManagerTestCase):
+    """P1-04：plugin.stopped 必须关联 host.shutdown 且 payload 合法。"""
+
+    def _stop_with_fault(self, fault: str, expected_diagnostic: str) -> None:
+        package = self._new_package(args=["serve", f"--fault={fault}"])
+        process = self.manager.start(package)
+        self.manager.stop("example.echo")
+        self.assertEqual(process.state, PluginState.STOPPED)
+        self.assertEqual(process.extensions, frozenset())
+        self.assertEqual(process.pending_count, 0)
+        self.assertGreaterEqual(process.protocol_violations, 1)
+        self.assertTrue(
+            any(expected_diagnostic in line for line in process.diagnostics),
+            process.diagnostics,
+        )
+        self.assertTrue(process.wait_for_exit(10.0))
+
+    def test_wrong_shutdown_correlation_rejected(self) -> None:
+        self._stop_with_fault(
+            "shutdown-wrong-correlation", "SHUTDOWN_CORRELATION_MISMATCH"
+        )
+
+    def test_bool_inflight_count_rejected(self) -> None:
+        self._stop_with_fault("shutdown-bad-inflight", "SHUTDOWN_INFLIGHT_INVALID")
+
+    def test_negative_inflight_count_rejected(self) -> None:
+        self._stop_with_fault(
+            "shutdown-negative-inflight", "SHUTDOWN_INFLIGHT_INVALID"
+        )
+
+    def test_duplicate_stopped_rejected(self) -> None:
+        self._stop_with_fault("shutdown-duplicate", "SHUTDOWN_DUPLICATE")
+
+    def test_nonzero_inflight_does_not_fake_success(self) -> None:
+        process = self._start()
+        try:
+            waiting = self.manager.invoke_tool_async(
+                "example.echo",
+                "echo.wait",
+                {"text": "pending-at-shutdown"},
+                invocation_id="inv-shutdown",
+            )
+            self.assertTrue(process.wait_for(lambda p: p.pending_count == 1, 3.0))
+            self.manager.stop("example.echo")
+            stopped = [
+                record.frame
+                for record in process.frames
+                if record.frame["type"] == "plugin.stopped"
+            ]
+            self.assertEqual(len(stopped), 1)
+            self.assertEqual(stopped[0]["payload"], {"inFlightCount": 1})
+            self.assertEqual(process.shutdown_in_flight, 1)
+            outcome = waiting.wait(3.0)
+            self.assertEqual(outcome.status, ToolStatus.UNKNOWN)
+            self.assertIsNone(outcome.result)
+            self.assertEqual(process.pending_count, 0)
+            self.assertEqual(process.state, PluginState.STOPPED)
+        finally:
+            self.manager.stop("example.echo")
+
+    def test_shutdown_timeout_still_reliably_terminates(self) -> None:
+        package = self._new_package(args=["serve", "--fault=shutdown-no-reply"])
+        manager = self._fresh_manager(shutdown=0.4)
+        process = manager.start(package)
+        try:
+            started = time.monotonic()
+            manager.stop("example.echo")
+            elapsed = time.monotonic() - started
+            self.assertGreaterEqual(elapsed, 0.3)
+            self.assertEqual(process.state, PluginState.STOPPED)
+            self.assertEqual(process.extensions, frozenset())
+            self.assertEqual(process.pending_count, 0)
+            self.assertTrue(process.wait_for_exit(10.0))
+            assert process._proc is not None
+            self.assertIsNotNone(process._proc.poll())
+        finally:
+            manager.shutdown_all()
+
+
+# ---------------------------------------------------------------------------
+# P1-05：启动失败不遗留子进程
+# ---------------------------------------------------------------------------
+
+
+class StartupRollbackTests(_ManagerTestCase):
+    """P1-05：Popen 前完成消息构造；Popen 后异常必须回收进程。"""
+
+    def test_non_json_config_fails_before_popen(self) -> None:
+        with mock.patch(
+            "ca_agent_next.plugins.manager.subprocess.Popen"
+        ) as popen:
+            with self.assertRaises(PluginError) as caught:
+                self.manager.start(self.package, config={"bad": object()})
+            popen.assert_not_called()
+        self.assertEqual(caught.exception.code, PluginErrorCode.INVALID_ARGUMENT)
+        self.assertEqual(self.manager.plugin_ids(), ())
+        self.assertEqual(self.manager.extensions("example.echo"), frozenset())
+
+    def test_post_popen_failure_terminates_process(self) -> None:
+        with mock.patch.object(
+            PluginProcess, "_write_outbound", side_effect=RuntimeError("boom")
+        ):
+            with self.assertRaises(PluginError) as caught:
+                self.manager.start(self.package)
+        self.assertEqual(caught.exception.code, PluginErrorCode.PROCESS_START_FAILED)
+        process = self.manager.process("example.echo")
+        assert process is not None
+        self.assertEqual(process.state, PluginState.NOT_READY)
+        self.assertEqual(process.extensions, frozenset())
+        self.assertEqual(process.pending_count, 0)
+        self.assertTrue(process.wait_for_exit(10.0))
+        assert process._proc is not None
+        self.assertIsNotNone(process._proc.poll())
+
+
+# ---------------------------------------------------------------------------
+# P1-06：Provider v2 Driver 接口边界
+# ---------------------------------------------------------------------------
+
+
+class _FakeInvocation:
+    def __init__(self, invocation_id: str, callable_id: str) -> None:
+        self.invocation_id = invocation_id
+        self.callable_id = callable_id
+        self._outcome = ToolOutcome(
+            invocation_id=invocation_id,
+            callable_id=callable_id,
+            status=ToolStatus.RESULT,
+            result={"driver": True},
+        )
+
+    def done(self) -> bool:
+        return True
+
+    def wait(self, timeout: float | None = None) -> ToolOutcome:
+        return self._outcome
+
+
+class _FakeToolsDriver(ToolsExtensionDriver):
+    def __init__(
+        self, plugin_id: str = "driver.tools", *, fail_start: bool = False
+    ) -> None:
+        self._plugin_id = plugin_id
+        self._fail_start = fail_start
+        self._state = "CONFIGURED"
+        self.started = False
+        self.closed = False
+
+    @property
+    def plugin_id(self) -> str:
+        return self._plugin_id
+
+    @property
+    def protocol(self) -> str:
+        return DriverProtocol.NATIVE_PLUGIN.value
+
+    @property
+    def extensions(self) -> frozenset[str]:
+        if self._state != "READY":
+            return frozenset()
+        return frozenset({"tools", "event.delivery"})
+
+    @property
+    def state(self) -> str:
+        return self._state
+
+    @property
+    def pending_count(self) -> int:
+        return 0
+
+    def start(self) -> None:
+        if self._fail_start:
+            raise RuntimeError("driver start failed")
+        self.started = True
+        self._state = "READY"
+
+    def invoke_tool_async(
+        self,
+        callable_id: str,
+        arguments,
+        *,
+        invocation_id: str,
+        timeout: float,
+    ):
+        return _FakeInvocation(invocation_id, callable_id)
+
+    def dispatch_delivery(self, **kwargs) -> DeliveryOutcome:
+        return DeliveryOutcome(
+            delivery_id=kwargs["delivery_id"],
+            response_obligation_id=kwargs["response_obligation_id"],
+            status="delivered",
+        )
+
+    def cancel_operation(
+        self, invocation_id: str, *, reason: str, timeout: float
+    ) -> CancelledOutcome:
+        return CancelledOutcome(
+            target_operation_id=invocation_id,
+            disposition="cancelled",
+            cancel_message_id="driver-cancel",
+            correlation_id="driver-cancel",
+        )
+
+    def close(self) -> None:
+        self.closed = True
+        self._state = "STOPPED"
+
+
+class DriverBoundaryTests(unittest.TestCase):
+    """P1-06：唯一 Manager 内的稳定 Driver 接口，不新增第二 Manager/Registry。"""
+
+    def test_provider_driver_contract_is_stable(self) -> None:
+        self.assertEqual(PROVIDER_V2_PROTOCOL, "ca-client-tools.provider/v2")
+        self.assertTrue(
+            issubclass(ProviderV2ToolsExtensionDriver, ToolsExtensionDriver)
+        )
+        self.assertTrue(
+            {"initialize", "catalog", "invoke_backend", "cancel_backend"}
+            <= set(ProviderV2ToolsExtensionDriver.__abstractmethods__)
+        )
+        with self.assertRaises(TypeError):
+            ProviderV2ToolsExtensionDriver()  # type: ignore[abstract]
+
+    def test_descriptor_deduplicates_backend_ids_in_order(self) -> None:
+        descriptor = ProviderPackageDescriptor(
+            provider_id="ca-client-tools.sbi",
+            provider_version="1.2.0",
+            package_root=Path("."),
+            interface_snapshot_digest="sha256:a",
+            runtime_bindings_digest="sha256:b",
+            backend_catalog_digest="sha256:c",
+            bindings=(
+                ProviderBinding("READ.A", "backend.a", "READ"),
+                ProviderBinding("OWNER.B", "backend.b", "MUTATION"),
+                ProviderBinding("READ.C", "backend.a", "READ"),
+            ),
+        )
+        self.assertEqual(
+            descriptor.backend_operation_ids(), ("backend.a", "backend.b")
+        )
+        self.assertIsNotNone(descriptor.binding_for("OWNER.B"))
+
+    def test_manager_owns_driver_lifecycle_and_dispatch(self) -> None:
+        host = support.FakeHost()
+        manager = PluginManager(host, timeouts=_timeouts())
+        driver = _FakeToolsDriver()
+        manager.register_driver(driver)
+        try:
+            self.assertTrue(driver.started)
+            self.assertIn("driver.tools", manager.plugin_ids())
+            self.assertEqual(
+                manager.extensions("driver.tools"),
+                frozenset({"tools", "event.delivery"}),
+            )
+            outcome = manager.invoke_tool("driver.tools", "anything", {"x": 1})
+            self.assertEqual(outcome.status, ToolStatus.RESULT)
+            cancelled = manager.cancel_operation("driver.tools", "inv-driver")
+            self.assertEqual(cancelled.disposition, "cancelled")
+            delivery = manager.dispatch_delivery(
+                "driver.tools",
+                response_obligation_id="obl-d",
+                response_channel_id="ch-d",
+                event_type="driver.event",
+                body={},
+            )
+            self.assertEqual(delivery.status, "delivered")
+            with self.assertRaises(PluginError):
+                manager.register_driver(_FakeToolsDriver())
+        finally:
+            manager.shutdown_all()
+        self.assertTrue(driver.closed)
+
+    def test_driver_start_failure_rolls_back_registration(self) -> None:
+        host = support.FakeHost()
+        manager = PluginManager(host, timeouts=_timeouts())
+        driver = _FakeToolsDriver("driver.broken", fail_start=True)
+        with self.assertRaises(RuntimeError):
+            manager.register_driver(driver)
+        self.assertIsNone(manager.driver("driver.broken"))
+        self.assertNotIn("driver.broken", manager.plugin_ids())
+        self.assertTrue(driver.closed)
 
 
 if __name__ == "__main__":  # pragma: no cover
