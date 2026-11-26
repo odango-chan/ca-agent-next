@@ -1,11 +1,13 @@
 # EC01 — CA-SL 与 Skill 作者体系架构设计
 
 > 文档类型：外部能力域架构设计（Next 中央权威设计）  
-> 文档版本：0.1.1  
+> 文档版本：0.1.2  
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 唯一新目标；作者规范/Compiler/Bundle 未发布）  
 > 功能归属：EC01；关联 F02、F06、F08、F09  
 > 关联需求：IR-003、IR-006；SR-004～SR-006、SR-011、SR-023  
-> 修订日期：2026-11-25  
+> 修订日期：2026-11-26
+> 全局评审范围：继承根目录 Agent.md 的 review_scope
+> 本文局部非目标：以本文第 §9 节为准；Demo 不引入生产级准入、签名或兼容层  
 > 来源：ca-skills main 780497a；CA-SL v1alpha5 发布规范 18d818436；PR #88/#89
 
 ## 1. 架构定位
@@ -150,3 +152,4 @@ CA-SL v1alpha5 的 when 已进入已合并的 ca-skills #88/#89 发布刷新；�
 |---|---|---|---|---|---|
 | 2026-11-25 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 从 CA-SL v1alpha5、作者模型和 Compiler #61 还原作者体系架构，分离规范发布与 Compiler/Host 实现状态 | Issue #12；SR-023 |
 | 2026-11-26 | 0.1.1 | GPT-6（ChatGPT） | §2～3、§10、修订记录 | 将 EC01 新作者体系统一到 1.6.0-only Capability-first、一对一绑定和无兼容；旧 v1alpha5 仅审计 | Issue #40；IR-008；SR-029；SR-027 |
+| 2026-11-26 | 0.1.2 | GPT-6（ChatGPT） | 文档头与修订记录 | 补齐 EC01 规范 review_scope 与非目标头部声明 | Issue #40；PR #45 |
