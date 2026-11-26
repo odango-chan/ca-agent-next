@@ -1,8 +1,8 @@
 # CA Agent Next 架构设计
 
 > 文档类型：总体架构设计  
-> 状态：目标架构基线；PR #1 已合并；架构所定义的 Next Host/Runtime/Plugin Manager 尚未实现、尚未验收    
-> 文档版本：0.4.3
+> 状态：**CA-SL 1.6.0 Capability-first 架构增量待评审**；已通过的 SR-002/003 模块历史验收独立保留，1.6.0 新 Runtime/Compiler/Bundle/Studio 尚未发布    
+> 文档版本：0.4.4
 > 修订日期：2026-11-26  
 > 适用范围：ca-agent-next 通用 Agent Core、Host、Runtime、Skill 与 Plugin 公共机制  
 > 权威边界：本文是本仓唯一总体架构文档；字段级契约见规范，机制细节见设计说明书  
@@ -48,7 +48,7 @@ CA Agent Next 是一个通用 Agent。Agent Core 不内置 OpenAMSM、5GC 或其
 | ca-agent-demo / REF01 | 既有 Python Generic Host、Context、ArtifactStore、Provider 和 Development 测试证据 | 逐文件审计、选择性复用；不整仓复制 |
 | ca-runtime / REF02 | Go Runtime Host、Procedure、Provider、Predicate、Observation 参考 | 语义/实现对照，不是 Next 运行时 |
 | ca-agent / TARGET01 | Go Native Host、ProductTask、Artifact Store 和 Host Contract | 后续晋级目标，不作为本次 Python 重构源码 |
-| ca-skills / EC01 | CA-SL v1alpha5、SKILL.md、可选 Assurance 和业务 Skill 作者源 | 作者源与发布输入；Agent 只消费发布 Bundle |
+| ca-skills / EC01 | Agent Skills SKILL.md、CA-SL **1.6.0-only** 新 Assurance 作者规范与业务 Skill（历史 v1alpha5 仅归档） | 唯一新作者与 Bundle 发布输入；Agent 只消费正式 1.6.0 发布 Bundle |
 | ca-skill-compiler / EC02 | CA-SL 检查、链接、Build、Verify 和 Artifact 发布 | 外部工具链；Next 不调用 Compiler |
 | ca-client-tools / EC03 | Tool Interface Package、Provider v2、Runtime Bindings、SBI Client、Codec | 通过唯一 Plugin Manager 的 tools Extension 接入 |
 | ca-openamsm-plugin / EC04 | OpenAMSM SBI Event ingress / Delivery | 独立 Go Event/Delivery Plugin |
@@ -266,6 +266,22 @@ sequenceDiagram
 - [公共契约与所有权规范](../规范/公共契约与所有权规范.md)
 - [演示验收基线](../验收与实施/演示验收基线.md)
 
+## 15. CA-SL 1.6.0 Capability-first 总体架构约束（设计待评审）
+
+新版本明确以 **CA-SL 1.6.0** 为**唯一新语言与运行输入**，不采用 v1alpha6 命名，也不兼容已冻结的 v1alpha5。该决策属于 [IR-008](../IR/IR%20总登记册.md#ir-008) / [SR-029](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) / [Issue #40](https://github.com/odango-chan/ca-agent-next/issues/40)。
+
+| 组件 | 1.6.0 唯一职责 | 不可跨越的边界 |
+|---|---|---|
+| ca-skills / EC01 | SKILL.md 使用 Agent Skills Specification；Assurance/Contract/Procedure 只出现 Capability ID，正式发布 1.6.0 Schema/机器标识和作者实例 | 不允许旧 Callable 作者语法或自动迁移 |
+| Owner/Provider Package / F03.05 | Skill-facing Capability 与公开 Callable 双向一对一；两个 OpenAMSM 事件独立 Capability；Provider 封闭 selector 在内部路由 backendOperationId | 不以安装 Plugin 赋予 Grant；Reconcile 仅 Runtime internal-only |
+| ca-skill-compiler / EC02 | 唯一 1.6.0 Parser/Linker/Check/Build/Verify；静态产生唯一 Capability→Callable Binding、Request Schema/when Runtime Artifact 和新 Build DTO | 不接受旧 v1alpha5 BuildRequest/Result、Artifact 或作者源；不在 Agent 内编译 |
+| ca-skills 发布 / F08 | 重新编写/编译/验证 1.6.0 Skill，组装同语言版本的正式 Bundle | 不复用旧构建脚本作为 PASS，不发布部分成功批次 |
+| Agent Importer/Catalog / F02 | 仅消费已发布 1.6.0 Assurance Bundle；Importer 返回候选，Catalog 原子激活；SKILL.md-only 仍可 LLM-guided | 无旧 Bundle 解析、混合 Catalog、fallback、自动转换或版本协商 |
+| Runtime / F04 | 以 Capability 为作者侧 Action 入口，从 Artifact Binding 得到唯一 Callable，再执行 Scope/kind/Effect/Schema/Run 检查和 Plugin 分发 | 模型不可选择 Callable、backendOperationId 或 internal-only Reconcile |
+| Skill Studio / F09 | Package Explorer 仅展示 Capability；LSP/AI Authoring 仅生成 1.6.0 Capability 作者字段 | 无平级 Tools/Operations 作者树、旧项目兼容或自动迁移 |
+
+**当前阶段**：本新增章节及相关子架构**待独立评审**；1.6.0 正式语法、机器标识、Compiler API/Binding、Owner/Provider Package、Bundle、Studio 与 Agent/E2E 均未实施/发布。既有 SR-002/003 模块 VERIFIED 不构成 1.6.0 产品 PASS。
+
 ## 修订记录
 
 | 日期 | 文档版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
@@ -280,3 +296,4 @@ sequenceDiagram
 | 2026-11-25 | 0.4.1 | GPT-6.2（ChatGPT） | §10、外部依赖快照 | 纠正 Host Artifact Store Channel 生命周期；同步 Provider v1.2.0、Go Host P1 外部参考与 Next Python Host 未实现状态；区分 Mock AMF Codec C1 | 统一总体架构、F05、Plugin IPC 和验收基线中的协议状态 | Issue #12；SR-009、SR-010、SR-011、SR-015 |
 | 2026-11-25 | 0.4.2 | Codex / GPT-6 | 正文 | §7 对齐 M.3 输入校验与候选排除顺序 | 消除执行歧义并同步中央设计 | Issue #12 |
 | 2026-11-26 | 0.4.3 | Codex / GPT-6 | 见本行变更 | §Tool 更正业务公共契约所有权 | 对齐跨仓实现与独立复验 | Issue #12 |
+| 2026-11-26 | 0.4.4 | GPT-6（ChatGPT） | §3、§15、修订记录 | 加入 CA-SL 1.6.0-only Capability-first 总体约束与完整责任矩阵 | 避免语言旧版兼容、Runtime Tool 选择和 Compiler 内嵌回归 | Issue #40；IR-008；SR-029 |
