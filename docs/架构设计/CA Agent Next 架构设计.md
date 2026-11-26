@@ -2,11 +2,11 @@
 
 > 文档类型：总体架构设计  
 > 状态：**CA-SL 1.6.0 Capability-first 架构增量待评审**；已通过的 SR-002/003 模块历史验收独立保留，1.6.0 新 Runtime/Compiler/Bundle/Studio 尚未发布    
-> 文档版本：0.4.4
+> 文档版本：0.4.5
 > 修订日期：2026-11-26  
 > 适用范围：ca-agent-next 通用 Agent Core、Host、Runtime、Skill 与 Plugin 公共机制  
 > 权威边界：本文是本仓唯一总体架构文档；字段级契约见规范，机制细节见设计说明书  
-> 全局评审范围：继承根目录 Agent.md 的 review_scope；本文局部非目标见 §2.2
+> 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：以本文范围与非目标章节为准；无额外扩展  
 
 关联需求项见 [IR-002](../IR/IR%20总登记册.md#ir-002)、[IR-003](../IR/IR%20总登记册.md#ir-003)、[IR-004](../IR/IR%20总登记册.md#ir-004)、[IR-005](../IR/IR%20总登记册.md#ir-005)。
@@ -297,3 +297,4 @@ sequenceDiagram
 | 2026-11-25 | 0.4.2 | Codex / GPT-6 | 正文 | §7 对齐 M.3 输入校验与候选排除顺序 | 消除执行歧义并同步中央设计 | Issue #12 |
 | 2026-11-26 | 0.4.3 | Codex / GPT-6 | 见本行变更 | §Tool 更正业务公共契约所有权 | 对齐跨仓实现与独立复验 | Issue #12 |
 | 2026-11-26 | 0.4.4 | GPT-6（ChatGPT） | §3、§15、修订记录 | 加入 CA-SL 1.6.0-only Capability-first 总体约束与完整责任矩阵 | 避免语言旧版兼容、Runtime Tool 选择和 Compiler 内嵌回归 | Issue #40；IR-008；SR-029 |
+| 2026-11-26 | 0.4.5 | GPT-6（ChatGPT） | 文档头与修订记录 | 把 review_scope 继承语句改为 CI 规范的一次精确声明 | 解除 PR #45 当前 Head Review Context formal-doc 校验失败 | Issue #40；PR #45 |
