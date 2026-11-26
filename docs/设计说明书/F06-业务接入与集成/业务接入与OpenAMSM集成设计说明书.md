@@ -233,6 +233,6 @@ ca-skills `780497a2` 的三个 MAS `examples/skills/*-pdu-session-mas/assurance/
 | 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 全文 | 根据 OpenAMSM Owner、Plugin Draft、Mock AMF 与当前跨仓状态重建 Create/Modify/UE Release 集成设计 | 历史记录未单独分列原因 | Issue #12；SR-017～019 |
 | 2026-11-25 | 0.2.1 | GPT-6.2（ChatGPT） | §2、§4、§10 | 更新 ca-skills Owner-linked Skill 源路径、PR #83～#86 状态及 ca-client-tools v1.2.0 / CA-SL Release Record 状态 | 避免旧示例、旧 Provider 版本和规范头部候选文字造成误读 | Issue #12；SR-017～019、SR-023 |
 | 2026-11-25 | 0.2.2 | GPT-6.2（ChatGPT） | §10 | 更新 ca-client-tools PR #39 与 env-5gc-sim PR #86 的 Codec 状态；明确 Mock AMF C1 不代表 Agent Tool/Provider 或 Next 集成 | 防止把独立测试对端迁移误计为 OpenAMSM Agent 集成进展 | Issue #12；SR-009～SR-011、SR-017～SR-019 |
-| 2026-11-26 | 0.2.3 | Codex / GPT-6 | 见本行变更 | §2、4、6、7 校正候选判定、HTTP 响应义务和真实 Owner Callable；§12 增补 EC04 固定协议来源、请求投影与独立复验 | Issue #12 |
-| 2026-11-26 | 0.2.4 | Codex / GPT-6 | 见本行变更 | 补足 Create 的真实 NAS 字段来源及跨仓设计缺口；补齐正式文档的评审范围与非目标；明确可控 peer/Plugin 的重试身份；§7 依据 Owner catalog 区分确认 mutation 和 Wait READ | Issue #12 |
+| 2026-11-26 | 0.2.3 | Codex / GPT-6 | 见本行变更 | §2、4、6、7 校正候选判定、HTTP 响应义务和真实 Owner Callable；§12 增补 EC04 固定协议来源、请求投影与独立复验 | 历史记录未单独分列原因 | Issue #12 |
+| 2026-11-26 | 0.2.4 | Codex / GPT-6 | 见本行变更 | 补足 Create 的真实 NAS 字段来源及跨仓设计缺口；补齐正式文档的评审范围与非目标；明确可控 peer/Plugin 的重试身份；§7 依据 Owner catalog 区分确认 mutation 和 Wait READ | 历史记录未单独分列原因 | Issue #12 |
 | 2026-11-26 | 0.2.5 | GPT-6.2（ChatGPT） | §4、§8 | 同步冻结 v1alpha5 Capability Build-time / Runtime 边界及 MAS.RECONCILE internal-only 保证 | 让 OpenAMSM 业务集成流程引用 F03.05 的唯一 Tool/Provider Runtime 设计 | IR-006 · SR-015 · Issue #12 |
