@@ -1,13 +1,13 @@
 # SR-010：OpenAMSM 工具插件与按需编解码集成
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.11  
+> SR 版本：0.1.12  
 > 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**，未获得实施 READY，产品验收 NOT_RUN  
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-26  
 > 所属阶段：Phase G  
 > 上游需求：[IR-005](../IR/IR%20总登记册.md#ir-005)  
-> 设计依据：[Plugin平台设计说明书](../设计说明书/F03-Plugin平台/Plugin平台设计说明书.md) v0.3.5 §8；[Tool Interface 与 Provider 集成设计](../设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) v0.4.0 全文；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.2 §5～10；[公共契约与所有权规范](../规范/公共契约与所有权规范.md) v0.2.6 §2、5、6、8  
+> 设计依据：[Plugin平台设计说明书](../设计说明书/F03-Plugin平台/Plugin平台设计说明书.md) v0.3.6 §8；[Tool Interface 与 Provider 集成设计](../设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) v0.4.1 全文；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.2 §5～10；[公共契约与所有权规范](../规范/公共契约与所有权规范.md) v0.2.7 §2、5、6、8  
 > Acceptance：OM-04、OM-10、OM-13（见[演示验收基线](../验收与实施/演示验收基线.md)）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：见第 3 节
@@ -111,3 +111,5 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-26 | 0.1.9 | F03.05 v0.3.9 已包含 SR-015 设计移交，但本 SR Provider v2 wire contract 仍待设计门禁 | Issue #28；SR-003；SR-010 | undefined |
 | 2026-11-26 | 0.1.10 | 登记独立设计待评审批次、专项审查重点与缺失输入，保留 SR DRAFT/产品 NOT_RUN | 按 1.6.0-only / Capability-first 设计集中审查；避免提前授予实施门禁 | Issue #12；SR-029；PR #45 |
 | 2026-11-26 | 0.1.11 | 按治理 §6.1 拆分设计/实施/模块/系统依赖；补齐 AC-010-xx 正反验收 | 解除全局 VERIFIED 门槛与缺模块 AC 问题，避免 Harness 猜测/EX 倒灌 | Issue #12/#40；PR #46；SR 管理规范 §6.1 |
+
+| 2026-11-26 | 0.1.12 | 同步本次 1.6.0 实质整改后的权威 Feature/Compiler 文档版本 | 保证 SR 新旧规范引用与固定审核 Head 一致 | Issue #12/#40；PR #46 |
