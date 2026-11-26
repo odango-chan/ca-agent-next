@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：目标机制设计；Artifact 互操作部分依赖外部 Compiler 发布  
-> 文档版本：0.2.12
+> 文档版本：0.2.13
 > 功能归属：F02 — Skill 管理与选择  
 > 关联 SR：SR-004、SR-005、SR-006    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -234,3 +234,4 @@ Next 在 Skill 导入时反序列化已检查程序和类型环境，建立运�
 | 2026-11-26 | 0.2.11 | GPT-6.2（ChatGPT） | §4、§9 | 明确冻结 v1alpha5 Artifact 不序列化 Skill Capability ID；Compiler Build-time 校验作者源 Capability，Runtime Scope 只从 operation/observation exports 建立 | 对齐 F03.05 与 Compiler v2.1.0 frozen artifact schema，避免实现者读取不存在字段 | IR-006 · SR-015 · Issue #12 |
 
 | 2026-11-26 | 0.2.12 | GPT-6.2（ChatGPT） | §1～5、§9～12、修订记录 | 区分 Importer candidate 与 SR-005 Catalog 激活；明确冻结 Artifact v1alpha5、Development v1alpha1、新 Runtime Artifact API 的消费矩阵；同步 CA-SL v1alpha5 固定 SHA、Compiler #61 / SR-013、SR-027 Bundle 和 Issue #40 v1alpha6 边界 | 防止把旧冻结 Artifact/Development Artifact 当作当前可运行 Bundle，避免在 Manifest/Bundle 契约未冻结时让 SR-004 或 Harness 猜测实现 | Issue #43；SR-004；SR-013；SR-027；Issue #40 |
+| 2026-11-26 | 0.2.13 | GPT-6.2（ChatGPT） | §9、修订记录 | 明确 F03.05 的 v1alpha5 依赖/Callable 语义是语言与构建语义，不代表冻结 Artifact API v1alpha5 可导入；新版 Runtime Artifact 的字段映射必须由 Compiler #61 正式冻结 | 避免把旧 Artifact 的 dependencyClosure 字段猜测为新 Runtime Artifact API 的字段 | Issue #43；SR-004；SR-013 |
