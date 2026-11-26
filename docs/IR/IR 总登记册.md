@@ -1,7 +1,7 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录  
-> 文档版本：0.1.17  
+> 文档版本：0.1.18  
 > 修订日期：2026-11-26  
 > 状态：7 项 IR；IR-007 登记 Python 工程工具链统一需求，SR-028 为 DRAFT。  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -18,7 +18,7 @@ IR 编号稳定。GitHub Issue 用于讨论、分派和跟踪，一个 IR 可关
 - 协作 Issue：[Issue #35](https://github.com/odango-chan/ca-agent-next/issues/35)（G01 §11.8 状态刷新；SR-001 代码修复仍由 Issue #27 跟踪）。
 - 实施分解：[SR-001](../SR/SR-001-评审上下文自动生成.md)。
 - 架构、设计和规范：[文档编写与治理规范](../规范/文档编写与治理规范.md)、[Agent](../../Agent.md)。
-- 完成依据：SR-001 的必需 AC 全部 VERIFIED 后方可完成；当前设计为 READY，实施 PR [#32](https://github.com/odango-chan/ca-agent-next/pull/32) OPEN，AC-REV-08/09 有待修复，不宣称完成。
+- 完成依据：SR-001 的必需 AC 全部 PASS 且实施集成完成后方可关闭；当前设计 READY，PR [#32](https://github.com/odango-chan/ca-agent-next/pull/32) OPEN、未合并；最终 HEAD `18ae581435be76cfbf7f92f6e010d54bdef7aa3a` 的 AC-REV-01～10 全部 PASS，真实 Workflow [Run 45791388839](https://github.com/odango-chan/ca-agent-next/actions/runs/45791388839) success，三份 Artifact 已核对；尚不宣称 IR 完成。
 
 ## IR-002
 - 设计修订追踪：[Next Issue #19](https://github.com/odango-chan/ca-agent-next/issues/19)（CLOSED）；[设计 PR #20](https://github.com/odango-chan/ca-agent-next/pull/20)（MERGED，commit `281ccb957b9222e72175e210d1afed177aa8a14f`）；阶段门禁治理：[Issue #21](https://github.com/odango-chan/ca-agent-next/issues/21)（CLOSED）；父级中央设计恢复见 [Next Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12)。
@@ -121,3 +121,4 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 | 2026-11-26 | 0.1.15 | GPT-6.2（ChatGPT） | IR-002 | 同步 SR-002 实施 PR #23 合并、AC-002-01～08 PASS、SR-002 VERIFIED，以及设计/治理 Issue #19/#21 的关闭状态；保留 SR-003 DRAFT 与 EX-01 NOT_RUN。 | 使 IR-002 的完成状态反映已完成模块和剩余模块，不把单个 SR VERIFIED 或模块 AC PASS 误报为 IR 整体完成。 | Issue #22；PR #20；PR #23；SR-002 v0.2.10；SR-003 v0.2.7 |
 | 2026-11-26 | 0.1.16 | GPT-6.2（ChatGPT） | IR-001、IR-007 | 刷新 SR-001 当前 PR/验收边界，并登记 Python 工程工具链与 uv 环境管理需求 | 修正 G01 §11.8 过期状态，建立 Python 工具链需求到 G02/SR-028 的追踪 | Issue #35；PR #32；SR-001；SR-028 |
 | 2026-11-26 | 0.1.17 | GPT-6.2（ChatGPT） | IR-007 | 将 G02 设计引用更新至 v0.1.1，明确 SR-028 命令只在 PR #32 集成后可用 | 保持 IR、G02 和 SR-028 使用同一最新设计版本与阶段依赖 | Issue #35；G02 v0.1.1；SR-028 v0.1.1 |
+| 2026-11-26 | 0.1.18 | GPT-6.2（ChatGPT） | IR-001 | 回填 SR-001 最终 78 项测试、AC-REV-01～10 PASS 与真实 Workflow/Artifact 证据；保留 PR OPEN 的集成门禁 | 两个独立复核 BLOCKER 已修复，但未合并前不把需求标记完成 | Issue #27；PR #32；Run 45791388839；SR-001 v0.3.8 |
