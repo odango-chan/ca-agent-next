@@ -7,7 +7,7 @@
 > 创建日期：2026-11-26  
 > 所属阶段：G02 工程治理支撑  
 > 上游需求：[IR-007](../IR/IR%20总登记册.md#ir-007)  
-> 设计依据：[G02 Python 工程工具链与环境管理设计说明书](../设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md) v0.1.0 §1～§8；[SR-002](SR-002-Python%20核心与宿主基础骨架.md) v0.2.10 §2.1；[SR 管理规范](../规范/SR%20管理规范.md) v0.7.0  
+> 设计依据：[G02 Python 工程工具链与环境管理设计说明书](../设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md) v0.1.1 §1～§8；[SR-002](SR-002-Python%20核心与宿主基础骨架.md) v0.2.10 §2.1；[SR 管理规范](../规范/SR%20管理规范.md) v0.7.0  
 > 设计/治理 Issue：[ca-agent-next #35](https://github.com/odango-chan/ca-agent-next/issues/35)（不是实施 Issue）  
 > 目标仓：`odango-chan/ca-agent-next`  
 > 固定设计基线：`docs/restore-original-designs-20261125` @ `38192949829763ca5e73be031932bd590b6e4ebc`  

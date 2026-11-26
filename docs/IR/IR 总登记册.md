@@ -1,7 +1,7 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录  
-> 文档版本：0.1.16  
+> 文档版本：0.1.17  
 > 修订日期：2026-11-26  
 > 状态：7 项 IR；IR-007 登记 Python 工程工具链统一需求，SR-028 为 DRAFT。  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -94,7 +94,7 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 
 - 协作 Issue：[Next #35](https://github.com/odango-chan/ca-agent-next/issues/35)（中央设计与治理刷新；不是代码实施 Issue）。
 - 实施分解：[SR-028](../SR/SR-028-Python工程工具链与uv环境管理.md)（DRAFT；实施 Issue 尚未创建）。
-- 架构与设计：[G02 Python 工程工具链与环境管理设计说明书](../设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md) v0.1.0。
+- 架构与设计：[G02 Python 工程工具链与环境管理设计说明书](../设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md) v0.1.1。
 - 实施范围：首批仅覆盖 `ca-agent-next` 根 Python 项目；其他仓库采用 uv 或迁移依赖管理须各自登记目标仓、基线、Issue 和 SR。
 - 完成依据：SR-028 的全部必需验收在目标仓真实执行并 VERIFIED；设计评审或锁文件生成本身不代表实施完成。
 
@@ -120,3 +120,4 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 | 2026-11-26 | 0.1.14 | GPT-6.2（ChatGPT） | IR-002 | 登记 SR-002 READY 后创建的独立实施 Issue #22，并明确 Issue #19/#21 分别承担设计和治理追踪。 | 完成需求到实施任务的追踪链，防止误用设计 Issue。 | IR-002；SR-002；Issue #19；Issue #21；Issue #22；PR #20 |
 | 2026-11-26 | 0.1.15 | GPT-6.2（ChatGPT） | IR-002 | 同步 SR-002 实施 PR #23 合并、AC-002-01～08 PASS、SR-002 VERIFIED，以及设计/治理 Issue #19/#21 的关闭状态；保留 SR-003 DRAFT 与 EX-01 NOT_RUN。 | 使 IR-002 的完成状态反映已完成模块和剩余模块，不把单个 SR VERIFIED 或模块 AC PASS 误报为 IR 整体完成。 | Issue #22；PR #20；PR #23；SR-002 v0.2.10；SR-003 v0.2.7 |
 | 2026-11-26 | 0.1.16 | GPT-6.2（ChatGPT） | IR-001、IR-007 | 刷新 SR-001 当前 PR/验收边界，并登记 Python 工程工具链与 uv 环境管理需求 | 修正 G01 §11.8 过期状态，建立 Python 工具链需求到 G02/SR-028 的追踪 | Issue #35；PR #32；SR-001；SR-028 |
+| 2026-11-26 | 0.1.17 | GPT-6.2（ChatGPT） | IR-007 | 将 G02 设计引用更新至 v0.1.1，明确 SR-028 命令只在 PR #32 集成后可用 | 保持 IR、G02 和 SR-028 使用同一最新设计版本与阶段依赖 | Issue #35；G02 v0.1.1；SR-028 v0.1.1 |
