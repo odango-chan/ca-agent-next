@@ -1,8 +1,8 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.29
-> 状态：SR-001/SR-002/SR-024 VERIFIED；SR-003 设计 READY、实施 IN_PROGRESS（PR #34 OPEN；Head `52f0fa32` 双平台模块 CI PASS）；SR-015 IMPLEMENTED，其余 22 项 DRAFT  
+> 文档版本：0.3.30
+> 状态：27 项 SR：SR-001/SR-002/SR-024 VERIFIED；SR-003/SR-015 IMPLEMENTED；22 项 DRAFT；SR-003 模块 CI PASS，系统 EX NOT_RUN  
 > 修订日期：2026-11-26  
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
@@ -16,7 +16,7 @@
 - 本索引只汇总 ID、标题、设计依据、状态、依赖和实施入口。
 - 状态变化先更新 SR 文件，再更新本索引和[实施状态总览](实施状态总览.md)。
 - ca-agent-next PR #1 是文档/设计基线 PR，不是任何 SR 的实现 PR。
-- PR #1、PR #32 已合并；SR-001/SR-002/SR-024 VERIFIED；SR-003 设计 READY、实施 IN_PROGRESS；SR-015 设计移交 IMPLEMENTED。
+- PR #1、#32、#34 已合并；SR-001/SR-002/SR-024 VERIFIED，SR-003/SR-015 IMPLEMENTED，其余 22 项 DRAFT。
 
 ## 2. SR 清单
 
@@ -24,7 +24,7 @@
 |---|---|---|---|
 | [SR-001](../SR/SR-001-评审上下文自动生成.md) | [IR-001](../IR/IR%20总登记册.md#ir-001) | 评审上下文自动生成 | VERIFIED |
 | [SR-002](../SR/SR-002-Python%20核心与宿主基础骨架.md) | [IR-002](../IR/IR%20总登记册.md#ir-002) | Python 核心与宿主基础骨架 | VERIFIED |
-| [SR-003](../SR/SR-003-统一插件管理器与扩展通信.md) | [IR-002](../IR/IR%20总登记册.md#ir-002) | 统一插件管理器与扩展通信 | READY（设计；实施 IN_PROGRESS） |
+| [SR-003](../SR/SR-003-统一插件管理器与扩展通信.md) | [IR-002](../IR/IR%20总登记册.md#ir-002) | 统一插件管理器与扩展通信 | IMPLEMENTED |
 | [SR-004](../SR/SR-004-已发布技能包导入.md) | [IR-003](../IR/IR%20总登记册.md#ir-003) | 已发布技能包导入 | DRAFT |
 | [SR-005](../SR/SR-005-技能目录与条件程序消费.md) | [IR-003](../IR/IR%20总登记册.md#ir-003) | 技能目录与已检查 when 程序消费 | DRAFT |
 | [SR-006](../SR/SR-006-技能解析器与续跑选择.md) | [IR-003](../IR/IR%20总登记册.md#ir-003) | 技能解析器与 continuation 选择 | DRAFT |
@@ -76,7 +76,7 @@
 
 - 治理自动化：SR-001 VERIFIED；[PR #32](https://github.com/odango-chan/ca-agent-next/pull/32) MERGED（`7a0fac41e573021207ab8201bbc718718c451e50`）；AC-REV-01～10 PASS、80 tests OK、Run [45793590532](https://github.com/odango-chan/ca-agent-next/actions/runs/45793590532) success；SR-028 仍为 DRAFT。
 - Phase A：SR-002（VERIFIED；PR #23 已集成；AC-002-01～08 PASS；EX-01 仍 NOT_RUN）。
-- Phase B：SR-003 设计 READY、实施 IN_PROGRESS；Issue [#28](https://github.com/odango-chan/ca-agent-next/issues/28)、PR [#34](https://github.com/odango-chan/ca-agent-next/pull/34) OPEN；Head `52f0fa32` 的 [专项 CI #45814208662](https://github.com/odango-chan/ca-agent-next/actions/runs/45814208662) SUCCESS；Ubuntu/Python 3.12 与 Windows/Python 3.14 各 Plugin 87、Host 52、Review Context 80 tests PASS，Go Echo/compileall/证据采集 PASS；系统 EX-02/03/04/18 NOT_RUN。 尚未合入恢复分支。
+- Phase B：SR-003 IMPLEMENTED；[PR #34](https://github.com/odango-chan/ca-agent-next/pull/34) MERGED（`32c7c1be5e93bddc83349234476b2ffa09e1ca23`）；最终受测 PR Head `e8bcb1b89de5094a4b1b68f973af6720801c7fbd` 与合并提交的 tree 一致；[CI #45815167442](https://github.com/odango-chan/ca-agent-next/actions/runs/45815167442) SUCCESS，Ubuntu/Python 3.12 与 Windows/Python 3.14 各 Plugin 87 / Host 52 / Review Context 80 PASS，Go Echo 构建、compileall 和证据采集 PASS。系统 EX-02/03/04/18 仍 NOT_RUN。 系统级 EX 与 Provider v2 wire DTO 属独立范围，暂不标为 VERIFIED。
 - Phase C：SR-004。
 - Phase D：SR-005、SR-006。
 - Phase E：SR-007。
@@ -93,7 +93,7 @@
 - 设计来源：ca-agent-next PR #1 的架构、设计、规范和 Acceptance 文档。
 - PR #1：已合并；只代表设计文档变更。
 - Next Runtime：README 声明尚无已验收 Runtime 实现。
-- 当前 27 项 SR 中 3 项 VERIFIED（SR-001、SR-002、SR-024）、1 项 READY（SR-003 设计）、1 项 IMPLEMENTED（SR-015 设计移交）、22 项 DRAFT；SR-003 的实施状态另记为 IN_PROGRESS；[PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)已核对 58 个文件与 SHA256SUMS；归档报告为 Go/Python 18/18，当前审计复跑 NOT_RUN，不改变 SR-013 总体 DRAFT 状态。SR-009 仅覆盖 Event/Delivery Plugin 与本地 staging；SR-010 还覆盖 Next Host ArtifactStore、ca-host.artifact-store/v1 channel server、Provider v2 Driver 和 Codec 消费。
+- 当前 27 项 SR 中 3 VERIFIED（SR-001/002/024）、2 IMPLEMENTED（SR-003/015）、22 DRAFT；SR-013 归档 PoC 不改变 DRAFT；SR-009 只覆盖 Event/Delivery Plugin/staging，SR-010 覆盖 Host ArtifactStore、Channel、Provider v2 Driver/Codec。
 - Issue #12 追踪本轮中央设计资产恢复；PR #11/#13/#15/#16/#18 均在独立分支 OPEN/DRAFT，恢复分支已同步可复用的最新文档内容但尚未创建 PR；PR 状态不等于 SR 实施状态。
 - 恢复分支 docs/restore-original-designs-20261125 尚未创建指向 main 的总 PR；SR-002 设计 PR #20 与实施 PR #23 均已合并到恢复分支，SR-002 为 VERIFIED、AC-002-01～08 PASS；EX-01 仍 NOT_RUN。该恢复分支尚未合并 main。
 - ca-agent-demo、ca-client-tools、ca-skill-compiler、ca-skills 和 ca-openamsm-plugin 的现有代码/PR 只能作为外部复用或依赖证据，不能自动算作 Next SR 已实施。
@@ -142,3 +142,4 @@
 | 2026-11-26 | 0.3.27 | GPT-6.2（ChatGPT） | §1～§4 | 回填 ca-agent-demo PR #253 合并、Issue #252 关闭及 AC-024-01～07 PASS；SR-024 转 VERIFIED；同步 SR-003 的设计 READY / 实施 IN_PROGRESS 与本地模块 AC 证据 | 消除 SR-024 已完成仍显示 READY 的过期状态，并区分 SR-003 设计门禁、实施进度与未运行的 CI/系统 EX | Issue #12；ca-agent-demo #252/#253；SR-024 v0.1.12；SR-003；PR #34 |
 | 2026-11-26 | 0.3.28 | GPT-6（ChatGPT） | 文档头、§3.2、修订记录 | 保留 SR-024 VERIFIED 与 SR-003 设计 READY / 实施 IN_PROGRESS；回填 PR #34 Merge 候选 Base SHA | 与最新恢复分支一致，不能将历史 AC 结果升级为候选 Head PASS | Issue #28；PR #34 |
 | 2026-11-26 | 0.3.29 | GPT-6（ChatGPT） | 文档头、§3、修订记录 | 以新 Head 的 CI success 替换等待验证状态 | 不将模块测试等同系统验收 | Issue #28；PR #34；[CI #45814208662](https://github.com/odango-chan/ca-agent-next/actions/runs/45814208662) |
+| 2026-11-26 | 0.3.30 | GPT-6（ChatGPT） | §1～4 | SR-003 IMPLEMENTED，主状态统计更新为 3/2/22 | 满足实现合并后的 SR 状态回填 | Issue #28；PR #34；Merge `32c7c1be` |
