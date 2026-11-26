@@ -1,7 +1,7 @@
 # Tool Interface 与 Provider 集成设计说明书
 
 > 文档类型：功能子模块设计说明书
-> 文档版本：0.4.0
+> 文档版本：0.4.1
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 功能归属：F03.05 — Tool Plugin 集成
 > 交叉功能：F03.01～F03.04、F04.01、F04.05、F05.02、F06
@@ -16,9 +16,9 @@
 
 ### 1.1 目标
 
-1. Tool 是 Plugin 导出的 Callable Operation，不是独立进程、Manager、Registry 或 Runtime。
+1. Tool/Callable 是 Plugin 的 Tools Extension 中的**内部调用身份**，不是作者可见的 Operation ID，也不是独立进程、Manager、Registry 或 Runtime；Operation/Observation 是 Procedure 阶段。
 2. 所有 Tool Provider 均由唯一 Plugin Manager 管理；Runtime 是唯一 Action 调用与授权边界。
-3. Skill 只声明其依赖的 Capability / Callable，不接触 Provider 私有 backend ID、服务地址、凭据或私有 Host 参数。
+3. **1.6.0 Skill 只声明 Capability ID**，不写 Callable ID、Operation ID、Provider 私有 backend ID、地址、凭据或私有参数；公开 Capability 与 Callable 双向一对一，Compiler 负责生成内部 Binding。
 4. Compiler 构建时使用精确的 Provider Interface / Owner Contract 依赖快照；冻结 v1alpha5 Artifact 仅记录 dependency alias、stablePackageId 和导出集合，不携带依赖版本或 snapshotDigest。Next 的 Demo 部署因此通过 provider.yaml 的 `interfacePackagePath` / `interfaceSnapshotDigest` 固定 Provider Interface snapshot，并通过 Provider Runtime Bindings 的 Owner stable ID、version、publicationDigest 和 manifestDigest 固定 Owner 发布物；不得宣称 Artifact 本身实现了逐 Skill 的字节级依赖锁。
 5. Owner 对业务状态、Receipt、Commit Proof 和 Reconcile 负责；Provider/IPC/HTTP 成功不构成业务提交证明。
 6. 复用 ca-agent-demo 已有的 Schema 校验、Effect 一致性、精确 Callable Scope、UNKNOWN 和 exact-original reconcile 机制，但不把 Demo 的手工注册、5GC 业务装配或第二份契约源搬进 Next。
@@ -71,11 +71,13 @@
 1. **一个 Plugin Manager。** Tool Provider 是 Plugin Manager 管理的 Tools Extension 提供者；Tool 是其导出的 Operation。不得为 Provider、Tool 或 Codec 增设独立 Manager。
 2. **区分 Provider Interface 与 Owner Contract。** Provider Interface Package 提供 Provider 自身导出的 Callable（当前 ca-client-tools v1.2.0 为 11 个 READ）；业务 Owner Contract Package 提供 Owner 业务 Callable、Effect、Schema、Outcome、Evidence 和 Capability membership（OpenAMSM v1alpha4）。MAS Skill 的 `mas::` 调用来自 Owner Contract Package，不从 Provider Interface Package 推导。私有 backendOperationId 只存在于 Provider Runtime Bindings / Provider 内部 Catalog。
 3. **Owner 结果语义单独归属。** Owner Contract Package 是业务 Callable、Owner Outcomes、Receipt、Commit Proof 和 exact-original Reconcile 的权威来源；Provider Runtime Bindings 只能引用和定位这些语义，不能重新定义。
-4. **安装不等于授权。** Plugin Manager 加载一个 Provider，不会授予任何 Skill 调用权限。冻结 v1alpha5 Runtime Scope 以 Artifact `dependencyClosure[].exports[]` 建立精确 Callable allowlist；Capability ID 是 Compiler Build-time 作者源检查输入，不是该 Artifact 的运行时字段。
+4. **安装不等于授权。** Plugin Manager 加载 Provider 不授予 Skill Capability。**新 1.6.0 Runtime 以 Artifact 的 capabilityBindings 将 Skill 声明 Capability 解析到唯一公开 Callable，检查精确 Scope、kind、Effect 和 Schema 后才派发**。冻结 v1alpha5 Callable-only Artifact 的事实属于历史审计，不适用于新 Runtime。
 5. **Provider catalog 不授权、不扩权。** Provider 的 initialize/catalog/invoke 是执行与可用性协议；catalog 只报告显式请求的私有 backend binding 是否支持/可用，不产生公开 Callable，也不产生 Grant。
 6. **Provider v2 是迁移适配。** ca-client-tools v1.2.0 使用既有 ca-client-tools.provider/v2 NDJSON 协议。Next 在唯一 Plugin Manager 内提供 ProviderV2 Tools Extension Driver；它是进程/协议适配器，不是第二个 Manager、Registry 或授权路径。Native Plugin 仍使用 Plugin IPC v1alpha1。
 7. **不复制 Demo 的手工注册。** Next 从发布包和部署配置加载明确的 Provider 包与运行时映射；不复制 tools/registrations/default.yaml、Python ToolImplementationCatalog 或 MAS 专用 adapter。
 8. **Codec 只是可选 Operation。** 只有当 Codec 能力按正式 Interface Package / Runtime Bindings 发布并被 Skill 依赖时，才经同一 Tools Extension 调用；不创建 Codec Plugin/Manager。
+
+**规范优先级与来源分区：**本设计 §12 与 SR-029、SR-025、SR-026 定义新 **CA-SL 1.6.0** 唯一公开 Package/Compiler/Runtime 目标。§2、§4.1～§4.4 记载旧 Provider v1.2.0、Owner v1alpha4、Compiler v2.1.0、11 READ / 24:25、旧 Development 包事实，**仅供追溯和差异验证**。§5～§11 的通用 IPC/Artifact/Host 机制可复用，但涉及旧格式/ID/Callable 集合时必须以 §12 和对应新正式发布为准；绝不保留历史解析/路由兼容入口。
 
 ## 4. 契约与身份所有权
 
@@ -145,9 +147,9 @@
 
 冻结 CA-SL v1alpha5 Runtime 使用的 Owner Contract Package 与 Skill Studio / Compiler v2.1.0 Development profile 使用的 `interface-package/v1alpha1` 是两个不同消费面。Development package 是对 Owner v1alpha4 source snapshot 的静态包装，不替代 Owner 原始 ToolCatalog、CapabilityContracts、Evidence Guarantees，也不替代 Provider Interface Package 或 Provider Runtime Bindings。
 
-MAS Owner 的 Development Interface Package 由 ca-client-tools 独立 Publisher 实施（SR-025），导出闭包、CapabilityCatalog 逻辑投影、EvidenceDescriptor、Schema closure 与 package/source version 边界由 F09 §4.5 统一定义。Provider Interface Package 仍只提供 ca-client-tools 自身的 11 个 READ Callable；MAS Skill 的 `mas::` Owner Callable 不得从 Provider Package 推导。
+历史 Compiler v2.1.0 的 MAS Owner Development Interface Package 由 F09 §4（只读审计）记载，其 24/25 members、Provider v1.2.0 11 READ、旧 1.0.0 wrapper 均不是新目标。**当前 SR-025 负责全新 1.6.0 Owner 24/24 Capability-first Publisher**，所需 Package Schema、Publisher version、合法身份与 Bindings 由 Owner/Compiler 正式发布；Provider 新 2/2 由 ca-client-tools 另行发布，不能从旧数组直接转换。
 
-Compiler v2.1.0 的 Development package version 必须为 exact SemVer。Owner source version `v1alpha4` 不可直接作为 `package.json.version`；MAS Publisher 首版固定为 `1.0.0`。必须保留 Owner source stable Package ID、ToolCatalog contract IDs、Owner outcomes、Receipt / Commit Proof / Reconcile 语义或冻结 v1alpha5 Runtime Owner linking。
+**历史 Compiler v2.1.0 的** Development package version 必须为 exact SemVer，旧 wrapper 的 1.0.0 只供源审计；**新 1.6.0 Publisher 不得默认使用该版本或旧 package.json Schema**。Owner source version v1alpha4 不能冒充新语言或新 Package identity。必须保留 Owner source stable Package ID、ToolCatalog contract IDs、Owner outcomes、Receipt / Commit Proof / Reconcile 语义或冻结 v1alpha5 Runtime Owner linking。
 
 
 ## 5. 组件职责
@@ -549,6 +551,17 @@ Runtime Action 以 Capability ID 为 Skill / Procedure 作者侧入口。Runtime
 **1.6.0-only 设计评审硬门槛：** 旧 Owner/Provider Release 只是基数审计输入，必须按 1.6.0 新契约重新发布。 此章节仅描述目标设计，外部代码/Release/E2E 均 NOT_RUN。
 
 
+### 12.8 新版公开能力拒绝矩阵
+
+| 输入类别 | 唯一 1.6.0 行为 |
+|---|---|
+| 合法 1:1 Capability / Callable，kind/Effect/Schema 匹配 | Compiler 构建唯一 Binding，Runtime 经 Artifact Scope 分发内部 Callable |
+| 旧 Owner 24 IDs/25 members（两个 Event Callable 共用一个 Capability） | 拒绝；需 Owner 发布拆分的 24/24 |
+| 旧 Provider 2 Capability/11 READ Callable | 拒绝作为新版公开面；需发布 2/2 与封闭 contextKind/resourceKind selector |
+| 旧 v1alpha5 Alias::Callable、Artifact、旧 Development 1.0.0 ZIP | 新 Authoring/Compiler/Agent/Studio 都拒绝，不转换、不 fallback |
+| 模型指定 Callable/backendOperationId/URL 或自由文本 selector | IPC 前拒绝；Provider 只能用 Schema 闭合路由私有 handler |
+| Skill/LLM 直接调用 internal-only MAS.RECONCILE | `INTERNAL_RECONCILE_ONLY`、IPC=0；Coordinator 仅按原 Mutation Reconcile |
+
 ## 13. 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
@@ -567,3 +580,5 @@ Runtime Action 以 Capability ID 为 Skill / Procedure 作者侧入口。Runtime
 | 2026-11-26 | 0.3.8 | GPT-6.2（ChatGPT） | §2～§8、§11 | 将 PR #13 已完成的 P1/P2 修正移植到当前恢复基线；明确 frozen v1alpha5 Capability 不序列化、Reconcile internal-only、完整 Interface tree 路径校验、安装级 Loader 与 per-Skill Resolver 分离；复用 v1.2.0 pinned Release `SHA256SUMS` 与 Host executable digest 对账；固定 Artifact Store 来源和 Host-owned ToolCatalog 不采用 | 防止设计版本倒挂，并让 F03.05 与 F02/F04/F06/公共契约使用同一执行边界 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-26 | 0.3.9 | GPT-6.2（ChatGPT） | 文档头、修订记录 | 回填 SR-015 设计迁移 PR #37 已合并到恢复分支 | 仅更新设计资产集成状态，不将 F03 Provider Runtime 或 Codec Consumer 误报为已实现 | Issue #12；SR-015；PR #37 |
 | 2026-11-26 | 0.4.0 | GPT-6（ChatGPT） | 新增 1.6.0 目标章节、状态及修订记录 | 移植一对一 Binding / Selector / Action 设计并标为待评审 | 无旧版兼容或产品完成承诺 | Issue #40；SR-029 |
+
+| 2026-11-26 | 0.4.1 | GPT-6（ChatGPT） | §1、§3～§4、§12 | 规范性目标限定 Capability-only；旧 Publisher 24:25/11 READ 降为审计，新增拒绝矩阵 | 解除新旧 Callable/Owner/Provider Published Package 混淆 | Issue #12/#40；SR-025/026/029；PR #46 |
