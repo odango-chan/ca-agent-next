@@ -1,8 +1,8 @@
 # Tool Interface 与 Provider 集成设计说明书
 
 > 文档类型：功能子模块设计说明书
-> 文档版本：0.3.8
-> 状态：目标设计；SR-015 READY（代码实施另行追踪）
+> 文档版本：0.3.9
+> 状态：目标设计；SR-015 设计移交 IMPLEMENTED（Next 代码实施另行追踪）
 > 功能归属：F03.05 — Tool Plugin 集成
 > 交叉功能：F03.01～F03.04、F04.01、F04.05、F05.02、F06
 > 关联 SR：SR-003、SR-007、SR-010、SR-015、SR-025
@@ -497,3 +497,4 @@ Codec PR #39 的固定候选 `eb1169fe1d0e2e691d101908aad08ee8801da754` 在 `pro
 | 2026-11-25 | 0.3.6 | Codex / GPT-6 | 正文 | 同步 Publisher 身份、版本和验收边界 | 消除执行歧义并同步中央设计 | Issue #12 |
 | 2026-11-26 | 0.3.7 | Codex / GPT-6 | §4、§6、§8、§12 | 校正装载顺序、catalog 分区与 initialize 失败语义；补齐 ca-client-tools 两端及 Codec 发布归属 | 对齐跨仓实现与独立复验 | Issue #12 |
 | 2026-11-26 | 0.3.8 | GPT-6.2（ChatGPT） | §2～§8、§11 | 将 PR #13 已完成的 P1/P2 修正移植到当前恢复基线；明确 frozen v1alpha5 Capability 不序列化、Reconcile internal-only、完整 Interface tree 路径校验、安装级 Loader 与 per-Skill Resolver 分离；复用 v1.2.0 pinned Release `SHA256SUMS` 与 Host executable digest 对账；固定 Artifact Store 来源和 Host-owned ToolCatalog 不采用 | 防止设计版本倒挂，并让 F03.05 与 F02/F04/F06/公共契约使用同一执行边界 | IR-006 · SR-015 · Issue #12 |
+| 2026-11-26 | 0.3.9 | GPT-6.2（ChatGPT） | 文档头、修订记录 | 回填 SR-015 设计迁移 PR #37 已合并到恢复分支 | 仅更新设计资产集成状态，不将 F03 Provider Runtime 或 Codec Consumer 误报为已实现 | Issue #12；SR-015；PR #37 |
