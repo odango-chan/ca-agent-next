@@ -1,7 +1,7 @@
 # EC05 — OpenAMSM Owner 与权威状态架构设计
 
 > 文档类型：外部能力域架构设计（实现派生重建）  
-> 文档版本：0.1.0  
+> 文档版本：0.1.1  
 > 状态：依据当前 main 代码、Owner 声明、契约和验收材料重建；源仓没有独立总体架构文档  
 > 功能归属：EC05；关联 F04、F05、F06、F07  
 > 关联需求：IR-004、IR-005；SR-007、SR-010、SR-011、SR-018  
@@ -41,6 +41,20 @@ Owner 以 contracts/mas/operations.yaml 作为声明源，由 publish.py 生成 
 ToolCatalog 描述 Callable ID、Effect、Capability、输入输出 Schema 和 Owner 结果语义。MUTATION Callable 必须有 Receipt Schema、Commit Proof 和精确原始 Invocation 关联。READ Callable 不得被误报为副作用提交。
 
 Owner 声明源、发布产物、Provider 绑定与 Skill 作者源分别归属不同仓库；Next 只消费正式发布契约，不复制 Owner 操作实现。
+
+## 2.1 CA-SL 1.6.0 Capability-first 发布目标
+
+本节是 Next 新目标设计，不改写 env-openamsm v1alpha4 已发布字节和现有业务实现。
+
+| 项目 | 历史 Owner v1alpha4 | 新 CA-SL 1.6.0 目标 |
+|---|---|---|
+| CapabilityContracts | 24 Capability / 25 Callable membership；唯一多成员项为 mas.se.events.emit | 24 Capability / 24 public Callable；establishment / release marker 两种事件分别成为 Capability |
+| Reconcile | mas.reconcile.exact_original 曾出现在 Skill-facing CapabilityContracts | 从 Skill-facing CapabilityContracts 移除；MAS.RECONCILE 保留 ToolCatalog 和 Mutation Reconcile binding，Runtime Coordinator internal-only |
+| Receipt Query | MAS.RECEIPT_QUERY 为普通受控 READ | 保持普通 Skill-facing READ Capability / Callable |
+| ToolCatalog | 25 contracts（21 MUTATION + 4 READ） | 保留 25 contracts；不删除内部 Reconcile contract |
+| 发布 | v1alpha4 Owner source / package | SR-025 重新发布 1.6.0 Capability-first Package；新发布物尚未交付 |
+
+新作者不得写 Owner Callable ID。Compiler 必须从显式依赖 Package 唯一解析 Capability→Callable，并校验 kind、Effect、Schema、Owner identity；不得以旧 24/25 membership 或旧 Artifact 作为新输入。具体新 Package Schema / Publisher 版本由 SR-025 与 Compiler 1.6.0 契约冻结。
 
 ## 3. Owner 组件边界
 
@@ -128,3 +142,5 @@ UE-requested Release 的 NAS message type 是 0xD1，与 AMF/network-initiated R
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
 |---|---|---|---|---|---|
 | 2026-11-25 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 根据 Owner 发布声明、Receipt、Scheme C 设计和当前主线文件重建架构；标记为实现派生重建，避免虚构原始架构文档 | Issue #12；SR-018 |
+
+| 2026-11-26 | 0.1.1 | GPT-6（ChatGPT） | 1.6.0 新目标与历史边界 | 增加 1.6.0 Owner Capability 24/24 目标与 Reconcile internal-only 边界，保留 v1alpha4 为历史实现基线 | Issue #12/#40；PR #46 |
