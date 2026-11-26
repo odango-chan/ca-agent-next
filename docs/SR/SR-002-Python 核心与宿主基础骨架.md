@@ -1,7 +1,7 @@
 # SR-002：Python 核心与宿主基础骨架
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.2  
+> SR 版本：0.2.3  
 > 状态：DRAFT；本轮设计修订待评审，不允许代码实施  
 > 创建日期：2026-11-25  
 > 所属阶段：Phase A  
@@ -40,7 +40,7 @@
 F01 §5.1～5.5 定义以下公开类型和方法，SR-002 按该定义实现，不自行改名或增加第二套契约：
 
 - `JSONValue`：仅允许 JSON null、boolean、有限 number、string、array 和 string-keyed object；不允许 bytes、Path 或任意 Python 对象。
-- `Event`：冻结 dataclass；event_id、ingress_id、event_type 为非空 string；payload/source 为只读 Mapping[str, JSONValue]；external_request_id/response_channel_id 为可选 string；artifact_refs 为 tuple[str, ...]，默认空 tuple。
+- `Event`：冻结 dataclass；event_id、ingress_id、event_type 为非空 string；payload 为必需的只读 Mapping[str, JSONValue]；source 为可选只读 Mapping[str, JSONValue]（缺省按空映射处理）；external_request_id/response_channel_id 为可选 string；artifact_refs 为 tuple[str, ...]，默认空 tuple。
 - `Context`：冻结 dataclass，values 为只读 Mapping[str, JSONValue]，默认空映射。
 - `Run`：冻结 dataclass，run_id 和 event_id 为非空 string；不在本 SR 实现持久化、Continuation 或状态机。
 - `ModelRequest`：冻结 dataclass，包含 run、event 和 context。
@@ -48,7 +48,8 @@ F01 §5.1～5.5 定义以下公开类型和方法，SR-002 按该定义实现，
 - `HostResult`：冻结 dataclass，包含 run 与 proposal。
 - `ModelClient`：由调用方注入的同步 Protocol，方法为 `propose(request: ModelRequest) -> ModelProposal`。
 - `AgentLoop`：构造时注入 ModelClient；`run_once(request)` 对 ModelClient 调用恰好一次，不重试。
-- `Host`：构造时注入 ModelClient；公开 `handle_event(event: Event) -> HostResult`。Host 创建最小 Run/Context 并调用 AgentLoop。
+- `HostError`：稳定错误异常，构造签名为 `HostError(code: str, safe_message: str)`；code 必须属于本节定义的错误码，safe_message 不含原始凭据或模型响应。
+- `Host`：构造时注入 ModelClient；公开 `handle_event(event: Event) -> HostResult`。未提供 `run_id_factory` 时使用标准库 `uuid.uuid4().hex` 生成 run_id；Event 校验通过后、每次调用恰好生成一次。Host 创建最小 Run/Context 并调用 AgentLoop。
 
 Host 不创建真实模型客户端、不读取 Provider/Gateway 环境变量、不拥有注入 ModelClient 的资源生命周期。ModelClient 由应用组合入口创建和管理。测试使用 Fake ModelClient。
 
@@ -176,3 +177,4 @@ tests/
 | 2026-11-26 | 0.2.0 | 将 EX-01 明确为系统级门槛；新增 AC-002-01～AC-002-08、固定 Smoke 输入/输出/错误码、ModelClient 注入和 SR-003 复用边界 | 使 SR-002 可独立实施和验收，避免被后续模块阻塞 | Issue #19；IR-002；SR-003 |
 | 2026-11-26 | 0.2.1 | 补齐 Event/Context/Run/Proposal 字段类型、HostError 安全诊断和确定性 Smoke run_id；回填 Draft 设计 PR #20 | 消除 Harness 对类型、异常映射和 Smoke 稳定性的猜测 | Issue #19；PR #20 |
 | 2026-11-26 | 0.2.2 | 将设计依据版本同步到 F01 v0.3.1 | 保证 SR-002 引用当前权威字段与错误契约 | Issue #19；F01 v0.3.1 |
+| 2026-11-26 | 0.2.3 | 固定 HostError 构造签名、默认 UUID run_id 生成时机及 Event.source 可选语义 | 消除 Host 实现和 Fake 测试的剩余猜测 | Issue #19；F01 v0.3.3；PR #20 |

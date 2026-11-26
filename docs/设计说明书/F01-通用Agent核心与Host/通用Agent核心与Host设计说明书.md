@@ -1,7 +1,7 @@
 # 通用 Agent Core 与 Host 设计说明书
 
 > 文档类型：功能设计说明书  
-> 文档版本：0.3.2  
+> 文档版本：0.3.3  
 > 状态：Next 目标设计；本仓实现状态需独立验收，不以参考仓 PASS 代替  
 > 功能归属：F01 — 通用 Agent Core 与 Host  
 > 关联 SR：SR-002、SR-020、SR-021  
@@ -130,7 +130,7 @@ SR-002 固定下列最小类型；字段名和含义以本表为准：
 | 类型 | 字段/语义 |
 |---|---|
 | `JSONValue` | JSON null、boolean、有限 number、string、array 或 string-keyed object；不允许 bytes、Path 或任意 Python 对象 |
-| `Event` | 冻结 dataclass；event_id、ingress_id、event_type 为非空 string；payload/source 为只读 Mapping[str, JSONValue]；external_request_id/response_channel_id 为可选 string；artifact_refs 为 tuple[str, ...]，默认空 tuple |
+| `Event` | 冻结 dataclass；event_id、ingress_id、event_type 为非空 string；payload 为必需的只读 Mapping[str, JSONValue]；source 为可选只读 Mapping[str, JSONValue]（缺省按空映射处理）；external_request_id/response_channel_id 为可选 string；artifact_refs 为 tuple[str, ...]，默认空 tuple |
 | `Context` | 冻结 dataclass；values 为只读 Mapping[str, JSONValue]，默认空映射；不承载伪造的 Observation/Evidence |
 | `Run` | 冻结 dataclass；run_id、event_id 为非空 string；不在本切片实现持久化、Continuation 或状态机 |
 | `ModelRequest` | 冻结 dataclass；包含 run、event、context |
@@ -148,8 +148,7 @@ class ModelClient(Protocol):
     def propose(self, request: ModelRequest) -> ModelProposal: ...
 
 class HostError(Exception):
-    code: str
-    safe_message: str
+    def __init__(self, code: str, safe_message: str): ...
 
 class AgentLoop:
     def __init__(self, model_client: ModelClient): ...
@@ -166,6 +165,7 @@ class Host:
 ```
 
 - `Host.handle_event` 校验 Event，创建 Run 和最小 Context，构造 ModelRequest，调用 AgentLoop 并返回 HostResult；输入无效或执行失败时抛出带稳定 code/safe_message 的 HostError。
+- 若未注入 `run_id_factory`，Host 使用标准库 `uuid.uuid4().hex` 生成 run_id；Event 校验通过后每次 `handle_event` 恰好调用工厂一次。输入无效时不生成 Run ID。
 - `AgentLoop.run_once` 对注入的 ModelClient 调用恰好一次；本切片不重试、不流式读取、不创建真实 Provider。
 - ModelClient 由应用组合入口创建并注入。Host/AgentLoop 不读取环境变量、不创建 HTTP 客户端、不拥有注入对象的关闭责任。
 - 测试用 Fake ModelClient 记录完整 ModelRequest、调用次数和返回值/异常；一次 `handle_event` 必须对应一次 `propose`。
@@ -282,3 +282,4 @@ SR-002 的独立模块验收为 AC-002-01～AC-002-08，详见《演示验收基
 | 2026-11-26 | 0.3.0 | GPT-6.2（ChatGPT） | §2、§5、§11 | 固定 Next Python 包身份、Host/ModelClient 公共接口、Fake 注入、Smoke/错误契约和 SR-002/EX-01 验收分层；明确 SR-003 复用入口。使首个 Python Host 切片可独立实施和复验，且不复制 ca-agent-demo 的包身份或运行时。 | Issue #19；SR-002、SR-003；AC-002-01～08、EX-01 |
 | 2026-11-26 | 0.3.1 | GPT-6.2（ChatGPT） | §5.2～5.5 | 固定 JSONValue、Event/Context 字段约束、HostError 与安全错误映射，并让 Smoke Run ID 确定化；使实现与测试可以直接按字段和错误语义执行。 | Issue #19；SR-002；PR #20 |
 | 2026-11-26 | 0.3.2 | GPT-6.2（ChatGPT） | 修订记录 | 统一本次新增修订记录的六列格式，保持历史修改意图与关联追踪完整。 | Issue #19；PR #20 |
+| 2026-11-26 | 0.3.3 | GPT-6.2（ChatGPT） | §5.2～5.4 | 明确 Event.source 可选、HostError 构造签名及默认 UUID run_id 的生成规则和时机。 | 让 Host 公开契约和失败路径可直接实现与测试。 | Issue #19；SR-002；PR #20 |
