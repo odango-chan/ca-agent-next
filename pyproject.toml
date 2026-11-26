@@ -6,7 +6,13 @@ build-backend = "setuptools.build_meta"
 name = "ca-agent-next"
 version = "0.1.0"
 requires-python = ">=3.11"
-dependencies = [
+# SR-002 固定 Host 核心无强制运行时依赖。Plugin Manager 的 YAML 1.2 与
+# Draft 2020-12 校验依赖被隔离在可选 extra 中，安装入口：
+#   python -m pip install -e ".[plugins]"
+dependencies = []
+
+[project.optional-dependencies]
+plugins = [
     "ruamel.yaml>=0.18,<0.19",
     "jsonschema>=4.23,<5",
 ]
