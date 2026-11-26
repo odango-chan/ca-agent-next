@@ -1,13 +1,13 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.7  
-> 状态：待评审  
-> 修订日期：2026-11-25  
+> 文档版本：0.3.8  
+> 状态：目标设计基线待评审；当前实现快照 2026-11-26：#272 MERGED、#276 OPEN/DRAFT/DIRTY、#269 OPEN；SR-024 VERIFIED、SR-025 READY  
+> 修订日期：2026-11-26  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级准入、额外 package-level digest、签名和 Trust Registry；仅保留 Compiler v2.1.0 Interface Package schema 明确要求的 `files[].sha256`  
 
-关联 IR-006、SR-015、SR-016、SR-020（参考宿主架构审计）、SR-024（Host Context Publisher）、SR-025（MAS Owner Publisher）；Compiler 接口以 [EC02 Development Build 设计](../EC02-Compiler/Development%20Build设计.md) 为准。基线为 [docs/architecture/studio-boundaries.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/architecture/studio-boundaries.md)、[docs/design/ai-procedure-authoring.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/design/ai-procedure-authoring.md)。
+关联 IR-006、SR-015、SR-016、SR-020（参考宿主架构审计）、SR-024（Host Context Publisher）、SR-025（MAS Owner Publisher）；Compiler 接口以 [EC02 Development Build 设计](../EC02-Compiler/Development%20Build设计.md) 为准。基线为 [docs/architecture/studio-boundaries.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/a8633553615d786e360a62c2b0042a27ae92d9d3/docs/architecture/studio-boundaries.md)、[docs/design/ai-procedure-authoring.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/a8633553615d786e360a62c2b0042a27ae92d9d3/docs/design/ai-procedure-authoring.md)。
 
 ## 1. 编辑与语言服务
 
@@ -53,8 +53,8 @@ Skill Studio 的依赖导入负责**获取、验证和固定原始包快照**，
 
 | Contract alias | Stable Package ID | 当前 Studio lock kind | 状态 |
 |---|---|---|---|
-| `mas` | `urn:openamsm:mas:tool-contracts` | `tool-catalog`（ca-client-tools v1.2.0 Owner contract source） | 尚非正式 Interface Package |
-| `ca-context` | `urn:connectionagent:ca:host-context` | `schema-bundle`（Host Development fixture） | 尚非正式 Interface Package |
+| `mas` | `urn:openamsm:mas:tool-contracts` | `tool-catalog`（ca-client-tools v1.2.0 Owner source） | SR-025 READY；Publisher 尚未实施，当前 lock 仍为 `tool-catalog` |
+| `ca-context` | `urn:connectionagent:ca:host-context` | `schema-bundle`（Host Development fixture） | SR-024 VERIFIED；Publisher 已合并，ZIP 尚未导入 Studio lock；当前仍为 `schema-bundle` |
 
 项目另预加载 `ca-client`，其 Package ID 为 `urn:wtlab:ca-client-tools:openamsm-sbi-interface`，来自已发布 `ca-client-tools_interface_1.1.0.zip`。它导出十一项 public READ Tools / 两个 Capabilities，用于只读 SBI Query IntelliSense；它**不是** `mas` Owner contract，也不是 `ca-context`，当前 Contract 未声明它为根。Studio/Compiler 不得推断替换。
 
@@ -138,24 +138,31 @@ Package Explorer、LSP、Problems 与 AI Workbench 必须区分源码诊断、�
 
 ## 7. 当前实施状态与验收门槛
 
-截至 2026-11-25：
+截至 2026-11-26：
 
 | 项目 | 状态 | 证据 / 未完成 |
 |---|---|---|
 | ZIP Import / immutable snapshot / Package Explorer | MERGED | [Studio #267](https://github.com/odango-chan/ca-skill-studio-demo/pull/267)，main merge `11b1246` |
 | Default Example dependency preload | MERGED | [Studio #270](https://github.com/odango-chan/ca-skill-studio-demo/pull/270)，main merge `d3b1d36` |
-| Compiler v2.1.0 request builder | OPEN / DRAFT / STALE | [Studio #272](https://github.com/odango-chan/ca-skill-studio-demo/pull/272)，测试 HEAD `8abffc7`，当前落后 main 67 commits |
-| Compiler v2.1.0 Node/Browser Worker | OPEN / DRAFT / STALE | [Studio #276](https://github.com/odango-chan/ca-skill-studio-demo/pull/276)，测试 HEAD `7d6adeb`，落后 #272 base 9 commits |
+| Compiler v2.1.0 request builder | MERGED | [Studio #272](https://github.com/odango-chan/ca-skill-studio-demo/pull/272)，merge/main SHA `a8633553615d786e360a62c2b0042a27ae92d9d3` |
+| Compiler v2.1.0 Node/Browser Worker | OPEN / DRAFT / DIRTY | [Studio #276](https://github.com/odango-chan/ca-skill-studio-demo/pull/276)，head `7d6adeb`；base SHA `3b3c4ac9d4b3a2f2e2380793d028d92f24c62c27` 与当前 main 未对齐，GitHub `mergeable_state=dirty` |
 | Package Audit Development Build cutover | NOT_IMPLEMENTED | [Studio #269](https://github.com/odango-chan/ca-skill-studio-demo/issues/269) |
 | AI Authoring exact-candidate Development Build gate | NOT_IMPLEMENTED | [Studio #269](https://github.com/odango-chan/ca-skill-studio-demo/issues/269) |
-| MAS / Host Context formal Interface Package publication | BLOCKED | 当前锁定 kind 分别为 `tool-catalog` / `schema-bundle`；MAS Owner Publisher 归 SR-025，Host Context Publisher 归 SR-024；两个 Package ID 各自使用首版 `1.0.0`，发布物尚未产生 |
+| MAS Owner Interface Package Publisher | READY / NOT_IMPLEMENTED | SR-025；ca-client-tools 实施 Issue 将在本 SR READY 后单独登记；Package version 固定 `1.0.0` |
+| Host Context Interface Package Publisher | VERIFIED / NOT_IMPORTED | SR-024；ca-agent-demo PR #253 MERGED，AC-024-01～07 PASS；ZIP 仍未导入 Studio lock |
 | Host fixture provenance in Studio lock | NOT_IMPLEMENTED | #267 已持久化 ZIP source metadata（upload/contentDigest/packageId/version/publisher），但尚未写入 `source.sourceStatus`；由 SR-016 / Studio #269 补齐 |
-| Real released ca-client-tools v1.1.0 as Compiler root | NOT_RUN | 需显式 `ca-client` synthetic Contract 正例 |
+| Real released ca-client-tools v1.2.0 as Compiler root | NOT_RUN | 需显式 `ca-client` synthetic Contract 正例；此 Provider 包不替代 MAS Owner Package |
 | No-root UI state | NOT_IMPLEMENTED | 不调用 Compiler、无 Artifact、无 `NOT_ADMITTED` |
 
-#272 / #276 曾在各自历史 HEAD 通过 PR Verify、Native Windows、IDE Host、Theia Browser-Only、Theia Browser Host 和 Pages Chromium 等检查，但当前分支分别落后 main / base；历史 PASS 不满足当前合并门禁。必须在刷新分支后重跑完整 exact-head 验收。
+#272 已合并，只证明 request builder 切片进入 main；#276 仍 OPEN / DRAFT 且 base 与当前 main 不一致、GitHub 报告 dirty。#276 的历史 HEAD 检查不构成当前 exact-head 验收；必须先对齐当前 main，再重跑所需 Node/Browser Worker、Native Windows、IDE Host、Browser-Only Chromium、Theia Browser Host 和 Pages 门禁。
 
 必要验收至少包括：原始发布 ZIP 导入/锁定字节一致性；Contract root closure 只包含可达 Interface Packages；无关项目依赖不进入 BuildRequest；声明为非 Interface Package 的 root fail-closed；缺失/损坏/摘要错/传递依赖环拒绝；零根不调用 Compiler；Node/WASM/Chromium 结果一致；AI 候选 stale invalidation、Apply/Undo 和磁盘未保存语义。所有结果只证明相应静态/编辑器层，不代表 Owner/Host Admission、Runtime、Production 或真实 5GC Qualification。
+
+
+
+当前产品审计补充（2026-11-26）：Studio Issue [#279](https://github.com/odango-chan/ca-skill-studio-demo/issues/279) 仍 OPEN，负责统一 Product Acceptance 与架构/代码审计；[#290](https://github.com/odango-chan/ca-skill-studio-demo/issues/290) 仍 OPEN，负责运行文档与 main 对齐。Example 替换另有 P1 回归 [#295](https://github.com/odango-chan/ca-skill-studio-demo/issues/295)：Pages Chromium run `45788420150` 在可选 `.vscode/settings.json` 缺失时复现 OPFS `EntryNotFound`；事务回滚保护有效，但替换未完成。该问题不得用 clean retry 代替代码修复。
+
+SR-024 的 Host Publisher 已 VERIFIED，但生成 ZIP 尚未创建 Release/Registry，也未导入当前 Studio lock；SR-025 目前仅设计 READY，MAS Publisher 代码和 ZIP 均未产生。Studio main `a863355` 的 #272 已合并，#276 仍 dirty，#269 的 Build/Verify、Package Audit、AI Authoring gate、lock provenance 和 no-root 仍未闭合。Pages 最新部署 SHA 未重新核验。
 
 ## 8. 历史决策
 
@@ -176,3 +183,4 @@ EC06 历史决策已统一归档于中央仓：[ADR-0001 Source-first Visual](..
 | 2026-11-25 | 0.3.5 | GPT-6.2（ChatGPT） | §4.5、§6～7 | 将 MAS Owner Publisher 独立归入 SR-025、Host Publisher 归入 SR-024；按 Compiler v2.1.0 修正 MAS exports 为 25/24/25/53；发现 v1alpha4/v1 非 SemVer，提出 package/source version 分离决策门槛 | 防止发布无法被 Development Build 接受的版本，同时保持 Owner/Host 源身份与 Studio lock 边界 | IR-006 · SR-015 · SR-016 · SR-024 · SR-025 · Studio #269 |
 | 2026-11-25 | 0.3.6 | Codex / GPT-6 | 正文 | 同步两个 Publisher 的 1.0.0 身份与消费边界 | Issue #12 |
 | 2026-11-25 | 0.3.7 | Codex / GPT-6 | 正文 | §4.5 依据 v2.1.0 源函数实测修正 +build 与项目包身份限制 | Issue #12 |
+| 2026-11-26 | 0.3.8 | GPT-6.2（ChatGPT） | 文档头、§4.5、§7 | 回填 Studio main `a863355`、#272 MERGED、#276 OPEN/DRAFT/DIRTY、#269 OPEN；更新 SR-024 VERIFIED、SR-025 READY；登记 #279/#290/#295 当前审计与 OPFS 替换回归 | 区分 Publisher 完成与 Studio lock 消费、request builder 合并与 Worker/Verify 完成；避免旧 PR HEAD 的历史 PASS 被当作当前门禁 | Issue #12；IR-006；SR-016、SR-024、SR-025；Studio #269/#272/#276/#279/#290/#295 |
