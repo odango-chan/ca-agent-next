@@ -52,8 +52,8 @@
 
 ### 4.2 实施依赖
 
-- AC-028-01～AC-028-07：SR-028 达到 READY、独立实施 Issue 建立后即可执行，不依赖 Agent Runtime 产品阶段。
-- AC-028-08（SR-001 Workflow 迁移）：依赖 SR-001 PR #32 修复 AC-REV-08/09、完成真实 Workflow 复验并集成到目标恢复分支。该依赖只阻塞 Workflow 迁移 AC，不阻塞 SR-028 的设计评审或其他独立实施阶段。
+- AC-028-01～AC-028-06：SR-028 达到 READY、独立实施 Issue 建立后即可执行，不依赖 Agent Runtime 产品阶段。
+- AC-028-07（CI 环境与测试入口）和 AC-028-08（SR-001 Workflow/Artifact 迁移）：均依赖 SR-001 PR #32 修复 AC-REV-08/09、完成真实 Workflow 复验并集成到目标恢复分支。该依赖只阻塞这两个 CI/Workflow AC，不阻塞 SR-028 的设计评审或 AC-028-01～06 的独立实施。
 - SR-028 当前没有实施 Issue。Issue #35 只负责中央设计和治理文档，不授予代码、配置或 Workflow 写入授权。
 
 ## 5. Acceptance
@@ -66,8 +66,8 @@
 | AC-028-04 | `uv.lock` 已提交且与 pyproject 一致；锁文件漂移时 `uv lock --check` / `uv sync --locked` 必须失败，不自动改写锁文件 | clean checkout 的 locked sync 与负例 |
 | AC-028-05 | 每个 worktree 使用独立 `.venv/`；`.venv/` 被 Git 忽略；两个并行 worktree 的 editable metadata 和测试互不污染 | 两个 worktree 的路径、distribution metadata 和测试输出 |
 | AC-028-06 | 项目脚本、完整 unittest 和 Host Smoke 使用 `uv run --locked --group dev` 通过 | 命令、CPython 3.14.6、完整测试结果和 Smoke 输出 |
-| AC-028-07 | GitHub Actions 使用固定 setup-uv action、uv 0.13.10、`uv python install`、`uv sync --locked --group dev` 和 `uv run --locked`；不执行 pip 临时安装 | Workflow diff、真实 PR Run 和 Job 日志 |
-| AC-028-08 | SR-001 Workflow 已集成后，将其迁移到 uv；真实 `pull_request` Run 中完整测试和生成器成功，Artifact 恰含三份预期文件 | SR-001 集成基线 SHA、真实 Run URL、Summary 和下载核对后的 Artifact 文件清单 |
+| AC-028-07 | PR #32 集成后，GitHub Actions 使用固定 setup-uv action、uv 0.13.10、`uv python install`、`uv sync --locked --group dev` 和 `uv run --locked`；运行完整 unittest/Smoke，不执行 pip 临时安装 | Workflow diff、真实 PR Run 和 Job 日志 |
+| AC-028-08 | SR-001 Workflow 已集成后，将其迁移到 uv；真实 `pull_request` Run 中上下文生成器成功，Artifact 恰含三份预期文件 | SR-001 集成基线 SHA、真实 Run URL、Summary 和下载核对后的 Artifact 文件清单 |
 | AC-028-09 | 不修改其他仓库、不改变运行时依赖和 setuptools backend、不引入额外签名/hash/Trust Registry 机制 | PR 文件清单、pyproject metadata、设计/实施边界审查 |
 
 所有 AC 必须逐项记录受测 SHA、环境、命令、预期/实际结果和证据。未执行保持 NOT_RUN；依赖未满足的 AC 记录 BLOCKED，不得推导 PASS。

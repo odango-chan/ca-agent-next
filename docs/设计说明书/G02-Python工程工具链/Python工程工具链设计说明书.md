@@ -184,7 +184,7 @@ SR-028 的 Workflow 迁移阶段必须等 PR #32 修复 AC-REV-08/09、完成复
 |---|---|---|---|
 | D0 | 设计评审 | 无 | 本文与 SR-028 评审通过后，SR-028 才可 READY |
 | I1 | 根 Python 项目采用 uv | SR-028 READY、独立实施 Issue | pyproject、uv.lock、.python-version、.gitignore、测试命令 |
-| I2 | GitHub Actions 迁移 | I1；SR-001 PR #32 已修复并集成到目标分支 | 更新 review-context Workflow，禁止改动 SR-001 分支 |
+| I2 | GitHub Actions 迁移 | I1；SR-001 PR #32 已修复并集成到目标分支 | 更新 review-context Workflow，运行完整测试与生成器，禁止改动 SR-001 分支 |
 | I3 | 环境隔离验收 | I1 | 至少两个独立 worktree 验证 .venv 与 distribution metadata 不互相污染 |
 
 I1 与 I3 可在 SR-028 实施 Issue 内按依赖顺序执行；I2 只在 SR-001 Workflow 已进入目标分支后执行。任何阶段依赖未满足时只暂停对应阶段/AC，不把无关设计评审阻塞。
