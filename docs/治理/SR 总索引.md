@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.10\
+> 文档版本：0.3.11\
 > 状态：待评审；全部 SR 当前为 DRAFT，不允许直接实施  
 > 修订日期：2026-11-26  
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -87,14 +87,14 @@
 阶段顺序是建议依赖顺序；每个 SR 只有达到 READY 且依赖满足后才能进入实施。Goal 模式可将同一依赖批次中的多个 READY SR 合并执行，但不得跨越未满足的依赖或把 DRAFT SR 当成可执行任务。
 
 ## 4. 当前基线说明
-- SR-002 设计修订由 [Issue #19](https://github.com/odango-chan/ca-agent-next/issues/19) 和 [Draft PR #20](https://github.com/odango-chan/ca-agent-next/pull/20) 追踪；SR 保持 DRAFT，AC-002-01～AC-002-08 与系统级 EX-01 均为 NOT_RUN，实施 Issue 尚未创建。
+- SR-002 设计修订由 [Issue #19](https://github.com/odango-chan/ca-agent-next/issues/19) 和 [PR #20（Ready for review）](https://github.com/odango-chan/ca-agent-next/pull/20) 追踪；SR 保持 DRAFT，AC-002-01～AC-002-08 与系统级 EX-01 均为 NOT_RUN，实施 Issue 尚未创建。
 
 - 设计来源：ca-agent-next PR #1 的架构、设计、规范和 Acceptance 文档。
 - PR #1：已合并；只代表设计文档变更。
 - Next Runtime：README 声明尚无已验收 Runtime 实现。
 - 26 项 SR 当前均为 DRAFT；[PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)已核对 58 个文件与 SHA256SUMS；归档报告为 Go/Python 18/18，当前审计复跑 NOT_RUN，不改变 SR-013 总体 DRAFT 状态。SR-009 仅覆盖 Event/Delivery Plugin 与本地 staging；SR-010 还覆盖 Next Host ArtifactStore、ca-host.artifact-store/v1 channel server、Provider v2 Driver 和 Codec 消费。
 - Issue #12 追踪本轮中央设计资产恢复；PR #11/#13/#15/#16/#18 均在独立分支 OPEN/DRAFT，恢复分支已同步可复用的最新文档内容但尚未创建 PR；PR 状态不等于 SR 实施状态。
-- 恢复分支 docs/restore-original-designs-20261125 尚未创建指向 main 的总 PR；SR-002 独立设计评审 [PR #20](https://github.com/odango-chan/ca-agent-next/pull/20) 为 Draft，base 指向该恢复分支。两者均为设计评审，不代表 SR 实施。
+- 恢复分支 docs/restore-original-designs-20261125 尚未创建指向 main 的总 PR；SR-002 独立设计评审 [PR #20](https://github.com/odango-chan/ca-agent-next/pull/20) 已 Ready for review，base 指向该恢复分支。两者均为设计评审，不代表 SR 实施。
 - ca-agent-demo、ca-client-tools、ca-skill-compiler、ca-skills 和 ca-openamsm-plugin 的现有代码/PR 只能作为外部复用或依赖证据，不能自动算作 Next SR 已实施。
 
 ## 修订记录
@@ -123,3 +123,4 @@
 | 2026-11-26 | 0.3.10 | GPT-6.2（ChatGPT） | §2～§4 | 同步 SR-002 v0.2.5、SR-003 v0.2.4 与 F01 v0.3.5 的追踪入口 | 使 SR 清单、依赖和设计评审状态与权威文档一致 | IR-002；SR-002；SR-003；Issue #19；PR #20 |
 | 2026-11-26 | 0.3.9 | GPT-6.2（ChatGPT） | §2～§4 | 同步 SR-002 v0.2.4、SR-003 v0.2.3 与 F01 v0.3.4 的追踪入口 | 使 SR 清单、依赖和设计评审状态与权威文档一致 | IR-002；SR-002；SR-003；Issue #19；PR #20 |
 | 2026-11-26 | 0.3.10 | GPT-6.2（ChatGPT） | §2～§4 | 同步 SR-002 v0.2.5、SR-003 v0.2.4 与 F01 v0.3.5 的追踪入口。 | 使 SR 清单、依赖和设计评审状态与权威文档一致。 | IR-002；SR-002；SR-003；Issue #19；PR #20 |
+| 2026-11-26 | 0.3.11 | GPT-6.2（ChatGPT） | §2、§4 | 同步 SR-002 PR #20 Ready for review 状态，SR 仍为 DRAFT、AC/EX 仍 NOT_RUN。 | 保持 SR 索引与实际 PR 状态一致，避免误判实施门禁。 | SR-002；Issue #19；PR #20 |

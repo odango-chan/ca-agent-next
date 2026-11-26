@@ -1,7 +1,7 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录  
-> 文档版本：0.1.10  
+> 文档版本：0.1.11  
 > 修订日期：2026-11-26  
 > 状态：新增跨仓需求待评审  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -21,7 +21,7 @@ IR 编号稳定。GitHub Issue 用于讨论、分派和跟踪，一个 IR 可关
 - 完成依据：对应 SR 的必需验收全部 VERIFIED；当前均为 DRAFT，证据未执行。
 
 ## IR-002
-- 设计修订追踪：[Next Issue #19](https://github.com/odango-chan/ca-agent-next/issues/19)（仅跟踪 SR-002 设计修订，不是实施 Issue）；[设计 PR #20](https://github.com/odango-chan/ca-agent-next/pull/20)（Draft）；父级中央设计恢复见 [Next Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12)。
+- 设计修订追踪：[Next Issue #19](https://github.com/odango-chan/ca-agent-next/issues/19)（仅跟踪 SR-002 设计修订，不是实施 Issue）；[设计 PR #20](https://github.com/odango-chan/ca-agent-next/pull/20)（Ready for review）；父级中央设计恢复见 [Next Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12)。
 
 **通用宿主与可插拔扩展**
 
@@ -103,3 +103,4 @@ Compiler 实施沿用 [SR-013](../SR/SR-013-Compiler已检查when与发布产物
 | 2026-11-26 | 0.1.10 | GPT-6.2（ChatGPT） | IR-002 | 明确 Issue #19/#20 仅跟踪 SR-002 设计修订，并与实施 Issue 分离 | 避免将设计评审追踪误读为代码实施授权，保持 IR→SR→Issue→PR 关系清晰 | IR-002；SR-002；Issue #19；PR #20 |
 | 2026-11-26 | 0.1.9 | GPT-6.2（ChatGPT） | IR-002 | 明确 Issue #19/#20 仅跟踪 SR-002 设计修订，并与实施 Issue 分离 | 避免将设计评审追踪误读为代码实施授权，保持 IR→SR→Issue→PR 关系清晰 | IR-002；SR-002；Issue #19；PR #20 |
 | 2026-11-26 | 0.1.10 | GPT-6.2（ChatGPT） | IR-002 | 明确 Issue #19/#20 仅跟踪 SR-002 设计修订，并与实施 Issue 分离。 | 避免将设计评审追踪误读为代码实施授权，保持 IR→SR→Issue→PR 关系清晰。 | IR-002；SR-002；Issue #19；PR #20 |
+| 2026-11-26 | 0.1.11 | GPT-6.2（ChatGPT） | IR-002 | 将 SR-002 设计 PR #20 状态同步为 Ready for review，并继续明确 Issue #19 非实施 Issue。 | 使需求登记与 GitHub 评审状态一致，不产生提前实施授权。 | IR-002；Issue #19；PR #20 |
