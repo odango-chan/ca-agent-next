@@ -247,7 +247,7 @@ sequenceDiagram
 
 外部 Compiler/语言规范发布是 Agent 的外部依赖，不意味着 Next 需要集成 Compiler 命令。外部仓 PASS 不计入 Next PASS；实施前必须刷新准确 SHA、发布物、PR 和测试范围。
 
-## 14. 当前实现状态快照（2026-11-26）
+## 当前实现状态快照（2026-11-26）
 
 - Phase A：SR-002 Python Host + Model Loop 最小切片 VERIFIED，AC-002-01～08 PASS；完整 Runtime、EX-01 和 CPython 全矩阵仍未完成。
 - Phase B：SR-003 设计 READY、实施 IN_PROGRESS；PR #34 已 MERGED 到恢复分支，merge commit `32c7c1b`；PR head `52f0fa32` 的 Ubuntu/Python 3.12 与 Windows/Python 3.14 模块 CI SUCCESS。该结果不等于 merge commit 的 post-merge exact verification；EX-02/03/04/18 仍 NOT_RUN。并行任务负责 SR-003 后续收尾，本轮只回填状态，不修改其实现。

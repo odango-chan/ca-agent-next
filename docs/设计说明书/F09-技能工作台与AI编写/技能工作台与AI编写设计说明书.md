@@ -1,7 +1,7 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.8  
+> 文档版本：0.3.9  
 > 状态：目标设计基线待评审；当前实现快照 2026-11-26：#272 MERGED、#276 OPEN/DRAFT/DIRTY、#269 OPEN；SR-024 VERIFIED、SR-025 READY  
 > 修订日期：2026-11-26  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -184,3 +184,4 @@ EC06 历史决策已统一归档于中央仓：[ADR-0001 Source-first Visual](..
 | 2026-11-25 | 0.3.6 | Codex / GPT-6 | 正文 | 同步两个 Publisher 的 1.0.0 身份与消费边界 | Issue #12 |
 | 2026-11-25 | 0.3.7 | Codex / GPT-6 | 正文 | §4.5 依据 v2.1.0 源函数实测修正 +build 与项目包身份限制 | Issue #12 |
 | 2026-11-26 | 0.3.8 | GPT-6.2（ChatGPT） | 文档头、§4.5、§7 | 回填 Studio main `a863355`、#272 MERGED、#276 OPEN/DRAFT/DIRTY、#269 OPEN；更新 SR-024 VERIFIED、SR-025 READY；登记 #279/#290/#295 当前审计与 OPFS 替换回归 | 区分 Publisher 完成与 Studio lock 消费、request builder 合并与 Worker/Verify 完成；避免旧 PR HEAD 的历史 PASS 被当作当前门禁 | Issue #12；IR-006；SR-016、SR-024、SR-025；Studio #269/#272/#276/#279/#290/#295 |
+| 2026-11-26 | 0.3.9 | GPT-6.2（ChatGPT） | §4.5、文档头 | 将 SR-025 的目标仓实施追踪固定为 ca-client-tools #43 OPEN，明确 Publisher 尚未实施 | 补齐 READY → 目标仓 Issue 的可追踪关系，不将 Issue 创建误报为代码交付 | Issue #12；IR-006；SR-025；ca-client-tools #43 |

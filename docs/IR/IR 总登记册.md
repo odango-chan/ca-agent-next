@@ -85,7 +85,7 @@ Compiler 实施沿用 [SR-013](../SR/SR-013-Compiler已检查when与发布产物
 - 实施分解：[SR-023](../SR/SR-023-技能作者源与语言规范移交.md)、[SR-015](../SR/SR-015-工具契约设计移交.md)、[SR-016](../SR/SR-016-工作台设计移交与条件编辑.md)、[SR-017](../SR/SR-017-业务插件设计移交.md)、[SR-018](../SR/SR-018-业务所有者设计移交.md)、[SR-019](../SR/SR-019-仿真对端设计移交.md)、[SR-020](../SR/SR-020-参考宿主设计移交.md)、[SR-021](../SR/SR-021-原生宿主设计移交.md)、[SR-022](../SR/SR-022-执行内核设计移交.md)、[SR-024](../SR/SR-024-Host%20Context%20Interface%20Package%20Publisher.md)、[SR-025](../SR/SR-025-MAS%20Owner%20Interface%20Package%20Publisher.md)、[SR-026](../SR/SR-026-Codec公开工具发布.md)、[SR-027](../SR/SR-027-技能Bundle构建与发布.md)。
 - 设计与验收：[跨仓设计资产迁移与一致性审计](../参考与审计/跨仓设计资产迁移与一致性审计.md)，逐仓检查文档迁移和行为符合性。
 - SR-024 完成依据：[ca-agent-demo PR #253](https://github.com/odango-chan/ca-agent-demo/pull/253) 已 MERGED，Issue #252 已关闭；AC-024-01～07 PASS，SR-024 VERIFIED。Review COMMENTED、4 个 PR checks SKIPPED 不计作 APPROVED/CI PASS；Studio ZIP 导入/lock 消费仍归 SR-016。
-- SR-025 设计依据：[SR-025 v0.1.6](../SR/SR-025-MAS%20Owner%20Interface%20Package%20Publisher.md) 已 READY；目标仓实施 Issue [ca-client-tools #43](https://github.com/odango-chan/ca-client-tools/issues/43) OPEN；Owner Publisher 尚未实施。
+- SR-025 设计依据：[SR-025 v0.1.7](../SR/SR-025-MAS%20Owner%20Interface%20Package%20Publisher.md) 已 READY；目标仓实施 Issue [ca-client-tools #43](https://github.com/odango-chan/ca-client-tools/issues/43) OPEN；Owner Publisher 尚未实施。
 
 
 ## IR-007
