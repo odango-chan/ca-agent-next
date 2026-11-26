@@ -1,7 +1,8 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录  
-> 文档版本：0.1.8  
+> 文档版本：0.1.9  
+> 修订日期：2026-11-26  
 > 状态：新增跨仓需求待评审  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级需求管理平台
@@ -20,7 +21,7 @@ IR 编号稳定。GitHub Issue 用于讨论、分派和跟踪，一个 IR 可关
 - 完成依据：对应 SR 的必需验收全部 VERIFIED；当前均为 DRAFT，证据未执行。
 
 ## IR-002
-- 协作 Issue：[Next #19](https://github.com/odango-chan/ca-agent-next/issues/19)（SR-002 设计修订；不是实施 Issue）；设计 PR：[Next #20](https://github.com/odango-chan/ca-agent-next/pull/20)（Draft）；父级中央设计恢复见 [Next #12](https://github.com/odango-chan/ca-agent-next/issues/12)。
+- 设计修订追踪：[Next Issue #19](https://github.com/odango-chan/ca-agent-next/issues/19)（仅跟踪 SR-002 设计修订，不是实施 Issue）；[设计 PR #20](https://github.com/odango-chan/ca-agent-next/pull/20)（Draft）；父级中央设计恢复见 [Next Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12)。
 
 **通用宿主与可插拔扩展**
 
