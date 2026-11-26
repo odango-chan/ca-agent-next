@@ -1,0 +1,116 @@
+name: Review Context
+
+# SR-001：从 PR 事件读取真实 base/head SHA，读取 head 版 Agent.md 的唯一
+# review_scope，严格校验后生成三份评审上下文产物并作为 Workflow Artifact 交付。
+# 本 Workflow 不调用任何大模型、外部 Harness 或自动 Review 服务。
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, edited]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: review-context-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review-context:
+    name: Generate review context
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PYTHONIOENCODING: utf-8
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+    steps:
+      - name: Checkout PR head commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Verify base and head commit objects
+        run: |
+          set -euo pipefail
+          for sha in "$BASE_SHA" "$HEAD_SHA"; do
+            if [ -z "$sha" ]; then
+              echo "::error::PR 事件未提供 base/head SHA"
+              exit 1
+            fi
+            if git cat-file -e "${sha}^{commit}" 2>/dev/null; then
+              echo "commit 可读取：$sha"
+            else
+              echo "本地缺少 $sha，尝试从 origin 显式获取"
+              git fetch --no-tags origin "$sha"
+              git cat-file -e "${sha}^{commit}"
+            fi
+          done
+          merge_base="$(git merge-base "$BASE_SHA" "$HEAD_SHA")"
+          echo "merge-base：$merge_base"
+          git cat-file -e "${merge_base}^{commit}"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PyYAML
+        run: python -m pip install --disable-pip-version-check "PyYAML>=6.0,<7"
+
+      - name: Run SR-001 regression tests
+        run: python -m unittest discover -s tests -p test_review_context.py -v
+
+      - name: Generate review context
+        id: generate
+        run: |
+          set -euo pipefail
+          work_dir="$RUNNER_TEMP/review-context"
+          summary_file="$RUNNER_TEMP/review-context-summary.md"
+          python scripts/review_context.py \
+            --base "$BASE_SHA" \
+            --head "$HEAD_SHA" \
+            --out "$work_dir" \
+            --summary "$summary_file" \
+            --event-path "$GITHUB_EVENT_PATH"
+
+      - name: Write workflow summary
+        if: success()
+        run: |
+          set -euo pipefail
+          summary_file="$RUNNER_TEMP/review-context-summary.md"
+          artifact_name="review-context-pr-${PR_NUMBER}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          {
+            cat "$summary_file"
+            echo ""
+            echo "### 入口"
+            echo ""
+            echo "- Workflow Run：${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "- Artifact：${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts"
+            echo "  名称 \`$artifact_name\`"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload review context artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: review-context-pr-${{ github.event.pull_request.number }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/review-context/review-scope.json
+            ${{ runner.temp }}/review-context/评审上下文.md
+            ${{ runner.temp }}/review-context/统一评审提示词.md
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Report failure
+        if: failure()
+        run: |
+          {
+            echo "## Review Context 生成失败"
+            echo ""
+            echo "本 Job 失败，未上传任何完成态 Artifact。若失败发生在生成步骤，则表示 review_scope 校验未通过，且不会生成宽松默认范围；具体错误见对应步骤日志。"
+            echo ""
+            echo "- Workflow Run：${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          } >> "$GITHUB_STEP_SUMMARY"
