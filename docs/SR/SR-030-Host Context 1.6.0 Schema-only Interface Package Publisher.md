@@ -1,7 +1,7 @@
 # SR-030：Host Context 1.6.0 Schema-only Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.0
+> SR 版本：0.1.1
 > 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**；不授予实施 READY，产品验收 NOT_RUN
 > 创建日期：2026-11-26
 > 修订日期：2026-11-26
@@ -16,7 +16,7 @@
 
 ## 1. 目标与责任
 
-将 ca-agent-demo 中 Host-owned 的静态 Subject Context Schema，按 CA-SL 1.6.0 / Compiler 新 Interface Package 契约重新发布为 **Schema-only Package**，供 Skill Contract 的 requestSchema / contexts 依赖闭包使用。
+将 ca-agent-demo 中 Host-owned 的静态 Subject Context Schema，按 CA-SL 1.6.0 / Compiler 新 Interface Package 契约重新发布为 **Schema-only Package**，供 Skill Contract.contexts 的 Host Context Schema 依赖闭包使用；Contract.requestSchema 始终指向 Skill 自有 Request Schema，不引用本 Host Context Package。
 
 本 SR 只发布 Schema，不发布 Capability、Callable、Tool、Observation、Context 实例、Runtime identity 或 Admission Grant。新 Package 必须允许 0 Capability exports / 0 Callable exports；不得为了迁就旧 v1alpha1 Package 结构虚构 Tool / Callable。
 
@@ -45,10 +45,10 @@ Publisher 必须从固定 Revision 读取原始 Schema 字节并核对 Git blob�
 3. Package version 必须使用一个新的 SemVer 版本；旧 1.0.0 是历史 Development Package 版本，不得复用为新发布版本。建议候选 2.0.0，最终由 Publisher 在实施 Issue / 正式 Package Schema 中冻结。
 4. Package 只包含根 Manifest 与原始 subject.schema.json；仅发布一个 Schema export，ID 精确等于源 $id，路径指向原始文件；dependencies 为空。
 5. Capability exports 必须为空；Callable exports 必须为空；ToolCatalog / Evidence / Runtime Bindings 不属于本 Package。
-6. 新 Package Schema 必须明确允许 Schema-only Package；若 Compiler 1.6.0 Package Schema 不允许空 Capability / Callable exports，则该 Schema 与 CA-SL 1.6.0 Request Schema / Context Schema 设计冲突，必须先修订中央契约，Publisher 不得制造合成 Callable 绕过。
+6. 新 Package Schema 必须明确允许 Schema-only Package；若 Compiler 1.6.0 Package Schema 不允许空 Capability / Callable exports，则该 Schema 与 CA-SL 1.6.0 Context Schema 设计冲突，必须先修订中央契约，Publisher 不得制造合成 Callable 绕过。
 7. Package 的 Manifest 只含 1.6.0 Package Schema 明确规定的字段。sourceRevision、Git blob、sourceStatus、Studio upload metadata 不得添加为自定义 Package 字段。
 8. 不额外增加 package-level digest、签名、Trust Registry 或 Admission。若新 Package Schema 自身要求必要的逐文件字段，严格按该 Schema 实现；不得从旧 v1alpha1 Schema 推断新字段。
-9. 新 Compiler 必须能把此 Package 作为 requestSchema / contexts 的纯 Schema 依赖加入 closure，并在没有任何 Capability roots 时正确处理；此项由 SR-013 AC-013-06 与本 SR AC-030-03 联合验收。
+9. 新 Compiler 必须能把此 Package 作为 Contract.contexts 的纯 Schema 依赖加入 closure，并在没有任何 Capability roots 时正确处理；此项由 SR-013 AC-013-06 与本 SR AC-030-03 联合验收。
 
 ## 4. Studio Project Lock 的来源边界
 
@@ -64,7 +64,7 @@ Publisher 必须从固定 Revision 读取原始 Schema 字节并核对 Git blob�
 |---|---|---|
 | AC-030-01 | 固定源 Revision、路径、Git blob 与原始字节 | 精确匹配 SR-024 已验证来源；源文件缺失、blob 变化或从非固定 Revision 读取均拒绝 |
 | AC-030-02 | 新 Package identity 与 1.6.0 Language Target | Package ID / Publisher 稳定；languageTarget 使用正式批准值；新 SemVer 与旧 1.0.0 区分；Manifest 通过 Compiler 1.6.0 正式 Schema |
-| AC-030-03 | Schema-only Package | 恰好一个 Schema export；0 Capability / 0 Callable；无 ToolCatalog、Evidence 或 Runtime Binding；可作为 Request Schema / Context Schema closure root |
+| AC-030-03 | Schema-only Package | 恰好一个 Schema export；0 Capability / 0 Callable；无 ToolCatalog、Evidence 或 Runtime Binding；可作为 Contract.contexts 的 Context Schema closure root；不得替代 Skill 自有 requestSchema |
 | AC-030-04 | 原始字节与确定性发布 | subject.schema.json 原始字节不变；ZIP entries / Manifest 稳定排序；相同固定输入产生相同输出；无自定义来源字段 |
 | AC-030-05 | 负例与旧版拒绝 | 旧 v1alpha5 / Development v1alpha1 Package、旧 1.0.0 manifest、错误 languageTarget、额外 Callable、重复 Schema、未知文件、Schema ID 不匹配均 fail-closed；不转换、不 fallback |
 | AC-030-06 | Provenance 分层 | sourceRevision / Git blob 仅在 Publisher 证据；sourceStatus / upload metadata 仅在 Studio Lock；Package Manifest 不接收这些字段 |
@@ -78,7 +78,7 @@ Publisher 必须从固定 Revision 读取原始 Schema 字节并核对 Git blob�
 
 **设计依赖：**
 - CA-SL 1.6.0 完整语言规范、F08、EC02 与 SR-013 明确允许 Schema-only Package；
-- SR-029 明确 Contract.contexts / requestSchema 的 Schema 依赖语义；
+- SR-029 / CA-SL 1.6.0 规范明确 Contract.contexts 引用 Host Context Schema，requestSchema 则是 Skill 自有请求 Schema；
 - F09 / SR-016 明确 Package Manifest 与 Project Lock provenance 的边界。
 
 **实施依赖：**
@@ -93,3 +93,4 @@ Publisher 必须从固定 Revision 读取原始 Schema 字节并核对 Git blob�
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
 |---|---|---|---|---|---|---|
 | 2026-11-26 | 0.1.0 | GPT-6（ChatGPT） | 全文 | 新增 Host Context CA-SL 1.6.0 Schema-only Package Publisher 设计，区分 SR-024 历史 VERIFIED 与新版发布门槛，定义 0/0 Capability/Callable、源码 pin、Lock provenance 和独立 AC | 发现 F09 / SR-016 仍把旧 Development Publisher 当作新版依赖，且 Compiler Schema-only Package 能力未定义 | Issue #12/#40；IR-006/008；SR-013/016/024/029 |
+| 2026-11-26 | 0.1.1 | GPT-6（ChatGPT） | §1、§3、AC-030-03、依赖与修订记录 | 明确 Host Context Schema-only Package 只能由 Contract.contexts 引用；requestSchema 始终是 Skill 自有 Schema 根 | 避免将 Host Context Package 错误当成 Skill Request Schema，保持 CA-SL 1.6.0 §4 的作者语义一致 | Issue #12/#40；CA-SL 1.6.0；SR-013 AC-013-06；SR-029；PR #46 |
