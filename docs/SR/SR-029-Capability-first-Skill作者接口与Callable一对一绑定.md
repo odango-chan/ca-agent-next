@@ -1,7 +1,7 @@
 # SR-029：Capability-first Skill 作者接口与 Callable 一对一绑定
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.1  
+> SR 版本：0.2.2  
 > 状态：待评审 / DESIGN_READY_FOR_REVIEW；非实施 READY；新版规范/产品 NOT_RELEASED
 > 创建日期：2026-11-26  
 > 上游需求：[IR-008](../IR/IR%20总登记册.md#ir-008)；关联需求：[IR-003](../IR/IR%20总登记册.md#ir-003)  
@@ -261,5 +261,6 @@ Create / Release 继续分别使用原有 Schema 与 Evidence Guarantee；Modify
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
 |---|---|---|---|---|---|---|
 | 2026-11-26 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 建立 Capability-first Skill 作者接口、一对一 Callable、Package cardinality 审计及 Compiler / Runtime / Studio 闭环 | 消除 Skill 源码与 Provider / Owner 内部 Callable ID 的耦合，并明确 v1alpha5 冻结与 1.6.0 候选边界 | IR-008、IR-003、Issue #40 |
-| 2026-11-26 | 0.2.0 | GPT-6（ChatGPT） | §0～15、修订记录 | 移植 Capability-first 与 Owner/Provider cardinality 审计，刷新为 1.6.0-only、无旧兼容，状态改为待独立评审 | Issue #40；SR-029；SR-004；SR-013；SR-027 |
+| 2026-11-26 | 0.2.0 | GPT-6（ChatGPT） | §0～15、修订记录 | 移植 Capability-first 与 Owner/Provider cardinality 审计，刷新为 1.6.0-only、无旧兼容，状态改为待独立评审 | 保留历史基数证据、明确设计评审与产品交付分离 | Issue #40；SR-029；SR-004；SR-013；SR-027 |
 | 2026-11-26 | 0.2.1 | GPT-6（ChatGPT） | 版本隔离与修订记录 | 补齐 Studio 拒绝旧项目边界，设计待评审 | 避免历史代码/测试被视为新版有效输入 | Issue #40；SR-029 |
+| 2026-11-26 | 0.2.2 | GPT-6（ChatGPT） | 标题层级/修订记录 | 修正历史修订表列数与独立设计评审状态 | 满足 Markdown 设计评审门禁，避免编号或治理表歧义 | Issue #40；SR-029 |
