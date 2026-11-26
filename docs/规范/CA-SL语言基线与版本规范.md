@@ -1,8 +1,8 @@
 # CA-SL 语言基线与版本规范
 
 > 文档类型：语言版本与运行时消费规范  
-> 文档版本：0.2.2  
-> 状态：CA-SL v1alpha5 FROZEN / RELEASED；Compiler when 运行时 Artifact 尚未完成  
+> 文档版本：0.2.3  
+> 状态：历史 CA-SL v1alpha5 FROZEN / RELEASED；**下一正式目标 CA-SL 1.6.0 DESIGN / NOT_RELEASED**；Compiler/Bundle 产品门槛未完成  
 > 修订日期：2026-11-26  
 > 关联 IR：IR-003、IR-006；SR-023、SR-013  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -10,7 +10,7 @@
 
 ## 1. 当前正式语言基线
 
-当前唯一语言目标为 connectionagent.io/v1alpha5，不引入旧版兼容映射或新的 v1alpha6。
+**版本决策（Issue #40，2026-11-26）：新增作者与产品实现统一面向 CA-SL 1.6.0，不再创建 v1alpha6 版本。** 已发布的历史语言规范仍为 `connectionagent.io/v1alpha5`（冻结不可变），但它不再是新产品链的目标。1.6.0 的精确 `languageTarget` 机器标识必须由 ca-skills 正式规范与 Compiler 跨仓互操作契约共同冻结；在正式发布前不得自造标识、把历史 Artifact 重命名或宣称已发布。无旧版兼容解析与自动迁移。
 
 完整规范正文已迁入 Next：[CA-SL v1alpha5 完整语言规范](CA-SL%20v1alpha5完整语言规范.md)。迁移来源是 ca-skills 发布规范提交 18d8184367982ccbc835756136c4a53f9096c3a0；ca-skills PR #88（规范刷新）和 PR #89（发布记录固定）均已合并。
 
@@ -63,6 +63,16 @@ CA-SL 语义变化必须：
 
 不引入旧版兼容、Agent 内置 Compiler、运行期编译、独立 Skill Admission、审批、签名、Trust Registry、额外 SHA-256 或第二套选择条件语言。
 
+## 6. 下一正式语言目标：CA-SL 1.6.0（未发布）
+
+本节依据 [Issue #40](https://github.com/odango-chan/ca-agent-next/issues/40) 的最新版本决策；独立 SR-029 负责 Capability-first 作者语义及跨模块闭环。**“1.6.0”是下一个正式发布目标，不是“v1alpha6”的别名，也不是已经发布的 Runtime 契约。**
+
+- Skill-facing Contract / Procedure 仅使用 Capability ID，不再用 `tool: alias::CALLABLE_ID`；Skill-facing Capability 与公开 Callable **一对一**。Callable ID 保留在内部 Package/Compiler/Provider/Runtime 绑定和诊断中。
+- Operation / Observation 仍为 Node 阶段而非外部 Operation ID，按 Callable kind、Effect、Schema 校验；Compiler 必须链接出唯一 Capability→Callable Binding。Provider 内部可用封闭枚举路由多个 backend handler，但不能扩大 Skill Scope。
+- 1.6.0 的作者示例、Schema、Compiler API、Runtime Artifact、Provider/Owner 发布身份、ca-skills Bundle、Studio 浏览及真实回归须按 SR-029、SR-013、SR-027 和相关模块分别冻结/验收；**Compiler #61 针对历史 v1alpha5 的 when 设计不自动等同 1.6.0 产品发布**。
+- 当前未发布 1.6.0；只可规划新实现，不得把旧 `v1alpha5` Builder、Development v1alpha1 Artifact 或候选机器标识当作 1.6.0 正式产物。
+- 不建立双语法、兼容映射、自动转换或 Agent 内编译机制。历史 v1alpha5 规范、Release Record 与 Artifact 字节保持原状，仅用于既有结果追溯。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
@@ -71,3 +81,4 @@ CA-SL 语义变化必须：
 | 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | §1–5 | 核对 #88/#89 合并状态，迁入完整规范正文，明确源仓状态差异与 Compiler #61 未完成边界 | Issue #12；SR-023；SR-013 |
 | 2026-11-25 | 0.2.1 | Codex / GPT-6 | 正文 | §4 对齐中央设计与语言发布责任 | Issue #12 |
 | 2026-11-26 | 0.2.2 | Codex / GPT-6 | 见本行变更 | 区分数字版本的新发布物和固定来源的实际机器标识 | Issue #12 |
+| 2026-11-26 | 0.2.3 | GPT-6.2（ChatGPT） | 文档头、§1、§6、修订记录 | 根据 Issue #40 明确下一正式目标改为 CA-SL 1.6.0（不使用 v1alpha6），定义 Capability-first 与历史冻结发布边界 | 避免反复 alpha 命名、静默重解释 v1alpha5 或提前宣称 1.6.0 已发布 | Issue #40；SR-029；SR-004；SR-013；SR-027 |
