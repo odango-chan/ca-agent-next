@@ -468,7 +468,15 @@ class TestACREV03StrictSchema(RepoTestBase):
 
     def test_missing_required_finding_class(self) -> None:
         block = BASELINE_BLOCK.replace("    - OUT_OF_SCOPE\n", "", 1)
-        self.assert_rejected(block, "缺少必须保留的分类 OUT_OF_SCOPE")
+        self.assert_rejected(block, "必须是治理规范 §11.3 的完整六种分类，缺少 OUT_OF_SCOPE")
+
+    def test_missing_blocker_class(self) -> None:
+        block = BASELINE_BLOCK.replace("    - BLOCKER\n", "", 1)
+        self.assert_rejected(block, "缺少 BLOCKER")
+
+    def test_missing_non_blocking_class(self) -> None:
+        block = BASELINE_BLOCK.replace("    - NON_BLOCKING\n", "", 1)
+        self.assert_rejected(block, "缺少 NON_BLOCKING")
 
     def test_empty_in_scope(self) -> None:
         start = BASELINE_BLOCK.index("  in_scope:\n")
@@ -858,6 +866,14 @@ class TestACREV08DocHeaders(RepoTestBase):
         code, _, stderr = invoke(self.repo, self.base, head, self.out)
         self.assertEqual(code, rc.EXIT_OK, stderr)
 
+    def test_header_negating_inheritance_fails(self) -> None:
+        problems = rc.check_doc_header(
+            "# 示例\n\n> 全局评审范围：不继承 review_scope。\n> 本文局部非目标：无。\n",
+            "docs/架构设计/F01-否定继承.md",
+        )
+        self.assertTrue(problems)
+        self.assertIn("全局评审范围", problems[0])
+
     def test_non_formal_path_is_ignored(self) -> None:
         self.checkout_branch("feature/docs")
         self.repo.write("docs/规范/示例规范.md", "# 规范\n\n无头部说明。\n")
@@ -896,6 +912,16 @@ class TestACREV09ScopeChange(RepoTestBase):
         self.assertIn("CHANGED", summary)
         self.assertIn("新增：new_scope_entry：本次 PR 新增的项目范围条目。", summary)
         self.assertIn("项目负责人审查", summary)
+        for required in (
+            "| Base SHA |",
+            "| Head SHA |",
+            "| Agent.md Head SHA |",
+            "| schema_version |",
+            "| profile |",
+            "| 校验结果 | PASS |",
+            "| 变更文件 |",
+        ):
+            self.assertIn(required, summary)
 
         context = self.read_artifact(rc.CONTEXT_NAME)
         self.assertIn("范围变更：**CHANGED**", context)
@@ -986,6 +1012,106 @@ class TestGitFailures(RepoTestBase):
         code, _, stderr = invoke(repo, base, base, repo.path / "out")
         self.assertEqual(code, rc.EXIT_VALIDATION)
         self.assertIn("Agent.md 缺失", stderr)
+
+    def test_validation_failure_writes_no_artifact(self) -> None:
+        repo = TempRepo()
+        self.addCleanup(repo.close)
+        repo.write(
+            AGENT_MD_PATH,
+            agent_doc(BASELINE_BLOCK.replace("  profile: demo_prototype\n", "", 1)),
+        )
+        base = repo.commit("invalid scope")
+        out = repo.path / "out"
+
+        code, _, stderr = invoke(repo, base, base, out)
+        self.assertEqual(code, rc.EXIT_VALIDATION)
+        self.assertIn("缺少必填字段 'profile'", stderr)
+        self.assertFalse(out.exists())
+
+    def test_subprocess_returns_non_zero_with_location(self) -> None:
+        repo = TempRepo()
+        self.addCleanup(repo.close)
+        repo.write(
+            AGENT_MD_PATH,
+            agent_doc(BASELINE_BLOCK.replace("    - OUT_OF_SCOPE\n", "", 1)),
+        )
+        base = repo.commit("invalid finding classes")
+        env = {
+            key: value
+            for key, value in os.environ.items()
+            if key != "GITHUB_EVENT_PATH"
+        }
+        env["PYTHONIOENCODING"] = "utf-8"
+        proc = subprocess.run(
+            [
+                sys.executable,
+                str(SCRIPT_PATH),
+                "--repo",
+                str(repo.path),
+                "--base",
+                base,
+                "--head",
+                base,
+                "--out",
+                str(repo.path / "out"),
+            ],
+            capture_output=True,
+            env=env,
+            check=False,
+        )
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("OUT_OF_SCOPE", proc.stderr.decode("utf-8"))
+        self.assertFalse((repo.path / "out").exists())
+
+
+# --------------------------------------------------------------------------
+# base 版本范围比较的失败关闭（AC-REV-09 边界）
+# --------------------------------------------------------------------------
+
+
+class TestBaseScopeComparison(RepoTestBase):
+    def test_base_without_scope_block_is_added(self) -> None:
+        repo = TempRepo()
+        self.addCleanup(repo.close)
+        repo.write(AGENT_MD_PATH, "# 仓库协作指引\n\n本版本暂无 review_scope 区块。\n")
+        base = repo.commit("base without review scope")
+        repo.write(AGENT_MD_PATH, agent_doc())
+        head = repo.commit("add review scope block")
+        summary_path = repo.path / "summary.md"
+
+        code, _, stderr = invoke(
+            repo, base, head, repo.path / "out", "--summary", str(summary_path)
+        )
+        self.assertEqual(code, rc.EXIT_OK, stderr)
+        summary = summary_path.read_text(encoding="utf-8")
+        self.assertIn("ADDED", summary)
+
+    def test_base_with_partial_markers_fails_closed(self) -> None:
+        self.repo.write(
+            AGENT_MD_PATH,
+            f"# 仓库协作指引\n\n{rc.BEGIN_MARKER}\n~~~yaml\n{BASELINE_BLOCK}~~~\n",
+        )
+        base = self.repo.commit("base with partial markers")
+        self.repo.write(AGENT_MD_PATH, agent_doc())
+        head = self.repo.commit("head with complete markers")
+
+        code, _, stderr = invoke(self.repo, base, head, self.out)
+        self.assertEqual(code, rc.EXIT_VALIDATION)
+        self.assertIn("REVIEW_SCOPE 标记不完整", stderr)
+
+    def test_base_with_incomplete_structure_fails_closed(self) -> None:
+        broken = BASELINE_BLOCK.replace(
+            "  finding_classes:\n", "  finding_classes_removed:\n", 1
+        )
+        self.repo.write(AGENT_MD_PATH, agent_doc(broken))
+        base = self.repo.commit("base with incomplete structure")
+        self.repo.write(AGENT_MD_PATH, agent_doc())
+        head = self.repo.commit("head with complete structure")
+
+        code, _, stderr = invoke(self.repo, base, head, self.out)
+        self.assertEqual(code, rc.EXIT_VALIDATION)
+        self.assertIn("无法判定范围变更", stderr)
+        self.assertNotIn("Traceback", stderr)
 
 
 if __name__ == "__main__":

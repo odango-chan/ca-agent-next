@@ -9,7 +9,7 @@
   本次 PR 变更文件和来源版本。
 * ``统一评审提示词.md``：统一评审原则、项目级评审范围与本次任务上下文的组合。
 
-设计依据：``docs/SR/SR-001-评审上下文自动生成.md`` v0.3.5 与
+设计依据：``docs/SR/SR-001-评审上下文自动生成.md`` v0.3.6 与
 ``docs/规范/文档编写与治理规范.md`` §11。
 
 用法::
@@ -24,6 +24,7 @@
 2    需要范围决策（输出 SCOPE_DECISION_REQUIRED，不得自动裁决）
 3    Git 对象、merge-base 或运行环境不可用
 4    产物写入失败
+64   命令行用法错误
 ===  ==================================================================
 
 本脚本不调用任何大模型、外部 Harness 或自动 Review 服务；生成产物不等同于
@@ -45,6 +46,7 @@ EXIT_VALIDATION = 1
 EXIT_SCOPE_DECISION = 2
 EXIT_GIT = 3
 EXIT_OUTPUT = 4
+EXIT_USAGE = 64
 
 AGENT_MD_PATH = "Agent.md"
 BEGIN_MARKER = "<!-- REVIEW_SCOPE:BEGIN -->"
@@ -99,13 +101,7 @@ FINDING_CLASSES = (
     "UNVERIFIED",
     "SCOPE_DECISION_REQUIRED",
 )
-# 提示词必须保留以下分类的原始语义，不得在生成时丢失。
-REQUIRED_FINDING_CLASSES = (
-    "OUT_OF_SCOPE",
-    "DEFERRED",
-    "UNVERIFIED",
-    "SCOPE_DECISION_REQUIRED",
-)
+# SR-001 §9：finding_classes 必须是治理规范 §11.3 的六种分类，且无重复。
 
 # 正式架构、设计说明书、SR、验收和决策文档目录（治理规范 §11.7）。
 FORMAL_DOC_PREFIXES = (
@@ -712,11 +708,12 @@ def validate_scope(raw: Any, source: str) -> dict[str, Any]:
         if text in classes:
             _fail(path, f"重复的分类 {text!r}")
         classes.append(text)
-    missing_classes = [name for name in REQUIRED_FINDING_CLASSES if name not in classes]
+    missing_classes = [name for name in FINDING_CLASSES if name not in classes]
     if missing_classes:
         _fail(
             "review_scope.finding_classes",
-            f"缺少必须保留的分类 {'、'.join(missing_classes)}",
+            "必须是治理规范 §11.3 的完整六种分类，缺少 "
+            + "、".join(missing_classes),
         )
 
     normalized = {
@@ -997,7 +994,10 @@ def check_doc_header(text: str, path: str) -> list[str]:
 
     header = "\n".join(header_lines)
     problems: list[str] = []
-    if "全局评审范围" not in header or "review_scope" not in header:
+    scope_declaration = re.search(
+        r"全局评审范围\s*[：:][^\n]*继承[^\n]*Agent\.md[^\n]*review_scope", header
+    )
+    if scope_declaration is None:
         problems.append(
             f"{path}: 文档头部缺少“全局评审范围：继承根目录 Agent.md 的 review_scope”声明"
         )
@@ -1329,7 +1329,7 @@ def render_summary(info: dict[str, Any], metadata: dict[str, Any]) -> str:
         f"| profile | `{scope['profile']}` |",
         f"| 变更文件 | {len(changes)} 个（{counts_text}） |",
         f"| 范围变更 | {status_text} |",
-        "| 校验结果 | PASS |",
+        f"| 校验结果 | {info['validation_result']} |",
         "",
         "### 生成物",
         "",
@@ -1392,6 +1392,62 @@ def parse_agent_md(text: str, source: str) -> dict[str, Any]:
     return validate_scope(document["review_scope"], source)
 
 
+def _require_comparable_scope(raw: Any, source: str) -> dict[str, Any]:
+    """确认 base 版本范围对象具备可比较结构；结构不完整时失败关闭。
+
+    base 版本只用于范围变更比较，不要求通过 head 的全部 Schema 校验；但缺少
+    比较所需的键或结构时无法判定范围变更，必须以明确错误失败。
+    """
+
+    if type(raw) is not dict:
+        raise ValidationError(f"{source}: review_scope 不是 mapping，无法判定范围变更")
+    missing = [key for key in TOP_KEYS if key not in raw]
+    if missing:
+        raise ValidationError(
+            f"{source}: review_scope 缺少 "
+            + "、".join(repr(key) for key in missing)
+            + "，无法判定范围变更"
+        )
+    target = raw["target"]
+    if (
+        type(target) is not dict
+        or "description" not in target
+        or type(target.get("sequence")) is not list
+    ):
+        raise ValidationError(
+            f"{source}: review_scope.target 结构不完整，无法判定范围变更"
+        )
+    for group in SCOPE_LISTS:
+        entries = raw[group]
+        if type(entries) is not list:
+            raise ValidationError(
+                f"{source}: review_scope.{group} 必须为 list，无法判定范围变更"
+            )
+        for index, entry in enumerate(entries):
+            if type(entry) is not dict or "id" not in entry or "description" not in entry:
+                raise ValidationError(
+                    f"{source}: review_scope.{group}[{index}] 结构不完整，"
+                    "无法判定范围变更"
+                )
+    policy = raw["review_policy"]
+    if type(policy) is not dict:
+        raise ValidationError(
+            f"{source}: review_scope.review_policy 必须为 mapping，无法判定范围变更"
+        )
+    missing_policy = [key for key in POLICY_KEYS if key not in policy]
+    if missing_policy:
+        raise ValidationError(
+            f"{source}: review_scope.review_policy 缺少 "
+            + "、".join(repr(key) for key in missing_policy)
+            + "，无法判定范围变更"
+        )
+    if type(raw["finding_classes"]) is not list:
+        raise ValidationError(
+            f"{source}: review_scope.finding_classes 必须为 list，无法判定范围变更"
+        )
+    return raw
+
+
 def build_result(
     repo: GitRepository,
     base: str,
@@ -1410,6 +1466,7 @@ def build_result(
 
     base_scope: dict[str, Any] | None = None
     base_blob = repo.read_path(base_commit, AGENT_MD_PATH, "base")
+    base_source = f"Agent.md（base {base_commit}）"
     if base_blob is None:
         base_scope = None
     else:
@@ -1417,22 +1474,27 @@ def build_result(
             base_text = base_blob.decode("utf-8")
         except UnicodeDecodeError as exc:
             raise ValidationError(
-                f"Agent.md（base {base_commit}）不是合法 UTF-8，无法判定范围变更（{exc}）"
+                f"{base_source} 不是合法 UTF-8，无法判定范围变更（{exc}）"
             ) from exc
         base_lines = base_text.splitlines()
-        if not _marker_lines(base_lines, BEGIN_MARKER, "base") or not _marker_lines(
-            base_lines, END_MARKER, "base"
-        ):
+        base_begin = _marker_lines(base_lines, BEGIN_MARKER, "base")
+        base_end = _marker_lines(base_lines, END_MARKER, "base")
+        if not base_begin and not base_end:
+            # base 版本没有 review_scope 区块：范围由无到有，必须显式展示。
             base_scope = None
+        elif not base_begin or not base_end:
+            raise ValidationError(
+                f"{base_source} 的 REVIEW_SCOPE 标记不完整，无法判定范围变更"
+            )
         else:
-            block = extract_scope_block(base_text, f"Agent.md（base {base_commit}）")
-            document = load_scope_yaml(block, f"Agent.md（base {base_commit}）")
-            if "review_scope" not in document or type(document["review_scope"]) is not dict:
+            block = extract_scope_block(base_text, base_source)
+            document = load_scope_yaml(block, base_source)
+            if "review_scope" not in document:
                 raise ValidationError(
-                    f"Agent.md（base {base_commit}）的 review_scope 区块不含 review_scope mapping，"
+                    f"{base_source} 的 review_scope 区块缺少顶层 review_scope 键，"
                     "无法判定范围变更"
                 )
-            base_scope = document["review_scope"]
+            base_scope = _require_comparable_scope(document["review_scope"], base_source)
 
     comparison = compare_scopes(base_scope, head_scope)
     changes = repo.changed_files(merge_base, head_commit)
@@ -1453,6 +1515,7 @@ def build_result(
         "scope": head_scope,
         "comparison": comparison,
         "changes": changes,
+        "validation_result": "PASS",
     }
     info["metadata"] = metadata
     info["artifacts"] = {
@@ -1480,8 +1543,17 @@ def write_artifacts(out_dir: Path, artifacts: dict[str, str]) -> list[Path]:
     return written
 
 
+class _UsageArgumentParser(argparse.ArgumentParser):
+    """命令行用法错误使用独立退出码，避免与 SCOPE_DECISION_REQUIRED 混淆。"""
+
+    def error(self, message: str) -> None:  # pragma: no cover - 用法错误分支
+        self.print_usage(sys.stderr)
+        print(f"ERROR: {message}", file=sys.stderr)
+        raise SystemExit(EXIT_USAGE)
+
+
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
+    parser = _UsageArgumentParser(
         prog="review_context.py",
         description="SR-001 PR 评审上下文生成器：从 head 版 Agent.md 生成评审上下文。",
     )

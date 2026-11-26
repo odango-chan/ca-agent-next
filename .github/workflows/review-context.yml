@@ -107,8 +107,7 @@ jobs:
           {
             echo "## Review Context 生成失败"
             echo ""
-            echo "校验未通过，未上传任何生成物 Artifact。错误详情见本 Job 的 *Generate review context* 步骤日志。"
-            echo "失败时不生成宽松默认范围，也不上传完成态产物。"
+            echo "本 Job 失败，未上传任何完成态 Artifact。若失败发生在生成步骤，则表示 review_scope 校验未通过，且不会生成宽松默认范围；具体错误见对应步骤日志。"
             echo ""
             echo "- Workflow Run：${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           } >> "$GITHUB_STEP_SUMMARY"
