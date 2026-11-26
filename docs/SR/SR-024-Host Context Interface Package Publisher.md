@@ -97,7 +97,7 @@ PR 检查记录（合并后审计）：
 - **GitHub Review 状态为 COMMENTED，不是 APPROVED。** GitHub API 显示 review actor 为 `odango-chan`，与 PR 作者相同；因此该技术评审结论可作为技术证据，但不满足独立 GitHub Reviewer 身份和正式 Approval 门禁。PR 作者不能批准自己的 PR。
 - 受测 HEAD `99b273136d24d0593038821ab52d613aee8743b0` 的 combined status 为 `pending`、status contexts 数量为 0；关联 Check Suite `123853096562` 的 Workflow 为 Release request、事件为 `create`、结论为 `skipped`，4 个 jobs（preflight-linux、preflight-windows、tag-and-dispatch、cleanup）全部 `skipped`。没有 PR-triggered Workflow Run；这些结果不得记作 CI PASS。
 - 当前连接无法读取 main branch protection（GitHub API 返回 403），因此不推断 required-check 配置。GitHub 正常 Merge API 已成功接受本次合并，未使用 admin bypass；这不改变 4 个 workflow jobs 的 SKIPPED 事实，也不将其计作 CI PASS。
-- PR #253 未合并；Issue #252 保持 OPEN。尚缺 PR 作者之外的正式 GitHub Approval，以及维护者对 CI/required checks 的确认。
+- PR #253 已正常合并至 `main`，Issue #252 已按 VERIFIED 以 `completed` 关闭。GitHub Review #6070722615 仍为 COMMENTED，4 个 PR checks 仍为 SKIPPED；均保留原始状态，不计作正式 APPROVED/CI PASS。
 
 ### 5.2 职责边界
 
