@@ -1,12 +1,12 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.2.10\
+> 文档版本：0.2.11\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 修订日期：2026-11-26  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产准入、Owner 信任运营、签名、Trust Registry、生产资格及真实 5GC/MAS 认证。
 
-关联 [IR-003](../../IR/IR%20总登记册.md#ir-003)、[IR-006](../../IR/IR%20总登记册.md#ir-006)、[SR-012](../../SR/SR-012-Compiler设计归档与跨仓收敛.md)、[SR-013](../../SR/SR-013-Compiler已检查when与发布产物.md)、[Next Issue #14](https://github.com/odango-chan/ca-agent-next/issues/14) 和 [Compiler Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)。
+关联 [IR-003](../../IR/IR%20总登记册.md#ir-003)、[IR-006](../../IR/IR%20总登记册.md#ir-006)、[SR-012](../../SR/SR-012-Compiler设计归档与跨仓收敛.md)、[SR-013](../../SR/SR-013-Compiler已检查when与发布产物.md)、[SR-030](../../SR/SR-030-Host%20Context%201.6.0%20Schema-only%20Interface%20Package%20Publisher.md)、[Next Issue #14](https://github.com/odango-chan/ca-agent-next/issues/14) 和 [Compiler Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)。
 
 ## 1. 权威与版本边界
 
@@ -287,7 +287,7 @@ Chromium parity 脚本使用真实 Headless Chrome；若默认路径不可用，
 - AC-013-02 正式 Contract.when 编译：NOT_RUN。
 - AC-013-03 新版 Runtime Artifact Schema/API：待 Compiler Owner 对 §5.1 候选版本作明确确认。
 - AC-013-04 Build/Verify 与产品门禁：NOT_RUN。
-- AC-013-05 Compiler Release 资产：依赖 AC-013-01～04 和单独发布授权，BLOCKED。
+- AC-013-05 Compiler Release 资产：依赖 AC-013-01～04、AC-013-06 和单独发布授权，BLOCKED。\n- AC-013-06 Schema-only Package / Schema dependency closure / 零 Capability roots：BLOCKED / NOT_RUN，联合 SR-030 AC-030-03。
 - SR-013 整体保持 DRAFT；本设计补充不代表 Compiler 产品代码已实施、PR 已合并或 Release 已发布。
 
 ## 10. Capability 静态链接与 Runtime Artifact v2 绑定
@@ -311,7 +311,7 @@ Compiler 对每个 Procedure Capability 使用点执行以下确定性步骤：
 7. 复用现有 Schema closure、Evidence、Scope identity / provenance、Mutation Receipt / Commit Proof / Reconcile 校验；Reconcile 不作为普通 Capability 导出。
 8. 对未被任何 Procedure 使用的 Grant 报 CAPABILITY_GRANT_UNUSED；不得因未使用而保留隐式授权。
 
-Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId。Provider 内部的多 handler 路由由 Callable 的封闭 Input Schema 决定。
+Schema-only 依赖规则：显式依赖闭包可以包含仅导出 Schema 的 Interface Package，其 Capability / Callable exports 均为零；Compiler 只将被 Contract.contexts 等正式 Schema 引用的 Schema export 与完整 $ref 闭包纳入 Schema dependency closure，不为该 Package 建立 Capability grant、Callable binding 或 Tool allowlist。零 Capability roots 不要求 Schema dependency closure 为空；只有不存在外部 Capability 和外部 Schema 引用时，Package dependency closure 才为空。\n\nLink 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId。Provider 内部的多 handler 路由由 Callable 的封闭 Input Schema 决定。
 
 ### 10.3 Artifact v2 Capability Binding
 
@@ -326,7 +326,7 @@ Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId�
 - kind / effect：ToolCatalog 或 Interface Package 的规范值；
 - inputSchemaRef / outputSchemaRef：对应 Package 的精确 Schema 引用。
 
-编译后的 Procedure 节点保留 capabilityId；capabilityBindings[] 是 capabilityId 到 callableId 的唯一内部映射。Manifest 的 dependencyClosure.exports[] 仍列出精确 operation / observation Callable exports，Runtime 继续从该闭包建立 Callable allowlist。Capability ID 不是运行时模型选择器；Callable ID 不暴露给模型。
+编译后的 Procedure 节点保留 capabilityId；capabilityBindings[] 是 capabilityId 到 callableId 的唯一内部映射。Schema-only Package 的 Schema exports 仅进入 Schema dependency closure，不生成 capabilityBindings、Callable allowlist 或 Tool Effect。Manifest 的 dependencyClosure.exports[] 仍列出精确 operation / observation Callable exports，Runtime 继续从该闭包建立 Callable allowlist。Capability ID 不是运行时模型选择器；Callable ID 不暴露给模型。
 
 ### 10.4 稳定诊断与失败行为
 
@@ -340,7 +340,7 @@ Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId�
 - 新 Artifact v2 只支持 languageTarget 1.6.0；新 Compiler 不解析旧版语法、旧 Build DTO 或 Artifact。
 - Development v1alpha1 Schema / Golden 不变并继续 NOT_ADMITTED。
 - 不增加包级 hash、签名、Trust Registry、Admission 或新的 Capability Manager；复用现有 Package identity、Schema 和文件清单机制。
-- 本节由 SR-029 设计；SR-013 继续跟踪 when / Request Schema / Build / Verify / Release 的 Compiler 实施，AC-013-03 必须消费本节唯一 Artifact v2 目标。
+- Capability↔Callable Binding 由 SR-029 设计；Schema-only Package 由 CA-SL 1.6.0 规范 / SR-030 定义；SR-013 继续跟踪 when / Request Schema / Schema-only closure / Build / Verify / Release 的 Compiler 实施，AC-013-03 与 AC-013-06 必须消费本节唯一 Artifact v2 目标。
 
 **1.6.0-only 设计评审硬门槛：** 新 Compiler Parser/Check/Build/Verify/BuildRequest/BuildResult/Artifact 只支持 1.6.0。 此章节仅描述目标设计，外部代码/Release/E2E 均 NOT_RUN。
 
@@ -351,7 +351,8 @@ Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId�
 |---|---|---|
 | 作者与语言 | 仅 1.6.0 Contract/Procedure/when/Capability；旧 Alias::Callable 全拒绝 | ca-skills：机器 languageTarget、作者 Schema、Golden |
 | 一对一 Link | Owner 24/24、Provider 2/2 公共映射；Reconcile internal-only；每公开 Callable 仅一 Capability | Owner/Provider 发布新 Package/Schema |
-| 空根依赖 | 没有外部 Capability 的 Assurance 允许空依赖闭包和零外部 Tool Effect 构建；缺声明却引用 Capability 必须拒绝 | Compiler：新 BuildRequest/Dependency Schema 明确支持合法空 roots |
+| Capability roots 与 Schema dependency closure | 零 Capability roots 合法；若有 contexts Schema-only 引用，Package dependency closure 可非空；仅无外部 Capability / Schema 引用时整体闭包为空 | Compiler：新 BuildRequest / DependencyInspection 必须区分 Capability roots 与 Schema-only 依赖 |
+| Schema-only Interface Package | 显式导出 Schema、0 Capability / 0 Callable，可作为 contexts Schema 依赖；不产生 Capability grant、Callable binding、Tool allowlist 或 Tool Effect | Compiler 1.6.0 Package Schema / Link / Build / Verify；SR-013 AC-013-06 与 SR-030 AC-030-03 联合验收 |
 | when 与 Request Schema | input 使用需 Schema；event.type-only 不要求；Guard/nullable 静态检查；有 Schema 时无 when 也发布根闭包 | ca-skills 新 CEL 剖面 + Compiler CheckedExpr/DescriptorSet |
 | 唯一 Build/Verify | 只接受 1.6.0 DTO 与 Runtime Artifact；文件、绑定、Schema、结果可确定性 Verify；旧 DTO/包拒绝 | Compiler 新 CLI/DTO/Manifest/Golden/Node/WASM |
 | 消费 | Agent 只导入新发布 Bundle，Studio 使用相同新 Compiler/Package，不自制 Linker | SR-004、SR-016、SR-027 的正式模块 AC |
@@ -382,3 +383,4 @@ Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId�
 | 2026-11-26 | 0.2.8 | GPT-6（ChatGPT） | 新增 1.6.0 目标章节、状态及修订记录 | 移植一对一 Binding / Selector / Action 设计并标为待评审 | 无旧版兼容或产品完成承诺 | Issue #40；SR-029 |
 | 2026-11-26 | 0.2.9 | GPT-6（ChatGPT） | §1、§5～7、修订记录 | 移除新 Compiler 复用 v1alpha5 BuildRequest/DependencyInspection/Verify 的旧假设，唯一目标为 1.6.0 DTO/Artifact，历史包在新版明确拒绝 | 贯彻 Issue #40 全链路无兼容、无双轨/迁移；准确机器标识待 Compiler Owner 冻结 | Issue #40；SR-029；SR-013 |
 | 2026-11-26 | 0.2.10 | GPT-6（ChatGPT） | 规范性设计与验收门槛 | 修复 Parser/Build/Manifest 的 v1alpha5 新实现要求，并补齐 1.6.0 空根与发布职责 | 修复新旧语言/能力运行时冲突 | Issue #12/#40；SR-013/025/029；PR #46 |
+| 2026-11-26 | 0.2.11 | GPT-6（ChatGPT） | §1、§9～§11、修订记录 | 明确 Schema-only Interface Package 可进入 Schema dependency closure，且零 Capability roots 与零 Package dependency closure 是不同概念；增加 SR-013 AC-013-06 / SR-030 AC-030-03 联合验收入口 | 防止 Compiler Linker 把 Schema-only Package 错误当成 Capability root，或要求虚构 Callable 满足旧结构 | Issue #12/#40；SR-013、SR-029、SR-030；PR #46 |
