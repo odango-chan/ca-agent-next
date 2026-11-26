@@ -1,15 +1,15 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.18\
+> 文档版本：0.2.19\
 > 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**；实施/产品验收未升级  
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-26  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：Next 消费端实现、生产准入、Owner Trust 治理、自动发布及真实 5GC/MAS 资格。
 
-上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。功能归属：EC02 Compiler、F08 技能编译与发布；消费端关联 F02。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.11、[F08 技能编译与发布设计说明书](../设计说明书/F08-技能编译与发布设计说明书.md) v0.3.14、[F02 Skill 管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md) §7/§11、CA-SL v1alpha5 正式来源 SHA 18d8184367982ccbc835756136c4a53f9096c3a0。
+上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。功能归属：EC02 Compiler、F08 技能编译与发布；消费端关联 F02。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.12、[F08 技能编译与发布设计说明书](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.14、[F02 Skill 管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md) §7/§11、[CA-SL 1.6.0 中央语言设计](../规范/CA-SL%201.6.0完整语言规范.md)。
 
-目标仓：odango-chan/ca-skill-compiler。实施 Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)。文档刷新 Issue：[Next #14](https://github.com/odango-chan/ca-agent-next/issues/14)。目标代码基线：Compiler v2.1.0，commit 255ab85fa5abb4b0bf36656bf64250cafebf45cb。规范依赖：[ca-skills #88](https://github.com/odango-chan/ca-skills/pull/88) 已合并，正式发布身份见 [ca-skills release record](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs/releases/ca-sl-v1alpha5.md)。
+目标仓：odango-chan/ca-skill-compiler。实施 Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)。文档刷新 Issue：[Next #14](https://github.com/odango-chan/ca-agent-next/issues/14)。目标代码基线：Compiler v2.1.0，commit 255ab85fa5abb4b0bf36656bf64250cafebf45cb。历史来源：[ca-skills #88](https://github.com/odango-chan/ca-skills/pull/88) 已合并，正式发布身份见 [ca-skills release record](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs/releases/ca-sl-v1alpha5.md)。
 
 ## 0. 本轮设计评审入口（2026-11-26）
 
@@ -313,7 +313,7 @@ AC-013-06  Schema-only Package / Schema closure / zero Capability roots
      v
 AC-013-05  经授权 Compiler Release
      |
-     +----> SR-023：ca-skills Bundle 发布
+     +----> SR-027：ca-skills Bundle 构建与发布
      |
      +----> SR-004/005/006：Next 导入、Catalog、Resolver 和运行时验收
 ~~~
@@ -324,7 +324,7 @@ AC-013-05  经授权 Compiler Release
 - G.4 规则与 lowering 无法保持语义：停止，不能用 DynType、自制 evaluator 或运行期异常绕过。
 - Schema Resolver 需要 Development 专用状态才能工作：先抽取共享内部能力，不能让正式 Artifact 依赖 Development API。
 - Compiler Owner 未批准新 Artifact API：停止 AC-013-03，不写入猜测字段。
-- 冻结 Artifact Golden 发生变化：停止并修复兼容性，不更新 Golden 掩盖差异。
+- 历史 Golden 被改写时恢复留档输入；新 1.6.0 Golden 不匹配时记录差异并停止该 AC。禁止在新二进制增加旧格式兼容入口。
 - Native/WASM/Chromium/Python 任一门禁失败：记录 FAIL，不发布。
 - 目标仓写入权限、PR 合并或 Release 授权缺失：只做只读检查或已授权范围内的工作，不越权。
 
@@ -345,7 +345,7 @@ SR-013 达到 READY 且文档门禁通过后，实施使用一个连续 Goal，�
 - AC-013-05 必须再次检查发布授权；没有明确授权时只完成 Release 前检查，不创建 Tag 或 Release。
 - 若无法读取固定的 PR #18 归档、EVIDENCE.md 或其 Artifact，必须标记证据不可访问并请求提供；不得假装已复核，也不得用聊天报告替代独立复核。
 - Compiler 代码变更在 ca-skill-compiler 仓执行；Next 仅维护中央设计、SR 和验收证据。ca-skills Bundle CI 与 Next Runtime 消费端仍按 SR-027、SR-004/005/006 分别处理。
-- 只有 G1～G10 文档门禁、SR READY、依赖检查和目标仓写入授权全部满足后，才生成一个完整可复制的 Goal 提示词。提示词必须包含固定文档 SHA、Issue #61、各 AC 顺序、精确命令、停止规则、非目标和证据格式。
+- 只有 G1～G10 文档门禁、SR READY、依赖检查和目标仓写入授权全部满足后，才生成一个完整可复制的 Goal 提示词。提示词必须包含固定设计 SHA、已核实覆盖该阶段的实施 Issue、各 AC 顺序、精确命令、停止规则和证据格式。每批立即 Commit、Push，核对远端 ref SHA 与受测提交。
 
 ## 10. 非目标
 
@@ -370,7 +370,7 @@ SR-013 达到 READY 前必须：
 6. AC-013-06 的 Schema-only 正负例、零 Capability roots / Schema dependency closure 区分和跨宿主命令完整。
 7. 每项 AC 的 Acceptance、命令、退出条件、证据格式和停止/恢复条件完整。
 
-SR-013 只有 AC-013-01～06 均达到各自通过条件，Compiler Release 有授权且证据可复核，才可报告 Compiler 交付完成。SR-023、SR-004/005/006 的 Bundle/Agent 验收不得由 SR-013 代替。
+SR-013 只有 AC-013-01～06 均达到各自通过条件，Compiler Release 有授权且证据可复核，才可报告 Compiler 交付完成。SR-027、SR-004/005/006 的 Bundle/Agent 验收不得由 SR-013 代替。
 
 ## 12. CA-SL 1.6.0 统一新接口与设计评审门槛
 
@@ -378,7 +378,7 @@ SR-013 只有 AC-013-01～06 均达到各自通过条件，Compiler Release 有�
 - 新版 Compiler 只处理 CA-SL 1.6.0 Capability-first 源码。Contract/Procedure 的 Capability ID 经 SR-029 定义的一对一约束绑定到唯一 Callable；严格校验 kind、Effect、Input/Output Schema、Owner/Provider Package identity，Artifact 保存已编译的 Binding。
 - 与 when/Request Schema 相关的 CheckedExpr、DescriptorSet、Schema 根与 $ref 闭包和 Binding 使用同一个正式 1.6.0 Runtime Artifact。其 BuildRequest、BuildResult、DependencyInspection 和 Verify 使用唯一 1.6.0 DTO；不兼容历史 v1alpha5 和 Development v1alpha1 运行输入。
 - 精确 machine languageTarget、API 名称、字段、Schema 与 Golden 必须由 ca-skills / Compiler Owner 在正式 Issue/PR/Release 冻结；历史 Go/Python CEL PoC 可作为算法审计，但不能宣称 1.6.0 产品 PASS。
-- 相关设计门禁为 [SR-029](SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md)、[SR-004](SR-004-已发布技能包导入.md)、[SR-027](SR-027-技能Bundle构建与发布.md)，新 Release 未完成前不得给出 Compiler 产品实施 READY 或 Harness 提示词。
+- 相关设计门禁为 [SR-029](SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md)、[SR-004](SR-004-已发布技能包导入.md)、[SR-027](SR-027-技能Bundle构建与发布.md)。按 §9、§11 评审各阶段 READY。Compiler Release 是 AC-013-05 的交付结果；禁止把它列为 AC-013-02～04 或 AC-013-06 的启动条件。AC-013-06 使用按正式 Schema 生成的真实 Publisher 候选做联合验证，记录候选来源和受测 Compiler 提交；AC-013-05 另验发行资产。当前设计仍待独立评审。
 
 ## 修订记录
 
@@ -415,3 +415,4 @@ SR-013 只有 AC-013-01～06 均达到各自通过条件，Compiler Release 有�
 | 2026-11-26 | 0.2.16 | GPT-6（ChatGPT） | 最终一致性复评 / 规范性描述 | 补齐零外部根依赖的 Build/Verify 正反验收、旧 Development 仅历史保留及 1.6.0 Request Schema 权威 | 消除 1.6.0 与历史 Development 的模糊措辞，修正后续评审的可执行门槛 | Issue #12/#40；PR #46 |
 | 2026-11-26 | 0.2.17 | GPT-6（ChatGPT） | §1～§2、AC-013-04～06、依赖图、READY 与修订记录 | 新增 AC-013-06，定义 Schema-only Interface Package 与零 Capability roots / 非空 Schema dependency closure 的区别；修正 AC-013-04 对空 roots/closure 的表述 | SR-030 已要求 Host Context Schema-only Package，但 SR-013 原先缺少对应 Compiler AC；防止 Compiler 将零 Capability roots 错误解释为零 Schema dependencies，或虚构 Tool/Callable | Issue #12/#40；SR-029、SR-030；EC02；F08；PR #46 |
 | 2026-11-26 | 0.2.18 | GPT-6（ChatGPT） | AC-013-06 语义边界、READY 定义、修订记录 | 将 Schema-only Package 的使用范围收敛为 Contract.contexts；明确 requestSchema 始终由 Skill 自有 Schema 提供 | 与 CA-SL 1.6.0 Request Schema / Context Schema 所有权边界保持一致 | Issue #12/#40；CA-SL 1.6.0；SR-030；PR #46 |
+| 2026-11-26 | 0.2.19 | Codex / GPT-6 | 设计依据、§9、§11～12 | 修复 F08 链接、Bundle 归属和发布依赖方向，明确候选联验与推送证据 | 避免以 Compiler 自身 Release 阻塞实现，或拿旧 Golden 做兼容 | Issue #12/#40，PR #46，SR-013/027/030 |

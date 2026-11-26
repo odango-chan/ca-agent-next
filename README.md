@@ -4,7 +4,7 @@ CA Agent Next 是下一代通用 Agent 的独立实现仓。目标是用尽可�
 
 **语言决策：Agent Core、Host、Agent Model Loop、Skill Importer、Skill Resolver 和 Runtime 固定使用 Python。** 独立 Plugin 可以使用 Go；Go Plugin 不意味着 Go Host。
 
-> 当前状态：PR #1 的架构、功能设计和规范基线已合并；SR-002 的 Python Host + Model Loop 最小切片已通过模块 AC-002-01～08 并集成到恢复分支，但完整 Agent Runtime、Plugin Manager 和系统级 EX-01 尚未完成。设计完成、代码实现、模块验收和系统验收必须分别表述。
+> 当前设计评审范围见[SR 总索引](docs/治理/SR%20总索引.md)。24 项 DRAFT SR 已请求独立设计评审。SR-001/002/003 模块已 VERIFIED，SR-024 的 VERIFIED 限于历史 Publisher，SR-015 已 IMPLEMENTED。新 1.6.0 产品链及系统 EX 仍待验收。
 
 ## 从这里开始
 
@@ -53,7 +53,7 @@ Next 是项目群架构、设计、规范和治理规则的唯一集中入口。
 - Tool 是 Plugin 导出的 Callable Operation，不是独立进程或 Manager。
 - 每个 Skill 必须有 SKILL.md；Assurance 可选。无 Assurance 仅 LLM-guided；有效发布 Artifact 支持 Deterministic 和 LLM-guided；无效 Artifact 导入失败。
 - when 是可选 Assurance Contract 中的 CEL 选择表达式；predicates.yaml 只用于执行期业务判断。
-- Agent 只消费已发布 Skill Artifact，不调用 Compiler，不实现 Skill Admission。
+- CA-SL 1.6.0 是唯一新目标。作者只引用 Capability ID，Compiler 将其链接到唯一公开 Callable；Runtime 在 Scope 内分发。Agent 只消费正式发布的 Assurance Bundle，不调用 Compiler，不实现 Skill Admission。
 - Deterministic 与 LLM-guided 经过同一个 Runtime Action Boundary。
 - SBI 可携带 JSON 和 multipart 二进制。Event Plugin 处理外部协议；Host 管理 ArtifactStore；Codec 按需作为现有 Tool Plugin 的 Operation 调用。
 
@@ -61,7 +61,7 @@ Next 是项目群架构、设计、规范和治理规则的唯一集中入口。
 
 所有变更先关联 Issue，新分支使用[分支命名规范](docs/规范/文档编写与治理规范.md#14-分支命名与生命周期)。Harness 默认采用 Goal 模式，提示词在[文档门禁](docs/规范/文档编写与治理规范.md#13-执行提示词交付门禁)通过后生成。
 
-先完成 Python Core、唯一 Plugin Manager、已发布 Skill 导入、SkillCatalog / Resolver 和 Runtime Action Boundary；通过 Echo 垂直 E2E 后，再接入 OpenAMSM Plugin、Tool Package 和 Create → Modify → Release。未取得真实证据的阶段标记 NOT_STARTED / NOT_RUN。
+模块评审按各 SR 的直接输入展开。SKILL.md-only 导入可以单独评审；正式 Assurance 导入等待新版 Compiler 和 Bundle。OpenAMSM Go Plugin 可用测试 Host 做独立模块验收；与 Next 的系统组合安排在 Echo E2E 通过后。设计、代码、模块 AC 与系统 EX 分别记录证据。
 
 ## Demo 范围
 

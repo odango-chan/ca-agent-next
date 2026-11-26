@@ -1,16 +1,16 @@
 # SR-028：Python 工程工具链与 uv 环境管理
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.3  
+> SR 版本：0.1.4  
 > 修订日期：2026-11-26  
 > 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**；不授予实施 READY，产品验收原状态不变  
 > 创建日期：2026-11-26  
 > 所属阶段：G02 工程治理支撑  
 > 上游需求：[IR-007](../IR/IR%20总登记册.md#ir-007)  
-> 设计依据：[G02 Python 工程工具链与环境管理设计说明书](../设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md) v0.1.2 §1～§8；[SR-002](SR-002-Python%20核心与宿主基础骨架.md) v0.2.10 §2.1；[SR 管理规范](../规范/SR%20管理规范.md) v0.7.0  
+> 设计依据：[G02 Python 工程工具链与环境管理设计说明书](../设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md) v0.1.4 §1～§8；[SR-002](SR-002-Python%20核心与宿主基础骨架.md) v0.2.10 §2.1；[SR 管理规范](../规范/SR%20管理规范.md) v0.7.0  
 > 设计/治理 Issue：[ca-agent-next #35](https://github.com/odango-chan/ca-agent-next/issues/35)（不是实施 Issue）  
 > 目标仓：`odango-chan/ca-agent-next`  
-> 固定设计基线：`docs/restore-original-designs-20261125` @ `38192949829763ca5e73be031932bd590b6e4ebc`  
+> 本轮复核输入：PR #46 @ `c3bf36a75199901a06479d52534747224ae6db46`；独立评审和后续 Goal 分别固定含本次修订的完整设计 SHA。
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：其他仓库迁移、生产级供应链安全、运行时架构改造和完整 Python 版本矩阵资格认证
 
@@ -36,7 +36,7 @@
 4. 生成并提交 `uv.lock`；添加纯文本 `.python-version`（内容仅为 `3.14.6`），并向 `.gitignore` 追加独立行 `.venv/`，保留既有规则。
 5. 统一本地和 CI 的安装、测试、Smoke、脚本执行命令为 `uv sync --locked` / `uv run --locked`。
 6. 在独立 worktree 中验证每个 checkout 使用自己的 `.venv/`，不共享 site-packages 或 editable distribution metadata。
-7. 在 SR-001 PR #32 集成到目标分支后，将 review-context Workflow 迁移为 uv；在真实 PR Workflow 中运行完整单元测试和上下文生成器。
+7. 从含 SR-001/SR-003 的目标分支迁移现有工作流的 Python 安装入口，保留 G02 §3.8 的双平台回归；在真实 PR Workflow 中运行完整单元测试和上下文生成器。
 8. 更新 README/Agent 协作入口和受影响命令文档，记录实际 uv/Python 版本、命令、环境和测试证据。
 
 不得在 SR-001 PR #32 分支中实施上述迁移。
@@ -55,26 +55,26 @@
 
 ### 4.1 设计依赖
 
-- G02 v0.1.0 与 SR-002 v0.2.10 的 Python distribution/build metadata 是稳定输入。
+- G02 v0.1.4 与 SR-002 v0.2.10 的 Python distribution/build metadata 是稳定输入。
 - 设计评审不依赖 SR-001 的代码合并；可以独立评审 uv 与 worktree 方案。
 
 ### 4.2 实施依赖
 
 - AC-028-01～AC-028-06：SR-028 达到 READY、独立实施 Issue 建立后即可执行，不依赖 Agent Runtime 产品阶段。
-- AC-028-07（CI 环境与测试入口）和 AC-028-08（SR-001 Workflow/Artifact 迁移）：均依赖 SR-001 PR #32 修复 AC-REV-08/09、完成真实 Workflow 复验并集成到目标恢复分支。该依赖只阻塞这两个 CI/Workflow AC，不阻塞 SR-028 的设计评审或 AC-028-01～06 的独立实施。
+- AC-028-07（CI 环境与测试入口）和 AC-028-08（SR-001 Workflow/Artifact 迁移）：所需 SR-001 Workflow 与脚本已随 PR #32 合入。独立实施 PR 核对目标分支仍含这些入口及 SR-003 回归工作流后，按 G02 §3.8 迁移与复验。既有成功结果不计为迁移 PASS。
 - SR-028 当前没有实施 Issue。Issue #35 只负责中央设计和治理文档，不授予代码、配置或 Workflow 写入授权。
 
 ## 5. Acceptance
 
 | ID | 验收条件 | 必需证据 |
 |---|---|---|
-| AC-028-01 | 根 pyproject 保留 `ca-agent-next`、版本 `0.1.0`、`requires-python >=3.11`、setuptools build backend、src package discovery 和空运行时依赖；仅增加 uv 与开发依赖配置 | pyproject diff；distribution metadata 检查；确认 PyYAML 不在 Requires-Dist runtime metadata |
+| AC-028-01 | 根 pyproject 保留 `ca-agent-next`、版本 `0.1.0`、`requires-python >=3.11`、setuptools build backend、src package discovery 和空运行时依赖；保留 SR-003 的 plugins extra，仅增加 uv 与开发依赖配置 | pyproject diff；distribution metadata 检查；确认 PyYAML 不在 Requires-Dist runtime metadata |
 | AC-028-02 | `.python-version` 文件内容精确为 `3.14.6`；uv CLI 固定为 0.13.10；setup-uv 使用 v10.4.0 不可变 commit `1db35dd8eee11c5894872e0b383ae6c406cf738d` 并显式设置 version | 文件内容、`uv --version`、`python --version`、Workflow 日志和配置 |
 | AC-028-03 | PyYAML 位于 `[dependency-groups].dev`，不进入 Agent Core 运行时依赖 | pyproject/uv.lock；distribution metadata 测试 |
 | AC-028-04 | `uv.lock` 已提交且与 pyproject 一致；锁文件漂移时 `uv lock --check` / `uv sync --locked` 必须失败，不自动改写锁文件 | clean checkout 的 locked sync 与负例 |
-| AC-028-05 | 每个 worktree 使用独立 `.venv/`；`.venv/` 被 Git 忽略（`git check-ignore .venv` 成功）；`uv sync` 将当前 checkout 项目安装到该环境；两个并行 worktree 的 editable metadata 和测试互不污染 | 两个 worktree 的 `.venv` 路径、ignore 结果、distribution metadata 和测试输出 |
-| AC-028-06 | 当前基线可用的完整 unittest 与 Host Smoke 使用 `uv run --locked --group dev` 通过；`scripts/review_context.py` 不属于本 AC，待 PR #32 集成后由 AC-028-07/08 覆盖 | 命令、CPython 3.14.6、完整测试结果和 Smoke 输出 |
-| AC-028-07 | PR #32 集成后，GitHub Actions 使用 G02 §3.7 固定 setup-uv YAML、uv 0.13.10、`uv python install`、`uv sync --locked --group dev` 和 `uv run --locked`；运行完整 unittest/Smoke，不执行 pip 临时安装 | Workflow diff、真实 PR Run 和 Job 日志；核对 action commit 与版本输入 |
+| AC-028-05 | 每个 worktree 使用独立 `.venv/`；`.venv/` 被 Git 忽略（`git check-ignore .venv/pyvenv.cfg` 成功）；`uv sync` 将当前 checkout 项目安装到该环境；两个并行 worktree 的 editable metadata 和测试互不污染 | 两个 worktree 的 `.venv` 路径、ignore 结果、distribution metadata 和测试输出 |
+| AC-028-06 | 当前基线可用的完整 unittest 与 Host Smoke 使用 `uv run --locked --group dev --extra plugins` 通过，记录 Host、Plugin、Review Context 的发现数及失败/跳过数；生成器、Summary 及三文件 Artifact 由 AC-028-08 在真实 PR 验收 | 命令、CPython 3.14.6、完整测试结果和 Smoke 输出 |
+| AC-028-07 | GitHub Actions 使用 G02 §3.7 固定 setup-uv YAML、uv 0.13.10、`uv python install`、`uv sync --locked --group dev` 和 `uv run --locked`；运行完整 unittest/Smoke，不执行 pip 临时安装 | Workflow diff、真实 PR Run 和 Job 日志；核对 action commit 与版本输入 |
 | AC-028-08 | SR-001 Workflow 已集成后，将其迁移到 uv；真实 `pull_request` Run 中上下文生成器成功，Artifact 恰含三份预期文件 | SR-001 集成基线 SHA、真实 Run URL、Summary 和下载核对后的 Artifact 文件清单 |
 | AC-028-09 | 不修改其他仓库、不改变运行时依赖和 setuptools backend、不引入额外签名/hash/Trust Registry 机制 | PR 文件清单、pyproject metadata、设计/实施边界审查 |
 
@@ -103,3 +103,4 @@ SR-028 当前为 DRAFT。G02/SR-028 的设计 PR 尚待独立评审；不得创�
 | 2026-11-26 | 0.1.1 | GPT-6.2（ChatGPT） | §2、§4～§5 | 将 review_context.py 的执行前置明确绑定 PR #32 集成；把当前基线 unittest/Host Smoke 与后续 Workflow 迁移验收分离 | 保证 SR-028 的独立 I1 可先行实施，不要求引用尚未集成的脚本；避免 AC-028-06/07/08 重复或提前要求 | Issue #35；PR #32；G02 |
 | 2026-11-26 | 0.1.2 | GPT-6.2（ChatGPT） | §2、§5 | 补齐 `.python-version`、`.gitignore`、setup-uv action 固定配置、`uv sync` 项目安装与构建可复现边界的明确验收 | 使 DeepSeek Harness 可按固定文件内容/配置实现，并防止对 wheel 级可复现性作超范围承诺 | Issue #35；G02 v0.1.2 |
 | 2026-11-26 | 0.1.3 | GPT-6（ChatGPT） | 文档头、§0、设计依据 | 提交设计待评审、明确新旧契约/验收隔离并保留 DRAFT 主状态 | 统一中央评审批次，防止旧版发布证据冒充新版资格 | Issue #12；PR #45；SR-029 |
+| 2026-11-26 | 0.1.4 | Codex / GPT-6 | §2、§4、AC-028-01/05～08 | 复核 PR #32/#34 集成后的工作流与真实依赖，修正完整测试命令 | 避免等待已合并 PR 或漏装 plugins extra | Issue #12/#35，PR #46，SR-028 |

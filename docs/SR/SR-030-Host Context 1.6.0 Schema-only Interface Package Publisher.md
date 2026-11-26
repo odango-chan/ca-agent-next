@@ -1,7 +1,7 @@
 # SR-030：Host Context 1.6.0 Schema-only Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.1
+> SR 版本：0.1.2
 > 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**；不授予实施 READY，产品验收 NOT_RUN
 > 创建日期：2026-11-26
 > 修订日期：2026-11-26
@@ -82,7 +82,8 @@ Publisher 必须从固定 Revision 读取原始 Schema 字节并核对 Git blob�
 - F09 / SR-016 明确 Package Manifest 与 Project Lock provenance 的边界。
 
 **实施依赖：**
-- Compiler 1.6.0 正式 Package Schema、BuildRequest / DependencyInspection 与 Schema-only Link 规则发布；
+- 固定 Compiler Owner 正式公布的 1.6.0 Package Schema、BuildRequest / DependencyInspection 与 Schema-only Link 规则的版本、SHA、Golden 和来源。机器契约可独立于 Compiler 二进制发行；契约尚未公布时，不得生成候选。
+- 按正式契约从固定源生成真实 Publisher 候选，记录生产者 SHA、命令、样本与输出。先验 AC-030-03 的包结构，再将同一份候选交给 AC-013-06 检查 Context Schema closure 和零 Capability roots。候选生成不等待 AC-013-05；Compiler Release、Publisher 正式发布和 Studio 导入分别记录。
 - ca-skills 1.6.0 languageTarget / Schema / Golden 发布；
 - ca-agent-demo 新实施 Issue 在本设计独立评审通过后创建，并固定设计 SHA。
 
@@ -94,3 +95,4 @@ Publisher 必须从固定 Revision 读取原始 Schema 字节并核对 Git blob�
 |---|---|---|---|---|---|---|
 | 2026-11-26 | 0.1.0 | GPT-6（ChatGPT） | 全文 | 新增 Host Context CA-SL 1.6.0 Schema-only Package Publisher 设计，区分 SR-024 历史 VERIFIED 与新版发布门槛，定义 0/0 Capability/Callable、源码 pin、Lock provenance 和独立 AC | 发现 F09 / SR-016 仍把旧 Development Publisher 当作新版依赖，且 Compiler Schema-only Package 能力未定义 | Issue #12/#40；IR-006/008；SR-013/016/024/029 |
 | 2026-11-26 | 0.1.1 | GPT-6（ChatGPT） | §1、§3、AC-030-03、依赖与修订记录 | 明确 Host Context Schema-only Package 只能由 Contract.contexts 引用；requestSchema 始终是 Skill 自有 Schema 根 | 避免将 Host Context Package 错误当成 Skill Request Schema，保持 CA-SL 1.6.0 §4 的作者语义一致 | Issue #12/#40；CA-SL 1.6.0；SR-013 AC-013-06；SR-029；PR #46 |
+| 2026-11-26 | 0.1.2 | Codex / GPT-6 | §6，修订记录 | 区分机器 Schema 发布、真实 Publisher 候选、Compiler 联验和二进制发行 | 消除相互等待 | Issue #12/#40，PR #46，SR-013/030 |

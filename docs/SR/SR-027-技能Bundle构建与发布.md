@@ -1,12 +1,12 @@
 # SR-027：技能Bundle构建与发布
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.8  
+> SR 版本：0.1.9  
 > 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**；不授予实施 READY，产品验收原状态不变  
 > 创建日期：2026-11-26  
 > 修订日期：2026-11-26  
 > 上游需求：IR-006  
-> 设计依据：F08 v0.3.13 §4、§6；CA-SL 1.6.0 目标（Issue #40 / SR-029）。  
+> 设计依据：F08 v0.3.14 §4、§6；CA-SL 1.6.0 目标（Issue #40 / SR-029）。  
 > 关联 Issue：ca-agent-next#12（设计）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：见 §4；本批限外部构建与发布。
@@ -36,17 +36,17 @@ CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验�
 |---|---|
 | AC-027-01 | ca-skills 仓根使用新建的 **1.6.0 专用测试入口**（命令、文件名与测试数在新实现 Issue 固定），检验新版 Compiler Check/Build/Verify、Bundle 成功与错误拒绝；可继续运行文档检查，但 **v1alpha5 测试不得作为本 AC 的 PASS 证据**；记录命令、受测 SHA、发现数和日志 |
 | AC-027-02 | CI 在干净 checkout 生成候选。逐项查 SKILL.md、所声明的资源及可选 Assurance 对应产物；损坏 Artifact 使当批发布数为零。Development Artifact 不进入 Runtime Bundle |
-| AC-027-03 | 使用同一候选在 Next 执行 SR-004 导入与 SR-008 Echo；原始作者 checkout 和 Compiler 从 Host 运行环境移除后依然可运行。分别记录构建、发布及消费状态 |
+| AC-027-03 | 发布后从正式资产入口取得 AC-027-02 的同一批内容，在 Next 执行 SR-004 导入与 SR-008 Echo；原始作者 checkout 和 Compiler 从 Host 运行环境移除后依然可运行。分别记录构建、发布及消费状态 |
 
 ## 4. 状态与非目标
 
-中央设计 Issue #12；ca-skills 实施 Issue、实施 PR、构建证据和正式发行资产尚未登记。READY 前固定首批作者源、Bundle 的具体文件清单、可用 Compiler 版本与匹配 Verify 命令；候选构建和正式发布分别登记。状态 DRAFT，测试 NOT_RUN。Next 不编译，Compiler 不负责组装 Bundle。无替代 SR。
+中央设计 Issue #12；ca-skills 实施 Issue、实施 PR、构建证据和正式发行资产尚未登记。READY 前固定首批作者源、Bundle 的具体文件清单、可用 Compiler 版本与匹配 Verify 命令；候选构建和正式发布分别登记。AC-027-01/02 通过、资产与 Verify 日志可追溯且取得发布授权后，由发布步骤上传同一批次。AC-027-03 是发布后的消费联验，不作为上传前置；消费端尚未就绪时只暂停该 AC，整项 SR 仍待验证。状态 DRAFT，测试 NOT_RUN。Next 不编译，Compiler 不负责组装 Bundle。无替代 SR。
 
 ## 5. 当前外部输入与发布证据核对（2026-11-26）
 
 | 输入 | 当前可核对事实 | 对本 SR 的结论 |
 |---|---|---|
-| CA-SL v1alpha5 | ca-skills PR #88 MERGED；normative SHA `18d8184367982ccbc835756136c4a53f9096c3a0`；PR #89 将该 SHA 固定在 release record | 语言规范依赖已满足；不是 Skill Bundle |
+| CA-SL v1alpha5 | ca-skills PR #88 MERGED；normative SHA `18d8184367982ccbc835756136c4a53f9096c3a0`；PR #89 将该 SHA 固定在 release record | 仅覆盖历史语言；新版作者 Schema 和机器标识仍待 ca-skills 正式发布 |
 | Compiler v2.1.0 | [正式 Release](https://github.com/odango-chan/ca-skill-compiler/releases/tag/v2.1.0)；冻结 Artifact v1alpha5 和 Development Artifact v1alpha1；旧 Artifact 字节/语义不变 | 不能满足 F08 新 Runtime Artifact API 的 Request Schema/when 输出 |
 | Compiler when Artifact | [Compiler Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) OPEN；SR-013 AC-013-02～04 未完成，AC-013-05 BLOCKED | 新 Runtime Artifact API 尚未发布；本 SR 不得选择或猜测候选 API/Manifest 字段 |
 | ca-skills 作者源 | main `780497a2918ad3e7bdff554ab64b0ba627e867e0` 含 v1alpha5 MAS 作者源；`scripts/compile_mas_v1alpha5.py` 只对单 Skill 做 Check/Inspect/可选 Build | 现有脚本不是 Bundle assembler，也不证明正式 Bundle 已发布 |
@@ -70,3 +70,4 @@ CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验�
 | 2026-11-26 | 0.1.7 | GPT-6（ChatGPT） | 文档头、§0、设计依据 | 提交设计待评审、明确新旧契约/验收隔离并保留 DRAFT 主状态 | Issue #12；PR #45；SR-029 |
 
 | 2026-11-26 | 0.1.8 | GPT-6（ChatGPT） | 设计依据与新版本路径 | 刷新 1.6.0 正式目标设计引用：v0.3.12→v0.3.13 | Issue #12/#40；PR #46 |
+| 2026-11-26 | 0.1.9 | Codex / GPT-6 | §3～5 | 将构建、授权发布、正式资产消费按顺序取证，消除发布与消费互等并纠正历史语言依赖状态 | Issue #12/#43，PR #46，SR-004/008/013/027 |
