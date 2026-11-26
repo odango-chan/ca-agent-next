@@ -200,4 +200,4 @@ tests/
 | 2026-11-26 | 0.2.2 | 未记录（历史资料未提供） | 未记录（历史资料未提供） | 将设计依据版本同步到 F01 v0.3.1 | 保证 SR-002 引用当前权威字段与错误契约 | Issue #19；F01 v0.3.1 |
 | 2026-11-26 | 0.2.3 | 未记录（历史资料未提供） | 未记录（历史资料未提供） | 固定 HostError 构造签名、默认 UUID run_id 生成时机及 Event.source 可选语义 | 消除 Host 实现和 Fake 测试的剩余猜测 | Issue #19；F01 v0.3.3；PR #20 |
 | 2026-11-26 | 0.2.4 | GPT-6.2（ChatGPT） | §2.1～§2.3、§5.1、§6 | 固定 pyproject 元数据、公开导出、Event/Context/JSONValue 校验、HostError 与 CLI 诊断 | 消除包身份、输入验证和失败路径的实现猜测，使 Harness 可按同一契约实施 | IR-002；F01；AC-002-01～08；Issue #19；PR #20 |
-| 2026-11-26 | 0.2.5 | 将 HostError 唯一定义位置固定为 contracts.py，并由 host.py 重导出；明确 CLI_USAGE_ERROR 不属于 HostError；同步 F01 v0.3.5。 | 消除 ModelLoop/Host 循环依赖和 CLI/Host 错误类型混淆。 | Issue #19；F01 v0.3.5；SR-003；PR #20 |
+| 2026-11-26 | 0.2.5 | GPT-6.2（ChatGPT） | §2.1～§2.2、§5.3～§5.4 | 将 HostError 唯一定义位置固定为 contracts.py，由 host.py 重导出；明确 CLI_USAGE_ERROR 不属于 HostError；同步 F01 v0.3.5。 | 消除 ModelLoop/Host 循环依赖和 CLI/Host 错误类型混淆。 | Issue #19；F01 v0.3.5；SR-003；PR #20 |

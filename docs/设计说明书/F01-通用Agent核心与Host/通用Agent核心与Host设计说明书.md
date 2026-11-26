@@ -170,17 +170,20 @@ SR-002 固定下列最小类型；字段名和含义以本表为准：
 公开接口为同步调用，避免首个骨架同时引入异步运行时和 Provider 复杂度：
 
 ```python
-class ModelClient(Protocol):
-    def propose(self, request: ModelRequest) -> ModelProposal: ...
-
-# contracts.py 定义 HostError；model_loop.py 从 contracts 导入；host.py 从 contracts 重导出。
+# contracts.py
 class HostError(Exception):
     def __init__(self, code: str, safe_message: str): ...
 
+# model_client.py
+class ModelClient(Protocol):
+    def propose(self, request: ModelRequest) -> ModelProposal: ...
+
+# model_loop.py
 class AgentLoop:
     def __init__(self, model_client: ModelClient): ...
     def run_once(self, request: ModelRequest) -> ModelProposal: ...
 
+# host.py
 class Host:
     def __init__(
         self,
