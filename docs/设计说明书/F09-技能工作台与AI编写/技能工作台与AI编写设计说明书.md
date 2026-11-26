@@ -1,13 +1,13 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.11  
+> 文档版本：0.3.12  
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
-> 修订日期：2026-11-25  
+> 修订日期：2026-11-26  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
- > 本文局部非目标：生产级准入、额外 package-level digest、签名和 Trust Registry；历史 Compiler v2.1.0 的 `files[].sha256` 要求仅归旧版审计，不转为新版 Schema 要求  
+> 本文局部非目标：生产级准入、额外 package-level digest、签名和 Trust Registry；历史 Compiler v2.1.0 的 `files[].sha256` 要求仅归旧版审计，不转为新版 Schema 要求  
 
-关联 IR-006、SR-015、SR-016、SR-020（参考宿主架构审计）、SR-024（Host Context Publisher）、SR-025（MAS Owner Publisher）；Compiler 接口以 [EC02 Development Build 设计](../EC02-Compiler/Development%20Build设计.md) 为准。基线为 [docs/architecture/studio-boundaries.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/architecture/studio-boundaries.md)、[docs/design/ai-procedure-authoring.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/design/ai-procedure-authoring.md)。
+关联 IR-006、SR-015、SR-016、SR-020（参考宿主架构审计）、SR-024（Host Context Publisher）、SR-025（MAS Owner Publisher）；新 1.6.0 Compiler 接口以 [EC02 Compiler 设计说明书](../EC02-Compiler/Compiler设计说明书.md) 和 [SR-013](../../SR/SR-013-Compiler已检查when与发布产物.md) 为准；历史 EC02 Development Build 设计只保留源审计，不作为当前 Compiler DTO/Worker/Bundle 发布入口。基线为 [docs/architecture/studio-boundaries.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/architecture/studio-boundaries.md)、[docs/design/ai-procedure-authoring.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/design/ai-procedure-authoring.md)。
 
 ## 1. 编辑与语言服务
 
@@ -216,3 +216,4 @@ AI Authoring 的 Change Set 只能新增或修改 Capability ID、Procedure argu
 | 2026-11-26 | 0.3.9 | GPT-6（ChatGPT） | 版本隔离与修订记录 | 隔离历史 Development Compiler 流程，1.6.0-only Studio 仅用新 Worker/Build DTO | Issue #40；SR-029 |
 | 2026-11-26 | 0.3.10 | GPT-6（ChatGPT） | 修订表/记录 | 合并历史修订行的内容与原因列，仅保留原文字义，不改历史断言 | Issue #40；SR-029 |
 | 2026-11-26 | 0.3.11 | GPT-6（ChatGPT） | 目标合同、实施 AC 和旧版留档 | §3～§9 重建 1.6.0-only Studio Package/Compiler/AI/zero-root 工作流和独立验收，旧 Development 只读留档 | Issue #12/#40；SR-016/025/029；PR #46 |
+| 2026-11-26 | 0.3.12 | GPT-6（ChatGPT） | 文档头与 1.6.0 当前设计依据 | 修复 PR #46 Review Context 文档头检查及旧 Development Build 设计依据，更新新 Compiler/SR-013 正式入口 | Issue #12/#40；PR #46；CI #45837224652 |
