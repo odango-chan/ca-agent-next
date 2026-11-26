@@ -1,8 +1,8 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.41
-> 状态：28 项 SR：4 VERIFIED、1 IMPLEMENTED、23 DRAFT（23 项设计均已提交待评审），SR-003 模块 AC PASS，系统 EX NOT_RUN
+> 文档版本：0.3.42
+> 状态：29 项 SR：4 VERIFIED、1 IMPLEMENTED、24 DRAFT（24 项设计均已提交待评审），SR-003 模块 AC PASS，系统 EX NOT_RUN
 > 修订日期：2026-11-26  
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
@@ -16,7 +16,7 @@
 - 本索引只汇总 ID、标题、设计依据、状态、依赖和实施入口。
 - 状态变化先更新 SR 文件，再更新本索引和[实施状态总览](实施状态总览.md)。
 - ca-agent-next PR #1 是文档/设计基线 PR，不是任何 SR 的实现 PR。
-- PR #1、#32、#34 已合并；SR-001/SR-002/SR-003/SR-024 VERIFIED，SR-015 IMPLEMENTED，其余 23 项 DRAFT（设计均已提交待评审，非实施 READY）。
+- PR #1、#32、#34 已合并；SR-001/SR-002/SR-003/SR-024 VERIFIED，SR-015 IMPLEMENTED，其余 24 项 DRAFT（设计均已提交待评审，非实施 READY）。
 
 ## 2. SR 清单
 
@@ -44,18 +44,19 @@
 | [SR-021](../SR/SR-021-原生宿主设计移交.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 原生宿主设计移交 | DRAFT |
 | [SR-022](../SR/SR-022-执行内核设计移交.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 执行内核设计移交 | DRAFT |
 | [SR-023](../SR/SR-023-技能作者源与语言规范移交.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 技能作者源与语言规范移交 | DRAFT |
-| [SR-024](../SR/SR-024-Host%20Context%20Interface%20Package%20Publisher.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Host Context Interface Package Publisher | VERIFIED |
+| [SR-024](../SR/SR-024-Host%20Context%20Interface%20Package%20Publisher.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Host Context Interface Package Publisher（历史 v1alpha5） | VERIFIED（历史范围） |
 | [SR-025](../SR/SR-025-MAS%20Owner%20Interface%20Package%20Publisher.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | MAS Owner 1.6.0 Capability-first Interface Package Publisher | DRAFT |
 | [SR-026](../SR/SR-026-Codec公开工具发布.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Codec 公开工具发布 | DRAFT |
 | [SR-027](../SR/SR-027-技能Bundle构建与发布.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 技能 Bundle 构建与发布 | DRAFT |
 | [SR-028](../SR/SR-028-Python工程工具链与uv环境管理.md) | [IR-007](../IR/IR%20总登记册.md#ir-007) | Python 工程工具链与 uv 环境管理 | DRAFT |
 | [SR-029](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) | [IR-008](../IR/IR%20总登记册.md#ir-008)（关联 IR-003） | CA-SL 1.6.0 Capability-first 作者模型与 Callable 双向一对一；完全无旧版兼容 | **DRAFT（设计待评审，非实施 READY）** |
+| [SR-030](../SR/SR-030-Host%20Context%201.6.0%20Schema-only%20Interface%20Package%20Publisher.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Host Context 1.6.0 Schema-only Interface Package Publisher | DRAFT |
 
 设计版本与章节、依赖、验收 ID、实施证据以各 SR 为准。逐项阻塞见[就绪审计](../参考与审计/跨仓设计资产迁移与一致性审计.md#8-设计就绪审计)。
 
 ### 2.1 本批 DRAFT 的设计待评审清单（与实施主状态正交）
 
-**截至本候选提交，23/23 项实施主状态为 DRAFT 的 SR 已具有中央设计待评审入口。** 这仅表示提供了公开可核的评审候选，**不是**独立设计批准、`READY` 实施授权，也不是外部发布或 AC/EX/OM 验收通过。总范围见 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12)，1.6.0 唯一作者/运行时目标见 [SR-029](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md)；SR-004 / SR-029 原有专项 PR #44/#45 的依赖顺序保持不变。
+**截至本候选提交，24/24 项实施主状态为 DRAFT 的 SR 已具有中央设计待评审入口。** 这仅表示提供了公开可核的评审候选，**不是**独立设计批准、`READY` 实施授权，也不是外部发布或 AC/EX/OM 验收通过。总范围见 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12)，1.6.0 唯一作者/运行时目标见 [SR-029](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md)；SR-004 / SR-029 原有专项 PR #44/#45 的依赖顺序保持不变。
 
 | SR | 本轮评审焦点 | 设计评审 | 实施主状态 |
 |---|---|---|---|
@@ -82,6 +83,7 @@
 | SR-027 | 1.6.0 技能 Bundle 发布 | 待评审（REVIEW_REQUESTED） | DRAFT |
 | SR-028 | uv Python 工程工具链 | 待评审（REVIEW_REQUESTED） | DRAFT |
 | SR-029 | 1.6.0 Capability-first 一对一绑定 | 待评审（REVIEW_REQUESTED） | DRAFT |
+| SR-030 | Host Context 1.6.0 Schema-only Publisher；0 Capability / 0 Callable，精确 Schema export | 待评审（REVIEW_REQUESTED） | DRAFT |
 
 上述专项评审按单版本 1.6.0 和 Capability↔Callable 一对一原则校核；历史 v1alpha5、Compiler v2.1.0、Owner v1alpha4 和 Provider v1.2.0 只可作迁移/审计来源。旧来源中的身份、Build DTO、Artifact、Bundle 或测试不得自动证明新版发布/可实施。SR-029 新契约尚未发布，Compiler #61、Publisher、Skill Bundle 等真实前置仍保持各自 BLOCKED/NOT_RUN；SR-028 的 uv 工具链设计可独立于这些外部发布审查。
 
@@ -94,7 +96,7 @@
 | 1 | SR-023 | CA-SL v1alpha5、作者源与发布基线恢复 | ca-skills | 先固定语言、Skill 作者源与版本边界；Compiler #61 仍是外部 OPEN 依赖 |
 | 2 | SR-015 | Tool Interface / Provider / Codec 设计恢复 | ca-client-tools → Next F03.05 | IMPLEMENTED；SR-015 合并时 F03.05 v0.3.9（现行设计 v0.4.1）；SR-015 v0.3.8；PR #37 MERGED，产品代码未实现 |
 | 3 | SR-025 | MAS Owner 1.6.0 Capability-first Interface Package Publisher | ca-client-tools → Next F03.05 / F09 | 新 Owner 24/24 Capability↔Callable 发布；历史 24/25、Development v1alpha1 和 1.0.0 仅审计；具体新机器 Schema/版本待 Owner/Compiler 冻结 |
-| 4 | SR-024 | Host Context Interface Package Publisher | ca-agent-demo → Next F09 | VERIFIED；[Issue #252](https://github.com/odango-chan/ca-agent-demo/issues/252) 已关闭；[PR #253](https://github.com/odango-chan/ca-agent-demo/pull/253) 已合并，merge `25168db031e996bfa4de440c4156ae94f4e19bce`；AC-024-01～07 均 PASS。Review COMMENTED、4 个 PR checks SKIPPED 如实保留；不占用 SR-020 的参考宿主审计 ID |
+| 4 | SR-030 | Host Context 1.6.0 Schema-only Interface Package Publisher | ca-agent-demo → Next F09 | DRAFT；固定原始 Schema 来源；0 Capability / 0 Callable；新 Package Schema、languageTarget 和 SemVer 待冻结，AC-030-01～07 NOT_RUN；SR-024 VERIFIED 仅作为旧 v1alpha5 Development Publisher 历史证据 |
 | 5 | SR-018 | OpenAMSM Owner 权威状态恢复 | env-openamsm | 固定 Callable、Receipt、Commit Proof、Reconcile 和 Modify/Release 边界 |
 | 6 | SR-019 | Mock AMF / 5GC 仿真对端恢复 | env-5gc-sim | 固定协议对端、World、进程和真实测试边界 |
 | 7 | SR-017 | OpenAMSM Event/Delivery Plugin 恢复 | ca-openamsm-plugin | 依赖 F03/F05、EC05 Owner Contract；当前 PR #1 Draft |
@@ -123,7 +125,7 @@
 
 ### 3.3 实质修订与设计复评追踪
 
-本轮 #46 以 1.6.0-only 的规范性内容实际替换旧 Compiler/Studio/Publisher 实施要求：EC02、SR-013 统一新 Parser/BuildRequest/Binding；F09/SR-016、SR-025 重写新版本验收；F02/F03/F03.05/F04/F06/F08 修正新旧规范冲突；SR-005～011 分开四类依赖、定义模块 AC；SR-012 和 SR-017～023 明确设计移交的独立静态 AC。设计评审与实际发布、实施和系统 E2E 分离，**当前 23 项实施 SR 仍为 DRAFT**；新 1.6.0 机器 Schema、正式 Owner/Compiler/Bundle 发布物尚未交付，产品验收 NOT_RUN。
+本轮 #46 以 1.6.0-only 的规范性内容实际替换旧 Compiler/Studio/Publisher 实施要求：EC02、SR-013 统一新 Parser/BuildRequest/Binding；F09/SR-016、SR-025 重写新版本验收；F02/F03/F03.05/F04/F06/F08 修正新旧规范冲突；SR-005～011 分开四类依赖、定义模块 AC；SR-012 和 SR-017～023 明确设计移交的独立静态 AC。设计评审与实际发布、实施和系统 E2E 分离，**当前 24 项实施 SR 仍为 DRAFT**；新 1.6.0 机器 Schema、正式 Owner/Compiler/Bundle 发布物尚未交付，产品验收 NOT_RUN。
 
 ## 4. 当前基线说明
 - SR-002 设计 PR [#20](https://github.com/odango-chan/ca-agent-next/pull/20) 已 MERGED（`281ccb957b9222e72175e210d1afed177aa8a14f`）；实施 PR [#23](https://github.com/odango-chan/ca-agent-next/pull/23) 已 MERGED（`49964464e19d13d219ea0b3513d2223fe81d2435`）；设计 Issue #19 与治理 Issue #21 已关闭。SR-002 为 VERIFIED，AC-002-01～08 PASS；EX-01、CPython 3.11/3.12/3.13 矩阵及 DeepSeek Harness 仍 NOT_RUN。实施 Issue [#22](https://github.com/odango-chan/ca-agent-next/issues/22) 由本次证据回填 PR #25 合并关闭。
@@ -131,7 +133,7 @@
 - 设计来源：ca-agent-next PR #1 的架构、设计、规范和 Acceptance 文档。
 - PR #1：已合并；只代表设计文档变更。
 - Next Runtime：README 声明尚无已验收 Runtime 实现。
-- 当前 28 项 SR 中 4 VERIFIED（SR-001/002/003/024）、1 IMPLEMENTED（SR-015）、23 DRAFT（其中 SR-029 设计待评审）；SR-013 归档 PoC 不改变 DRAFT；SR-009 只覆盖 Event/Delivery Plugin/staging，SR-010 覆盖 Host ArtifactStore、Channel、Provider v2 Driver/Codec。
+- 当前 29 项 SR 中 4 VERIFIED（SR-001/002/003/024）、1 IMPLEMENTED（SR-015）、24 DRAFT（其中 SR-029 设计待评审）；SR-013 归档 PoC 不改变 DRAFT；SR-009 只覆盖 Event/Delivery Plugin/staging，SR-010 覆盖 Host ArtifactStore、Channel、Provider v2 Driver/Codec。
 - Issue #12 追踪本轮中央设计资产恢复；PR #11/#13/#15/#16/#18 均在独立分支 OPEN/DRAFT，恢复分支已同步可复用的最新文档内容但尚未创建 PR；PR 状态不等于 SR 实施状态。
 - 恢复分支 docs/restore-original-designs-20261125 尚未创建指向 main 的总 PR；SR-002 设计 PR #20 与实施 PR #23 均已合并到恢复分支，SR-002 为 VERIFIED、AC-002-01～08 PASS；EX-01 仍 NOT_RUN。该恢复分支尚未合并 main。
 - ca-agent-demo、ca-client-tools、ca-skill-compiler、ca-skills 和 ca-openamsm-plugin 的现有代码/PR 只能作为外部复用或依赖证据，不能自动算作 Next SR 已实施。
@@ -192,3 +194,4 @@
 | 2026-11-26 | 0.3.39 | GPT-6（ChatGPT） | Phase C、修订记录 | 将 SR-004 最新待评审版本对齐 v0.2.7；维持 28 项 SR（4 VERIFIED / 1 IMPLEMENTED / 23 DRAFT） | 不把审核状态误认为下游实施 READY | Issue #40/#43；PR #45 |
 | 2026-11-26 | 0.3.40 | GPT-6（ChatGPT） | 文档头、设计评审、修订记录 | 为全部 23 项 DRAFT SR 建立独立设计待评审矩阵；实施状态统计仍为 4/1/23 | 明确评审请求与实施 READY 独立，不假设 1.6.0 外部产物已发布 | Issue #12/#40/#43；SR-004～SR-029 |
 | 2026-11-26 | 0.3.41 | GPT-6（ChatGPT） | 现行 1.6.0 权威设计与审核追踪 | 与 #46 实质设计整改一致，更新当前版本、Owner 1.6.0 Publisher 和模块 AC 边界 | 消除旧 Development 1.0.0 误导与设计/实施状态混淆 | Issue #12/#40；PR #46 |
+| 2026-11-26 | 0.3.42 | GPT-6（ChatGPT） | SR 清单、设计待评审矩阵、Publisher 顺序与修订记录 | 将新增 SR-030 纳入唯一 1.6.0 Host Context Schema-only Publisher；把 SR-024 明确标为历史 v1alpha5 Publisher；统计更新为 29 项 SR / 4 VERIFIED / 1 IMPLEMENTED / 24 DRAFT | 避免把旧 Development Publisher 的 VERIFIED 误认为新版 Schema-only Package 已发布 | Issue #12/#40；SR-024、SR-030；PR #46 |
