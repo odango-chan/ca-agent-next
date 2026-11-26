@@ -1,8 +1,8 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.7  
-> 状态：待评审  
+> 文档版本：0.3.8  
+> 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
 > 修订日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级准入、额外 package-level digest、签名和 Trust Registry；仅保留 Compiler v2.1.0 Interface Package schema 明确要求的 `files[].sha256`  
@@ -161,6 +161,30 @@ Package Explorer、LSP、Problems 与 AI Workbench 必须区分源码诊断、�
 
 EC06 历史决策已统一归档于中央仓：[ADR-0001 Source-first Visual](../../决策记录/EC06-ADR-0001-Source-first-Visual.md)、[ADR-0002 IDE Host Spike](../../决策记录/EC06-ADR-0002-IDE%20Host%20Spike.md)、[ADR-0003 Theia 原生工作台与 Markdown](../../决策记录/EC06-ADR-0003-Theia原生工作台与Markdown.md)、[ADR-0004 Package 优先工作区](../../决策记录/EC06-ADR-0004-Package优先工作区.md)、[ADR-0005 固定源码与预览工作台](../../决策记录/EC06-ADR-0005-固定源码与预览工作台.md)。Classic 为历史迁移证据。原始设计材料包括 [Studio boundaries](../../架构设计/外部能力域/EC06-Skill%20Studio所有权与源码边界原文.md)、[Authoring Workbench](../外部能力域/EC06-Skill%20Studio/Authoring%20Workbench设计原文.md)、[Plugin-managed Configuration v0.1](../外部能力域/EC06-Skill%20Studio/Plugin-managed%20Configuration%20%26%20Tool%20Integration%20v0.1原文.md) 和 [C4 Package Overview](../外部能力域/EC06-Skill%20Studio/C4%20Package%20Overview原文.md)；当前目标设计仍以本文为准。
 
+## 9. Capability-first Package Explorer 与 LSP
+
+### 9.1 唯一能力入口
+
+Skill Studio 的 Package Explorer 以 Capability 作为唯一 Skill-facing 能力导航入口。Package 依赖仍按 Package 分组；Package 内显示 Capability，不再并列展示 Tools / Operations / Callable 树。Capability 详情可显示描述、kind、Effect、Input/Output Schema、Evidence 和来源 Package；Callable ID 只允许出现在内部 Binding 详情或编译诊断，不作为可选择的作者节点。
+
+### 9.2 语言服务
+
+1.6.0 LSP / Completion 对 Contract.capabilities、operation.capability、observation.capability 提供 Capability ID 补全、悬停、定义跳转和静态诊断。补全来源是已导入并固定的 Package Capability exports，不是运行时 Provider catalog。Compiler 仍是 Capability membership、唯一性、Schema、Evidence、Scope 的最终 Link 权威；LSP 不得把本地投影诊断显示为 Compiler Build PASS。
+
+### 9.3 AI Authoring
+
+AI Authoring 的 Change Set 只能新增或修改 Capability ID、Procedure arguments 和其他 CA-SL 作者字段；不得生成 Callable ID、backendOperationId 或动态 Provider 选择。Apply 后使用同一语言服务和 Compiler BuildRequest / Verify 路径重新检查。
+
+### 9.4 版本与导入
+
+- 历史 v1alpha5 Package / Skill 快照只读归档，不进入新版 Studio，也不提供迁移。
+- 1.6.0 Package 必须声明唯一 languageTarget，并使用满足一对一约束的 Capability exports。
+- Studio 只支持 1.6.0 项目，不提供历史项目兼容读取或版本 fallback。
+- 当前 Studio #267/#269 的既有实施状态不因本设计自动升级；Capability Explorer、LSP 和新 Package 消费仍是未实施目标。
+
+**1.6.0-only 待评审硬门槛：** 新 Studio 仅接受 1.6.0 项目，旧项目不兼容、不自动迁移；此处只是目标设计，产品和 E2E 均 NOT_RUN。
+
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
@@ -176,3 +200,4 @@ EC06 历史决策已统一归档于中央仓：[ADR-0001 Source-first Visual](..
 | 2026-11-25 | 0.3.5 | GPT-6.2（ChatGPT） | §4.5、§6～7 | 将 MAS Owner Publisher 独立归入 SR-025、Host Publisher 归入 SR-024；按 Compiler v2.1.0 修正 MAS exports 为 25/24/25/53；发现 v1alpha4/v1 非 SemVer，提出 package/source version 分离决策门槛 | 防止发布无法被 Development Build 接受的版本，同时保持 Owner/Host 源身份与 Studio lock 边界 | IR-006 · SR-015 · SR-016 · SR-024 · SR-025 · Studio #269 |
 | 2026-11-25 | 0.3.6 | Codex / GPT-6 | 正文 | 同步两个 Publisher 的 1.0.0 身份与消费边界 | Issue #12 |
 | 2026-11-25 | 0.3.7 | Codex / GPT-6 | 正文 | §4.5 依据 v2.1.0 源函数实测修正 +build 与项目包身份限制 | Issue #12 |
+| 2026-11-26 | 0.3.8 | GPT-6（ChatGPT） | 新增 1.6.0 目标设计 | 仅支持新版本，无兼容或迁移 | Issue #40；SR-029 |
