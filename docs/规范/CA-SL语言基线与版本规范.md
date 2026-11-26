@@ -1,8 +1,8 @@
 # CA-SL 语言基线与版本规范
 
 > 文档类型：语言版本与运行时消费规范  
-> 文档版本：0.2.2  
-> 状态：CA-SL v1alpha5 FROZEN / RELEASED；Compiler when 运行时 Artifact 尚未完成  
+> 文档版本：0.2.3  
+> 状态：CA-SL v1alpha5 FROZEN / RELEASED；v1alpha6 Capability-first 仅为 Next 设计候选、尚未发布；Compiler when Runtime Artifact 尚未完成  
 > 修订日期：2026-11-26  
 > 关联 IR：IR-003、IR-006；SR-023、SR-013  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -10,7 +10,7 @@
 
 ## 1. 当前正式语言基线
 
-当前唯一语言目标为 connectionagent.io/v1alpha5，不引入旧版兼容映射或新的 v1alpha6。
+当前唯一已发布语言目标仍为 connectionagent.io/v1alpha5；SR-029 定义的 connectionagent.io/v1alpha6 是破坏性候选目标，尚未发布。v1alpha5 不做兼容映射或自动迁移。
 
 完整规范正文已迁入 Next：[CA-SL v1alpha5 完整语言规范](CA-SL%20v1alpha5完整语言规范.md)。迁移来源是 ca-skills 发布规范提交 18d8184367982ccbc835756136c4a53f9096c3a0；ca-skills PR #88（规范刷新）和 PR #89（发布记录固定）均已合并。
 
@@ -63,6 +63,19 @@ CA-SL 语义变化必须：
 
 不引入旧版兼容、Agent 内置 Compiler、运行期编译、独立 Skill Admission、审批、签名、Trust Registry、额外 SHA-256 或第二套选择条件语言。
 
+## 6. Capability-first 作者接口目标（CA-SL v1alpha6 候选）
+
+本节定义 Next 的下一版作者接口目标，不修改已发布的 CA-SL v1alpha5 规范正文或发布身份。
+
+- 当前发布基线不变：connectionagent.io/v1alpha5 仍为唯一已发布语言版本；其 operation.tool / observation.tool 对 Alias::ExportId 的语义保持冻结。v1alpha5 作者源、Compiler v2.1.0 历史发布物和 Golden 不得被静默重解释。
+- 目标候选：connectionagent.io/v1alpha6。该版本把 Skill-facing 外部调用入口从 Callable ID 改为 Capability ID；这是破坏性语言变更，必须使用新的 languageTarget 和新的作者源发布，不提供 v1alpha5 兼容别名、自动迁移或双语法解析。
+- Contract.capabilities 只包含 Capability ID。Procedure 的外部 Operation 使用 operation.capability；Observation 使用 observation.capability。两者均只写 Capability ID，不写 dependency alias::Callable ID。
+- dependencies 仍声明精确的 Owner / Provider Interface Package 依赖。Compiler 在已声明依赖闭包中解析 Capability ID，必须且只能命中一个 Capability export；重复 ID 或跨包歧义 fail-closed。依赖 alias 不再进入 Procedure 的 Capability 引用。
+- Operation / Observation 仍是 Procedure Node 的阶段，不新增 Operation ID。Callable 的 kind 决定阶段匹配：operation.capability 只能链接 kind=operation；observation.capability 只能链接 kind=observation。Effect、Schema、Evidence、Scope 仍由权威 Package 契约提供，Skill 不得覆盖。
+- operation.script、Predicate、Precondition、Postcondition、Wait、when、requestSchema 的既有语义不因本次 Capability-first 变更而改变。
+- 新版 Compiler Runtime Artifact 必须携带编译期解析的 Capability Binding；旧冻结 Artifact v1alpha5 不得加字段。Artifact API / BuildResult API 的新版本候选及文件布局见 EC02 Compiler 与 SR-013；Owner Gate 完成前仍是候选，不是已冻结 API。
+- v1alpha6 尚未在 ca-skills 发布，Compiler、Runtime、Studio 也尚未实现该语义。只有规范发布、Compiler API/Golden 和消费端验收全部切换后，才可把 v1alpha6 标记为正式发布。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
@@ -71,3 +84,4 @@ CA-SL 语义变化必须：
 | 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | §1–5 | 核对 #88/#89 合并状态，迁入完整规范正文，明确源仓状态差异与 Compiler #61 未完成边界 | Issue #12；SR-023；SR-013 |
 | 2026-11-25 | 0.2.1 | Codex / GPT-6 | 正文 | §4 对齐中央设计与语言发布责任 | Issue #12 |
 | 2026-11-26 | 0.2.2 | Codex / GPT-6 | 见本行变更 | 区分数字版本的新发布物和固定来源的实际机器标识 | Issue #12 |
+| 2026-11-26 | 0.2.3 | GPT-6.2（ChatGPT） | §1、§4、§6 | 明确 v1alpha5 冻结与 v1alpha6 Capability-first 候选边界；不改写已发布规范 | Skill 作者接口从 Callable 切换到 Capability 需要新 languageTarget | IR-008；SR-029；Issue #40 |

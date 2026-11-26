@@ -33,7 +33,7 @@ DeepSeek Harness 默认使用 Goal 模式。按[SR 管理规范](docs/规范/SR%
 ## 3. 不可违反的架构约束
 
 - 全系统只有一个 Plugin Manager；Plugin 是独立包/进程，可导出 Event ingress、Event delivery、Tools Extension。
-- Tool 是 Plugin 导出的 Callable Operation，不是独立进程、Manager 或 Registry。
+- Tool 是 Plugin 导出的 Callable Operation，不是独立进程、Manager 或 Registry。Skill-facing 作者接口以 Capability 为唯一能力入口；Callable ID 只用于 Package / Compiler / Runtime 内部绑定，不由模型选择。
 - 不建立第二 Provider Manager、Tool Registry、Codec Manager、Event Registry 或第二套 IPC。
 - 每个 Skill 必须有 SKILL.md；Assurance 可选。无 Assurance 仅 LLM-guided；有效发布 Artifact 支持 Deterministic 和 LLM-guided；无效发布 Artifact 导入失败。
 - when 是可选 Assurance Contract 的纯 CEL Skill 选择表达式；predicates.yaml 只用于执行期业务判断。
@@ -41,6 +41,9 @@ DeepSeek Harness 默认使用 Goal 模式。按[SR 管理规范](docs/规范/SR%
 - Skill 选择先于模式选择；精确 Continuation 恢复原 Run，不重新选择 Skill。
 - SkillCatalog 由 Core/Host 拥有；更新原子切换 generation；在途 Invocation 固定 generation。
 - Deterministic 与 LLM-guided 共用 Runtime Action Boundary；LLM 不得直接调用 Plugin 或扩大 Callable Scope。
+- Skill-facing Capability ↔ Callable 必须双向一对一；Provider 可在一个公开 Callable 内按封闭 Schema selector 使用多个私有 backendOperationId，不得暴露多个 Callable 供 LLM 选择。
+- CA-SL v1alpha5 已发布语义保持冻结；Capability-first 仅作为 v1alpha6 候选，未发布前不得声称可用，不做旧版兼容或自动迁移。
+- MAS.RECONCILE 是 Runtime internal-only Reconcile target，不是 Skill-facing Capability；普通 Skill / LLM Action 必须在 Provider IPC 前拒绝。
 - Owner Receipt / Commit Proof 是 mutation 结果权威；HTTP 200、IPC 成功或 Delivery 成功不能替代；UNKNOWN 不得变成 COMMITTED。
 - SBI 可携带 JSON、multipart 和二进制。Event Plugin 处理协议；Host 管理 ArtifactStore；Codec 按需作为现有 Tool Plugin 的 Operation 调用。
 - Event/Delivery Plugin 本地 staging 与 Host→Tool Artifact Channel 是两条不同路径。ca-host.artifact-store/v1 已冻结；ca-client-tools Provider v1.2.0 已实现消费，ca-agent Go Host main 447d0cc 有 P1 验收证据。Next Python Host 的 ArtifactStore / Channel 尚未实现，因此 Next 的 artifact-bearing Provider binding 仍必须 NOT_CONFIGURED，并在远端 I/O 前拒绝。必须遵循 v1 的随机 opaque artifactRef、Invocation/direction/slot 绑定、loopback HTTP/1.1 通道、大小/生命周期限制、逐 Artifact SHA-256 传输校验和原子发布；该 SHA-256 不是引用身份或内容寻址。不得把 Event stagingPath 传给 Provider，不得将原始 bytes/Base64 放入 NDJSON。
@@ -167,3 +170,4 @@ review_scope:
 | 2026-11-25 | Codex | 第 2 节 | 引用固定 PR SHA 的分阶段实施规则 | 支持先验证再定稿 | SR-013、PR #7 |
 | 2026-11-25 | GPT-6.2（ChatGPT） | 第 3、4、7 节 | 更正 ca-host.artifact-store/v1 已冻结、Provider/Go Host 外部实现已存在、Next Python Host 尚未实现的三层状态；明确 SHA-256 仅为既有协议传输校验 | 消除 F05、F03.05 与源仓实现状态冲突，避免把外部 PASS 计入 Next | F05、F03.05、SR-009、SR-010；Issue #12 |
 | 2026-11-26 | GPT-6.2（ChatGPT） | 第 1、2、5 节 | 明确设计/实施/AC/EX 分阶段门禁，分离设计与实施 Issue，并要求实施 Commit/Push 后核对远端 SHA | 防止独立 SR 被无关下游依赖或系统级 EX 阻塞，并确保交付可追溯 | Issue #21；SR 管理规范 §6.1；PR #20 |
+| 2026-11-26 | GPT-6.2（ChatGPT） | 第 3、5 节 | 加入 Capability-first / Callable 一对一、Reconcile internal-only 与 v1alpha5 / v1alpha6 版本边界 | 避免模型选择内部调用身份，保持跨仓作者与运行时契约一致 | IR-008；SR-029；Issue #40 |

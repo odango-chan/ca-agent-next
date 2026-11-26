@@ -1,9 +1,9 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录  
-> 文档版本：0.1.22  
+> 文档版本：0.1.23  
 > 修订日期：2026-11-26  
-> 状态：7 项 IR；IR-007 登记 Python 工程工具链统一需求，SR-028 为 DRAFT。  
+> 状态：8 项 IR；IR-008 登记 Capability-first Skill 作者接口与 Callable 一对一需求，SR-029 为 READY（中央设计；代码未实施）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级需求管理平台
 
@@ -40,6 +40,7 @@ IR 编号稳定。GitHub Issue 用于讨论、分派和跟踪，一个 IR 可关
 
 - 协作 Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)（EC02 外部实现）；[Next #14](https://github.com/odango-chan/ca-agent-next/issues/14) 跟踪中央设计文档刷新；[PR #16](https://github.com/odango-chan/ca-agent-next/pull/16) 为对应 Draft 文档评审，不代表实施。
 - 实施分解：[SR-004](../SR/SR-004-已发布技能包导入.md)、[SR-005](../SR/SR-005-技能目录与条件程序消费.md)、[SR-006](../SR/SR-006-技能解析器与续跑选择.md)。
+- Capability-first 语言 / Artifact 目标：[SR-029](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md)（IR-008；v1alpha6 候选；when 语义保持不变）。
 - 架构、设计和规范：[Skill管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md)、[技能与确定性保障格式规范](../规范/技能与确定性保障格式规范.md)、[Runtime执行设计说明书](../设计说明书/F04-Runtime执行/Runtime执行设计说明书.md)。
 - 完成依据：对应 SR 的必需验收全部 VERIFIED；当前均为 DRAFT，证据未执行。
 
@@ -99,6 +100,18 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 - 实施范围：首批仅覆盖 `ca-agent-next` 根 Python 项目；其他仓库采用 uv 或迁移依赖管理须各自登记目标仓、基线、Issue 和 SR。
 - 完成依据：SR-028 的全部必需验收在目标仓真实执行并 VERIFIED；设计评审或锁文件生成本身不代表实施完成。
 
+## IR-008
+
+**Capability-first Skill 作者接口与 Callable 一对一契约**
+
+Skill 作者应声明业务 Capability，而不是直接引用 Owner / Provider Callable ID。每个 Skill-facing Capability 必须唯一映射一个公开 Callable；Provider 可在内部使用多个私有 backendOperationId 实现一个公开 Callable。该需求统一 CA-SL 作者语法、Owner / Provider Package、Compiler Link、Runtime Action Boundary 和 Skill Studio 能力入口。
+
+- 协作 Issue：[Next #40](https://github.com/odango-chan/ca-agent-next/issues/40)（中央设计与规范刷新；不是代码实施 Issue）。
+- 实施分解：[SR-029](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md)（READY；中央设计已闭合，下游实施 SR 需按目标仓另行登记）。
+- 关联需求：IR-003（新版 Runtime Artifact、when / Request Schema 与 Skill 消费链路）。
+- 设计入口：F02、F03.05、F04、EC02 Compiler、F06、F08、F09；CA-SL v1alpha5 保持冻结，v1alpha6 仅为未发布候选。
+- 完成依据：后续目标仓 SR 的 Package cardinality、CA-SL、Compiler Build / Verify、Runtime、Studio 和 OpenAMSM Create → Modify → Release 必需验收全部 VERIFIED；本 IR 登记和设计 READY 不代表下游实现完成。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
@@ -127,3 +140,4 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 | 2026-11-26 | 0.1.20 | GPT-6.2（ChatGPT） | IR-007 | 将 G02/SR-028 引用升级到 v0.1.2，记录精确 Python 文件内容、setup-uv 配置和可复现边界 | 使需求登记册指向最新可执行设计基线 | Issue #35；G02 v0.1.2；SR-028 v0.1.2 |
 | 2026-11-26 | 0.1.21 | GPT-6.2（ChatGPT） | IR-001 | 根据 PR #32 合并、80 项测试及 AC 证据更新 SR-001 完成依据 | 此前 PR OPEN 的历史状态已过期 | Issue #27；PR #32；PR #36 |
 | 2026-11-26 | 0.1.22 | GPT-6.2（ChatGPT） | IR-002、IR-006 | 回填 SR-003 设计 READY / 实施 IN_PROGRESS 及 PR #34 本地模块 AC 证据；回填 SR-024 PR #253 合并、Issue #252 关闭和 VERIFIED 状态 | 修正需求登记册中 SR-003 DRAFT、SR-024 未记录实施结果的过期状态；不把未合并 PR 或 SKIPPED checks 误报为已集成/CI PASS | Issue #12、#28；SR-003；SR-024；PR #34；ca-agent-demo #252/#253 |
+| 2026-11-26 | 0.1.23 | GPT-6.2（ChatGPT） | IR-003、IR-008 | 登记 Capability-first Skill 作者接口与 Callable 一对一需求，并将 SR-029 关联到新版 Artifact / when 消费链路 | 防止 Callable ID 继续成为 Skill 作者和模型可选择接口 | Issue #40；IR-008；SR-013；SR-029 |

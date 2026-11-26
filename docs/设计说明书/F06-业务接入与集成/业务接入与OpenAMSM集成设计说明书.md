@@ -1,8 +1,8 @@
 # 业务接入与 OpenAMSM 集成设计说明书
 
 > 文档类型：业务集成设计说明书  
-> 文档版本：0.2.5  
-> 状态：目标集成设计已重建；外部 Owner 能力已实现，Next Plugin/Host 端到端尚未验收  
+> 文档版本：0.2.6  
+> 状态：现行 v1alpha5 OpenAMSM 代码与证据保持不变；v1alpha6 Capability-first 目标映射已补充，未实施  
 > 功能归属：F06 — 业务接入与集成；EC04、EC05、EC07  
 > 关联 IR：IR-004、IR-005、IR-006  
 > 关联 SR：SR-009、SR-010、SR-011、SR-017、SR-018、SR-019  
@@ -224,6 +224,72 @@ ca-skills `780497a2` 的三个 MAS `examples/skills/*-pdu-session-mas/assurance/
 
 `ca-agent-demo@57e277ff/src/ca_agent_host/integrations/fivegc/nsmf_http.py::_create_request` 对 `INITIAL_REQUEST` 投影为 1，从 N1 解出 PDU Session Type 与 SSC mode，并拒绝客户端在 SBI JSON 中注入同名字段。它还交叉检查 N1 与 JSON 的 PSI。当前 MAS Create 又在选择前要求这些字段。仅移植最小 discriminator 不能满足该契约。应在 ca-skills 的作者契约和 Procedure 中区分选择输入与绑定后的业务读取，由已声明的 Owner/Codec READ 根据原始 Artifact 获取后者。实施前把每个字段的来源、读取操作、Schema 和消费者写入同一 fixture，以固定作者 revision 验证；若没有已发布的所需 READ，保留该依赖的 BLOCKED。稳定重试与共享 /modify 路径的分类可用独立 fixture 先验收。
 
+## 13. OpenAMSM Capability-first Skill 映射（v1alpha6 目标）
+
+本节定义未来 v1alpha6 作者源映射；当前 ca-skills main 的 v1alpha5 Procedure 仍使用冻结的 tool: mas::Callable 语法，不在本仓或下游仓自动改写。
+
+### 13.1 Create
+
+~~~yaml
+record-session-establishment-event:
+  operation:
+    capability: mas.se.establishment-event.record
+    arguments:
+      ue_identity: context.supi
+      psi: context.request.pduSessionId
+      event: "ESTABLISHED"
+      sessionKeys: create-sm-context.operation.output.session_keys
+~~~
+
+该 Capability 唯一映射 Owner Callable SE.EMIT_EVENTS，保留 ESTABLISHED 输入 Schema 和 se.establishment-event-recorded Evidence Guarantee。
+
+### 13.2 Modify
+
+~~~yaml
+apply-qos-delta:
+  operation:
+    capability: mas.upn.up.qos.delta
+    arguments:
+      ue_identity: context.supi
+      psi: context.request.pduSessionId
+      qos_flows_delta: "1"
+      qfi: parse-n1.operation.output.qfi
+      five_qi: parse-n1.operation.output.five_qi
+      gfbr_ul: parse-n1.operation.output.gfbr_ul
+      gfbr_dl: parse-n1.operation.output.gfbr_dl
+      mfbr_ul: parse-n1.operation.output.mfbr_ul
+      mfbr_dl: parse-n1.operation.output.mfbr_dl
+~~~
+
+Modify 的 Goal、Owner Receipt、QoS Delta 和 N1/N2 语义不变；仅把 Skill-facing Callable 引用改为 Capability。
+
+### 13.3 UE-requested Release
+
+~~~yaml
+emit-release-event:
+  operation:
+    capability: mas.se.release-event-marker.write
+    arguments:
+      ue_identity: context.supi
+      psi: context.request.pduSessionId
+      ev: "RELEASED"
+~~~
+
+该 Capability 唯一映射 Owner Callable SE.EMIT_RELEASE_EVENT_C，保留 RELEASED 输入 Schema 和 se.release-event-marker-written Evidence Guarantee。它与 Create 的建立事件 Capability 分离，不把本地释放标记描述为外部 Delivery。
+
+### 13.4 Provider Observation
+
+Provider 的 SMF Context Read 和 NF Metrics Read 分别使用一个 READ Observation Capability，并通过封闭 selector 选择查询资源：
+
+- openamsm.smf.mas.context.read：contextKind 为 sc / pa / upn / ssm / iam / ups / ca / saa。
+- openamsm.nf.metrics.read：resourceKind 为 amf.ue-info / amf.gnb-info / smf.pdu-info。
+
+selector 是公开 Callable Input Schema 的字段；11 个旧 backendOperationId 保留在 Provider 内部，不进入 Skill 源。
+
+### 13.5 业务流程不变
+
+Create → Modify → Release 的顺序、Owner authoritative state、Receipt / Commit Proof、UNKNOWN / Reconcile、N1/N2 generation 和 Evidence Goal 均保持现有定义。此次只改变 Capability / Callable 契约表达，不重写 5GC 业务流程，也不声明新 E2E 已通过。
+
 ## 修订记录
 
 
@@ -236,3 +302,4 @@ ca-skills `780497a2` 的三个 MAS `examples/skills/*-pdu-session-mas/assurance/
 | 2026-11-26 | 0.2.3 | Codex / GPT-6 | 见本行变更 | §2、4、6、7 校正候选判定、HTTP 响应义务和真实 Owner Callable；§12 增补 EC04 固定协议来源、请求投影与独立复验 | 历史记录未单独分列原因 | Issue #12 |
 | 2026-11-26 | 0.2.4 | Codex / GPT-6 | 见本行变更 | 补足 Create 的真实 NAS 字段来源及跨仓设计缺口；补齐正式文档的评审范围与非目标；明确可控 peer/Plugin 的重试身份；§7 依据 Owner catalog 区分确认 mutation 和 Wait READ | 历史记录未单独分列原因 | Issue #12 |
 | 2026-11-26 | 0.2.5 | GPT-6.2（ChatGPT） | §4、§8 | 同步冻结 v1alpha5 Capability Build-time / Runtime 边界及 MAS.RECONCILE internal-only 保证 | 让 OpenAMSM 业务集成流程引用 F03.05 的唯一 Tool/Provider Runtime 设计 | IR-006 · SR-015 · Issue #12 |
+| 2026-11-26 | 0.2.6 | GPT-6.2（ChatGPT） | §13 | 补充 Create / Modify / Release Capability 映射、事件语义拆分与 Provider Observation selector | 让真实 MAS 示例使用统一 Capability-first 作者入口而不改变业务语义 | IR-008；SR-029；Issue #40 |

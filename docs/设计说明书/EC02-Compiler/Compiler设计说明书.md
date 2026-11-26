@@ -1,7 +1,7 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.2.7\
-> 状态：设计补充待评审；Compiler 实施由 SR-013 跟踪  
+> 文档版本：0.2.8\
+> 状态：Compiler v2.1.0 / CA-SL v1alpha5 历史发布不变；Artifact v2 / BuildResult v2 的唯一新目标为 v1alpha6，Capability Binding 尚未实现  
 > 修订日期：2026-11-26  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产准入、Owner 信任运营、签名、Trust Registry、生产资格及真实 5GC/MAS 认证。
@@ -162,7 +162,7 @@ AC-013-01 报告采用 Go 1.26.6、cel-go 0.33.2、Go protobuf 1.36.10、CPython
 
 - connectionagent.io/compiler-artifact/v1alpha5 保持完全不变。
 - Development v1alpha1 保持完全不变并继续 NOT_ADMITTED。
-- 新发布 Runtime Artifact 使用独立版本化 Manifest/文件布局，languageTarget 仍为 connectionagent.io/v1alpha5。
+- 新发布 Runtime Artifact 使用独立版本化 Manifest/文件布局，languageTarget 目标更新为 connectionagent.io/v1alpha6；v1alpha5 已发布 Artifact / Golden 保持冻结。
 - 建议的新 Artifact API 候选为 connectionagent.io/compiler-artifact/2；对应的新 BuildResult API 候选为 connectionagent.io/compiler-build-result/2。**两者均为本设计提案，不是已冻结 API。** 新 Runtime Build 入口复用当前 BuildRequest API connectionagent.io/compiler-build-request/v1alpha5；DependencyInspection API connectionagent.io/compiler-dependency-inspection/v1alpha5 不变，除非代码审计证明输入 DTO 必须变化。新 Compiler 版本的正式 Runtime Build 只产生 2 BuildResult / Artifact，VerifyBuildResult 只接受该结果契约；不在同一二进制中双轨支持旧/新 Runtime BuildResult，不增加版本 dispatch、fallback 或兼容路由。旧 v2.1.0 Release 及其 Artifact/BuildResult v1alpha5 保持不可变历史发布。Development Build 继续使用其独立 v1alpha1 API/Artifact 家族，不因 when 扩展。AC-013-03 开始前 Compiler Owner 必须书面确认两个新 API version；如采用其他命名，先更新本节和 SR-013，再实施。Harness 不得自行发明第三个版本名。
 - 不把 Development 专用 executionStatus=NOT_ADMITTED、hostAdmission 或 Skill Admission 状态写入新发布 Runtime Artifact。
 
@@ -290,6 +290,58 @@ Chromium parity 脚本使用真实 Headless Chrome；若默认路径不可用，
 - AC-013-05 Compiler Release 资产：依赖 AC-013-01～04 和单独发布授权，BLOCKED。
 - SR-013 整体保持 DRAFT；本设计补充不代表 Compiler 产品代码已实施、PR 已合并或 Release 已发布。
 
+## 10. Capability 静态链接与 Runtime Artifact v2 绑定
+
+### 10.1 输入语义
+
+本节是 SR-029 对现有 Artifact v2 候选的增量要求。新候选只面向 CA-SL v1alpha6；v1alpha5 / Compiler v2.1.0 已发布路径保持冻结，Development v1alpha1 继续 NOT_ADMITTED。
+
+Contract.capabilities 是 Capability Grant 列表；Procedure 的 operation.capability / observation.capability 是使用点。dependencies 仍提供精确 Owner Contract / Provider Interface Package 快照。Skill 作者源不出现 Callable ID。
+
+### 10.2 Link 算法
+
+Compiler 对每个 Procedure Capability 使用点执行以下确定性步骤：
+
+1. 校验 Capability ID 格式，并确认它已列在同一 Skill Contract.capabilities 中。
+2. 在该 Skill 的显式 dependency closure 中查找 Capability export；必须恰好命中一个 Package。零个报 CAPABILITY_UNRESOLVED；多个报 CAPABILITY_AMBIGUOUS。
+3. 读取该 Capability 的公开 Callable membership；数量必须恰好为 1。零个或多个报 CAPABILITY_CALLABLE_CARDINALITY_INVALID。
+4. 检查该 Callable 只归属一个 Skill-facing Capability；重复归属报 CALLABLE_CAPABILITY_CARDINALITY_INVALID。
+5. 在同一 Package / Owner 的 ToolCatalog 中解析 Callable；Owner、ID、kind、Effect、Input/Output Schema 必须唯一一致。
+6. operation.capability 必须匹配 kind=operation；observation.capability 必须匹配 kind=observation 且 Effect=READ。Operation Effect 由 ToolCatalog 决定，不由 Skill 声明。
+7. 复用现有 Schema closure、Evidence、Scope identity / provenance、Mutation Receipt / Commit Proof / Reconcile 校验；Reconcile 不作为普通 Capability 导出。
+8. 对未被任何 Procedure 使用的 Grant 报 CAPABILITY_GRANT_UNUSED；不得因未使用而保留隐式授权。
+
+Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId。Provider 内部的多 handler 路由由 Callable 的封闭 Input Schema 决定。
+
+### 10.3 Artifact v2 Capability Binding
+
+既有候选 API connectionagent.io/compiler-artifact/2 与 connectionagent.io/compiler-build-result/2 保持候选名称；本次将其唯一 languageTarget 更新为 connectionagent.io/v1alpha6。它们尚未通过 Compiler Owner Gate，不是已冻结 API。BuildRequest v1alpha5 是否保持不变按 SR-013 的 DTO 审计与 Owner Gate 决定。
+
+每个 Skill 的 Manifest 增加 capabilityBindings[]。每项至少包含：
+
+- capabilityId：作者源使用的 Capability ID；
+- dependencyId / stablePackageId：解析来源；
+- owner 或 publisher identity：所属契约权威；
+- callableId：唯一内部 Callable ID；
+- kind / effect：ToolCatalog 或 Interface Package 的规范值；
+- inputSchemaRef / outputSchemaRef：对应 Package 的精确 Schema 引用。
+
+编译后的 Procedure 节点保留 capabilityId；capabilityBindings[] 是 capabilityId 到 callableId 的唯一内部映射。Manifest 的 dependencyClosure.exports[] 仍列出精确 operation / observation Callable exports，Runtime 继续从该闭包建立 Callable allowlist。Capability ID 不是运行时模型选择器；Callable ID 不暴露给模型。
+
+### 10.4 稳定诊断与失败行为
+
+至少定义以下稳定诊断：CAPABILITY_UNRESOLVED、CAPABILITY_AMBIGUOUS、CAPABILITY_NOT_GRANTED、CAPABILITY_GRANT_UNUSED、CAPABILITY_CALLABLE_CARDINALITY_INVALID、CALLABLE_CAPABILITY_CARDINALITY_INVALID、CAPABILITY_PHASE_KIND_MISMATCH、CAPABILITY_SCHEMA_MISMATCH、CAPABILITY_BINDING_MISSING。
+
+任何 Capability Link、Schema、Evidence、Scope 或 Artifact 装配错误均返回完整诊断和空 OutputFiles，不生成部分 Artifact。禁止 fallback 到 v1alpha5、Development 或动态 Provider catalog。
+
+### 10.5 不变量
+
+- v1alpha5 已发布 Artifact / Golden 和 Compiler v2.1.0 不变。
+- 新 Artifact v2 只支持 languageTarget v1alpha6；不在同一新 Compiler 中双轨支持 v1alpha5 / v1alpha6。
+- Development v1alpha1 Schema / Golden 不变并继续 NOT_ADMITTED。
+- 不增加包级 hash、签名、Trust Registry、Admission 或新的 Capability Manager；复用现有 Package identity、Schema 和文件清单机制。
+- 本节由 SR-029 设计；SR-013 继续跟踪 when / Request Schema / Build / Verify / Release 的 Compiler 实施，AC-013-03 必须消费本节唯一 Artifact v2 目标。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
@@ -311,3 +363,4 @@ Chromium parity 脚本使用真实 Headless Chrome；若默认路径不可用，
 | 2026-11-25 | 0.2.5 | Codex | 正文 | 同步隔离 PoC 的固定归档与复跑状态 | 核对 Issue #12 与固定提交 | Issue #12 |
 | 2026-11-26 | 0.2.6 | Codex / GPT-6 | 见本行变更 | 将实际 Bundle CI/发布归入 ca-skills 生产端 SR-027 | 对齐跨仓实现与独立复验 | Issue #12 |
 | 2026-11-26 | 0.2.7 | Codex / GPT-6 | 见本行变更 | 将未发布 Runtime Artifact 与 BuildResult 的候选版本段改为纯数字 2，保留 Owner 冻结门禁 | 对齐跨仓实现与独立复验 | Issue #12 |
+| 2026-11-26 | 0.2.8 | GPT-6.2（ChatGPT） | §5、§10 | 将 Artifact v2 / BuildResult v2 候选唯一目标切换到 v1alpha6，并补齐 capabilityBindings、静态链接和稳定诊断 | 让新版 Artifact 同时承载 when、Request Schema 与 Capability-first 作者语义 | IR-008；IR-003；SR-013；SR-029；Issue #40 |

@@ -1,8 +1,8 @@
 # Skill 管理与选择设计说明书
 
 > 文档类型：机制设计说明书  
-> 状态：目标机制设计；Artifact 互操作部分依赖外部 Compiler 发布  
-> 文档版本：0.2.11
+> 状态：v1alpha5 当前发布消费规则保持冻结；Capability-first v1alpha6 目标设计已补充，Compiler / Runtime 实现未开始  
+> 文档版本：0.2.12
 > 功能归属：F02 — Skill 管理与选择  
 > 关联 SR：SR-004、SR-005、SR-006    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -192,6 +192,29 @@ Next 在 Skill 导入时反序列化已检查程序和类型环境，建立运�
 
 按 [CA-SL 发布与候选](../../规范/CA-SL语言基线与版本规范.md) 确认 when 的发布状态。[F08 编译与发布](../F08-技能编译与发布/技能编译与发布设计说明书.md)负责组装 Bundle，EC02 负责生成已检查程序，Next 由 SR-004～006 消费与验收；F09 Studio 维护作者编辑。继续使用 §6 的优先次序和原有验收条件。
 
+## 13. Capability-first Skill 作者与消费边界
+
+### 13.1 作者源
+
+目标作者版本 connectionagent.io/v1alpha6 中，Contract.capabilities 只声明 Capability ID；Procedure 的 operation.capability / observation.capability 只引用同一 Capability ID。Skill 源不再包含 Owner / Provider Callable ID 或 dependency alias::Callable。v1alpha5 当前发布语法保持冻结，不被重解释。
+
+dependencies 继续声明确切 Owner Contract Package / Provider Interface Package。Compiler 从显式依赖闭包解析 Capability ID，必须唯一命中一个 Package export；不得从运行时 Provider catalog 发现 Capability。
+
+### 13.2 Grant、阶段和 Schema
+
+- Contract.capabilities 是 Skill 的能力 Grant 上界；Procedure 中每个 Capability 引用都必须在 Grant 列表中。
+- 一个 Skill-facing Capability 必须且只能映射一个公开 Callable；一个 Callable 也只能归属一个 Skill-facing Capability。
+- operation.capability 解析 kind=operation；observation.capability 解析 kind=observation。Callable 的 Effect / Schema / Evidence / Owner / Provider 身份均由 Package 契约提供。
+- Observation 必须 READ；Operation 的 Effect 可为 READ 或 MUTATION，但由 ToolCatalog 决定，Skill 不得声明或覆盖。
+- when、requestSchema、Predicate、Precondition、Postcondition、Wait 和 Continuation 语义保持不变。
+
+### 13.3 Runtime 与导入
+
+Compiler 将已解析 Capability Binding 编入新版 Runtime Artifact；Artifact 同时保留精确 Callable export allowlist。Runtime 根据 Procedure 的 Capability ID 找到唯一 Binding，再在内部使用 Callable ID 派发。Capability ID 不由模型改写，Callable ID 不向模型开放。v1alpha5 Artifact 不添加 Capability Binding 字段。
+
+### 13.4 状态
+
+当前 ca-skills / Compiler / Runtime 的正式发布仍是 v1alpha5 路径。v1alpha6 作者规范、Artifact v2、Runtime 消费和 Skill 示例尚未发布或实现；不得把目标设计描述为现有产品能力。
 
 ## 修订记录
 
@@ -212,3 +235,4 @@ Next 在 Skill 导入时反序列化已检查程序和类型环境，建立运�
 | 2026-11-25 | 0.2.9 | GPT-6.2（ChatGPT） | §7 | 修复 CA-SL v1alpha5 when 发布/运行时依赖的失效锚点，指向当前语言基线 §3 | 不改变 M.3/SA-012 语义；使候选资格引用可导航 | IR-003；Issue #12 |
 | 2026-11-25 | 0.2.10 | Codex / GPT-6 | 正文 | §6、追踪 对齐语言发布与 Compiler/Bundle 职责 | 消除执行歧义并同步中央设计 | Issue #12 |
 | 2026-11-26 | 0.2.11 | GPT-6.2（ChatGPT） | §4、§9 | 明确冻结 v1alpha5 Artifact 不序列化 Skill Capability ID；Compiler Build-time 校验作者源 Capability，Runtime Scope 只从 operation/observation exports 建立 | 对齐 F03.05 与 Compiler v2.1.0 frozen artifact schema，避免实现者读取不存在字段 | IR-006 · SR-015 · Issue #12 |
+| 2026-11-26 | 0.2.12 | GPT-6.2（ChatGPT） | §13 | 新增 Capability-first Skill 作者、Grant、Link 与 Runtime 消费边界 | Skill 作者只表达业务能力，不直接依赖 Owner / Provider Callable ID | IR-008；SR-029；Issue #40 |

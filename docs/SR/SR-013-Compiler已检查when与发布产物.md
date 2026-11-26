@@ -1,7 +1,7 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.8\
-> 状态：DRAFT（设计补充待评审；不得据此启动产品实施）  
+> 文档版本：0.2.9\
+> 状态：DRAFT（when / Request Schema / Artifact v2 实施需求；languageTarget 目标更新为 v1alpha6，依赖 SR-029 Capability-first 设计；Compiler 产品实施未开始）  
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-26  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -11,13 +11,24 @@
 
 目标仓：odango-chan/ca-skill-compiler。实施 Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)。文档刷新 Issue：[Next #14](https://github.com/odango-chan/ca-agent-next/issues/14)。目标代码基线：Compiler v2.1.0，commit 255ab85fa5abb4b0bf36656bf64250cafebf45cb。规范依赖：[ca-skills #88](https://github.com/odango-chan/ca-skills/pull/88) 已合并，正式发布身份见 [ca-skills release record](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs/releases/ca-sl-v1alpha5.md)。
 
+
+## 当前目标修订（2026-11-26，SR-029 关联）
+
+SR-013 的 when、Request Schema、CheckedExpr / DescriptorSet、Build / Verify 和发布验收范围保持不变；为避免与最新作者语言目标冲突，AC-013-03 的未发布 Artifact v2 / BuildResult v2 候选现在唯一面向 connectionagent.io/v1alpha6。
+
+- CA-SL v1alpha5 与已发布 Artifact v1alpha5 仍完全冻结；不修改旧 Golden，不增加兼容解析或回退。
+- v1alpha6 的 Capability-first 作者语法、一对一 Package membership 和 capabilityBindings 由 [SR-029](SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) 定义；SR-013 不重复定义该语义，只要求 Artifact v2 将其编译结果完整携带。
+- when / requestSchema 的既有语义保持不变；v1alpha6 继承 v1alpha5 的 CEL、G.4、M.2 / M.3 规则。
+- Artifact v2 / BuildResult v2 仍须 Compiler Owner Gate 确认；SR-029 READY 不替代 Compiler Owner 批准，也不授权修改 Compiler 仓。
+- 本修订不把 SR-013 标记为 READY；AC-013-02～05、Compiler 产品实现与发布仍按本 SR 记录为 NOT_RUN / DRAFT。
+
 ## 1. 目标、范围与契约边界
 
-为 CA-SL v1alpha5 的可选 assurance/contract.yaml.when 提供 Compiler 发布阶段静态检查、跨语言 CheckedExpr、版本化 Runtime Artifact、Build/Verify 和正式发布证据。
+为 CA-SL v1alpha6 的可选 assurance/contract.yaml.when（when 语义继承 v1alpha5） 提供 Compiler 发布阶段静态检查、跨语言 CheckedExpr、版本化 Runtime Artifact、Build/Verify 和正式发布证据。
 
 必须保持：
 
-- CA-SL languageTarget 仍为 connectionagent.io/v1alpha5。
+- CA-SL languageTarget 的新 Artifact v2 目标为 connectionagent.io/v1alpha6；v1alpha5 已发布路径保持冻结。
 - 已发布 Artifact v1alpha5 完全冻结。
 - Development Artifact v1alpha1 完全冻结并继续 NOT_ADMITTED。
 - 单一 Go Compiler Core；Native CLI 与 WASM Worker 共用。
@@ -116,7 +127,7 @@ PoC 中复用 Development Schema/Lock fixture 只证明共享 Schema 解析机�
 
 ### 4.1 实施输入
 
-- CA-SL v1alpha5 固定规范 SHA。
+- CA-SL v1alpha6 目标语义；when / G.4 规则继承 v1alpha5 固定规范 SHA。
 - Compiler v2.1.0 / 255ab85fa5abb4b0bf36656bf64250cafebf45cb。
 - AC-013-01 隔离 PoC 和 EVIDENCE.md。
 - Compiler 当前 api.go、inherited_semantics.go、cel_check.go、schema_registry.go、development_link.go 与多 Skill Lock fixture。
@@ -124,7 +135,7 @@ PoC 中复用 Development Schema/Lock fixture 只证明共享 Schema 解析机�
 ### 4.2 实施步骤
 
 1. 在现有 Contract parser / AST 中增加可选 when 字段，保留原始表达式和 SourcePath 行列；不创建第二个 YAML parser。
-2. 将 when 纳入正式 CA-SL v1alpha5 发布语义链。没有 when 时不生成程序；when 必须是非空字符串。
+2. 将 when 纳入正式 CA-SL v1alpha6 目标语义链；when 语义沿用 v1alpha5，不作兼容映射。没有 when 时不生成程序；when 必须是非空字符串。
 3. 对已声明的 Contract.requestSchema 复用现有 Schema Registry / Reference Resolver 建立逐 Skill 独立 Root 和闭包；若 when 只引用 event.type，则不要求 requestSchema；若 when 引用 input，则必须声明 requestSchema，否则按 SA-005 报 CEL_INVALID。必要时提取共享内部解析层，禁止把 Development Build 请求和产物作为正式发布路径。
 4. 每个 when 环境始终包含 event.type；仅当表达式引用 input 时，才把该 Skill Request Schema 闭包加入 CEL 类型环境。event-only when 不得强制依赖 requestSchema；若 Contract 已声明 requestSchema，仍须按 G.4 验证并在新版 Artifact 输出供 Host 使用。禁止 DynType。
 5. 使用 cel-go AST 执行 G.4 白名单检查、静态字段/类型验证和 bool 结果检查。
@@ -151,7 +162,7 @@ CEL 表达式、字段访问、守卫、非 bool 和缺少 input Schema 使用 C
 
 ### 4.4 AC-013-02 验收
 
-- SA-004/005 的正负例符合正式 CA-SL v1alpha5。
+- SA-004/005 的正负例符合 CA-SL v1alpha6 目标语义；v1alpha5 已发布 Golden 保持不变。
 - event.type-only when 在无 requestSchema 时可通过；引用 input 却未声明 requestSchema 时 CEL_INVALID；声明 requestSchema 的 event-only Skill 仍发布 Request Schema。
 - G.4 支持项均有正例；禁止项均有静态拒绝例。
 - Missing / Explicit Null / Value、has/non-null 守卫和 AND/OR/NOT 事实传播有 Go 测试。
@@ -164,11 +175,11 @@ CEL 表达式、字段访问、守卫、非 bool 和缺少 input Schema 使用 C
 
 ### 5.1 版本决策
 
-设计推荐候选 API：Artifact 为 connectionagent.io/compiler-artifact/2，BuildResult 为 connectionagent.io/compiler-build-result/2。新 Runtime Build 复用 BuildRequest connectionagent.io/compiler-build-request/v1alpha5；DependencyInspection 保持 connectionagent.io/compiler-dependency-inspection/v1alpha5，除非实际 DTO 审计证明需要升级。languageTarget 仍为 connectionagent.io/v1alpha5。
+设计推荐候选 API：Artifact 为 connectionagent.io/compiler-artifact/2，BuildResult 为 connectionagent.io/compiler-build-result/2。新 Runtime Build 复用 BuildRequest connectionagent.io/compiler-build-request/v1alpha5；DependencyInspection 保持 connectionagent.io/compiler-dependency-inspection/v1alpha5，除非实际 DTO 审计证明需要升级。languageTarget 唯一目标为 connectionagent.io/v1alpha6。
 
 新 Compiler Runtime Build 只产生 2 BuildResult / Artifact，VerifyBuildResult 只接受该新结果契约；不在同一二进制中双轨支持旧/新 Runtime BuildResult，不增加版本 dispatch、fallback 或兼容路由。旧 v2.1.0 Release 保留冻结 Artifact/BuildResult v1alpha5 历史行为；Development Build 继续使用独立 v1alpha1 API/Artifact 家族。
 
-**Owner Gate：** Compiler Owner 必须在 AC-013-03 代码实施前确认 Artifact 与 BuildResult 两个 API 名称。若拒绝，先在 EC02 / SR-013 中更新决策及理由；Harness 不得自行改用 v1alpha6、Development v1alpha2 或其他临时名字。
+**Owner Gate：** Compiler Owner 必须在 AC-013-03 代码实施前确认 Artifact 与 BuildResult 两个 API 名称。若拒绝，先在 EC02 / SR-013 中更新决策及理由；Harness 不得自行改用 v1alpha7、Development v1alpha2 或其他临时名字。v1alpha6 由 SR-029 固定为当前唯一目标候选。
 
 ### 5.2 候选文件
 
@@ -204,7 +215,7 @@ Manifest 保留现有 v1alpha5 顶层字段语义。每个声明 requestSchema �
 
 ### 6.1 Build
 
-- 正式 v1alpha5 单一 Core 解析和静态检查。
+- 正式 v1alpha6 单一 Core 解析和静态检查（when 语义继承 v1alpha5）。
 - 对声明 requestSchema 的 Skill 生成规范化 G.4 Schema 根与完整引用闭包，供 Host 运行期校验。
 - 对有 when 的 Skill 生成 CheckedExpr Any 与 DescriptorSet；仅当 when 引用 input 时，DescriptorSet 才纳入该 Request Schema 类型闭包。
 - 按新版 Manifest 装配确定性 Artifact。
@@ -323,7 +334,7 @@ SR-013 达到 READY 且文档门禁通过后，实施使用一个连续 Goal，�
 - Next Agent Runtime、SkillCatalog、Resolver、Continuation 或 Python 导入代码；这些由 SR-004/005/006 负责。
 - ca-skills Bundle CI；由 SR-027 负责。
 - Compiler 内的 Tool/Owner 执行、网络访问或 Runtime。
-- CA-SL v1alpha6、旧版兼容映射、冻结 Artifact 修改。
+- 超出 v1alpha6 的后续语言变更、v1alpha5 兼容映射 / 自动迁移、冻结 Artifact 修改。
 - Development Artifact 作为发布 Bundle。
 - Agent Skill Admission、生产授权、签名、Trust Registry、额外 SHA-256、生产资格或 5GC/MAS 认证。
 
@@ -363,3 +374,4 @@ SR-013 只有 AC-013-01～05 均达到各自通过条件，Compiler Release 有�
 | 2026-11-25 | 0.2.6 | Codex / GPT-6 | 正文 | 同步所引权威设计版本 | 消除执行歧义并同步中央设计 | Issue #12 SR-013 |
 | 2026-11-26 | 0.2.7 | Codex / GPT-6 | 见本行变更 | 将实际 Bundle CI/发布归入 ca-skills 生产端 SR-027 | 对齐跨仓实现与独立复验 | Issue #12 |
 | 2026-11-26 | 0.2.8 | Codex / GPT-6 | 见本行变更 | 将未发布 Runtime Artifact 与 BuildResult 的候选版本段改为纯数字 2，保留 Owner 冻结门禁 | 对齐跨仓实现与独立复验 | Issue #12 |
+| 2026-11-26 | 0.2.9 | GPT-6.2（ChatGPT） | §1、§3～§7 | 将 Artifact v2 / BuildResult v2 的唯一 languageTarget 更新为 v1alpha6，并引用 SR-029 的 capabilityBindings 设计 | 避免 SR-013 继续要求已过时的 v1alpha5 新发布目标；保留 v1alpha5 冻结与 when 语义 | IR-003；IR-008；SR-013；SR-029；Issue #40 |

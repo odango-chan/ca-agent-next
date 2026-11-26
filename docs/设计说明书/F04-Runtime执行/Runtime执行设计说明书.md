@@ -1,8 +1,8 @@
 # Runtime 执行设计说明书
 
 > 文档类型：机制设计说明书  
-> 状态：目标设计，待实现和验收  
-> 文档版本：0.3.5
+> 状态：目标 Runtime Capability Action / 内部 Callable Binding 设计已补充；Next Runtime 未实现  
+> 文档版本：0.3.6
 > 功能归属：F04 — Runtime 执行  
 > 关联 SR：SR-007    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -111,6 +111,28 @@ Skill/Artifact 无效、Callable Scope 不匹配、普通 Skill 调用 internal-
 
 现行 ca-runtime 的 RuntimeHost.v1、ProviderBinding、请求重放、Outcome 与执行期 Predicate 具有独立实现基线。Next 沿用结果和证据语义，业务 Skill 选择在宿主完成。SR-022 负责核对出入参、实现和证据。 详见[分仓证据](../../参考与审计/跨仓设计资产迁移与一致性审计.md)。
 
+## 10. Capability Action Boundary
+
+### 10.1 作者侧 Action
+
+v1alpha6 编译 Procedure 的外部阶段以 Capability ID 为入口。Runtime Action Request 的概念输入为当前 Run、Node/Stage、Capability ID 和具名 arguments；不接受模型提供 Callable ID、Owner alias、backendOperationId、URL 或 Provider 选择参数。
+
+### 10.2 内部绑定与派发
+
+Runtime 从当前 Artifact 的 capabilityBindings 中按 Capability ID 解析唯一 Callable；再执行当前 Run 的精确 Callable allowlist、Package identity、kind、Effect、Input Schema、HostInvocation、Scope、deadline 和 budget 校验。通过后才交给唯一 Plugin Manager 的 Tools Extension / ProviderV2 Driver。Callable ID 仅用于内部 dispatch、Trace 和诊断。
+
+- Operation Stage 只接受 kind=operation；Effect 可为 READ 或 MUTATION，由 ToolCatalog 决定。
+- Observation Stage 只接受 kind=observation 且 Effect=READ。
+- Capability 无绑定、多重绑定、重复归属、阶段 kind 不匹配、Schema 不匹配或依赖包身份不一致，均 fail-closed。
+- Provider 可在一个 Callable 内部按封闭 Schema selector 选择私有 backendOperationId；Runtime / LLM 不参与该选择。
+
+### 10.3 Reconcile
+
+MAS.RECONCILE 不是 Skill-facing Capability。普通 Skill / LLM Action 必须在 Provider IPC 前拒绝并返回 INTERNAL_RECONCILE_ONLY；Runtime Coordinator 仅按原 Mutation 的 originalInvocationId、Scope 和 Correlation 使用内部 Reconcile 绑定。该约束不改变 Owner Receipt / Commit Proof / UNKNOWN 语义。
+
+### 10.4 版本边界
+
+上述 Capability Action 只适用于 CA-SL v1alpha6 及其新 Runtime Artifact。冻结 v1alpha5 Artifact 的 Callable Scope、exports 和既有运行语义保持不变；Next Runtime 当前未实现本节目标。
 
 ## 修订记录
 
@@ -128,3 +150,4 @@ Skill/Artifact 无效、Callable Scope 不匹配、普通 Skill 调用 internal-
 | 2026-11-25 | 0.3.3 | GPT-6.2（ChatGPT） | 第 3 章 | 补充 provider.yaml interfaceSnapshotDigest 对 Provider Interface snapshot 的部署级校验 | 与 Owner sidecar 的部署 pin 一起闭合 Provider / Owner 两类依赖 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.3.4 | Codex / GPT-6 | 正文 | §4.2 明确未声明 Callable 时的运行行为 | 消除执行歧义并同步中央设计 | Issue #12 |
 | 2026-11-26 | 0.3.5 | GPT-6.2（ChatGPT） | §3、§6、§7 | 明确 frozen v1alpha5 Capability ID 不进入 Runtime Artifact/Scope，并补齐 sidecar Reconcile internal-only 的 Runtime 保证 | 对齐 F03.05 的 Callable allowlist、Owner membership/Effect 与 exact-original Reconcile 边界 | IR-006 · SR-015 · Issue #12 |
+| 2026-11-26 | 0.3.6 | GPT-6.2（ChatGPT） | §10 | 定义 Capability Action 到唯一 Callable 的内部解析、Scope 和 Reconcile 边界 | 让 Runtime 不向模型暴露 Callable 选择能力 | IR-008；SR-029；Issue #40 |
