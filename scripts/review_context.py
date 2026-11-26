@@ -991,6 +991,44 @@ def _normalize_header_declaration(line: str) -> str:
     return value.rstrip("。.")
 
 
+def _header_metadata_lines(header_lines: list[str]) -> list[str]:
+    """仅提取真实 Markdown blockquote 元数据行，忽略代码围栏和 HTML 注释。"""
+
+    declarations: list[str] = []
+    fence_char: str | None = None
+    fence_length = 0
+    in_html_comment = False
+
+    for line in header_lines:
+        stripped = line.lstrip()
+        fence = re.match(r"^(\x60{3,}|~{3,})", stripped)
+        if fence:
+            marker = fence.group(1)
+            if fence_char is None:
+                fence_char = marker[0]
+                fence_length = len(marker)
+            elif marker[0] == fence_char and len(marker) >= fence_length:
+                fence_char = None
+                fence_length = 0
+            continue
+        if fence_char is not None:
+            continue
+
+        if in_html_comment:
+            if "-->" in line:
+                in_html_comment = False
+            continue
+        if "<!--" in line:
+            if "-->" not in line.split("<!--", 1)[1]:
+                in_html_comment = True
+            continue
+
+        if stripped.startswith(">"):
+            declarations.append(_normalize_header_declaration(stripped))
+
+    return declarations
+
+
 def check_doc_header(text: str, path: str) -> list[str]:
     """检查正式文档头部是否声明继承全局范围和本文局部非目标。"""
 
@@ -1004,23 +1042,31 @@ def check_doc_header(text: str, path: str) -> list[str]:
             break
 
     problems: list[str] = []
+    metadata_lines = _header_metadata_lines(header_lines)
     canonical_scope = "全局评审范围：继承根目录 Agent.md 的 review_scope"
-    scope_declaration = any(
-        _normalize_header_declaration(line) == canonical_scope
-        for line in header_lines
-    )
-    if not scope_declaration:
+    scope_declarations = [
+        line for line in metadata_lines if line.startswith("全局评审范围")
+    ]
+    if scope_declarations != [canonical_scope]:
         problems.append(
-            f"{path}: 文档头部必须使用正向规范声明“{canonical_scope}”"
+            f"{path}: 文档头部必须且只能使用一次正向规范声明“{canonical_scope}”"
         )
-    declaration = re.search(
-        r"本文局部非目标\s*[：:]\s*(.*)",
-        "\n".join(header_lines),
-    )
-    if declaration is None:
-        problems.append(f"{path}: 文档头部缺少“本文局部非目标”声明（没有时写“无”）")
-    elif not declaration.group(1).strip():
-        problems.append(f"{path}: 文档头部的“本文局部非目标”声明为空（没有时写“无”）")
+
+    local_declarations = [
+        line for line in metadata_lines if line.startswith("本文局部非目标")
+    ]
+    if len(local_declarations) != 1:
+        problems.append(
+            f"{path}: 文档头部必须且只能包含一条“本文局部非目标”声明（没有时写“无”）"
+        )
+    else:
+        declaration = re.fullmatch(
+            r"本文局部非目标[：:]\s*(.*)", local_declarations[0]
+        )
+        if declaration is None or not declaration.group(1).strip():
+            problems.append(
+                f"{path}: 文档头部的“本文局部非目标”声明为空或格式错误（没有时写“无”）"
+            )
     return problems
 
 
