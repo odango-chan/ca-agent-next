@@ -6,7 +6,7 @@
 > 创建日期：2026-11-25  
 > 所属阶段：Phase A  
 > 上游需求：[IR-002](../IR/IR%20总登记册.md#ir-002)  
-> 设计依据：[CA Agent Next 架构设计](../架构设计/CA%20Agent%20Next%20架构设计.md) v0.4.3 §3～5；[通用 Agent Core 与 Host 设计说明书](../设计说明书/F01-通用Agent核心与Host/通用Agent核心与Host设计说明书.md) v0.3.1 §2～5  
+> 设计依据：[CA Agent Next 架构设计](../架构设计/CA%20Agent%20Next%20架构设计.md) v0.4.3 §3～5；[通用 Agent Core 与 Host 设计说明书](../设计说明书/F01-通用Agent核心与Host/通用Agent核心与Host设计说明书.md) v0.3.3 §2～5  
 > Acceptance：AC-002-01～AC-002-08（本 SR 模块验收）；EX-01（系统级验收，不作为本 SR 的独立门禁，见[演示验收基线](../验收与实施/演示验收基线.md)）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：见第 3 节

@@ -282,4 +282,4 @@ SR-002 的独立模块验收为 AC-002-01～AC-002-08，详见《演示验收基
 | 2026-11-26 | 0.3.0 | GPT-6.2（ChatGPT） | §2、§5、§11 | 固定 Next Python 包身份、Host/ModelClient 公共接口、Fake 注入、Smoke/错误契约和 SR-002/EX-01 验收分层；明确 SR-003 复用入口。使首个 Python Host 切片可独立实施和复验，且不复制 ca-agent-demo 的包身份或运行时。 | Issue #19；SR-002、SR-003；AC-002-01～08、EX-01 |
 | 2026-11-26 | 0.3.1 | GPT-6.2（ChatGPT） | §5.2～5.5 | 固定 JSONValue、Event/Context 字段约束、HostError 与安全错误映射，并让 Smoke Run ID 确定化；使实现与测试可以直接按字段和错误语义执行。 | Issue #19；SR-002；PR #20 |
 | 2026-11-26 | 0.3.2 | GPT-6.2（ChatGPT） | 修订记录 | 统一本次新增修订记录的六列格式，保持历史修改意图与关联追踪完整。 | Issue #19；PR #20 |
-| 2026-11-26 | 0.3.3 | GPT-6.2（ChatGPT） | §5.2～5.4 | 明确 Event.source 可选、HostError 构造签名及默认 UUID run_id 的生成规则和时机。 | 让 Host 公开契约和失败路径可直接实现与测试。 | Issue #19；SR-002；PR #20 |
+| 2026-11-26 | 0.3.3 | GPT-6.2（ChatGPT） | §5.2～5.4 | 明确 Event.source 可选、HostError 构造签名及默认 UUID run_id 的生成规则和时机；让 Host 公开契约和失败路径可直接实现与测试。 | Issue #19；SR-002；PR #20 |
