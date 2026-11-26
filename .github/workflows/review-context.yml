@@ -87,7 +87,7 @@ jobs:
             echo "- Workflow Run：${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             echo "- Artifact：${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts"
             echo "  名称 \`$artifact_name\`"
-          } >> "$GITHUB_STEP_SUMMARY"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Upload review context artifacts
         if: success()
