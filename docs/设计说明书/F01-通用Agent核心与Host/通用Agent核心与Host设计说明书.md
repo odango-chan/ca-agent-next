@@ -96,6 +96,24 @@ Model Client 是可替换适配器；自动化测试必须支持 Fake Model Clie
 
 SR-002 只建立以下 Python distribution 和 import identity：
 
+`pyproject.toml` 的项目/构建段固定如下：
+
+```toml
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ca-agent-next"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["ca_agent_next*"]
+```
+
 | 项目 | 固定值 |
 |---|---|
 | Distribution | `ca-agent-next` |
@@ -104,6 +122,7 @@ SR-002 只建立以下 Python distribution 和 import identity：
 | 模块入口 | `python -m ca_agent_next --smoke` |
 | 项目元数据 | 根目录 `pyproject.toml`；项目版本 `0.1.0`；`requires-python = ">=3.11"`；`dependencies = []` |
 | 构建配置 | `setuptools>=68`、`setuptools.build_meta`；包发现 `where = ["src"]`、`include = ["ca_agent_next*"]` |
+| 运行时依赖 | 仅 Python 标准库；项目 `dependencies = []`，setuptools 仅为构建依赖 |
 | 测试入口 | `tests/test_host.py`，标准库 `unittest` |
 
 最小文件布局：
