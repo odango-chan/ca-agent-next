@@ -1,13 +1,13 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.13  
+> 文档版本：0.3.14  
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
 > 修订日期：2026-11-26  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级准入、额外 package-level digest、签名和 Trust Registry；历史 Compiler v2.1.0 的 `files[].sha256` 要求仅归旧版审计，不转为新版 Schema 要求  
 
-关联 IR-006、SR-015、SR-016、SR-020（参考宿主架构审计）、SR-024（旧 Development Host Publisher，仅历史）、SR-025（MAS Owner 1.6.0 Publisher）、SR-030（Host Context 1.6.0 Schema-only Publisher）；新 1.6.0 Compiler 接口以 [EC02 Compiler 设计说明书](../EC02-Compiler/Compiler设计说明书.md) 和 [SR-013](../../SR/SR-013-Compiler已检查when与发布产物.md) 为准；历史 EC02 Development Build 设计只保留源审计，不作为当前 Compiler DTO/Worker/Bundle 发布入口。基线为 [docs/architecture/studio-boundaries.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/architecture/studio-boundaries.md)、[docs/design/ai-procedure-authoring.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/design/ai-procedure-authoring.md)。
+关联 IR-006、SR-015、SR-016、SR-020（参考宿主架构审计）、SR-024（旧 Development Host Publisher，仅历史）、SR-025（MAS Owner 1.6.0 Publisher）、SR-030（Host Context 1.6.0 Schema-only Publisher）；新 1.6.0 Compiler 接口以 [EC02 Compiler 设计说明书](../EC02-Compiler/Compiler设计说明书.md) v0.2.11 和 [SR-013](../../SR/SR-013-Compiler已检查when与发布产物.md) v0.2.17 为准；历史 EC02 Development Build 设计只保留源审计，不作为当前 Compiler DTO/Worker/Bundle 发布入口。基线为 [docs/architecture/studio-boundaries.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/architecture/studio-boundaries.md)、[docs/design/ai-procedure-authoring.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/design/ai-procedure-authoring.md)。
 
 ## 1. 编辑与语言服务
 
@@ -131,9 +131,10 @@ Compiler v2.1.0 的 `validDevelopmentVersion` 接受 `major.minor.patch` 和合�
 ## 6. 新 1.6.0 无 Assurance 与零外部依赖
 
 - **SKILL.md-only**：不调用 Compiler，只有 LLM-guided，不生成 Assurance Artifact，不拥有 Callable Scope；在双栏源编辑器中仍可预览文字、元数据与 references。
-- **存在 Assurance、但没有外部依赖**：新 1.6.0 Compiler 设计必须支持**有效的空依赖闭包**，前提是 Procedure 没有引用外部 Capability/Callable。BuildRequest 仍包含 Skill/语言/Schema/源身份，但 Package roots/exports 为空；新 Compiler 需在正式 Schema 冻结时明确允许这个组合，Compiler 只能生成不含外部 Tool Effect 的确定性 Artifact。不可伪造一个 Package 充当根。
+- **存在 Assurance、没有外部 Capability / Schema 引用**：新 1.6.0 Compiler 必须允许零 Capability roots 与空 Package dependency closure；BuildRequest 仍包含 Skill/语言/Schema/源身份，Compiler 生成不含外部 Tool Effect 的确定性 Artifact。
+- **存在 Assurance、仅引用 Schema-only Package**：例如 Contract.contexts 引用 SR-030 Host Context Schema。此时 Capability roots 与 Callable bindings 仍为空，但 Package dependency closure 必须包含该显式依赖的 Schema export 和完整 $ref 闭包；不得把 Schema-only Package 当作 Capability root，也不得虚构 Tool / Callable。
 - **存在 Assurance 且使用 Capability 但未声明依赖**：Compiler 静态 Link 必须拒绝 `CAPABILITY_UNRESOLVED` / `CAPABILITY_NOT_GRANTED`；绝不能把它当成合法零根。旧 v2.1.0 只能接受非空 roots 的限制**不是 1.6.0 新设计**。
-- 新 Compiler 如果尚未发布支持零根的确切 BuildRequest/Schema，Studio 对该测试情形明确显示 `COMPILER_CONTRACT_PENDING`、不调用旧 API、不产生 Artifact；设计评审需确认这一新契约是否在 Compiler #61 / SR-013 同版交付，任何实现前都必须有确定答案。
+- 新 Compiler 如果尚未发布区分 Capability roots 与 Schema dependency closure 的确切 BuildRequest/Schema，Studio 对该测试情形明确显示 `COMPILER_CONTRACT_PENDING`、不调用旧 API、不产生 Artifact；设计评审需确认 AC-013-06 是否由 Compiler #61 / SR-013 同版交付，任何实现前都必须有确定答案。
 
 ## 7. 历史实现状态与新版本待验证项
 
@@ -154,7 +155,7 @@ Compiler v2.1.0 的 `validDevelopmentVersion` 接受 `major.minor.patch` 和合�
 
 #272 / #276 曾在各自历史 HEAD 通过 PR Verify、Native Windows、IDE Host、Theia Browser-Only、Theia Browser Host 和 Pages Chromium 等检查，但当前分支分别落后 main / base；历史 PASS 不满足当前合并门禁。必须在刷新分支后重跑完整 exact-head 验收。
 
-必要验收至少包括：原始发布 ZIP 导入/锁定字节一致性；Contract root closure 只包含可达 Interface Packages；无关项目依赖不进入 BuildRequest；声明为非 Interface Package 的 root fail-closed；缺失/损坏/摘要错/传递依赖环拒绝；零根不调用 Compiler；Node/WASM/Chromium 结果一致；AI 候选 stale invalidation、Apply/Undo 和磁盘未保存语义。所有结果只证明相应静态/编辑器层，不代表 Owner/Host Admission、Runtime、Production 或真实 5GC Qualification。
+必要验收至少包括：原始发布 ZIP 导入/锁定字节一致性；Contract root closure 只包含可达 Interface Packages；无关项目依赖不进入 BuildRequest；声明为非 Interface Package 的 root fail-closed；缺失/损坏/摘要错/传递依赖环拒绝；无 Assurance 不调用 Compiler；Assurance 无外部 Capability / Schema 依赖时允许空闭包 Build；Assurance 仅引用 Schema-only Package 时保留非空 Schema closure 但零 Capability roots / Callable bindings；Node/WASM/Chromium 结果一致；AI 候选 stale invalidation、Apply/Undo 和磁盘未保存语义。所有结果只证明相应静态/编辑器层，不代表 Owner/Host Admission、Runtime、Production 或真实 5GC Qualification。
 
 ## 8. 历史决策
 
@@ -193,7 +194,7 @@ AI Authoring 的 Change Set 只能新增或修改 Capability ID、Procedure argu
 | 唯一 Binding | 正确 one-to-one 与多成员/重复 Callable 反例 | 补全和定义跳转只返回公开 Capability；错误不得显示 Compiler PASS |
 | 共同 Compiler 路径 | 同源码/lock 的 Package Audit 与 AI Candidate | 完全相同的新 BuildRequest/Verify；不同 revision 不可复用结果 |
 | stale/Apply/Undo | Candidate 或 lock 变化、Apply 后立即 Undo | 旧结果失效；显式确认；精确还原原始 Buffer，Save 不被触发 |
-| SKILL.md-only / 零根 Assurance | 无 Assurance；有 Assurance 但无外部 Capability；缺依赖但引用外部 Capability | 分别为不调用 Compiler、空闭包合法 Build、fail-closed 拒绝 |
+| Assurance / Capability / Schema closure | 无 Assurance；有 Assurance 且无外部 Capability / Schema 依赖；有 Assurance 且仅引用 SR-030 Schema-only Package；缺依赖但引用外部 Capability | 分别为不调用 Compiler、空 Package closure 合法 Build、非空 Schema closure 且零 Capability roots / Callable bindings 的合法 Build、fail-closed 拒绝 |
 | 多宿主一致性 | 同正式 1.6.0 Snapshot 的 Node/Native/WASM/Chromium | 诊断/结果相同，记录 SHA、测试数、命令、真实截图/日志 |
 
 **评审与实施门槛**：上述每项测试的正式 Package Schema、Compiler DTO/CLI/Worker、语言标识由对应发布者冻结后才允许产品 PASS。Studio 旧 Example 替换、旧 1.6.0 不兼容及历史导入结果仅用于审计，不能混入新 AC。SR-016 是该矩阵的实施与验收追踪入口；系统 E2E 不能代替 Studio 模块 AC。
@@ -220,3 +221,4 @@ AI Authoring 的 Change Set 只能新增或修改 Capability ID、Procedure argu
 | 2026-11-26 | 0.3.12 | GPT-6（ChatGPT） | 文档头与 1.6.0 当前设计依据 | 修复 PR #46 Review Context 文档头检查及旧 Development Build 设计依据，更新新 Compiler/SR-013 正式入口 | Issue #12/#40；PR #46；CI #45837224652 |
 
 | 2026-11-26 | 0.3.13 | GPT-6（ChatGPT） | 1.6.0 Host Context Publisher / 依赖边界 | 纠正 SR-024 仅为旧 Development Publisher，新增 SR-030 Schema-only 1.6.0 Host Context 发布链，并将来源 provenance 放回 Project Lock | Issue #12/#40；IR-006/008；SR-030 |
+| 2026-11-26 | 0.3.14 | GPT-6（ChatGPT） | §4.4～§6、§9.5、修订记录 | 明确零 Capability roots 不等于零 Package dependency closure；增加 Schema-only Host Context Package 的 Compiler gate、Studio 测试和 AC-016-04 映射 | 消除 F09 原“零根不调用 Compiler”与“无外部依赖 Assurance 可 Build”之间的矛盾，确保 Schema-only 依赖可被正确消费 | Issue #12/#40；SR-013 AC-013-06；SR-016 AC-016-04；SR-030；PR #46 |
