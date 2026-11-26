@@ -172,7 +172,7 @@ tests/
 | 设计修订 Issue | [ca-agent-next #19](https://github.com/odango-chan/ca-agent-next/issues/19)（CLOSED / completed） |
 | 设计评审 PR | [ca-agent-next #20](https://github.com/odango-chan/ca-agent-next/pull/20)（MERGED；目标恢复分支；merge commit `281ccb957b9222e72175e210d1afed177aa8a14f`） |
 | 治理规则 Issue | [ca-agent-next #21](https://github.com/odango-chan/ca-agent-next/issues/21)（CLOSED / completed；SR 管理规范 v0.7.0、文档治理规范 v0.6.0） |
-| 实施 Issue | [ca-agent-next #22](https://github.com/odango-chan/ca-agent-next/issues/22)（实施已完成；本证据回填 PR 合并后关闭） |
+| 实施 Issue | [ca-agent-next #22](https://github.com/odango-chan/ca-agent-next/issues/22)（由本证据回填 PR #25 合并时关闭） |
 | 实施 PR | [ca-agent-next #23](https://github.com/odango-chan/ca-agent-next/pull/23)（MERGED；目标恢复分支；merge commit `49964464e19d13d219ea0b3513d2223fe81d2435`） |
 | 受测实施 Commit | `6628245978f1fbd1e1d1393b9338c908c962eb9e`（分支 `feature/issue-22-sr-002-python-host-skeleton`；远端 SHA 已核实） |
 | 设计基线 | 实施时契约快照：F01 v0.3.6、SR-002 v0.2.9、Acceptance v0.3.8；当前 SR 状态记录为 v0.2.10。PR #20 后续仅修订治理元数据，未改变本 SR 契约 |
