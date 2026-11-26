@@ -1255,6 +1255,15 @@ class PendingRegistryTests(unittest.TestCase):
         assert original is not None
         self.assertEqual(original.message_id, "m-inv-1")
 
+        # 同一 kind 下的 deliveryId 也必须唯一，不能覆盖已有 delivery 索引。
+        registry.register("d1", self._request("delivery", "del-1"))
+        with self.assertRaises(PluginError):
+            registry.register("d2", self._request("delivery", "del-1"))
+        self.assertEqual(len(registry), 1)
+        delivery = registry.pop_operation("del-1", "delivery")
+        assert delivery is not None
+        self.assertEqual(delivery.message_id, "m-del-1")
+
     def test_same_operation_id_across_kinds_is_distinct(self) -> None:
         registry = PendingRegistry()
         registry.register("c1", self._request("tools", "inv-1"))
