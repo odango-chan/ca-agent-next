@@ -1,7 +1,7 @@
 # SR-008：Echo 垂直端到端示例
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.10\
+> SR 版本：0.1.11  
 > 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**，未获得实施 READY，产品验收 NOT_RUN  
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-26  
@@ -37,26 +37,32 @@
 - 不引入 OpenAMSM 业务代码。
 - 不以单元测试代替垂直 E2E。
 
-## 4. 依赖与前置条件
+## 4. 依赖与分阶段门槛（遵循 SR 管理规范 §6.1）
 
-SR-002～SR-007。
+| 依赖类型 | 权威输入 | 适用门槛 |
+|---|---|---|
+| 设计 | F02/F03/F04/F08 与 SR-029 的 Skill/Tool/Run 统一目标 | 仅业务中立 Echo，公开 Capability 对应唯一 Callable |
+| 实施 | SR-002/003 模块、SR-004～007 目标实现及 Echo Go Plugin 固定源码 | 独立的 Plugin 协议/LLM-only 子路径可先验收 |
+| 模块验收 | SR-027 正式 1.6.0 Echo Assurance Bundle 和新 Compiler Verify 证据 | 阻塞 AC-008-02/03 的 Deterministic 组合验收，不阻塞 SKILL-only 子用例 |
+| 系统 EX | EX-17 与 Echo 完整系统组合 | 只在全部组件真实启动后才能报告系统 E2E PASS |
 
-设计按 F07 与 F02/F04 对照两种模式的输入和预期。组合执行消费 SR-002～007 对应模块证据与 SR-027 的 Echo Bundle。Go Plugin 对测可用固定源码，只有正式组合运行可记 EX-17。 设计可按 SR 管理规范 §6.1 单独评审。
+**设计评审与实施 READY 独立判定**：本 SR 的功能职责、已知目标契约、失败路径和下面每项模块 AC 足够完整即可请求设计评审；不得要求“全部前置 SR VERIFIED”作为统一前置。实际实施按本次 Scope 逐阶段检查所消费的已发布能力；缺失时仅相应 AC 标记 BLOCKED/NOT_RUN，系统 EX/OM 不倒灌模块门禁。Owner/Provider/Compiler 的未知机器标识、Schema 和 API 只能由对应 Owner 正式发布，Harness 不得推测。新 Skill/Artifact/Runtime 接口只接受 CA-SL 1.6.0 / Capability-first，不提供旧版兼容。
 
-## 5. 验收条件
+## 5. 独立模块验收条件（正例、反例与证据）
 
-1. Echo Event → Skill → Run → Tool → Outcome/Evidence → Delivery 完整运行。
-2. 两种 Skill 形态和两种执行模式按设计工作。
-3. Demo Acceptance 中 Echo 适用项全部有真实运行证据。
-4. 不依赖 OpenAMSM 专用逻辑。
+| 模块 AC | 固定输入/操作 | 预期、诊断与隔离 |
+|---|---|---|
+| AC-008-01 | 同一个 Go Plugin 暴露 Event/Tool/Delivery，SKILL.md-only Skill + Fake Model | 完成 Event→Skill→Run→文本 Delivery；无需 Compiler，未授权 Tool Action 拒绝 |
+| AC-008-02 | 同一正式 1.6.0 Echo Assurance Bundle 的 Deterministic 模式 | 按已发布 Capability Binding 精确一次 Tool dispatch；Outcome/Owner Evidence 与响应 correlation 完整 |
+| AC-008-03 | 同一 1.6.0 Bundle 用 LLM-guided 模式请求合法与越权 Capability | 合法 Tool 走与确定性模式相同 Action Boundary；越权请求 IPC=0 |
+| AC-008-04 | 重试 Event、丢失或错 correlation、超时/取消、旧 Artifact | 重复请求不产生重复 mutation；错误隔离/拒绝且不降级旧格式 |
+| AC-008-05 | 独立进程 Host + Go Plugin + 两种发布包在固定环境组合运行 | 记录组件受测 SHA、真实调用/Delivery、Go 进程退出/临时目录清理；系统 EX-17 另行按完整标准验收 |
 
-验收时必须引用演示验收基线中的对应 Acceptance ID，并记录真实执行命令、测试结果、Example 和覆盖范围。未执行项保持 NOT_RUN。
+### 5.1 实现落点、运行和取证
 
-### 实施位置与复验入口
-
-以下路径为本 SR 的目标交付物。在 ca-agent-next 仓根运行，测试通过公开入口调用受测组件。目标位置为 `examples/echo/`、测试 Host 的公开进程入口。在独立临时目录运行同一 Go Plugin、一个已发布 Assurance Echo 包和 Fake Model。对相同输入分别指定两种允许模式，校验 Run、调用与交付的 correlation；再以纯指导包验证无 Compiler 调用和无声明 Tool 的拒绝。测试结束关闭进程并清理本次临时目录。发布方为 ca-skills。执行正式 Echo 组合验收前登记 Echo 的作者源 commit、外部 Compiler tag/SHA、发布资产路径、Artifact API 与 Verify 日志。固定 ca-skills 审计树 `780497a2918ad3e7bdff554ab64b0ba627e867e0` 没有名称含 Echo 的作者包；若已有异名合适资产，由发布方提供该组证据。若需要增加作者包，在 ca-skills 的独立实施 SR 中跟踪，Next 不自行生成或伪造运行包。
-
-验收命令为 `python -m unittest discover -s tests -p test_echo.py -v`。必须发现并执行本节正反例；发现 0 个测试或跳过必需用例时，退出码 0 也不能计入 PASS。逐个 Acceptance ID 回填受测 SHA、命令、预期与实测值及日志位置。
+- 目标实现：`examples/echo/、公开 Host 进程入口`；测试入口：`python -m unittest discover -s tests -p test_echo.py -v`。若实现前目标仓文件/命令尚未存在，由具体实施 PR 在模块范围内创建并登记，**不得以不存在的脚本退出 0 或 0 discovered tests 作为 PASS**。
+- 使用本 SR 明示的最小正负例与计数型测试 Provider/Mock；真实 Publisher、新 Compiler、Owner 收据、隔离环境等数据只从固定 SHA 的正式发布物读取。模拟输入能验证本地行为，但**不能替代**要求正式外部源的 AC。
+- 每项 AC 单独记录受测代码 SHA、设计 Head、外部 Package/Schema/API 版本、命令、环境、测试数量、预期/实测、失败诊断与证据路径。未执行始终 NOT_RUN；输入缺失标记 BLOCKED；系统 EX/OM 必须用独立组合证据交付。
 
 ## 6. 实施关联
 
@@ -99,3 +105,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-26 | 0.1.8 | GPT-6.2（ChatGPT） | §1 | 将 Acceptance 设计依据更新至 v0.3.8 | 避免 Echo 设计继续引用过期验收版本 | Issue #26 |
 | 2026-11-26 | 0.1.9 | GPT-6.2（ChatGPT） | 文档头部 | 将 Acceptance 设计依据更新至 v0.3.9 | 与 SR-002 集成后当前演示验收基线保持一致 | PR #25；Issue #26 |
 | 2026-11-26 | 0.1.10 | GPT-6（ChatGPT） | 文档头、§0、设计依据 | 登记独立设计待评审批次、专项审查重点与缺失输入，保留 SR DRAFT/产品 NOT_RUN | 按 1.6.0-only / Capability-first 设计集中审查；避免提前授予实施门禁 | Issue #12；SR-029；PR #45 |
+| 2026-11-26 | 0.1.11 | GPT-6（ChatGPT） | §4～§5 | 按治理 §6.1 拆分设计/实施/模块/系统依赖；补齐 AC-008-xx 正反验收 | 解除全局 VERIFIED 门槛与缺模块 AC 问题，避免 Harness 猜测/EX 倒灌 | Issue #12/#40；PR #46；SR 管理规范 §6.1 |

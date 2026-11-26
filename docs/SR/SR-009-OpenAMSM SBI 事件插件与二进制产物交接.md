@@ -1,7 +1,7 @@
 # SR-009：OpenAMSM SBI 事件插件与二进制产物交接
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.1  
+> SR 版本：0.2.2  
 > 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**，未获得实施 READY，产品验收 NOT_RUN  
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-26  
@@ -39,25 +39,33 @@
 - 不完整解码 NAS/NGAP，不复制 Codec 实现。
 - 不使用 Base64、Plugin 自有 Artifact 数据库或额外摘要机制；不实现 ca-host.artifact-store/v1 channel server，也不接收/生成 Host artifactRef。
 
-## 4. 依赖与前置条件
+## 4. 依赖与分阶段门槛（遵循 SR 管理规范 §6.1）
 
-SR-008、SR-003；输入是 SR-017 固定的候选设计及 F03/F05 正式接口，按阶段确认批准的设计 SHA。该仓现有实现不作为开发自身的前置。
+| 依赖类型 | 权威输入 | 适用门槛 |
+|---|---|---|
+| 设计 | F03 Plugin/IPC、F05 Artifact、F06 和 SR-017 源候选设计 | Plugin 只做 Event/Delivery/Staging；Skill 选择归 Core |
+| 实施 | Plugin Package/IPC v1alpha1 已冻结规范、Plugin 自身独立 Go 进程 | 可用测试 Host 单独实施/验收 Plugin，无需 Next Skill/Owner |
+| 模块验收 | SBI 原始 Create/Update/multipart/NAS 字节样本与测试 Host | 不依赖真实 Owner；固定 0xC9 Modify / 0xD1 Release discriminator |
+| 系统 OM | OM-01～03/05～08/14/15 与完整 Next Host + Mock AMF | 只能在组合环境验收；不代替 Plugin 单模块 AC |
 
-设计使用 SR-017 登记的 EC04 候选 SHA 和 F03/F05 契约。独立 Plugin 用测试 Host 验收 ingress、staging 与 delivery。接入实际 Next Host 时消费 SR-003，第二业务系统集成使用 SR-008 Echo 证据。候选协议变化须重新评审受影响的字段。 设计可按 SR 管理规范 §6.1 单独评审。
+**设计评审与实施 READY 独立判定**：本 SR 的功能职责、已知目标契约、失败路径和下面每项模块 AC 足够完整即可请求设计评审；不得要求“全部前置 SR VERIFIED”作为统一前置。实际实施按本次 Scope 逐阶段检查所消费的已发布能力；缺失时仅相应 AC 标记 BLOCKED/NOT_RUN，系统 EX/OM 不倒灌模块门禁。Owner/Provider/Compiler 的未知机器标识、Schema 和 API 只能由对应 Owner 正式发布，Harness 不得推测。新 Skill/Artifact/Runtime 接口只接受 CA-SL 1.6.0 / Capability-first，不提供旧版兼容。
 
-## 5. 验收条件
+## 5. 独立模块验收条件（正例、反例与证据）
 
-1. 严格使用 Plugin Package/IPC v1alpha1。
-2. JSON 与 multipart/Content-ID 映射正确，原始二进制字节保持不变。
-3. Plugin 只发布符合 Plugin IPC v1alpha1 的相对 stagingPath、slot、mediaType 和 byteLength 描述符；不得发布绝对路径或 artifactRef。Host 导入 ArtifactStore 的验收属于 SR-010，不计入本 Plugin 仓单独验收。
-4. UpdateSMContext 对 0xC9 与 0xD1 分类正确；畸形/未知/不支持类型 fail-closed。
-5. Delivery 只访问本次 responseObligation 授权的输出。
+| 模块 AC | 固定输入/操作 | 预期、诊断与隔离 |
+|---|---|---|
+| AC-009-01 | Plugin 启动，经 stdin/stdout IPC 版本握手与 capabilities discovery | Plugin Package/IPC v1alpha1 协议通过；非法版本与超帧明确拒绝 |
+| AC-009-02 | Create/Update JSON 与 multipart/related Content-ID、原始 N1/N2 bytes | 归一化 Event 包含正确 correlation/slot/mediaType/byteLength，原字节逐位相同 |
+| AC-009-03 | Staging 仅可提交相对路径、声明 slot；绝对路径、路径穿越、artifactRef 反例 | 非法描述拒绝；Plugin 不直接创建 Host artifactRef/ArtifactStore |
+| AC-009-04 | 合法 0xC9 Modify、0xD1 UE Release、截断或未知 NAS discriminator | 各合法类型准确分类，非法/歧义 fail-closed；不在插件内调用业务 Owner |
+| AC-009-05 | responseObligation 对应可用 Delivery 与错 externalRequestId、过期/越权输出 | 仅本次授权 response 交付；串单/过期拒绝，不发出错误 2xx |
+| AC-009-06 | 重复请求与多并发回放，不同 correlation 的 raw fixtures | 原始 bytes/correlation 不混淆；本模块只证明 Plugin ingress/delivery，不宣称 Next 去重/Run 或 OM E2E |
 
-验收时必须引用演示验收基线中的对应 Acceptance ID，并记录真实执行命令、测试结果、Example 和覆盖范围。未执行项保持 NOT_RUN。
+### 5.1 实现落点、运行和取证
 
-### Plugin 独立验收与组合证据
-
-建议实现位置为 `cmd/openamsm-plugin`，从插件仓根执行 `go test ./... -count=1` 和 `go build ./cmd/openamsm-plugin`。用测试 Host 经 stdin/stdout 握手驱动进程，回放 Create、0xC9、0xD1、截断与歧义 discriminator 的 SBI 样本，记录归一化 Event、slot、相对路径、字节比对及 delivery correlation。对重复请求使用同一协议身份。OM-02/05～08 中涉及选技、ArtifactStore、精确 Run 与去重的断言须另附 Next 组合证据；模拟 Host 的通过只覆盖 Plugin 一侧。
+- 目标实现：`cmd/openamsm-plugin（ca-openamsm-plugin）`；测试入口：`go test ./... -count=1 && go build ./cmd/openamsm-plugin`。若实现前目标仓文件/命令尚未存在，由具体实施 PR 在模块范围内创建并登记，**不得以不存在的脚本退出 0 或 0 discovered tests 作为 PASS**。
+- 使用本 SR 明示的最小正负例与计数型测试 Provider/Mock；真实 Publisher、新 Compiler、Owner 收据、隔离环境等数据只从固定 SHA 的正式发布物读取。模拟输入能验证本地行为，但**不能替代**要求正式外部源的 AC。
+- 每项 AC 单独记录受测代码 SHA、设计 Head、外部 Package/Schema/API 版本、命令、环境、测试数量、预期/实测、失败诊断与证据路径。未执行始终 NOT_RUN；输入缺失标记 BLOCKED；系统 EX/OM 必须用独立组合证据交付。
 
 ## 6. 实施关联
 
@@ -100,3 +108,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-26 | 0.1.9 | Codex / GPT-6 | §4～5 | Codex / GPT-6，§4～5。分别登记设计输入、实施接入和验收依赖。 | 使 Harness 能按当前阶段判定启动与验收条件 | Issue #12、#21 |
 | 2026-11-26 | 0.2.0 | GPT-6.2（ChatGPT） | 文档头部 | 将 Plugin IPC 设计依据更新至 v0.2.4 | 与当前 12 帧协议和 SR-003 使用同一冻结规范版本 | Issue #26 |
 | 2026-11-26 | 0.2.1 | GPT-6（ChatGPT） | 文档头、§0、设计依据 | 登记独立设计待评审批次、专项审查重点与缺失输入，保留 SR DRAFT/产品 NOT_RUN | 按 1.6.0-only / Capability-first 设计集中审查；避免提前授予实施门禁 | Issue #12；SR-029；PR #45 |
+| 2026-11-26 | 0.2.2 | GPT-6（ChatGPT） | §4～§5 | 按治理 §6.1 拆分设计/实施/模块/系统依赖；补齐 AC-009-xx 正反验收 | 解除全局 VERIFIED 门槛与缺模块 AC 问题，避免 Harness 猜测/EX 倒灌 | Issue #12/#40；PR #46；SR 管理规范 §6.1 |

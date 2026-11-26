@@ -1,7 +1,7 @@
 # SR-010：OpenAMSM 工具插件与按需编解码集成
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.10  
+> SR 版本：0.1.11  
 > 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**，未获得实施 READY，产品验收 NOT_RUN  
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-26  
@@ -44,31 +44,36 @@
 - 不实现新的 content-addressed artifact identity、去重、额外 package hash、签名或 Trust Registry；仅实现 v1 channel 已规定的逐 Artifact 传输校验。
 - 不允许 Provider 自行选择文件路径、远端 URL 或凭据。
 
-## 4. 依赖与前置条件
+## 4. 依赖与分阶段门槛（遵循 SR 管理规范 §6.1）
 
-SR-003、SR-007、SR-009；外部依赖为 ca-client-tools Provider v1.2.0 / Codec API、冻结的 ca-host.artifact-store/v1 契约与共享 conformance fixtures。ca-agent Go Host P1 仅作为外部参考证据，不计入 Next 验收。
+| 依赖类型 | 权威输入 | 适用门槛 |
+|---|---|---|
+| 设计 | F03.05/ F05 正式 ca-host.artifact-store/v1、SR-029 1.6.0 Capability Binding | Host Artifact Channel 与 Provider Tool/Codec 不能混成双 Provider Manager |
+| 实施 | SR-003 单 Plugin Manager、SR-007 Action Boundary、SR-009 Plugin staging；Provider v1.2.0 旧 API 只作 Host channel 历史互操作参考 | Host ArtifactStore / Channel 可独立实现，外部新 1.6.0 Capability 导出不阻塞本 Host 子阶段 |
+| 模块验收 | Host channel v1 已冻结 conformance fixtures；SR-026 新 Codec Capability 发布包 | AC-010-01～06 可按 Host 通道独立验证；AC-010-07/08 等待新 Codec 发布 |
+| 系统 OM | OM-04/10/13 与真实 NF/Owner | 不作为 Host Channel 模块 READY 前置 |
 
-进入 READY 前必须确认所有前置 SR 已 VERIFIED，或在 SR 中明确记录并批准并行实施理由；外部依赖必须有可核对的版本、接口和可用证据。
+**设计评审与实施 READY 独立判定**：本 SR 的功能职责、已知目标契约、失败路径和下面每项模块 AC 足够完整即可请求设计评审；不得要求“全部前置 SR VERIFIED”作为统一前置。实际实施按本次 Scope 逐阶段检查所消费的已发布能力；缺失时仅相应 AC 标记 BLOCKED/NOT_RUN，系统 EX/OM 不倒灌模块门禁。Owner/Provider/Compiler 的未知机器标识、Schema 和 API 只能由对应 Owner 正式发布，Harness 不得推测。新 Skill/Artifact/Runtime 接口只接受 CA-SL 1.6.0 / Capability-first，不提供旧版兼容。
 
-## 5. 验收条件
+## 5. 独立模块验收条件（正例、反例与证据）
 
-1. ca-client-tools Provider v2 经同一 Plugin Manager 的 tools Extension 调用；不存在第二 Provider Manager。
-2. Next Host ArtifactStore 生成 v1 合规随机 opaque `artifactRef`，并将引用绑定到当前 Invocation、direction 和 slot；拒绝跨 Invocation、跨方向、跨 slot 或未声明位置的引用。
-3. Host 在 `initialize` 中提供 v1 闭合 `artifactChannel`，只监听 `127.0.0.1` ephemeral port；省略通道时 initialize 可成功，artifact-bearing binding 报 `NOT_CONFIGURED`；显式非法配置时 initialize 返回 `PROVIDER_CONFIGURATION_INVALID`，无后续 catalog/invoke。两类路径均不产生远端 I/O。
-4. Provider 可按 v1 contract GET 输入 Artifact、POST 输出 Artifact；Host 校验媒体类型、Content-Length、SHA-256、配额和 invocation/slot 绑定，输出仅在整个结果校验通过后原子发布。
-5. 取消、超时、Provider 退出、无效结果和部分上传均清理 staged outputs；过期引用不可读取。
-6. Next Host 通过 ca-host.artifact-store/v1 共享 conformance fixtures，覆盖 reference、bootstrap、GET/POST、slot、quota、expiry、partial-write、atomic publication 和 error mapping；使用确定性本地 upstream，不声称真实 NF multipart 已验收。
-7. Interface Package 明确声明 Codec Callable ID、输入输出 Schema 和 Artifact 语义；Codec 操作只在正式发布后可调用。
-8. no-decode Skill 不调用 Codec；decode-required Skill 经 Runtime Action Boundary 调用 Codec；Decode 不修改原始字节，不支持消息明确失败。
-9. 仅使用实际发布并验收的 NAS/N2 消息子集。
+| 模块 AC | 固定输入/操作 | 预期、诊断与隔离 |
+|---|---|---|
+| AC-010-01 | 通过唯一 Plugin Manager 初始化 Provider Tools Extension；配置缺失/非法 | 无第二 Manager；缺 channel 可初始化但 Artifact Binding NOT_CONFIGURED；非法配置 PROVIDER_CONFIGURATION_INVALID，远端 I/O=0 |
+| AC-010-02 | Host 生成 opaque artifactRef 与同一/跨 Invocation、direction、slot 的读取 | 合法引用通过，跨边界/过期/路径泄漏拒绝，token 不编码文件/URL |
+| AC-010-03 | Provider GET 输入/POST 输出正确二进制与 mediaType、Content-Length、逐 Artifact 传输校验 | 输出原子发布，字节一致；slot/schema/size/digest 不符不形成可读产物 |
+| AC-010-04 | 取消、超时、Provider 退出、部分写入、配额超限 | 所有 staged outputs 清理；未完成 Artifact 不可读取；无重复 Owner mutation |
+| AC-010-05 | Codec 未发布、Host 不需要 Decode、Codec 必需但不存在 | no-decode 路径不触发 Codec；必需 Codec 未发布只阻塞对应 AC，不冒充已发布能力 |
+| AC-010-06 | Provider runtime bindings 指向私有后端；旧 11 个 READ 的任意 Callable 外露 | 仅新 1.6.0 公开 Capability→Callable Binding 可提供作者调用；私有 backendOperationId 不出现在 Skill/LLM |
+| AC-010-07 | SR-026 正式发布的 DecodeNAS Capability 与单消息 0xD1、截断/错误类型 | 正常 Decode 输出结构化 JSON 且原 bytes 保留；负例 fail-closed；未发布时 BLOCKED |
+| AC-010-08 | 1.6.0 Bundle 对已导出 Codec READ Capability 做真实 Runtime Tool Action | 必须经统一 Action Boundary + Provider channel；所需 new Package/Runtime Artifact 缺失时 NOT_RUN |
+| AC-010-09 | 同一 conformance fixtures 的 Host Python / Provider Go 联合测试 | 准确记录受测 SHA、请求/响应、GET/POST 字节、Slot、配额与错误映射；仅算 Host 子模块，不算 OM E2E |
 
-验收时必须引用演示验收基线中的对应 Acceptance ID，并记录真实执行命令、测试结果、Example 和覆盖范围。未执行项保持 NOT_RUN。
+### 5.1 实现落点、运行和取证
 
-### 实施位置与复验入口
-
-以下路径为本 SR 的目标交付物。在 ca-agent-next 仓根运行，测试通过公开入口调用受测组件。目标位置为 `src/ca_agent_next/plugins/` 与 Host ArtifactStore 实现。按 ca-client-tools v1.2.0 的 `contracts/host-artifact-store/v1/` fixtures 启动独立 Provider。缺通道、跨 slot、过期和截断输出均有输入，记录真实 GET/POST、发布/清理结果与 upstream 调用次数。配置缺失时上游调用为零；无已发布 Codec Callable 时将 decode-required 记为 BLOCKED，生产端由 SR-026 跟踪，可独立验收现有 Provider v2 路径。
-
-验收命令为 `python -m unittest discover -s tests -p test_artifact_channel.py -v`。必须发现并执行本节正反例；发现 0 个测试或跳过必需用例时，退出码 0 也不能计入 PASS。逐个 Acceptance ID 回填受测 SHA、命令、预期与实测值及日志位置。
+- 目标实现：`src/ca_agent_next/plugins/ 与 Host ArtifactStore`；测试入口：`python -m unittest discover -s tests -p test_artifact_channel.py -v`。若实现前目标仓文件/命令尚未存在，由具体实施 PR 在模块范围内创建并登记，**不得以不存在的脚本退出 0 或 0 discovered tests 作为 PASS**。
+- 使用本 SR 明示的最小正负例与计数型测试 Provider/Mock；真实 Publisher、新 Compiler、Owner 收据、隔离环境等数据只从固定 SHA 的正式发布物读取。模拟输入能验证本地行为，但**不能替代**要求正式外部源的 AC。
+- 每项 AC 单独记录受测代码 SHA、设计 Head、外部 Package/Schema/API 版本、命令、环境、测试数量、预期/实测、失败诊断与证据路径。未执行始终 NOT_RUN；输入缺失标记 BLOCKED；系统 EX/OM 必须用独立组合证据交付。
 
 ## 6. 实施关联
 
@@ -105,3 +110,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-26 | 0.1.8 | 同步设计依据到本次复审的修订版本 | 对齐跨仓实现与独立复验 | Issue #12 |
 | 2026-11-26 | 0.1.9 | F03.05 v0.3.9 已包含 SR-015 设计移交，但本 SR Provider v2 wire contract 仍待设计门禁 | Issue #28；SR-003；SR-010 | undefined |
 | 2026-11-26 | 0.1.10 | 登记独立设计待评审批次、专项审查重点与缺失输入，保留 SR DRAFT/产品 NOT_RUN | 按 1.6.0-only / Capability-first 设计集中审查；避免提前授予实施门禁 | Issue #12；SR-029；PR #45 |
+| 2026-11-26 | 0.1.11 | 按治理 §6.1 拆分设计/实施/模块/系统依赖；补齐 AC-010-xx 正反验收 | 解除全局 VERIFIED 门槛与缺模块 AC 问题，避免 Harness 猜测/EX 倒灌 | Issue #12/#40；PR #46；SR 管理规范 §6.1 |

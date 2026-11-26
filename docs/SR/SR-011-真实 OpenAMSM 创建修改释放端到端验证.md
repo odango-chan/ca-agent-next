@@ -1,7 +1,7 @@
 # SR-011：真实 OpenAMSM 创建修改释放端到端验证
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.2  
+> SR 版本：0.2.3  
 > 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**，未获得实施 READY，产品验收 NOT_RUN  
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-26  
@@ -37,27 +37,33 @@
 - Synthetic Owner 或 fixture 通过不等于真实隔离 E2E。
 - 不声明 Production Qualification。
 
-## 4. 依赖与前置条件
+## 4. 依赖与分阶段门槛（遵循 SR 管理规范 §6.1）
 
-SR-008、SR-009、SR-010；外部依赖为真实 OpenAMSM、ca-client-tools 和所需 Skill 发布物。
+| 依赖类型 | 权威输入 | 适用门槛 |
+|---|---|---|
+| 设计 | F06 / F04 / F05、SR-029 1.6.0 Capability/Owner 语义和最新验收基线 | 设计阶段确认 Owner/Host/Plugin 和 Run 权威边界 |
+| 实施 | SR-008 Echo 组合、SR-009 Event Plugin、SR-010 Provider+Artifact、Owner/Simulator 隔离环境 | 真实完整 E2E 要有各组件模块证据与明确环境 |
+| 模块验收 | 实际 ca-skills 1.6.0 MAS 三份 Skill Bundle、Compiler Verify、Owner Receipt/Commit Proof、Mock AMF、PFCP/N1/N2 | 阻塞真实运行型 AC；不能以历史 Demo 环境或 synthetic fixture 代替 |
+| 系统 EX/OM | EX-20、OM-09/11/12，真实 SMF/UE 隔离实例 | 系统 EX/OM 证据必须在全部模块 AC 后单独登记 |
 
-设计按 F06 与验收基线审查三段消息、原 Run、Owner 结果及清理顺序。运行组合场景时消费 SR-008、009、010 和指定业务包，先记录隔离实例、初始状态及受测版本。缺环境仅暂停该次真实 OM-11，不能用 fixture 替代。 设计可按 SR 管理规范 §6.1 单独评审。
+**设计评审与实施 READY 独立判定**：本 SR 的功能职责、已知目标契约、失败路径和下面每项模块 AC 足够完整即可请求设计评审；不得要求“全部前置 SR VERIFIED”作为统一前置。实际实施按本次 Scope 逐阶段检查所消费的已发布能力；缺失时仅相应 AC 标记 BLOCKED/NOT_RUN，系统 EX/OM 不倒灌模块门禁。Owner/Provider/Compiler 的未知机器标识、Schema 和 API 只能由对应 Owner 正式发布，Harness 不得推测。新 Skill/Artifact/Runtime 接口只接受 CA-SL 1.6.0 / Capability-first，不提供旧版兼容。
 
-## 5. 验收条件
+## 5. 独立模块验收条件（正例、反例与证据）
 
-1. 一个真实隔离 OpenAMSM Owner/SMF 和一个 UE/PSI 完成 Create → Modify → Release。
-2. N1/N2 原始字节、ArtifactRef、Run/generation 和 continuation 关联可追溯。
-3. Owner Receipt/Commit Proof/Reconcile 语义正确，UNKNOWN 不提升为 COMMITTED。
-4. 无重复 mutation，最终状态与响应交付一致。
-5. Agent Core、Resolver、Runtime、Plugin Manager 无 OpenAMSM 业务分支。
+| 模块 AC | 固定输入/操作 | 预期、诊断与隔离 |
+|---|---|---|
+| AC-011-01 | 固定隔离环境、各组件/Package Release SHA、UE/PSI、场景前 Session 状态 | 环境/资产完整才启动；缺任何新 1.6.0 包则 BLOCKED 而不是合成包 PASS |
+| AC-011-02 | 真实 Create，随后同 UE/PSI Modify（含 QoS）与 UE-requested Release | Owner 与 SMF 状态、N1/N2/PFCP、三次请求/响应身份及最终 Release 状态精确匹配 |
+| AC-011-03 | 同 ID 同内容重试、同 ID 不同内容冲突、同内容新 ID 独立 Invocation | 首项无重复 mutation；冲突不变更；新 ID 只按真实 Owner/Scope 规则执行，不串入旧 Run |
+| AC-011-04 | 响应丢失、Owner UNKNOWN、迟到/重复 N2 与精确 Reconcile | UNKNOWN 不提升 COMMITTED；按原 Invocation/Proof/Scope 回查，重复 mutation=0 |
+| AC-011-05 | 原始 N1/N2 Artifact bytes、Run/generation、continuation 与 responseObligation | 所有引用同一实际请求，跨 Run/旧 generation 被拒；最终 Delivery/SMF projection 一致 |
+| AC-011-06 | 静态与运行追踪检查 Agent Core/Resolver/Plugin Manager 源码 | 无 OpenAMSM 业务条件分支；新增业务只改变 Plugin/Skill/Package/部署配置；系统 EX/OM 单独复验 |
 
-验收时必须引用演示验收基线中的对应 Acceptance ID，并记录真实执行命令、测试结果、Example 和覆盖范围。未执行项保持 NOT_RUN。
+### 5.1 实现落点、运行和取证
 
-### 实施位置与复验入口
-
-以下路径为本 SR 的目标交付物。在 ca-agent-next 仓根运行，测试通过公开入口调用受测组件。目标位置为 `examples/openamsm/` 与 Next 组合测试入口。先记录隔离实例、各发布资产、固定版本、专用 UE/PSI、初始会话与仅限该实例的复位命令。从 env-5gc-sim 的场景驱动保存三组私有请求身份样本：同内容同 ID 重试、不同内容同 ID 冲突、同内容新 ID 独立操作。记录请求数、响应通道与 Owner mutation 数，首组不得重复 mutation，冲突组不得新增 mutation。对同一 UE 连续运行 Create/Modify/UE Release，关联三次请求、原始 N1/N2、PFCP、Owner Receipt、原 Run/generation 与最终清理。未提供隔离配置或组件版本时入口报环境缺失并记 BLOCKED，不能用合成包通过。
-
-验收命令为 `python -m unittest discover -s tests -p test_openamsm.py -v`。必须发现并执行本节正反例；发现 0 个测试或跳过必需用例时，退出码 0 也不能计入 PASS。逐个 Acceptance ID 回填受测 SHA、命令、预期与实测值及日志位置。
+- 目标实现：`examples/openamsm/ 与 Next 公开组合验收入口`；测试入口：`python -m unittest discover -s tests -p test_openamsm.py -v`。若实现前目标仓文件/命令尚未存在，由具体实施 PR 在模块范围内创建并登记，**不得以不存在的脚本退出 0 或 0 discovered tests 作为 PASS**。
+- 使用本 SR 明示的最小正负例与计数型测试 Provider/Mock；真实 Publisher、新 Compiler、Owner 收据、隔离环境等数据只从固定 SHA 的正式发布物读取。模拟输入能验证本地行为，但**不能替代**要求正式外部源的 AC。
+- 每项 AC 单独记录受测代码 SHA、设计 Head、外部 Package/Schema/API 版本、命令、环境、测试数量、预期/实测、失败诊断与证据路径。未执行始终 NOT_RUN；输入缺失标记 BLOCKED；系统 EX/OM 必须用独立组合证据交付。
 
 ## 6. 实施关联
 
@@ -97,3 +103,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-26 | 0.2.0 | GPT-6.2（ChatGPT） | 文档头部 | 将 Acceptance 设计依据更新至 v0.3.8 | 避免真实 OpenAMSM E2E 设计继续引用旧验收基线 | Issue #26 |
 | 2026-11-26 | 0.2.1 | GPT-6.2（ChatGPT） | 文档头部 | 将 Acceptance 设计依据更新至 v0.3.9 | 与 SR-002 集成后当前演示验收基线保持一致 | PR #25；Issue #26 |
 | 2026-11-26 | 0.2.2 | GPT-6（ChatGPT） | 文档头、§0、设计依据 | 登记独立设计待评审批次、专项审查重点与缺失输入，保留 SR DRAFT/产品 NOT_RUN | 按 1.6.0-only / Capability-first 设计集中审查；避免提前授予实施门禁 | Issue #12；SR-029；PR #45 |
+| 2026-11-26 | 0.2.3 | GPT-6（ChatGPT） | §4～§5 | 按治理 §6.1 拆分设计/实施/模块/系统依赖；补齐 AC-011-xx 正反验收 | 解除全局 VERIFIED 门槛与缺模块 AC 问题，避免 Harness 猜测/EX 倒灌 | Issue #12/#40；PR #46；SR 管理规范 §6.1 |
