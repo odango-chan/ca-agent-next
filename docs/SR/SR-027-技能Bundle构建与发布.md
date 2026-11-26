@@ -52,4 +52,4 @@ CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验�
 |---|---|---|---|---|---|
 | 2026-11-26 | 0.1.0 | Codex / GPT-6 | 见本行变更 | 首次登记两端交付、独立复验与就绪条件 | Issue #12 |
 | 2026-11-26 | 0.1.1 | Codex / GPT-6 | 见本行变更 | 补齐正式文档的评审范围与非目标；列明依赖设计版本；同步设计依据到本次复审的修订版本 | Issue #12 |
-| 2026-11-26 | 0.1.2 | GPT-6.2（ChatGPT） | 文档头、§4～6、修订记录 | 记录 CA-SL v1alpha5 固定源、Compiler v2.1.0 冻结 Artifact、Issue #61 未完成、ca-skills 当前无正式 Bundle 的真实状态 | 防止将规范/Compiler Release/本地 Build 误报为 Published Skill Bundle；为 SR-004 明确外部实施依赖 | Issue #43；SR-004；SR-013；SR-027 |
+| 2026-11-26 | 0.1.2 | GPT-6.2（ChatGPT） | 文档头、§4～6、修订记录 | 记录 CA-SL v1alpha5 固定源、Compiler v2.1.0 冻结 Artifact、Issue #61 未完成及 ca-skills 当前无正式 Bundle；防止将规范/Compiler Release/本地 Build 误报为 Published Skill Bundle，并为 SR-004 明确外部依赖 | Issue #43；SR-004；SR-013；SR-027 |
