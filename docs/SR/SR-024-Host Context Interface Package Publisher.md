@@ -1,8 +1,8 @@
 # SR-024：Host Context Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.9
-> 状态：READY（设计评审通过；产品验收 NOT_RUN）
+> SR 版本：0.1.10
+> 状态：IN_PROGRESS（设计 READY；目标仓实现已推送，PR #253 OPEN；AC-024-01～07 在受测 PR head 实测 PASS，等待独立评审与合并）
 > 创建日期：2026-11-25
 > 所属阶段：跨仓设计移交
 > 上游需求：[IR-006](../IR/IR%20总登记册.md#ir-006)
@@ -64,9 +64,42 @@ make verify
 
 ## 5. 实施关联与执行门禁
 
-- [Studio Issue #269](https://github.com/odango-chan/ca-skill-studio-demo/issues/269)：OPEN；下游消费端集成，归 SR-016，不是 Publisher 生成 ZIP 的硬前置。
-- 实施 Issue：[ca-agent-demo #252](https://github.com/odango-chan/ca-agent-demo/issues/252)；固定设计候选 SHA：`0fdd991f203f8468be155c35d81254eb84cd8ce5`（ca-agent-next PR #24）；目标仓启动基线：`57e277ff9094dad93543df46910a12a1dbbaf560`。实施 PR / Commit：无。实施：NOT_STARTED。AC-024-01～07：NOT_RUN。替代关系：无。
-- 本轮对固定设计候选 SHA `0fdd991f203f8468be155c35d81254eb84cd8ce5` 的 §1～4 完成逐项审查。Compiler Schema 和 Host fixture 的 Git blob 均与 §3 相符。用原始 fixture 构造的 manifest 通过 Draft 2020-12 校验，添加 sourceStatus 后被拒绝；同一输入两次生成的两文件 ZIP 字节一致，解包后的 Schema 保持原始字节。目标仓已声明 jsonschema 依赖和 make verify 入口。设计 READY，AC-024-01～07 的产品执行保持 NOT_RUN。独立实施 Issue [ca-agent-demo #252](https://github.com/odango-chan/ca-agent-demo/issues/252) 已建立，固定本 SR 设计候选 SHA 与目标 main 基线；该 Issue 只授权 AC-024-01～07 的 Publisher 最小切片，不包含 Studio #269、Compiler 修改、Release 或生产准入。
+- [Studio Issue #269](https://github.com/odango-chan/ca-skill-studio-demo/issues/269)：仍为 OPEN；下游消费端 BuildRequest / Compiler 集成及 `source.sourceStatus=DEVELOPMENT_FIXTURE` 的 Lock provenance 归 SR-016，不是 Publisher 生成 ZIP 的硬前置。PR #253 没有修改 Studio 或 Lock。
+- 实施 Issue：[ca-agent-demo #252](https://github.com/odango-chan/ca-agent-demo/issues/252)，保持 OPEN，等待独立评审和 PR 合并；固定设计 SHA：`0fdd991f203f8468be155c35d81254eb84cd8ce5`；目标仓启动基线：`57e277ff9094dad93543df46910a12a1dbbaf560`。
+- 实施 PR：[ca-agent-demo #253](https://github.com/odango-chan/ca-agent-demo/pull/253)，OPEN、非 Draft、目标 `main`、`mergeable=true` / `mergeable_state=clean`；未合并。实施分支：`feature/issue-252-sr-024-host-context-publisher`。受测 Commit 与当前远端 head：`99b273136d24d0593038821ab52d613aee8743b0`。变更严格为本 SR 授权的两个文件：`scripts/publish_host_context_interface_package.py`、`tests/test_host_context_interface_package.py`。
+- **实施状态：IN_PROGRESS。** 代码已实现并推送，AC-024-01～07 均在受测 PR head 上有实际执行证据；PR 尚未合并，因此尚未达到 IMPLEMENTED。合并后复核集成基线，再按 SR 管理规范决定是否转 VERIFIED。替代关系：无。
+
+### 5.1 受测提交与验收证据
+
+输出 ZIP：`.agent-tmp/ac024/ca-host-context-1.0.0.zip`，702 bytes；SHA-256：`de94074b4c7c7a29fe4665d5e7b5a2d9772a7d1cb4b25e3aa4253b148a10a1ca`。两次独立生成的 ZIP 字节完全一致；生成物未提交。
+
+环境：Windows 11（10.0.26200）、Git 2.55.0.windows.1、uv 0.11.26、Python 3.12.13、jsonschema 4.26.0、Go 1.26.6。系统未安装 `make`；使用 GNU Make 3.82.90 的 `mingw32-make verify` 执行 Makefile 中相同的 `verify` recipe。
+
+| AC | 结果 | 受测证据 |
+|---|---|---|
+| AC-024-01 | PASS | 源 Git blob 精确匹配 `4faee66642b8bc5eb2e45c131be4688b982037d8`；ZIP 内 Schema 与源文件逐字节相同，未重新序列化。 |
+| AC-024-02 | PASS | 官方 Compiler v2.1.0 Schema blob 匹配 `f4cd831d21afd15665c92e99ffe2c3b31a3583df`；Draft 2020-12 校验通过；`sourceStatus`、`manifestDigest`、`signature` 和错误 Schema 均被拒绝。 |
+| AC-024-03 | PASS | 固定 package 身份、`version=1.0.0`、Schema `$id=...:v1`、`dependencies=[]` 和唯一 Schema export 均由测试精确断言。 |
+| AC-024-04 | PASS | Export ID/path 精确匹配；`files[].sha256` 对原始字节计算；无 `sourceStatus` 或 Schema 未声明字段。 |
+| AC-024-05 | PASS | ZIP 恰好两个 entries，顺序/时间戳/权限/压缩参数固定；两次构建逐字节一致；ZIP 未提交，无 Release/Registry。 |
+| AC-024-06 | PASS | `uv run pytest -q tests/test_host_context_interface_package.py`：37 passed；`mingw32-make verify`：2170 passed、100 skipped、2 deselected，退出码 0。 |
+| AC-024-07 | PASS | 使用 Compiler v2.1.0 实际 `validDevelopmentVersion` 与 `skillc build-development` 验证：`1.0.0` 正例成功；`v1`、`1.0.0+build.5` 与 snapshot key 不匹配负例拒绝。 |
+
+关键命令和结果：
+- 官方 Schema `curl` 获取成功，Git blob 校验退出码 0。
+- Publisher CLI 退出码 0，ZIP 702 bytes。
+- `uv run pytest -q tests/test_host_context_interface_package.py` 退出码 0（37 passed）。
+- `mingw32-make verify` 退出码 0（2170 passed, 100 skipped, 2 deselected）；该命令执行 Makefile 的 `verify` recipe：`uv run python scripts/validate_docs.py` 与 `uv run pytest -q -m "not live_model"`。
+- Compiler v2.1.0 `git archive` 临时树中的实际版本校验及 `skillc build-development` 正/负例均已执行；未修改 Compiler 仓库。
+
+PR 门禁与剩余事项：
+- GitHub 当前未返回该 head 的 PR-triggered Workflow Run；可见的 Release-request `create` 事件运行及其 Jobs 均为 `SKIPPED`，不得记作 CI PASS。
+- PR 当前没有独立 Review。PR 作者不能批准自己的 PR；已在 PR #253 请求独立 Reviewer。未执行合并。
+- Issue #252 保持 OPEN；独立 Reviewer 正式审查/批准（如仓库规则要求）及所需 PR checks 是合并前事项。
+
+### 5.2 职责边界
+
+本 SR 仅完成 Host Context Interface Package Publisher。Studio ZIP Import 已由 Studio #267 完成，但 `source.sourceStatus=DEVELOPMENT_FIXTURE` 的 Lock provenance 和 BuildRequest / Compiler 消费集成仍归 SR-016 / Studio #269。不得把 PR #253 描述为 Studio 集成、Compiler 产品集成、Host Trust/Admission 或生产级发布完成。
 
 
 ## 修订记录
@@ -83,3 +116,4 @@ make verify
 | 2026-11-25 | 0.1.7 | Codex / GPT-6 | 正文 | 同步本轮受影响的现行设计依据 | 历史记录未拆分（原记录合并） | Issue #12 SR-024 |
 | 2026-11-26 | 0.1.8 | Codex / GPT-6 | §3、§5 | 记录固定输入的实测设计结论，分离设计 READY 与目标仓实施 Issue。 | 历史记录未拆分（原记录合并） | Issue #12、#21 |
 | 2026-11-26 | 0.1.9 | GPT-6.2（ChatGPT） | §5 | 登记 ca-agent-demo 实施 Issue #252，并固定设计候选 SHA、目标 main SHA、AC 范围和非目标边界 | 完成 READY→跨仓实施 Issue 的追踪闭环，保持产品 AC NOT_RUN | Issue #26；ca-agent-demo #252 |
+| 2026-11-26 | 0.1.10 | GPT-6.2（ChatGPT） | 头部、§5～§5.2 | 回填 ca-agent-demo PR #253 的受测 Commit、AC-024-01～07 实测 PASS、ZIP 身份、测试环境与结果；将 SR 状态转为 IN_PROGRESS，并记录独立 Review、PR CI 与合并待办 | 代码已推送但 PR 未合并；按 SR 状态机区分受测 PASS、代码集成和 VERIFIED，不提前宣称完成 | Issue #12；ca-agent-demo #252/#253 |
