@@ -132,7 +132,7 @@
 
 **Capability 的 Build-time / Runtime 边界：** 冻结 v1alpha5 Artifact 的 `dependencyClosure[].exports[]` 仅序列化 `exportKind`、`exportId` 和 `owner`，不序列化作者源 `contract.capabilities`、Capability ID 或 Development profile 的 `capabilityRequirements`。Compiler Build 时使用 Owner snapshot 与 `trustedBuildContext.capabilityContracts` 校验作者源 Capability 声明和 Callable membership；这是静态链接/构建期保证。Runtime 不得从 Artifact 读取 Capability ID，也不得把 Capability ID 作为 Skill Runtime Scope 字段。Runtime 的有效调用面只由该 Artifact 精确导出的 `operation` / `observation` exports 建立；对 Owner Callable，Runtime 再按部署固定 Owner `CapabilityContracts` 校验 Callable membership 与 Effect。若 export、Owner membership、Effect 或部署身份不一致，必须 fail-closed。故 Runtime 不能仅凭 Skill Artifact 证明“编译时依赖字节”与“运行时依赖字节”完全相同。Next 目标 Demo 部署设计采用部署级单版本绑定：provider.yaml 的 `interfacePackagePath` / `interfaceSnapshotDigest` 固定 Provider Interface snapshot；这不是 ca-agent-demo main 已实现的 package-loader 事实；Provider Runtime Bindings sidecar 的 `ownerContract` 固定 Owner stableId、version、publicationDigest、manifestDigest。Host 必须验证 Interface snapshot digest、已安装 Owner publication 与 sidecar 一致，并检查 Artifact dependencyClosure 所需的 exports / Schema 均存在。发布流程必须将 Skill Artifact 与该 Owner v1alpha4 publication 及匹配的 ca-client-tools v1.2.0 Provider package 配套交付；编译时使用的 Owner snapshot 与 sidecar 所引用的 Owner publication 必须由发布流程保持一致，这一配套关系不能仅凭冻结 Artifact 在运行时反向证明。若未来需要逐 Skill 的 package version/snapshotDigest pin，必须由新的 Compiler Artifact API/profile 提供；不得修改已冻结 v1alpha5，也不得把 Development v1alpha1（其 Artifact 带 Lock、但 executionStatus 固定 `NOT_ADMITTED`）当作当前 Agent 运行输入。
 
-运行期必须同时取得部署配置选定的 Owner publication 与 Provider 平台包：Runtime 用 Owner snapshot 解释 Skill-facing Callable、Capability、Schema、Outcome、Evidence 和 Reconcile；ProviderV2 Driver 用 provider.yaml 的 11 个 Provider Interface mappings 与 sidecar 的 25 个 Owner mappings 找到私有 backend。Host 校验 Provider Interface `interfaceSnapshotDigest` 与 provider.yaml 一致，Provider Interface stablePackageId / required exports 与 Artifact dependencyClosure 一致；Owner stable ID / required exports 与 Artifact dependencyClosure 一致，并校验 Owner version / publicationDigest / manifestDigest 与 sidecar 一致。缺失任一来源、身份或映射时 fail-closed，不得用另一份 Catalog 推导补齐。
+运行期必须同时取得部署配置选定的 Owner publication 与 Provider 平台包：Runtime 用 Owner snapshot 解释 Skill-facing Callable、Schema、Outcome、Evidence 和 Reconcile，并校验 Owner Callable membership / Effect；作者源 Capability requirement 已在 Compiler Build-time 校验，不从冻结 Artifact 读取 Capability ID。ProviderV2 Driver 用 provider.yaml 的 11 个 Provider Interface mappings 与 sidecar 的 25 个 Owner mappings 找到私有 backend。Host 校验 Provider Interface `interfaceSnapshotDigest` 与 provider.yaml 一致，Provider Interface stablePackageId / required exports 与 Artifact dependencyClosure 一致；Owner stable ID / required exports 与 Artifact dependencyClosure 一致，并校验 Owner version / publicationDigest / manifestDigest 与 sidecar 一致。缺失任一来源、身份或映射时 fail-closed，不得用另一份 Catalog 推导补齐。
 
 ### 4.3 Skill、Plugin 与部署配置
 
@@ -407,7 +407,7 @@ Next Runtime 必须从已验证 sidecar 中所有 Mutation 的 `commitProof.reco
 | Provider 包、Manifest、Interface Package 或 sidecar 结构无效 | Plugin Manager 加载期 | Provider Extension 不可用；明确报错，不降级、不 fallback |
 | Owner Contract 版本或发布身份不匹配 | 包加载/Runtime 绑定校验 | 拒绝绑定；不得用相似字段或旧版映射补齐 |
 | backendOperationId 不存在或 Provider catalog 返回 unsupported | ProviderV2 Driver | 对应 binding unavailable；不得重构 ID 或调用其他 backend |
-| Skill 未声明 Callable / Capability | Runtime Action Boundary | 发送前拒绝；Plugin Manager 不得自行放行 |
+| Artifact 未导出 Callable / Owner Callable membership 或 Effect 无效 | Runtime Action Boundary | 发送前拒绝；Capability authoring requirement 已由 Compiler Build-time 校验，Runtime 不读取 Artifact Capability ID |
 | Input Schema / Effect / Artifact Scope 不匹配 | Runtime Action Boundary | 发送前拒绝；不触发远端操作 |
 | Provider 未配置服务或 Artifact Channel | Provider / Driver | NOT_CONFIGURED；不尝试备用 URL 或其他 Provider |
 | READ 返回 Schema 无效或关联 ID 错误 | Runtime | 不生成成功 Observation，返回明确失败 |
@@ -444,7 +444,7 @@ Next Runtime 必须从已验证 sidecar 中所有 Mutation 的 `commitProof.reco
 - 一个 Native Plugin 与一个 Provider v2 Tools Extension 由同一 Plugin Manager 管理；不存在第二 Manager/Registry/Runtime。
 - Compiler 构建时使用精确依赖快照；冻结 v1alpha5 Artifact 不携带依赖版本/snapshotDigest 或 Skill Capability ID。Compiler Build-time 校验作者源 Capability 与 Owner CapabilityContracts；Runtime 只从 operation/observation exports 建立精确 Callable allowlist，并验证各契约源的 Callable membership/Effect。部署通过 provider.yaml 的 interfaceSnapshotDigest 固定 Provider Interface，通过 Runtime Bindings sidecar 的 Owner publication identity 固定 Owner Contract；不宣称逐 Skill byte-exact pin。
 - Provider 启动握手、精确 catalog 查询、requestId 关联、cancel/timeout 和进程退出有自动化测试。
-- 未知 Callable、未授权 Capability、Effect 不匹配、Schema 错误、backend 不存在和 Provider unavailable 均 fail-closed。
+- Artifact 未导出 Callable、Owner CapabilityContracts membership / Effect 不匹配、Schema 错误、backend 不存在和 Provider unavailable 均 fail-closed；不读取冻结 Artifact 中不存在的 Capability ID。
 - Skill/LLM 无法看到或构造 backendOperationId、服务 URL、凭据和 privateArguments。
 - READ 输出经过 Schema 与来源校验；MUTATION 只有有效 Owner Receipt + Commit Proof 才能 COMMITTED。
 - UNKNOWN 使用原始 Invocation identity 进行 Reconcile，零重复 mutation。
