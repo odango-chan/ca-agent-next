@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.23
+> 文档版本：0.3.24
 > 状态：SR-001、SR-002 VERIFIED；SR-003、SR-024 READY；其余 23 项 SR 为 DRAFT；SR-028 为 G02 Python 工程工具链设计候选（DRAFT）；实施启动按 SR 管理规范 §6.1 检查阶段依赖  
 > 修订日期：2026-11-26  
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -93,7 +93,7 @@
 - 设计来源：ca-agent-next PR #1 的架构、设计、规范和 Acceptance 文档。
 - PR #1：已合并；只代表设计文档变更。
 - Next Runtime：README 声明尚无已验收 Runtime 实现。
-- 当前 27 项 SR 中 1 项 VERIFIED（SR-002）、3 项 READY（SR-001、SR-003、SR-024）、23 项 DRAFT；[PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)已核对 58 个文件与 SHA256SUMS；归档报告为 Go/Python 18/18，当前审计复跑 NOT_RUN，不改变 SR-013 总体 DRAFT 状态。SR-009 仅覆盖 Event/Delivery Plugin 与本地 staging；SR-010 还覆盖 Next Host ArtifactStore、ca-host.artifact-store/v1 channel server、Provider v2 Driver 和 Codec 消费。
+- 当前 27 项 SR 中 2 项 VERIFIED（SR-001、SR-002）、2 项 READY（SR-003、SR-024）、23 项 DRAFT；[PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)已核对 58 个文件与 SHA256SUMS；归档报告为 Go/Python 18/18，当前审计复跑 NOT_RUN，不改变 SR-013 总体 DRAFT 状态。SR-009 仅覆盖 Event/Delivery Plugin 与本地 staging；SR-010 还覆盖 Next Host ArtifactStore、ca-host.artifact-store/v1 channel server、Provider v2 Driver 和 Codec 消费。
 - Issue #12 追踪本轮中央设计资产恢复；PR #11/#13/#15/#16/#18 均在独立分支 OPEN/DRAFT，恢复分支已同步可复用的最新文档内容但尚未创建 PR；PR 状态不等于 SR 实施状态。
 - 恢复分支 docs/restore-original-designs-20261125 尚未创建指向 main 的总 PR；SR-002 设计 PR #20 与实施 PR #23 均已合并到恢复分支，SR-002 为 VERIFIED、AC-002-01～08 PASS；EX-01 仍 NOT_RUN。该恢复分支尚未合并 main。
 - ca-agent-demo、ca-client-tools、ca-skill-compiler、ca-skills 和 ca-openamsm-plugin 的现有代码/PR 只能作为外部复用或依赖证据，不能自动算作 Next SR 已实施。
@@ -136,3 +136,4 @@
 | 2026-11-26 | 0.3.21 | GPT-6.2（ChatGPT） | §1～§3 | 回填 SR-001 最终 AC-REV-01～10 PASS、78 项专项测试和 Run 45791388839；明确 PR #32 未合并 | 区分验收完成与集成完成，避免 AC 状态和 PR 状态混淆 | Issue #27；PR #32；Run 45791388839 |
 | 2026-11-26 | 0.3.22 | GPT-6.2（ChatGPT） | §1～§3 | 更新 SR-001 最新 HEAD 9d061c0、80 项专项测试和 Run 45793336377 | 回填最终代码块/注释/重复声明反例的验收结果，保持 PR 未合并门禁 | Issue #27；PR #32；Run 45793336377 |
 | 2026-11-26 | 0.3.23 | GPT-6.2（ChatGPT） | §1～§3 | 回填 SR-001 VERIFIED，合计 2 VERIFIED/2 READY/23 DRAFT | 与必需 AC 和合并状态一致 | Issue #27；PR #32；PR #36 |
+| 2026-11-26 | 0.3.24 | GPT-6.2（ChatGPT） | §3、修订记录 | 消除正文中残留的 1 VERIFIED / 3 READY 旧统计，统一为 2 VERIFIED / 2 READY / 23 DRAFT | 保持头部、列表和统计段落完全一致 | Issue #27；PR #32；PR #36 |
