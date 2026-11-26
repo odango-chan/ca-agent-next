@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.17
+> 文档版本：0.3.18
 > 状态：SR-002 VERIFIED；SR-001、SR-003、SR-024 READY；其余 22 项 SR 为 DRAFT；实施启动按 SR 管理规范 §6.1 检查阶段依赖  
 > 修订日期：2026-11-26  
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -75,7 +75,7 @@
 
 - 治理自动化：SR-001 READY；实施 Issue [#27](https://github.com/odango-chan/ca-agent-next/issues/27) 已登记；无产品前置，AC-REV-01～10 仍 NOT_RUN。
 - Phase A：SR-002（VERIFIED；PR #23 已集成；AC-002-01～08 PASS；EX-01 仍 NOT_RUN）。
-- Phase B：SR-003 READY；实施 Issue [#28](https://github.com/odango-chan/ca-agent-next/issues/28) 已登记；SR-002 VERIFIED 已满足，正式代码实施等待设计 PR #29 合并。
+- Phase B：SR-003 READY；实施 Issue [#28](https://github.com/odango-chan/ca-agent-next/issues/28) 已登记；SR-002 VERIFIED 已满足；实施分支从包含本设计的恢复分支集成提交派生，并在 Issue #28 固定该 SHA。
 - Phase C：SR-004。
 - Phase D：SR-005、SR-006。
 - Phase E：SR-007。
@@ -129,3 +129,4 @@
 | 2026-11-26 | 0.3.15 | GPT-6.2（ChatGPT） | §3～§4 | 登记 SR-002 独立实施 Issue #22，并保持 SR-003 DRAFT、实施依赖 SR-002 VERIFIED 的边界。 | 完成 READY→实施 Issue 的追踪闭环，不把设计 Issue 当作代码任务。 | Issue #19；Issue #21；Issue #22；PR #20 |
 | 2026-11-26 | 0.3.16 | GPT-6.2（ChatGPT） | §1～§4 | 将 SR-002 更新为 VERIFIED，回填 PR #20/#23 的合并状态和 AC-002-01～08 PASS；保持 SR-003 DRAFT 与 EX-01 NOT_RUN。 | 使 SR 索引反映模块实现和验收的真实状态，不把系统级 EX 或其他 SR 的未完成状态传播为 SR-002 阻塞。 | Issue #22；PR #20；PR #23；SR-002 v0.2.10 |
 | 2026-11-26 | 0.3.17 | GPT-6.2（ChatGPT） | §1～§4 | 将 SR-001/SR-003/SR-024 更新为 READY，并登记 Issue #27/#28/#252；同步 SR-002 VERIFIED 后的 SR-003 启动门槛 | 使索引反映最新设计审查、实施追踪和并行 SR-002 证据，不将系统 EX-01 混入模块门禁 | Issue #26～#28；ca-agent-demo #252；PR #25；PR #29 |
+| 2026-11-26 | 0.3.18 | GPT-6.2（ChatGPT） | §1～§3、§5 | 将 SR-003 实施状态从等待 PR #29 改为按最终恢复分支集成 SHA 启动；保留 SR-002 VERIFIED 与 1 VERIFIED / 3 READY / 22 DRAFT 统计。 | 消除已满足门禁的过期等待表述，并使实施入口绑定最终设计基线。 | Issue #26～#28；PR #29；SR-002、SR-003 |
