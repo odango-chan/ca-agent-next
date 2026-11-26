@@ -1,14 +1,20 @@
 # G02：Python 工程工具链与环境管理设计说明书
 
 > 文档类型：工程治理功能设计说明书  
-> 文档版本：0.1.2  
-> 状态：DRAFT；待独立设计评审，SR-028 不可实施  
+> 文档版本：0.1.3  
+> 状态：DRAFT（实施主状态）；**设计待评审 / REVIEW_REQUESTED**；SR-028 实施 NOT_READY  
 > 修订日期：2026-11-26  
 > 功能节点：G02 Python 工程工具链与环境管理  
 > 关联需求：[IR-007](../../IR/IR%20总登记册.md#ir-007)、[SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md)  
 > 追踪 Issue：[ca-agent-next #35](https://github.com/odango-chan/ca-agent-next/issues/35)  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级供应链安全治理、跨仓批量迁移、Agent Runtime 架构变更
+
+## 0. 设计评审入口（2026-11-26）
+
+本设计与 [SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md) 一同提交独立设计评审，关联 [Issue #35](https://github.com/odango-chan/ca-agent-next/issues/35) / [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12)。审查 uv/pin/lock、Python 3.14.6 基线、Worktree 隔离、setuptools 不变、GitHub Actions 与 AC-028-01～09 的实际命令及退出条件。
+
+**设计待评审与实施 READY 分离：**PR #32 的评审上下文 CI 已完成，不构成 uv 迁移验收；SR-028 保持 DRAFT。评审未通过不得生成实施提示词，不开展跨仓批量迁移或不必要的生产供应链 DFX。
 
 ## 1. 目标
 
@@ -222,3 +228,4 @@ I1 与 I3 可在 SR-028 实施 Issue 内按依赖顺序执行；I2 只在 SR-001
 | 2026-11-26 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 新建 G02 Python 工程工具链与环境管理设计；固定 uv、锁文件、依赖分组、Python 基线、worktree 隔离、CI 入口和 SR-001 Workflow 阶段依赖 | 解决共享 Python 环境污染和 Workflow 临时安装未声明依赖的问题，同时保持 setuptools 与 Agent Core 运行时依赖边界 | Issue #35；IR-007；SR-028 |
 | 2026-11-26 | 0.1.1 | GPT-6.2（ChatGPT） | §3.6、§6 | 明确 review_context.py CLI 只在 PR #32 集成后可执行，避免将尚不存在于当前基线的脚本列为 I1 命令 | 消除 SR-028 独立 I1 可实施性与 SR-001 下游依赖之间的命令歧义 | Issue #35；PR #32；SR-028 |
 | 2026-11-26 | 0.1.2 | GPT-6.2（ChatGPT） | §3.2、§3.5、§3.7、§5 | 固定 `.python-version` 文件内容、`.gitignore` 追加方式、setup-uv 精确 YAML 调用和 `uv sync` 项目安装语义；限定可复现承诺边界 | 进一步消除 Harness 对文件内容、CI action 配置、worktree editable 安装及构建可复现范围的猜测 | Issue #35；IR-007；SR-028 |
+| 2026-11-26 | 0.1.3 | GPT-6（ChatGPT） | 文档头、设计评审、修订记录 | 新增设计待评审入口、评审覆盖与实施门禁隔离 | 纳入统一 23 SR 设计评审批次，避免把历史 CI 当成 uv 迁移 PASS | Issue #12/#35；SR-028 |

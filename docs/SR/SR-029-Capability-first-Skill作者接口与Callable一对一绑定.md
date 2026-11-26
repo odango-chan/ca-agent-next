@@ -14,15 +14,6 @@
 > 工作分支：docs/issue-40-casl-160-capability-design-review
 > 本 SR 性质：中央架构与规范设计；不授权修改任何下游实现仓
 
-### 0.1 统一设计评审批次（2026-11-26）
-
-本 SR 已提交 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12) 的中央设计审查；**主状态 `DRAFT` 与设计 `REVIEW_REQUESTED` 独立，实施 READY/产品 PASS 均未获得**。新语言架构见 [SR-029](SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) 和 [PR #45](https://github.com/odango-chan/ca-agent-next/pull/45)。
-
-- **本轮审查重点：**核查 CA-SL 1.6.0 Capability-first 作者语法、Capability↔Callable 双向一对一、Provider 8+3 私有 backend 选择和 Owner 原始成员差异。
-- **未发布/未证据项：**PR #45 仅设计候选，外部 Publisher、Compiler API、新 Artifact/Bundle/Studio 尚未发布，AC-029 产品 NOT_RUN。
-- **统一目标：**CA-SL **1.6.0 ONLY**；Skill-facing 只有 Capability ID，公开 Capability↔Callable 严格双向一对一；旧语言、Compiler DTO、Artifact、Bundle、别名、fallback 与迁移兼容均禁止。旧源 Schema/fixture/发布身份只用于只读历史审计；新机器契约由发布者冻结，不得自行猜测。
-- **评审退出：**逐项核查范围/非目标、外部契约、失败语义和 AC；外部新合同未发布为 `BLOCKED`、产品未运行为 `NOT_RUN`。在独立评审通过前不得向 Harness 交付实施提示词。
-
 ## 0. 设计评审与无兼容门槛
 
 本 SR 仅是 CA-SL 1.6.0 Capability-first 的待评审设计。**无兼容**指：新作者规范、Compiler Parser/BuildRequest/BuildResult/Check/Build/Verify、Runtime Artifact、Agent Importer/Runtime、Studio 与 Bundle 全部只接受 1.6.0。没有旧包解析、别名、映射、双轨、版本协商、fallback、自动迁移或混合 Catalog。旧 Skill 必须人工重新编写、重新编译并发布，历史 v1alpha5 规范和 Golden 仅做只读审计。

@@ -1,8 +1,8 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.39
-> 状态：28 项 SR：4 VERIFIED、1 IMPLEMENTED、23 DRAFT（其中 SR-029 设计待评审），SR-003 模块 AC PASS，系统 EX NOT_RUN
+> 文档版本：0.3.40
+> 状态：28 项 SR：4 VERIFIED、1 IMPLEMENTED、23 DRAFT（23 项设计均已提交待评审），SR-003 模块 AC PASS，系统 EX NOT_RUN
 > 修订日期：2026-11-26  
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
@@ -16,7 +16,7 @@
 - 本索引只汇总 ID、标题、设计依据、状态、依赖和实施入口。
 - 状态变化先更新 SR 文件，再更新本索引和[实施状态总览](实施状态总览.md)。
 - ca-agent-next PR #1 是文档/设计基线 PR，不是任何 SR 的实现 PR。
-- PR #1、#32、#34 已合并；SR-001/SR-002/SR-003/SR-024 VERIFIED，SR-015 IMPLEMENTED，其余 23 项 DRAFT（含 SR-029 设计待评审，非实施 READY）。
+- PR #1、#32、#34 已合并；SR-001/SR-002/SR-003/SR-024 VERIFIED，SR-015 IMPLEMENTED，其余 23 项 DRAFT（设计均已提交待评审，非实施 READY）。
 
 ## 2. SR 清单
 
@@ -52,6 +52,38 @@
 | [SR-029](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) | [IR-008](../IR/IR%20总登记册.md#ir-008)（关联 IR-003） | CA-SL 1.6.0 Capability-first 作者模型与 Callable 双向一对一；完全无旧版兼容 | **DRAFT（设计待评审，非实施 READY）** |
 
 设计版本与章节、依赖、验收 ID、实施证据以各 SR 为准。逐项阻塞见[就绪审计](../参考与审计/跨仓设计资产迁移与一致性审计.md#8-设计就绪审计)。
+
+### 2.1 本批 DRAFT 的设计待评审清单（与实施主状态正交）
+
+**截至本候选提交，23/23 项实施主状态为 DRAFT 的 SR 已具有中央设计待评审入口。** 这仅表示提供了公开可核的评审候选，**不是**独立设计批准、`READY` 实施授权，也不是外部发布或 AC/EX/OM 验收通过。总范围见 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12)，1.6.0 唯一作者/运行时目标见 [SR-029](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md)；SR-004 / SR-029 原有专项 PR #44/#45 的依赖顺序保持不变。
+
+| SR | 本轮评审焦点 | 设计评审 | 实施主状态 |
+|---|---|---|---|
+| SR-004 | Skill Importer candidate 与旧 Artifact 拒绝 | 待评审（REVIEW_REQUESTED） | DRAFT |
+| SR-005 | Catalog 代际、CheckedExpr 与原子激活 | 待评审（REVIEW_REQUESTED） | DRAFT |
+| SR-006 | Skill Resolver 与 Continuation 选择 | 待评审（REVIEW_REQUESTED） | DRAFT |
+| SR-007 | 统一 Runtime Scope、Owner Outcome | 待评审（REVIEW_REQUESTED） | DRAFT |
+| SR-008 | 1.6.0 Echo 双 Skill 示例 | 待评审（REVIEW_REQUESTED） | DRAFT |
+| SR-009 | OpenAMSM SBI Plugin 与二进制 | 待评审（REVIEW_REQUESTED） | DRAFT |
+| SR-010 | Provider/Codec 与 Artifact Channel | 待评审（REVIEW_REQUESTED） | DRAFT |
+| SR-011 | 真实 OpenAMSM Create/Modify/Release | 待评审（REVIEW_REQUESTED） | DRAFT |
+| SR-012 | Compiler 中央设计归档 | 待评审（REVIEW_REQUESTED） | DRAFT |
+| SR-013 | Compiler when、新 Artifact 与 Build API | 待评审（REVIEW_REQUESTED） | DRAFT |
+| SR-016 | Skill Studio 与 1.6.0 集成 | 待评审（REVIEW_REQUESTED） | DRAFT |
+| SR-017 | OpenAMSM Event/Delivery Plugin 设计移交 | 待评审（REVIEW_REQUESTED） | DRAFT |
+| SR-018 | MAS Owner 权威契约移交 | 待评审（REVIEW_REQUESTED） | DRAFT |
+| SR-019 | Mock AMF 与仿真对端 | 待评审（REVIEW_REQUESTED） | DRAFT |
+| SR-020 | Python Generic Host 参考审计 | 待评审（REVIEW_REQUESTED） | DRAFT |
+| SR-021 | Go Native Host 目标参考 | 待评审（REVIEW_REQUESTED） | DRAFT |
+| SR-022 | ca-runtime 语义迁移对照 | 待评审（REVIEW_REQUESTED） | DRAFT |
+| SR-023 | 历史 CA-SL 规范只读移交 | 待评审（REVIEW_REQUESTED） | DRAFT |
+| SR-025 | MAS Owner 新 Interface Package 发布 | 待评审（REVIEW_REQUESTED） | DRAFT |
+| SR-026 | Codec 对外 Capability 发布 | 待评审（REVIEW_REQUESTED） | DRAFT |
+| SR-027 | 1.6.0 技能 Bundle 发布 | 待评审（REVIEW_REQUESTED） | DRAFT |
+| SR-028 | uv Python 工程工具链 | 待评审（REVIEW_REQUESTED） | DRAFT |
+| SR-029 | 1.6.0 Capability-first 一对一绑定 | 待评审（REVIEW_REQUESTED） | DRAFT |
+
+上述专项评审按单版本 1.6.0 和 Capability↔Callable 一对一原则校核；历史 v1alpha5、Compiler v2.1.0、Owner v1alpha4 和 Provider v1.2.0 只可作迁移/审计来源。旧来源中的身份、Build DTO、Artifact、Bundle 或测试不得自动证明新版发布/可实施。SR-029 新契约尚未发布，Compiler #61、Publisher、Skill Bundle 等真实前置仍保持各自 BLOCKED/NOT_RUN；SR-028 的 uv 工具链设计可独立于这些外部发布审查。
 
 ## 3. 设计恢复与实施顺序
 
@@ -154,3 +186,4 @@
 | 2026-11-26 | 0.3.37 | GPT-6（ChatGPT） | SR 清单、§3.2、§4、修订记录 | 新增 SR-029 设计待评审，28 项 SR 统计更新为 4 VERIFIED / 1 IMPLEMENTED / 23 DRAFT，约束 1.6.0-only 无兼容 | 将设计待评审与实施 READY 分开并追溯 IR-008 / Issue #40 | Issue #40；SR-029；IR-008 |
 | 2026-11-26 | 0.3.38 | GPT-6（ChatGPT） | 文档互引与修订记录 | 刷新当前生效版本引用：当前 SR-004 文档版本已刷新为设计待评审，实施仍 DRAFT | 防止待审文档引用旧版本 | Issue #40；SR-029 | 
 | 2026-11-26 | 0.3.39 | GPT-6（ChatGPT） | Phase C、修订记录 | 将 SR-004 最新待评审版本对齐 v0.2.7；维持 28 项 SR（4 VERIFIED / 1 IMPLEMENTED / 23 DRAFT） | 不把审核状态误认为下游实施 READY | Issue #40/#43；PR #45 |
+| 2026-11-26 | 0.3.40 | GPT-6（ChatGPT） | 文档头、设计评审、修订记录 | 为全部 23 项 DRAFT SR 建立独立设计待评审矩阵；实施状态统计仍为 4/1/23 | 明确评审请求与实施 READY 独立，不假设 1.6.0 外部产物已发布 | Issue #12/#40/#43；SR-004～SR-029 |
