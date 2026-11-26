@@ -1,23 +1,23 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.8\
-> 状态：DRAFT（设计补充待评审；不得据此启动产品实施）  
+> 文档版本：0.2.9\
+> 状态：**DRAFT（设计待评审）**；CA-SL 1.6.0-only Compiler 新契约待 Owner 冻结；产品实施/发布 NOT_RUN  
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-26  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：Next 消费端实现、生产准入、Owner Trust 治理、自动发布及真实 5GC/MAS 资格。
 
-上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。功能归属：EC02 Compiler、F08 技能编译与发布；消费端关联 F02。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.5、[F08 技能编译与发布设计说明书](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.5、[F02 Skill 管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md) §7/§11、CA-SL v1alpha5 正式来源 SHA 18d8184367982ccbc835756136c4a53f9096c3a0。
+上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。功能归属：EC02 Compiler、F08 技能编译与发布；消费端关联 F02。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.9、[F08 技能编译与发布设计说明书](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.10、[F02 Skill 管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md) §7/§11、CA-SL v1alpha5 正式来源 SHA 18d8184367982ccbc835756136c4a53f9096c3a0。
 
 目标仓：odango-chan/ca-skill-compiler。实施 Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)。文档刷新 Issue：[Next #14](https://github.com/odango-chan/ca-agent-next/issues/14)。目标代码基线：Compiler v2.1.0，commit 255ab85fa5abb4b0bf36656bf64250cafebf45cb。规范依赖：[ca-skills #88](https://github.com/odango-chan/ca-skills/pull/88) 已合并，正式发布身份见 [ca-skills release record](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs/releases/ca-sl-v1alpha5.md)。
 
 ## 1. 目标、范围与契约边界
 
-为 CA-SL v1alpha5 的可选 assurance/contract.yaml.when 提供 Compiler 发布阶段静态检查、跨语言 CheckedExpr、版本化 Runtime Artifact、Build/Verify 和正式发布证据。
+为下一正式 **CA-SL 1.6.0** 的可选 assurance/contract.yaml.when 提供 Compiler 发布阶段静态检查、跨语言 CheckedExpr、Request Schema 与 SR-029 唯一 Capability→Callable Binding，构建全新的单版本 BuildRequest/BuildResult、Runtime Artifact、Check/Build/Verify 和正式发布证据。历史 v1alpha5 PoC/发行物仅做审计，不能复用其 Build DTO 或计作新版产品验收。
 
 必须保持：
 
-- CA-SL languageTarget 仍为 connectionagent.io/v1alpha5。
+- **唯一新 CA-SL 语言目标为 1.6.0**；准确 `languageTarget` 机器标识由 ca-skills / Compiler Owner 联合正式冻结；新版 Compiler/Agent 拒绝旧 v1alpha5 与未发布的候选语言。
 - 已发布 Artifact v1alpha5 完全冻结。
 - Development Artifact v1alpha1 完全冻结并继续 NOT_ADMITTED。
 - 单一 Go Compiler Core；Native CLI 与 WASM Worker 共用。
@@ -30,13 +30,13 @@
 
 | 项目 | 固定值 / 状态 |
 |---|---|
-| CA-SL | connectionagent.io/v1alpha5，规范来源 SHA 18d8184367982ccbc835756136c4a53f9096c3a0 |
+| CA-SL | **1.6.0 NOT_RELEASED**，精确机器标识与正式 Schema 待 ca-skills 发布；v1alpha5 SHA 18d8184367982ccbc835756136c4a53f9096c3a0 仅历史审计 |
 | Compiler | v2.1.0；PoC 源基线 255ab85fa5abb4b0bf36656bf64250cafebf45cb |
 | Go PoC 环境 | Go 1.26.6、cel-go 0.33.2、cel.dev/expr 0.25.1、Go protobuf 1.36.10 |
 | Python PoC 环境 | CPython 3.14.6、cel-expr-python 0.1.4、protobuf 7.36.2 |
 | 目标仓写入授权 | 产品实现前须再次确认；本轮文档 PR 不授予 Compiler 写入权限 |
 | 合并 / 发布 | 必须单独授权；本轮不包含 |
-| 规范门槛 | 已满足；正式源 SHA 已固定 |
+| 规范门槛 | **未满足**；CA-SL 1.6.0 规范/机器标识/Capability Binding 尚未正式发布；历史 v1alpha5 不能替代 |
 | PoC | [PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)已核对 58 个文件与 SHA256SUMS；归档报告为 Go/Python 18/18，当前审计复跑 NOT_RUN |
 | 产品实施 | AC-013-02～04 NOT_RUN；AC-013-05 BLOCKED |
 
@@ -164,7 +164,7 @@ CEL 表达式、字段访问、守卫、非 bool 和缺少 input Schema 使用 C
 
 ### 5.1 版本决策
 
-设计推荐候选 API：Artifact 为 connectionagent.io/compiler-artifact/2，BuildResult 为 connectionagent.io/compiler-build-result/2。新 Runtime Build 复用 BuildRequest connectionagent.io/compiler-build-request/v1alpha5；DependencyInspection 保持 connectionagent.io/compiler-dependency-inspection/v1alpha5，除非实际 DTO 审计证明需要升级。languageTarget 仍为 connectionagent.io/v1alpha5。
+设计推荐候选 API：Artifact 为 connectionagent.io/compiler-artifact/2，BuildResult 为 connectionagent.io/compiler-build-result/2。新 Runtime Build/DependencyInspection/BuildRequest 均必须提供 **仅支持 CA-SL 1.6.0** 的唯一新 DTO；不复用旧 v1alpha5 机器 API。精确 Schema、Artifact/BuildResult 版本与机器 languageTarget 均由 Compiler Owner Gate 冻结，不能预先把候选值当成已发布契约。
 
 新 Compiler Runtime Build 只产生 2 BuildResult / Artifact，VerifyBuildResult 只接受该新结果契约；不在同一二进制中双轨支持旧/新 Runtime BuildResult，不增加版本 dispatch、fallback 或兼容路由。旧 v2.1.0 Release 保留冻结 Artifact/BuildResult v1alpha5 历史行为；Development Build 继续使用独立 v1alpha1 API/Artifact 家族。
 
@@ -220,7 +220,7 @@ Manifest 保留现有 v1alpha5 顶层字段语义。每个声明 requestSchema �
 - 验证所有类型引用可解析，Request Schema identity 与该 Skill 一致。
 - 验证 SourcePath、表达式位置、程序文件与 Manifest 一致。
 - 验证不存在跨 Skill Descriptor 引用。
-- 新 Runtime Build 复用 BuildRequest v1alpha5，返回唯一的 BuildResult 2；VerifyBuildResult 只接受该新结果并验证 Artifact 2，执行完整重建和逐文件比较或 Compiler Owner 批准的等价确定性复验。旧 v1alpha5 Runtime Verify 行为由旧 v2.1.0 Release 保持，不在新二进制内兼容路由；Development Verify 继续使用独立 Development API v1alpha1。现有 CLI 写盘前 Verify 的不变量必须保留。
+- 新 Runtime Build 只接受 CA-SL 1.6.0 的**新 BuildRequest/BuildResult/Artifact**；VerifyBuildResult 只验证该唯一新结果，执行完整重建和逐文件比较或 Compiler Owner 批准的等价确定性复验。旧 BuildRequest v1alpha5、旧 Artifact/Bundle/Development v1alpha1 均被新 Compiler/Agent 拒绝，无兼容、自动迁移或 fallback。旧 v1alpha5 Runtime Verify 行为由旧 v2.1.0 Release 保持，不在新二进制内兼容路由；Development Verify 继续使用独立 Development API v1alpha1。现有 CLI 写盘前 Verify 的不变量必须保留。
 - 新版失败行为不改变冻结 v1alpha5 与 Development v1alpha1 的 Verify。
 
 ### 6.3 必跑命令
@@ -323,7 +323,7 @@ SR-013 达到 READY 且文档门禁通过后，实施使用一个连续 Goal，�
 - Next Agent Runtime、SkillCatalog、Resolver、Continuation 或 Python 导入代码；这些由 SR-004/005/006 负责。
 - ca-skills Bundle CI；由 SR-027 负责。
 - Compiler 内的 Tool/Owner 执行、网络访问或 Runtime。
-- CA-SL v1alpha6、旧版兼容映射、冻结 Artifact 修改。
+- 旧 CA-SL 语法兼容、旧 Build DTO / Artifact / Bundle 兼容、双版本、版本协商、迁移工具、fallback、冻结历史 Artifact 修改；唯一新目标是 1.6.0，不使用 v1alpha6 命名。
 - Development Artifact 作为发布 Bundle。
 - Agent Skill Admission、生产授权、签名、Trust Registry、额外 SHA-256、生产资格或 5GC/MAS 认证。
 
@@ -339,6 +339,14 @@ SR-013 达到 READY 前必须：
 6. 每项 AC 的 Acceptance、命令、退出条件、证据格式和停止/恢复条件完整。
 
 SR-013 只有 AC-013-01～05 均达到各自通过条件，Compiler Release 有授权且证据可复核，才可报告 Compiler 交付完成。SR-023、SR-004/005/006 的 Bundle/Agent 验收不得由 SR-013 代替。
+
+## 10. CA-SL 1.6.0 统一新接口与设计评审门槛
+
+- 本 SR 的 **设计待评审** 不意味着 Compiler 已实现或 READY；AC-013-02～05 的新产品 Build/Verify/Golden / Release 必须独立通过。
+- 新版 Compiler 只处理 CA-SL 1.6.0 Capability-first 源码。Contract/Procedure 的 Capability ID 经 SR-029 定义的一对一约束绑定到唯一 Callable；严格校验 kind、Effect、Input/Output Schema、Owner/Provider Package identity，Artifact 保存已编译的 Binding。
+- 与 when/Request Schema 相关的 CheckedExpr、DescriptorSet、Schema 根与 $ref 闭包和 Binding 使用同一个正式 1.6.0 Runtime Artifact。其 BuildRequest、BuildResult、DependencyInspection 和 Verify 使用唯一 1.6.0 DTO；不兼容历史 v1alpha5 和 Development v1alpha1 运行输入。
+- 精确 machine languageTarget、API 名称、字段、Schema 与 Golden 必须由 ca-skills / Compiler Owner 在正式 Issue/PR/Release 冻结；历史 Go/Python CEL PoC 可作为算法审计，但不能宣称 1.6.0 产品 PASS。
+- 相关设计门禁为 [SR-029](SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md)、[SR-004](SR-004-已发布技能包导入.md)、[SR-027](SR-027-技能Bundle构建与发布.md)，新 Release 未完成前不得给出 Compiler 产品实施 READY 或 Harness 提示词。
 
 ## 修订记录
 
@@ -363,3 +371,4 @@ SR-013 只有 AC-013-01～05 均达到各自通过条件，Compiler Release 有�
 | 2026-11-25 | 0.2.6 | Codex / GPT-6 | 正文 | 同步所引权威设计版本 | 消除执行歧义并同步中央设计 | Issue #12 SR-013 |
 | 2026-11-26 | 0.2.7 | Codex / GPT-6 | 见本行变更 | 将实际 Bundle CI/发布归入 ca-skills 生产端 SR-027 | 对齐跨仓实现与独立复验 | Issue #12 |
 | 2026-11-26 | 0.2.8 | Codex / GPT-6 | 见本行变更 | 将未发布 Runtime Artifact 与 BuildResult 的候选版本段改为纯数字 2，保留 Owner 冻结门禁 | 对齐跨仓实现与独立复验 | Issue #12 |
+| 2026-11-26 | 0.2.9 | GPT-6（ChatGPT） | 文档头、§1～2、§5～6、§10、修订记录 | 把 Compiler 新产品规范统一为 CA-SL 1.6.0-only，移除 v1alpha5 BuildRequest/DependencyInspection/Runtime 兼容入口并增加 SR-029 Binding 门槛 | 不把历史 PoC、冻结发布源或旧 Build DTO 当作当前产品设计完成 | Issue #40；SR-029；Compiler #61 |
