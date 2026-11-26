@@ -1,7 +1,7 @@
 # 通用 Agent Core 与 Host 设计说明书
 
 > 文档类型：功能设计说明书  
-> 文档版本：0.3.6  
+> 文档版本：0.3.7  
 > 状态：Next 目标设计；本仓实现状态需独立验收，不以参考仓 PASS 代替  
 > 功能归属：F01 — 通用 Agent Core 与 Host  
 > 关联 SR：SR-002、SR-020、SR-021  
@@ -82,11 +82,11 @@ Host 至少维护：
 Model Loop 不承担 Tool dispatch。每一轮模型输入由 Host 组装，至少包含：
 - 当前 Goal/Event 的规范化视图；
 - 已绑定 Skill 的 SKILL.md；
-- 当前允许的 Callable 描述和 Schema 摘要；
+- 当前 Skill 已授权的 Capability 描述和公开 Input / Output Schema 摘要；模型不得看到 Callable ID 或 backendOperationId；
 - 已授权 Context / Observation；
 - 当前 Run 位置和剩余 response obligation。
 
-模型输出必须转换为结构化 Action Proposal。Host/Runtime 校验 Skill identity、Callable ID、参数 Schema、Artifact refs、Run state 和 invocation identity 后，才允许调用 Plugin。模型输出格式错误、未知 Callable、参数不完整或越权时停止，不自动猜测修复。
+模型输出必须转换为结构化 Action Proposal。Host / Runtime 校验 Skill identity、Capability ID、参数 Schema、Artifact refs、Run state 和 invocation identity；再从已验证 Artifact 的唯一 capabilityBinding 解析内部 Callable，才允许调用 Plugin。模型不得提交或替换 Callable ID、backendOperationId、URL 或 Provider selector；未知 Capability、绑定歧义、参数不完整或越权时停止，不自动猜测修复。
 
 Model Client 是可替换适配器；自动化测试必须支持 Fake Model Client。模型 Provider、Gateway URL、模型 ID 和凭据属于部署配置，不进入业务 Skill 契约。
 
@@ -322,3 +322,5 @@ SR-002 的独立模块验收为 AC-002-01～AC-002-08，详见《演示验收基
 | 2026-11-26 | 0.3.4 | GPT-6.2（ChatGPT） | §5.1～§5.5 | 固定包元数据、公开导出、Event/Context/JSONValue 校验、HostError/CLI 错误语义和 Smoke 契约 | 形成可独立实施与复验的 Python Host 契约，并明确与后续模块的边界 | IR-002；SR-002；SR-003；AC-002-01～08；Issue #19；PR #20 |
 | 2026-11-26 | 0.3.5 | GPT-6.2（ChatGPT） | §5.1～5.4 | 固定 HostError 在 contracts.py 唯一定义、host.py 重导出，并将 CLI_USAGE_ERROR 明确为 CLI-only 诊断。 | 避免 ModelLoop/Host 循环导入及 CLI/Host 异常类型混淆。 | Issue #19；SR-002 v0.2.5；SR-003；PR #20 |
 | 2026-11-26 | 0.3.6 | GPT-6.2（ChatGPT） | §5.5 | 澄清默认 Smoke Fake 的成功输出与测试注入边界；注入型 ModelClient 只用于 CLI 失败路径测试，成功调用次数由 Fake 单元测试记录断言。 | 消除任意注入 Fake 的调用计数接口歧义，不新增生产 Protocol 或公共属性。 | Issue #19；Issue #21；SR-002 v0.2.7；AC-002-01～08；PR #20 |
+
+| 2026-11-26 | 0.3.7 | GPT-6（ChatGPT） | 当前目标契约 | 将 Model Loop 可见输入和 Action Proposal 从 Callable ID 改为 Capability ID，Callable 仅由 Host 从已验证 Binding 内部解析 | 切换到 1.6.0 Capability-first 单一作者入口 | Issue #12/#40；PR #46 |
