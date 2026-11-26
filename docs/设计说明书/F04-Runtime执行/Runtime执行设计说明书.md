@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：目标设计，待实现和验收  
-> 文档版本：0.3.4
+> 文档版本：0.3.5
 > 功能归属：F04 — Runtime 执行  
 > 关联 SR：SR-007    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -33,15 +33,15 @@ Host 不直接调用 Tool Plugin。LLM 不得绕过 Runtime，也不得自行扩
 
 ## 3. 统一 Action Boundary
 
-Deterministic 与 LLM-guided 都形成同一种概念上的 Runtime Action Request，并经过相同的校验和分发路径。Callable ID、输入/输出 Schema 和 Effect 来自 Skill Artifact dependencyClosure 声明的契约来源：Provider Interface Package 或业务 Owner Contract Package；Capability membership 来自对应契约的 Capability 定义。OpenAMSM MAS 的 `mas::CALLABLE` 来自 Owner Contract Package，而不是 ca-client-tools 的 11-READ Interface Package。Owner Outcomes、Receipt、Commit Proof 和 Reconcile 只来自 Owner Contract Package。Provider Runtime Bindings 只提供私有 backendOperationId、HostInvocation/privateArguments 来源和 observation 定位，不是公开 Tool 契约或授权来源。不得在 Agent Core 内维护重复 Tool 定义。
+Deterministic 与 LLM-guided 都形成同一种概念上的 Runtime Action Request，并经过相同的校验和分发路径。Callable ID、输入/输出 Schema 和 Effect 来自 Skill Artifact dependencyClosure 声明的契约来源：Provider Interface Package 或业务 Owner Contract Package；Capability membership 来自对应契约的 Capability 定义。OpenAMSM MAS 的 `mas::CALLABLE` 来自 Owner Contract Package，而不是 ca-client-tools 的 11-READ Interface Package。**冻结 CA-SL v1alpha5 Artifact 不序列化作者源 `contract.capabilities` 的 Capability ID**；Compiler Build-time 使用 Owner `CapabilityContracts` 校验作者源 Capability 声明，Runtime 只从 Artifact `operation` / `observation` exports 建立精确 Callable allowlist，并按部署固定 Owner Contract 验证 Owner Callable membership / Effect。不得让 Runtime 从 Artifact 读取 Capability ID，也不得把 Capability ID 作为 Skill Runtime Scope 字段。Owner Outcomes、Receipt、Commit Proof 和 Reconcile 只来自 Owner Contract Package。Provider Runtime Bindings 只提供私有 backendOperationId、HostInvocation/privateArguments 来源和 observation 定位，不是公开 Tool 契约或授权来源。不得在 Agent Core 内维护重复 Tool 定义。
 
 冻结 CA-SL v1alpha5 Artifact 的 dependencyClosure 只携带 stablePackageId 与 required exports，不携带 Owner package version / snapshotDigest。当前 Demo 的 Runtime 因此使用 provider.yaml 的 `interfacePackagePath` / `interfaceSnapshotDigest` 校验 Provider Interface snapshot，并使用 Provider Runtime Bindings sidecar 中的 Owner stableId、version、publicationDigest、manifestDigest 校验部署安装的 Owner publication；这属于部署级依赖固定，不是逐 Skill 字节级 pin。Runtime 必须同时验证 Artifact 所需 exports / Schema 存在且与 sidecar Owner identity 一致。
 
 Runtime 在分发前至少核对：
 
 1. 当前 Run 是否绑定有效 Skill 和对应 Catalog generation。
-2. Action 是否属于当前 Skill 发布 Artifact 声明的 Callable Scope。
-3. Callable ID 是否存在，参数是否符合部署固定的 Provider Interface Package 或 Owner Contract Package Schema；Provider Interface bytes 应匹配 provider.yaml 的 `interfaceSnapshotDigest`；Owner snapshot 的 stable ID / required exports 应与 Artifact dependencyClosure 一致，Owner version / publicationDigest / manifestDigest 应与 Provider sidecar 一致。
+2. Action 是否属于当前 Skill 发布 Artifact `dependencyClosure[].exports[]` 中的精确 `operation` / `observation` Callable allowlist。
+3. Callable ID 是否存在，参数是否符合部署固定的 Provider Interface Package 或 Owner Contract Package Schema；Provider Interface bytes 应匹配 provider.yaml 的 `interfaceSnapshotDigest`；Owner snapshot 的 stable ID / required exports 应与 Artifact dependencyClosure 一致，Owner version / publicationDigest / manifestDigest 应与 Provider sidecar 一致。冻结 v1alpha5 Artifact 不含 Capability ID；对 Owner Callable 只验证部署 Owner Contract 中的 membership / Effect，不读取不存在的 Skill Capability 字段。
 4. Effect 是否与该 Operation 的声明一致。
 5. Artifact Reference 是否由 Host 管理并关联到当前 Invocation。
 6. Action 是否满足当前 Run 的状态和 continuation 约束。
@@ -83,9 +83,11 @@ Owner 返回 UNKNOWN 时必须保留 UNKNOWN，并按 Owner 契约执行后续�
 
 具体状态机和 Owner Receipt 结构由 Owner Contract Package 定义；Provider Runtime Bindings 只声明 Provider 如何定位并返回该 Receipt，不得重定义其字段和状态。Runtime 不自行发明业务状态枚举。
 
+对于 exact-original Reconcile，Runtime 必须从已验证 sidecar 的 Mutation `commitProof.reconcile.bindingId` 派生 internal-only Reconcile binding 集合；普通 Skill/LLM Action 即使在 frozen Artifact exports 中包含该 READ export，也必须在 Provider IPC 前以 `INTERNAL_RECONCILE_ONLY` 拒绝且零 Provider IPC。只有 Reconcile Coordinator 的内部专用入口可以使用原 originalInvocationId、原 Run Owner scope 调用该 binding；缺失、重复或非 READ target 在 Provider package load 阶段 fail-closed。
+
 ## 7. 失败语义
 
-Skill/Artifact 无效、Callable Scope 不匹配、Schema 不匹配、Plugin 不可用、IPC 失败、continuation 关联失败均必须产生明确诊断。失败不得伪造 Owner 结果、猜测目标 Run 或自动执行未经声明的替代 Action。
+Skill/Artifact 无效、Callable Scope 不匹配、普通 Skill 调用 internal-only Reconcile（`INTERNAL_RECONCILE_ONLY`）、Schema 不匹配、Plugin 不可用、IPC 失败、continuation 关联失败均必须产生明确诊断。失败不得伪造 Owner 结果、猜测目标 Run 或自动执行未经声明的替代 Action。
 
 ## 8. 验收要求
 
@@ -111,6 +113,8 @@ Skill/Artifact 无效、Callable Scope 不匹配、Schema 不匹配、Plugin 不
 
 
 ## 修订记录
+
+| 2026-11-26 | 0.3.5 | GPT-6.2（ChatGPT） | §3、§6、§7 | 明确 frozen v1alpha5 Capability ID 不进入 Runtime Artifact/Scope，并补齐 sidecar Reconcile internal-only 的 Runtime 保证 | 对齐 F03.05 的 Callable allowlist、Owner membership/Effect 与 exact-original Reconcile 边界 | IR-006 · SR-015 · Issue #12 |
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修订内容 | 原因 | 关联 |
 |---|---|---|---|---|---|---|
