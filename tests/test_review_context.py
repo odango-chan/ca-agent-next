@@ -1,6 +1,6 @@
 """SR-001：PR 评审上下文生成器自动化验收测试。
 
-覆盖 AC-REV-01～AC-REV-09：
+覆盖 AC-REV-01～AC-REV-09（含 Base 严格 Schema 与规范化头部声明反例）：
 
 * AC-REV-01 正常解析
 * AC-REV-02 标记校验
@@ -866,14 +866,34 @@ class TestACREV08DocHeaders(RepoTestBase):
         code, _, stderr = invoke(self.repo, self.base, head, self.out)
         self.assertEqual(code, rc.EXIT_OK, stderr)
 
-    def test_header_negating_inheritance_fails(self) -> None:
-        problems = rc.check_doc_header(
-            "# 示例\n\n> 全局评审范围：不继承 review_scope。\n> 本文局部非目标：无。\n",
-            "docs/架构设计/F01-否定继承.md",
+    def test_header_rejects_full_negated_inheritance_declarations(self) -> None:
+        declarations = (
+            "不继承根目录 Agent.md 的 review_scope",
+            "无需继承根目录 Agent.md 的 review_scope",
+            "不得继承根目录 Agent.md 的 review_scope",
+            "禁止继承根目录 Agent.md 的 review_scope",
+            "不需要继承根目录 Agent.md 的 review_scope",
+            "继承根目录 Agent.md 的 review_scope（仅在适用时）",
         )
-        self.assertTrue(problems)
-        self.assertIn("全局评审范围", problems[0])
+        for declaration in declarations:
+            with self.subTest(declaration=declaration):
+                problems = rc.check_doc_header(
+                    "# 示例\n\n"
+                    f"> 全局评审范围：{declaration}\n"
+                    "> 本文局部非目标：无。\n",
+                    "docs/架构设计/F01-否定继承.md",
+                )
+                self.assertTrue(problems)
+                self.assertIn("全局评审范围", problems[0])
 
+    def test_header_accepts_only_canonical_positive_declaration(self) -> None:
+        problems = rc.check_doc_header(
+            "# 示例\n\n"
+            "> 全局评审范围: 继承根目录 Agent.md 的 review_scope。\n"
+            "> 本文局部非目标：无。\n",
+            "docs/架构设计/F01-正向继承.md",
+        )
+        self.assertEqual(problems, [])
     def test_non_formal_path_is_ignored(self) -> None:
         self.checkout_branch("feature/docs")
         self.repo.write("docs/规范/示例规范.md", "# 规范\n\n无头部说明。\n")
@@ -1070,6 +1090,70 @@ class TestGitFailures(RepoTestBase):
 
 
 class TestBaseScopeComparison(RepoTestBase):
+    def test_base_rejects_unknown_fields_at_every_mapping_level(self) -> None:
+        mutations = (
+            (
+                "outer document",
+                lambda document: document.update({"unexpected_document_key": True}),
+            ),
+            (
+                "review_scope mapping",
+                lambda document: document["review_scope"].update(
+                    {"unexpected_scope_key": True}
+                ),
+            ),
+            (
+                "target mapping",
+                lambda document: document["review_scope"]["target"].update(
+                    {"unexpected_target_key": True}
+                ),
+            ),
+            (
+                "in_scope entry",
+                lambda document: document["review_scope"]["in_scope"][0].update(
+                    {"unexpected_entry_key": True}
+                ),
+            ),
+            (
+                "always_required entry",
+                lambda document: document["review_scope"]["always_required"][0].update(
+                    {"unexpected_entry_key": True}
+                ),
+            ),
+            (
+                "non_goals entry",
+                lambda document: document["review_scope"]["non_goals"][0].update(
+                    {"unexpected_entry_key": True}
+                ),
+            ),
+            (
+                "review_policy mapping",
+                lambda document: document["review_scope"]["review_policy"].update(
+                    {"unexpected_policy_key": True}
+                ),
+            ),
+        )
+
+        for label, mutate in mutations:
+            with self.subTest(mapping=label):
+                repo = TempRepo()
+                self.addCleanup(repo.close)
+                document = yaml.safe_load(BASELINE_BLOCK)
+                mutate(document)
+                broken_block = yaml.safe_dump(
+                    document, allow_unicode=True, sort_keys=False
+                )
+                repo.write(AGENT_MD_PATH, agent_doc(broken_block))
+                base = repo.commit(f"base with unknown field in {label}")
+                repo.write(AGENT_MD_PATH, agent_doc())
+                head = repo.commit("head removes unknown base field")
+                out = repo.path / "out"
+
+                code, _, stderr = invoke(repo, base, head, out)
+                self.assertEqual(code, rc.EXIT_VALIDATION, stderr)
+                self.assertIn("无法判定范围变更", stderr)
+                self.assertFalse(out.exists(), "Base Schema 失败不得写入任何 Artifact")
+
     def test_base_without_scope_block_is_added(self) -> None:
         repo = TempRepo()
         self.addCleanup(repo.close)

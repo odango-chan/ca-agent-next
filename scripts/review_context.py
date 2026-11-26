@@ -980,6 +980,16 @@ def _is_formal_doc(path: str) -> bool:
     return any(path.startswith(prefix) for prefix in FORMAL_DOC_PREFIXES)
 
 
+def _normalize_header_declaration(line: str) -> str:
+    """规范化 Markdown blockquote、空白和冒号，不改变声明语义。"""
+
+    value = line.strip()
+    while value.startswith(">"):
+        value = value[1:].lstrip()
+    value = re.sub(r"\s+", " ", value).replace(":", "：")
+    return value.rstrip("。.")
+
+
 def check_doc_header(text: str, path: str) -> list[str]:
     """检查正式文档头部是否声明继承全局范围和本文局部非目标。"""
 
@@ -992,16 +1002,20 @@ def check_doc_header(text: str, path: str) -> list[str]:
         if line.startswith("## "):
             break
 
-    header = "\n".join(header_lines)
     problems: list[str] = []
-    scope_declaration = re.search(
-        r"全局评审范围\s*[：:][^\n]*继承[^\n]*Agent\.md[^\n]*review_scope", header
+    canonical_scope = "全局评审范围：继承根目录 Agent.md 的 review_scope"
+    scope_declaration = any(
+        _normalize_header_declaration(line) == canonical_scope
+        for line in header_lines
     )
-    if scope_declaration is None:
+    if not scope_declaration:
         problems.append(
-            f"{path}: 文档头部缺少“全局评审范围：继承根目录 Agent.md 的 review_scope”声明"
+            f"{path}: 文档头部必须使用正向规范声明“{canonical_scope}”"
         )
-    declaration = re.search(r"本文局部非目标\s*[：:]\s*(.*)", header)
+    declaration = re.search(
+        r"本文局部非目标\s*[：:]\s*(.*)",
+        "\n".join(header_lines),
+    )
     if declaration is None:
         problems.append(f"{path}: 文档头部缺少“本文局部非目标”声明（没有时写“无”）")
     elif not declaration.group(1).strip():
@@ -1393,59 +1407,17 @@ def parse_agent_md(text: str, source: str) -> dict[str, Any]:
 
 
 def _require_comparable_scope(raw: Any, source: str) -> dict[str, Any]:
-    """确认 base 版本范围对象具备可比较结构；结构不完整时失败关闭。
+    """Base 必须通过与 Head 完全相同的当前严格 Schema，不做兼容降级。"""
 
-    base 版本只用于范围变更比较，不要求通过 head 的全部 Schema 校验；但缺少
-    比较所需的键或结构时无法判定范围变更，必须以明确错误失败。
-    """
-
-    if type(raw) is not dict:
-        raise ValidationError(f"{source}: review_scope 不是 mapping，无法判定范围变更")
-    missing = [key for key in TOP_KEYS if key not in raw]
-    if missing:
+    try:
+        # 统一校验顶层/嵌套 mapping 的未知字段、必填字段、类型、枚举、
+        # ID 唯一性和六类 finding_classes；返回标准化对象供差异比较。
+        return validate_scope(raw, source)
+    except ValidationError as exc:
         raise ValidationError(
-            f"{source}: review_scope 缺少 "
-            + "、".join(repr(key) for key in missing)
-            + "，无法判定范围变更"
-        )
-    target = raw["target"]
-    if (
-        type(target) is not dict
-        or "description" not in target
-        or type(target.get("sequence")) is not list
-    ):
-        raise ValidationError(
-            f"{source}: review_scope.target 结构不完整，无法判定范围变更"
-        )
-    for group in SCOPE_LISTS:
-        entries = raw[group]
-        if type(entries) is not list:
-            raise ValidationError(
-                f"{source}: review_scope.{group} 必须为 list，无法判定范围变更"
-            )
-        for index, entry in enumerate(entries):
-            if type(entry) is not dict or "id" not in entry or "description" not in entry:
-                raise ValidationError(
-                    f"{source}: review_scope.{group}[{index}] 结构不完整，"
-                    "无法判定范围变更"
-                )
-    policy = raw["review_policy"]
-    if type(policy) is not dict:
-        raise ValidationError(
-            f"{source}: review_scope.review_policy 必须为 mapping，无法判定范围变更"
-        )
-    missing_policy = [key for key in POLICY_KEYS if key not in policy]
-    if missing_policy:
-        raise ValidationError(
-            f"{source}: review_scope.review_policy 缺少 "
-            + "、".join(repr(key) for key in missing_policy)
-            + "，无法判定范围变更"
-        )
-    if type(raw["finding_classes"]) is not list:
-        raise ValidationError(
-            f"{source}: review_scope.finding_classes 必须为 list，无法判定范围变更"
-        )
-    return raw
+            f"{source}: Base review_scope 不符合当前严格 Schema，"
+            f"无法判定范围变更：{exc.message}"
+        ) from None
 
 
 def build_result(
@@ -1492,6 +1464,16 @@ def build_result(
             if "review_scope" not in document:
                 raise ValidationError(
                     f"{base_source} 的 review_scope 区块缺少顶层 review_scope 键，"
+                    "无法判定范围变更"
+                )
+            unknown_document_keys = [
+                key for key in document if key != "review_scope"
+            ]
+            if unknown_document_keys:
+                rendered = "、".join(repr(key) for key in unknown_document_keys)
+                raise ValidationError(
+                    f"{base_source}: review_scope 区块只允许唯一的 "
+                    f"review_scope 顶层键，发现额外顶层键 {rendered}；"
                     "无法判定范围变更"
                 )
             base_scope = _require_comparable_scope(document["review_scope"], base_source)
