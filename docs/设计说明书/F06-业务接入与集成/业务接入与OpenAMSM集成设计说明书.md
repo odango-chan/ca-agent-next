@@ -1,11 +1,11 @@
 # 业务接入与 OpenAMSM 集成设计说明书
 
 > 文档类型：业务集成设计说明书  
-> 文档版本：0.2.7  
+> 文档版本：0.2.8  
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
 > 功能归属：F06 — 业务接入与集成；EC04、EC05、EC07  
 > 关联 IR：IR-004、IR-005、IR-006  
-> 关联 SR：SR-009、SR-010、SR-011、SR-017、SR-018、SR-019  
+> 关联 SR：SR-009、SR-010、SR-011、SR-017、SR-018、SR-019、SR-026、SR-030  
 > 修订日期：2026-11-26
 > 全局评审范围：继承根目录 Agent.md 的 review_scope。  
 > 本文局部非目标：生产级资格、完整 NAS/NGAP 和 Core 业务分支。
@@ -288,14 +288,21 @@ Provider 的 SMF Context Read 和 NF Metrics Read 分别使用一个 READ Observ
 
 selector 是公开 Callable Input Schema 的字段；11 个旧 backendOperationId 保留在 Provider 内部，不进入 Skill 源。
 
-### 13.5 业务流程不变
+### 13.5 Codec Capability 与 Host Context Schema Package
+
+- Codec 不作为模型可见的自由 Callable；SR-026 发布一个 Skill-facing Codec Capability ↔ 一个公开 Callable，首批仅支持冻结的 NAS Decode 消息子集。Codec 输入使用已授权的 Artifact ref / slot，不把原始 N1/N2 bytes 转成模型可见字符串；Provider 私有 handler 和 backendOperationId 不进入 Skill 源。
+- Provider 新目标由两个通用 READ Capability / Callable 加一个 Codec Capability / Callable 构成，合计 3/3；若 Publisher 采用多个 Package，跨 Package 合计仍为 3/3，且每个 Package 快照内独立校验。
+- MAS Skill 的 requestSchema / contexts 可引用 Host Context Schema-only Package。SR-030 负责其 1.6.0 Publisher；该 Package 只导出 Schema，0 Capability / 0 Callable，不得虚构 Tool。SR-024 VERIFIED 仅代表历史 Development Publisher，不满足新版消费门槛。
+- Codec / Host Context 的正式发布物尚未存在；相关产品 AC 保持 NOT_RUN / BLOCKED。
+
+### 13.6 业务流程不变
 
 Create → Modify → Release 的顺序、Owner authoritative state、Receipt / Commit Proof、UNKNOWN / Reconcile、N1/N2 generation 和 Evidence Goal 均保持现有定义。此次只改变 Capability / Callable 契约表达，不重写 5GC 业务流程，也不声明新 E2E 已通过。
 
 **1.6.0-only 待评审硬门槛：** MAS Skill 必须按 1.6.0 重新编写与发布；旧 E2E PASS 不证明新版本；此处只是目标设计，产品和 E2E 均 NOT_RUN。
 
 
-### 13.6 真实联测与模块证据分层
+### 13.7 真实联测与模块证据分层
 
 1.6.0 Create/Modify/Release Skill 必须由 ca-skills 作者重新编写、使用唯一新 Compiler Check/Build/Verify 并正式发布 Bundle；历史 v1alpha5 E2E/Owner v1alpha4 只是业务输出参考，不能证明新 Runtime Binding 或新系统资格。SR-009 单独验 Plugin ingress/delivery/staging，SR-010 单独验 Host Artifact Channel、Provider/Codec，SR-011 才在正式新发布物和隔离环境齐备后执行同 UE/PSI 的真实 E2E；OM/EX 不能倒灌模块设计 READY 门槛。
 
@@ -313,3 +320,5 @@ Create → Modify → Release 的顺序、Owner authoritative state、Receipt / 
 | 2026-11-26 | 0.2.5 | GPT-6.2（ChatGPT） | §4、§8 | 同步冻结 v1alpha5 Capability Build-time / Runtime 边界及 MAS.RECONCILE internal-only 保证 | 让 OpenAMSM 业务集成流程引用 F03.05 的唯一 Tool/Provider Runtime 设计 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-26 | 0.2.6 | GPT-6（ChatGPT） | 新增 Capability-first 1.6.0 章节与状态 | 移植旧分支设计并按无兼容最新基线校正 | 仅设计待评审，不将历史 E2E 视为新版本通过 | Issue #40；SR-029 |
 | 2026-11-26 | 0.2.7 | GPT-6（ChatGPT） | 规范性设计与验收门槛 | 纠正多 true 候选决策和 MAS 旧 Callable-only Runtime，区分模块/系统证据 | 修复新旧语言/能力运行时冲突 | Issue #12/#40；SR-013/025/029；PR #46 |
+
+| 2026-11-26 | 0.2.8 | GPT-6（ChatGPT） | 1.6.0 Capability / Codec 目标 | 补齐 Provider Codec 1:1 Capability 与 Host Context Schema-only Package 的业务集成边界 | 修正历史 Callable-only 描述和 Provider 能力基数遗漏 | Issue #12/#40；SR-025/026/030 |
