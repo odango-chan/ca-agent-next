@@ -1,7 +1,7 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录  
-> 文档版本：0.1.14  
+> 文档版本：0.1.15  
 > 修订日期：2026-11-26  
 > 状态：新增跨仓需求待评审  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -27,10 +27,10 @@ IR 编号稳定。GitHub Issue 用于讨论、分派和跟踪，一个 IR 可关
 
 业务通过 Plugin 扩展，宿主保持 Python 和业务中立。
 
-- 实施协作 Issue：[SR-002 实施 Issue #22](https://github.com/odango-chan/ca-agent-next/issues/22)；SR-002 已 READY，代码尚未开始。Issue #19 仅用于设计修订，Issue #21 仅用于治理修订。
+- 实施协作 Issue：[SR-002 实施 Issue #22](https://github.com/odango-chan/ca-agent-next/issues/22)；SR-002 已进入实施评审，见 [实施 PR #23](https://github.com/odango-chan/ca-agent-next/pull/23)（OPEN，受测提交 `6628245978f1fbd1e1d1393b9338c908c962eb9e`）。Issue #19 仅用于设计修订，Issue #21 仅用于治理修订。
 - 实施分解：[SR-002](../SR/SR-002-Python%20核心与宿主基础骨架.md)、[SR-003](../SR/SR-003-统一插件管理器与扩展通信.md)。
 - 架构、设计和规范：[CA Agent Next 架构设计](../架构设计/CA%20Agent%20Next%20架构设计.md)、[通用Agent核心与Host设计说明书](../设计说明书/F01-通用Agent核心与Host/通用Agent核心与Host设计说明书.md)、[Plugin平台设计说明书](../设计说明书/F03-Plugin平台/Plugin平台设计说明书.md)、[插件包与进程通信协议规范](../规范/插件包与进程通信协议规范.md)。
-- 完成依据：对应 SR 的必需模块验收全部 VERIFIED；当前 SR-002 为 READY、SR-003 为 DRAFT，AC-002-01～08 和 EX-01 均 NOT_RUN。
+- 完成依据：对应 SR 的必需模块验收全部 VERIFIED；当前 SR-002 IN_PROGRESS、SR-003 DRAFT。#23 提供候选 AC 证据；EX-01 NOT_RUN。
 
 ## IR-003
 
@@ -106,3 +106,4 @@ Compiler 实施沿用 [SR-013](../SR/SR-013-Compiler已检查when与发布产物
 | 2026-11-26 | 0.1.12 | GPT-6.2（ChatGPT） | IR-002 | 同步 SR-002 v0.2.6、Acceptance v0.3.7 与 PR #20 Ready for review 状态 | 使需求登记、设计修订追踪和验收版本一致，同时保持实施 Issue 未创建 | IR-002；SR-002；Issue #19；PR #20 |
 | 2026-11-26 | 0.1.13 | GPT-6.2（ChatGPT） | IR-002 | 同步 SR-002 独立设计评审 APPROVE_FOR_READY 与 READY 状态，并登记治理 Issue #21；模块 AC 和系统 EX 继续 NOT_RUN。 | 区分设计、治理和后续代码实施追踪，避免把设计 Issue 当作实施授权。 | IR-002；SR-002；SR-003；Issue #19；Issue #21；PR #20 |
 | 2026-11-26 | 0.1.14 | GPT-6.2（ChatGPT） | IR-002 | 登记 SR-002 READY 后创建的独立实施 Issue #22，并明确 Issue #19/#21 分别承担设计和治理追踪。 | 完成需求到实施任务的追踪链，防止误用设计 Issue。 | IR-002；SR-002；Issue #19；Issue #21；Issue #22；PR #20 |
+| 2026-11-26 | 0.1.15 | Codex / GPT-6 | IR-002 | 关联 #22、#23 与固定提交，并标识仍需集成的阶段。 | 使 Harness 能按当前阶段判定启动与验收条件 | Issue #12、#21 |

@@ -1,9 +1,9 @@
 # SR-002：Python 核心与宿主基础骨架
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.9  
+> SR 版本：0.2.10  
 > 修订日期：2026-11-26  
-> 状态：READY；独立设计评审 APPROVE_FOR_READY，代码实施尚未开始  
+> 状态：IN_PROGRESS；设计评审 APPROVE_FOR_READY；实施 PR #23 已开  
 > 创建日期：2026-11-25  
 > 所属阶段：Phase A  
 > 上游需求：[IR-002](../IR/IR%20总登记册.md#ir-002)  
@@ -172,15 +172,15 @@ tests/
 | 设计修订 Issue | [ca-agent-next #19](https://github.com/odango-chan/ca-agent-next/issues/19) |
 | 设计评审 PR | [ca-agent-next #20](https://github.com/odango-chan/ca-agent-next/pull/20)（OPEN / Ready for review；base 为 docs/restore-original-designs-20261125） |
 | 治理规则 Issue | [ca-agent-next #21](https://github.com/odango-chan/ca-agent-next/issues/21)（阶段依赖与 AC/EX 门禁） |
-| 实施 Issue | [ca-agent-next #22](https://github.com/odango-chan/ca-agent-next/issues/22)（独立实施任务；代码尚未开始） |
+| 实施 Issue | [ca-agent-next #22](https://github.com/odango-chan/ca-agent-next/issues/22)（独立实施任务；PR #23） |
 | 独立设计评审 | APPROVE_FOR_READY；评审基线 `888b8ba01b505ab53404b91ccbe2e8f08960868b`；P0/P1 为 0，P2/P3 已按评审建议澄清/修正 |
 | 实施仓库 | ca-agent-next |
-| 实施 PR / Commit | 无 |
-| 实施状态 | NOT_STARTED |
-| AC-002-01～AC-002-08 | NOT_RUN |
+| 实施 PR / Commit | [实施 PR #23](https://github.com/odango-chan/ca-agent-next/pull/23)（OPEN，受测提交 `6628245978f1fbd1e1d1393b9338c908c962eb9e`） |
+| 实施状态 | IN_PROGRESS；目标基线尚未集成 |
+| AC-002-01～AC-002-08 | #23 在上述提交逐项报告 PASS；本次独立复跑安装、包身份、Smoke 和 52 项单测通过 |
 | EX-01 系统级验收 | NOT_RUN |
 
-本 SR 已依据独立评审报告转为 READY；该状态只表示设计、范围、依赖分类和模块验收条件具备实施条件，不代表代码已实施、AC 已通过、EX 已通过或 PR 已合并。AC-002-01～08 与 EX-01 继续保持 NOT_RUN，代码实施须通过独立实施 Issue 和当前阶段门禁。
+#22 固定读取 PR #20 的设计提交 b9eb71d7671a75fc56e7d389e59aa9f7d6c0973b。本次从 #23 获取 8 个文件，Git blob 与 PR 文件清单逐项一致。Windows / CPython 3.14.6，隔离虚拟环境复用本地 setuptools 84.2.1，以 python -m pip install --no-index --no-deps --no-build-isolation -e . 安装成功。包版本 0.1.0、HostError 类型身份正确；python -m ca_agent_next --smoke 返回固定输出且 model_calls=1；python -m unittest discover -s tests -p test_host.py -v 实际运行 52 项，失败、错误、跳过均为 0。PR #20 先于 #23 集成至恢复分支后，再根据集成提交及必需 AC 判定 VERIFIED。EX-01 后置。
 
 ## 8. 变更与替代关系
 
@@ -209,3 +209,4 @@ tests/
 | 2026-11-26 | 0.2.7 | GPT-6.2（ChatGPT） | §4、§5.1、§7 | 根据独立评审 APPROVE_FOR_READY 将 SR-002 转为 READY；明确 SR-003 的实施依赖与设计评审分离，并限定注入型 ModelClient 仅用于 CLI 失败路径测试；同步 PR #20 状态。 | 关闭 P2-01/P3-01/P3-02，不扩大 SR-002 范围；保持 AC/EX 未运行状态真实。 | IR-002；Issue #19；Issue #21；PR #20；评审 SHA `888b8ba` |
 | 2026-11-26 | 0.2.8 | GPT-6.2（ChatGPT） | 文档头部、§2 | 将当前设计依据和公共契约引用从 F01 v0.3.5 更新为 F01 v0.3.6；本次 F01 仅澄清 Smoke 注入测试边界，不改变 SR-002 类型契约。 | 确保 READY SR 引用当前权威设计版本，避免 Harness 读取过期版本号。 | Issue #19；Issue #21；F01 v0.3.6；PR #20 |
 | 2026-11-26 | 0.2.9 | GPT-6.2（ChatGPT） | §7 | 创建并登记独立 SR-002 实施 Issue #22，固定其与设计 Issue #19、治理 Issue #21 和设计 PR #20 的关系。 | 满足 READY 后先建实施 Issue、再交付 Harness Goal 的治理顺序，避免设计 Issue 被误作实施授权。 | Issue #19；Issue #21；Issue #22；PR #20 |
+| 2026-11-26 | 0.2.10 | Codex / GPT-6 | §7 | 回填 #23 的固定实施提交、候选验收与独立复跑。 | 使 Harness 能按当前阶段判定启动与验收条件 | Issue #12、#21 |
