@@ -1,11 +1,11 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.10  
+> 文档版本：0.3.11  
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
 > 修订日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
-> 本文局部非目标：生产级准入、额外 package-level digest、签名和 Trust Registry；仅保留 Compiler v2.1.0 Interface Package schema 明确要求的 `files[].sha256`  
+ > 本文局部非目标：生产级准入、额外 package-level digest、签名和 Trust Registry；历史 Compiler v2.1.0 的 `files[].sha256` 要求仅归旧版审计，不转为新版 Schema 要求  
 
 关联 IR-006、SR-015、SR-016、SR-020（参考宿主架构审计）、SR-024（Host Context Publisher）、SR-025（MAS Owner Publisher）；Compiler 接口以 [EC02 Development Build 设计](../EC02-Compiler/Development%20Build设计.md) 为准。基线为 [docs/architecture/studio-boundaries.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/architecture/studio-boundaries.md)、[docs/design/ai-procedure-authoring.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/design/ai-procedure-authoring.md)。
 
@@ -19,9 +19,11 @@ Theia 的 Package Explorer 以作者源码为工作区入口。可视化视图�
 
 ## 3. when 编写与验收
 
-正式语言刷新后，Contract 字段提示与诊断对齐中央规范。`when` 是 `assurance/contract.yaml` 中的可选顶层字段，不是 SKILL.md Front Matter 字段；其 Schema 类型、CEL 静态检查与错误定位必须对齐 CA-SL v1alpha5 作者规范。没有 `when` 的 Contract 保持原有行为。文本与 AI 编辑均保持可预览，不能把选择条件写入 Predicate。覆盖 Browser Worker、源码往返、已有包、有效与无效表达式、Compiler gate 与应用后再打开。
+正式语言刷新后，Contract 字段提示与诊断对齐中央规范。`when` 是 `assurance/contract.yaml` 中的可选顶层字段，不是 SKILL.md Front Matter 字段；其 Schema 类型、CEL 静态检查与错误定位必须对齐 **CA-SL 1.6.0 的唯一正式作者 Schema + 新 Compiler 契约**；历史 v1alpha5 仅用于只读测试差异审计。没有 `when` 的 Contract 保持原有行为。文本与 AI 编辑均保持可预览，不能把选择条件写入 Predicate。覆盖 Browser Worker、源码往返、已有包、有效与无效表达式、Compiler gate 与应用后再打开。
 
-## 4. Interface Package 导入与项目快照
+## 4. 历史 Interface Package / Development Build 设计审计（非 1.6.0 规范）
+
+**本 §4.1～§4.5 只记载 Compiler v2.1.0、Studio #267/#270、旧 1.0.0 ZIP 和历史 Lock 的真实行为与来源。它们不是 CA-SL 1.6.0 的 Package Schema、BuildRequest、Lock、发布物或实施验收目标。新规范性流程唯一见 §5～§6 与 §9，凡字段/版本/测试冲突以这些新条款为准；不实现任何历史格式兼容入口。**
 
 ### 4.1 职责边界
 
@@ -102,41 +104,37 @@ Compiler v2.1.0 的 `validDevelopmentVersion` 接受 `major.minor.patch` 和合�
 - `sourceStatus=DEVELOPMENT_FIXTURE` 只由 Studio 写入 `skillc.lock/v0.1` 的 `source.sourceStatus`；不得写入任何正式 `package.json`。这项持久化由 SR-016 / Studio #269 验收。SR-024 已固定 Host source Revision/Git blob，不要求项目锁重复保存。
 - #267 ZIP Import 和 #270 MAS Example preload 已 MERGED，不得再列为尚未实现的前置。#269 仍负责 Development BuildRequest、Package Audit、AI Authoring Compiler Gate 和 no-root 诊断。
 - 两个 Publisher 都只发布静态 Interface Package；`publisher` 是声明身份，不是 Owner Trust。Compiler v2.1.0 Development BuildRequest 不接受 `trustedBuildContext`、Owner attestation、Deployment Grant、live Evidence 或 Provider binding；成功结果仍为 `VALIDATED / LINKED / BUILT / NOT_ADMITTED`，不代表 Host Admission 或 Runtime Execution。
-## 5. Compiler Development Build 与状态投影
+## 5. CA-SL 1.6.0 Package Audit / AI Authoring 单一路径
 
-### 5.1 单一 Build 路径
+### 5.1 新版输入、组件与生命周期
 
-上述 Compiler v2.1.0 / Development v1alpha1 BuildRequest、Worker/WASM 与 VerifyDevelopment 是历史实现状态，不作为**1.6.0 新 Studio**的可执行入口。新的 Package Audit 和 AI Authoring 只能共用 Compiler Owner 正式冻结的 1.6.0-only 新 BuildRequest/Worker/WASM/Verify，不得自行实现 Linker/依赖闭包，也不得调用旧 Development Build 或做 fallback。
+1. Studio 打开 1.6.0 Skill 工作区，绑定当前**原始源码 Buffer**和其不可变 revision。导入依赖只接受新 Compiler/Publisher 冻结的 1.6.0 Interface Package ZIP；严格验证新版正式 Package Schema、语言标识、公开 Capability 唯一映射、精确导出闭包与当前项目依赖快照。旧 v1alpha5、Development v1alpha1/v2.1.0 ZIP 和旧项目配置一律拒绝，不做转换。
+2. Studio 维护自己的持久项目依赖锁：包标识、精确版本、来源身份及逐包已安装源快照（字段由 1.6.0 新 Package Schema 冻结；不偷用旧 `skillc.lock/v0.1` wire 格式）。Compiler 的 BuildRequest/派生依赖闭包由同一候选源码和**同一项目锁 revision**生成，不建立第二个持久项目锁；Compiler 负责权威静态链接，Studio 不复制 Linker。
+3. Package Explorer 展示 Package→Capability；每个 Capability 仅对应一个公开 Callable。Callable、backendOperationId 不成为作者选择节点；Editor/LSP/AI 只生成 `contract.capabilities`、`operation.capability`、`observation.capability`。包内多成员、重复 Callable、Schema 不符、旧 Alias::Callable 都标记为不可用于新版编译。
+4. Package Audit 与 AI Authoring 都走**同一新 1.6.0 Compiler adapter/Worker/WASM/Build/Verify**。输入为准确源码字节 + lock revision + Owner 的新 BuildRequest；禁止调用历史 `build-development`、`verify-development`、v2.1.0 Worker 或构建 fallback。Compiler 未冻结字段/API 之前，本调用保持 `BLOCKED`，不凭旧 Schema 猜测。
+5. Preview/Review 允许查看未经编译的候选 Change Set，但标记「尚未检查，不能 Apply」。只有**与当前候选字节和当前项目锁 revision 精确匹配**的 Build + Verify 成功，才可提供「应用候选」；Apply 必须由用户确认、保留未保存 Buffer、支持 Undo 恢复逐字原文；Save 仍由用户决定。候选、依赖快照或语言版本变化使旧结果立刻失效。
+6. Browser、Native、WASM 用同一构建输入与可追踪诊断，任一结果不能混用来自另一 HEAD、Lock revision 或旧语言的 PASS。Worker 不访问 Provider credentials、不执行 Runtime Tool、不赋予 Owner/Host 资格。
 
-- Package Audit 对当前保存源码和当前 lock generation 进行 Build + VerifyDevelopment。
-- AI Authoring 对**同一候选源码字节**和同一 lock generation 进行 Build + VerifyDevelopment；候选变更或 lock generation 改变立即使旧 Build/Verify 结果失效。
-- 仅在候选的 Build + VerifyDevelopment 成功后，才允许显示可应用的候选；Apply 仍需用户明确确认。Apply 使用原生编辑器 Buffer，Undo 必须恢复精确原文；Save 由用户决定。
-- Worker 只执行 Compiler Core，不下载依赖、不访问项目文件系统、不读取 Provider credentials、不授予 Owner Trust、不执行 Runtime Tool。
+### 5.2 UI 状态投影（非新 Compiler 机器字段）
 
-### 5.2 结果状态
+| 关注项 | 显示原则 |
+|---|---|
+| Source | `NOT_CHECKED`、`VALIDATED`、`FAILED` 是 Studio 概念状态；Compiler 返回值必须按**正式新 Schema**映射，不虚构 wire 字段 |
+| Package/Capability Link | 精确唯一映射成功才显示 LINKED；任何多成员/重复 Callable/失配源都显示明确错误 |
+| Artifact | 仅当前候选 Build+Verify 成功才标记 BUILT；未构建/过期标记 NOT_RUN/STALE |
+| Execution | Build ≠ Host/Runtime 授权；Demo 没有独立 Skill Admission，不能凭编译成功伪造 Owner Commit 或运行资格 |
+| Historical | 旧 Development 的 `VALIDATED / LINKED / BUILT / NOT_ADMITTED` 仅供 §4 历史审计，**不是 1.6.0 新 BuildResult 机器值** |
 
-Compiler Development Build 成功结果固定为：
+失败应给出由哪个输入、哪一 SourcePath、哪一 Capability/Schema 导致拒绝；诊断不能因为编辑器无法加载 Compiler 就假装 PASS。公开 LSP/Preview 不触发旧版编译器。
 
-| 字段 | 成功值 | 含义 |
-|---|---|---|
-| `sourceStatus` | `VALIDATED` | 当前源码通过 Compiler 静态检查 |
-| `interfaceLinkStatus` | `LINKED` | Contract roots 和完整 Interface Package 闭包链接成功 |
-| `artifactStatus` | `BUILT` | Development Artifact 已生成 |
-| `executionStatus` | `NOT_ADMITTED` | 不授予 Host/Runtime 执行资格 |
+## 6. 新 1.6.0 无 Assurance 与零外部依赖
 
-失败时，失败阶段为 `FAILED`，后续未执行阶段为 `NOT_RUN`，不得返回部分 Artifact。Host Admission Requirements 和 Runtime Execution Requirements 是不同集合，不能把 Requirement 缺失、Build 成功或 `NOT_ADMITTED` 误报为真实 Owner 授权或 Runtime 结果。
+- **SKILL.md-only**：不调用 Compiler，只有 LLM-guided，不生成 Assurance Artifact，不拥有 Callable Scope；在双栏源编辑器中仍可预览文字、元数据与 references。
+- **存在 Assurance、但没有外部依赖**：新 1.6.0 Compiler 设计必须支持**有效的空依赖闭包**，前提是 Procedure 没有引用外部 Capability/Callable。BuildRequest 仍包含 Skill/语言/Schema/源身份，但 Package roots/exports 为空；新 Compiler 需在正式 Schema 冻结时明确允许这个组合，Compiler 只能生成不含外部 Tool Effect 的确定性 Artifact。不可伪造一个 Package 充当根。
+- **存在 Assurance 且使用 Capability 但未声明依赖**：Compiler 静态 Link 必须拒绝 `CAPABILITY_UNRESOLVED` / `CAPABILITY_NOT_GRANTED`；绝不能把它当成合法零根。旧 v2.1.0 只能接受非空 roots 的限制**不是 1.6.0 新设计**。
+- 新 Compiler 如果尚未发布支持零根的确切 BuildRequest/Schema，Studio 对该测试情形明确显示 `COMPILER_CONTRACT_PENDING`、不调用旧 API、不产生 Artifact；设计评审需确认这一新契约是否在 Compiler #61 / SR-013 同版交付，任何实现前都必须有确定答案。
 
-Package Explorer、LSP、Problems 与 AI Workbench 必须区分源码诊断、接口链接诊断、Artifact 状态、Host Admission Requirement 和 Runtime Execution Requirement。Compiler 未运行、未链接或没有 Artifact 时不得显示 Build PASS。注意：BuildResult 顶层 `sourceStatus=VALIDATED` 与 Studio 项目锁中的 `source.sourceStatus=DEVELOPMENT_FIXTURE` 属于不同对象、不同语义，不得互相覆盖或由一方推导另一方。
-
-## 6. 无 Assurance、零根依赖与 no-root 状态
-
-- 只有 `SKILL.md`、没有 `assurance/` 的 Skill 按 CA-SL v1alpha5 走 LLM-guided only 路径：不调用 Compiler，不构造 Development BuildRequest，不生成 Deterministic Artifact。
-- 存在 Assurance 但 `contract.dependencies` 没有根依赖的 Skill，不能直接调用当前 Compiler v2.1.0 Development Build：冻结的 BuildRequest / Interface Dependency Lock 契约要求非空 `snapshots`、`roots` 和 `packages`。
-- Studio 必须显示显式 `NO_INTERFACE_ROOTS` / `BUILD_NOT_RUN` 状态和可理解的诊断，不合成假 Package、不构造空 roots 请求、不回退冻结 v2.0.2 Build、不生成 Artifact，也不伪造 `NOT_ADMITTED`（该值只来自成功 Development BuildResult）。
-- 本地编辑器语法提示可以继续工作，但不得将本地提示冒充 Compiler `VALIDATED`。Compiler 未运行时，其 `sourceStatus` 是 `NOT_RUN`，或根本不存在 BuildResult。
-- 如果产品需要“零外部依赖的 Assurance Skill 也生成确定性 Artifact”，必须另立 Compiler 契约变更并发布新契约版本；不得改变 v2.1.0 冻结 Schema 或在 Studio 中私自扩展。
-
-## 7. 当前实施状态与验收门槛
+## 7. 历史实现状态与新版本待验证项
 
 截至 2026-11-25：
 
@@ -185,6 +183,20 @@ AI Authoring 的 Change Set 只能新增或修改 Capability ID、Procedure argu
 **1.6.0-only 待评审硬门槛：** 新 Studio 仅接受 1.6.0 项目，旧项目不兼容、不自动迁移；此处只是目标设计，产品和 E2E 均 NOT_RUN。
 
 
+### 9.5 1.6.0 独立验收矩阵
+
+| 验收方向 | 固定输入 | 必需输出 |
+|---|---|---|
+| 1.6.0 新 ZIP Import | Publisher 正式包、唯一 Capability↔Callable 和声明 Schema | 原字节快照、Package→Capability Explorer 和可重新打开的新版锁 |
+| 旧包/旧项目拒绝 | v1alpha5、v2.1.0 Development、旧 `skillc.lock` | 明确版本诊断、无转换、无 fallback、锁未被污染 |
+| 唯一 Binding | 正确 one-to-one 与多成员/重复 Callable 反例 | 补全和定义跳转只返回公开 Capability；错误不得显示 Compiler PASS |
+| 共同 Compiler 路径 | 同源码/lock 的 Package Audit 与 AI Candidate | 完全相同的新 BuildRequest/Verify；不同 revision 不可复用结果 |
+| stale/Apply/Undo | Candidate 或 lock 变化、Apply 后立即 Undo | 旧结果失效；显式确认；精确还原原始 Buffer，Save 不被触发 |
+| SKILL.md-only / 零根 Assurance | 无 Assurance；有 Assurance 但无外部 Capability；缺依赖但引用外部 Capability | 分别为不调用 Compiler、空闭包合法 Build、fail-closed 拒绝 |
+| 多宿主一致性 | 同正式 1.6.0 Snapshot 的 Node/Native/WASM/Chromium | 诊断/结果相同，记录 SHA、测试数、命令、真实截图/日志 |
+
+**评审与实施门槛**：上述每项测试的正式 Package Schema、Compiler DTO/CLI/Worker、语言标识由对应发布者冻结后才允许产品 PASS。Studio 旧 Example 替换、旧 1.6.0 不兼容及历史导入结果仅用于审计，不能混入新 AC。SR-016 是该矩阵的实施与验收追踪入口；系统 E2E 不能代替 Studio 模块 AC。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
@@ -203,3 +215,4 @@ AI Authoring 的 Change Set 只能新增或修改 Capability ID、Procedure argu
 | 2026-11-26 | 0.3.8 | GPT-6（ChatGPT） | 新增 1.6.0 目标设计 | 仅支持新版本，无兼容或迁移 | Issue #40；SR-029 |
 | 2026-11-26 | 0.3.9 | GPT-6（ChatGPT） | 版本隔离与修订记录 | 隔离历史 Development Compiler 流程，1.6.0-only Studio 仅用新 Worker/Build DTO | Issue #40；SR-029 |
 | 2026-11-26 | 0.3.10 | GPT-6（ChatGPT） | 修订表/记录 | 合并历史修订行的内容与原因列，仅保留原文字义，不改历史断言 | Issue #40；SR-029 |
+| 2026-11-26 | 0.3.11 | GPT-6（ChatGPT） | 目标合同、实施 AC 和旧版留档 | §3～§9 重建 1.6.0-only Studio Package/Compiler/AI/zero-root 工作流和独立验收，旧 Development 只读留档 | Issue #12/#40；SR-016/025/029；PR #46 |
