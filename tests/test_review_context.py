@@ -886,6 +886,50 @@ class TestACREV08DocHeaders(RepoTestBase):
                 self.assertTrue(problems)
                 self.assertIn("全局评审范围", problems[0])
 
+    def test_header_requires_single_uncommented_blockquote_declaration(self) -> None:
+        invalid_headers = (
+            (
+                "bare declaration",
+                "# 示例\n\n"
+                "全局评审范围：继承根目录 Agent.md 的 review_scope\n"
+                "> 本文局部非目标：无\n",
+            ),
+            (
+                "fenced declaration",
+                "# 示例\n\n"
+                "~~~text\n"
+                "> 全局评审范围：继承根目录 Agent.md 的 review_scope\n"
+                "~~~\n"
+                "> 本文局部非目标：无\n",
+            ),
+            (
+                "commented declaration",
+                "# 示例\n\n"
+                "<!--\n"
+                "> 全局评审范围：继承根目录 Agent.md 的 review_scope\n"
+                "-->\n"
+                "> 本文局部非目标：无\n",
+            ),
+        )
+        for label, header in invalid_headers:
+            with self.subTest(case=label):
+                problems = rc.check_doc_header(
+                    header, "docs/架构设计/F01-伪造继承.md"
+                )
+                self.assertTrue(problems)
+                self.assertIn("全局评审范围", problems[0])
+
+    def test_header_rejects_conflicting_duplicate_scope_declarations(self) -> None:
+        problems = rc.check_doc_header(
+            "# 示例\n\n"
+            "> 全局评审范围：继承根目录 Agent.md 的 review_scope\n"
+            "> 全局评审范围：不继承根目录 Agent.md 的 review_scope\n"
+            "> 本文局部非目标：无\n",
+            "docs/架构设计/F01-重复声明.md",
+        )
+        self.assertTrue(problems)
+        self.assertIn("必须且只能使用一次", problems[0])
+
     def test_header_accepts_only_canonical_positive_declaration(self) -> None:
         problems = rc.check_doc_header(
             "# 示例\n\n"
