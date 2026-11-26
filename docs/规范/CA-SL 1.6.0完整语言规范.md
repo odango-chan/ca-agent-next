@@ -1,7 +1,7 @@
 # CA-SL 1.6.0 完整语言规范（中央设计稿）
 
 > 文档类型：CA-SL 作者语言规范（中央规范性设计稿）
-> 文档版本：0.1.0
+> 文档版本：0.1.1
 > 语言版本：CA-SL 1.6.0
 > languageTarget 候选：connectionagent.io/v1.6.0（本设计建议值；发布前由 ca-skills 与 Compiler Owner 在正式 Schema / Golden 中确认）
 > 状态：**DRAFT / REVIEW_REQUESTED**；未发布、未冻结、不得作为已发布产品规范
@@ -334,7 +334,7 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 | 仅 event.type 的 when，无 requestSchema | 可通过 CEL 静态检查 |
 | when 引用 input 但无 requestSchema | CEL_INVALID |
 | requestSchema 存在但无 when | Schema 仍验证并发布闭包 |
-| Schema-only Package：0 Capability / 0 Callable，含已声明 Schema export | 可作为 Request Schema / Context Schema 依赖 |
+| Schema-only Package：0 Capability / 0 Callable，含已声明 Schema export | 可作为 Contract.contexts 的 Host Context Schema 依赖；requestSchema 仍必须指向 Skill 自有请求 Schema |
 | 未声明依赖却引用 Capability / Schema | 静态拒绝 |
 | 多个 when=true | 仅在精确 true 候选集合内消歧 |
 | when=false / runtime error | 排除，不重新加入无 when 集合 |
@@ -379,3 +379,4 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
 |---|---|---|---|---|---|---|
 | 2026-11-26 | 0.1.0 | GPT-6（ChatGPT） | 全文 | 建立 CA-SL 1.6.0 完整作者语言规范中央设计稿，定义 Capability-only、contexts、when、Request Schema、Procedure、PredicateSet、Wait、Evidence、Outcome、无兼容及 v1alpha5 全文逐项处置 | 版本基线与 SR-029 局部语法草案不足以替代完整语言规范，防止 Harness 从历史文件自行推断 | Issue #12/#40；IR-008；SR-029、SR-013、SR-027 |
+| 2026-11-26 | 0.1.1 | GPT-6（ChatGPT） | §4、§16、修订记录 | 明确 requestSchema 指向 Skill 自有 Schema，Host Context Schema-only Package 仅通过 Contract.contexts 引用 | 避免将 Host Context Package 当作 Request Schema 根，统一 Contract.requestSchema 与 contexts 的不同所有权 | Issue #12/#40；SR-029、SR-030；PR #46 |
