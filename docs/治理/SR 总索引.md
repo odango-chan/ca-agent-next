@@ -1,8 +1,8 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.28
-> 状态：SR-001、SR-002、SR-024 VERIFIED；SR-003 设计 READY / 实施 IN_PROGRESS（PR #34 OPEN，Base `69fe856` Merge 候选待完整回归）；SR-015 IMPLEMENTED；22 项 DRAFT；实施门禁按 SR 管理规范 §6.1  
+> 文档版本：0.3.29
+> 状态：SR-001/SR-002/SR-024 VERIFIED；SR-003 设计 READY、实施 IN_PROGRESS（PR #34 OPEN；Head `52f0fa32` 双平台模块 CI PASS）；SR-015 IMPLEMENTED，其余 22 项 DRAFT  
 > 修订日期：2026-11-26  
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
@@ -76,7 +76,7 @@
 
 - 治理自动化：SR-001 VERIFIED；[PR #32](https://github.com/odango-chan/ca-agent-next/pull/32) MERGED（`7a0fac41e573021207ab8201bbc718718c451e50`）；AC-REV-01～10 PASS、80 tests OK、Run [45793590532](https://github.com/odango-chan/ca-agent-next/actions/runs/45793590532) success；SR-028 仍为 DRAFT。
 - Phase A：SR-002（VERIFIED；PR #23 已集成；AC-002-01～08 PASS；EX-01 仍 NOT_RUN）。
-- Phase B：SR-003 设计 READY、实施 IN_PROGRESS；Issue [#28](https://github.com/odango-chan/ca-agent-next/issues/28)、PR [#34](https://github.com/odango-chan/ca-agent-next/pull/34) OPEN；`504ec1b` 上 AC-003-01～04 本地 PASS；最新 Base `69fe856` 合并候选的 Plugin/Host/Review Context 回归、文档门禁仍待 CI 验证；PR Head 已同步，当前不得标记 PASS；系统 EX-02/03/04/18 NOT_RUN。
+- Phase B：SR-003 设计 READY、实施 IN_PROGRESS；Issue [#28](https://github.com/odango-chan/ca-agent-next/issues/28)、PR [#34](https://github.com/odango-chan/ca-agent-next/pull/34) OPEN；Head `52f0fa32` 的 [专项 CI #45814208662](https://github.com/odango-chan/ca-agent-next/actions/runs/45814208662) SUCCESS；Ubuntu/Python 3.12 与 Windows/Python 3.14 各 Plugin 87、Host 52、Review Context 80 tests PASS，Go Echo/compileall/证据采集 PASS；系统 EX-02/03/04/18 NOT_RUN。 尚未合入恢复分支。
 - Phase C：SR-004。
 - Phase D：SR-005、SR-006。
 - Phase E：SR-007。
@@ -141,3 +141,4 @@
 | 2026-11-26 | 0.3.26 | GPT-6.2（ChatGPT） | §1～§4、修订记录 | 回填 PR #37 MERGED，将 SR-015 标为 IMPLEMENTED；27 项状态为 2 VERIFIED / 2 READY / 1 IMPLEMENTED / 22 DRAFT | 按 SR 状态机区分文档迁移完成与验收 VERIFIED，保留 SR-001、SR-028 并行结果 | Issue #12；SR-015；PR #37 |
 | 2026-11-26 | 0.3.27 | GPT-6.2（ChatGPT） | §1～§4 | 回填 ca-agent-demo PR #253 合并、Issue #252 关闭及 AC-024-01～07 PASS；SR-024 转 VERIFIED；同步 SR-003 的设计 READY / 实施 IN_PROGRESS 与本地模块 AC 证据 | 消除 SR-024 已完成仍显示 READY 的过期状态，并区分 SR-003 设计门禁、实施进度与未运行的 CI/系统 EX | Issue #12；ca-agent-demo #252/#253；SR-024 v0.1.12；SR-003；PR #34 |
 | 2026-11-26 | 0.3.28 | GPT-6（ChatGPT） | 文档头、§3.2、修订记录 | 保留 SR-024 VERIFIED 与 SR-003 设计 READY / 实施 IN_PROGRESS；回填 PR #34 Merge 候选 Base SHA | 与最新恢复分支一致，不能将历史 AC 结果升级为候选 Head PASS | Issue #28；PR #34 |
+| 2026-11-26 | 0.3.29 | GPT-6（ChatGPT） | 文档头、§3、修订记录 | 以新 Head 的 CI success 替换等待验证状态 | 不将模块测试等同系统验收 | Issue #28；PR #34；[CI #45814208662](https://github.com/odango-chan/ca-agent-next/actions/runs/45814208662) |
