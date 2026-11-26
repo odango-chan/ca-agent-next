@@ -1,9 +1,9 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录  
-> 文档版本：0.1.26  
+> 文档版本：0.1.27  
 > 修订日期：2026-11-26  
-> 状态：8 项 IR；IR-008 登记 CA-SL 1.6.0 Capability-first 严格一对一与完全无旧版兼容，SR-029 设计待评审；SR-028 仍 DRAFT。  
+> 状态：8 项 IR；IR-008 登记 CA-SL 1.6.0 Capability-first 严格一对一与完全无旧版兼容，SR-029 设计待评审；IR-006 下 SR-030 Host Context Schema-only Publisher 设计待评审；SR-028 仍 DRAFT。  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级需求管理平台
 
@@ -144,3 +144,4 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 | 2026-11-26 | 0.1.25 | GPT-6（ChatGPT） | IR-008、文档状态、修订记录 | 新增 CA-SL 1.6.0 Capability-first / Callable 一对一需求，并登记 SR-029 设计待评审与全链路无兼容门槛 | 防止下游把历史 v1alpha5 当作新系统可执行输入 | Issue #40；SR-029；SR-004 |
 
 | 2026-11-26 | 0.1.26 | GPT-6（ChatGPT） | 1.6.0 Host Context Publisher / 依赖边界 | 将 Host Context 1.6.0 Schema-only Publisher 纳入 IR-006/IR-008，区分 SR-024 历史 VERIFIED 与 SR-030 新需求 | 避免旧 Development Package 被误认为新版正式输入 | Issue #12/#40；IR-006/008；SR-030 |
+| 2026-11-26 | 0.1.27 | GPT-6（ChatGPT） | IR-006/IR-008、修订记录 | 同步 SR-030 新版 Host Context 1.6.0 Schema-only Publisher 需求与 SR-024 历史 v1alpha5 Publisher 边界 | 使 IR→SR 追踪明确区分旧版已验证证据和新版待评审需求 | Issue #12/#40；IR-006/008；SR-024、SR-030；PR #46 |
