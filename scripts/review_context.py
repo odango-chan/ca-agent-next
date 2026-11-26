@@ -986,7 +986,8 @@ def _normalize_header_declaration(line: str) -> str:
     value = line.strip()
     while value.startswith(">"):
         value = value[1:].lstrip()
-    value = re.sub(r"\s+", " ", value).replace(":", "：")
+    value = re.sub(r"\s+", " ", value)
+    value = re.sub(r"\s*[：:]\s*", "：", value)
     return value.rstrip("。.")
 
 
