@@ -1,7 +1,7 @@
 # G02：Python 工程工具链与环境管理设计说明书
 
 > 文档类型：工程治理功能设计说明书  
-> 文档版本：0.1.0  
+> 文档版本：0.1.1  
 > 状态：DRAFT；待独立设计评审，SR-028 不可实施  
 > 修订日期：2026-11-26  
 > 功能节点：G02 Python 工程工具链与环境管理  
@@ -108,6 +108,11 @@ uv sync --locked --group dev
 ```bash
 uv run --locked --group dev python -m unittest discover -s tests -v
 uv run --locked --group dev python -m ca_agent_next --smoke
+```
+
+仅在 SR-001 PR #32 已集成到目标分支、`scripts/review_context.py` 实际存在后，才追加执行：
+
+```bash
 uv run --locked --group dev python scripts/review_context.py --help
 ```
 
@@ -205,3 +210,4 @@ I1 与 I3 可在 SR-028 实施 Issue 内按依赖顺序执行；I2 只在 SR-001
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
 |---|---|---|---|---|---|---|
 | 2026-11-26 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 新建 G02 Python 工程工具链与环境管理设计；固定 uv、锁文件、依赖分组、Python 基线、worktree 隔离、CI 入口和 SR-001 Workflow 阶段依赖 | 解决共享 Python 环境污染和 Workflow 临时安装未声明依赖的问题，同时保持 setuptools 与 Agent Core 运行时依赖边界 | Issue #35；IR-007；SR-028 |
+| 2026-11-26 | 0.1.1 | GPT-6.2（ChatGPT） | §3.6、§6 | 明确 review_context.py CLI 只在 PR #32 集成后可执行，避免将尚不存在于当前基线的脚本列为 I1 命令 | 消除 SR-028 独立 I1 可实施性与 SR-001 下游依赖之间的命令歧义 | Issue #35；PR #32；SR-028 |
