@@ -1,8 +1,8 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.19
-> 状态：SR-002 VERIFIED；SR-001、SR-003 READY；SR-024 IN_PROGRESS；其余 22 项 SR 为 DRAFT；实施启动按 SR 管理规范 §6.1 检查阶段依赖  
+> 文档版本：0.3.20
+> 状态：SR-002 VERIFIED；SR-001、SR-003 READY；SR-024 IN_PROGRESS（AC-024-01～07 技术评审 PASS；GitHub Review COMMENTED 由 PR 作者账号提交，正式独立 Approval 待完成；checks skipped/pending）；其余 22 项 SR 为 DRAFT；实施启动按 SR 管理规范 §6.1 检查阶段依赖  
 > 修订日期：2026-11-26  
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
@@ -60,7 +60,7 @@
 | 1 | SR-023 | CA-SL v1alpha5、作者源与发布基线恢复 | ca-skills | 先固定语言、Skill 作者源与版本边界；Compiler #61 仍是外部 OPEN 依赖 |
 | 2 | SR-015 | Tool Interface / Provider / Codec 设计恢复 | ca-client-tools → Next F03.05 | 明确公开 Callable、Owner Contract、Provider v2 和单一 Plugin Manager 消费 |
 | 3 | SR-025 | MAS Owner Development Interface Package Publisher | ca-client-tools → Next F03.05 / F09 | 将 Owner v1alpha4 source 包装为 Compiler v2.1.0 Development Interface Package；package.version 固定为 `1.0.0` |
-| 4 | SR-024 | Host Context Interface Package Publisher | ca-agent-demo → Next F09 | IN_PROGRESS；实施 Issue [ca-agent-demo #252](https://github.com/odango-chan/ca-agent-demo/issues/252) 与 [PR #253](https://github.com/odango-chan/ca-agent-demo/pull/253) 已登记；AC-024-01～07 在受测 head `99b2731` 实测 PASS；PR 尚未合并，等待独立 Review；不占用 SR-020 的参考宿主审计 ID |
+| 4 | SR-024 | Host Context Interface Package Publisher | ca-agent-demo → Next F09 | IN_PROGRESS；[PR #253](https://github.com/odango-chan/ca-agent-demo/pull/253) head `99b2731` 的 AC-024-01～07 已技术评审 PASS（Review #6070722615 为 COMMENTED，GitHub actor 与 PR 作者相同，非独立 Approval）；combined status pending、4 个 checks skipped；等待作者之外的正式 Approval 与维护者确认 CI 门禁；不占用 SR-020 的参考宿主审计 ID |
 | 5 | SR-018 | OpenAMSM Owner 权威状态恢复 | env-openamsm | 固定 Callable、Receipt、Commit Proof、Reconcile 和 Modify/Release 边界 |
 | 6 | SR-019 | Mock AMF / 5GC 仿真对端恢复 | env-5gc-sim | 固定协议对端、World、进程和真实测试边界 |
 | 7 | SR-017 | OpenAMSM Event/Delivery Plugin 恢复 | ca-openamsm-plugin | 依赖 F03/F05、EC05 Owner Contract；当前 PR #1 Draft |
@@ -131,3 +131,4 @@
 | 2026-11-26 | 0.3.17 | GPT-6.2（ChatGPT） | §1～§4 | 将 SR-001/SR-003/SR-024 更新为 READY，并登记 Issue #27/#28/#252；同步 SR-002 VERIFIED 后的 SR-003 启动门槛 | 使索引反映最新设计审查、实施追踪和并行 SR-002 证据，不将系统 EX-01 混入模块门禁 | Issue #26～#28；ca-agent-demo #252；PR #25；PR #29 |
 | 2026-11-26 | 0.3.18 | GPT-6.2（ChatGPT） | §1～§3、§5 | 将 SR-003 实施状态从等待 PR #29 改为按最终恢复分支集成 SHA 启动；保留 SR-002 VERIFIED 与 1 VERIFIED / 3 READY / 22 DRAFT 统计。 | 消除已满足门禁的过期等待表述，并使实施入口绑定最终设计基线。 | Issue #26～#28；PR #29；SR-002、SR-003 |
 | 2026-11-26 | 0.3.19 | GPT-6.2（ChatGPT） | 头部、§2～§4 | 将 SR-024 从 READY 更新为 IN_PROGRESS，登记 ca-agent-demo PR #253、受测 head 与 AC-024-01～07 PASS 证据；修正中央设计恢复批次标题，避免把不同 SR 状态误写为全部 DRAFT | 代码已推送但 PR 尚未合并；保持 SR 状态统计、实施入口与验收证据一致 | Issue #12；ca-agent-demo #252/#253；SR-024 v0.1.10 |
+| 2026-11-26 | 0.3.20 | GPT-6.2（ChatGPT） | 头部、§3.1 | 补充 SR-024 独立技术评审结论与正式门禁差异：Review #6070722615 为 COMMENTED 且 reviewer GitHub 身份与 PR 作者相同；4 个 checks skipped、combined status pending；等待真正独立 Approval 和维护者 CI 门禁确认 | 不把独立技术分析误写为独立 GitHub 身份批准，不把 skipped checks 计作 CI PASS；SR 保持 IN_PROGRESS | Issue #12；ca-agent-demo #252/#253；Review #6070722615；SR-024 v0.1.11 |
