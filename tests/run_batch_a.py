@@ -107,7 +107,8 @@ def write_report(results: list[CaseResult], started_at: str, finished_at: str) -
         "",
         f"总入口：`python tests/run_batch_a.py`（从仓库根目录执行）；本次退出码 {0 if not any(r.status == 'FAIL' for r in results) else 1}。",
     ]
-    report = TESTS_ROOT / "A_BATCH_RESULTS.md"
+    report = EVIDENCE / "A_BATCH_RESULTS.md"
+    report.parent.mkdir(parents=True, exist_ok=True)
     report.write_text("\n".join(lines), encoding="utf-8", newline="\n")
     return report
 
@@ -136,6 +137,7 @@ def main() -> int:
     failed = sum(1 for item in results if item.status == "FAIL")
     print("")
     print(f"cases={len(results)} fail={failed} report={report}")
+    print(f"stable report: {TESTS_ROOT / 'A_BATCH_RESULTS.md'}")
     return 1 if failed else 0
 
 

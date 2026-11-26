@@ -15,7 +15,7 @@ python tests/run_batch_a.py
 1. 校验 `examples/echo/plugin/plugin.yaml`、三个 Extension 和两个 Schema；
 2. 从 `examples/echo/plugin/` 执行 `go build`，生成 `examples/echo/plugin/bin/echo-plugin[.exe]`；
 3. 以 `echo-plugin serve` 启动真实 Go 子进程；
-4. 运行 `A00`–`A08`，写出 `tests/evidence/` 与 [`A_BATCH_RESULTS.md`](A_BATCH_RESULTS.md)；
+4. 运行 `A00`–`A08`，写出 `tests/evidence/`、`tests/evidence/A_BATCH_RESULTS.md`，并给出稳定交付报告 [`A_BATCH_RESULTS.md`](A_BATCH_RESULTS.md)；
 5. 任一用例 `FAIL` 时退出码为 1。
 
 前置：Python 3.11+（验证使用 3.14.6）、PyYAML、Go 1.24+（验证使用 1.26.6）。
@@ -40,7 +40,7 @@ tests/
 │       ├── A07-delivery-wrong-id.json
 │       └── A08-terminal-twice.json
 ├── evidence/                  # 运行生成（脱敏 NDJSON、stderr、summary）
-├── A_BATCH_RESULTS.md         # 运行生成的逐例结果表
+├── A_BATCH_RESULTS.md         # 稳定交付报告（文件路径、命令、结果、干净 checkout）
 └── README.md
 ```
 
@@ -56,6 +56,7 @@ Go Echo Plugin 没有 `ECHO_CASE` 之类的测试模式。`tests/conformance/hos
 ## 证据
 
 - `tests/evidence/results.json`：机器可读汇总；
+- `tests/evidence/A_BATCH_RESULTS.md`：每次运行生成的逐例结果表；
 - `tests/evidence/batchA/<case>/transcript.ndjson`：真实收发帧（已脱敏）；
 - `tests/evidence/batchA/<case>/plugin.stderr.log`：Plugin stderr；
 - `tests/evidence/batchA/<case>/summary.json`：断言结果、pending/completions、obligations；
