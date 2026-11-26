@@ -1,7 +1,8 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录  
-> 文档版本：0.1.6  
+> 文档版本：0.1.14  
+> 修订日期：2026-11-26  
 > 状态：新增跨仓需求待评审  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级需求管理平台
@@ -20,15 +21,16 @@ IR 编号稳定。GitHub Issue 用于讨论、分派和跟踪，一个 IR 可关
 - 完成依据：对应 SR 的必需验收全部 VERIFIED；当前均为 DRAFT，证据未执行。
 
 ## IR-002
+- 设计修订追踪：[Next Issue #19](https://github.com/odango-chan/ca-agent-next/issues/19)；[设计 PR #20](https://github.com/odango-chan/ca-agent-next/pull/20)（Ready for review，独立评审 APPROVE_FOR_READY）；阶段门禁治理：[Issue #21](https://github.com/odango-chan/ca-agent-next/issues/21)；父级中央设计恢复见 [Next Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12)。
 
 **通用宿主与可插拔扩展**
 
 业务通过 Plugin 扩展，宿主保持 Python 和业务中立。
 
-- 协作 Issue：未登记。
+- 实施协作 Issue：[SR-002 实施 Issue #22](https://github.com/odango-chan/ca-agent-next/issues/22)；SR-002 已 READY，代码尚未开始。Issue #19 仅用于设计修订，Issue #21 仅用于治理修订。
 - 实施分解：[SR-002](../SR/SR-002-Python%20核心与宿主基础骨架.md)、[SR-003](../SR/SR-003-统一插件管理器与扩展通信.md)。
 - 架构、设计和规范：[CA Agent Next 架构设计](../架构设计/CA%20Agent%20Next%20架构设计.md)、[通用Agent核心与Host设计说明书](../设计说明书/F01-通用Agent核心与Host/通用Agent核心与Host设计说明书.md)、[Plugin平台设计说明书](../设计说明书/F03-Plugin平台/Plugin平台设计说明书.md)、[插件包与进程通信协议规范](../规范/插件包与进程通信协议规范.md)。
-- 完成依据：对应 SR 的必需验收全部 VERIFIED；当前均为 DRAFT，证据未执行。
+- 完成依据：对应 SR 的必需模块验收全部 VERIFIED；当前 SR-002 为 READY、SR-003 为 DRAFT，AC-002-01～08 和 EX-01 均 NOT_RUN。
 
 ## IR-003
 
@@ -86,13 +88,21 @@ Compiler 实施沿用 [SR-013](../SR/SR-013-Compiler已检查when与发布产物
 
 ## 修订记录
 
-| 日期 | 版本 | 修订内容 | 原因 | 影响 SR |
-|---|---|---|---|---|
-| 2026-11-25 | 0.1.0 | 登记五项 IR 及其实施分解 | 建立双向需求追踪 | SR-001～SR-011 |
-| 2026-11-25 | 0.1.1 | 更新 EC02 归档与追踪 | 对齐中央设计及 Compiler #61 | SR-012 |
-| 2026-11-25 | 0.1.2 | Codex 登记 Compiler 实施 SR | 对齐跨仓实施门槛 | SR-013 |
-| 2026-11-25 | 0.1.2 | Codex / GPT-6 · IR-006 · 登记十项分仓 SR | 跨仓设计移交 | IR-006 |
+| 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
+|---|---|---|---|---|---|---|
+| 2026-11-25 | 0.1.0 | 未记录（历史资料未提供） | 未记录（历史资料未提供） | 登记五项 IR 及其实施分解 | 建立双向需求追踪 | SR-001～SR-011 |
+| 2026-11-25 | 0.1.1 | 未记录（历史资料未提供） | 未记录（历史资料未提供） | 更新 EC02 归档与追踪 | 对齐中央设计及 Compiler #61 | SR-012 |
+| 2026-11-25 | 0.1.2 | 未记录（历史资料未提供） | 未记录（历史资料未提供） | Codex 登记 Compiler 实施 SR | 对齐跨仓实施门槛 | SR-013 |
+| 2026-11-25 | 0.1.2 | 未记录（历史资料未提供） | 未记录（历史资料未提供） | Codex / GPT-6 · IR-006 · 登记十项分仓 SR | 跨仓设计移交 | IR-006 |
 | 2026-11-25 | 0.1.3 | GPT-6.2（ChatGPT） | IR-003 | 明确 Compiler #61 为外部实现 Issue、Next #14 为文档刷新 Issue；不改变 SR-004/005/006 的消费端职责 | 区分外部实现和中央设计治理 | Issue #14、SR-013、Compiler #61 |
 | 2026-11-25 | 0.1.4 | GPT-6.2（ChatGPT） | IR-003 | 登记 PR #16 为中央设计 Draft PR，明确不计入产品实施 | 使需求、设计 PR 和实施 Issue 状态一致 | Issue #14、PR #16、Compiler #61 |
 | 2026-11-25 | 0.1.5 | GPT-6.2（ChatGPT） | IR-006 | 登记 Host Context Interface Package Publisher 独立需求 SR-024，并保留 SR-020 的参考宿主审计职责 | 修复 SR ID 冲突，保持 IR→SR 一对多追踪 | IR-006；SR-020、SR-024 |
-| 2026-11-26 | 0.1.6 | 修复 IR-006 缺 SR-025 并登记 SR-026/027 | 对齐跨仓实现与独立复验 | Issue #12 |
+| 2026-11-26 | 0.1.6 | 未记录（历史资料未提供） | 未记录（历史资料未提供） | 修复 IR-006 缺 SR-025 并登记 SR-026/027 | 对齐跨仓实现与独立复验 | Issue #12 |
+| 2026-11-26 | 0.1.7 | 未记录（历史资料未提供） | 未记录（历史资料未提供） | IR-002 登记 SR-002 设计修订 Issue #19，并明确其不代表实施授权 | 补齐需求到设计修订的协作追踪 | Issue #19；SR-002 |
+| 2026-11-26 | 0.1.8 | 未记录（历史资料未提供） | 未记录（历史资料未提供） | 回填 SR-002 设计 PR #20 的 Draft 状态和恢复分支目标 | 保持需求、Issue、PR 追踪闭合 | Issue #19；PR #20 |
+| 2026-11-26 | 0.1.9 | GPT-6.2（ChatGPT） | IR-002 | 明确 Issue #19/#20 仅跟踪 SR-002 设计修订，并与实施 Issue 分离 | 避免将设计评审追踪误读为代码实施授权，保持 IR→SR→Issue→PR 关系清晰 | IR-002；SR-002；Issue #19；PR #20 |
+| 2026-11-26 | 0.1.10 | GPT-6.2（ChatGPT） | IR-002 | 明确 Issue #19/#20 仅跟踪 SR-002 设计修订，并与实施 Issue 分离。 | 避免将设计评审追踪误读为代码实施授权，保持 IR→SR→Issue→PR 关系清晰。 | IR-002；SR-002；Issue #19；PR #20 |
+| 2026-11-26 | 0.1.11 | GPT-6.2（ChatGPT） | IR-002 | 将 SR-002 设计 PR #20 状态同步为 Ready for review，并继续明确 Issue #19 非实施 Issue。 | 使需求登记与 GitHub 评审状态一致，不产生提前实施授权。 | IR-002；Issue #19；PR #20 |
+| 2026-11-26 | 0.1.12 | GPT-6.2（ChatGPT） | IR-002 | 同步 SR-002 v0.2.6、Acceptance v0.3.7 与 PR #20 Ready for review 状态 | 使需求登记、设计修订追踪和验收版本一致，同时保持实施 Issue 未创建 | IR-002；SR-002；Issue #19；PR #20 |
+| 2026-11-26 | 0.1.13 | GPT-6.2（ChatGPT） | IR-002 | 同步 SR-002 独立设计评审 APPROVE_FOR_READY 与 READY 状态，并登记治理 Issue #21；模块 AC 和系统 EX 继续 NOT_RUN。 | 区分设计、治理和后续代码实施追踪，避免把设计 Issue 当作实施授权。 | IR-002；SR-002；SR-003；Issue #19；Issue #21；PR #20 |
+| 2026-11-26 | 0.1.14 | GPT-6.2（ChatGPT） | IR-002 | 登记 SR-002 READY 后创建的独立实施 Issue #22，并明确 Issue #19/#21 分别承担设计和治理追踪。 | 完成需求到实施任务的追踪链，防止误用设计 Issue。 | IR-002；SR-002；Issue #19；Issue #21；Issue #22；PR #20 |
