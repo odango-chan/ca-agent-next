@@ -1,13 +1,13 @@
 # SR-010：OpenAMSM 工具插件与按需编解码集成
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.12  
-> 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**，未获得实施 READY，产品验收 NOT_RUN  
+> SR 版本：0.2.0  
+> 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**，未获得实施 READY，产品验收 NOT_RUN；PR #46 首轮 CHANGES_REQUESTED，修订待复评  
 > 创建日期：2026-11-25  
-> 修订日期：2026-11-26  
+> 修订日期：2026-11-27  
 > 所属阶段：Phase G  
 > 上游需求：[IR-005](../IR/IR%20总登记册.md#ir-005)  
-> 设计依据：[Plugin平台设计说明书](../设计说明书/F03-Plugin平台/Plugin平台设计说明书.md) v0.3.6 §8；[Tool Interface 与 Provider 集成设计](../设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) v0.4.1 全文；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.2 §5～10；[公共契约与所有权规范](../规范/公共契约与所有权规范.md) v0.2.7 §2、5、6、8  
+> 设计依据：[Plugin平台设计说明书](../设计说明书/F03-Plugin平台/Plugin平台设计说明书.md) v0.3.6 §8；[Tool Interface 与 Provider 集成设计](../设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) v0.4.3 全文；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.5 §5～10；[公共契约与所有权规范](../规范/公共契约与所有权规范.md) v0.2.6 §2、5、6、8  
 > Acceptance：OM-04、OM-10、OM-13（见[演示验收基线](../验收与实施/演示验收基线.md)）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：见第 3 节
@@ -50,7 +50,7 @@
 |---|---|---|
 | 设计 | F03.05/ F05 正式 ca-host.artifact-store/v1、SR-029 1.6.0 Capability Binding | Host Artifact Channel 与 Provider Tool/Codec 不能混成双 Provider Manager |
 | 实施 | SR-003 单 Plugin Manager、SR-007 Action Boundary、SR-009 Plugin staging；Provider v1.2.0 旧 API 只作 Host channel 历史互操作参考 | Host ArtifactStore / Channel 可独立实现，外部新 1.6.0 Capability 导出不阻塞本 Host 子阶段 |
-| 模块验收 | Host channel v1 已冻结 conformance fixtures；SR-026 新 Codec Capability 发布包 | AC-010-01～06 可按 Host 通道独立验证；AC-010-07/08 等待新 Codec 发布 |
+| 模块验收 | Host channel v1 已冻结 conformance fixtures；SR-026 新 Codec Capability 发布包 | AC-010-01～05 用测试 Host/Provider；09 使用真实 Go Provider 与 Python Host，无需真实 NF；06a 本地拒绝，06b/07/08 依赖正式 1.6.0 资产 |
 | 系统 OM | OM-04/10/13 与真实 NF/Owner | 不作为 Host Channel 模块 READY 前置 |
 
 **设计评审与实施 READY 独立判定**：本 SR 的功能职责、已知目标契约、失败路径和下面每项模块 AC 足够完整即可请求设计评审；不得要求“全部前置 SR VERIFIED”作为统一前置。实际实施按本次 Scope 逐阶段检查所消费的已发布能力；缺失时仅相应 AC 标记 BLOCKED/NOT_RUN，系统 EX/OM 不倒灌模块门禁。Owner/Provider/Compiler 的未知机器标识、Schema 和 API 只能由对应 Owner 正式发布，Harness 不得推测。新 Skill/Artifact/Runtime 接口只接受 CA-SL 1.6.0 / Capability-first，不提供旧版兼容。
@@ -64,10 +64,10 @@
 | AC-010-03 | Provider GET 输入/POST 输出正确二进制与 mediaType、Content-Length、逐 Artifact 传输校验 | 输出原子发布，字节一致；slot/schema/size/digest 不符不形成可读产物 |
 | AC-010-04 | 取消、超时、Provider 退出、部分写入、配额超限 | 所有 staged outputs 清理；未完成 Artifact 不可读取；无重复 Owner mutation |
 | AC-010-05 | Codec 未发布、Host 不需要 Decode、Codec 必需但不存在 | no-decode 路径不触发 Codec；必需 Codec 未发布只阻塞对应 AC，不冒充已发布能力 |
-| AC-010-06 | Provider runtime bindings 指向私有后端；旧 11 个 READ 的任意 Callable 外露 | 仅新 1.6.0 公开 Capability→Callable Binding 可提供作者调用；私有 backendOperationId 不出现在 Skill/LLM |
+| AC-010-06 | 06a 本地传私有 backendOperationId、旧 READ Callable 或非法 selector；06b 在正式 1.6.0 Package 与 Bundle 上按已 Link 的 Capability 分发 | 06a 在后端 I/O 前拒绝；06b 核对唯一公开映射、合法路由及 Scope；缺正式输入时 06b BLOCKED，单独 06a 不能使整项 PASS |
 | AC-010-07 | SR-026 正式发布的 DecodeNAS Capability 与单消息 0xD1、截断/错误类型 | 正常 Decode 输出结构化 JSON 且原 bytes 保留；负例 fail-closed；未发布时 BLOCKED |
 | AC-010-08 | 1.6.0 Bundle 对已导出 Codec READ Capability 做真实 Runtime Tool Action | 必须经统一 Action Boundary + Provider channel；所需 new Package/Runtime Artifact 缺失时 NOT_RUN |
-| AC-010-09 | 同一 conformance fixtures 的 Host Python / Provider Go 联合测试 | 准确记录受测 SHA、请求/响应、GET/POST 字节、Slot、配额与错误映射；仅算 Host 子模块，不算 OM E2E |
+| AC-010-09 | 同一 conformance fixtures 的 Host Python / Provider Go 联合测试 | 准确记录受测 SHA、请求/响应、GET/POST 字节、Slot、配额与错误映射；另测只有 Provider ok=true、HTTP 2xx、IPC 成功或模型成功文本，及 Receipt 的 Scope/Invocation 不符：按 SR-007 AC-007-05/06 均不得记 COMMITTED，无重复 mutation；仅算 Host 子模块，不算 OM E2E |
 
 ### 5.1 实现落点、运行和取证
 
@@ -113,3 +113,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-26 | 0.1.11 | 按治理 §6.1 拆分设计/实施/模块/系统依赖；补齐 AC-010-xx 正反验收 | 解除全局 VERIFIED 门槛与缺模块 AC 问题，避免 Harness 猜测/EX 倒灌 | Issue #12/#40；PR #46；SR 管理规范 §6.1 |
 
 | 2026-11-26 | 0.1.12 | 同步本次 1.6.0 实质整改后的权威 Feature/Compiler 文档版本 | 保证 SR 新旧规范引用与固定审核 Head 一致 | Issue #12/#40；PR #46 |
+| 2026-11-27 | 0.2.0 | Codex / GPT-6，§4～5、AC-010-06/09，拆分测试环境并核对 Owner Proof | 落实首轮独立评审，区分设计依据与实测证据 | SR-010，Issue #12，PR #46 |

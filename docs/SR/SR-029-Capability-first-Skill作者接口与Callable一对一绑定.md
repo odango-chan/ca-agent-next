@@ -1,10 +1,10 @@
 # SR-029：Capability-first Skill 作者接口与 Callable 一对一绑定
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.4  
-> 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**；不授予实施 READY，产品验收原状态不变  
+> SR 版本：0.2.5  
+> 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**；不授予实施 READY，产品验收原状态不变；PR #46 首轮 CHANGES_REQUESTED，修订待复评  
 > 创建日期：2026-11-26  
-> 修订日期：2026-11-26  
+> 修订日期：2026-11-27  
 > 上游需求：[IR-008](../IR/IR%20总登记册.md#ir-008)；关联需求：[IR-003](../IR/IR%20总登记册.md#ir-003)  
 > 功能：F02、F03.05、F04、F06、F08、F09、EC02  
 > 设计 Issue：[ca-agent-next #40](https://github.com/odango-chan/ca-agent-next/issues/40)  
@@ -67,6 +67,8 @@ Skill-facing Capability 与公开 Callable 严格双向一对一；Operation / O
 - openamsm.nf.metrics.read：3 个 Callable，共用 metrics-page-query 和 metrics-page Schema。
 
 目标各收敛为一个公开 Callable，Capability ID 分别保持 openamsm.smf.mas.context.read 和 openamsm.nf.metrics.read。SMF Context Read 的 Input 增加封闭 contextKind 枚举 sc / pa / upn / ssm / iam / ups / ca / saa；NF Metrics Read 的 Input 增加封闭 resourceKind 枚举 amf.ue-info / amf.gnb-info / smf.pdu-info。现有 8+3 个 backendOperationId 作为 Provider 私有实现路由保留，不再作为 11 个 Skill-facing Callable。
+
+两个通用查询 READ 构成 2/2 子集。加入 SR-026 的一个 Codec READ 后，Provider 全量为 3 Capability / 3 公开 Callable。逐 Package 与跨 Package 合并均检查双向唯一，重复或缺项均失败。
 
 ## 4. 规范性设计决策
 
@@ -155,7 +157,7 @@ Owner 1.6.0 目标：
 
 Provider Interface 目标：
 
-- 2 Capability / 2 公开 Callable。
+- 两个通用查询 READ 构成 2/2 子集。加入 SR-026 的一个 Codec READ 后，Provider 全量为 3 Capability / 3 公开 Callable。逐 Package 与跨 Package 合并均检查双向唯一，重复或缺项均失败。
 - 11 个原 backendOperationId 保留为 Provider 私有路由。
 - SMF / NF 查询通过封闭 selector 字段进入同一个公开 Callable，不公开 11 个独立 Callable。
 
@@ -236,13 +238,13 @@ Create / Release 继续分别使用原有 Schema 与 Evidence Guarantee；Modify
 | AC-029-02 | Provider Interface 当前 2/11 基数、8+3 查询分组与共享 Schema 有固定来源审计 | 来源审计已记录，待独立评审 |
 | AC-029-03 | Capability ↔ Callable 双向一对一、Operation/Observation kind、Effect、Schema 规则明确 | 设计已记录，待独立评审 |
 | AC-029-04 | Owner 事件 Capability 拆分、Reconcile internal-only、Receipt Query 保留规则明确 | 设计已记录，待独立评审 |
-| AC-029-05 | Provider 两个通用 READ Callable 与封闭 selector / 私有 backend 路由明确 | 设计已记录，待独立评审 |
+| AC-029-05 | 查询 2/2、含 Codec 全量 3/3；单包及跨包重复绑定或漏 Codec 均失败；封闭 selector 只选择私有 backend | 设计已记录，待独立评审 |
 | AC-029-06 | 1.6.0 正式命名、完全无兼容/自动迁移、准确机器标识与作者 Schema 发布责任清晰 | 待独立设计评审 |
 | AC-029-07 | Compiler Link、诊断、Artifact v2 capabilityBindings 与 Build/Verify 边界明确 | 设计已记录，待独立评审 |
 | AC-029-08 | Runtime Action、Callable allowlist、Reconcile 内部入口明确 | 设计已记录，待独立评审 |
 | AC-029-09 | Skill Studio Capability-only Explorer / LSP / AI Authoring 明确 | 设计已记录，待独立评审 |
 | AC-029-10 | MAS Create / Modify / Release 的 1.6.0 Capability 映射与业务语义保持边界明确 | 设计已记录，待独立评审 |
-| AC-029-11 | F02/F03.05/F04/F06/F08/F09/EC02、IR/SR、版本规范/功能树/目录与 SR-004 一致；静态门禁 | 待静态检查与独立评审 |
+| AC-029-11 | F02/F03.05/F04/F06/F08/F09/EC02、IR/SR、版本规范/功能树/目录与 SR-004 一致；逐包与合并快照分别核对 3/3，实际发布前仅验设计 | 待静态检查与独立评审 |
 | AC-029-12 | 未修改下游仓；未把设计目标误报为实现或 E2E PASS | 待独立评审 |
 
 ## 14. 依赖与状态边界
@@ -269,3 +271,4 @@ Create / Release 继续分别使用原有 Schema 与 Evidence Guarantee；Modify
 | 2026-11-26 | 0.2.2 | GPT-6（ChatGPT） | 标题层级/修订记录 | 修正历史修订表列数与独立设计评审状态 | 满足 Markdown 设计评审门禁，避免编号或治理表歧义 | Issue #40；SR-029 |
 | 2026-11-26 | 0.2.3 | GPT-6（ChatGPT） | 文档头与修订记录 | 补齐 formal SR 正式 review_scope 与非目标声明 | 解除 PR #45 当前 Head Review Context formal-doc 校验失败 | Issue #40；PR #45 |
 | 2026-11-26 | 0.2.4 | GPT-6（ChatGPT） | 文档头、§0、设计依据 | 提交设计待评审、明确新旧契约/验收隔离并保留 DRAFT 主状态 | 统一中央评审批次，防止旧版发布证据冒充新版资格 | Issue #12；PR #45；SR-029 |
+| 2026-11-27 | 0.2.5 | Codex / GPT-6 | §3.2、§6、AC-029-05/11 | 区分查询子集与 Provider 全量 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |

@@ -1,14 +1,14 @@
 # Tool Interface 与 Provider 集成设计说明书
 
 > 文档类型：功能子模块设计说明书
-> 文档版本：0.4.2
+> 文档版本：0.4.3
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 功能归属：F03.05 — Tool Plugin 集成
 > 交叉功能：F03.01～F03.04、F04.01、F04.05、F05.02、F06
 > 关联 SR：SR-003、SR-007、SR-010、SR-015、SR-025、SR-026
 > 全局评审范围：继承根目录 Agent.md 的 review_scope。
 > 本文局部非目标：不实施 Provider/Host 代码迁移，不修改外部仓库，不完成 Codec Phase C，不声明生产资格。
-> 修订日期：2026-11-26
+> 修订日期：2026-11-27
 
 本文定义 CA Agent Next 如何消费 Tool Interface Package、Owner Contract Package 和 Provider Runtime Bindings，并将 Provider 作为唯一 Plugin Manager 管理的 Tools Extension 接入。本文是 **Next 消费侧架构与集成行为的权威设计**；外部包的实际字段、发布物和实现仍由各自所有者维护，Next 不复制其完整 Catalog 或 Schema。
 
@@ -147,7 +147,7 @@
 
 冻结 CA-SL v1alpha5 Runtime 使用的 Owner Contract Package 与 Skill Studio / Compiler v2.1.0 Development profile 使用的 `interface-package/v1alpha1` 是两个不同消费面。Development package 是对 Owner v1alpha4 source snapshot 的静态包装，不替代 Owner 原始 ToolCatalog、CapabilityContracts、Evidence Guarantees，也不替代 Provider Interface Package 或 Provider Runtime Bindings。
 
-历史 Compiler v2.1.0 的 MAS Owner Development Interface Package 由 F09 §4（只读审计）记载，其 24/25 members、Provider v1.2.0 11 READ、旧 1.0.0 wrapper 均不是新目标。**当前 SR-025 负责全新 1.6.0 Owner 24/24 Capability-first Publisher**，所需 Package Schema、Publisher version、合法身份与 Bindings 由 Owner/Compiler 正式发布；Provider 新 2/2 由 ca-client-tools 另行发布，不能从旧数组直接转换。
+历史 Compiler v2.1.0 的 MAS Owner Development Interface Package 由 F09 §4（只读审计）记载，其 24/25 members、Provider v1.2.0 11 READ、旧 1.0.0 wrapper 均不是新目标。**当前 SR-025 负责全新 1.6.0 Owner 24/24 Capability-first Publisher**，所需 Package Schema、Publisher version、合法身份与 Bindings 由 Owner/Compiler 正式发布；Provider 查询子集 2/2，加 Codec 后全量 3/3，由 ca-client-tools 发布，不能从旧数组直接转换。
 
 **历史 Compiler v2.1.0 的** Development package version 必须为 exact SemVer，旧 wrapper 的 1.0.0 只供源审计；**新 1.6.0 Publisher 不得默认使用该版本或旧 package.json Schema**。Owner source version v1alpha4 不能冒充新语言或新 Package identity。必须保留 Owner source stable Package ID、ToolCatalog contract IDs、Owner outcomes、Receipt / Commit Proof / Reconcile 语义或冻结 v1alpha5 Runtime Owner linking。
 
@@ -588,3 +588,4 @@ Runtime Action 以 Capability ID 为 Skill / Procedure 作者侧入口。Runtime
 | 2026-11-26 | 0.4.1 | GPT-6（ChatGPT） | §1、§3～§4、§12 | 规范性目标限定 Capability-only；旧 Publisher 24:25/11 READ 降为审计，新增拒绝矩阵 | 解除新旧 Callable/Owner/Provider Published Package 混淆 | Issue #12/#40；SR-025/026/029；PR #46 |
 
 | 2026-11-26 | 0.4.2 | GPT-6（ChatGPT） | 1.6.0 Capability / Codec 目标 | 修正 Skill 仅声明 Capability，补齐 Codec 第三个 1:1 公开能力并区分历史 Provider 2/11 | 修正历史 Callable-only 描述和 Provider 能力基数遗漏 | Issue #12/#40；SR-025/026/030 |
+| 2026-11-27 | 0.4.3 | Codex / GPT-6 | Provider 一对一映射 | 区分查询 2/2 与包含 Codec 的 3/3 | 与 SR-029、F06 的发布范围对齐 | Issue #12，PR #46 |

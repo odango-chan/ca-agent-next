@@ -1,13 +1,13 @@
 # SR-011：真实 OpenAMSM 创建修改释放端到端验证
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.4  
-> 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**，未获得实施 READY，产品验收 NOT_RUN  
+> SR 版本：0.3.0  
+> 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**，未获得实施 READY，产品验收 NOT_RUN；PR #46 首轮 CHANGES_REQUESTED，修订待复评  
 > 创建日期：2026-11-25  
-> 修订日期：2026-11-26  
+> 修订日期：2026-11-27  
 > 所属阶段：Phase H  
 > 上游需求：[IR-005](../IR/IR%20总登记册.md#ir-005)  
-> 设计依据：[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.2.7 §5～10；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.2 §2～12；[演示验收基线](../验收与实施/演示验收基线.md) v0.3.21 §2～10  
+> 设计依据：[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.3.0 §5～10；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.5 §2～12；[演示验收基线](../验收与实施/演示验收基线.md) v0.3.23 §2～10  
 > Acceptance：EX-20、OM-09、OM-11、OM-12（见[演示验收基线](../验收与实施/演示验收基线.md)）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：见第 3 节
@@ -55,11 +55,23 @@
 | AC-011-01 | 固定隔离环境、各组件/Package Release SHA、UE/PSI、场景前 Session 状态 | 环境/资产完整才启动；缺任何新 1.6.0 包则 BLOCKED 而不是合成包 PASS |
 | AC-011-02 | 真实 Create，随后同 UE/PSI Modify（含 QoS）与 UE-requested Release | Owner 与 SMF 状态、N1/N2/PFCP、三次请求/响应身份及最终 Release 状态精确匹配 |
 | AC-011-03 | 同 ID 同内容重试、同 ID 不同内容冲突、同内容新 ID 独立 Invocation | 首项无重复 mutation；冲突不变更；新 ID 只按真实 Owner/Scope 规则执行，不串入旧 Run |
-| AC-011-04 | 响应丢失、Owner UNKNOWN、迟到/重复 N2 与精确 Reconcile | UNKNOWN 不提升 COMMITTED；按原 Invocation/Proof/Scope 回查，重复 mutation=0 |
+| AC-011-04 | 响应丢失、Owner UNKNOWN、迟到/重复 N2 与精确 Reconcile | UNKNOWN 不提升 COMMITTED；N1/N2 共用 generation、releaseTxn、Run，各用本路 confirm originalInvocationId/Proof/Scope 回查；互换 Proof 时清理调用为零，重复 mutation=0 |
 | AC-011-05 | 原始 N1/N2 Artifact bytes、Run/generation、continuation 与 responseObligation | 所有引用同一实际请求，跨 Run/旧 generation 被拒；最终 Delivery/SMF projection 一致 |
 | AC-011-06 | 静态与运行追踪检查 Agent Core/Resolver/Plugin Manager 源码 | 无 OpenAMSM 业务条件分支；新增业务只改变 Plugin/Skill/Package/部署配置；系统 EX/OM 单独复验 |
 
 ### 5.1 实现落点、运行和取证
+
+**隔离联测**。环境命令按 env-openamsm `dc83ccbf5be54dcc7112dd43ba95ea6fa5975550`、env-5gc-sim `6ba1dc47049013e19d93222fb308ffead7eb4c0e` 登记。每次从干净隔离实例开始，只操作该实例。记录实际 checkout SHA、配置路径、监听地址与 logs。以下为 Bash 命令。
+
+| 阶段和工作目录 | 命令和通过条件 |
+|---|---|
+| 资产，Next | 由联测配置给出已物化的五个路径。执行 `for p in "${CREATE_BUNDLE:?}" "${MODIFY_BUNDLE:?}" "${RELEASE_BUNDLE:?}" "${PROVIDER_PACKAGE:?}" "${OWNER_PACKAGE:?}"; do test -e "$p" || exit 1; done`。再按正式 Manifest 逐一核对 release identity、Schema-only 闭包、Compiler Verify 记录与部署快照；任一不符则停止。|
+| NF，env-openamsm | 依次运行 `./bin/env-openamsm doctor`、`./bin/env-openamsm verify-upstream`、`./bin/env-openamsm build`、`./bin/env-openamsm configure --profile local`、`sudo ./bin/env-openamsm start --profile local`。配置时由隔离环境提供 ENV_OPENAMSM_QUERY_TOKEN。|
+| NF 就绪 | `./bin/env-openamsm status` 后运行 `./bin/env-openamsm smoke`；记录 SCP/SMF/UPF、Owner build identity 与本轮 UE/PSI 的无会话前态。局部 smoke 成功只满足环境预检。|
+| Peer，env-5gc-sim | `go build -o mock-amf ./cmd/mock-amf`；`./mock-amf run --config "${MOCK_AMF_CONFIG:?}" --scenario "${LIFECYCLE_SCENARIO:?}" --json`。配置必须走 SCP 指向本轮 Next 入口，使用同一 UE/PSI，保存回调、PFCP 和 Owner 证据。|
+| 清理/隔离 | 对运行中的测试 peer 使用 `curl --fail --http2-prior-knowledge -H 'Content-Type: application/json' -d '{}' "${PEER_URL:?}/mock-amf/v1/reset"`，记录代际变化；进程已退出时使用新监听地址/空状态启动下一轮。回收本轮 Host 和 peer，运行 `sudo ./bin/env-openamsm stop`。NF 停止或 peer reset 均不能充当 Owner 释放证据。|
+
+真实 Next 部署配置、同一批 1.6.0 资产及指向它们的 lifecycle scenario 尚缺；AC-011-01～06 保持 BLOCKED。禁止用旧快照重放或单元测试替代。
 
 - 目标实现：`examples/openamsm/ 与 Next 公开组合验收入口`；测试入口：`python -m unittest discover -s tests -p test_openamsm.py -v`。若实现前目标仓文件/命令尚未存在，由具体实施 PR 在模块范围内创建并登记，**不得以不存在的脚本退出 0 或 0 discovered tests 作为 PASS**。
 - 使用本 SR 明示的最小正负例与计数型测试 Provider/Mock；真实 Publisher、新 Compiler、Owner 收据、隔离环境等数据只从固定 SHA 的正式发布物读取。模拟输入能验证本地行为，但**不能替代**要求正式外部源的 AC。
@@ -106,3 +118,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-26 | 0.2.3 | GPT-6（ChatGPT） | §4～§5 | 按治理 §6.1 拆分设计/实施/模块/系统依赖；补齐 AC-011-xx 正反验收 | 解除全局 VERIFIED 门槛与缺模块 AC 问题，避免 Harness 猜测/EX 倒灌 | Issue #12/#40；PR #46；SR 管理规范 §6.1 |
 
 | 2026-11-26 | 0.2.4 | GPT-6（ChatGPT） | 文档头、设计依据 | 同步本次 1.6.0 实质整改后的权威 Feature/Compiler 文档版本 | 保证 SR 新旧规范引用与固定审核 Head 一致 | Issue #12/#40；PR #46 |
+| 2026-11-27 | 0.3.0 | Codex / GPT-6 | §5.1、AC-011-04/05 | 登记隔离环境入口与逐路确认收据 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |

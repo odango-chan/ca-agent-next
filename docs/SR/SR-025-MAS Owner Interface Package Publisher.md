@@ -1,14 +1,14 @@
 # SR-025：MAS Owner 1.6.0 Capability-first Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.10
-> 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**；不授予实施 READY，产品验收原状态不变  
+> SR 版本：0.1.11
+> 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**；不授予实施 READY，产品验收原状态不变；PR #46 首轮 CHANGES_REQUESTED，修订待复评  
 > 创建日期：2026-11-25
-> 修订日期：2026-11-26  
+> 修订日期：2026-11-27  
 > 所属阶段：外部 Publisher 实施移交
 > 上游需求：[IR-006](../IR/IR%20总登记册.md#ir-006)
 > 功能：F03.05 / EC03（消费方关联 F09.07）
-> 设计依据：[F03.05 Tool Interface / Provider 设计](../../docs/设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) v0.4.1；[F09 新版 1.6.0 设计 §5～§9](../../docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md) v0.3.12；[SR-015](SR-015-工具契约设计移交.md)；[EC02 新 1.6.0 Compiler 设计](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.10 与 [SR-013](SR-013-Compiler已检查when与发布产物.md)；历史 Compiler v2.1.0 Development BuildRequest 仅供审计
+> 设计依据：[F03.05 Tool Interface / Provider 设计](../设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) v0.4.3；[F09 新版 1.6.0 设计 §5～§9](../设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md) v0.3.15；[SR-015](SR-015-工具契约设计移交.md)；[EC02 新 1.6.0 Compiler 设计](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.13 与 [SR-013](SR-013-Compiler已检查when与发布产物.md)；历史 Compiler v2.1.0 Development BuildRequest 仅供审计
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：Provider v2 重构、Host Runtime Binding 重构、生产级 Trust/Admission/签名或额外包完整性体系；历史 v1alpha4/v1alpha5 Development Bundle 仅供源审计
 
@@ -109,3 +109,4 @@ Owner `v1alpha4` source 的 `tool-catalog.yaml` 含 25 published contracts、旧
 | 2026-11-26 | 0.1.9 | GPT-6（ChatGPT） | 文档头与 1.6.0 当前设计依据 | 修复 PR #46 Review Context 文档头检查及旧 Development Build 设计依据，更新新 Compiler/SR-013 正式入口 | Issue #12/#40；PR #46；CI #45837224652 |
 
 | 2026-11-26 | 0.1.10 | GPT-6（ChatGPT） | 最终一致性复评 / 规范性描述 | AC-025-07 明确唯一新 1.6.0 Compiler，不混用 Development profile | Issue #12/#40；PR #46 |
+| 2026-11-27 | 0.1.11 | Codex / GPT-6 | 文档头 | 统一中央权威文档的相对路径与版本 | Issue #12，PR #46 |

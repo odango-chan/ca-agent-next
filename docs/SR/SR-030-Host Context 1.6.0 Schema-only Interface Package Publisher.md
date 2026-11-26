@@ -1,10 +1,10 @@
 # SR-030：Host Context 1.6.0 Schema-only Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.2
-> 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**；不授予实施 READY，产品验收 NOT_RUN
+> SR 版本：0.1.3
+> 状态：DRAFT（实施主状态）；首轮限范围 APPROVE_FOR_READY，范围见评审记录；产品验收按各 AC 单列  
 > 创建日期：2026-11-26
-> 修订日期：2026-11-26
+> 修订日期：2026-11-27
 > 上游需求：[IR-006](../IR/IR%20总登记册.md#ir-006)；关联需求：[IR-008](../IR/IR%20总登记册.md#ir-008)、[IR-003](../IR/IR%20总登记册.md#ir-003)
 > 功能：F09.06 — Host Context Interface Package Publisher
 > 目标仓：odango-chan/ca-agent-demo
@@ -15,6 +15,8 @@
 > 版本边界：SR-024 VERIFIED 仅覆盖旧 Compiler v2.1.0 Development v1alpha1 / CA-SL v1alpha5 Package；本 SR 是新 1.6.0 Publisher，不继承旧格式或旧验收结果
 
 ## 1. 目标与责任
+
+**独立评审记录**（PR #46，固定 `fd80c74`）：APPROVE_FOR_READY 仅限Schema-only 设计及 AC-030-01 固定源审计。实施主状态 DRAFT，其他产品 AC 依各自输入门槛判定。
 
 将 ca-agent-demo 中 Host-owned 的静态 Subject Context Schema，按 CA-SL 1.6.0 / Compiler 新 Interface Package 契约重新发布为 **Schema-only Package**，供 Skill Contract.contexts 的 Host Context Schema 依赖闭包使用；Contract.requestSchema 始终指向 Skill 自有 Request Schema，不引用本 Host Context Package。
 
@@ -96,3 +98,4 @@ Publisher 必须从固定 Revision 读取原始 Schema 字节并核对 Git blob�
 | 2026-11-26 | 0.1.0 | GPT-6（ChatGPT） | 全文 | 新增 Host Context CA-SL 1.6.0 Schema-only Package Publisher 设计，区分 SR-024 历史 VERIFIED 与新版发布门槛，定义 0/0 Capability/Callable、源码 pin、Lock provenance 和独立 AC | 发现 F09 / SR-016 仍把旧 Development Publisher 当作新版依赖，且 Compiler Schema-only Package 能力未定义 | Issue #12/#40；IR-006/008；SR-013/016/024/029 |
 | 2026-11-26 | 0.1.1 | GPT-6（ChatGPT） | §1、§3、AC-030-03、依赖与修订记录 | 明确 Host Context Schema-only Package 只能由 Contract.contexts 引用；requestSchema 始终是 Skill 自有 Schema 根 | 避免将 Host Context Package 错误当成 Skill Request Schema，保持 CA-SL 1.6.0 §4 的作者语义一致 | Issue #12/#40；CA-SL 1.6.0；SR-013 AC-013-06；SR-029；PR #46 |
 | 2026-11-26 | 0.1.2 | Codex / GPT-6 | §6，修订记录 | 区分机器 Schema 发布、真实 Publisher 候选、Compiler 联验和二进制发行 | 消除相互等待 | Issue #12/#40，PR #46，SR-013/030 |
+| 2026-11-27 | 0.1.3 | Codex / GPT-6 | 评审入口 | 回填独立评审批准评议的具体范围 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |

@@ -1,12 +1,12 @@
 # SR-026：Codec公开工具发布
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.3  
-> 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**；不授予实施 READY，产品验收原状态不变  
+> SR 版本：0.1.4  
+> 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**；不授予实施 READY，产品验收原状态不变；PR #46 首轮 CHANGES_REQUESTED，修订待复评  
 > 创建日期：2026-11-26  
-> 修订日期：2026-11-26  
+> 修订日期：2026-11-27  
 > 上游需求：IR-006  
-> 设计依据：F03.05 v0.4.1 §8.2、§11 与 EC03 外部生产端复验。  
+> 设计依据：F03.05 v0.4.3 §8.2、§11 与 EC03 外部生产端复验。  
 > 关联 Issue：ca-agent-next#12（设计）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：见 §4；本批仅验收指定 NAS Decode。
@@ -42,6 +42,8 @@
 
 源仓实施 Issue、PR、commit、正式包未登记，测试 NOT_RUN。前述公开 ID/Schema、版本与本地结果 profile 未冻结，维持 DRAFT。第一批不含 Encode、全量 NGAP、ext=1 或其他未经资格化消息。SR-015 的设计移交和 SR-010 已发布 Provider 部分可单独验收。无替代 SR。
 
+**外部契约决定（D14，OPEN）**。已核对 ca-client-tools main `7bcb2614aa3615d8358df31eecefd0909e894e40` 与 [PR #39](https://github.com/odango-chan/ca-client-tools/pull/39) 的候选库 `eb1169fe1d0e2e691d101908aad08ee8801da754`。生产者需提供同一固定源中的 Package ID/纯数字版本、公开 Capability 与唯一 Callable、入出参 Schema 及 slot/mediaType、handler 路径/符号与本地结果 profile，并记录正式发布或签认的 PR/commit。AC-026-01 仅复核库向量。此记录为空时 02/03、AC-010-06b 的全量 3/3 及 07/08 均不得使用候选别名或推测 Schema。
+
 ### 首批 NAS 向量
 
 固定 PR #39 `protocol/codec/codec_test.go::TestDecodeNASOpenAMSMVectors` 中的 `release-request`，原始四个 octet 为 `2e 05 01 d1`，Decoder 的消息类型应为 `PDUSessRelReq`，PSI=5、PTI=1。加入截断到三个 octet、同头但最后 octet 为 0xd4 的反例，后者是有效 Release Complete、超出首批指定的消息类型。以 `go test ./protocol/codec -run TestDecodeNASOpenAMSMVectors -count=1 -v` 单独核对原始库向量，再由公开 Provider 调用重跑。本节只定义第一批公开子集。
@@ -55,3 +57,4 @@
 | 2026-11-26 | 0.1.2 | GPT-6（ChatGPT） | 文档头、§0、设计依据 | 提交设计待评审、明确新旧契约/验收隔离并保留 DRAFT 主状态 | Issue #12；PR #45；SR-029 |
 
 | 2026-11-26 | 0.1.3 | GPT-6（ChatGPT） | 设计依据与新版本路径 | 刷新 1.6.0 正式目标设计引用：v0.4.0→v0.4.1 | Issue #12/#40；PR #46 |
+| 2026-11-27 | 0.1.4 | Codex / GPT-6 | §2、§4 | 标出 Provider Owner 缺件及候选库可复核边界 | Issue #12，PR #46 |

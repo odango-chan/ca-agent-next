@@ -1,13 +1,13 @@
 # SR-008：Echo 垂直端到端示例
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.11  
-> 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**，未获得实施 READY，产品验收 NOT_RUN  
+> SR 版本：0.2.0  
+> 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**，未获得实施 READY，产品验收 NOT_RUN；PR #46 首轮 CHANGES_REQUESTED，修订待复评  
 > 创建日期：2026-11-25  
-> 修订日期：2026-11-26  
+> 修订日期：2026-11-27  
 > 所属阶段：Phase F  
 > 上游需求：[IR-004](../IR/IR%20总登记册.md#ir-004)  
-> 设计依据：[演示验收基线](../验收与实施/演示验收基线.md) v0.3.21 §1～6；[实施路线与阶段门槛](../验收与实施/实施路线与阶段门槛.md) v0.2.11 §6\
+> 设计依据：[演示验收基线](../验收与实施/演示验收基线.md) v0.3.23 §1～6；[实施路线与阶段门槛](../验收与实施/实施路线与阶段门槛.md) v0.2.15 §6\
 > Acceptance：EX-17（见[演示验收基线](../验收与实施/演示验收基线.md)）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：见第 3 节
@@ -60,7 +60,16 @@
 
 ### 5.1 实现落点、运行和取证
 
-- 目标实现：`examples/echo/、公开 Host 进程入口`；测试入口：`python -m unittest discover -s tests -p test_echo.py -v`。若实现前目标仓文件/命令尚未存在，由具体实施 PR 在模块范围内创建并登记，**不得以不存在的脚本退出 0 或 0 discovered tests 作为 PASS**。
+**独立进程入口（SR-008 拟交付）**。当前 Next CLI 仅提供 `--smoke`。在 Example 中交付通用 Host 的薄启动器 `examples.echo.run`，使用真实 Host、Catalog、Plugin Manager 和子进程，Fake Model 只用于可重复选择。启动器不得在 Core 增加 Echo 分支。命令均从 Next 仓根执行。
+
+| 步骤 | 命令或判据 |
+|---|---|
+| 构建插件 | Linux/macOS 运行 `go -C examples/echo/plugin build -trimpath -o bin/echo-plugin .`；Windows 输出 `bin/echo-plugin.exe`。 |
+| 启动/配置 | `python -m examples.echo.run --plugin examples/echo/plugin/plugin.yaml --skills "$ECHO_SKILLS" --timeout 30`。ECHO_SKILLS 是已物化的本批 Echo 包父目录；每次运行独立工作目录，读取包内 Manifest 的程序路径及 serve 参数。 |
+| 就绪与取证 | 进程启动后 5 秒内收到与 initialize 匹配的 plugin.ready；30 秒内完成 ingress、选择、Tool 和关联 Delivery，将各身份、模式、次数和退出原因写入运行日志。指导包及两种 Assurance 模式分别验证 AC-008-01～03。 |
+| 退出 | 全部必需断言通过且 Plugin 正常关闭返回 0；运行错误、超时或证据缺失返回 1，非法 CLI 返回 2。所有分支回收子进程及临时目录。 |
+
+当前启动器、正式包及上游模块齐备前，AC-008-05 / EX-17 保持 BLOCKED。单元测试入口：`python -m unittest discover -s tests -p test_echo.py -v`。若实现前目标仓文件/命令尚未存在，由具体实施 PR 在模块范围内创建并登记，**不得以不存在的脚本退出 0 或 0 discovered tests 作为 PASS**。
 - 使用本 SR 明示的最小正负例与计数型测试 Provider/Mock；真实 Publisher、新 Compiler、Owner 收据、隔离环境等数据只从固定 SHA 的正式发布物读取。模拟输入能验证本地行为，但**不能替代**要求正式外部源的 AC。
 - 每项 AC 单独记录受测代码 SHA、设计 Head、外部 Package/Schema/API 版本、命令、环境、测试数量、预期/实测、失败诊断与证据路径。未执行始终 NOT_RUN；输入缺失标记 BLOCKED；系统 EX/OM 必须用独立组合证据交付。
 
@@ -106,3 +115,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-26 | 0.1.9 | GPT-6.2（ChatGPT） | 文档头部 | 将 Acceptance 设计依据更新至 v0.3.9 | 与 SR-002 集成后当前演示验收基线保持一致 | PR #25；Issue #26 |
 | 2026-11-26 | 0.1.10 | GPT-6（ChatGPT） | 文档头、§0、设计依据 | 登记独立设计待评审批次、专项审查重点与缺失输入，保留 SR DRAFT/产品 NOT_RUN | 按 1.6.0-only / Capability-first 设计集中审查；避免提前授予实施门禁 | Issue #12；SR-029；PR #45 |
 | 2026-11-26 | 0.1.11 | GPT-6（ChatGPT） | §4～§5 | 按治理 §6.1 拆分设计/实施/模块/系统依赖；补齐 AC-008-xx 正反验收 | 解除全局 VERIFIED 门槛与缺模块 AC 问题，避免 Harness 猜测/EX 倒灌 | Issue #12/#40；PR #46；SR 管理规范 §6.1 |
+| 2026-11-27 | 0.2.0 | Codex / GPT-6 | §5.1 | 定义独立进程 Echo 的命令、时限和退出条件 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |

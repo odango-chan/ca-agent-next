@@ -2,12 +2,12 @@
 
 > 文档类型：机制设计说明书  
 > 状态：**设计待评审**（唯一新目标 CA-SL 1.6.0；全链路不兼容任何旧作者语法、Build DTO、Artifact、Bundle；1.6.0 产品未发布）
-> 文档版本：0.2.18
+> 文档版本：0.3.0
 > 功能归属：F02 — Skill 管理与选择  
 > 关联 SR：SR-004、SR-005、SR-006    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
 > 本文局部非目标：以本文范围与非目标章节为准；无额外扩展  
-> 修订日期：2026-11-26  
+> 修订日期：2026-11-27  
 > 适用范围：Skill 包导入、SkillCatalog、Resolver、已发布 CA-SL Runtime Artifact 与 Python CEL Runtime
 
 关联需求项见 [IR-003](../../IR/IR%20总登记册.md#ir-003)。
@@ -65,8 +65,8 @@ published-skills/<skill-id>/
 
 | 输入 | Agent 处理 | Compiler 调用 |
 |---|---|---|
-| 只有 SKILL.md 的 Skill 包 | 读取指导和候选元数据，加入 Catalog；仅 LLM-guided | 不调用 |
-| SKILL.md + 已发布 Assurance Artifact | 基本结构/必需文件/格式/类型数据检查，解析 Tool/Capability 依赖，加入 Catalog | 不调用 |
+| 只有 SKILL.md 的 Skill 包 | 读取指导和候选元数据，返回 candidate，由 Catalog 原子激活；仅 LLM-guided | 不调用 |
+| SKILL.md + 已发布 Assurance Artifact | 基本结构/必需文件/格式/类型数据检查，解析 Tool/Capability 及 contexts Schema 闭包，返回 candidate，由 Catalog 原子激活 | 不调用 |
 | 无效或不完整的发布包 | 显式导入失败，不得降级为 SKILL.md-only | 不调用 |
 
 Agent 不接收尚未发布的 Assurance 作者源作为可执行 Skill。LLM 创建或修改 Assurance 源码后，必须经外部发布流程编译并发布新的运行包，才能进入 Agent Catalog。LLM 创建或修改 SKILL.md-only 包则可按普通 Skill 导入流程更新。
@@ -79,7 +79,7 @@ Agent 只执行以下消费端检查：
 - Artifact 的 apiVersion 必须属于 SR-004 明确支持的 Compiler 正式 Runtime Artifact API；当前目标是 Compiler/SR-029 联合发布的 **CA-SL 1.6.0** Runtime Artifact（精确机器标识仍待发布）。历史冻结 Artifact v1alpha5、Development Artifact v1alpha1、未知 API 均拒绝，不做兼容映射。
 - 必需 Artifact 文件存在且路径位于包根目录内。
 - Manifest 引用的文件、Schema/type data 和本地依赖可解析。
-- 新版 **CA-SL 1.6.0** Artifact 必须包含 Compiler 静态解析的唯一 Capability→Callable Binding，携带精确依赖包身份、kind、Effect、Schema、operation/observation exports 并供 Runtime 生成闭合 Callable allowlist；具体 Manifest 字段与路径由 SR-029 + Compiler #61 / SR-013 正式契约冻结。依赖来源可为 Provider Interface Package 或业务 Owner Contract Package，两者不得混淆。Provider Interface 快照按 `provider.yaml.interfacePackagePath` / `interfaceSnapshotDigest` 固定；Owner publication 由 Runtime Bindings sidecar identity 固定。旧 v1alpha5 MAS alias/Callable 作者格式属于冻结历史，不得拿来作为 1.6.0 运行时数据。
+- 新版 **CA-SL 1.6.0** Artifact 必须包含 Compiler 静态解析的唯一 Capability→Callable Binding，携带精确依赖包身份、kind、Effect、Schema、operation/observation exports 并供 Runtime 生成闭合 Callable allowlist；具体 Manifest 字段与路径由 SR-029 + Compiler #61 / SR-013 正式契约冻结。Callable 依赖可来自 Provider Interface 或业务 Owner Contract；contexts 的 Schema-only 依赖按 §2.3 保存，仅贡献 Schema。Provider Interface 快照按 `provider.yaml.interfacePackagePath` / `interfaceSnapshotDigest` 固定；Owner publication 由 Runtime Bindings sidecar identity 固定。旧 v1alpha5 MAS alias/Callable 作者格式属于冻结历史，不得拿来作为 1.6.0 运行时数据。
 - when 的 CheckedExpr 和类型描述数据可被指定 Python CEL Runtime 反序列化。
 - Artifact 文件、路径或依赖不满足要求时给出明确错误并拒绝导入。所有旧 CA-SL / 旧 Build DTO / 旧 Manifest / 旧 Runtime Artifact / v1alpha6 候选包均明确拒绝；不进行版本协商、兼容映射、旧 Scope 重解释、自动迁移、回退或混合 Catalog。
 
@@ -94,6 +94,10 @@ SkillCatalog 属于 Python Agent Core / Host，不属于 Plugin Manager。它是
 - 是否存在有效发布 Assurance Artifact；
 - 已反序列化的 when 程序、CEL Profile 和类型环境；
 - 发布 Artifact 声明的 Callable/Capability 依赖引用，以及其 dependency alias、stable package identity 和 export closure。注意：冻结 CA-SL v1alpha5 Artifact 的 dependencyClosure 不包含 dependency version / snapshotDigest；不能将其表述为逐 Skill 字节级依赖锁。
+
+只有 Contract.contexts 可通过显式 alias 使用 Host Context 的导出。Importer 按正式 Manifest 和安装快照核对 Package identity、alias、Schema export 及全部传递 $ref，将精确 Schema 闭包连同来源保存到 candidate。缺 alias、缺 export、零 Schema 导出、断裂或歧义 $ref、伪造 Callable 均拒绝整份 candidate。Schema-only 不产生 Capability Binding、Action Scope 或 Tool Effect。requestSchema 根必须属于本 Skill。
+
+有 when 时 SR-004 在返回 candidate 前一次性反序列化 CheckedExpr、构造 Program 与类型环境。SR-005 直接保留这些对象和 Schema 快照。构造失败不返回 candidate，激活失败不改变活动代。
 
 Importer 对调用方提供的已物化包根目录执行消费端检查，返回 import candidate；不负责下载/解包 Bundle，也不直接激活 Catalog。SR-005 使用一个或多个已验证 candidate 构造候选 Catalog generation；基本检查和依赖解析全部成功后原子激活，任何失败保留旧 generation。每个 Invocation 固定其选择时的 generation。references/ 和大型知识材料按需加载，不在每次 Event 选择时扫描目录或读取文件。
 
@@ -112,7 +116,11 @@ Agent 不实现文件监视器、自动下载、分布式缓存或通用 Plugin 
 9. 无候选时澄清或拒绝；不得无 Skill 绑定地回退到 Generic Agent。
 10. 精确绑定 Skill 后，才选择 Deterministic 或 LLM-guided 模式。
 
-无规范化 Event 的直接用户任务只走未声明 when 的语义候选路径。**以上是 Next 面向 CA-SL 1.6.0 的目标 Resolver 规则**，设计依据是 SR-029 + 本 F02（新 ca-skills 正式语言发布后以正式规范核对）；历史 v1alpha5 M.3/SA-012 仅为语义追溯，不再构成新 Resolver 的规范输入或测试正例。
+直接文本没有 typed input 时，排除所有声明 requestSchema 的候选，跳过其 CEL 与模型消歧。只在无 when 且无必需输入 Schema 的合格集合内选择；空集进入澄清。禁止从文本猜造 typed input。
+
+Continuation 仅用协议身份和 correlation 查原 Run。Skill、Artifact、generation、Node/Wait 位置均取自原 Run；消息夹带冲突身份、错 correlation 或已结束 Run 则拒绝，合法重复按原结果幂等应答，迟到消息隔离。以上路径均零重选、零 CEL 重算，拒绝或重放时新增 mutation 为零。
+
+**以上是 Next 面向 CA-SL 1.6.0 的目标 Resolver 规则**，设计依据是 SR-029 + 本 F02（新 ca-skills 正式语言发布后以正式规范核对）；历史 v1alpha5 M.3/SA-012 仅为语义追溯，不再构成新 Resolver 的规范输入或测试正例。
 
 when 只能读取规范化 Event 的 event.type 和 Contract.requestSchema 声明的 input 字段，不得访问 Tool、Observation、Runtime Context、时钟或可变 Host 状态。读取 input 成员必须由作者源 Contract 声明 requestSchema，并由外部 Compiler 在发布前静态检查。
 
@@ -127,7 +135,7 @@ when 只能读取规范化 Event 的 event.type 和 Contract.requestSchema 声�
 | 无有效候选 | 空 | 空 | 澄清或拒绝，禁止 Generic Agent 无 Skill 回退 |
 | continuation 指向现有 Run | 不重新求值 | 不重新求值 | 仅恢复绑定的 Skill + 固定 Catalog generation；缺失或过期则拒绝 |
 
-其中没有规范化 Event 的直接用户输入只能走无 when 候选集合；模型不能用文本/元数据授予 Callable Scope。所有选择动作记录 eventId、Catalog generation、最终 Skill ID、候选集合与拒绝原因（不持久化业务秘密），重复 Event/Continuation 不应增加 dispatch 次数。外部正式 1.6.0 when/Schema Descriptor 元数据缺失时，不得按“无 when”处理，而应作为无效 Assurance 包导入失败。
+没有 typed input 的直接文本只能进入无 when 且无需 requestSchema 的集合；模型不能用文本/元数据授予 Callable Scope。所有选择动作记录 eventId、Catalog generation、最终 Skill ID、候选集合与拒绝原因（不持久化业务秘密），重复 Event/Continuation 不应增加 dispatch 次数。外部正式 1.6.0 when/Schema Descriptor 元数据缺失时，不得按“无 when”处理，而应作为无效 Assurance 包导入失败。
 
 ## 7. when 程序的发布与运行时接口
 
@@ -254,3 +262,4 @@ Next 在 Skill 导入时反序列化已检查程序和类型环境，建立运�
 | 2026-11-26 | 0.2.16 | GPT-6.2（ChatGPT） | §4、§9、修订记录 | 新 Agent 导入/Catalog 全面拒绝历史语言与旧 Artifact、无双轨并存或 fallback | 实现 1.6.0 单版本运行时，不让历史数据混入当前 Skill 执行 | Issue #40/#43；SR-004；SR-005 |
 | 2026-11-26 | 0.2.17 | GPT-6（ChatGPT） | 文档头、修订记录 | 将 CA-SL 1.6.0-only 的目标设计明确推进待独立评审；完整规范/API/Bundle 未发布 | 保持设计评审与实施 READY、产品 RELEASED 分离 | Issue #40；SR-029；PR #44 |
 | 2026-11-26 | 0.2.18 | GPT-6（ChatGPT） | 核心规范与验收章节 | 去除 v1alpha5 M.3 规范依赖；新增 1.6.0 Resolver 结果表、拒绝和 continuation invariants | 为 SR-005/006 提供唯一可审查的选择语义 | Issue #12/#40；SR-005/006；SR-029 |
+| 2026-11-27 | 0.3.0 | Codex / GPT-6 | §2～6 | 固定 Schema-only、Program 归属及 Resolver 输入边界 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |

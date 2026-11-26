@@ -1,12 +1,12 @@
 # SR-027：技能Bundle构建与发布
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.9  
-> 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**；不授予实施 READY，产品验收原状态不变  
+> SR 版本：0.2.0  
+> 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**；不授予实施 READY，产品验收原状态不变；PR #46 首轮 CHANGES_REQUESTED，修订待复评  
 > 创建日期：2026-11-26  
-> 修订日期：2026-11-26  
+> 修订日期：2026-11-27  
 > 上游需求：IR-006  
-> 设计依据：F08 v0.3.14 §4、§6；CA-SL 1.6.0 目标（Issue #40 / SR-029）。  
+> 设计依据：F08 v0.3.15 §4、§6；CA-SL 1.6.0 目标（Issue #40 / SR-029）。  
 > 关联 Issue：ca-agent-next#12（设计）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：见 §4；本批限外部构建与发布。
@@ -30,11 +30,27 @@
 
 CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验证成功后组装发布目录。指导包只含作者入口及声明的资源；确定性包随附已验证的 Runtime Artifact。输出记录作者 revision、Compiler 实际版本、API、资产路径、各包结果。发布前在临时目录验证，失败不上传部分批次；由授权的发布步骤消费同一份候选。
 
+### 2.1 首批构建矩阵
+
+作者根相对 ca-skills 的 `examples/skills/`。三项 MAS 原始输入固定为 `780497a2918ad3e7bdff554ab64b0ba627e867e0`，Echo 两个目录为本 SR 的新增目标。正式批次只取一个含五份 1.6.0 作者输入的 **同一提交**。CI 从 checkout 的 `git rev-parse HEAD` 记录实际作者 revision，逐根核对，无权用此历史 SHA 代替新作者 SHA。
+
+| 作者目录 / 输出 ID | 输入和验收 |
+|---|---|
+| `echo-guide` | 仅 SKILL.md，无 Capability、外部依赖及 Artifact。同一 echo.request 文本 hello 经 Delivery 回传。 |
+| `echo-assured` | 示例设计要求一个 Echo READ 及唯一公开绑定，输入/输出均为含 text 的闭合对象。SR-003 的 Plugin 使用 `urn:example:echo:interface`、实际 Callable 为 `echo.read`；发布包须显式导出示例 Capability（建议 `echo.read`，同名也必须有正式 Binding），不得从 Callable 名反推。 |
+| `establish-pdu-session-mas` | Owner + Host Context Schema-only。沿固定源的 13 项 grants，将事件项替换为 `mas.se.establishment-event.record`；Grant 与实际 Procedure、Owner 输出逐项核对。 |
+| `modify-pdu-session-mas` | Owner + Host Context Schema-only，`mas.ssm.n1.modify.parse`、`mas.upn.up.qos.delta`；QoS 来源保持可追溯。 |
+| `release-pdu-session-mas` | Owner + Host Context Schema-only。沿固定源的 8 项 grants，把事件项替换为 `mas.se.release-event-marker.write`，两路 confirm 保持独立。 |
+
+每个根输出至 `published-skills/<skill-id>/`，根名等于 SKILL.md 的 name。原样包含一份 SKILL.md、按相对路径列明的资源；四个 Assurance 根另含同一次 Build/Verify 给出的完整 Runtime Artifact 文件集合，保留 Compiler 的相对布局，拒绝路径碰撞、遗漏、额外 Artifact 或作者 assurance/ 源混入。记录每包源路径、同批 revision、依赖版本、Capability 清单、实际输出相对路径和 Verify 日志。候选只上传一次；五包中任一失败则发布数为零。
+
+**目标仓测试入口（待实现）**为 `python -m unittest discover -s tests -p test_bundle_160.py -v`。最少 10 个必需用例：五包各一项成功、旧 languageTarget、缺依赖、歧义 Binding、缺 Artifact 文件、Verify 失败时全批零上传。必需失败/跳过均为零，记录实际发现数。正式 Compiler 可执行、Check/Build/Verify 的完整 argv 与 tag、Echo Interface 导出和新作者 SHA 由相应生产者登记；缺任一项则停止 AC-027-01/02，不能把本文候选名称、历史 CLI 或 mock 输出作为发布证据。
+
 ## 3. 验收与退出条件
 
 | ID | 入口与判据 |
 |---|---|
-| AC-027-01 | ca-skills 仓根使用新建的 **1.6.0 专用测试入口**（命令、文件名与测试数在新实现 Issue 固定），检验新版 Compiler Check/Build/Verify、Bundle 成功与错误拒绝；可继续运行文档检查，但 **v1alpha5 测试不得作为本 AC 的 PASS 证据**；记录命令、受测 SHA、发现数和日志 |
+| AC-027-01 | ca-skills 仓根使用新建的 **1.6.0 专用测试入口**（§2.1 固定命令、文件与必需用例），检验新版 Compiler Check/Build/Verify、Bundle 成功与错误拒绝；可继续运行文档检查，但 **v1alpha5 测试不得作为本 AC 的 PASS 证据**；记录命令、受测 SHA、发现数和日志 |
 | AC-027-02 | CI 在干净 checkout 生成候选。逐项查 SKILL.md、所声明的资源及可选 Assurance 对应产物；损坏 Artifact 使当批发布数为零。Development Artifact 不进入 Runtime Bundle |
 | AC-027-03 | 发布后从正式资产入口取得 AC-027-02 的同一批内容，在 Next 执行 SR-004 导入与 SR-008 Echo；原始作者 checkout 和 Compiler 从 Host 运行环境移除后依然可运行。分别记录构建、发布及消费状态 |
 
@@ -51,7 +67,7 @@ CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验�
 | Compiler when Artifact | [Compiler Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) OPEN；SR-013 AC-013-02～04 未完成，AC-013-05 BLOCKED | 新 Runtime Artifact API 尚未发布；本 SR 不得选择或猜测候选 API/Manifest 字段 |
 | ca-skills 作者源 | main `780497a2918ad3e7bdff554ab64b0ba627e867e0` 含 v1alpha5 MAS 作者源；`scripts/compile_mas_v1alpha5.py` 只对单 Skill 做 Check/Inspect/可选 Build | 现有脚本不是 Bundle assembler，也不证明正式 Bundle 已发布 |
 | ca-skills Release | 当前 Release 列表只有历史 v0.1.0；未发现与 **CA-SL 1.6.0** Runtime Artifact API 匹配的 Published Skill Bundle | 无可供 SR-004 使用的正式 Assurance 正例 |
-| ca-skills 仓库布局 | 当前 main 未发现 `published-skills/` / 新 Runtime Artifact Bundle 发布目录 | Bundle layout / Skill 与 Artifact 关联契约仍须由本 SR 和 F08 明确的生产端 SR 冻结 |
+| ca-skills 仓库布局 | 当前 main 未发现 `published-skills/` / 新 Runtime Artifact Bundle 发布目录 | §2.1 固定候选根与关联规则；实际 Compiler Manifest 文件及生成结果随同版发行证据登记 |
 
 **阶段结论：** 本 SR 仍为 DRAFT。下一发布链只面向 **CA-SL 1.6.0**；先等 ca-skills / SR-029 规范及精确机器标识、Compiler #61 / SR-013 对 1.6.0 语言及 Capability Binding 冻结新 Runtime API，再组装 Bundle；不得猜测 Manifest，不得把本地旧 v1alpha5 编译目录或临时拼装包当作 AC-027-02/03 正例。SR-004 的 SKILL.md-only 路径可独立验证，但不提升 SR-027 或 Assurance Bundle 的状态。
 
@@ -71,3 +87,4 @@ CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验�
 
 | 2026-11-26 | 0.1.8 | GPT-6（ChatGPT） | 设计依据与新版本路径 | 刷新 1.6.0 正式目标设计引用：v0.3.12→v0.3.13 | Issue #12/#40；PR #46 |
 | 2026-11-26 | 0.1.9 | Codex / GPT-6 | §3～5 | 将构建、授权发布、正式资产消费按顺序取证，消除发布与消费互等并纠正历史语言依赖状态 | Issue #12/#43，PR #46，SR-004/008/013/027 |
+| 2026-11-27 | 0.2.0 | Codex / GPT-6 | §2～5、AC-027-01/02 | 登记同批五个作者根、测试与发行输入缺口 | Issue #12，PR #46 |

@@ -1,12 +1,12 @@
 # 业务接入与 OpenAMSM 集成设计说明书
 
 > 文档类型：业务集成设计说明书  
-> 文档版本：0.2.8  
+> 文档版本：0.3.0  
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
 > 功能归属：F06 — 业务接入与集成；EC04、EC05、EC07  
 > 关联 IR：IR-004、IR-005、IR-006  
 > 关联 SR：SR-009、SR-010、SR-011、SR-017、SR-018、SR-019、SR-026、SR-030  
-> 修订日期：2026-11-26
+> 修订日期：2026-11-27
 > 全局评审范围：继承根目录 Agent.md 的 review_scope。  
 > 本文局部非目标：生产级资格、完整 NAS/NGAP 和 Core 业务分支。
 
@@ -80,7 +80,7 @@ Plugin 不负责：
 
 SBI requestSchema 是业务 Skill 输入契约，不应复制完整 3GPP multipart schema 或把原始 N1/N2 变成模型可见字符串。
 
-**新 1.6.0 MAS Skill 只引用 Capability ID。** Compiler 用 Owner 24/24 与 Provider 2/2 的新正式公开映射检查 Grant、唯一 Callable、kind/Effect/Schema，并输出 Artifact capabilityBindings；Runtime 依 Binding 和部署固定的 Owner/Provider identity 验证内部 Callable Scope 后才分发。历史 v1alpha5 Artifact 不含 Capability 的审计事实**不构成新分发规则**。
+**新 1.6.0 MAS Skill 只引用 Capability ID。** Compiler 用 Owner 24/24 与 Provider 查询子集 2/2（含 Codec 的全量为 3/3）的正式公开映射检查 Grant、唯一 Callable、kind/Effect/Schema，并输出 Artifact capabilityBindings；Runtime 依 Binding 和部署固定的 Owner/Provider identity 验证内部 Callable Scope 后才分发。历史 v1alpha5 Artifact 不含 Capability 的审计事实**不构成新分发规则**。
 
 `MAS.RECONCILE` 保留 Owner ToolCatalog 作为 Coordinator internal-only target：Coordinator 按 original Invocation/Scope/Correlation 与原 Mutation Reconcile binding 回查，普通 Skill/LLM 直调则在 IPC 前拒绝。`MAS.RECEIPT_QUERY` 仍是受 Capability/Scope 控制的普通 READ。
 
@@ -96,7 +96,7 @@ Skill 按 CA-SL **1.6.0 Procedure Capability Binding** 经内部 Owner Callable 
 
 UE Modify 是 UpdateSMContext 中携带 5GSM PDU Session Modification Request（0xC9）的场景，不是任何 N1/N2 completion callback。
 
-目标流程：
+以下流程中的 mas:: 名称仅表示 Compiler 完成 Binding 后的内部 Owner Callable。1.6.0 作者在 Procedure 中只写 §13 的 Capability ID。
 
 ~~~text
 UpdateSMContext + N1 0xC9
@@ -125,7 +125,7 @@ UpdateSMContext + N1 0xC9
 
 UE-requested PDU Session Release 是 UpdateSMContext 携带 NAS 5GSM 0xD1 的场景，不能与 AMF/network-initiated ReleaseSMContext 混为一谈。
 
-目标流程：
+以下流程中的 mas:: 名称仅表示 Compiler 完成 Binding 后的内部 Owner Callable。1.6.0 作者在 Procedure 中只写 §13 的 Capability ID。
 
 ~~~text
 UpdateSMContext + N1 0xD1
@@ -147,7 +147,7 @@ UpdateSMContext + N1 0xD1
 
 当前发布的 `SSM.RELEASE_CONFIRM_N1` 与 `SSM.RELEASE_CONFIRM_N2` 均为 MUTATION，须按各自原始 Invocation 验证 Owner 结果。收到回调、读到字节或验证关联本身不能证明确认动作已提交。CA-SL Wait 的触发只允许声明的 READ，不得将这两个确认操作填入 READ trigger。
 
-N1 与 N2 确认是两个独立输入，必须绑定同一个 Owner generation、releaseTxn、原始 Invocation 和 Run。重复、迟到、乱序、旧 generation 或错误 Session 的消息都不得触发清理。只有两者都确认后才可执行最终清理。
+作者侧两路确认分别写 `mas.ssm.n1.release.confirm.n1` 和 `mas.ssm.n1.release.confirm.n2`。N1 与 N2 确认是两个独立输入，必须绑定同一个 Owner generation、releaseTxn 和 Run。N1、N2 各自以其 confirm mutation 的 originalInvocationId 验证本路 Receipt/Proof，UNKNOWN 时按本路原调用 Reconcile；互换两路收据必须拒绝且清理次数为零。重复、迟到、乱序、旧 generation 或错误 Session 的消息都不得触发清理。只有两者都确认后才可执行最终清理。
 
 ## 8. Owner Receipt 与 UNKNOWN
 
@@ -292,7 +292,7 @@ selector 是公开 Callable Input Schema 的字段；11 个旧 backendOperationI
 
 - Codec 不作为模型可见的自由 Callable；SR-026 发布一个 Skill-facing Codec Capability ↔ 一个公开 Callable，首批仅支持冻结的 NAS Decode 消息子集。Codec 输入使用已授权的 Artifact ref / slot，不把原始 N1/N2 bytes 转成模型可见字符串；Provider 私有 handler 和 backendOperationId 不进入 Skill 源。
 - Provider 新目标由两个通用 READ Capability / Callable 加一个 Codec Capability / Callable 构成，合计 3/3；若 Publisher 采用多个 Package，跨 Package 合计仍为 3/3，且每个 Package 快照内独立校验。
-- MAS Skill 的 requestSchema / contexts 可引用 Host Context Schema-only Package。SR-030 负责其 1.6.0 Publisher；该 Package 只导出 Schema，0 Capability / 0 Callable，不得虚构 Tool。SR-024 VERIFIED 仅代表历史 Development Publisher，不满足新版消费门槛。
+- MAS Skill 的 requestSchema 根必须为 Skill 自有 Schema。仅 Contract.contexts 可引用 Host Context Schema-only Package 的显式导出。SR-030 负责其 1.6.0 Publisher；该 Package 只导出 Schema，0 Capability / 0 Callable，不得虚构 Tool。SR-024 VERIFIED 仅代表历史 Development Publisher，不满足新版消费门槛。
 - Codec / Host Context 的正式发布物尚未存在；相关产品 AC 保持 NOT_RUN / BLOCKED。
 
 ### 13.6 业务流程不变
@@ -322,3 +322,4 @@ Create → Modify → Release 的顺序、Owner authoritative state、Receipt / 
 | 2026-11-26 | 0.2.7 | GPT-6（ChatGPT） | 规范性设计与验收门槛 | 纠正多 true 候选决策和 MAS 旧 Callable-only Runtime，区分模块/系统证据 | 修复新旧语言/能力运行时冲突 | Issue #12/#40；SR-013/025/029；PR #46 |
 
 | 2026-11-26 | 0.2.8 | GPT-6（ChatGPT） | 1.6.0 Capability / Codec 目标 | 补齐 Provider Codec 1:1 Capability 与 Host Context Schema-only Package 的业务集成边界 | 修正历史 Callable-only 描述和 Provider 能力基数遗漏 | Issue #12/#40；SR-025/026/030 |
+| 2026-11-27 | 0.3.0 | Codex / GPT-6 | §5～7、§13.5 | 明确作者 Capability、两路收据、Schema 与 Provider 基数 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
