@@ -11,7 +11,7 @@ Effect、request/response media type、Schema、Source Pin、Artifact Slot、
 
 - ``docs/设计说明书/F03-Plugin平台/Plugin平台设计说明书.md`` §3、§5；
 - ``docs/设计说明书/F03-Plugin平台/Tool Interface 与 Provider 集成设计说明书.md``
-  v0.3.7 §3、§6.3～§6.4、§11.1——**该文档当前状态为“目标设计；待评审”**，
+  v0.3.9 §3、§6.3～§6.4、§11.1——**目标设计；SR-015 设计移交 IMPLEMENTED，但 SR-010 仍为 DRAFT**，
   是后续 Provider 集成的目标设计输入，不是 SR-003 已冻结的实施契约；
 - ``docs/SR/SR-003-统一插件管理器与扩展通信.md`` §2、§5（本 SR 只固定 Manager
   面向的 Driver 边界，真实 Provider v2 数据合同与适配归 SR-010）。

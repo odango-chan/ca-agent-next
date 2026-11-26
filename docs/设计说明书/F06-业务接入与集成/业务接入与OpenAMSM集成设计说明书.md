@@ -1,7 +1,7 @@
 # 业务接入与 OpenAMSM 集成设计说明书
 
 > 文档类型：业务集成设计说明书  
-> 文档版本：0.2.4  
+> 文档版本：0.2.5  
 > 状态：目标集成设计已重建；外部 Owner 能力已实现，Next Plugin/Host 端到端尚未验收  
 > 功能归属：F06 — 业务接入与集成；EC04、EC05、EC07  
 > 关联 IR：IR-004、IR-005、IR-006  
@@ -79,6 +79,8 @@ Plugin 不负责：
 | 原始二进制 Artifact refs | Next Host ArtifactStore | F05 |
 
 SBI requestSchema 是业务 Skill 输入契约，不应复制完整 3GPP multipart schema 或把原始 N1/N2 变成模型可见字符串。
+
+对于 MAS Skill，作者源 `contract.capabilities` 的 Capability ID 由 Compiler Build-time 对 Owner `CapabilityContracts` 校验；冻结 v1alpha5 Artifact 不序列化 Capability ID。Runtime 的实际 Callable allowlist 只从 Artifact `operation` / `observation` exports 建立，并按部署固定 Owner Contract 验证 Callable membership / Effect。`MAS.RECONCILE` 的 internal-only 约束由 F03.05 定义：Runtime 从 Mutation sidecar `commitProof.reconcile.bindingId` 派生目标集合，普通 Skill/LLM 调用必须在 Provider IPC 前拒绝；只有 Coordinator 内部入口可使用原 Invocation 查询。
 
 ## 5. CreateSMContext
 
@@ -224,10 +226,13 @@ ca-skills `780497a2` 的三个 MAS `examples/skills/*-pdu-session-mas/assurance/
 
 ## 修订记录
 
-| 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
-|---|---|---|---|---|---|
-| 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 全文 | 根据 OpenAMSM Owner、Plugin Draft、Mock AMF 与当前跨仓状态重建 Create/Modify/UE Release 集成设计 | Issue #12；SR-017～019 |
+
+
+| 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
+|---|---|---|---|---|---|---|
+| 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 全文 | 根据 OpenAMSM Owner、Plugin Draft、Mock AMF 与当前跨仓状态重建 Create/Modify/UE Release 集成设计 | 历史记录未单独分列原因 | Issue #12；SR-017～019 |
 | 2026-11-25 | 0.2.1 | GPT-6.2（ChatGPT） | §2、§4、§10 | 更新 ca-skills Owner-linked Skill 源路径、PR #83～#86 状态及 ca-client-tools v1.2.0 / CA-SL Release Record 状态 | 避免旧示例、旧 Provider 版本和规范头部候选文字造成误读 | Issue #12；SR-017～019、SR-023 |
 | 2026-11-25 | 0.2.2 | GPT-6.2（ChatGPT） | §10 | 更新 ca-client-tools PR #39 与 env-5gc-sim PR #86 的 Codec 状态；明确 Mock AMF C1 不代表 Agent Tool/Provider 或 Next 集成 | 防止把独立测试对端迁移误计为 OpenAMSM Agent 集成进展 | Issue #12；SR-009～SR-011、SR-017～SR-019 |
-| 2026-11-26 | 0.2.3 | Codex / GPT-6 | 见本行变更 | §2、4、6、7 校正候选判定、HTTP 响应义务和真实 Owner Callable；§12 增补 EC04 固定协议来源、请求投影与独立复验 | Issue #12 |
-| 2026-11-26 | 0.2.4 | Codex / GPT-6 | 见本行变更 | 补足 Create 的真实 NAS 字段来源及跨仓设计缺口；补齐正式文档的评审范围与非目标；明确可控 peer/Plugin 的重试身份；§7 依据 Owner catalog 区分确认 mutation 和 Wait READ | Issue #12 |
+| 2026-11-26 | 0.2.3 | Codex / GPT-6 | 见本行变更 | §2、4、6、7 校正候选判定、HTTP 响应义务和真实 Owner Callable；§12 增补 EC04 固定协议来源、请求投影与独立复验 | 历史记录未单独分列原因 | Issue #12 |
+| 2026-11-26 | 0.2.4 | Codex / GPT-6 | 见本行变更 | 补足 Create 的真实 NAS 字段来源及跨仓设计缺口；补齐正式文档的评审范围与非目标；明确可控 peer/Plugin 的重试身份；§7 依据 Owner catalog 区分确认 mutation 和 Wait READ | 历史记录未单独分列原因 | Issue #12 |
+| 2026-11-26 | 0.2.5 | GPT-6.2（ChatGPT） | §4、§8 | 同步冻结 v1alpha5 Capability Build-time / Runtime 边界及 MAS.RECONCILE internal-only 保证 | 让 OpenAMSM 业务集成流程引用 F03.05 的唯一 Tool/Provider Runtime 设计 | IR-006 · SR-015 · Issue #12 |

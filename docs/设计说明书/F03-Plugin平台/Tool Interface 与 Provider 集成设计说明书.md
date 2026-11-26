@@ -1,8 +1,8 @@
 # Tool Interface 与 Provider 集成设计说明书
 
 > 文档类型：功能子模块设计说明书
-> 文档版本：0.3.7
-> 状态：目标设计；待评审
+> 文档版本：0.3.9
+> 状态：目标设计；SR-015 设计移交 IMPLEMENTED（Next 代码实施另行追踪）
 > 功能归属：F03.05 — Tool Plugin 集成
 > 交叉功能：F03.01～F03.04、F04.01、F04.05、F05.02、F06
 > 关联 SR：SR-003、SR-007、SR-010、SR-015、SR-025
@@ -48,10 +48,11 @@
 
 | 来源 | 固定基线 | 本次使用内容 |
 |---|---|---|
-| ca-agent-next | main b2ed5eb84114f9c2556a0cd06ed974887b1b70ad | 当前 F03/F04、Plugin IPC、公共契约与治理基线 |
+| ca-agent-next | `docs/restore-original-designs-20261125` @ `38192949829763ca5e73be031932bd590b6e4ebc` | 当前恢复分支的 F02/F03/F04、Plugin IPC、公共契约与治理基线；不是 `main` 集成状态 |
 | ca-client-tools | main 7bcb2614aa3615d8358df31eecefd0909e894e40；Release v1.2.0（2026-11-24） | Provider v2、Backend Binding Catalog v2、Interface Package、Runtime Bindings v1、Codec |
 | env-openamsm | main dc83ccbf5be54dcc7112dd43ba95ea6fa5975550 | OpenAMSM Owner v1alpha4 契约与 Receipt / Reconcile |
-| ca-agent-demo | main 57e277ff9094dad93543df46910a12a1dbbaf560 | Generic Host、Tool Action Boundary、Provider v2 Consumer、Capability Scope 和测试 |
+| ca-agent-demo | main 57e277ff9094dad93543df46910a12a1dbbaf560 | Generic Host、Tool Action Boundary、Provider v2 Consumer、Capability Scope 和测试；main 不含 provider.yaml / Runtime Bindings package loader |
+| ca-agent | commit 2c0b07f2eaff3bc1020bfc6775ef9bf09e3052ae | `ca-host.artifact-store/v1` Host Artifact Store contract；Accepted for implementation，非 Next 已实现证据 |
 | ca-skills | main 780497a2918ad3e7bdff554ab64b0ba627e867e0 | CA-SL v1alpha5 MAS Skill 作者源：Owner dependency alias、Capability requirements、mas:: Callable 引用 |
 | ca-skill-compiler | main 255ab85fa5abb4b0bf36656bf64250cafebf45cb；产品 v2.1.0 | 冻结 v1alpha5 Build 的 ResolvedDependency / TrustedBuildContext Owner linking；Development v1alpha1 Interface Package/Lock 是独立 profile |
 | ca-client-tools PR #39 | OPEN，非 Draft；Phase B head eb1169f | Codec Phase B 候选证据；Phase C Consumer Migration 未开始 |
@@ -61,6 +62,8 @@
 
 - ca-client-tools：[docs/architecture.md](https://github.com/odango-chan/ca-client-tools/blob/7bcb2614aa3615d8358df31eecefd0909e894e40/docs/architecture.md)、[docs/provider-protocol-v2.md](https://github.com/odango-chan/ca-client-tools/blob/7bcb2614aa3615d8358df31eecefd0909e894e40/docs/provider-protocol-v2.md)、[docs/provider-backend-binding-catalog-v2.md](https://github.com/odango-chan/ca-client-tools/blob/7bcb2614aa3615d8358df31eecefd0909e894e40/docs/provider-backend-binding-catalog-v2.md)、[docs/runtime-bindings-v1.md](https://github.com/odango-chan/ca-client-tools/blob/7bcb2614aa3615d8358df31eecefd0909e894e40/docs/runtime-bindings-v1.md)、[docs/tool-provider-release-package-vnext.md](https://github.com/odango-chan/ca-client-tools/blob/7bcb2614aa3615d8358df31eecefd0909e894e40/docs/tool-provider-release-package-vnext.md)、[docs/host-integration.md](https://github.com/odango-chan/ca-client-tools/blob/7bcb2614aa3615d8358df31eecefd0909e894e40/docs/host-integration.md)、[docs/nas5gsm-codec.md](https://github.com/odango-chan/ca-client-tools/blob/7bcb2614aa3615d8358df31eecefd0909e894e40/docs/nas5gsm-codec.md)。
 - ca-agent-demo：[generic-agent-host-architecture.md](https://github.com/odango-chan/ca-agent-demo/blob/57e277ff9094dad93543df46910a12a1dbbaf560/docs/design/generic-agent-host-architecture.md)、[skill-tool-runtime-boundary.md](https://github.com/odango-chan/ca-agent-demo/blob/57e277ff9094dad93543df46910a12a1dbbaf560/docs/design/skill-tool-runtime-boundary.md)、[provider_v2.py](https://github.com/odango-chan/ca-agent-demo/blob/57e277ff9094dad93543df46910a12a1dbbaf560/src/ca_agent_host/integrations/ca_client_tools/provider_v2.py)、[tool_contract.py](https://github.com/odango-chan/ca-agent-demo/blob/57e277ff9094dad93543df46910a12a1dbbaf560/src/ca_agent_host/runtime/tool_contract.py)、[capability_contract.py](https://github.com/odango-chan/ca-agent-demo/blob/57e277ff9094dad93543df46910a12a1dbbaf560/src/ca_agent_host/runtime/capability_contract.py)、[capability_scope.py](https://github.com/odango-chan/ca-agent-demo/blob/57e277ff9094dad93543df46910a12a1dbbaf560/src/ca_agent_host/runtime/capability_scope.py)、[registration.py](https://github.com/odango-chan/ca-agent-demo/blob/57e277ff9094dad93543df46910a12a1dbbaf560/tools/registration.py)。
+
+`ca-client-tools/docs/host-integration.md` 仍描述历史 Host-owned ToolCatalog identity 模型；这是该 Host 集成文档的既有模型，不是 Next 的公开契约。Next 不采用该模型，也不维护第二份公开 ToolCatalog；Skill-facing public Callable identity 只来自 Provider Interface Package 与 Owner Contract Package，Provider v2 catalog 只用于核对已声明的私有 backend availability。
 - ca-skills：[establish MAS Contract](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/examples/skills/establish-pdu-session-mas/assurance/contract.yaml)、[modify MAS Contract](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/examples/skills/modify-pdu-session-mas/assurance/contract.yaml)、[release MAS Contract](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/examples/skills/release-pdu-session-mas/assurance/contract.yaml)。这些作者源以 `dependencies.mas: urn:openamsm:mas:tool-contracts` 引用 Owner 契约，并在 Procedure 中使用 `mas::` Callable。
 
 ## 3. 核心决策
@@ -68,7 +71,7 @@
 1. **一个 Plugin Manager。** Tool Provider 是 Plugin Manager 管理的 Tools Extension 提供者；Tool 是其导出的 Operation。不得为 Provider、Tool 或 Codec 增设独立 Manager。
 2. **区分 Provider Interface 与 Owner Contract。** Provider Interface Package 提供 Provider 自身导出的 Callable（当前 ca-client-tools v1.2.0 为 11 个 READ）；业务 Owner Contract Package 提供 Owner 业务 Callable、Effect、Schema、Outcome、Evidence 和 Capability membership（OpenAMSM v1alpha4）。MAS Skill 的 `mas::` 调用来自 Owner Contract Package，不从 Provider Interface Package 推导。私有 backendOperationId 只存在于 Provider Runtime Bindings / Provider 内部 Catalog。
 3. **Owner 结果语义单独归属。** Owner Contract Package 是业务 Callable、Owner Outcomes、Receipt、Commit Proof 和 exact-original Reconcile 的权威来源；Provider Runtime Bindings 只能引用和定位这些语义，不能重新定义。
-4. **安装不等于授权。** Plugin Manager 加载一个 Provider，不会授予任何 Skill 调用权限。Runtime 按当前 Skill 发布 Artifact 的精确 Capability / Callable Scope 检查每次调用。
+4. **安装不等于授权。** Plugin Manager 加载一个 Provider，不会授予任何 Skill 调用权限。冻结 v1alpha5 Runtime Scope 以 Artifact `dependencyClosure[].exports[]` 建立精确 Callable allowlist；Capability ID 是 Compiler Build-time 作者源检查输入，不是该 Artifact 的运行时字段。
 5. **Provider catalog 不授权、不扩权。** Provider 的 initialize/catalog/invoke 是执行与可用性协议；catalog 只报告显式请求的私有 backend binding 是否支持/可用，不产生公开 Callable，也不产生 Grant。
 6. **Provider v2 是迁移适配。** ca-client-tools v1.2.0 使用既有 ca-client-tools.provider/v2 NDJSON 协议。Next 在唯一 Plugin Manager 内提供 ProviderV2 Tools Extension Driver；它是进程/协议适配器，不是第二个 Manager、Registry 或授权路径。Native Plugin 仍使用 Plugin IPC v1alpha1。
 7. **不复制 Demo 的手工注册。** Next 从发布包和部署配置加载明确的 Provider 包与运行时映射；不复制 tools/registrations/default.yaml、Python ToolImplementationCatalog 或 MAS 专用 adapter。
@@ -125,9 +128,11 @@
 
 对**冻结 CA-SL v1alpha5 Build**，Compiler 从 `resolvedDependencies` 的精确 Owner snapshot 索引 ToolCatalog/Schema，并由 `trustedBuildContext.dependencyBindings` 绑定 dependencyId、digest、stablePackageId 和 authorizedOwners；Owner `CapabilityContracts` 通过 `trustedBuildContext.capabilityContracts` 独立输入，并按其 DeploymentAuthorization 绑定校验。Development v1alpha1 的 `package.json` / Interface Package / Dependency Lock 是另一个 Build profile，不能反向假定当前 Owner v1alpha4 发布物已包装成该格式。Next Agent 只消费已发布 v1alpha5 Artifact，不在运行期调用 Compiler。
 
-**冻结 Artifact 的依赖身份限制必须显式保留：** v1alpha5 `manifest.json` 的 `dependencyClosure[]` 只有 `dependencyId`、`stablePackageId` 和 `exports[]`，没有 package version 或 snapshotDigest；编译时 `resolvedDependencies.digest` / `trustedBuildContext.dependencyBindings.digest` 不会写入该冻结 Artifact。故 Runtime 不能仅凭 Skill Artifact 证明“编译时依赖字节”与“运行时依赖字节”完全相同。当前 Demo 采用部署级单版本绑定：provider.yaml 的 `interfacePackagePath` / `interfaceSnapshotDigest` 固定 Provider Interface snapshot；Provider Runtime Bindings sidecar 的 `ownerContract` 固定 Owner stableId、version、publicationDigest、manifestDigest。Host 必须验证 Interface snapshot digest、已安装 Owner publication 与 sidecar 一致，并检查 Artifact dependencyClosure 所需的 exports / Schema 均存在。发布流程必须将 Skill Artifact 与该 Owner v1alpha4 publication 及匹配的 ca-client-tools v1.2.0 Provider package 配套交付；编译时使用的 Owner snapshot 与 sidecar 所引用的 Owner publication 必须由发布流程保持一致，这一配套关系不能仅凭冻结 Artifact 在运行时反向证明。若未来需要逐 Skill 的 package version/snapshotDigest pin，必须由新的 Compiler Artifact API/profile 提供；不得修改已冻结 v1alpha5，也不得把 Development v1alpha1（其 Artifact 带 Lock、但 executionStatus 固定 `NOT_ADMITTED`）当作当前 Agent 运行输入。
+**冻结 Artifact 的依赖身份限制必须显式保留：** v1alpha5 `manifest.json` 的 `dependencyClosure[]` 只有 `dependencyId`、`stablePackageId` 和 `exports[]`，没有 package version 或 snapshotDigest；编译时 `resolvedDependencies.digest` / `trustedBuildContext.dependencyBindings.digest` 不会写入该冻结 Artifact。
 
-运行期必须同时取得部署配置选定的 Owner publication 与 Provider 平台包：Runtime 用 Owner snapshot 解释 Skill-facing Callable、Capability、Schema、Outcome、Evidence 和 Reconcile；ProviderV2 Driver 用 provider.yaml 的 11 个 Provider Interface mappings 与 sidecar 的 25 个 Owner mappings 找到私有 backend。Host 校验 Provider Interface `interfaceSnapshotDigest` 与 provider.yaml 一致，Provider Interface stablePackageId / required exports 与 Artifact dependencyClosure 一致；Owner stable ID / required exports 与 Artifact dependencyClosure 一致，并校验 Owner version / publicationDigest / manifestDigest 与 sidecar 一致。缺失任一来源、身份或映射时 fail-closed，不得用另一份 Catalog 推导补齐。
+**Capability 的 Build-time / Runtime 边界：** 冻结 v1alpha5 Artifact 的 `dependencyClosure[].exports[]` 仅序列化 `exportKind`、`exportId` 和 `owner`，不序列化作者源 `contract.capabilities`、Capability ID 或 Development profile 的 `capabilityRequirements`。Compiler Build 时使用 Owner snapshot 与 `trustedBuildContext.capabilityContracts` 校验作者源 Capability 声明和 Callable membership；这是静态链接/构建期保证。Runtime 不得从 Artifact 读取 Capability ID，也不得把 Capability ID 作为 Skill Runtime Scope 字段。Runtime 的有效调用面只由该 Artifact 精确导出的 `operation` / `observation` exports 建立；对 Owner Callable，Runtime 再按部署固定 Owner `CapabilityContracts` 校验 Callable membership 与 Effect。若 export、Owner membership、Effect 或部署身份不一致，必须 fail-closed。故 Runtime 不能仅凭 Skill Artifact 证明“编译时依赖字节”与“运行时依赖字节”完全相同。Next 目标 Demo 部署设计采用部署级单版本绑定：provider.yaml 的 `interfacePackagePath` / `interfaceSnapshotDigest` 固定 Provider Interface snapshot；这不是 ca-agent-demo main 已实现的 package-loader 事实；Provider Runtime Bindings sidecar 的 `ownerContract` 固定 Owner stableId、version、publicationDigest、manifestDigest。Host 必须验证 Interface snapshot digest、已安装 Owner publication 与 sidecar 一致，并检查 Artifact dependencyClosure 所需的 exports / Schema 均存在。发布流程必须将 Skill Artifact 与该 Owner v1alpha4 publication 及匹配的 ca-client-tools v1.2.0 Provider package 配套交付；编译时使用的 Owner snapshot 与 sidecar 所引用的 Owner publication 必须由发布流程保持一致，这一配套关系不能仅凭冻结 Artifact 在运行时反向证明。若未来需要逐 Skill 的 package version/snapshotDigest pin，必须由新的 Compiler Artifact API/profile 提供；不得修改已冻结 v1alpha5，也不得把 Development v1alpha1（其 Artifact 带 Lock、但 executionStatus 固定 `NOT_ADMITTED`）当作当前 Agent 运行输入。
+
+运行期必须同时取得部署配置选定的 Owner publication 与 Provider 平台包：Runtime 用 Owner snapshot 解释 Skill-facing Callable、Schema、Outcome、Evidence 和 Reconcile，并校验 Owner Callable membership / Effect；作者源 Capability requirement 已在 Compiler Build-time 校验，不从冻结 Artifact 读取 Capability ID。ProviderV2 Driver 用 provider.yaml 的 11 个 Provider Interface mappings 与 sidecar 的 25 个 Owner mappings 找到私有 backend。Host 校验 Provider Interface `interfaceSnapshotDigest` 与 provider.yaml 一致，Provider Interface stablePackageId / required exports 与 Artifact dependencyClosure 一致；Owner stable ID / required exports 与 Artifact dependencyClosure 一致，并校验 Owner version / publicationDigest / manifestDigest 与 sidecar 一致。缺失任一来源、身份或映射时 fail-closed，不得用另一份 Catalog 推导补齐。
 
 ### 4.3 Skill、Plugin 与部署配置
 
@@ -176,18 +181,21 @@ Plugin Manager 的部署配置为每个 Provider Extension 提供一个显式、
 
 ### 6.2 校验与初始化顺序
 
-1. **解析包入口。** 使用严格 YAML 解析；拒绝重复 key、未知字段、缺失必需字段和不支持的版本。
-2. **约束包内路径。** runtimeBindingsPath、Schema 文件和可执行文件必须解析在所选包根目录内；拒绝绝对路径、路径穿越和符号链接逃逸。
-3. **校验契约依赖快照。** 装载时按部署包和 sidecar 解析 Provider Interface Package 与 Owner Contract Package；以下与 Skill dependencyClosure 的交叉核验在绑定该 Skill 时执行；Provider Interface bytes 必须与 provider.yaml 的 `interfaceSnapshotDigest` 一致，且其 stablePackageId / required exports 必须与 Artifact dependencyClosure 一致；Owner stablePackageId 和 required exports 必须与 Artifact dependencyClosure 一致，Owner version / publicationDigest / manifestDigest 必须与 Provider Runtime Bindings sidecar 及部署配置一致。不得宣称 v1alpha5 Artifact 提供了依赖 snapshotDigest，也不得把 Owner ToolCatalog 当成 Provider Interface Package或自行生成缺失 Schema。
-4. **校验 Runtime Bindings sidecar。** 验证其精确 API identity、Provider ID/version、Owner Contract stable ID/version/publicationDigest/manifestDigest 引用、Schema 文件闭包和唯一 binding ID；Owner 引用必须与当前安装的 Owner snapshot 一致。
-5. **校验映射一致性。** 每个 Runtime Binding 的 ownerCallableId、runtimeOperationId、Effect、Schema 和 Capability 必须与所引用 Owner Contract 一致；静态校验完成后保留精确 backendOperationId，步骤 8 在进程启动后通过 wire catalog 对账，禁止由名称拼接、lowercase 或猜测生成。
-6. **启动 Provider。** 使用固定可执行文件和 argv（当前命令为 provider serve），不经 Shell 字符串解释。一个已选 Provider 包对应一个长生命周期进程。
-7. **Provider initialize。** 发送 Host/Provider instance identity 与 frame、in-flight、call-duration limits；核对 Provider ID、版本、build digest、backend catalog digest 和 catalogVersion。
-8. **显式 catalog 查询。** 向 Provider 请求 provider.yaml 公开 bindings 与 Runtime Bindings sidecar 的精确 backendOperationId 去重并集；校验返回的 supported/unsupported 分区、描述符和请求顺序。无需新增 list-all 方法，也不得用 catalog 响应发现未声明的公开 Callable。
+Provider Package Loader、Provider initialize/catalog 是 **安装级生命周期**，只依赖已选 Provider 包、部署配置和部署选定的 Owner publication，不依赖当前 Skill Artifact。
+
+1. **解析 Provider 包入口。** 使用严格 YAML 解析 provider.yaml；拒绝重复 key、未知字段、缺失必需字段和不支持的版本。
+2. **约束 Provider 包内路径。** `interfacePackagePath`（目录及其完整文件树）、`runtimeBindingsPath`、sidecar 引用的 Schema 文件和可执行文件都必须解析在所选包根目录内；拒绝绝对路径、路径穿越和符号链接逃逸。对 `interfacePackagePath` 不得只校验目录入口或抽样文件；树内每个实际文件都必须受相同的根目录约束。部署选定的 Owner publication 是独立安装快照，不要求位于 Provider 包内。
+3. **校验 Provider Interface snapshot。** 对 `interfacePackagePath` 指向的完整文件树按发布契约计算 snapshot digest，并与 provider.yaml 的 `interfaceSnapshotDigest` 精确匹配；不得只校验 package.json 或抽样文件。
+4. **校验 Runtime Bindings sidecar 与 Owner publication。** 验证 sidecar 精确 API identity、Provider ID/version、`runtimeBindingsDigest`、Schema 文件闭包和唯一 binding ID；sidecar 的 Owner stableId/version/publicationDigest/manifestDigest 必须与部署选定的 Owner publication 完全一致。不得把 Owner ToolCatalog 当成 Provider Interface Package，也不得自行生成缺失 Schema。
+5. **校验静态映射与 Reconcile 关系。** 每个 Provider public mapping 必须与 Provider Interface Package 的 Callable ID、Effect 和 Schema 一致；每个 Owner Runtime Binding 的 ownerCallableId、runtimeOperationId、Effect、Schema 和 Capability membership 必须与部署选定的 Owner Contract 一致。publicCallableId、runtimeBindingId、runtimeOperationId 和 backendOperationId 在各自身份空间必须唯一。对每个 MUTATION 的 `commitProof.reconcile.bindingId`，必须在同一 sidecar 中解析到唯一 READ binding，并将被引用的 binding ID 汇总为 Next Runtime 的 internal-only Reconcile 集合。目标缺失、重复、Effect 非 READ 或引用不一致时 fail-closed。此阶段只验证 sidecar/Owner 静态映射，不读取或猜测 Provider 内部 Backend Catalog，也不要求当前 Skill Artifact 已存在。
+6. **验证已固定发布物并启动 Provider。** 部署配置必须 pin 精确 Provider Release tag 和平台归档；包获取/安装时使用该 Release 同一 tag 发布的既有 `SHA256SUMS` 校验平台归档后再解包。Host 对已验证安装目录中的实际可执行文件字节独立计算 SHA-256，作为本次部署的期望 executable digest；这复用现有 Release checksum，不新增签名、Trust Registry 或第二套 package-integrity 机制。使用固定可执行文件和 argv（当前命令为 `provider serve`），不经 Shell 字符串解释。
+7. **Provider initialize。** 发送 Host/Provider instance identity 与 frame、in-flight、call-duration limits；核对 Provider ID、版本、build digest、backend catalog digest 和 catalogVersion。Host 必须先确认安装归档与 pinned Release 的 `SHA256SUMS` 匹配；该归档校验将安装后的可执行文件绑定到可信发布物。随后 Host 对实际启动路径上的可执行文件字节独立计算 executable digest，并将该值作为本次部署的期望值；Provider 自报 `buildDigest` 只作一致性校验，必须与 Host 计算值相等。`SHA256SUMS` 校验的是发布归档，不宣称其中另有独立 executable digest 条目。Provider 无法读取自身 executable 而回退到 build-info digest 时，该值不会匹配实际 executable digest，Host 必须 fail-closed；buildDigest 不在 provider.yaml 中，不得从 provider.yaml 或 Provider 自报值推导期望值。
+8. **显式 catalog 查询。** 仅在 initialize 成功后，向 Provider 请求 provider.yaml 公开 bindings 与 Runtime Bindings sidecar 的精确 backendOperationId 去重并集（当前预期 36 个 ID）；校验 supported/unsupported 分区、描述符、Effect、catalogVersion 和请求顺序。backend ID 是否实际存在只在此步骤确认。无需新增 list-all 方法，也不得用 catalog 响应发现未声明的公开 Callable。
 9. **发布可用 Extension。** 将明确可用的公开 Callable 绑定到该 Provider Extension。未配置或未实现的 binding 保留明确 unavailable 诊断，不得切换到其他 Provider、旧注册文件或默认业务 adapter。
 
-Plugin Manager 可以维护进程内的派发映射，但该映射只是已发布包的运行时投影，不是第二个权威 Registry。
+**Per-Skill dependency resolution 是独立的 Runtime 阶段。** 在 Skill import/update 或 Catalog generation 激活前，Runtime Contract Dependency Resolver 针对每个已发布 v1alpha5 Artifact，按 dependency alias / stablePackageId / exports 校验部署选定的 Provider Interface 与 Owner publication，并确认所需 Schema 和 Callable 存在；Provider Interface bytes 必须匹配 `interfaceSnapshotDigest`，Owner stableId / required exports 必须匹配 Artifact closure，Owner version / publicationDigest / manifestDigest 必须匹配 sidecar。Capability ID 不从 Artifact 读取；Runtime Scope 仅由 operation/observation exports 建立。不得要求 Provider Loader 先拿到某个当前 Skill。
 
+Plugin Manager 可以维护进程内的派发映射，但该映射只是已发布包的运行时投影，不是第二个权威 Registry。
 ### 6.3 Provider v2 与统一 Plugin IPC
 
 - Native Plugin 使用 connectionagent.io/plugin-package/v1alpha1 与 connectionagent.io/plugin-ipc/v1alpha1。
@@ -306,7 +314,7 @@ Provider 内部基础 Catalog 的 identity 为 ca-client-tools.provider-bindings
                     v
              Runtime Action Request
                     |
-          Callable / Capability Scope
+          Artifact export Callable allowlist
                     |
              Input Schema / Effect
                     |
@@ -336,16 +344,16 @@ Provider 内部基础 Catalog 的 identity 为 ca-client-tools.provider-bindings
 
 Runtime 在任何 Plugin IPC / Provider invoke 之前必须完成：
 
-1. 当前 Run 已绑定精确 Skill Artifact 与其依赖闭包；Owner Callable 必须解析到部署固定且与 Provider sidecar 一致的 Owner Contract snapshot，并满足 Artifact 的 stablePackageId / required exports；Provider READ Callable 必须解析到字节与 provider.yaml `interfaceSnapshotDigest` 一致的 Interface Package。Continuation 继续使用原 Run，不重新选 Skill。
-2. Callable ID 属于该 Skill Artifact 声明的 Callable / Capability 依赖闭包，并且其 stablePackageId / required exports 与部署选定的契约快照一致。
-3. Capability / Callable Scope 属于当前 Run 的精确 allowlist；不得用“Provider 已安装”代替授权。
-4. 输入符合该 Callable 实际所属契约源（Provider Interface Package 或 Owner Contract Package）的 Schema；未知字段、缺失字段、类型/范围错误均拒绝。
-5. Effect 与发布契约一致；Provider 实际声明与 Owner Contract 不一致时 fail-closed。
-6. Artifact Reference 由 Host 管理，且与当前 Run、Invocation、direction、slot 和 mediaType 一致。
-7. 调用满足当前 Run 状态、deadline、预算与 continuation 约束。
+1. 当前 Run 已绑定精确 Skill Artifact 与已解析的依赖闭包；Owner Callable 必须解析到部署固定且与 Provider sidecar 一致的 Owner Contract snapshot，并满足 Artifact 的 stablePackageId / required exports；Provider READ Callable 必须解析到字节与 provider.yaml `interfaceSnapshotDigest` 一致的 Interface Package。Continuation 继续使用原 Run，不重新选 Skill。
+2. Callable ID 必须属于该 Skill Artifact 的精确 `operation` / `observation` export closure；不得通过 Provider 私有 Catalog 扩张 allowlist。
+3. **Capability 不作为 frozen v1alpha5 Runtime Artifact 字段。** 作者源 `contract.capabilities` 已由 Compiler Build-time 对 Owner `CapabilityContracts` 校验；Runtime 不读取不存在的 Capability ID。Runtime 的有效 Scope 是 Artifact exports 形成的精确 Callable allowlist，并按所属部署固定契约源验证 Callable membership / Effect（Owner Callable 对 Owner Contract，Provider public Callable 对 Interface Package）。任何缺失、冲突或不匹配均 fail-closed。
+4. 当前 Run 的 Callable allowlist 必须排除所有由 Mutation `commitProof.reconcile.bindingId` 引用的 internal-only Reconcile binding；即使 Artifact export closure 包含对应 Owner READ export，普通 Skill/LLM Action 仍须在发送前拒绝，并返回稳定诊断 `INTERNAL_RECONCILE_ONLY`，Provider IPC 次数必须为零。Reconcile Coordinator 只能通过 Runtime 内部专用入口访问该 binding。
+5. 输入符合该 Callable 实际所属契约源（Provider Interface Package 或 Owner Contract Package）的 Schema；未知字段、缺失字段、类型/范围错误均拒绝。
+6. Effect 与发布契约一致；Provider catalog descriptor 与 Owner Contract / sidecar 不一致时 fail-closed。
+7. Artifact Reference 由 Host 管理，且与当前 Run、Invocation、direction、slot 和 mediaType 一致。
+8. 调用满足当前 Run 状态、deadline、预算与 continuation 约束。
 
 拒绝发生在发送之前时，不调用 Provider，并产生可断言的稳定诊断。
-
 ### 7.2 HostInvocation 与 privateArguments
 
 - Skill 只能提供公开 Schema 中允许的业务参数。
@@ -365,12 +373,15 @@ Runtime 在任何 Plugin IPC / Provider invoke 之前必须完成：
 
 ### 7.4 Exact-original Reconcile
 
+**当前 Owner/Compiler 的重要边界：** env-openamsm v1alpha4 将 `MAS.RECONCILE` 发布为普通 READ operation，并在 CapabilityContracts 中声明 `mas.reconcile.exact_original`。冻结 v1alpha5 Compiler 仅在某个 Mutation 的 `mutation.reconcile.callable` 明确指向该目标时，才会将其识别为 dedicated Reconcile 并拒绝普通 `operation.tool` 引用；当前 Owner 的 21 个 Mutation 未声明该字段。因此当前 Build 可能接受 Skill 对 `mas::MAS.RECONCILE` 的直接引用，Next 不得把编译期拒绝当作已具备保证。
+
+Next Runtime 必须从已验证 sidecar 中所有 Mutation 的 `commitProof.reconcile.bindingId` 收集目标，并将目标 binding ID 从 Skill/LLM 的普通 dispatch surface 排除；目标必须在同一 sidecar 中唯一解析为 READ binding，否则 Provider package load fail-closed。即使 Artifact export closure 包含该 READ export，普通 Action 也必须返回 `INTERNAL_RECONCILE_ONLY` 且不发送 Provider 请求。Reconcile Coordinator 只可通过 Runtime 内部专用入口，使用原始 originalInvocationId、原 Run Owner scope 和 sidecar 声明参数调用该 binding；该入口不是第二份公开授权路径，也不接受模型提供的 invocation 或 Host-private 参数。
+
 1. Runtime 保留原始 Callable、originalInvocationId、原始调用输出/私有材料引用和 Owner scope。
-2. Reconcile 使用 Owner Contract 中声明的精确 Reconcile binding 和同一 originalInvocationId。
+2. Reconcile 使用 Owner Contract 中声明、并由 sidecar Mutation `commitProof.reconcile.bindingId` 精确引用的 Reconcile binding 和同一 originalInvocationId。
 3. Reconcile 只查询原操作，不重新发送原 mutation，不创建新 Invocation 代替旧 Invocation。
 4. 只有匹配原身份的 Owner Receipt / Reconcile Decision 才能解析 UNKNOWN。
 5. 无法获得或验证精确结果时保持 UNRESOLVED/UNKNOWN，并输出可诊断结果。
-
 ## 8. Artifact 与 Codec
 
 ### 8.1 二进制交接
@@ -380,6 +391,7 @@ Runtime 在任何 Plugin IPC / Provider invoke 之前必须完成：
 - 原始二进制不放进 Plugin NDJSON，也不使用 Base64 搬运；按已发布的 Host Artifact Store contract 通过独立 channel 传输。
 - Provider 侧没有配置 artifactChannel 时，artifact-bearing binding 必须是 NOT_CONFIGURED，并在任何远端 I/O 前拒绝。
 - 原始输入字节保留为 Owner/Protocol 证据；Codec 解码出的语义投影不能替代原始字节，也不能自动授权重新编码后发送。
+- Host Artifact Store 依据 `ca-host.artifact-store/v1`（`odango-chan/ca-agent` commit `2c0b07f2eaff3bc1020bfc6775ef9bf09e3052ae`，Accepted for implementation）管理引用和独立 loopback channel；该契约规定的 per-artifact-byte SHA-256 是流传输内容完整性校验，不是 Provider/Plugin package digest、签名或额外 package integrity 体系。Next 消费该既有契约，不宣称该外部契约已在 Next 实现。
 
 ### 8.2 Codec
 
@@ -395,7 +407,7 @@ Runtime 在任何 Plugin IPC / Provider invoke 之前必须完成：
 | Provider 包、Manifest、Interface Package 或 sidecar 结构无效 | Plugin Manager 加载期 | Provider Extension 不可用；明确报错，不降级、不 fallback |
 | Owner Contract 版本或发布身份不匹配 | 包加载/Runtime 绑定校验 | 拒绝绑定；不得用相似字段或旧版映射补齐 |
 | backendOperationId 不存在或 Provider catalog 返回 unsupported | ProviderV2 Driver | 对应 binding unavailable；不得重构 ID 或调用其他 backend |
-| Skill 未声明 Callable / Capability | Runtime Action Boundary | 发送前拒绝；Plugin Manager 不得自行放行 |
+| Artifact 未导出 Callable / Owner Callable membership 或 Effect 无效 | Runtime Action Boundary | 发送前拒绝；Capability authoring requirement 已由 Compiler Build-time 校验，Runtime 不读取 Artifact Capability ID |
 | Input Schema / Effect / Artifact Scope 不匹配 | Runtime Action Boundary | 发送前拒绝；不触发远端操作 |
 | Provider 未配置服务或 Artifact Channel | Provider / Driver | NOT_CONFIGURED；不尝试备用 URL 或其他 Provider |
 | READ 返回 Schema 无效或关联 ID 错误 | Runtime | 不生成成功 Observation，返回明确失败 |
@@ -430,9 +442,9 @@ Runtime 在任何 Plugin IPC / Provider invoke 之前必须完成：
 后续实现至少应覆盖：
 
 - 一个 Native Plugin 与一个 Provider v2 Tools Extension 由同一 Plugin Manager 管理；不存在第二 Manager/Registry/Runtime。
-- Compiler 构建时使用精确依赖快照；冻结 v1alpha5 Artifact 不携带依赖版本/snapshotDigest。当前部署通过 provider.yaml 的 interfaceSnapshotDigest 固定 Provider Interface，通过 Runtime Bindings sidecar 的 Owner publication identity 固定 Owner Contract，并验证 Artifact 所需 stablePackageId / exports；不宣称逐 Skill byte-exact pin。
+- Compiler 构建时使用精确依赖快照；冻结 v1alpha5 Artifact 不携带依赖版本/snapshotDigest 或 Skill Capability ID。Compiler Build-time 校验作者源 Capability 与 Owner CapabilityContracts；Runtime 只从 operation/observation exports 建立精确 Callable allowlist，并验证各契约源的 Callable membership/Effect。部署通过 provider.yaml 的 interfaceSnapshotDigest 固定 Provider Interface，通过 Runtime Bindings sidecar 的 Owner publication identity 固定 Owner Contract；不宣称逐 Skill byte-exact pin。
 - Provider 启动握手、精确 catalog 查询、requestId 关联、cancel/timeout 和进程退出有自动化测试。
-- 未知 Callable、未授权 Capability、Effect 不匹配、Schema 错误、backend 不存在和 Provider unavailable 均 fail-closed。
+- Artifact 未导出 Callable、Owner CapabilityContracts membership / Effect 不匹配、Schema 错误、backend 不存在和 Provider unavailable 均 fail-closed；不读取冻结 Artifact 中不存在的 Capability ID。
 - Skill/LLM 无法看到或构造 backendOperationId、服务 URL、凭据和 privateArguments。
 - READ 输出经过 Schema 与来源校验；MUTATION 只有有效 Owner Receipt + Commit Proof 才能 COMMITTED。
 - UNKNOWN 使用原始 Invocation identity 进行 Reconcile，零重复 mutation。
@@ -446,15 +458,15 @@ Runtime 在任何 Plugin IPC / Provider invoke 之前必须完成：
 
 | 逻辑模块 | 唯一职责 | 输入 / 输出边界 | 必须覆盖的验收用例 |
 |---|---|---|---|
-| Provider Package Loader（Plugin Manager 内） | 解析已安装 Provider 包，校验 provider.yaml、interface snapshot、Runtime Bindings sidecar、Owner publication 引用和包内路径 | 输入包根目录、部署配置、部署选定 Owner snapshot；输出只读 ProviderPackageDescriptor（Provider identity/version、公开 mappings、sidecar mappings、digest） | 重复 YAML key、未知版本、路径穿越/符号链接逃逸、Interface snapshot digest 不匹配、sidecar digest 不匹配、Owner publication identity 不匹配均拒绝加载 |
-| ProviderV2 Driver（Plugin Manager 内 Tools Extension） | 管理单个长生命周期 Provider 进程；实现 initialize/catalog/invoke/cancel、requestId correlation、limits 和安全关闭 | 输入已验证 descriptor 与 Host 注入配置；输出统一 Tools Extension 调用结果；私有 backendOperationId 只在 Driver 内部 | 乱序响应关联、重复/非法 requestId、超大 frame、in-flight 超限、cancel、EOF drain、Provider 崩溃、stderr/stdout 分离、禁止自动重试 |
-| Contract Dependency Resolver（Runtime 内） | 解析 Skill Artifact dependencyClosure 的 Provider Interface / Owner Contract 来源；验证 stablePackageId、required exports 和部署级 pin | 输入已发布 v1alpha5 Artifact、provider.yaml、Runtime Bindings、Owner publication；输出 Skill 可见 Callable / Capability / Schema 解析结果 | mas alias 解析 Owner ToolCatalog；Provider Interface digest 匹配；Owner stable ID / version / publicationDigest / manifestDigest 匹配；缺失 export、重复 Callable、错误 Capability membership 均 fail-closed |
-| Runtime Action Boundary | 在 Provider IPC 前校验 Run/Skill Scope、Callable、Capability、Schema、Effect、HostInvocation、privateArguments 和 Artifact Reference | 输入 Runtime Action Request 与当前 Run Context；通过后输出 ProviderV2 Driver 的内部调用参数；拒绝时不发送 Provider 请求 | 未声明 Callable、未授权 Capability、Effect 不一致、Schema 错误、Host scope 不匹配、Artifact slot/direction 不匹配均在远端 I/O 前拒绝 |
+| Provider Package Loader（Plugin Manager 内） | 解析已安装 Provider 包，校验 provider.yaml、interfacePackagePath 完整文件树、Runtime Bindings sidecar、Owner publication 引用和包内路径 | 输入包根目录、部署配置、部署选定 Owner snapshot；输出只读 ProviderPackageDescriptor（Provider identity/version、公开 mappings、sidecar mappings、digest、internal-only Reconcile set） | 重复 YAML key、未知版本、interfacePackagePath / runtimeBindingsPath / Schema / executable 路径穿越、绝对路径或符号链接逃逸、Interface snapshot digest 不匹配、sidecar digest 不匹配、Owner identity 不匹配、Reconcile target 缺失/重复/非 READ 均拒绝加载 |
+| ProviderV2 Driver（Plugin Manager 内 Tools Extension） | 管理单个长生命周期 Provider 进程；实现 initialize/catalog/invoke/cancel、requestId correlation、limits 和安全关闭 | 输入已验证 descriptor、Host 预先计算的 executable digest 与 Host 注入配置；输出统一 Tools Extension 调用结果；私有 backendOperationId 只在 Driver 内部 | pinned release `SHA256SUMS` 归档校验、Host executable digest 与 initialize buildDigest 匹配（build-info fallback fail-closed）、backendCatalogDigest 对账；乱序响应关联、重复/非法 requestId、超大 frame、in-flight 超限、cancel、EOF drain、Provider 崩溃、stderr/stdout 分离、禁止自动重试 |
+| Contract Dependency Resolver（Runtime 内） | 按每个 Skill Artifact 解析 Provider Interface / Owner Contract 来源；验证 stablePackageId、required exports、Schema 和部署级 pin | 输入已发布 v1alpha5 Artifact、provider.yaml、Runtime Bindings、Owner publication；输出精确 Callable allowlist 与 Schema/Owner membership/Effect 验证结果 | mas alias 解析 Owner ToolCatalog；只从 operation/observation exports 建立 allowlist；不读取 Artifact Capability ID；Provider Interface digest 匹配；Owner stable ID / version / publicationDigest / manifestDigest 匹配；缺失 export、重复 Callable、Owner membership/Effect 错误均 fail-closed |
+| Runtime Action Boundary | 在 Provider IPC 前校验 Run/Skill Callable allowlist、Callable、Schema、Effect、HostInvocation、privateArguments 和 Artifact Reference | 输入 Runtime Action Request 与当前 Run Context；通过后输出 ProviderV2 Driver 的内部调用参数；拒绝时不发送 Provider 请求 | 未声明 Callable、internal-only Reconcile 普通调用（INTERNAL_RECONCILE_ONLY 且零 Provider IPC）、Owner membership/Effect 不一致、Schema 错误、Host scope 不匹配、Artifact slot/direction 不匹配均在远端 I/O 前拒绝；Coordinator 内部 Reconcile 使用原 originalInvocationId 成功 |
 | Owner Outcome Resolver / Reconcile Coordinator（Runtime 内） | 按 Owner Contract 解释 Receipt、Commit Proof、UNKNOWN 和 exact-original Reconcile | 输入 Provider result、Owner snapshot、原始 Invocation 和 sidecar evidence binding；输出 Owner Outcome / Evidence / Reconcile 状态 | HTTP 2xx 不得单独 COMMITTED；Receipt/Proof 精确绑定才可 COMMITTED；UNKNOWN 不重发 mutation；Reconcile 使用原 originalInvocationId；重复 mutation 数为 0 |
 | Host Artifact Adapter | 通过 Host Artifact Store channel 交接原始二进制，执行引用、大小、数量和 slot 边界检查 | 输入 Host artifactRef 与 Provider artifactChannel；输出受限 Artifact transfer；不把原始字节放入 NDJSON | channel 缺失、引用越界、size/aggregate/attachments 超限均在远端 I/O 前拒绝；禁止 Base64 和任意本地路径 |
 | Plugin Manager Extension 注册 | 将 Native Plugin 和 ProviderV2 Driver 纳入同一 Manager 的生命周期与分发 | 输入唯一 Plugin Package/Extension descriptor；输出一个统一 Tools Extension 入口 | Native Plugin 与 Provider v2 并存；重复 Callable/冲突 mapping 拒绝；不存在第二 Manager、Registry、Runtime、授权路径或 fallback |
 
-逻辑调用顺序固定为：Package Loader → ProviderV2 Driver initialize/catalog → Contract Dependency Resolver → Runtime Action Boundary → ProviderV2 Driver invoke → Owner Outcome Resolver / Reconcile。Plugin Manager 只管理进程与 Extension；Runtime 只管理 Skill Scope、契约校验和 Owner 结果；Provider 不选择 Skill、不授权、不判断 COMMITTED。
+逻辑调用顺序固定为：安装级 Package Loader（含静态 sidecar/Owner/Reconcile 校验）→ pinned Release SHA256SUMS 归档校验 / Host executable digest → ProviderV2 Driver initialize/catalog → per-Skill Contract Dependency Resolver（import/update 或 generation 激活前）→ Runtime Action Boundary → ProviderV2 Driver invoke → Owner Outcome Resolver / Reconcile。Plugin Manager 只管理进程与 Extension；Runtime 只管理 Skill Scope、契约校验和 Owner 结果；Provider 不选择 Skill、不授权、不判断 COMMITTED。
 
 ### 11.2 当前外部证据边界
 
@@ -483,4 +495,6 @@ Codec PR #39 的固定候选 `eb1169fe1d0e2e691d101908aad08ee8801da754` 在 `pro
 
 | 2026-11-25 | 0.3.5 | GPT-6.2（ChatGPT） | §4.4 | 区分冻结 v1alpha5 Runtime Owner Contract 与 Compiler v2.1.0 Development Interface Package；将 MAS Owner Publisher 实施责任链接到 SR-025，并记录 package/source version 的 SemVer 决策门槛 | 防止把 Owner Contract、Provider Interface Package 和 Development wrapper 混为同一发布面 | Issue #12；F09 v0.3.5；SR-015；SR-025 |
 | 2026-11-25 | 0.3.6 | Codex / GPT-6 | 正文 | 同步 Publisher 身份、版本和验收边界 | 消除执行歧义并同步中央设计 | Issue #12 |
-| 2026-11-26 | 0.3.7 | Codex / GPT-6 | 见本行变更 | §4、6 校正装载顺序、catalog 分区与 initialize 失败语义；§12 前补齐 ca-client-tools 两端及 Codec 发布归属 | 对齐跨仓实现与独立复验 | Issue #12 |
+| 2026-11-26 | 0.3.7 | Codex / GPT-6 | §4、§6、§8、§12 | 校正装载顺序、catalog 分区与 initialize 失败语义；补齐 ca-client-tools 两端及 Codec 发布归属 | 对齐跨仓实现与独立复验 | Issue #12 |
+| 2026-11-26 | 0.3.8 | GPT-6.2（ChatGPT） | §2～§8、§11 | 将 PR #13 已完成的 P1/P2 修正移植到当前恢复基线；明确 frozen v1alpha5 Capability 不序列化、Reconcile internal-only、完整 Interface tree 路径校验、安装级 Loader 与 per-Skill Resolver 分离；复用 v1.2.0 pinned Release `SHA256SUMS` 与 Host executable digest 对账；固定 Artifact Store 来源和 Host-owned ToolCatalog 不采用 | 防止设计版本倒挂，并让 F03.05 与 F02/F04/F06/公共契约使用同一执行边界 | IR-006 · SR-015 · Issue #12 |
+| 2026-11-26 | 0.3.9 | GPT-6.2（ChatGPT） | 文档头、修订记录 | 回填 SR-015 设计迁移 PR #37 已合并到恢复分支 | 仅更新设计资产集成状态，不将 F03 Provider Runtime 或 Codec Consumer 误报为已实现 | Issue #12；SR-015；PR #37 |
