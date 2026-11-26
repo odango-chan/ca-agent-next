@@ -1,0 +1,67 @@
+# SR-003 host tests (SR-002 suite, recorded separately)
+# command: python -m unittest discover -s tests -p "test_host.py" -v
+# cwd: C:\Users\z00587616\AppData\Local\Temp\sr003-clean-504ec1b
+# tested commit: 504ec1b0a35fc761eba621149a94c83d1012626f (clone --depth 1, core.autocrlf=true)
+# environment: CPython 3.14.6 (venv), Windows 10.0.26200, go1.26.6 windows/amd64, GOWORK=off
+# exit code: 0
+# --- stdout ---
+
+
+# --- stderr ---
+test_no_business_specific_domains (test_host.BusinessNeutralityTests.test_no_business_specific_domains) ... ok
+test_no_network_provider_or_environment_initialization (test_host.BusinessNeutralityTests.test_no_network_provider_or_environment_initialization) ... ok
+test_package_has_expected_modules (test_host.BusinessNeutralityTests.test_package_has_expected_modules) ... ok
+test_proposal_is_only_returned_not_executed (test_host.BusinessNeutralityTests.test_proposal_is_only_returned_not_executed) ... ok
+test_invalid_proposal_via_injected_client (test_host.CliFailureTests.test_invalid_proposal_via_injected_client) ... ok
+test_model_client_failure_via_injected_client (test_host.CliFailureTests.test_model_client_failure_via_injected_client) ... ok
+test_no_traceback_on_host_failure (test_host.CliFailureTests.test_no_traceback_on_host_failure) ... ok
+test_default_smoke_is_deterministic (test_host.CliSmokeSuccessTests.test_default_smoke_is_deterministic) ... ok
+test_default_smoke_opens_no_network_socket (test_host.CliSmokeSuccessTests.test_default_smoke_opens_no_network_socket) ... ok
+test_default_smoke_success_contract (test_host.CliSmokeSuccessTests.test_default_smoke_success_contract) ... ok
+test_argv_none_uses_process_arguments (test_host.CliUsageTests.test_argv_none_uses_process_arguments) ... ok
+test_missing_unknown_or_extra_arguments (test_host.CliUsageTests.test_missing_unknown_or_extra_arguments) ... ok
+test_usage_error_is_not_host_error (test_host.CliUsageTests.test_usage_error_is_not_host_error) ... ok
+test_context_defaults_to_empty_mapping (test_host.ContractTypeTests.test_context_defaults_to_empty_mapping) ... ok
+test_event_payload_is_required (test_host.ContractTypeTests.test_event_payload_is_required) ... ok
+test_event_source_defaults_to_empty_mapping (test_host.ContractTypeTests.test_event_source_defaults_to_empty_mapping) ... ok
+test_host_error_accepts_only_fixed_codes_and_messages (test_host.ContractTypeTests.test_host_error_accepts_only_fixed_codes_and_messages) ... ok
+test_host_error_is_exception (test_host.ContractTypeTests.test_host_error_is_exception) ... ok
+test_public_dataclasses_are_frozen (test_host.ContractTypeTests.test_public_dataclasses_are_frozen) ... ok
+test_artifact_refs_must_be_non_blank_string_tuple (test_host.EventValidationTests.test_artifact_refs_must_be_non_blank_string_tuple) ... ok
+test_blank_identity_fields_are_rejected (test_host.EventValidationTests.test_blank_identity_fields_are_rejected) ... ok
+test_cyclic_containers_are_rejected (test_host.EventValidationTests.test_cyclic_containers_are_rejected) ... ok
+test_invalid_event_does_not_call_model_or_run_id_factory (test_host.EventValidationTests.test_invalid_event_does_not_call_model_or_run_id_factory) ... ok
+test_non_event_objects_are_rejected (test_host.EventValidationTests.test_non_event_objects_are_rejected) ... ok
+test_non_finite_floats_are_rejected (test_host.EventValidationTests.test_non_finite_floats_are_rejected) ... ok
+test_non_json_objects_are_rejected (test_host.EventValidationTests.test_non_json_objects_are_rejected) ... ok
+test_non_string_mapping_keys_are_rejected (test_host.EventValidationTests.test_non_string_mapping_keys_are_rejected) ... ok
+test_optional_ids_allow_none_or_non_blank_strings (test_host.EventValidationTests.test_optional_ids_allow_none_or_non_blank_strings) ... ok
+test_payload_must_be_mapping (test_host.EventValidationTests.test_payload_must_be_mapping) ... ok
+test_source_must_be_mapping_when_provided (test_host.EventValidationTests.test_source_must_be_mapping_when_provided) ... ok
+test_artifact_refs_are_passed_through_unchanged (test_host.HostSuccessTests.test_artifact_refs_are_passed_through_unchanged) ... ok
+test_context_is_created_empty_and_does_not_copy_event_fields (test_host.HostSuccessTests.test_context_is_created_empty_and_does_not_copy_event_fields) ... ok
+test_default_run_id_is_uuid4_hex (test_host.HostSuccessTests.test_default_run_id_is_uuid4_hex) ... ok
+test_each_handle_event_creates_one_run_and_one_call (test_host.HostSuccessTests.test_each_handle_event_creates_one_run_and_one_call) ... ok
+test_event_payload_is_not_mutated (test_host.HostSuccessTests.test_event_payload_is_not_mutated) ... ok
+test_handle_event_returns_result_and_calls_model_once (test_host.HostSuccessTests.test_handle_event_returns_result_and_calls_model_once) ... ok
+test_nested_json_payload_is_preserved (test_host.HostSuccessTests.test_nested_json_payload_is_preserved) ... ok
+test_client_exception_maps_to_model_client_failed_once (test_host.ModelClientBoundaryTests.test_client_exception_maps_to_model_client_failed_once) ... ok
+test_client_host_error_is_also_mapped_to_model_client_failed (test_host.ModelClientBoundaryTests.test_client_host_error_is_also_mapped_to_model_client_failed) ... ok
+test_client_is_not_retried_after_failure (test_host.ModelClientBoundaryTests.test_client_is_not_retried_after_failure) ... ok
+test_model_client_is_injected_and_request_is_recorded (test_host.ModelClientBoundaryTests.test_model_client_is_injected_and_request_is_recorded) ... ok
+test_canonical_module_paths_export_types (test_host.PackageIdentityTests.test_canonical_module_paths_export_types) ... ok
+test_distribution_metadata (test_host.PackageIdentityTests.test_distribution_metadata) ... ok
+test_host_error_is_single_type_defined_in_contracts (test_host.PackageIdentityTests.test_host_error_is_single_type_defined_in_contracts) ... ok
+test_import_package_uses_src_layout (test_host.PackageIdentityTests.test_import_package_uses_src_layout) ... ok
+test_public_exports_and_all_order (test_host.PackageIdentityTests.test_public_exports_and_all_order) ... ok
+test_invalid_proposal_values_are_rejected (test_host.ProposalValidationTests.test_invalid_proposal_values_are_rejected) ... ok
+test_valid_nested_proposal_is_returned_unchanged (test_host.ProposalValidationTests.test_valid_nested_proposal_is_returned_unchanged) ... ok
+test_factory_exception_maps_to_host_internal_error (test_host.RunIdFactoryTests.test_factory_exception_maps_to_host_internal_error) ... ok
+test_factory_is_called_exactly_once_after_validation (test_host.RunIdFactoryTests.test_factory_is_called_exactly_once_after_validation) ... ok
+test_invalid_factory_results_map_to_host_internal_error (test_host.RunIdFactoryTests.test_invalid_factory_results_map_to_host_internal_error) ... ok
+test_test_module_is_real (test_host.TestDiscoverySanityTests.test_test_module_is_real) ... ok
+
+----------------------------------------------------------------------
+Ran 52 tests in 0.071s
+
+OK

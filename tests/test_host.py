@@ -175,7 +175,21 @@ class PackageIdentityTests(unittest.TestCase):
         self.assertEqual(dist.metadata["Name"], "ca-agent-next")
         self.assertEqual(dist.version, "0.1.0")
         self.assertEqual(dist.metadata["Requires-Python"], ">=3.11")
-        self.assertIsNone(dist.metadata.get("Requires-Dist"))
+        # SR-002 固定 Host 核心无强制运行时依赖；SR-003 的 Plugin 专属依赖
+        # 隔离为可选 extra "plugins"。因此强制依赖仍必须为空，可选依赖只允许
+        # 该 extra 中的 ruamel.yaml 与 jsonschema。
+        requires = dist.metadata.get_all("Requires-Dist") or []
+        mandatory = [item for item in requires if "extra ==" not in item]
+        self.assertEqual(mandatory, [], requires)
+        optional = [item for item in requires if "extra ==" in item]
+        self.assertEqual(len(optional), 2, optional)
+        for item in optional:
+            compact = item.replace(" ", "")
+            self.assertIn('extra=="plugins"', compact, requires)
+            self.assertTrue(
+                compact.startswith("ruamel.yaml") or compact.startswith("jsonschema"),
+                requires,
+            )
 
     def test_import_package_uses_src_layout(self) -> None:
         package_dir = Path(ca_agent_next.__file__).resolve().parent

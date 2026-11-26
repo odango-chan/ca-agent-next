@@ -1,0 +1,20 @@
+apiVersion: connectionagent.io/plugin-package/v1alpha1
+kind: Plugin
+metadata:
+  id: example.echo
+  version: 1.0.0
+process:
+  executable: bin/echo-plugin
+  args: [serve]
+  protocol: connectionagent.io/plugin-ipc/v1alpha1
+extensions:
+  event.ingress:
+    events:
+      - type: echo.request
+        requestSchema: schemas/echo-request.json
+  event.delivery:
+    responses:
+      - eventType: echo.request
+        responseSchema: schemas/echo-response.json
+  tools:
+    interfacePackage: urn:example:echo:interface

@@ -1,0 +1,11 @@
+# compileall
+# command: python -m compileall -q src tests
+# cwd: C:\Users\z00587616\AppData\Local\Temp\sr003-clean-504ec1b
+# tested commit: 504ec1b0a35fc761eba621149a94c83d1012626f (clone --depth 1, core.autocrlf=true)
+# environment: CPython 3.14.6 (venv), Windows 10.0.26200, go1.26.6 windows/amd64, GOWORK=off
+# exit code: 0
+# --- stdout ---
+
+
+# --- stderr ---
+
