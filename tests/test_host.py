@@ -175,7 +175,13 @@ class PackageIdentityTests(unittest.TestCase):
         self.assertEqual(dist.metadata["Name"], "ca-agent-next")
         self.assertEqual(dist.version, "0.1.0")
         self.assertEqual(dist.metadata["Requires-Python"], ">=3.11")
-        self.assertIsNone(dist.metadata.get("Requires-Dist"))
+        # SR-002 切片固定 Host 无运行时依赖；SR-003 的 Plugin Package/IPC v1alpha1
+        # 实现需要 YAML 1.2 解析器与 JSON Schema 校验器。断言限制在该固定集合，
+        # 不允许出现其他运行时依赖。
+        requires = dist.metadata.get_all("Requires-Dist") or []
+        self.assertEqual(len(requires), 2, requires)
+        self.assertTrue(any(item.startswith("ruamel.yaml") for item in requires), requires)
+        self.assertTrue(any(item.startswith("jsonschema") for item in requires), requires)
 
     def test_import_package_uses_src_layout(self) -> None:
         package_dir = Path(ca_agent_next.__file__).resolve().parent

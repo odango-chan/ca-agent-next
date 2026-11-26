@@ -1,0 +1,26 @@
+{
+  "sourceDocument": "docs/规范/插件包与进程通信协议规范.md",
+  "sourceRepo": "odango-chan/ca-agent-next",
+  "designSha": "5b097e28e7197603cf3f00e103a0315c4bce0d79",
+  "section": "§5.1",
+  "lineRange": [
+    126,
+    137
+  ],
+  "frameCount": 12,
+  "frameTypes": [
+    "host.initialize",
+    "plugin.ready",
+    "ingress.event",
+    "ingress.ack",
+    "tools.invoke",
+    "tools.result",
+    "delivery.dispatch",
+    "delivery.result",
+    "host.cancel",
+    "plugin.cancelled",
+    "host.shutdown",
+    "plugin.stopped"
+  ],
+  "sha256": "34ba393a3e67c79cd2a9f36eeb3c38e085d75302a6ff159fc665c0069fb113e2"
+}
