@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：**设计待评审**（唯一新目标 CA-SL 1.6.0；全链路不兼容任何旧作者语法、Build DTO、Artifact、Bundle；1.6.0 产品未发布）
-> 文档版本：0.2.17
+> 文档版本：0.2.18
 > 功能归属：F02 — Skill 管理与选择  
 > 关联 SR：SR-004、SR-005、SR-006    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -112,9 +112,22 @@ Agent 不实现文件监视器、自动下载、分布式缓存或通用 Plugin 
 9. 无候选时澄清或拒绝；不得无 Skill 绑定地回退到 Generic Agent。
 10. 精确绑定 Skill 后，才选择 Deterministic 或 LLM-guided 模式。
 
-无规范化 Event 的直接用户任务只走未声明 when 的语义候选路径。上面的 Event 资格规则取自 [CA-SL v1alpha5 正式 M.3／SA-012](../../规范/CA-SL语言基线与版本规范.md#3-when-的发布与运行时依赖)，规范固定于 `18d8184367982ccbc835756136c4a53f9096c3a0`。
+无规范化 Event 的直接用户任务只走未声明 when 的语义候选路径。**以上是 Next 面向 CA-SL 1.6.0 的目标 Resolver 规则**，设计依据是 SR-029 + 本 F02（新 ca-skills 正式语言发布后以正式规范核对）；历史 v1alpha5 M.3/SA-012 仅为语义追溯，不再构成新 Resolver 的规范输入或测试正例。
 
 when 只能读取规范化 Event 的 event.type 和 Contract.requestSchema 声明的 input 字段，不得访问 Tool、Observation、Runtime Context、时钟或可变 Host 状态。读取 input 成员必须由作者源 Contract 声明 requestSchema，并由外部 Compiler 在发布前静态检查。
+
+### 6.1 决定性选择表与边界
+
+| 新 Event 资格 | 显式 when 候选 | 无 when 候选 | 处理 |
+|---|---|---|---|
+| Request Schema 校验失败 | 排除，跳过 CEL | 排除 | 记录 Skill ID + Schema 失败诊断，不启动该 Skill |
+| when=true | 保留 | 无关 | 仅在显式 true 集合内选择；一个直接绑定、多个由模型在该集合内消歧 |
+| when=false / CEL evaluation error | 排除 | 无关 | 不再回退到无条件候选；错误保持可观察但不扩大可选集合 |
+| 无任何 when=true | 空 | 可纳入已通过资格的 SKILL.md-only / Assurance(no when) | 语义选择仍只允许返回精确候选 ID |
+| 无有效候选 | 空 | 空 | 澄清或拒绝，禁止 Generic Agent 无 Skill 回退 |
+| continuation 指向现有 Run | 不重新求值 | 不重新求值 | 仅恢复绑定的 Skill + 固定 Catalog generation；缺失或过期则拒绝 |
+
+其中没有规范化 Event 的直接用户输入只能走无 when 候选集合；模型不能用文本/元数据授予 Callable Scope。所有选择动作记录 eventId、Catalog generation、最终 Skill ID、候选集合与拒绝原因（不持久化业务秘密），重复 Event/Continuation 不应增加 dispatch 次数。外部正式 1.6.0 when/Schema Descriptor 元数据缺失时，不得按“无 when”处理，而应作为无效 Assurance 包导入失败。
 
 ## 7. when 程序的发布与运行时接口
 
@@ -240,3 +253,4 @@ Next 在 Skill 导入时反序列化已检查程序和类型环境，建立运�
 | 2026-11-26 | 0.2.15 | GPT-6.2（ChatGPT） | 文档头、§2～4、§9、§12、修订记录 | 按 Issue #40 将新 Assurance 消费版本改为 CA-SL 1.6.0，固定已编译 Capability→Callable Binding 与新 Runtime API 联合门槛 | 避免用 v1alpha6 候选或旧 v1alpha5 Callable Artifact 作为新运行包，保留历史冻结身份 | Issue #40/#43；SR-029；SR-004；SR-013 |
 | 2026-11-26 | 0.2.16 | GPT-6.2（ChatGPT） | §4、§9、修订记录 | 新 Agent 导入/Catalog 全面拒绝历史语言与旧 Artifact、无双轨并存或 fallback | 实现 1.6.0 单版本运行时，不让历史数据混入当前 Skill 执行 | Issue #40/#43；SR-004；SR-005 |
 | 2026-11-26 | 0.2.17 | GPT-6（ChatGPT） | 文档头、修订记录 | 将 CA-SL 1.6.0-only 的目标设计明确推进待独立评审；完整规范/API/Bundle 未发布 | 保持设计评审与实施 READY、产品 RELEASED 分离 | Issue #40；SR-029；PR #44 |
+| 2026-11-26 | 0.2.18 | GPT-6（ChatGPT） | 核心规范与验收章节 | 去除 v1alpha5 M.3 规范依赖；新增 1.6.0 Resolver 结果表、拒绝和 continuation invariants | 为 SR-005/006 提供唯一可审查的选择语义 | Issue #12/#40；SR-005/006；SR-029 |
