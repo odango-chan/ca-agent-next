@@ -1,7 +1,7 @@
 # 通用 Agent Core 与 Host 设计说明书
 
 > 文档类型：功能设计说明书  
-> 文档版本：0.3.4  
+> 文档版本：0.3.5  
 > 状态：Next 目标设计；本仓实现状态需独立验收，不以参考仓 PASS 代替  
 > 功能归属：F01 — 通用 Agent Core 与 Host  
 > 关联 SR：SR-002、SR-020、SR-021  
@@ -144,7 +144,7 @@ tests/
 
 ca-agent-demo 的当前身份是 distribution `ca-agent-host`、import package `ca_agent_host`、CLI `ca-plan`。Next 不复用这些身份，不添加兼容别名或重导出包。只参考其 `src/` 包布局、Protocol 注入和 Fake 调用记录模式。
 
-`ca_agent_next.__init__` 必须按 `__all__` 导出：`JSONValue`、`Event`、`Context`、`Run`、`ModelRequest`、`ModelProposal`、`HostResult`、`ModelClient`、`AgentLoop`、`Host`、`HostError`。规范模块路径分别为 `contracts`、`model_client`、`model_loop` 和 `host`；不创建兼容别名。
+`ca_agent_next.__init__` 必须按 `__all__` 导出：`JSONValue`、`Event`、`Context`、`Run`、`ModelRequest`、`ModelProposal`、`HostResult`、`ModelClient`、`AgentLoop`、`Host`、`HostError`。`contracts.py` 定义 JSONValue、数据类型和 HostError；`model_client.py` 定义 ModelClient；`model_loop.py` 从 contracts 导入 HostError 并定义 AgentLoop；`host.py` 定义 Host 并从 contracts 重导出 HostError。这样 HostError 只有一个定义位置，不产生 model_loop ↔ host 循环导入；不创建兼容别名。
 
 ### 5.2 Host 与 Model Loop 公共类型
 
@@ -159,6 +159,7 @@ SR-002 固定下列最小类型；字段名和含义以本表为准：
 | `ModelRequest` | 冻结 dataclass；包含 `run: Run`、`event: Event`、`context: Context` |
 | `ModelProposal` | 冻结 dataclass；`kind` 为非空且非全空白字符串，`payload` 为 `Mapping[str, JSONValue]`；只是提议，不是已执行 Action |
 | `HostResult` | 冻结 dataclass；包含 `run: Run` 与 `proposal: ModelProposal` |
+| `HostError` | 在 `contracts.py` 定义的稳定异常；code 仅允许 `EVENT_INVALID`、`MODEL_CLIENT_FAILED`、`MODEL_PROPOSAL_INVALID`、`HOST_INTERNAL_ERROR`，并携带对应固定 safe_message；`host.py` 只重导出该类型 |
 
 `artifact_refs` 只允许表示 Host-owned opaque reference；SR-002 不打开、复制或传输原始字节。Plugin 提供的 `stagingPath`、本地路径和原始 bytes 不得直接填入该字段；staging、ArtifactStore 和引用创建归 F05 / 对应 SR。
 
@@ -172,6 +173,7 @@ SR-002 固定下列最小类型；字段名和含义以本表为准：
 class ModelClient(Protocol):
     def propose(self, request: ModelRequest) -> ModelProposal: ...
 
+# contracts.py 定义 HostError；model_loop.py 从 contracts 导入；host.py 从 contracts 重导出。
 class HostError(Exception):
     def __init__(self, code: str, safe_message: str): ...
 
@@ -207,7 +209,7 @@ class Host:
 | Event 类型、字段或 JSONValue 无效 | `EVENT_INVALID` | `event is invalid` | 不生成 Run ID、不调用 ModelClient；Host 抛出 HostError |
 | ModelClient.propose 抛出任意 Exception | `MODEL_CLIENT_FAILED` | `model client failed` | 恰好一次调用、不重试；不透传异常文本；Host 抛出 HostError |
 | ModelClient 返回值不是有效 ModelProposal | `MODEL_PROPOSAL_INVALID` | `model proposal is invalid` | 不 dispatch、不尝试猜测修复；Host 抛出 HostError |
-| CLI 缺少 `--smoke`、出现未知参数或多余参数 | `CLI_USAGE_ERROR` | `invalid command line usage` | stderr 输出一行 JSON；退出码 2 |
+| CLI 缺少 `--smoke`、出现未知参数或多余参数 | `CLI_USAGE_ERROR` | `invalid command line usage` | CLI-only 诊断，不构造或抛出 HostError；stderr 输出一行 JSON；退出码 2 |
 | Run ID 工厂失败或其他未预期 Host 错误 | `HOST_INTERNAL_ERROR` | `host internal error` | Run ID 阶段失败时不调用 ModelClient；stderr 输出一行 JSON；退出码 1 |
 
 Model Proposal 不会在 SR-002 内执行。它不会触发 Plugin、Tool、Runtime、Owner 或任何外部副作用。Host 只返回提议及 Run 标识；后续 Runtime Action Boundary 由 F04/SR-007 负责。
@@ -313,3 +315,4 @@ SR-002 的独立模块验收为 AC-002-01～AC-002-08，详见《演示验收基
 | 2026-11-26 | 0.3.2 | GPT-6.2（ChatGPT） | 修订记录 | 统一本次新增修订记录的六列格式 | 保持历史修改意图与关联追踪完整。 | Issue #19；PR #20 |
 | 2026-11-26 | 0.3.3 | GPT-6.2（ChatGPT） | §5.2～5.4 | 明确 Event.source 可选、HostError 构造签名及默认 UUID run_id 的生成规则和时机 | 让 Host 公开契约和失败路径可直接实现与测试。 | Issue #19；SR-002；PR #20 |
 | 2026-11-26 | 0.3.4 | GPT-6.2（ChatGPT） | §5.1～§5.5 | 固定包元数据、公开导出、Event/Context/JSONValue 校验、HostError/CLI 错误语义和 Smoke 契约 | 形成可独立实施与复验的 Python Host 契约，并明确与后续模块的边界 | IR-002；SR-002；SR-003；AC-002-01～08；Issue #19；PR #20 |
+| 2026-11-26 | 0.3.5 | GPT-6.2（ChatGPT） | §5.1～5.4 | 固定 HostError 在 contracts.py 唯一定义、host.py 重导出，并将 CLI_USAGE_ERROR 明确为 CLI-only 诊断。 | 避免 ModelLoop/Host 循环导入及 CLI/Host 异常类型混淆。 | Issue #19；SR-002 v0.2.5；SR-003；PR #20 |

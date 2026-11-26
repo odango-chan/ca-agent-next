@@ -1,13 +1,13 @@
 # SR-002：Python 核心与宿主基础骨架
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.4  
+> SR 版本：0.2.5  
 > 修订日期：2026-11-26  
 > 状态：DRAFT；本轮设计修订待评审，不允许代码实施  
 > 创建日期：2026-11-25  
 > 所属阶段：Phase A  
 > 上游需求：[IR-002](../IR/IR%20总登记册.md#ir-002)  
-> 设计依据：[CA Agent Next 架构设计](../架构设计/CA%20Agent%20Next%20架构设计.md) v0.4.3 §3～5；[通用 Agent Core 与 Host 设计说明书](../设计说明书/F01-通用Agent核心与Host/通用Agent核心与Host设计说明书.md) v0.3.3 §2～5  
+> 设计依据：[CA Agent Next 架构设计](../架构设计/CA%20Agent%20Next%20架构设计.md) v0.4.3 §3～5；[通用 Agent Core 与 Host 设计说明书](../设计说明书/F01-通用Agent核心与Host/通用Agent核心与Host设计说明书.md) v0.3.5 §2～5  
 > Acceptance：AC-002-01～AC-002-08（本 SR 模块验收）；EX-01（系统级验收，不作为本 SR 的独立门禁，见[演示验收基线](../验收与实施/演示验收基线.md)）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：见第 3 节
@@ -28,10 +28,10 @@
 - 最小模块：
   - `__init__.py`：导出本节列出的全部公共类型，并按下列顺序固定 `__all__`：`JSONValue`、`Event`、`Context`、`Run`、`ModelRequest`、`ModelProposal`、`HostResult`、`ModelClient`、`AgentLoop`、`Host`、`HostError`。
   - `__main__.py`：`python -m ca_agent_next --smoke` 入口。
-  - `contracts.py`：Event、Context、Run、ModelRequest、ModelProposal、HostResult。
+  - `contracts.py`：JSONValue、Event、Context、Run、ModelRequest、ModelProposal、HostResult、HostError。
   - `model_client.py`：ModelClient Protocol。
   - `model_loop.py`：AgentLoop。
-  - `host.py`：Host。
+  - `host.py`：Host；从 `contracts.py` 导入并重导出 HostError，不重新定义。
 - 项目根目录 `pyproject.toml` 固定以下构建与项目元数据；不得自行改用其他构建后端或增加运行时依赖：
 
 ```toml
@@ -66,10 +66,12 @@ F01 §5.1～5.5 定义以下公开类型和方法，SR-002 按该定义实现，
 - `HostResult`：冻结 dataclass，包含 `run: Run` 与 `proposal: ModelProposal`。
 - `ModelClient`：由调用方注入的同步 Protocol，方法为 `propose(request: ModelRequest) -> ModelProposal`。
 - `AgentLoop`：构造时注入 ModelClient；`run_once(request)` 对 ModelClient 调用恰好一次，不重试。
-- `HostError`：稳定错误异常，构造签名为 `HostError(code: str, safe_message: str)`；`code` 仅允许 F01 §5.4 定义的错误码，`safe_message` 必须使用对应固定安全消息，不得包含原始凭据、模型响应或异常文本。
+- `HostError`：稳定错误异常，构造签名为 `HostError(code: str, safe_message: str)`；`code` 仅允许 Host 错误码 `EVENT_INVALID`、`MODEL_CLIENT_FAILED`、`MODEL_PROPOSAL_INVALID`、`HOST_INTERNAL_ERROR`；`CLI_USAGE_ERROR` 是 CLI-only 诊断，不是 HostError。`safe_message` 必须使用对应固定安全消息，不得包含原始凭据、模型响应或异常文本。
 - `Host`：构造时注入 ModelClient；公开 `handle_event(event: Event) -> HostResult`。未提供 `run_id_factory` 时使用标准库 `uuid.uuid4().hex` 生成 `run_id`；Event 完整校验通过后、每次调用恰好生成一次。工厂异常或返回空白/非字符串 ID 时抛出 `HOST_INTERNAL_ERROR`，且不得调用 ModelClient。
 
-公共导入路径固定为：`ca_agent_next.contracts` 导出 `JSONValue/Event/Context/Run/ModelRequest/ModelProposal/HostResult`；`ca_agent_next.model_client` 导出 `ModelClient`；`ca_agent_next.model_loop` 导出 `AgentLoop`；`ca_agent_next.host` 导出 `Host/HostError`。包根 `ca_agent_next` 的 `__all__` 必须重导出上述全部名称。
+HostError 定义在 `contracts.py`，供 `model_loop.py` 和 `host.py` 从同一位置导入；`host.py` 只重导出，不重复定义，避免 AgentLoop/Host 相互导入形成循环依赖。
+
+公共导入路径固定为：`ca_agent_next.contracts` 导出 `JSONValue/Event/Context/Run/ModelRequest/ModelProposal/HostResult/HostError`；`ca_agent_next.model_client` 导出 `ModelClient`；`ca_agent_next.model_loop` 导出 `AgentLoop`；`ca_agent_next.host` 导出 `Host` 并从 contracts 重导出 `HostError`。包根 `ca_agent_next` 的 `__all__` 必须重导出上述全部名称。
 
 冻结 dataclass 阻止字段重新赋值；`Mapping` 是公共只读接口约定，不宣称 Python 对象具备递归深冻结。生产者和 ModelClient 均不得在交接后修改映射或其嵌套值。
 
@@ -198,3 +200,4 @@ tests/
 | 2026-11-26 | 0.2.2 | 未记录（历史资料未提供） | 未记录（历史资料未提供） | 将设计依据版本同步到 F01 v0.3.1 | 保证 SR-002 引用当前权威字段与错误契约 | Issue #19；F01 v0.3.1 |
 | 2026-11-26 | 0.2.3 | 未记录（历史资料未提供） | 未记录（历史资料未提供） | 固定 HostError 构造签名、默认 UUID run_id 生成时机及 Event.source 可选语义 | 消除 Host 实现和 Fake 测试的剩余猜测 | Issue #19；F01 v0.3.3；PR #20 |
 | 2026-11-26 | 0.2.4 | GPT-6.2（ChatGPT） | §2.1～§2.3、§5.1、§6 | 固定 pyproject 元数据、公开导出、Event/Context/JSONValue 校验、HostError 与 CLI 诊断 | 消除包身份、输入验证和失败路径的实现猜测，使 Harness 可按同一契约实施 | IR-002；F01；AC-002-01～08；Issue #19；PR #20 |
+| 2026-11-26 | 0.2.5 | 将 HostError 唯一定义位置固定为 contracts.py，并由 host.py 重导出；明确 CLI_USAGE_ERROR 不属于 HostError；同步 F01 v0.3.5。 | 消除 ModelLoop/Host 循环依赖和 CLI/Host 错误类型混淆。 | Issue #19；F01 v0.3.5；SR-003；PR #20 |
