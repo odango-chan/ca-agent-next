@@ -1,9 +1,9 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录  
-> 文档版本：0.1.24  
+> 文档版本：0.1.25  
 > 修订日期：2026-11-26  
-> 状态：7 项 IR；IR-007 登记 Python 工程工具链统一需求，SR-028 为 DRAFT。  
+> 状态：8 项 IR；IR-008 登记 CA-SL 1.6.0 Capability-first 严格一对一与完全无旧版兼容，SR-029 设计待评审；SR-028 仍 DRAFT。  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级需求管理平台
 
@@ -99,6 +99,18 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 - 实施范围：首批仅覆盖 `ca-agent-next` 根 Python 项目；其他仓库采用 uv 或迁移依赖管理须各自登记目标仓、基线、Issue 和 SR。
 - 完成依据：SR-028 的全部必需验收在目标仓真实执行并 VERIFIED；设计评审或锁文件生成本身不代表实施完成。
 
+## IR-008
+
+**CA-SL 1.6.0 Capability-first Skill 作者模型与 Callable 一对一绑定（完全无兼容）**
+
+新 Skill 作者只描述 Capability；每个 Skill-facing Capability 与一个公开 Callable 必须严格双向一对一，编译器在固定 Package 身份下解析并绑定，Runtime 从已编译 Binding 取得精确 Callable，Skill Studio 只展示 Capability。Operation/Observation 只是 Node 阶段，不创建独立 Operation ID。
+
+- 决策与协作：[Next Issue #40](https://github.com/odango-chan/ca-agent-next/issues/40)；对应 [SR-029](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) **设计待评审 / 实施未 READY**。
+- 版本边界：**CA-SL 1.6.0 是唯一新作者/产品版本**，没有旧解析器、兼容映射、迁移工具、双轨编译、旧 Build DTO、旧 Artifact / Bundle 或混合 Catalog。历史 v1alpha5 仅供只读审计，旧 Skill 必须按新格式重新编写/编译/发布。
+- 设计入口：F02、F03.05、F04、F06、F08、F09、EC02，以及 [CA-SL 版本规范](../规范/CA-SL语言基线与版本规范.md)；SR-004 导入只支持新 Assurance Bundle，SR-027 负责正式发布。
+- 外部发行依赖：ca-skills 1.6.0 规范/机器标识；Owner/Provider 一对一 Package；Compiler 新 BuildRequest / BuildResult / Binding / Runtime Artifact；Studio 与 Agent 的 1.6.0 产品回归与 MAS Create→Modify→Release E2E。
+- 验收与状态：SR-029 的设计 AC 需独立审查；代码实施 Issue / 受测 SHA / Golden / 正式 Release / E2E 尚无 1.6.0 证据，不能宣称 READY / VERIFIED。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
@@ -129,3 +141,4 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 | 2026-11-26 | 0.1.22 | GPT-6.2（ChatGPT） | IR-002、IR-006 | 回填 SR-003 设计 READY / 实施 IN_PROGRESS 及 PR #34 本地模块 AC 证据；回填 SR-024 PR #253 合并、Issue #252 关闭和 VERIFIED 状态 | 修正需求登记册中 SR-003 DRAFT、SR-024 未记录实施结果的过期状态；不把未合并 PR 或 SKIPPED checks 误报为已集成/CI PASS | Issue #12、#28；SR-003；SR-024；PR #34；ca-agent-demo #252/#253 |
 | 2026-11-26 | 0.1.23 | GPT-6.2（ChatGPT） | IR-003 | 登记 SR-004 独立设计 readiness Issue #43 | 使 Skill 导入与 Compiler/Bundle 依赖有单独的设计审查入口 | Issue #43；SR-004；SR-013；SR-027 |
 | 2026-11-26 | 0.1.24 | GPT-6.2（ChatGPT） | IR-003、修订记录 | 登记 Issue #40 的 CA-SL 1.6.0 单版本无兼容/迁移裁决，要求 SR-004 只消费新 Bundle | 避免 IR-003 上游仍允许旧 Assurance 运行输入 | Issue #40/#43；SR-004；SR-029 |
+| 2026-11-26 | 0.1.25 | GPT-6（ChatGPT） | IR-008、文档状态、修订记录 | 新增 CA-SL 1.6.0 Capability-first / Callable 一对一需求，并登记 SR-029 设计待评审与全链路无兼容门槛 | 防止下游把历史 v1alpha5 当作新系统可执行输入 | Issue #40；SR-029；SR-004 |
