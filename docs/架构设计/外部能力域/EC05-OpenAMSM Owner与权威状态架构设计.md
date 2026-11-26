@@ -1,12 +1,14 @@
 # EC05 — OpenAMSM Owner 与权威状态架构设计
 
 > 文档类型：外部能力域架构设计（实现派生重建）  
-> 文档版本：0.1.1  
+> 文档版本：0.1.2  
 > 状态：依据当前 main 代码、Owner 声明、契约和验收材料重建；源仓没有独立总体架构文档  
 > 功能归属：EC05；关联 F04、F05、F06、F07  
-> 关联需求：IR-004、IR-005；SR-007、SR-010、SR-011、SR-018  
+> 关联需求：IR-004、IR-005；SR-007、SR-010、SR-011、SR-018、SR-025  
 > 修订日期：2026-11-25  
-> 实现基线：env-openamsm main dc83ccbf5be54dcc7112dd43ba95ea6fa5975550
+> 实现基线：env-openamsm main dc83ccbf5be54dcc7112dd43ba95ea6fa5975550  
+> 全局评审范围：继承根目录 Agent.md 的 review_scope  
+> 本文局部非目标：不重建 Agent Runtime、Provider、Plugin 或 Studio 内部实现；不扩展到生产级 DFX 或全量 3GPP 资格
 
 ## 1. 架构定位与权威归属
 
@@ -144,3 +146,4 @@ UE-requested Release 的 NAS message type 是 0xD1，与 AMF/network-initiated R
 | 2026-11-25 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 根据 Owner 发布声明、Receipt、Scheme C 设计和当前主线文件重建架构；标记为实现派生重建，避免虚构原始架构文档 | Issue #12；SR-018 |
 
 | 2026-11-26 | 0.1.1 | GPT-6（ChatGPT） | 1.6.0 新目标与历史边界 | 增加 1.6.0 Owner Capability 24/24 目标与 Reconcile internal-only 边界，保留 v1alpha4 为历史实现基线 | Issue #12/#40；PR #46 |
+| 2026-11-26 | 0.1.2 | GPT-6（ChatGPT） | 文档头、§2.1、修订记录 | 补齐治理要求的全局评审范围与局部非目标；将 SR-025 纳入 1.6.0 Publisher 关联 | 使正式文档通过 review_scope 头部门禁，并显式追踪 Owner 新发布责任 | Issue #12/#40；SR-025；PR #46 |
