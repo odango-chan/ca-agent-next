@@ -1,9 +1,9 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录  
-> 文档版本：0.1.15  
+> 文档版本：0.1.21  
 > 修订日期：2026-11-26  
-> 状态：新增跨仓需求待评审  
+> 状态：7 项 IR；IR-007 登记 Python 工程工具链统一需求，SR-028 为 DRAFT。  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级需求管理平台
 
@@ -15,10 +15,10 @@ IR 编号稳定。GitHub Issue 用于讨论、分派和跟踪，一个 IR 可关
 
 评审者需要从实际 PR HEAD 获得一致的范围与任务证据。
 
-- 协作 Issue：未登记。
+- 协作 Issue：[Issue #35](https://github.com/odango-chan/ca-agent-next/issues/35)（G01 §11.8 状态刷新；SR-001 代码修复仍由 Issue #27 跟踪）。
 - 实施分解：[SR-001](../SR/SR-001-评审上下文自动生成.md)。
 - 架构、设计和规范：[文档编写与治理规范](../规范/文档编写与治理规范.md)、[Agent](../../Agent.md)。
-- 完成依据：对应 SR 的必需验收全部 VERIFIED；当前均为 DRAFT，证据未执行。
+- 完成依据：已满足。SR-001 v0.3.10 VERIFIED；[PR #32](https://github.com/odango-chan/ca-agent-next/pull/32) MERGED（`7a0fac41e573021207ab8201bbc718718c451e50`），AC-REV-01～10 PASS；最终代码 HEAD `9d061c0c06d5d2ebba4be3cde9143ec6db413a3e` 的 Workflow [45793590532](https://github.com/odango-chan/ca-agent-next/actions/runs/45793590532) success、80 项测试通过、三文件 Artifact 已核对。权威状态回填随 PR #36 集成，Issue #27 在回填合并后关闭。
 
 ## IR-002
 - 设计修订追踪：[Next Issue #19](https://github.com/odango-chan/ca-agent-next/issues/19)（CLOSED）；[设计 PR #20](https://github.com/odango-chan/ca-agent-next/pull/20)（MERGED，commit `281ccb957b9222e72175e210d1afed177aa8a14f`）；阶段门禁治理：[Issue #21](https://github.com/odango-chan/ca-agent-next/issues/21)（CLOSED）；父级中央设计恢复见 [Next Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12)。
@@ -86,6 +86,18 @@ Compiler 实施沿用 [SR-013](../SR/SR-013-Compiler已检查when与发布产物
 - 设计与验收：[跨仓设计资产迁移与一致性审计](../参考与审计/跨仓设计资产迁移与一致性审计.md)，逐仓检查文档迁移和行为符合性。
 
 
+## IR-007
+
+**Python 工程工具链与可复现开发环境**
+
+Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择、虚拟环境隔离和 CI 执行入口，避免各 Workflow 临时安装未声明依赖，也避免多个 Git worktree 共享 editable 安装造成环境污染。
+
+- 协作 Issue：[Next #35](https://github.com/odango-chan/ca-agent-next/issues/35)（中央设计与治理刷新；不是代码实施 Issue）。
+- 实施分解：[SR-028](../SR/SR-028-Python工程工具链与uv环境管理.md)（DRAFT；实施 Issue 尚未创建）。
+- 架构与设计：[G02 Python 工程工具链与环境管理设计说明书](../设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md) v0.1.2。
+- 实施范围：首批仅覆盖 `ca-agent-next` 根 Python 项目；其他仓库采用 uv 或迁移依赖管理须各自登记目标仓、基线、Issue 和 SR。
+- 完成依据：SR-028 的全部必需验收在目标仓真实执行并 VERIFIED；设计评审或锁文件生成本身不代表实施完成。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
@@ -107,3 +119,9 @@ Compiler 实施沿用 [SR-013](../SR/SR-013-Compiler已检查when与发布产物
 | 2026-11-26 | 0.1.13 | GPT-6.2（ChatGPT） | IR-002 | 同步 SR-002 独立设计评审 APPROVE_FOR_READY 与 READY 状态，并登记治理 Issue #21；模块 AC 和系统 EX 继续 NOT_RUN。 | 区分设计、治理和后续代码实施追踪，避免把设计 Issue 当作实施授权。 | IR-002；SR-002；SR-003；Issue #19；Issue #21；PR #20 |
 | 2026-11-26 | 0.1.14 | GPT-6.2（ChatGPT） | IR-002 | 登记 SR-002 READY 后创建的独立实施 Issue #22，并明确 Issue #19/#21 分别承担设计和治理追踪。 | 完成需求到实施任务的追踪链，防止误用设计 Issue。 | IR-002；SR-002；Issue #19；Issue #21；Issue #22；PR #20 |
 | 2026-11-26 | 0.1.15 | GPT-6.2（ChatGPT） | IR-002 | 同步 SR-002 实施 PR #23 合并、AC-002-01～08 PASS、SR-002 VERIFIED，以及设计/治理 Issue #19/#21 的关闭状态；保留 SR-003 DRAFT 与 EX-01 NOT_RUN。 | 使 IR-002 的完成状态反映已完成模块和剩余模块，不把单个 SR VERIFIED 或模块 AC PASS 误报为 IR 整体完成。 | Issue #22；PR #20；PR #23；SR-002 v0.2.10；SR-003 v0.2.7 |
+| 2026-11-26 | 0.1.16 | GPT-6.2（ChatGPT） | IR-001、IR-007 | 刷新 SR-001 当前 PR/验收边界，并登记 Python 工程工具链与 uv 环境管理需求 | 修正 G01 §11.8 过期状态，建立 Python 工具链需求到 G02/SR-028 的追踪 | Issue #35；PR #32；SR-001；SR-028 |
+| 2026-11-26 | 0.1.17 | GPT-6.2（ChatGPT） | IR-007 | 将 G02 设计引用更新至 v0.1.1，明确 SR-028 命令只在 PR #32 集成后可用 | 保持 IR、G02 和 SR-028 使用同一最新设计版本与阶段依赖 | Issue #35；G02 v0.1.1；SR-028 v0.1.1 |
+| 2026-11-26 | 0.1.18 | GPT-6.2（ChatGPT） | IR-001 | 回填 SR-001 最终 78 项测试、AC-REV-01～10 PASS 与真实 Workflow/Artifact 证据；保留 PR OPEN 的集成门禁 | 两个独立复核 BLOCKER 已修复，但未合并前不把需求标记完成 | Issue #27；PR #32；Run 45791388839；SR-001 v0.3.8 |
+| 2026-11-26 | 0.1.19 | GPT-6.2（ChatGPT） | IR-001 | 回填 SR-001 最终 80 项测试、代码块/注释/重复声明反例与 Run 45793336377；保留 PR OPEN 的集成门禁 | 将最新代码 HEAD、测试与 Artifact 证据同步至需求登记册，不把验收 PASS 误报为已集成 | Issue #27；PR #32；Run 45793336377；SR-001 v0.3.9 |
+| 2026-11-26 | 0.1.20 | GPT-6.2（ChatGPT） | IR-007 | 将 G02/SR-028 引用升级到 v0.1.2，记录精确 Python 文件内容、setup-uv 配置和可复现边界 | 使需求登记册指向最新可执行设计基线 | Issue #35；G02 v0.1.2；SR-028 v0.1.2 |
+| 2026-11-26 | 0.1.21 | GPT-6.2（ChatGPT） | IR-001 | 根据 PR #32 合并、80 项测试及 AC 证据更新 SR-001 完成依据 | 此前 PR OPEN 的历史状态已过期 | Issue #27；PR #32；PR #36 |
