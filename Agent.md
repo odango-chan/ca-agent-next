@@ -45,6 +45,9 @@ DeepSeek Harness 默认使用 Goal 模式。按[SR 管理规范](docs/规范/SR%
 - SBI 可携带 JSON、multipart 和二进制。Event Plugin 处理协议；Host 管理 ArtifactStore；Codec 按需作为现有 Tool Plugin 的 Operation 调用。
 - Event/Delivery Plugin 本地 staging 与 Host→Tool Artifact Channel 是两条不同路径。ca-host.artifact-store/v1 已冻结；ca-client-tools Provider v1.2.0 已实现消费，ca-agent Go Host main 447d0cc 有 P1 验收证据。Next Python Host 的 ArtifactStore / Channel 尚未实现，因此 Next 的 artifact-bearing Provider binding 仍必须 NOT_CONFIGURED，并在远端 I/O 前拒绝。必须遵循 v1 的随机 opaque artifactRef、Invocation/direction/slot 绑定、loopback HTTP/1.1 通道、大小/生命周期限制、逐 Artifact SHA-256 传输校验和原子发布；该 SHA-256 不是引用身份或内容寻址。不得把 Event stagingPath 传给 Provider，不得将原始 bytes/Base64 放入 NDJSON。
 - 不增加 activation.yaml、constraint.yaml、supportedModes、Domain/Task Contract Package、第二份 Skill Descriptor、旧版兼容、额外 SHA-256、签名或 Trust Registry。
+- **CA-SL 1.6.0 单版本、绝不兼容旧版（Issue #40 / IR-008 / SR-029）**：下一正式作者/Compiler/Runtime/Studio 语言目标只采用 1.6.0，不再使用 v1alpha6 命名。Skill 作者只引用 Capability ID，每个 Skill-facing Capability ↔ 唯一公开 Callable；Operation/Observation 是 Node 阶段，不创建独立 Operation ID。Compiler 将 Capability 静态链接为唯一 Callable Binding；Runtime 仅按已编译 Binding 的 Scope/kind/Effect/Schema 派发；Studio Package Explorer 只展示 Capability。
+- 新 Compiler 的 Parser、BuildRequest/BuildResult、Check/Build/Verify、Runtime Artifact，Agent Importer/Runtime、Studio 和 ca-skills Bundle **一律不接受旧 CA-SL v1alpha5、旧 Build DTO、旧 Artifact/Bundle、旧式 Callable 作者源**。无兼容层、版本协商、双轨、别名、fallback、自动迁移或转换器。历史 Release/Golden 仅只读留档，不得作为 1.6.0 产品 PASS；旧 Skill 必须重写、重新编译和发布。
+- CA-SL 1.6.0 机器 languageTarget、正式 Schema、Owner/Provider 一对一 Package、Compiler Artifact/Binding、Bundle 均须各 Publisher 冻结并有新 Golden/CI 实证；当前 **1.6.0 NOT_RELEASED**。设计文档标记为待评审并不等于 SR READY，更不等于代码实施授权。只读取本分支正式目标文档，不从历史参考原文构造新运行时兼容路径。
 
 ## 4. Demo DFX 边界
 
@@ -167,3 +170,4 @@ review_scope:
 | 2026-11-25 | Codex | 第 2 节 | 引用固定 PR SHA 的分阶段实施规则 | 支持先验证再定稿 | SR-013、PR #7 |
 | 2026-11-25 | GPT-6.2（ChatGPT） | 第 3、4、7 节 | 更正 ca-host.artifact-store/v1 已冻结、Provider/Go Host 外部实现已存在、Next Python Host 尚未实现的三层状态；明确 SHA-256 仅为既有协议传输校验 | 消除 F05、F03.05 与源仓实现状态冲突，避免把外部 PASS 计入 Next | F05、F03.05、SR-009、SR-010；Issue #12 |
 | 2026-11-26 | GPT-6.2（ChatGPT） | 第 1、2、5 节 | 明确设计/实施/AC/EX 分阶段门禁，分离设计与实施 Issue，并要求实施 Commit/Push 后核对远端 SHA | 防止独立 SR 被无关下游依赖或系统级 EX 阻塞，并确保交付可追溯 | Issue #21；SR 管理规范 §6.1；PR #20 |
+| 2026-11-26 | GPT-6（ChatGPT） | §3、修订记录 | 明确 CA-SL 1.6.0 Capability-first 双向一对一、Compiler Binding、全链路绝不兼容旧版和设计待评审与实施 READY 分离 | 避免 Harness 为历史 v1alpha5 擅自构建兼容适配或提前实施 | Issue #40；IR-008；SR-029 |
