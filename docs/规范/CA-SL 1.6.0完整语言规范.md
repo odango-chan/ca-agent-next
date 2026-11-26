@@ -1,10 +1,11 @@
 # CA-SL 1.6.0 完整语言规范（中央设计稿）
 
 > 文档类型：CA-SL 作者语言规范（中央规范性设计稿）
-> 文档版本：0.1.1
+> 文档版本：0.1.2
 > 语言版本：CA-SL 1.6.0
 > languageTarget 候选：connectionagent.io/v1.6.0（本设计建议值；发布前由 ca-skills 与 Compiler Owner 在正式 Schema / Golden 中确认）
 > 状态：**DRAFT / REVIEW_REQUESTED**；未发布、未冻结、不得作为已发布产品规范
+> 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 修订日期：2026-11-26
 > 规范所有者：ca-agent-next（中央设计）；正式作者 Schema / Golden / Release 由 ca-skills 发布
 > 关联：IR-003、IR-008；Issue #40；SR-023、SR-029、SR-013、SR-027
@@ -380,3 +381,4 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 |---|---|---|---|---|---|---|
 | 2026-11-26 | 0.1.0 | GPT-6（ChatGPT） | 全文 | 建立 CA-SL 1.6.0 完整作者语言规范中央设计稿，定义 Capability-only、contexts、when、Request Schema、Procedure、PredicateSet、Wait、Evidence、Outcome、无兼容及 v1alpha5 全文逐项处置 | 版本基线与 SR-029 局部语法草案不足以替代完整语言规范，防止 Harness 从历史文件自行推断 | Issue #12/#40；IR-008；SR-029、SR-013、SR-027 |
 | 2026-11-26 | 0.1.1 | GPT-6（ChatGPT） | §4、§16、修订记录 | 明确 requestSchema 指向 Skill 自有 Schema，Host Context Schema-only Package 仅通过 Contract.contexts 引用 | 避免将 Host Context Package 当作 Request Schema 根，统一 Contract.requestSchema 与 contexts 的不同所有权 | Issue #12/#40；SR-029、SR-030；PR #46 |
+| 2026-11-26 | 0.1.2 | GPT-6（ChatGPT） | 文档头、修订记录 | 补齐根 Agent.md review_scope 标准声明，保持完整规范进入独立评审时的统一治理范围 | 避免正式 CA-SL 规范稿因缺少全局评审范围而无法生成 Review Context | Issue #12/#40；PR #46 |
