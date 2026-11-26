@@ -1,7 +1,7 @@
 # SR-002：Python 核心与宿主基础骨架
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.5  
+> SR 版本：0.2.6  
 > 修订日期：2026-11-26  
 > 状态：DRAFT；本轮设计修订待评审，不允许代码实施  
 > 创建日期：2026-11-25  
@@ -55,7 +55,7 @@ include = ["ca_agent_next*"]
 
 ### 2.2 公共类型与调用边界
 
-F01 §5.1～5.5 定义以下公开类型和方法，SR-002 按该定义实现，不自行改名或增加第二套契约：
+F01 v0.3.5 §5.1～5.5 定义以下公开类型和方法，SR-002 按该定义实现，不自行改名或增加第二套契约：
 
 - `JSONValue`：递归 JSON 值；允许 `None`、`bool`、`int`、有限 `float`、`str`、`list[JSONValue]` 和 `Mapping[str, JSONValue]`。拒绝非有限浮点数、非字符串对象键、循环容器、bytes、Path、Decimal 和任意 Python 对象；校验布尔值时不得将其误判为整数。
 - `Event`：冻结 dataclass；`event_id`、`ingress_id`、`event_type` 必须是非空且非全空白字符串；`payload` 必需且必须是 `Mapping[str, JSONValue]`；`source` 可省略，省略时默认为空 Mapping，显式提供时必须是 `Mapping[str, JSONValue]`；`external_request_id`、`response_channel_id` 可为 `None`，非空时必须是非空且非全空白字符串；`artifact_refs` 必须是 `tuple[str, ...]`，默认空 tuple，每项均为非空且非全空白字符串。
@@ -113,11 +113,12 @@ SR-002 不实现 Event 去重、Continuation、Skill 选择、Plugin 分发、Ar
 ```text
 python -m pip install -e .
 python -c "from ca_agent_next import JSONValue, Event, Context, Run, ModelRequest, ModelProposal, HostResult, ModelClient, AgentLoop, Host, HostError"
+python -c "from ca_agent_next.contracts import HostError as A; from ca_agent_next.host import HostError as B; assert A is B"
 python -m ca_agent_next --smoke
 python -m unittest discover -s tests -p "test_host.py" -v
 ```
 
-测试必须通过公共 Host/CLI 入口覆盖：Event 有效/无效及递归 JSONValue 边界、run_id 工厂调用次数与失败、Context 空值、ModelClient 恰好一次/异常/不重试、Proposal 类型与字段拒绝、CLI 参数错误及 stdout/stderr/退出码。unittest 必须实际发现并执行测试；输出 `Ran 0 tests`、跳过必需用例或只执行导入检查，均不能计为 PASS。
+测试必须通过公共 Host/CLI 入口覆盖：Event 有效/无效及递归 JSONValue 边界、run_id 工厂调用次数与失败、Context 空值、ModelClient 恰好一次/异常/不重试、Proposal 类型与字段拒绝、CLI 参数错误及 stdout/stderr/退出码；并断言 `ca_agent_next.contracts.HostError is ca_agent_next.host.HostError`，确保重导出没有创建第二个异常类型。unittest 必须实际发现并执行测试；输出 `Ran 0 tests`、跳过必需用例或只执行导入检查，均不能计为 PASS。
 
 ### 5.1 固定 Smoke 契约
 
@@ -201,3 +202,4 @@ tests/
 | 2026-11-26 | 0.2.3 | 未记录（历史资料未提供） | 未记录（历史资料未提供） | 固定 HostError 构造签名、默认 UUID run_id 生成时机及 Event.source 可选语义 | 消除 Host 实现和 Fake 测试的剩余猜测 | Issue #19；F01 v0.3.3；PR #20 |
 | 2026-11-26 | 0.2.4 | GPT-6.2（ChatGPT） | §2.1～§2.3、§5.1、§6 | 固定 pyproject 元数据、公开导出、Event/Context/JSONValue 校验、HostError 与 CLI 诊断 | 消除包身份、输入验证和失败路径的实现猜测，使 Harness 可按同一契约实施 | IR-002；F01；AC-002-01～08；Issue #19；PR #20 |
 | 2026-11-26 | 0.2.5 | GPT-6.2（ChatGPT） | §2.1～§2.2、§5.3～§5.4 | 将 HostError 唯一定义位置固定为 contracts.py，由 host.py 重导出；明确 CLI_USAGE_ERROR 不属于 HostError；同步 F01 v0.3.5。 | 消除 ModelLoop/Host 循环依赖和 CLI/Host 错误类型混淆。 | Issue #19；F01 v0.3.5；SR-003；PR #20 |
+| 2026-11-26 | 0.2.6 | GPT-6.2（ChatGPT） | §2.2、§5、§6 | 固定 SR-002 对 F01 v0.3.5 的精确版本引用，并增加 HostError 单一类型身份的导入/测试断言。 | 使模块重导出边界可由自动化测试验证，避免循环依赖或重复异常类。 | F01 v0.3.5；AC-002-06；Issue #19；PR #20 |
