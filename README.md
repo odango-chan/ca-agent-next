@@ -4,7 +4,7 @@ CA Agent Next 是下一代通用 Agent 的独立实现仓。目标是用尽可�
 
 **语言决策：Agent Core、Host、Agent Model Loop、Skill Importer、Skill Resolver 和 Runtime 固定使用 Python。** 独立 Plugin 可以使用 Go；Go Plugin 不意味着 Go Host。
 
-> 当前状态：PR #1 的架构、功能设计和规范基线已合并；本仓尚无已验收的 Agent Runtime 实现。设计完成、代码实现和验收通过必须分别表述。
+> 当前状态：PR #1 的架构、功能设计和规范基线已合并；SR-002 的 Python Host + Model Loop 最小切片已通过模块 AC-002-01～08 并集成到恢复分支，但完整 Agent Runtime、Plugin Manager 和系统级 EX-01 尚未完成。设计完成、代码实现、模块验收和系统验收必须分别表述。
 
 ## 从这里开始
 

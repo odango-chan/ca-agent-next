@@ -1,9 +1,9 @@
 # SR-002：Python 核心与宿主基础骨架
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.9  
+> SR 版本：0.2.10  
 > 修订日期：2026-11-26  
-> 状态：READY；独立设计评审 APPROVE_FOR_READY，代码实施尚未开始  
+> 状态：VERIFIED；实现已集成，AC-002-01～AC-002-08 全部 PASS；EX-01 NOT_RUN  
 > 创建日期：2026-11-25  
 > 所属阶段：Phase A  
 > 上游需求：[IR-002](../IR/IR%20总登记册.md#ir-002)  
@@ -169,19 +169,25 @@ tests/
 
 | 项目 | 当前值 |
 |---|---|
-| 设计修订 Issue | [ca-agent-next #19](https://github.com/odango-chan/ca-agent-next/issues/19) |
-| 设计评审 PR | [ca-agent-next #20](https://github.com/odango-chan/ca-agent-next/pull/20)（OPEN / Ready for review；base 为 docs/restore-original-designs-20261125） |
-| 治理规则 Issue | [ca-agent-next #21](https://github.com/odango-chan/ca-agent-next/issues/21)（阶段依赖与 AC/EX 门禁） |
-| 实施 Issue | [ca-agent-next #22](https://github.com/odango-chan/ca-agent-next/issues/22)（独立实施任务；代码尚未开始） |
-| 独立设计评审 | APPROVE_FOR_READY；评审基线 `888b8ba01b505ab53404b91ccbe2e8f08960868b`；P0/P1 为 0，P2/P3 已按评审建议澄清/修正 |
-| 实施仓库 | ca-agent-next |
-| 实施 PR / Commit | 无 |
-| 实施状态 | NOT_STARTED |
-| AC-002-01～AC-002-08 | NOT_RUN |
-| EX-01 系统级验收 | NOT_RUN |
+| 设计修订 Issue | [ca-agent-next #19](https://github.com/odango-chan/ca-agent-next/issues/19)（CLOSED / completed） |
+| 设计评审 PR | [ca-agent-next #20](https://github.com/odango-chan/ca-agent-next/pull/20)（MERGED；目标恢复分支；merge commit `281ccb957b9222e72175e210d1afed177aa8a14f`） |
+| 治理规则 Issue | [ca-agent-next #21](https://github.com/odango-chan/ca-agent-next/issues/21)（CLOSED / completed；SR 管理规范 v0.7.0、文档治理规范 v0.6.0） |
+| 实施 Issue | [ca-agent-next #22](https://github.com/odango-chan/ca-agent-next/issues/22)（由本证据回填 PR #25 合并时关闭） |
+| 实施 PR | [ca-agent-next #23](https://github.com/odango-chan/ca-agent-next/pull/23)（MERGED；目标恢复分支；merge commit `49964464e19d13d219ea0b3513d2223fe81d2435`） |
+| 受测实施 Commit | `6628245978f1fbd1e1d1393b9338c908c962eb9e`（分支 `feature/issue-22-sr-002-python-host-skeleton`；远端 SHA 已核实） |
+| 设计基线 | 实施时契约快照：F01 v0.3.6、SR-002 v0.2.9、Acceptance v0.3.8；当前 SR 状态记录为 v0.2.10。PR #20 后续仅修订治理元数据，未改变本 SR 契约 |
+| 测试环境 | Windows；CPython 3.14.6；pip 26.1.2；setuptools>=68；运行时依赖为空 |
+| 安装与 Smoke | `python -m pip install -e .` PASS；`python -m ca_agent_next --smoke` PASS，stdout 固定单行 JSON，stderr 为空 |
+| 自动化测试 | `python -m unittest discover -s tests -p "test_host.py" -v`：52 passed / 0 failed / 0 errors / 0 skipped；`compileall` PASS |
+| AC-002-01～AC-002-08 | **PASS**；逐项证据见 [PR #23](https://github.com/odango-chan/ca-agent-next/pull/23) 和 [Issue #22 实施证据](https://github.com/odango-chan/ca-agent-next/issues/22#issuecomment-7183057195) |
+| 实施状态 | IMPLEMENTED |
+| SR 验收状态 | VERIFIED（本 PR 合并后，AC 证据与受测 SHA 固定在目标基线） |
+| EX-01 系统级验收 | NOT_RUN；由 SR-002/004/005/006/007 联合完成，不阻塞本 SR |
+| Python 版本矩阵 | CPython 3.11/3.12/3.13 NOT_RUN；仅 CPython 3.14.6 已验证 |
+| DeepSeek Harness | NOT_RUN；本批实现证据来自实施方本地命令和 Issue #22 回填 |
+| CI | PR #23 未返回 GitHub Actions workflow runs / CI 结果；不得将本地测试报告描述为 GitHub CI PASS |
 
-本 SR 已依据独立评审报告转为 READY；该状态只表示设计、范围、依赖分类和模块验收条件具备实施条件，不代表代码已实施、AC 已通过、EX 已通过或 PR 已合并。AC-002-01～08 与 EX-01 继续保持 NOT_RUN，代码实施须通过独立实施 Issue 和当前阶段门禁。
-
+SR-002 的模块 AC-002-01～08 已全部通过，实施 PR #23 已集成。上述 VERIFIED 仅表示本 SR 的模块验收证据完整，不表示 EX-01、Python 版本矩阵、DeepSeek Harness、完整 Agent Runtime 或生产 Qualification 已通过。未运行项继续保持 NOT_RUN。
 ## 8. 变更与替代关系
 
 - supersedes：无
@@ -209,3 +215,4 @@ tests/
 | 2026-11-26 | 0.2.7 | GPT-6.2（ChatGPT） | §4、§5.1、§7 | 根据独立评审 APPROVE_FOR_READY 将 SR-002 转为 READY；明确 SR-003 的实施依赖与设计评审分离，并限定注入型 ModelClient 仅用于 CLI 失败路径测试；同步 PR #20 状态。 | 关闭 P2-01/P3-01/P3-02，不扩大 SR-002 范围；保持 AC/EX 未运行状态真实。 | IR-002；Issue #19；Issue #21；PR #20；评审 SHA `888b8ba` |
 | 2026-11-26 | 0.2.8 | GPT-6.2（ChatGPT） | 文档头部、§2 | 将当前设计依据和公共契约引用从 F01 v0.3.5 更新为 F01 v0.3.6；本次 F01 仅澄清 Smoke 注入测试边界，不改变 SR-002 类型契约。 | 确保 READY SR 引用当前权威设计版本，避免 Harness 读取过期版本号。 | Issue #19；Issue #21；F01 v0.3.6；PR #20 |
 | 2026-11-26 | 0.2.9 | GPT-6.2（ChatGPT） | §7 | 创建并登记独立 SR-002 实施 Issue #22，固定其与设计 Issue #19、治理 Issue #21 和设计 PR #20 的关系。 | 满足 READY 后先建实施 Issue、再交付 Harness Goal 的治理顺序，避免设计 Issue 被误作实施授权。 | Issue #19；Issue #21；Issue #22；PR #20 |
+| 2026-11-26 | 0.2.10 | GPT-6.2（ChatGPT） | §7、修订记录 | 回填 PR #23 的集成 Commit、受测 SHA、CPython 3.14.6 环境、安装/Smoke/52 项测试与 AC-002-01～08 PASS；将实施状态更新为 IMPLEMENTED、SR 状态更新为 VERIFIED。 | 使 SR 状态由 READY 随实际实现、模块验收和证据集成推进；明确 EX-01、版本矩阵与 DeepSeek Harness 仍 NOT_RUN。 | Issue #22；PR #23；merge commit `49964464`；证据 comment `7183057195`；PR #25 |
