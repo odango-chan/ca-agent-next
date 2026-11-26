@@ -60,6 +60,9 @@ jobs:
       - name: Install PyYAML
         run: python -m pip install --disable-pip-version-check "PyYAML>=6.0,<7"
 
+      - name: Run SR-001 regression tests
+        run: python -m unittest discover -s tests -p test_review_context.py -v
+
       - name: Generate review context
         id: generate
         run: |
