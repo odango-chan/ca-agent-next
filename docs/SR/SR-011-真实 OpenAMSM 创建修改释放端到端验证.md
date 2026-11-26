@@ -1,15 +1,25 @@
 # SR-011：真实 OpenAMSM 创建修改释放端到端验证
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.1  
-> 状态：DRAFT；设计基线待评审，不允许实施  
+> SR 版本：0.2.2  
+> 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**，未获得实施 READY，产品验收 NOT_RUN  
 > 创建日期：2026-11-25  
+> 修订日期：2026-11-26  
 > 所属阶段：Phase H  
 > 上游需求：[IR-005](../IR/IR%20总登记册.md#ir-005)  
-> 设计依据：[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.2.4 §5～10；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.2 §2～12；[演示验收基线](../验收与实施/演示验收基线.md) v0.3.9 §2～10  
+> 设计依据：[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.2.4 §5～10；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.2 §2～12；[演示验收基线](../验收与实施/演示验收基线.md) v0.3.21 §2～10  
 > Acceptance：EX-20、OM-09、OM-11、OM-12（见[演示验收基线](../验收与实施/演示验收基线.md)）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：见第 3 节
+
+## 0. 本轮设计评审入口（2026-11-26）
+
+**状态边界：**本文已提交中央设计评审，SR 主状态仍为 `DRAFT`；`REVIEW_REQUESTED` 仅代表评审候选，不代表独立 APPROVE、实施 `READY`、已有产品或系统验收 PASS。设计追踪 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12)，统一单版本决策见 [SR-029](SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) 与 [PR #45](https://github.com/odango-chan/ca-agent-next/pull/45)。
+
+- **本轮评审重点：**核查同一 UE/PSI 的 Create→Modify(QoS)→Release、N1/N2/PFCP 及 Owner 原始 Receipt/UNKNOWN/Reconcile、Replay 0 mutation。
+- **已知依赖与未验证项：**Next 的 Phase C～G、1.6.0 正式 MAS Bundle/Provider 和隔离联测未满足；独立 EX-20/OM NOT_RUN。
+- **跨模块约束：**凡涉及新 Skill/Assurance/Compiler/Runtime/Studio/Bundle 的输入输出，只支持 **CA-SL 1.6.0**、Skill-facing Capability ID 和唯一公开 Capability↔Callable 绑定；**无** v1alpha5、旧 Build DTO、旧 Artifact/Bundle、别名、Fallback 或迁移兼容。历史文件和冻结版本保留为只读审计材料，不是新实施目标。具体产品契约与机器标识必须待 Owner 发布，不得推测。
+- **评审交付：**评审者依据本 SR 已声明范围、非目标、Acceptance/EX/OM、功能设计与最新规范提出逐项结论；P0/P1 指向当前 Demo 承诺的实际矛盾。审查未完成/依赖未发布/产品未运行必须分别保留 `PENDING_REVIEW` / `BLOCKED` / `NOT_RUN`，不能升级为实施资格。
 
 ## 1. 目标
 
@@ -86,3 +96,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-26 | 0.1.9 | Codex / GPT-6 | §4～5 | Codex / GPT-6，§4～5。分别登记设计输入、实施接入和验收依赖。 | 使 Harness 能按当前阶段判定启动与验收条件 | Issue #12、#21 |
 | 2026-11-26 | 0.2.0 | GPT-6.2（ChatGPT） | 文档头部 | 将 Acceptance 设计依据更新至 v0.3.8 | 避免真实 OpenAMSM E2E 设计继续引用旧验收基线 | Issue #26 |
 | 2026-11-26 | 0.2.1 | GPT-6.2（ChatGPT） | 文档头部 | 将 Acceptance 设计依据更新至 v0.3.9 | 与 SR-002 集成后当前演示验收基线保持一致 | PR #25；Issue #26 |
+| 2026-11-26 | 0.2.2 | GPT-6（ChatGPT） | 文档头、§0、设计依据 | 登记独立设计待评审批次、专项审查重点与缺失输入，保留 SR DRAFT/产品 NOT_RUN | 按 1.6.0-only / Capability-first 设计集中审查；避免提前授予实施门禁 | Issue #12；SR-029；PR #45 |
