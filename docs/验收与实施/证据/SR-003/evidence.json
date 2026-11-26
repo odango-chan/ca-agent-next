@@ -1,6 +1,6 @@
 {
   "pluginId": "example.echo",
-  "pid": 33448,
+  "pid": 59728,
   "state": "READY",
   "extensions": [
     "event.delivery",
@@ -128,5 +128,16 @@
       "correlationId": "h6"
     }
   ],
-  "pendingAfterStop": 0
+  "pendingAfterStop": 0,
+  "acceptance": {
+    "testedCodeSha": "136a9403d68ba8e5ab0c84ce7db0e08cfb1b5cb4",
+    "pluginTestCommand": "python -m unittest discover -s tests -p test_plugin.py -v",
+    "pluginTestCount": 72,
+    "pluginTestResult": "PASS",
+    "hostTestCommand": "python -m unittest discover -s tests -p \"test_host.py\" -v",
+    "hostTestCount": 52,
+    "hostTestResult": "PASS",
+    "compileall": "PASS",
+    "ci": "NOT_RUN"
+  }
 }

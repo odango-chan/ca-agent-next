@@ -1,0 +1,7 @@
+# compileall
+# command: python -m compileall -q src tests
+# cwd: C:\Users\z00587616\Documents\ConnectionAgent\ca-agent-next\.agents\worktrees\feature\issue-28-sr-003-plugin-manager
+# exit code: 0
+# --- stdout ---
+
+# --- stderr ---
