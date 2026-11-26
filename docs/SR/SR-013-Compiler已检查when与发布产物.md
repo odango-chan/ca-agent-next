@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.17\
+> 文档版本：0.2.18\
 > 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**；实施/产品验收未升级  
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-26  
@@ -270,7 +270,7 @@ ca-skills 的 Skill Bundle 组装与发布由 SR-027 负责；Next 导入与运�
 ### 8.1 冻结语义
 
 - 正式 CA-SL 1.6.0 Interface Package Schema 必须允许合法的 Schema-only Package：至少一个显式 Schema export，Capability exports = 0，Callable exports = 0；不得要求 ToolCatalog、Evidence 或 Runtime Binding，也不得生成合成 Tool / Callable。
-- Schema-only Package 只有在 Skill 的 Contract.contexts 或其他正式声明的 Schema 引用实际指向该 Package 的 Schema export 时，才进入该 Skill 的显式依赖闭包；未声明依赖、未导出 Schema ID 或未闭合的 $ref 必须 fail-closed。
+- Schema-only Package 只有在 Skill 的 Contract.contexts 显式指向该 Package 的 Schema export 时，才进入该 Skill 的显式依赖闭包；未声明依赖、未导出 Schema ID 或未闭合的 $ref 必须 fail-closed。
 - Compiler 必须区分 **Capability roots** 与 **Schema dependency closure**。零 Capability roots 是合法情况；Schema-only Package 可形成非空 Schema dependency closure，但不得产生 Capability grant、Callable binding、Tool allowlist 或外部 Tool Effect。
 - 只有当 Skill 没有任何外部 Capability 引用、也没有任何外部 Schema 引用时，整个 Package dependency closure 才为空。不得把空 Capability roots 与空 Package dependency closure 混为一谈。
 - 精确 Manifest / BuildRequest / DependencyInspection 字段由 Compiler Owner 在正式 1.6.0 Schema / Golden 中冻结；本 AC 只冻结上述语义，不预先发明 wire field 名称。
@@ -374,7 +374,7 @@ SR-013 只有 AC-013-01～06 均达到各自通过条件，Compiler Release 有�
 
 ## 12. CA-SL 1.6.0 统一新接口与设计评审门槛
 
-- 本 SR 的 **设计待评审** 不意味着 Compiler 已实现或 READY；AC-013-02～05 的新产品 Build/Verify/Golden / Release 必须独立通过。
+- 本 SR 的 **设计待评审** 不意味着 Compiler 已实现或 READY；AC-013-02～06 的新产品 Build/Verify/Golden / Release 必须独立通过。
 - 新版 Compiler 只处理 CA-SL 1.6.0 Capability-first 源码。Contract/Procedure 的 Capability ID 经 SR-029 定义的一对一约束绑定到唯一 Callable；严格校验 kind、Effect、Input/Output Schema、Owner/Provider Package identity，Artifact 保存已编译的 Binding。
 - 与 when/Request Schema 相关的 CheckedExpr、DescriptorSet、Schema 根与 $ref 闭包和 Binding 使用同一个正式 1.6.0 Runtime Artifact。其 BuildRequest、BuildResult、DependencyInspection 和 Verify 使用唯一 1.6.0 DTO；不兼容历史 v1alpha5 和 Development v1alpha1 运行输入。
 - 精确 machine languageTarget、API 名称、字段、Schema 与 Golden 必须由 ca-skills / Compiler Owner 在正式 Issue/PR/Release 冻结；历史 Go/Python CEL PoC 可作为算法审计，但不能宣称 1.6.0 产品 PASS。
@@ -414,3 +414,4 @@ SR-013 只有 AC-013-01～06 均达到各自通过条件，Compiler Release 有�
 
 | 2026-11-26 | 0.2.16 | GPT-6（ChatGPT） | 最终一致性复评 / 规范性描述 | 补齐零外部根依赖的 Build/Verify 正反验收、旧 Development 仅历史保留及 1.6.0 Request Schema 权威 | 消除 1.6.0 与历史 Development 的模糊措辞，修正后续评审的可执行门槛 | Issue #12/#40；PR #46 |
 | 2026-11-26 | 0.2.17 | GPT-6（ChatGPT） | §1～§2、AC-013-04～06、依赖图、READY 与修订记录 | 新增 AC-013-06，定义 Schema-only Interface Package 与零 Capability roots / 非空 Schema dependency closure 的区别；修正 AC-013-04 对空 roots/closure 的表述 | SR-030 已要求 Host Context Schema-only Package，但 SR-013 原先缺少对应 Compiler AC；防止 Compiler 将零 Capability roots 错误解释为零 Schema dependencies，或虚构 Tool/Callable | Issue #12/#40；SR-029、SR-030；EC02；F08；PR #46 |
+| 2026-11-26 | 0.2.18 | GPT-6（ChatGPT） | AC-013-06 语义边界、READY 定义、修订记录 | 将 Schema-only Package 的使用范围收敛为 Contract.contexts；明确 requestSchema 始终由 Skill 自有 Schema 提供 | 与 CA-SL 1.6.0 Request Schema / Context Schema 所有权边界保持一致 | Issue #12/#40；CA-SL 1.6.0；SR-030；PR #46 |
