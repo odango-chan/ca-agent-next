@@ -1,7 +1,7 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录  
-> 文档版本：0.1.22  
+> 文档版本：0.1.23  
 > 修订日期：2026-11-26  
 > 状态：7 项 IR；IR-007 登记 Python 工程工具链统一需求，SR-028 为 DRAFT。  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -38,7 +38,7 @@ IR 编号稳定。GitHub Issue 用于讨论、分派和跟踪，一个 IR 可关
 
 使用发布产物导入、选择及续跑，保留跨语言语义与代际一致性。
 
-- 协作 Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)（EC02 外部实现）；[Next #14](https://github.com/odango-chan/ca-agent-next/issues/14) 跟踪中央设计文档刷新；[PR #16](https://github.com/odango-chan/ca-agent-next/pull/16) 为对应 Draft 文档评审，不代表实施。
+- 协作 Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)（EC02 外部实现）；[Next #14](https://github.com/odango-chan/ca-agent-next/issues/14) 跟踪 SR-013 中央设计刷新；[Next #43](https://github.com/odango-chan/ca-agent-next/issues/43) 跟踪 SR-004 导入契约与 readiness 评审；[PR #16](https://github.com/odango-chan/ca-agent-next/pull/16) 为历史 Draft 文档评审，不代表实施。
 - 实施分解：[SR-004](../SR/SR-004-已发布技能包导入.md)、[SR-005](../SR/SR-005-技能目录与条件程序消费.md)、[SR-006](../SR/SR-006-技能解析器与续跑选择.md)。
 - 架构、设计和规范：[Skill管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md)、[技能与确定性保障格式规范](../规范/技能与确定性保障格式规范.md)、[Runtime执行设计说明书](../设计说明书/F04-Runtime执行/Runtime执行设计说明书.md)。
 - 完成依据：对应 SR 的必需验收全部 VERIFIED；当前均为 DRAFT，证据未执行。
@@ -127,3 +127,4 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 | 2026-11-26 | 0.1.20 | GPT-6.2（ChatGPT） | IR-007 | 将 G02/SR-028 引用升级到 v0.1.2，记录精确 Python 文件内容、setup-uv 配置和可复现边界 | 使需求登记册指向最新可执行设计基线 | Issue #35；G02 v0.1.2；SR-028 v0.1.2 |
 | 2026-11-26 | 0.1.21 | GPT-6.2（ChatGPT） | IR-001 | 根据 PR #32 合并、80 项测试及 AC 证据更新 SR-001 完成依据 | 此前 PR OPEN 的历史状态已过期 | Issue #27；PR #32；PR #36 |
 | 2026-11-26 | 0.1.22 | GPT-6.2（ChatGPT） | IR-002、IR-006 | 回填 SR-003 设计 READY / 实施 IN_PROGRESS 及 PR #34 本地模块 AC 证据；回填 SR-024 PR #253 合并、Issue #252 关闭和 VERIFIED 状态 | 修正需求登记册中 SR-003 DRAFT、SR-024 未记录实施结果的过期状态；不把未合并 PR 或 SKIPPED checks 误报为已集成/CI PASS | Issue #12、#28；SR-003；SR-024；PR #34；ca-agent-demo #252/#253 |
+| 2026-11-26 | 0.1.23 | GPT-6.2（ChatGPT） | IR-003 | 登记 SR-004 独立设计 readiness Issue #43 | 使 Skill 导入与 Compiler/Bundle 依赖有单独的设计审查入口 | Issue #43；SR-004；SR-013；SR-027 |
