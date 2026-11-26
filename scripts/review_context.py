@@ -1001,7 +1001,10 @@ def _header_metadata_lines(header_lines: list[str]) -> list[str]:
 
     for line in header_lines:
         stripped = line.lstrip()
-        fence = re.match(r"^(\x60{3,}|~{3,})", stripped)
+        fence_probe = stripped
+        while fence_probe.startswith(">"):
+            fence_probe = fence_probe[1:].lstrip()
+        fence = re.match(r"^(\x60{3,}|~{3,})", fence_probe)
         if fence:
             marker = fence.group(1)
             if fence_char is None:
@@ -1023,8 +1026,8 @@ def _header_metadata_lines(header_lines: list[str]) -> list[str]:
                 in_html_comment = True
             continue
 
-        if stripped.startswith(">"):
-            declarations.append(_normalize_header_declaration(stripped))
+        if line.startswith(">"):
+            declarations.append(_normalize_header_declaration(line))
 
     return declarations
 
