@@ -1,7 +1,7 @@
 # 通用 Agent Core 与 Host 设计说明书
 
 > 文档类型：功能设计说明书  
-> 文档版本：0.2.1  
+> 文档版本：0.3.0  
 > 状态：Next 目标设计；本仓实现状态需独立验收，不以参考仓 PASS 代替  
 > 功能归属：F01 — 通用 Agent Core 与 Host  
 > 关联 SR：SR-002、SR-020、SR-021  
@@ -30,6 +30,7 @@
 | Host | 进程入口、配置、Plugin Manager 装配、Event 接收协调、Run/Response 生命周期 | 业务协议业务逻辑、Owner 状态 |
 | Agent Core | 通用 Event/Goal 协调、Context 组装、Skill/Mode 流程协调 | OpenAMSM 路由表、5GC 状态机 |
 | Model Loop | Model Client、模型输入投影、受约束 Action 提议 | 直接调用 Plugin、授权、提交判断 |
+| ModelClient | 通过稳定 Protocol 接收 ModelRequest 并返回 ModelProposal；由组合入口注入 | Host 内部创建 Provider、Plugin dispatch、Owner outcome |
 | Skill Importer / Catalog | 导入已发布 Skill Bundle、构建不可变 Catalog generation | 编译作者源、生产准入 |
 | Skill Resolver | 对新 Event 选择精确 Skill；Continuation 恢复原 Skill | 业务执行 |
 | Runtime | Run 状态、Action Boundary、Procedure、Wait/Resume、Outcome 解释 | Plugin 进程生命周期、模型推理 |
@@ -89,6 +90,117 @@ Model Loop 不承担 Tool dispatch。每一轮模型输入由 Host 组装，至�
 
 Model Client 是可替换适配器；自动化测试必须支持 Fake Model Client。模型 Provider、Gateway URL、模型 ID 和凭据属于部署配置，不进入业务 Skill 契约。
 
+### 5.1 SR-002 首个可交付切片：包身份与目录
+
+SR-002 只建立以下 Python distribution 和 import identity：
+
+| 项目 | 固定值 |
+|---|---|
+| Distribution | `ca-agent-next` |
+| Import package | `ca_agent_next` |
+| 源码根目录 | `src/ca_agent_next/` |
+| 模块入口 | `python -m ca_agent_next --smoke` |
+| 项目元数据 | 根目录 `pyproject.toml`，setuptools build backend，`requires-python = ">=3.11"` |
+| 运行时依赖 | 本切片只使用 Python 标准库 |
+| 测试入口 | `tests/test_host.py`，标准库 `unittest` |
+
+最小文件布局：
+
+```text
+pyproject.toml
+src/ca_agent_next/
+  __init__.py
+  __main__.py
+  contracts.py
+  model_client.py
+  model_loop.py
+  host.py
+tests/
+  test_host.py
+```
+
+测试目标解释器为 CPython 3.14.6；元数据支持下限为 CPython 3.11。未在完整版本矩阵执行前，不得声称每个受支持版本均已验证。
+
+ca-agent-demo 的当前身份是 distribution `ca-agent-host`、import package `ca_agent_host`、CLI `ca-plan`。Next 不复用这些身份，不添加兼容别名或重导出包。只参考其 `src/` 包布局、Protocol 注入和 Fake 调用记录模式。
+
+### 5.2 Host 与 Model Loop 公共类型
+
+SR-002 固定下列最小类型；字段名和含义以本表为准：
+
+| 类型 | 字段/语义 |
+|---|---|
+| `Event` | `event_id`、`ingress_id`、`event_type`、`payload`；可选 `external_request_id`、`response_channel_id`、`source`、`artifact_refs` |
+| `Context` | `values`，为本次调用提供的只读键值映射；不承载伪造的 Observation/Evidence |
+| `Run` | `run_id`、`event_id`；不在本切片实现持久化、Continuation 或状态机 |
+| `ModelRequest` | `run`、`event`、`context` 的只读组合 |
+| `ModelProposal` | `kind` 与 `payload`；只是提议，不是已执行 Action |
+| `HostResult` | `run` 与 `proposal` |
+
+`artifact_refs` 只允许表示 Host-owned opaque reference；SR-002 不打开、复制或传输原始字节。staging、ArtifactStore 和访问授权归 F05 / 对应 SR。
+
+### 5.3 ModelClient 注入与 Host 公开 API
+
+公开接口为同步调用，避免首个骨架同时引入异步运行时和 Provider 复杂度：
+
+```python
+class ModelClient(Protocol):
+    def propose(self, request: ModelRequest) -> ModelProposal: ...
+
+class AgentLoop:
+    def __init__(self, model_client: ModelClient): ...
+    def run_once(self, request: ModelRequest) -> ModelProposal: ...
+
+class Host:
+    def __init__(
+        self,
+        model_client: ModelClient,
+        *,
+        run_id_factory: Callable[[], str] | None = None,
+    ): ...
+    def handle_event(self, event: Event) -> HostResult: ...
+```
+
+- `Host.handle_event` 校验 Event，创建 Run 和最小 Context，构造 ModelRequest，调用 AgentLoop 并返回 HostResult。
+- `AgentLoop.run_once` 对注入的 ModelClient 调用恰好一次；本切片不重试、不流式读取、不创建真实 Provider。
+- ModelClient 由应用组合入口创建并注入。Host/AgentLoop 不读取环境变量、不创建 HTTP 客户端、不拥有注入对象的关闭责任。
+- 测试用 Fake ModelClient 记录完整 ModelRequest、调用次数和返回值/异常；一次 `handle_event` 必须对应一次 `propose`。
+- Host 的公开入口是 `Host.handle_event(Event) -> HostResult`。SR-003 的 Event ingress adapter 将 Plugin IPC 的规范化字段映射为 Event，并调用这个入口；不得在 Plugin Manager 内重建 Host、AgentLoop 或 ModelClient。
+
+### 5.4 错误、Proposal 与生命周期边界
+
+| 场景 | 错误码 | 行为 |
+|---|---|---|
+| Event 必需字段或类型无效 | `EVENT_INVALID` | 不调用 ModelClient |
+| ModelClient 抛出异常 | `MODEL_CLIENT_FAILED` | 不重试，返回安全诊断 |
+| 返回值不是有效 ModelProposal | `MODEL_PROPOSAL_INVALID` | 不 dispatch，不尝试猜测修复 |
+| CLI 参数不支持 | `CLI_USAGE_ERROR` | 退出码 2 |
+| 未预期的 Host 错误 | `HOST_INTERNAL_ERROR` | 退出码 1，不输出 traceback |
+
+Model Proposal 不会在 SR-002 内执行。它不会触发 Plugin、Tool、Runtime、Owner 或任何外部副作用。Host 只返回提议及 Run 标识；后续 Runtime Action Boundary 由 F04/SR-007 负责。
+
+### 5.5 固定 Smoke 契约
+
+命令为 `python -m ca_agent_next --smoke`。Smoke 使用固定 Event：event_id `smoke-event-001`、ingress_id `smoke`、event_type `ca-agent-next.smoke`、payload `{"message":"hello"}`、source `{"protocol":"smoke","peer_id":"local"}`。进程内 Fake ModelClient 返回 kind `smoke.echo`、payload `{"message":"smoke-ok"}`。
+
+成功时 stdout 只输出一行紧凑 JSON，字段结构如下；不得输出日志或额外文本：
+
+```json
+{"schema_version":1,"status":"ok","event_id":"smoke-event-001","model_calls":1,"proposal":{"kind":"smoke.echo","payload":{"message":"smoke-ok"}}}
+```
+
+成功退出码为 0，stderr 为空。失败时 stdout 为空，stderr 只输出一行 JSON：`{"schema_version":1,"error":{"code":"MODEL_CLIENT_FAILED","message":"model client failed"}}`。稳定错误码和退出码按本节错误表及 SR-002 §5 执行；不得泄露 token、凭据、完整请求或 traceback。
+
+复验命令：
+
+```text
+python -m pip install -e .
+python -m ca_agent_next --smoke
+python -m unittest discover -s tests -p "test_host.py" -v
+```
+
+测试必须覆盖成功、输入拒绝、ModelClient 失败、Proposal 无效、CLI 错误、stdout/stderr 与调用次数；发现 0 个测试不能算 PASS。Smoke 不访问网络、不读取 Provider 配置、不需要 API Key。
+
+
 ## 6. Context 与 Artifact 协调
 
 Core 只协调 Context 需求，不拥有业务事实。Observation 必须经只读 Tool 能力获取；Owner Receipt/Commit Proof 由 Owner 发布并由 Runtime 解释。原始 N1/N2 等二进制由 Host ArtifactStore 管理，模型只看到明确允许的结构化投影和 Artifact metadata，不直接看到原始字节。
@@ -132,6 +244,8 @@ Demo 以单 Host 进程和本机/内网 Plugin 进程为基线；不要求 HA、
 
 ## 11. 验收
 
+SR-002 的独立模块验收为 AC-002-01～AC-002-08，详见《演示验收基线》§3.1。EX-01 是系统级 Python 语言与装配门槛，需在 SR-002、SR-004、SR-005、SR-006、SR-007 各自模块验收通过后联合执行；不得要求 SR-002 单独通过完整 EX-01，也不得因后续 SR 未完成而阻塞 SR-002。
+
 - Core/Host/Model Loop 为 Python；业务逻辑不进入 Core。
 - 一个 Echo Plugin 可触发至少一个 Skill，完成一次 LLM-guided Action 和一次 Deterministic Action。
 - 新 Event 先绑定 Skill；没有候选时不执行。
@@ -160,3 +274,4 @@ Demo 以单 Host 进程和本机/内网 Plugin 进程为基线；不要求 HA、
 | 2026-11-25 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 建立 Core/Host/Model Loop 和业务中立基线 | SR-002 |
 | 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 全文 | 补齐 Event/Run/Response、Action Boundary、配置、失败恢复和跨仓实现差异 | Issue #12；SR-020、SR-021 |
 | 2026-11-26 | 0.2.1 | Codex / GPT-6 | 见本行变更 | 公共 Callable 按权威源消费；补齐正式文档的评审范围与非目标 | Issue #12 |
+| 2026-11-26 | 0.3.0 | GPT-6.2（ChatGPT） | §2、§5、§11 | 固定 Next Python 包身份、Host/ModelClient 公共接口、Fake 注入、Smoke/错误契约和 SR-002/EX-01 验收分层；明确 SR-003 复用入口 | 使首个 Python Host 切片可独立实施和复验，不复制 ca-agent-demo 的包身份或运行时 | Issue #19；SR-002、SR-003；AC-002-01～08、EX-01 |

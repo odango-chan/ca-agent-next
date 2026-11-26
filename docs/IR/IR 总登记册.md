@@ -1,7 +1,7 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录  
-> 文档版本：0.1.6  
+> 文档版本：0.1.7  
 > 状态：新增跨仓需求待评审  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级需求管理平台
@@ -20,6 +20,7 @@ IR 编号稳定。GitHub Issue 用于讨论、分派和跟踪，一个 IR 可关
 - 完成依据：对应 SR 的必需验收全部 VERIFIED；当前均为 DRAFT，证据未执行。
 
 ## IR-002
+- 协作 Issue：[Next #19](https://github.com/odango-chan/ca-agent-next/issues/19)（SR-002 设计修订；不是实施 Issue）；父级中央设计恢复见 [Next #12](https://github.com/odango-chan/ca-agent-next/issues/12)。
 
 **通用宿主与可插拔扩展**
 
@@ -96,3 +97,4 @@ Compiler 实施沿用 [SR-013](../SR/SR-013-Compiler已检查when与发布产物
 | 2026-11-25 | 0.1.4 | GPT-6.2（ChatGPT） | IR-003 | 登记 PR #16 为中央设计 Draft PR，明确不计入产品实施 | 使需求、设计 PR 和实施 Issue 状态一致 | Issue #14、PR #16、Compiler #61 |
 | 2026-11-25 | 0.1.5 | GPT-6.2（ChatGPT） | IR-006 | 登记 Host Context Interface Package Publisher 独立需求 SR-024，并保留 SR-020 的参考宿主审计职责 | 修复 SR ID 冲突，保持 IR→SR 一对多追踪 | IR-006；SR-020、SR-024 |
 | 2026-11-26 | 0.1.6 | 修复 IR-006 缺 SR-025 并登记 SR-026/027 | 对齐跨仓实现与独立复验 | Issue #12 |
+| 2026-11-26 | 0.1.7 | IR-002 登记 SR-002 设计修订 Issue #19，并明确其不代表实施授权 | 补齐需求到设计修订的协作追踪 | Issue #19；SR-002 |
