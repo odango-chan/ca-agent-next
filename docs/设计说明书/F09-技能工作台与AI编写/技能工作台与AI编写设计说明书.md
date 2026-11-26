@@ -1,7 +1,7 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.8  
+> 文档版本：0.3.9  
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
 > 修订日期：2026-11-25  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -106,7 +106,7 @@ Compiler v2.1.0 的 `validDevelopmentVersion` 接受 `major.minor.patch` 和合�
 
 ### 5.1 单一 Build 路径
 
-Package Audit 和 AI Authoring 必须共用同一个 Development Build request builder、Compiler v2.1.0 Worker/WASM 与 VerifyDevelopment。不得各自实现 Linker、依赖闭包、摘要或结果解释，也不得在 Development Build 失败时静默回退到冻结 v1alpha5 Build/Verify v2.0.2。
+上述 Compiler v2.1.0 / Development v1alpha1 BuildRequest、Worker/WASM 与 VerifyDevelopment 是历史实现状态，不作为**1.6.0 新 Studio**的可执行入口。新的 Package Audit 和 AI Authoring 只能共用 Compiler Owner 正式冻结的 1.6.0-only 新 BuildRequest/Worker/WASM/Verify，不得自行实现 Linker/依赖闭包，也不得调用旧 Development Build 或做 fallback。
 
 - Package Audit 对当前保存源码和当前 lock generation 进行 Build + VerifyDevelopment。
 - AI Authoring 对**同一候选源码字节**和同一 lock generation 进行 Build + VerifyDevelopment；候选变更或 lock generation 改变立即使旧 Build/Verify 结果失效。
@@ -201,3 +201,4 @@ AI Authoring 的 Change Set 只能新增或修改 Capability ID、Procedure argu
 | 2026-11-25 | 0.3.6 | Codex / GPT-6 | 正文 | 同步两个 Publisher 的 1.0.0 身份与消费边界 | Issue #12 |
 | 2026-11-25 | 0.3.7 | Codex / GPT-6 | 正文 | §4.5 依据 v2.1.0 源函数实测修正 +build 与项目包身份限制 | Issue #12 |
 | 2026-11-26 | 0.3.8 | GPT-6（ChatGPT） | 新增 1.6.0 目标设计 | 仅支持新版本，无兼容或迁移 | Issue #40；SR-029 |
+| 2026-11-26 | 0.3.9 | GPT-6（ChatGPT） | 版本隔离与修订记录 | 隔离历史 Development Compiler 流程，1.6.0-only Studio 仅用新 Worker/Build DTO | Issue #40；SR-029 |
