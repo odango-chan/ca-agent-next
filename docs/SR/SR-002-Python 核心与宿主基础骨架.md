@@ -1,7 +1,7 @@
 # SR-002：Python 核心与宿主基础骨架
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.0  
+> SR 版本：0.2.1  
 > 状态：DRAFT；本轮设计修订待评审，不允许代码实施  
 > 创建日期：2026-11-25  
 > 所属阶段：Phase A  
@@ -39,12 +39,13 @@
 
 F01 §5.1～5.5 定义以下公开类型和方法，SR-002 按该定义实现，不自行改名或增加第二套契约：
 
-- `Event`：规范化事件，含 event_id、ingress_id、event_type、payload，以及可选 external_request_id、response_channel_id、source、opaque artifact_refs。
-- `Context`：本次调用可见的最小上下文值；不在本 SR 定义 Observation/Evidence 或 ArtifactStore 语义。
-- `Run`：本次调用的 run_id 与 event_id；不在本 SR 实现持久化、Continuation 或状态机。
-- `ModelRequest`：Run、Event 和 Context 的只读组合。
-- `ModelProposal`：模型提议的 kind 与 payload；不表示已执行 Action。
-- `HostResult`：Run 与 ModelProposal。
+- `JSONValue`：仅允许 JSON null、boolean、有限 number、string、array 和 string-keyed object；不允许 bytes、Path 或任意 Python 对象。
+- `Event`：冻结 dataclass；event_id、ingress_id、event_type 为非空 string；payload/source 为只读 Mapping[str, JSONValue]；external_request_id/response_channel_id 为可选 string；artifact_refs 为 tuple[str, ...]，默认空 tuple。
+- `Context`：冻结 dataclass，values 为只读 Mapping[str, JSONValue]，默认空映射。
+- `Run`：冻结 dataclass，run_id 和 event_id 为非空 string；不在本 SR 实现持久化、Continuation 或状态机。
+- `ModelRequest`：冻结 dataclass，包含 run、event 和 context。
+- `ModelProposal`：冻结 dataclass，kind 为非空 string，payload 为只读 Mapping[str, JSONValue]；不表示已执行 Action。
+- `HostResult`：冻结 dataclass，包含 run 与 proposal。
 - `ModelClient`：由调用方注入的同步 Protocol，方法为 `propose(request: ModelRequest) -> ModelProposal`。
 - `AgentLoop`：构造时注入 ModelClient；`run_once(request)` 对 ModelClient 调用恰好一次，不重试。
 - `Host`：构造时注入 ModelClient；公开 `handle_event(event: Event) -> HostResult`。Host 创建最小 Run/Context 并调用 AgentLoop。
@@ -78,7 +79,7 @@ SR-002 不实现 Event 去重、Continuation、Skill 选择、Plugin 分发、Ar
 - SR-002 没有前置 SR 依赖；可独立实施和验收。
 - SR-003 依赖 SR-002 VERIFIED，并复用 F01 定义的 Event、Host.handle_event、HostResult 和 ModelClient 注入边界。
 - EX-01 是系统级语言/装配门槛，需等待 SR-002、SR-004、SR-005、SR-006、SR-007 各自模块验收完成后联合执行；EX-01 不阻塞 SR-002 的独立验收。
-- ca-agent-demo 仅为只读参考：main SHA `57e277ff9094dad93543df46910a12a1dbbaf560`。可参考 `pyproject.toml` 的 src layout、`src/ca_agent_host/agent/model_adapter.py` 的 Protocol 注入方式和 `tests/unit/chat_model_fakes.py` 的调用记录 Fake；不得复制其 distribution `ca-agent-host`、import package `ca_agent_host`、CLI `ca-plan`、完整 Resident/Runtime 或业务实现。参考仓 PASS 不计为 Next 验收证据。
+- ca-agent-demo 仅为只读参考：main SHA `57e277ff9094dad93543df46910a12a1dbbaf560`。可参考 `pyproject.toml` 的 src layout、`src/ca_agent_host/agent/model_adapter.py` 的同步 `ChatModelTransport` Protocol，以及 `tests/unit/chat_model_fakes.py` 中记录 HTTP 请求的 `FakeHttpClient.calls` 模式；Next 的 typed `ModelClient.propose` 是独立公共契约，不是对 `ChatModelTransport.complete` 的直接复制。不得复制其 distribution `ca-agent-host`、import package `ca_agent_host`、CLI `ca-plan`、完整 Resident/Runtime 或业务实现。参考仓 PASS 不计为 Next 验收证据。
 
 ## 5. 模块验收
 
@@ -102,7 +103,7 @@ python -m unittest discover -s tests -p "test_host.py" -v
   - event_type：`ca-agent-next.smoke`
   - payload：`{"message":"hello"}`
   - source：`{"protocol":"smoke","peer_id":"local"}`
-- Smoke 使用进程内 Fake ModelClient，不读取真实 Provider 配置、不访问网络、不要求 API Key。
+- Smoke 使用进程内 Fake ModelClient，并将 run_id_factory 固定为返回 `smoke-run-001`；不读取真实 Provider 配置、不访问网络、不要求 API Key。
 - Fake 返回 ModelProposal：kind 为 `smoke.echo`，payload 为 `{"message":"smoke-ok"}`。
 - 成功 stdout 为单行紧凑 JSON，字段集合和类型固定：
 
@@ -145,7 +146,7 @@ tests/
 | 项目 | 当前值 |
 |---|---|
 | 设计修订 Issue | [ca-agent-next #19](https://github.com/odango-chan/ca-agent-next/issues/19) |
-| 设计评审 PR | 本 Issue 对应的 Draft PR，创建后回填 |
+| 设计评审 PR | [ca-agent-next #20](https://github.com/odango-chan/ca-agent-next/pull/20)（Draft；base 为 docs/restore-original-designs-20261125） |
 | 实施 Issue | 尚未创建；SR-002 达到 READY 后再创建 |
 | 实施仓库 | ca-agent-next |
 | 实施 PR / Commit | 无 |
@@ -173,3 +174,4 @@ tests/
 | 2026-11-25 | 0.1.4 | 固定目标代码位置、复验入口及可观察断言 | 对齐当前架构与实施门禁 | Issue #12 |
 | 2026-11-26 | 0.1.5 | 同步设计依据到本次复审的修订版本 | 对齐跨仓实现与独立复验 | Issue #12 |
 | 2026-11-26 | 0.2.0 | 将 EX-01 明确为系统级门槛；新增 AC-002-01～AC-002-08、固定 Smoke 输入/输出/错误码、ModelClient 注入和 SR-003 复用边界 | 使 SR-002 可独立实施和验收，避免被后续模块阻塞 | Issue #19；IR-002；SR-003 |
+| 2026-11-26 | 0.2.1 | 补齐 Event/Context/Run/Proposal 字段类型、HostError 安全诊断和确定性 Smoke run_id；回填 Draft 设计 PR #20 | 消除 Harness 对类型、异常映射和 Smoke 稳定性的猜测 | Issue #19；PR #20 |
