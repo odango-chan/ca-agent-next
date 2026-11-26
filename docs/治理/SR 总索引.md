@@ -76,7 +76,7 @@
 
 - 治理自动化：SR-001 VERIFIED；[PR #32](https://github.com/odango-chan/ca-agent-next/pull/32) MERGED（`7a0fac41e573021207ab8201bbc718718c451e50`）；AC-REV-01～10 PASS、80 tests OK、Run [45793590532](https://github.com/odango-chan/ca-agent-next/actions/runs/45793590532) success；SR-028 仍为 DRAFT。
 - Phase A：SR-002（VERIFIED；PR #23 已集成；AC-002-01～08 PASS；EX-01 仍 NOT_RUN）。
-- Phase B：SR-003 设计 READY、实施 IN_PROGRESS；Issue [#28](https://github.com/odango-chan/ca-agent-next/issues/28)、PR [#34](https://github.com/odango-chan/ca-agent-next/pull/34) OPEN；`504ec1b` 上 AC-003-01～04 本地 PASS；最新 Base `69fe856` 合并候选的 Plugin/Host/Review Context 回归、文档门禁均 NOT_RUN，未推送；系统 EX-02/03/04/18 NOT_RUN。
+- Phase B：SR-003 设计 READY、实施 IN_PROGRESS；Issue [#28](https://github.com/odango-chan/ca-agent-next/issues/28)、PR [#34](https://github.com/odango-chan/ca-agent-next/pull/34) OPEN；`504ec1b` 上 AC-003-01～04 本地 PASS；最新 Base `69fe856` 合并候选的 Plugin/Host/Review Context 回归、文档门禁仍待 CI 验证；PR Head 已同步，当前不得标记 PASS；系统 EX-02/03/04/18 NOT_RUN。
 - Phase C：SR-004。
 - Phase D：SR-005、SR-006。
 - Phase E：SR-007。
