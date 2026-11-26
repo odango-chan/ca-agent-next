@@ -1,8 +1,8 @@
 # CA-SL 语言基线与版本规范
 
 > 文档类型：语言版本与运行时消费规范  
-> 文档版本：0.2.4  
-> 状态：历史 CA-SL v1alpha5 FROZEN / RELEASED；**下一正式目标 CA-SL 1.6.0 DESIGN / NOT_RELEASED**；Compiler/Bundle 产品门槛未完成  
+> 文档版本：0.2.5  
+> 状态：**设计待评审**（唯一新目标 CA-SL 1.6.0；全链路不兼容任何旧作者语法、Build DTO、Artifact、Bundle；1.6.0 产品未发布）
 > 修订日期：2026-11-26  
 > 关联 IR：IR-003、IR-006；SR-023、SR-013  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -83,3 +83,4 @@ CA-SL 语义变化必须：
 | 2026-11-26 | 0.2.2 | Codex / GPT-6 | 见本行变更 | 区分数字版本的新发布物和固定来源的实际机器标识 | Issue #12 |
 | 2026-11-26 | 0.2.3 | GPT-6.2（ChatGPT） | 文档头、§1、§6、修订记录 | 根据 Issue #40 明确下一正式目标改为 CA-SL 1.6.0（不使用 v1alpha6），定义 Capability-first 与历史冻结发布边界；避免反复 alpha 命名、静默重解释 v1alpha5 或提前宣称 1.6.0 已发布 | Issue #40；SR-029；SR-004；SR-013；SR-027 |
 | 2026-11-26 | 0.2.4 | GPT-6.2（ChatGPT） | §1、§4、§6、修订记录 | 将无兼容要求冻结为 1.6.0 全链路单版本强制规则：不接受旧语法、旧 Build DTO、旧 Bundle、旧 Artifact、迁移或 fallback；历史记录仅审计留档，不让旧产物成为新版合法输入 | Issue #40/#43；SR-029；SR-004 |
+| 2026-11-26 | 0.2.5 | GPT-6（ChatGPT） | 文档头、修订记录 | 统一 1.6.0-only 设计待评审状态，不提升产品发布状态 | Issue #40；SR-029 |
