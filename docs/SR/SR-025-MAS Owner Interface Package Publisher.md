@@ -119,7 +119,7 @@
 - 目标仓：`odango-chan/ca-client-tools`。
 - 现有 ca-client-tools v1.2.0 Provider Interface Package 已发布；它不是本 SR 的 MAS Owner Package。
 - ca-client-tools #39 Codec Phase B 与本 SR 相互独立，不作为 Publisher 的硬前置。
-- 本 SR 实施 Issue：待 READY 后创建并回填；实施 PR / Commit：无；实施：NOT_STARTED；验收：NOT_RUN；替代关系：无。
+- 本 SR 实施 Issue：[ca-client-tools #43](https://github.com/odango-chan/ca-client-tools/issues/43) OPEN；实施 PR / Commit：无；实施：NOT_STARTED；验收：NOT_RUN；替代关系：无。
 
 ## 修订记录
 
@@ -133,3 +133,4 @@
 | 2026-11-25 | 0.1.4 | Codex / GPT-6 | 正文 | AC-025-07 固定 v2.1.0 真实 CLI 和复验输入；同步本轮受影响的现行设计依据 | Issue #12 SR-025 |
 | 2026-11-26 | 0.1.5 | Codex / GPT-6 | 见本行变更 | 同步设计依据到本次复审的修订版本 | Issue #12 |
 | 2026-11-26 | 0.1.6 | GPT-6.2（ChatGPT） | §1～§7 | 独立评审并固定 Owner source manifest blob/buildIdentity 与 59 文件内容基线；明确 127 项 export ID 生成规则、v1alpha5 与未来 v1alpha6 边界、单根 MAS Receipt Query Build/Verify 正负 fixture、release.yml checksum/asset gate；状态提升 READY | 消除源 Revision 与目标 checkout HEAD 的歧义，补齐 Harness 所需的 export identity、最小正例和发布步骤；避免未来 Capability-first 设计静默改变当前 v1alpha5 Publisher 输出 | Issue #12、Next #40；IR-006；F03.05 v0.3.9；F09 v0.3.8；SR-015、SR-016、SR-024；Compiler v2.1.0 |
+| 2026-11-26 | 0.1.7 | GPT-6.2（ChatGPT） | §7 | 创建并关联 ca-client-tools 实施 Issue #43；明确 SR-025 已 READY、目标仓实施尚未开始 | 完成 SR READY → 目标仓 Issue 的治理交接，不提前声称代码或发布已实施 | IR-006；SR-025；ca-client-tools #43 |

@@ -148,7 +148,7 @@ Package Explorer、LSP、Problems 与 AI Workbench 必须区分源码诊断、�
 | Compiler v2.1.0 Node/Browser Worker | OPEN / DRAFT / DIRTY | [Studio #276](https://github.com/odango-chan/ca-skill-studio-demo/pull/276)，head `7d6adeb`；base SHA `3b3c4ac9d4b3a2f2e2380793d028d92f24c62c27` 与当前 main 未对齐，GitHub `mergeable_state=dirty` |
 | Package Audit Development Build cutover | NOT_IMPLEMENTED | [Studio #269](https://github.com/odango-chan/ca-skill-studio-demo/issues/269) |
 | AI Authoring exact-candidate Development Build gate | NOT_IMPLEMENTED | [Studio #269](https://github.com/odango-chan/ca-skill-studio-demo/issues/269) |
-| MAS Owner Interface Package Publisher | READY / NOT_IMPLEMENTED | SR-025；ca-client-tools 实施 Issue 将在本 SR READY 后单独登记；Package version 固定 `1.0.0` |
+| MAS Owner Interface Package Publisher | READY / NOT_IMPLEMENTED | SR-025；[ca-client-tools #43](https://github.com/odango-chan/ca-client-tools/issues/43) OPEN；Publisher 尚未实施；Package version 固定 `1.0.0` |
 | Host Context Interface Package Publisher | VERIFIED / NOT_IMPORTED | SR-024；ca-agent-demo PR #253 MERGED，AC-024-01～07 PASS；ZIP 仍未导入 Studio lock |
 | Host fixture provenance in Studio lock | NOT_IMPLEMENTED | #267 已持久化 ZIP source metadata（upload/contentDigest/packageId/version/publisher），但尚未写入 `source.sourceStatus`；由 SR-016 / Studio #269 补齐 |
 | Real released ca-client-tools v1.2.0 as Compiler root | NOT_RUN | 需显式 `ca-client` synthetic Contract 正例；此 Provider 包不替代 MAS Owner Package |
@@ -162,7 +162,7 @@ Package Explorer、LSP、Problems 与 AI Workbench 必须区分源码诊断、�
 
 当前产品审计补充（2026-11-26）：Studio Issue [#279](https://github.com/odango-chan/ca-skill-studio-demo/issues/279) 仍 OPEN，负责统一 Product Acceptance 与架构/代码审计；[#290](https://github.com/odango-chan/ca-skill-studio-demo/issues/290) 仍 OPEN，负责运行文档与 main 对齐。Example 替换另有 P1 回归 [#295](https://github.com/odango-chan/ca-skill-studio-demo/issues/295)：Pages Chromium run `45788420150` 在可选 `.vscode/settings.json` 缺失时复现 OPFS `EntryNotFound`；事务回滚保护有效，但替换未完成。该问题不得用 clean retry 代替代码修复。
 
-SR-024 的 Host Publisher 已 VERIFIED，但生成 ZIP 尚未创建 Release/Registry，也未导入当前 Studio lock；SR-025 目前仅设计 READY，MAS Publisher 代码和 ZIP 均未产生。Studio main `a863355` 的 #272 已合并，#276 仍 dirty，#269 的 Build/Verify、Package Audit、AI Authoring gate、lock provenance 和 no-root 仍未闭合。Pages 最新部署 SHA 未重新核验。
+SR-024 的 Host Publisher 已 VERIFIED，但生成 ZIP 尚未创建 Release/Registry，也未导入当前 Studio lock；SR-025 设计 READY；实施 Issue [ca-client-tools #43](https://github.com/odango-chan/ca-client-tools/issues/43) OPEN，MAS Publisher 代码和 ZIP 均未产生。Studio main `a863355` 的 #272 已合并，#276 仍 dirty，#269 的 Build/Verify、Package Audit、AI Authoring gate、lock provenance 和 no-root 仍未闭合。Pages 最新部署 SHA 未重新核验。
 
 ## 8. 历史决策
 

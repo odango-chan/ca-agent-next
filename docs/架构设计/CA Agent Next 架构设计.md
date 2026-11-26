@@ -1,8 +1,8 @@
 # CA Agent Next 架构设计
 
 > 文档类型：总体架构设计  
-> 状态：目标架构基线；PR #1 已合并；架构所定义的 Next Host/Runtime/Plugin Manager 尚未实现、尚未验收    
-> 文档版本：0.4.3
+> 状态：目标架构基线；SR-002 Python Host/Model Loop 最小切片 VERIFIED；SR-003 PR #34 已合并到恢复分支，模块 CI 通过但 post-merge exact verification / 系统 EX 未完成；完整 Runtime 尚未验收    
+> 文档版本：0.4.4
 > 修订日期：2026-11-26  
 > 适用范围：ca-agent-next 通用 Agent Core、Host、Runtime、Skill 与 Plugin 公共机制  
 > 权威边界：本文是本仓唯一总体架构文档；字段级契约见规范，机制细节见设计说明书  
@@ -224,8 +224,8 @@ sequenceDiagram
 
 | 阶段 | 目标 | 当前状态 |
 |---|---|---|
-| A | Python Core / Host / Runtime 基础骨架 | NOT_STARTED |
-| B | 唯一 Plugin Manager、Package/IPC | NOT_STARTED |
+| A | Python Core / Host / Runtime 基础骨架 | PARTIAL（SR-002 VERIFIED；完整 Runtime 与 EX-01 未完成） |
+| B | 唯一 Plugin Manager、Package/IPC | IN_PROGRESS（PR #34 MERGED；merge commit post-merge exact verification 与系统 EX NOT_RUN） |
 | C | 已发布 Skill Artifact 消费与 SkillCatalog | NOT_STARTED |
 | D | Skill Resolver 与执行模式派生 | NOT_STARTED |
 | E | 统一 Runtime Action Boundary | NOT_STARTED |
@@ -235,17 +235,25 @@ sequenceDiagram
 
 外部依赖状态（2026-11-25）：
 
-- ca-skills PR #83～#86、#88、#89 均已合并；CA-SL v1alpha5 Release Record 固定规范提交 18d818436。源规范头部仍有 candidate 字样，以 Release Record 为发布状态依据。
+- ca-skills main `780497a2918ad3e7bdff554ab64b0ba627e867e0`；PR #88/#89 MERGED，PR #87 OPEN；CA-SL v1alpha5 Release Record 固定规范提交 `18d8184367982ccbc835756136c4a53f9096c3a0`。
 - ca-skill-compiler v2.1.0 已发布；Issue #61 OPEN，when 发布型 CheckedExpr/DescriptorSet Runtime Artifact 未完成。
-- ca-client-tools v1.2.0 已发布；PR #39 OPEN，Phase B Worker/Facade 有证据，Phase C Consumer Migration NOT_STARTED。
+- ca-client-tools main `7bcb2614aa3615d8358df31eecefd0909e894e40`，Provider v1.2.0 RELEASED；PR #38/#39 OPEN；MAS Owner Publisher 由 SR-025 READY / [Issue #43](https://github.com/odango-chan/ca-client-tools/issues/43) 跟踪，尚未实施。
 - env-openamsm PR #26/#27 已合并；MAS Owner v1alpha4 与 Receipt/Proof/Reconcile 已进入主线。
 - env-5gc-sim PR #79 已合并；Mock AMF Modify 测试场景进入主线。
 - ca-openamsm-plugin main 只有 README；PR #1 OPEN/Draft。
-- ca-agent-demo PR #219 MERGED；Development H1/H2/H3 证据可参考，但未完整证明 durable Owner Receipt / exact-original Reconcile。PR #246/#248/#249 OPEN，不计入 main。
-- ca-skill-studio-demo PR #258 MERGED；Pages 最新部署 SHA 未重新核验。
-- ca-agent-next PR #1 已合并；PR #13 是 F03.05 设计文档 PR（OPEN），不是实现 PR。
+- ca-agent-demo main `25168db031e996bfa4de440c4156ae94f4e19bce`；PR #219/#253 MERGED；SR-024 VERIFIED、AC-024-01～07 PASS；Review COMMENTED、4 个 PR checks SKIPPED；Development 不等于 Production Qualification。
+- ca-skill-studio-demo main `a8633553615d786e360a62c2b0042a27ae92d9d3`；#267/#270/#272 MERGED；#269 OPEN；#276 OPEN/DRAFT/DIRTY；#279/#290/#295 OPEN；Pages 最新部署 SHA 未重新核验。
+- ca-agent-next main `b2ed5eb84114f9c2556a0cd06ed974887b1b70ad`；恢复分支最新 merge commit `32c7c1be5e93bddc83349234476b2ffa09e1ca23`，PR #34 MERGED 到恢复分支；PR #13 CLOSED/superseded。系统 EX 和 merge-commit post-merge exact verification 仍 NOT_RUN。
 
 外部 Compiler/语言规范发布是 Agent 的外部依赖，不意味着 Next 需要集成 Compiler 命令。外部仓 PASS 不计入 Next PASS；实施前必须刷新准确 SHA、发布物、PR 和测试范围。
+
+## 14. 当前实现状态快照（2026-11-26）
+
+- Phase A：SR-002 Python Host + Model Loop 最小切片 VERIFIED，AC-002-01～08 PASS；完整 Runtime、EX-01 和 CPython 全矩阵仍未完成。
+- Phase B：SR-003 设计 READY、实施 IN_PROGRESS；PR #34 已 MERGED 到恢复分支，merge commit `32c7c1b`；PR head `52f0fa32` 的 Ubuntu/Python 3.12 与 Windows/Python 3.14 模块 CI SUCCESS。该结果不等于 merge commit 的 post-merge exact verification；EX-02/03/04/18 仍 NOT_RUN。并行任务负责 SR-003 后续收尾，本轮只回填状态，不修改其实现。
+- Skill Studio：main `a863355`；#267/#270/#272 MERGED，#269 OPEN，#276 OPEN/DRAFT/DIRTY；SR-024 VERIFIED，SR-025 READY / ca-client-tools #43 OPEN；两个 Publisher ZIP 均未完成 Studio lock 双根消费验收。
+- CA-SL：v1alpha5 RELEASED，规范提交 `18d8184367982ccbc835756136c4a53f9096c3a0`；Compiler #61 OPEN，when Runtime Artifact/Go-Python 产品互操作未完成。
+- 本架构描述目标与当前差异；外部仓 main/PR 状态不等于 Next 实现或系统 Acceptance。
 
 ## 14. 详细设计与规范入口
 
@@ -280,3 +288,4 @@ sequenceDiagram
 | 2026-11-25 | 0.4.1 | GPT-6.2（ChatGPT） | §10、外部依赖快照 | 纠正 Host Artifact Store Channel 生命周期；同步 Provider v1.2.0、Go Host P1 外部参考与 Next Python Host 未实现状态；区分 Mock AMF Codec C1 | 统一总体架构、F05、Plugin IPC 和验收基线中的协议状态 | Issue #12；SR-009、SR-010、SR-011、SR-015 |
 | 2026-11-25 | 0.4.2 | Codex / GPT-6 | 正文 | §7 对齐 M.3 输入校验与候选排除顺序 | 消除执行歧义并同步中央设计 | Issue #12 |
 | 2026-11-26 | 0.4.3 | Codex / GPT-6 | 见本行变更 | §Tool 更正业务公共契约所有权 | 对齐跨仓实现与独立复验 | Issue #12 |
+| 2026-11-26 | 0.4.4 | GPT-6.2（ChatGPT） | 文档头、§13～§14 | 更新 ca-skills、ca-client-tools、ca-agent-demo、Studio 与 Next 当前 main/PR 状态；记录 #34 MERGED 到恢复分支及 SR-025 READY/#43 OPEN | 避免将 PR 合并、模块 CI 和系统 EX 混为一谈；同步外部 Publisher 与 Studio 消费状态 | Issue #12；IR-006；SR-003、SR-016、SR-024、SR-025；ca-client-tools #43；Studio #269/#272/#276 |
