@@ -1,7 +1,7 @@
 # CA-SL 语言基线与版本规范
 
 > 文档类型：语言版本与运行时消费规范  
-> 文档版本：0.2.5  
+> 文档版本：0.2.6  
 > 状态：**设计待评审**（唯一新目标 CA-SL 1.6.0；全链路不兼容任何旧作者语法、Build DTO、Artifact、Bundle；1.6.0 产品未发布）
 > 修订日期：2026-11-26  
 > 关联 IR：IR-003、IR-006；SR-023、SR-013  
@@ -24,7 +24,7 @@
 
 ### 新发布物的数字版本
 
-两个 Development Interface Package 的 `package.json.version` 与各自 snapshot key 均为 `1.0.0`。新设计的 Runtime Artifact 与 BuildResult 候选版本段为 `2`，按 SR-013 的 Owner 契约确认及发布流程冻结。复核已有发行物时按固定 revision 读取原始路径、`apiVersion`、`languageTarget`、Schema `$id` 和字节；新版机器标识由 ca-skills / Compiler 全新冻结；**不迁移旧版机器标识**，不实现旧标识别名或兼容输入。
+**历史 Compiler v2.1.0 的**两个 Development Interface Package 的 `package.json.version` 与各自 snapshot key 均为 `1.0.0`；它不是新 1.6.0 Package 的版本规范。新设计的 Runtime Artifact 与 BuildResult 候选版本段为 `2`，按 SR-013 的 Owner 契约确认及发布流程冻结。复核已有发行物时按固定 revision 读取原始路径、`apiVersion`、`languageTarget`、Schema `$id` 和字节；新版机器标识由 ca-skills / Compiler 全新冻结；**不迁移旧版机器标识**，不实现旧标识别名或兼容输入。
 
 ## 2. Next 作者与运行时消费边界
 
@@ -34,12 +34,12 @@
 - 有效发布 Assurance Artifact 可用于 Deterministic 和 LLM-guided。
 - Contract 位于 assurance/contract.yaml；when 是可选顶层字段。
 - predicates.yaml 只描述执行期 Predicate；when 只负责新 Event 的 Skill 选择。
-- Node 阶段、Wait、Observation、Operation、Postcondition 及 Procedure Graph 语义以完整 CA-SL v1alpha5 规范为准。
+- **1.6.0** 的 Node 阶段、Wait、Observation、Operation、Postcondition 与 Procedure Graph 语义由 ca-skills 下一正式作者规范冻结；历史 v1alpha5 仅用于审计。Operation/Observation 只表示阶段，不新增 Skill-facing Operation ID。
 - Next Agent 只导入正式发布 Bundle，不读取作者源进行运行时编译，不内置或调用 Compiler。
 
 ## 3. when 的发布与运行时依赖
 
-when 的作者语义已进入 CA-SL v1alpha5 正式发布。它使用 Event 与 Skill requestSchema 类型环境，必须在发布阶段完成 CEL 解析、静态类型检查和 G.4 限制检查。
+**历史事实：**when 已进入 v1alpha5 Release，但不是新产品入口。**1.6.0 唯一目标**中 when 位于 Contract 顶层；Compiler 按 ca-skills 正式发布的新 CEL 剖面、当前 Skill Request Schema 和规范化 Event 静态校验、生成 CheckedExpr/DescriptorSet。安全 Guard/nullable/短路规则可借用旧 G.4 算法，准确新条款号/机器标识由 Owner 冻结，不猜测旧格式等价。
 
 但语言规范发布不等于 Compiler 发布物已完成：
 - ca-skill-compiler Issue #61 当前 OPEN。
@@ -84,3 +84,4 @@ CA-SL 语义变化必须：
 | 2026-11-26 | 0.2.3 | GPT-6.2（ChatGPT） | 文档头、§1、§6、修订记录 | 根据 Issue #40 明确下一正式目标改为 CA-SL 1.6.0（不使用 v1alpha6），定义 Capability-first 与历史冻结发布边界；避免反复 alpha 命名、静默重解释 v1alpha5 或提前宣称 1.6.0 已发布 | Issue #40；SR-029；SR-004；SR-013；SR-027 |
 | 2026-11-26 | 0.2.4 | GPT-6.2（ChatGPT） | §1、§4、§6、修订记录 | 将无兼容要求冻结为 1.6.0 全链路单版本强制规则：不接受旧语法、旧 Build DTO、旧 Bundle、旧 Artifact、迁移或 fallback；历史记录仅审计留档，不让旧产物成为新版合法输入 | Issue #40/#43；SR-029；SR-004 |
 | 2026-11-26 | 0.2.5 | GPT-6（ChatGPT） | 文档头、修订记录 | 统一 1.6.0-only 设计待评审状态，不提升产品发布状态 | Issue #40；SR-029 |
+| 2026-11-26 | 0.2.6 | GPT-6（ChatGPT） | 规范性设计与验收门槛 | 修正旧 G.4/Development 1.0.0 规范权威，唯一新目标为 1.6.0 | Issue #12/#40；SR-013/025/029；PR #46 |

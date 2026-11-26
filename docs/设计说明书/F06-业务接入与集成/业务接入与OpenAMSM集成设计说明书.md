@@ -1,7 +1,7 @@
 # 业务接入与 OpenAMSM 集成设计说明书
 
 > 文档类型：业务集成设计说明书  
-> 文档版本：0.2.6  
+> 文档版本：0.2.7  
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
 > 功能归属：F06 — 业务接入与集成；EC04、EC05、EC07  
 > 关联 IR：IR-004、IR-005、IR-006  
@@ -41,7 +41,7 @@ OpenAMSM SBI request
   -> EC04 Delivery Plugin
 ~~~
 
-Event Schema 只描述协议归一化后的输入和 Artifact slots。它不携带 Skill ID、Goal、Procedure 或 Capability Grant。每个新业务 Event 必须绑定一个 Skill；逐个候选检查 requestSchema 与可选 when，单个候选不匹配时继续评估其余候选；最终零个或多个匹配时显式停止，不得走 unbound Generic Agent fallback。
+Event Schema 只描述协议归一化后的输入和 Artifact slots。它不携带 Skill ID、Goal、Procedure 或 Capability Grant。每个新业务 Event 必须绑定一个 Skill；逐个候选检查 requestSchema 与可选 when，单个候选不匹配时继续评估其余候选；最终零个匹配时澄清或拒绝；**多个 when=true** 时仅由 F02 在精确候选集内调用 LLM 消歧并校验 Skill ID；不得走 unbound Generic Agent fallback。
 
 Continuation 不重新选择 Skill，必须恢复原 Run、原 Skill、原 generation；区分被恢复 Run 的原响应义务与本次 HTTP 请求自己的响应义务，分别按 correlation 完成。
 
@@ -73,20 +73,22 @@ Plugin 不负责：
 | multipart/related、Content-ID、N1/N2 slot | 3GPP OpenAPI 与 OpenAMSM 实际行为 | EC04 + F05 |
 | NAS 5GSM 消息与字段 | 3GPP NAS 标准、已资格化 Codec | Skill 按需调用 Codec Tool |
 | NGAP N2 PDU Session Resource 消息 | 3GPP NGAP 标准、已资格化 Codec | Skill 按需调用 Codec Tool |
-| Skill requestSchema / when | CA-SL v1alpha5 | F02 Resolver |
+| Skill requestSchema / when | CA-SL **1.6.0** 正式作者规范/Runtime Artifact（未发布） | F02 Resolver，v1alpha5 仅历史追溯 |
 | Tool Callable / IO Schema / Effect / Capability | Provider 自有 Callable 取自 Provider Interface Package，MAS Callable 取自 Owner Contract | F04 / Plugin Manager |
 | Owner 状态、Receipt、Commit Proof、Reconcile | env-openamsm MAS Owner v1alpha4 | Runtime 结果解释 |
 | 原始二进制 Artifact refs | Next Host ArtifactStore | F05 |
 
 SBI requestSchema 是业务 Skill 输入契约，不应复制完整 3GPP multipart schema 或把原始 N1/N2 变成模型可见字符串。
 
-对于 MAS Skill，作者源 `contract.capabilities` 的 Capability ID 由 Compiler Build-time 对 Owner `CapabilityContracts` 校验；冻结 v1alpha5 Artifact 不序列化 Capability ID。Runtime 的实际 Callable allowlist 只从 Artifact `operation` / `observation` exports 建立，并按部署固定 Owner Contract 验证 Callable membership / Effect。`MAS.RECONCILE` 的 internal-only 约束由 F03.05 定义：Runtime 从 Mutation sidecar `commitProof.reconcile.bindingId` 派生目标集合，普通 Skill/LLM 调用必须在 Provider IPC 前拒绝；只有 Coordinator 内部入口可使用原 Invocation 查询。
+**新 1.6.0 MAS Skill 只引用 Capability ID。** Compiler 用 Owner 24/24 与 Provider 2/2 的新正式公开映射检查 Grant、唯一 Callable、kind/Effect/Schema，并输出 Artifact capabilityBindings；Runtime 依 Binding 和部署固定的 Owner/Provider identity 验证内部 Callable Scope 后才分发。历史 v1alpha5 Artifact 不含 Capability 的审计事实**不构成新分发规则**。
+
+`MAS.RECONCILE` 保留 Owner ToolCatalog 作为 Coordinator internal-only target：Coordinator 按 original Invocation/Scope/Correlation 与原 Mutation Reconcile binding 回查，普通 Skill/LLM 直调则在 IPC 前拒绝。`MAS.RECEIPT_QUERY` 仍是受 Capability/Scope 控制的普通 READ。
 
 ## 5. CreateSMContext
 
 Create 的新 Event 来自 Nsmf CreateSMContext。Event Plugin 提取 HTTP/JSON 请求字段和 N1/N2 multipart slots，形成 nsmf.create-sm-context Event。F02 根据 requestType、Event type 和可选 contract.when 选择建立 PDU Session 的 Skill。当前 ca-skills 的 Owner-linked v1alpha5 MAS 作者源位于 examples/skills/establish-pdu-session-mas；不要与 skills/establish-pdu-session-mas 下的早期独立示例混淆。
 
-Skill 按 CA-SL Procedure 调用 Owner Callable，完成订阅校验、SM Context、UECM、Policy、UP Anchor、地址、Charging、UP Session 等步骤。当前 Owner-linked 作者源为 examples/skills/establish-pdu-session-mas。每一步输入输出来自 Owner Tool Interface Package；Agent 不在 Core 中硬编码 5GC 流程。
+Skill 按 CA-SL **1.6.0 Procedure Capability Binding** 经内部 Owner Callable 完成订阅校验、SM Context、UECM、Policy、UP Anchor、地址、Charging、UP Session 等步骤。当前 Owner-linked 作者源为 examples/skills/establish-pdu-session-mas。每一步输入输出来自 Owner Tool Interface Package；Agent 不在 Core 中硬编码 5GC 流程。
 
 成功响应由 Host 汇总 Runtime/Owner 结果并交给 Delivery Plugin。只有 Owner 有效 Receipt/Commit Proof 证明的 mutation 才能作为提交成功。
 
@@ -293,6 +295,10 @@ Create → Modify → Release 的顺序、Owner authoritative state、Receipt / 
 **1.6.0-only 待评审硬门槛：** MAS Skill 必须按 1.6.0 重新编写与发布；旧 E2E PASS 不证明新版本；此处只是目标设计，产品和 E2E 均 NOT_RUN。
 
 
+### 13.6 真实联测与模块证据分层
+
+1.6.0 Create/Modify/Release Skill 必须由 ca-skills 作者重新编写、使用唯一新 Compiler Check/Build/Verify 并正式发布 Bundle；历史 v1alpha5 E2E/Owner v1alpha4 只是业务输出参考，不能证明新 Runtime Binding 或新系统资格。SR-009 单独验 Plugin ingress/delivery/staging，SR-010 单独验 Host Artifact Channel、Provider/Codec，SR-011 才在正式新发布物和隔离环境齐备后执行同 UE/PSI 的真实 E2E；OM/EX 不能倒灌模块设计 READY 门槛。
+
 ## 修订记录
 
 
@@ -306,3 +312,4 @@ Create → Modify → Release 的顺序、Owner authoritative state、Receipt / 
 | 2026-11-26 | 0.2.4 | Codex / GPT-6 | 见本行变更 | 补足 Create 的真实 NAS 字段来源及跨仓设计缺口；补齐正式文档的评审范围与非目标；明确可控 peer/Plugin 的重试身份；§7 依据 Owner catalog 区分确认 mutation 和 Wait READ | 历史记录未单独分列原因 | Issue #12 |
 | 2026-11-26 | 0.2.5 | GPT-6.2（ChatGPT） | §4、§8 | 同步冻结 v1alpha5 Capability Build-time / Runtime 边界及 MAS.RECONCILE internal-only 保证 | 让 OpenAMSM 业务集成流程引用 F03.05 的唯一 Tool/Provider Runtime 设计 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-26 | 0.2.6 | GPT-6（ChatGPT） | 新增 Capability-first 1.6.0 章节与状态 | 移植旧分支设计并按无兼容最新基线校正 | 仅设计待评审，不将历史 E2E 视为新版本通过 | Issue #40；SR-029 |
+| 2026-11-26 | 0.2.7 | GPT-6（ChatGPT） | 规范性设计与验收门槛 | 纠正多 true 候选决策和 MAS 旧 Callable-only Runtime，区分模块/系统证据 | 修复新旧语言/能力运行时冲突 | Issue #12/#40；SR-013/025/029；PR #46 |

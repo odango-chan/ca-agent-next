@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
-> 文档版本：0.3.5
+> 文档版本：0.3.6
 > 功能归属：F03 — Plugin 平台  
 > 关联 SR：SR-003、SR-010    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -21,8 +21,8 @@
 
 1. 全系统只有一个 Plugin Manager。
 2. 一个 Plugin 进程可以导出一种或多种 Extension。
-3. Tool 是 Plugin 导出的可调用 Operation，不是独立进程。
-4. 一个 Plugin 可以导出多个 Capability，一个 Capability 可以包含多个 Operation。
+3. Tool/Callable 是 Plugin Tools Extension 执行的内部调用身份，不是独立进程；**Operation/Observation 只表示 Procedure Node 阶段**，不是作者级 Operation ID。
+4. 一个 Plugin 可以导出多个 Capability，**一个 Skill-facing Capability 恰好映射一个公开 Callable，且该 Callable 仅归属一个 Capability**；一个公开 Callable 可以通过封闭 selector 在 Provider 内路由多个私有 backendOperationId，绝非多个公开 Operation。
 5. Plugin Manager 负责生命周期、握手、IPC 和 Extension 分发，不负责 Skill 选择、Action 授权或 Owner 结果判断。
 6. Provider Interface Package 负责 Provider 自身导出的 Callable 契约；业务 Owner Contract Package 负责 Owner Callable、Schema、Capability membership 和结果语义；Provider Runtime Bindings 只提供私有执行映射。当前 OpenAMSM MAS Skill 的 `mas::` Callable 来自 Owner Contract Package，不从 ca-client-tools 11-READ Interface Package 推导。Plugin Manifest 不复制 Tool 定义。
 7. ToolCatalog 只是可发现能力的只读视图，不管理生命周期，也不构成第二个 Registry。
@@ -94,7 +94,7 @@ messageId、correlationId、eventId、invocationId、deliveryId、responseObliga
 
 ca-client-tools v1.2.0 当前发布的是独立 Provider 包，进程协议为 ca-client-tools.provider/v2（长生命周期 NDJSON）。Next 由唯一 Plugin Manager 内部的 ProviderV2 Tools Extension Driver 消费现有 provider.yaml 和 runtime-bindings.yaml，并把 Provider v2 的 initialize/catalog/invoke/cancel 适配为统一 Tools Extension 调用。Driver 只负责进程与协议适配，不得演变为永久 Provider Manager、第二套 Tool Registry 或第二条授权路径。Native Plugin 仍使用本仓统一 Plugin IPC v1alpha1。
 
-Plugin Manager 只转发 Runtime 已检查的调用。ca-client-tools Interface Package 当前提供 11 个 Provider READ Callable；OpenAMSM MAS Skill 通过 `mas` dependency alias 引用 Owner v1alpha4 ToolCatalog，Owner Contract Package 提供其业务 Callable、Schema、Capability membership、Outcome、Receipt、Commit Proof、Evidence 和 Reconcile。Provider Runtime Bindings 只提供 backendOperationId、HostInvocation/privateArguments 来源和 Provider observation 定位。三类跨组件契约不得合并成一份 Next 自维护 Catalog；Provider Backend Binding Catalog v2 只在 Provider 进程内部使用，Host 通过显式 catalog 请求核对映射，不解析或复制它。
+Plugin Manager 只转发 Runtime 已检查的内部 Callable。**新 1.6.0 Provider 接口为 2 个公开 Capability/2 个 Callable，Owner 为 24/24（不含 internal-only Reconcile）**。历史 Provider v1.2.0 11 READ 与 Owner v1alpha4 Callable/alias 仅用于源审计，不能作为新 Skill-facing Package 或 Runtime Binding。Provider Runtime Bindings 只提供 backendOperationId、HostInvocation/privateArguments 来源和 Provider observation 定位。三类跨组件契约不得合并成一份 Next 自维护 Catalog；Provider Backend Binding Catalog v2 只在 Provider 进程内部使用，Host 通过显式 catalog 请求核对映射，不解析或复制它。
 
 Tool Plugin 返回的传输成功不等于 Owner 业务 COMMITTED。Runtime 必须按 Owner Contract 验证 Receipt 与 Commit Proof；UNKNOWN 保持 UNKNOWN，并按原 Invocation 执行 exact-original Reconcile。
 
@@ -150,6 +150,10 @@ Capability 是 Skill-facing Package API；Callable 是 Compiler / Runtime / Prov
 **1.6.0-only 设计评审硬门槛：** 唯一 Plugin Manager 不增加兼容分发、动态授权或第二套能力管理器。 此章节仅描述目标设计，外部代码/Release/E2E 均 NOT_RUN。
 
 
+### 12.1 1.6.0 模块验收与历史隔离
+
+唯一正向路径：Skill 提出 Capability，Compiler Artifact 保有唯一 Callable Binding，经 Runtime Scope/kind/Effect/Schema 检查后再由 Plugin Manager Tools Extension 分发。无绑定、重复、阶段不符、错误 Schema、Reconcile 由普通 Skill 提出均在 IPC 前拒绝。历史 11 READ/24:25/Development 1.0.0 仅为历史来源，不证明新 2/2、24/24 Package 已发布；Plugin IPC 宿主协议本身可继续使用现行冻结规范，不因语言版本更名而修改 IPC wire。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修订内容 | 原因 | 关联 |
@@ -164,3 +168,4 @@ Capability 是 Skill-facing Package API；Callable 是 Compiler / Runtime / Prov
 | 2026-11-26 | 0.3.3 | Codex / GPT-6 | 见本行变更 | §5、10 明确启动顺序与整包注册，消除依赖当前 Skill 的装载循环 | 对齐跨仓实现与独立复验 | Issue #12 |
 | 2026-11-26 | 0.3.4 | GPT-6（ChatGPT） | 新增 1.6.0 目标章节、状态及修订记录 | 移植一对一 Binding / Selector / Action 设计并标为待评审 | 无旧版兼容或产品完成承诺 | Issue #40；SR-029 |
 | 2026-11-26 | 0.3.5 | GPT-6（ChatGPT） | 历史修订表及修订记录 | 补齐历史缺失列为未记录，保留既有内容，不改历史业务断言 | 保证待审设计的表结构有效 | Issue #40；SR-029 |
+| 2026-11-26 | 0.3.6 | GPT-6（ChatGPT） | 规范性设计与验收门槛 | 修复一对多公开 Operation 误述，明确一个 Capability 仅一公开 Callable | 修复新旧语言/能力运行时冲突 | Issue #12/#40；SR-013/025/029；PR #46 |
