@@ -195,13 +195,13 @@ Next 在 Skill 导入时反序列化已检查程序和类型环境，建立运�
 
 ## 修订记录
 
-| 2026-11-26 | 0.2.11 | GPT-6.2（ChatGPT） | §4、§9 | 明确冻结 v1alpha5 Artifact 不序列化 Skill Capability ID；Compiler Build-time 校验作者源 Capability，Runtime Scope 只从 operation/observation exports 建立 | 对齐 F03.05 与 Compiler v2.1.0 frozen artifact schema，避免实现者读取不存在字段 | IR-006 · SR-015 · Issue #12 |
+
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修订内容 | 原因 | 关联 |
 |---|---|---|---|---|---|---|
 | 2026-11-25 | 0.1.0 | 历史修订者/模型未记录 | 原第 1～10 章 | 既有 Skill 导入/选择设计基线 | 初始设计登记；逐章历史记录未建立 | SR-004～006 |
 | 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 第 11 章及全文归属 | 合并 CEL 互操作设计，明确 EC01/EC02 权威和 Next 消费边界 | 避免 Skill 功能拆成多份设计说明书 | F02；SR-004～006；EC01/EC02；PR #1 |
-| 2026-11-25 | 0.2.1 | 刷新需求追踪、目录或证据引用 | 对齐最新分支与 IR/SR 基线 | 见关联 SR |
+| 2026-11-25 | 0.2.1 | 未记录 | 全文 | 刷新需求追踪、目录或证据引用 | 对齐最新分支与 IR/SR 基线 | 见关联 SR |
 | 2026-11-25 | 0.2.2 | Codex / GPT-6 | §12 | 记录中央规范与 Compiler/Studio/Next 分工 | 跨仓设计移交 | IR-006 |
 | 2026-11-25 | 0.2.3 | Codex / GPT-6 | §6 | 明确 Event Request Schema 资格与诊断次序 | 对齐 CA-SL 候选 M.3／SA-012 | IR-003、SR-006、EX-10 |
 | 2026-11-25 | 0.2.4 | GPT-6.2（ChatGPT） | §4、§5、§9 | 将 Tool/Capability 依赖解析扩展为 Provider Interface 与 Owner Contract 两类精确快照，并明确 MAS `mas` dependency | 对齐 ca-skills v1alpha5 MAS 作者源与 Compiler 冻结 Build / Development 分离路径 | IR-006 · SR-015 · Issue #12 |
@@ -211,3 +211,4 @@ Next 在 Skill 导入时反序列化已检查程序和类型环境，建立运�
 | 2026-11-25 | 0.2.8 | GPT-6.2（ChatGPT） | §7、§11、§12 | 同步 F08、EC02 Compiler 与 SR-013 最新设计版本引用，保留 F02 已冻结的 when/Request Schema 语义 | 统一 Compiler 设计闭环版本 | Issue #14；IR-003；SR-013 |
 | 2026-11-25 | 0.2.9 | GPT-6.2（ChatGPT） | §7 | 修复 CA-SL v1alpha5 when 发布/运行时依赖的失效锚点，指向当前语言基线 §3 | 不改变 M.3/SA-012 语义；使候选资格引用可导航 | IR-003；Issue #12 |
 | 2026-11-25 | 0.2.10 | Codex / GPT-6 | 正文 | §6、追踪 对齐语言发布与 Compiler/Bundle 职责 | 消除执行歧义并同步中央设计 | Issue #12 |
+| 2026-11-26 | 0.2.11 | GPT-6.2（ChatGPT） | §4、§9 | 明确冻结 v1alpha5 Artifact 不序列化 Skill Capability ID；Compiler Build-time 校验作者源 Capability，Runtime Scope 只从 operation/observation exports 建立 | 对齐 F03.05 与 Compiler v2.1.0 frozen artifact schema，避免实现者读取不存在字段 | IR-006 · SR-015 · Issue #12 |
