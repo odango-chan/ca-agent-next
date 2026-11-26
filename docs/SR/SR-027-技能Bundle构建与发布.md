@@ -1,7 +1,7 @@
 # SR-027：技能Bundle构建与发布
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.4  
+> SR 版本：0.1.5  
 > 状态：DRAFT；Compiler 新 Runtime Artifact API 与正式 Bundle 正例尚不可用，不允许实施发布路径  
 > 创建日期：2026-11-26  
 > 上游需求：IR-006  
@@ -16,7 +16,7 @@
 
 ## 2. 在源仓交付
 
-以 `scripts/compile_mas_v1alpha5.py`、`tests/test_compile_mas_v1alpha5.py`、`.github/workflows/source-hygiene.yml` 为起点。现有 MAS 脚本面向 v2.0.2，源文件卫生检查不能证明已发布 Bundle。为本批指定的 Echo 作者源、MAS 作者源分别建立构建输入清单。Echo 在该基线缺失，准备 SR-008 所用的指导包和带 Assurance 的 Echo，登记路径、Capability、请求/响应样例及预期。MAS 输入选 `examples/skills/{establish,modify,release}-pdu-session-mas`，逐个给出依赖和 Verify 日志。
+历史 `scripts/compile_mas_v1alpha5.py`、`tests/test_compile_mas_v1alpha5.py` 及原有 CI **仅作为留档审计线索，不作为 1.6.0 新实现或验收入口**。新 Bundle 构建与测试必须基于 ca-skills 正式发布的 **1.6.0 作者语法**、SR-029 的 Capability→Callable Binding 和 Compiler 新版契约，从头定义单版本流程；不保留调用旧编译脚本的兼容分支。为本批指定的 Echo 作者源、MAS 作者源分别建立构建输入清单。Echo 在该基线缺失，准备 SR-008 所用的指导包和带 Assurance 的 Echo，登记路径、Capability、请求/响应样例及预期。MAS 输入选 `examples/skills/{establish,modify,release}-pdu-session-mas`，逐个给出依赖和 Verify 日志。
 
 CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验证成功后组装发布目录。指导包只含作者入口及声明的资源；确定性包随附已验证的 Runtime Artifact。输出记录作者 revision、Compiler 实际版本、API、资产路径、各包结果。发布前在临时目录验证，失败不上传部分批次；由授权的发布步骤消费同一份候选。
 
@@ -24,7 +24,7 @@ CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验�
 
 | ID | 入口与判据 |
 |---|---|
-| AC-027-01 | ca-skills 根运行 `python -m unittest discover -s tests -p test_compile_mas_v1alpha5.py -v` 和 `python scripts/verify_docs.py`；为 Bundle 正例和 Verify 失败新增可独立运行的测试并登记命令、发现数与日志 |
+| AC-027-01 | ca-skills 仓根使用新建的 **1.6.0 专用测试入口**（命令、文件名与测试数在新实现 Issue 固定），检验新版 Compiler Check/Build/Verify、Bundle 成功与错误拒绝；可继续运行文档检查，但 **v1alpha5 测试不得作为本 AC 的 PASS 证据**；记录命令、受测 SHA、发现数和日志 |
 | AC-027-02 | CI 在干净 checkout 生成候选。逐项查 SKILL.md、所声明的资源及可选 Assurance 对应产物；损坏 Artifact 使当批发布数为零。Development Artifact 不进入 Runtime Bundle |
 | AC-027-03 | 使用同一候选在 Next 执行 SR-004 导入与 SR-008 Echo；原始作者 checkout 和 Compiler 从 Host 运行环境移除后依然可运行。分别记录构建、发布及消费状态 |
 
@@ -55,3 +55,4 @@ CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验�
 | 2026-11-26 | 0.1.2 | GPT-6.2（ChatGPT） | 文档头、§4～6、修订记录 | 记录 CA-SL v1alpha5 固定源、Compiler v2.1.0 冻结 Artifact、Issue #61 未完成及 ca-skills 当前无正式 Bundle；防止将规范/Compiler Release/本地 Build 误报为 Published Skill Bundle，并为 SR-004 明确外部依赖 | Issue #43；SR-004；SR-013；SR-027 |
 | 2026-11-26 | 0.1.3 | GPT-6.2（ChatGPT） | 文档头、设计依据、修订记录 | 将 F08 设计依据更新至 v0.3.8，保持 SR-027 与发布端权威设计版本一致 | Issue #43；SR-004；SR-013；SR-027 |
 | 2026-11-26 | 0.1.4 | GPT-6.2（ChatGPT） | 文档头、§1、§5、修订记录 | 将后续 Skill Bundle 生产目标更新为 CA-SL 1.6.0，增加 SR-029 Capability Binding 与 Compiler #61 联合 Release 门槛 | 避免继续发布 v1alpha6 候选或旧 v1alpha5 作者源作为最新运行包 | Issue #40/#43；SR-029；SR-013；SR-027 |
+| 2026-11-26 | 0.1.5 | GPT-6.2（ChatGPT） | §2～3、修订记录 | 将旧 v1alpha5 构建脚本与测试从新版验收入口移除，仅保留历史审计；1.6.0 Bundle 必须原生编译/验证 | 严格无兼容、无旧构建管线的 1.6.0 单版本发布 | Issue #40/#43；SR-029；SR-027 |
