@@ -36,6 +36,22 @@ class PythonToolchainPolicyTests(unittest.TestCase):
             with self.subTest(path=path):
                 self.assertFalse(is_python_scope_path(path))
 
+    def test_go_only_workflow_is_not_python_scope(self) -> None:
+        self.assertFalse(
+            is_python_scope_path(
+                ".github/workflows/go-release.yml",
+                "name: Go Release\\non: push\\njobs:\\n  build:\\n    steps:\\n      - run: go test ./...",
+            )
+        )
+
+    def test_new_python_workflow_is_python_scope_by_content(self) -> None:
+        self.assertTrue(
+            is_python_scope_path(
+                ".github/workflows/python-tests.yml",
+                "name: Python tests\\njobs:\\n  test:\\n    steps:\\n      - run: uv run pytest",
+            )
+        )
+
     def test_root_alternate_lockfiles_are_rejected_but_nested_fixtures_are_not(self) -> None:
         self.assertEqual(
             forbidden_root_lockfiles(
