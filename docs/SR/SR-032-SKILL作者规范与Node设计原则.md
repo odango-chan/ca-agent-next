@@ -146,6 +146,6 @@ F09 的 AI Authoring 必须使用同一作者规范和完整正向示例生成�
 | 2026-11-27 | 0.1.9 | GPT-6.2（ChatGPT） | §5～§6 | 删除 `llmInvocable` 与 `scriptExecution.llmEnabled` 双门禁，更新 AC-032-11 为同一 Script Runner | 明确 Demo 中 LLM 默认可执行当前 Skill scripts/ 登记脚本，与确定性执行使用相同脚本能力 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.10 | GPT-6.2（ChatGPT） | §6、设计依赖 | 将 SR-032 设计依赖版本更新至 CA-SL 1.6.0 v0.1.9 / SKILL 作者规范 v0.1.7 | 确保 SR 验收引用的机器语义与作者规则均为移除双门禁后的最新基线 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.11 | GPT-6.2（ChatGPT） | §1、§3～§6 | 移除 Skill 层 Wait / await / polling 语法；补齐 CA-SL 原有 YAML 机器结构、Script I/O / Evidence / 错误契约、Host Resource Read；新增 AC-032-13/14 并纳入 SR-004/007/016 | 回应独立评审的真实阻断项，同时恢复既定语言边界，不重构原有四阶段语法 | Issue #49；IR-008；SR-032 |
-| 2026-11-27 | 0.1.12 | GPT-6.2（ChatGPT） | §3～§6、AC-032-15、设计依据 | 增加 `when` 的 Front Matter 位置、Assurance-only 适用范围、Request Schema 类型来源与 Compiler/Importer 一致性门禁 | 落实用户确认的入口方案，防止无 Assurance Skill 声明未经编译的 when | Issue #49；IR-008；F02/F08/F09；SR-004/013 |
+| 2026-11-27 | 0.1.12 | GPT-6.2（ChatGPT） | §3～§6、AC-032-15、设计依据 | 增加 `when` 的 Front Matter 位置、Assurance-only 适用范围、Request Schema 类型来源与 Compiler/Importer 一致性门禁 | 落实用户确认的入口方案，防止无 Assurance Skill 声明未经编译的 when；历史错误入口判断，已由 0.1.13 撤销，不构成兼容方案| Issue #49；IR-008；F02/F08/F09；SR-004/013 |
 
 | 2026-11-27 | 0.1.13 | GPT-6.2（ChatGPT） | 文档头、AC-032-15、设计依据、修订记录 | 将 when 作者入口恢复为 assurance/contract.yaml 顶层唯一字段；Front Matter 不声明 when；更新 CA-SL / EC01 / 作者规范版本引用 | 统一作者规范、Compiler、Importer 与 Studio 的字段所有权，避免双入口兼容 | Issue #49；IR-008；F02/F08/F09；SR-004/013/016 |
