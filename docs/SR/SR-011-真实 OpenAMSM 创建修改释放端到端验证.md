@@ -1,13 +1,13 @@
 # SR-011：真实 OpenAMSM 创建修改释放端到端验证
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.3.2\
-> 状态：DRAFT（实施主状态）；第二轮独立评审 CHANGES_REQUESTED（历史结论）；第三轮自评 **DESIGN_READY_FOR_INDEPENDENT_REVIEW**（仅设计评审候选，非独立批准或实施 READY）；产品 AC NOT_RUN/BLOCKED。
+> SR 版本：0.3.3\
+> 状态：DRAFT（实施主状态）；独立模型 Review #6082541121（固定 Head 3d5f17b7）：CHANGES_REQUESTED，P1 R3-SR011-01 阻断 AC-011-04；真实 1.6.0 E2E 仍 BLOCKED/NOT_RUN，READY=0。
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-27\
 > 所属阶段：Phase H  
 > 上游需求：[IR-005](../IR/IR%20总登记册.md#ir-005)  
-> 设计依据：[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.3.0 §5～10；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.5 §2～12；[演示验收基线](../验收与实施/演示验收基线.md) v0.3.24 §2～10\
+> 设计依据：[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.3.1 §4.1、§5～10；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.5 §2～12；[演示验收基线](../验收与实施/演示验收基线.md) v0.3.24 §2～10\
 > Acceptance：EX-20、OM-09、OM-11、OM-12（见[演示验收基线](../验收与实施/演示验收基线.md)）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：见第 3 节
@@ -55,8 +55,8 @@
 | AC-011-01 | 固定隔离环境、各组件/Package Release SHA、UE/PSI、场景前 Session 状态 | 环境/资产完整才启动；缺任何新 1.6.0 包则 BLOCKED 而不是合成包 PASS |
 | AC-011-02 | 真实 Create，随后同 UE/PSI Modify（含 QoS）与 UE-requested Release | Owner 与 SMF 状态、N1/N2/PFCP、三次请求/响应身份及最终 Release 状态精确匹配 |
 | AC-011-03 | 同 ID 同内容重试、同 ID 不同内容冲突、同内容新 ID 独立 Invocation | 首项无重复 mutation；冲突不变更；新 ID 只按真实 Owner/Scope 规则执行，不串入旧 Run |
-| AC-011-04 | 响应丢失、Owner UNKNOWN、迟到/重复 N2 与精确 Reconcile | UNKNOWN 不提升 COMMITTED；N1/N2 共用 generation、releaseTxn、Run，各用本路 confirm originalInvocationId/Proof/Scope 回查；互换 Proof 时清理调用为零，重复 mutation=0 |
-| AC-011-05 | 原始 N1/N2 Artifact bytes、Run/generation、continuation 与 responseObligation | 所有引用同一实际请求，跨 Run/旧 generation 被拒；最终 Delivery/SMF projection 一致 |
+| AC-011-04 | 响应丢失、Owner UNKNOWN；对同一 releaseTxn 分别执行 N1→N2、N2→N1 两种到达顺序；两笔并发事务 A/B 的 N1-A→N2-B→N1-B→N2-A 交错；重复、迟到 N1/N2；旧 generation、错 smContextRef、错 Session、互换两路 Receipt/Proof；执行精确 Reconcile | UNKNOWN 不提升 COMMITTED；只有同一 Run、同一 Owner generation/releaseTxn、正确 SUPI/PSI 且各自 originalInvocationId/Proof/Scope 全匹配的 N1 与 N2 两路确认都成立后才允许清理。单路、乱序、交错、重复、迟到、旧代际或错 Session 均不得误确认/触发清理，新增 mutation=0；旧代际明确返回 `STALE_SM_CONTEXT`，不污染新 generation。 |
+| AC-011-05 | 原始 N1/N2 Artifact bytes、Run/generation、continuation 与本次 callback responseObligation；重放旧 generation/context 的 N1 与 N2 回调 | 所有引用同一实际请求；跨 Run/旧 generation 被拒并返回 `STALE_SM_CONTEXT`，不清理、不新增 mutation；当前 callback 的 responseObligation 与原 Run 执行身份分离；最终 Delivery/SMF projection 一致 |
 | AC-011-06 | 静态与运行追踪检查 Agent Core/Resolver/Plugin Manager 源码 | 无 OpenAMSM 业务条件分支；新增业务只改变 Plugin/Skill/Package/部署配置；系统 EX/OM 单独复验 |
 
 ### 5.1 实现落点、运行和取证
@@ -121,3 +121,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-27 | 0.3.0 | Codex / GPT-6 | §5.1、AC-011-04/05 | 登记隔离环境入口与逐路确认收据 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
 | 2026-11-27 | 0.3.1 | Codex / GPT-6 | §5.1 | 隔离复用 SUPI/PSI 前排空并轮换 listener，验证过期回调 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
 | 2026-11-27 | 0.3.2 | GPT-6（ChatGPT） | 第三轮设计自评/历史修订表 | 隔离真实 NF、旧 listener 排空、新 generation/key reuse 与两路 Owner Proof 的场景及停止条件已写明；真实组合输入未齐；将第二轮结论保留为历史、登记第三轮独立复评候选并按版本整理记录 | 设计范围可供外部评审而不提前授权代码实施或夸大 AC 状态 | Issue #12；PR #46；SR-011 |
+| 2026-11-27 | 0.3.3 | GPT-6（ChatGPT） | AC-011-04/05、文档头、修订记录 | 增加 N1/N2 两种顺序、跨事务交错、迟到回调、旧 generation 和错 Session 的独立断言；将 STALE_SM_CONTEXT 映射到模块 AC | 处理独立模型 Review #6082541121 的 P1 R3-SR011-01，避免仅覆盖重复/迟到 N2 而漏掉乱序和交错清理 | Issue #12；PR #46；F06 v0.3.1；Review #6082541121 |

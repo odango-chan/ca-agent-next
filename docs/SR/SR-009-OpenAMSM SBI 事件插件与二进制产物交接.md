@@ -1,13 +1,13 @@
 # SR-009：OpenAMSM SBI 事件插件与二进制产物交接
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.6\
-> 状态：DRAFT（实施主状态）。PR #46 第二轮独立评审（1bf748db）：APPROVE_FOR_READY（AC-009-01～06 模块设计）。产品验收依各 AC 单列。
+> SR 版本：0.2.7\
+> 状态：DRAFT（实施主状态）；独立模型 Review #6082541121（固定 Head 3d5f17b7）：CHANGES_REQUESTED，P1 R3-SR009-01/02 阻断 AC-009-04；READY=0，产品 AC NOT_RUN/BLOCKED。
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-27\
 > 所属阶段：Phase G  
 > 上游需求：[IR-005](../IR/IR%20总登记册.md#ir-005)  
-> 设计依据：[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.5 §1～13、16；[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.3.0 §2～5；[插件包与进程通信协议规范](../规范/插件包与进程通信协议规范.md) v0.2.6 §6～8\
+> 设计依据：[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.5 §1～13、16；[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.3.1 §2～5、§4.1；[插件包与进程通信协议规范](../规范/插件包与进程通信协议规范.md) v0.2.6 §6～8\
 > Acceptance：OM-01～OM-03、OM-05～OM-08、OM-14、OM-15（见[演示验收基线](../验收与实施/演示验收基线.md)）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：见第 3 节
@@ -31,7 +31,7 @@
 - Plugin 仅通过 Host 提供的 inbound/outbound staging directory 写入/读取原始 N1/N2 文件描述符；不拥有 ArtifactStore，不生成 artifactRef。Host 导入/导出由 Next SR-010 承载。
 - 将规范化 Event 发布给 Host，并执行 SBI Delivery 编码。
 - 对共享 UpdateSMContext 仅提取最小 NAS discriminator，区分新 Modify、UE-requested Release 与既有事务的 N1/N2 completion；Host Resolver/Continuation 负责选择或恢复 Skill，Plugin 不识别原 Run。
-- 保留 externalRequestId、responseObligation、Run/continuation 关联。
+- 仅保留协议/部署提供的 externalRequestId（缺失时为空）、Plugin 本地 responseChannelId、可信 source.peerId、Content-ID/slot 和当前 HTTP/2 stream 的内存 waiter。Plugin 不保存、不接收、不发送 Run ID、responseObligationId 或 continuation state；Host 创建 responseObligationId，并依据 Host-owned pending continuation index 关联原 Run/generation。当前 HTTP callback 的 responseChannelId 与原 Run 的执行身份严格分离。
 
 ## 3. 非目标
 
@@ -57,7 +57,7 @@
 | AC-009-01 | Plugin 启动，经 stdin/stdout IPC 版本握手与 capabilities discovery | Plugin Package/IPC v1alpha1 协议通过；非法版本与超帧明确拒绝 |
 | AC-009-02 | Create/Update JSON 与 multipart/related Content-ID、原始 N1/N2 bytes | 归一化 Event 包含正确 correlation/slot/mediaType/byteLength，原字节逐位相同 |
 | AC-009-03 | Staging 仅可提交相对路径、声明 slot；绝对路径、路径穿越、artifactRef 反例 | 非法描述拒绝；Plugin 不直接创建 Host artifactRef/ArtifactStore |
-| AC-009-04 | `/modify` 的新请求 N1 `0xC9`/`0xD1`、既有事务回调 N1 `0xD4` 或 N2 Setup/Modify/Release Response；截断、未知 discriminator、错配 `n2SmInfoType` | 新操作与 continuation 准确区分；合法回调生成关联事件而非新业务 mutation；异常 fail-closed，Plugin 不恢复 Run、不调用 Owner |
+| AC-009-04 | 按 F06 v0.3.1 §4.1 固定的三个 normalized eventType、operationId、payload.request Schema 和 classification 测试：新请求 N1 `0xC9`/`0xD1`；continuation N1 `0xD4`；continuation N2 `PDU_RES_SETUP_RSP`/`PDU_RES_MOD_RSP`/`PDU_RES_REL_RSP`；覆盖分别到达、同一请求同时携带两路 confirmation、冲突 discriminator、截断、未知消息与错误 Content-ID | 精确发布 `nsmf.create-sm-context`、`nsmf.update-sm-context` 或 `nsmf.update-sm-context.continuation`；request JSON 与固定 OpenAPI Schema 一致且不改写；discriminator 与原始字节/JSON enum 一致；冲突/未知输入 fail-closed；Plugin 不持有 Run、responseObligation 或调用 Owner |
 | AC-009-05 | responseObligation 对应可用 Delivery 与错 externalRequestId、过期/越权输出 | 仅本次授权 response 交付；串单/过期拒绝，不发出错误 2xx |
 | AC-009-06 | 重复请求与多并发回放，不同 correlation 的 raw fixtures | 原始 bytes/correlation 不混淆；本模块只证明 Plugin ingress/delivery，不宣称 Next 去重/Run 或 OM E2E |
 
@@ -65,20 +65,20 @@ AC-009-01～06 仅依赖测试 Host、协议 fixture 和计数 peer。真实 Own
 
 ### 5.1 AC-009-04 参数化分类用例与职责边界
 
-本节是 AC-009-04 的**模块测试子例**，不是新增系统 OM 或 Run/Owner 实现范围。使用 F06 §4、§6～§7、§EC04 两端实现矩阵固定的 Nsmf 路径、multipart part 与消息类型；下表“分类”描述语义，不凭空创建新的 wire `eventType` 枚举或 Runtime DTO。实际传给 Host 的事件字段沿用插件 IPC v1alpha1 与 F06 已声明契约；如具体映射仍缺，先在固定 fixture 中明确映射并评审，禁止由 Harness 猜测公共机器标识。
+本节是 AC-009-04 的**模块测试子例**，不是新增系统 OM 或 Run/Owner 实现范围。规范化事件字段以 F06 v0.3.1 §4.1 为唯一集成语义合同，插件包的 plugin.yaml / schemas 必须逐项实现该合同；3GPP OpenAPI 原始 YAML 不得修改、手写投影或补字段。operationId、payload.request、discriminator、Content-ID/slot 和三个 eventType 均按 F06 固定值验收，不允许 Harness 猜测。
 
-| 输入（各含规范化 JSON/Content-ID 与原始字节 fixture） | Plugin 应证明的分类 | 本模块不得做的事 |
+| 输入（各含规范化 JSON/Content-ID 与原始字节 fixture） | 固定 eventType / discriminator | Plugin 应证明的分类与禁止事项 |
 |---|---|---|
-| `POST /sm-contexts/{smContextRef}/modify` + N1 5GSM `0xC9` | 新 UE Modify ingress | 不选择 Modify Skill、不创建 Run |
-| 相同路径 + N1 5GSM `0xD1` | 新 UE-requested Release ingress（非 network-initiated ReleaseSMContext） | 不调用 Release Owner |
-| 相同路径 + N1 Release Complete `0xD4` | 既有 Release 的 N1 confirmation/continuation ingress | 不把 `0xD4` 当作新的 Release 请求 |
-| 相同路径 + N2 `PDU_RES_SETUP_RSP` | 既有 Create 事务的 N2 completion ingress | 不重新触发 Create |
-| 相同路径 + N2 `PDU_RES_MOD_RSP` | 既有 Modify 事务的 N2 completion ingress | 不重新触发 Modify |
-| 相同路径 + N2 `PDU_RES_REL_RSP` | 既有 Release 事务的 N2 completion ingress | 不重新触发 Release |
-| N1/N2 回调分别到达、交错到达；同 peer 多事务并发 | 每次入站独立保留 operation、smContextRef、稳定 externalRequestId（若协议提供）、responseChannelId、Content-ID/slot 和原字节；不会串单 | 不用 HTTP 回调推定 Owner COMMITTED，不让 Event Plugin 持有/发送 runId |
+| `POST /sm-contexts/{smContextRef}/modify` + N1 5GSM `0xC9` | `nsmf.update-sm-context`；payload.operationId=`UpdateSmContext`，payload.discriminator.n1MessageType=`0xC9` | 新 UE Modify ingress；不选择 Modify Skill、不创建/关联 Run |
+| 相同路径 + N1 5GSM `0xD1` | `nsmf.update-sm-context`；payload.operationId=`UpdateSmContext`，payload.discriminator.n1MessageType=`0xD1` | 新 UE-requested Release ingress（非 network-initiated ReleaseSMContext）；不调用 Release Owner |
+| 相同路径 + N1 Release Complete `0xD4` | `nsmf.update-sm-context.continuation`；payload.discriminator.n1MessageType=`0xD4` | 既有 Release 的 N1 confirmation ingress；不把 `0xD4` 当作新的 Release 请求 |
+| 相同路径 + N2 `PDU_RES_SETUP_RSP` | `nsmf.update-sm-context.continuation`；payload.discriminator.n2SmInfoType=`PDU_RES_SETUP_RSP` | 既有 Create 事务的 N2 completion ingress；不重新触发 Create |
+| 相同路径 + N2 `PDU_RES_MOD_RSP` | `nsmf.update-sm-context.continuation`；payload.discriminator.n2SmInfoType=`PDU_RES_MOD_RSP` | 既有 Modify 事务的 N2 completion ingress；不重新触发 Modify |
+| 相同路径 + N2 `PDU_RES_REL_RSP` | `nsmf.update-sm-context.continuation`；payload.discriminator.n2SmInfoType=`PDU_RES_REL_RSP` | 既有 Release 事务的 N2 completion ingress；不重新触发 Release |
+| N1/N2 回调分别到达、交错到达；同 peer 多事务并发 | `nsmf.update-sm-context.continuation`；payload 保留 `smContextRef`、原始 UpdateSmContext JSON 和各自 discriminator；每次 ingress 有独立 responseChannelId | 保留可信 peer、externalRequestId（仅在协议/受信部署提供时）、Content-ID/slot 和原字节；Host 通过 Host-owned pending index 查找原 Run，Owner 再校验 generation/transaction；Plugin 不持有 Run/responseObligation |
 | 缺失或重复 Content-ID、part 错配、`n2SmInfoType` 与 N2 part 不符、截断/未知 5GSM、互相冲突的消息种类 | 拒绝错误输入，不发布新的可执行业务事件 | 不通过默补字段或业务解码修复输入 |
 
-测试 Host 仅验证 Plugin 的事件投影、隔离和 IPC，不用伪造 Run 身份替代 Host Continuation 证明。**原 Run/generation/releaseTxn 的匹配、回调独立响应义务以及零重复 mutation** 属 F02/F04/F05、SR-010/011 的组合验收，不由 SR-009 单模块声称 PASS。合法回调不因尚无可恢复 Run 就被 Plugin 错误归类；Host 负责后续接纳、拒绝或关联。
+测试 Host 仅验证 Plugin 的三个规范化 eventType、payload schema、discriminator 投影、staging 和 IPC。Plugin 只为当前 HTTP/2 stream 保留内存 waiter；Host 创建本次 ingress 的 responseObligationId，并用 Host-owned pending continuation index 按可信 peer、operationId、smContextRef 和分类定位候选原 Run；若无匹配或多重匹配则拒绝，不新建 Run。Owner/Runtime 再验证原 Run 的 generation、releaseTxn、SUPI/PSI 与本路 originalInvocationId/Proof。**原 Run/generation/releaseTxn 的匹配、回调独立响应义务以及零重复 mutation** 属 F02/F04/F05、SR-010/011 的组合验收，不由 SR-009 单模块声称 PASS。Plugin 不接收或发送 Run ID / responseObligationId。
 
 ### 5.2 实现落点、运行和取证
 
@@ -132,3 +132,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-27 | 0.2.4 | Codex / GPT-6 | 设计依据、§5 | 标明测试 Host 可覆盖的模块范围 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
 | 2026-11-27 | 0.2.5 | Codex / GPT-6 | 评审状态 | 登记第二轮限定范围及外部依赖 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
 | 2026-11-27 | 0.2.6 | GPT-6（ChatGPT） | §2、§5～5.2、设计依据、修订记录 | 扩展 AC-009-04 到 0xD4 与三种 N2 completion；模块验证和 Host Continuation/Owner 验证分离；按版本整理修订记录 | 关闭合法回调被误拒/误发新 mutation 的设计缺口，保持既定 AC 数量与实施非目标 | Issue #12；PR #46；SR-009；F06 §EC04 |
+| 2026-11-27 | 0.2.7 | GPT-6（ChatGPT） | §2、§5～5.2、设计依据、修订记录 | 移除 Plugin 对 Run/responseObligation/continuation state 的持有要求；引用 F06 冻结的三个 Event type、payload.request、discriminator、Content-ID/slot 与 Host-owned continuation 关联规则 | 处理独立模型 Review #6082541121 的 P1 R3-SR009-01/02，避免 IPC 违反 Host-only Run 边界和实现者猜测 Event 契约 | Issue #12；PR #46；F06 v0.3.1；Review #6082541121 |
