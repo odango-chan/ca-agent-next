@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.2.17\
+> 文档版本：0.2.18\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 修订日期：2026-11-27\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -368,8 +368,8 @@ Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId�
 - **本地 G.4 与外部 OAS 3.0 分离**：Skill-owned `requestSchema` 根及本地 Schema 节点继续使用 CA-SL 1.6.0 G.4。只有在 Skill 显式声明并 pin Source Bundle dependency 后，才能引用其中精确的 `#/components/schemas/...`；目标由 OAS 3.0 Schema Object validator 解释，不套用 G.4 白名单，不做 projection / Adapter。
 - **选定根与 lazy Resolver**：Compiler 的根是精确 Schema Component JSON Pointer；Plugin ingress 的根是固定 operation identity + `requestBody` surface（当前 `PostSmContexts` 的 `jsonData`）。先解析原版根 YAML，再仅递归解析该根可达的 refs；不得 eager resolve 根文件中未选定 operation 的全部 refs。相对 `$ref` 以引用所在文件为基准按 RFC 3986 解析；fragment 按 RFC 6901 解码。`../` 仅在规范化后的目标仍位于 pin 的 Source Root 内时允许；拒绝任意 scheme / authority / query、绝对路径、逃出 Source Root 的路径、非法 pointer escape、Bundle 外文件、unresolved in-scope ref、cross-commit mixing、non-schema pointer 和循环引用。未选定闭包外 refs 不构成当前消费失败。Build / Verify 必须离线使用锁定快照。
 - **真实来源闭包基线**：在 OpenAMSM commit `dc83ccbf5be54dcc7112dd43ba95ea6fa5975550` 上，`PostSmContexts.requestBody → jsonData → SmContextCreateData` 静态引用遍历得到 4 份原版 YAML、102 个可达 Schema Component，无未解析目标或循环。闭包为 TS 29.502、TS 29.571、TS 29.510 NFManagement、TS 29.518 Namf Communication；不是全目录 472 份 YAML。
-- **Dialect-aware 验证**：本地节点使用 G.4 validator；外部目标及其可达引用使用 OpenAPI 3.0.0 Schema Object semantics。当前固定闭包实际包含 `allOf` 1、`anyOf` 25、`oneOf` 3、`nullable` 2、`format` 4、`pattern` 42、`additionalProperties` 3、`items` 23、`enum` 27、`required` 26、`default` 21 个关键字出现项；这些计数是该 source commit 的审计证据，Golden 应覆盖各实际出现语义，不应当作未来版本的固定数量。组合语义为 `allOf` 交集、`anyOf` 至少一个分支、`oneOf` 恰好一个分支；`pattern`、schema-valued / boolean `additionalProperties`、`nullable`、`format` 等不得丢弃 / 改写。若可达闭包含不支持语义，使用 `SCHEMA_INVALID` 拒绝并输出 source file / JSON Pointer / Skill SourcePath；不得生成部分 Artifact。
-- **CEL 类型环境**：对 `anyOf` / `oneOf`，无条件暴露的字段必须在所有分支均存在且类型一致；`allOf` 按交集组合属性约束并合并 required 集合，类型冲突拒绝；`nullable` 的 Null 与 Missing 分开处理。无法证明可用性的字段不进入无条件类型环境，不猜测为某个类型。Plugin 的完整 operation / multipart 校验仍由 SR-010 原生 OAS consumer 负责，Compiler 不复制 operation 逻辑。
+- **Dialect-aware 验证**：本地节点使用 G.4 validator；外部目标及其可达引用使用 OpenAPI 3.0.0 Schema Object semantics。当前固定闭包实际包含 `allOf` 1、`anyOf` 25、`oneOf` 3、`nullable` 2、`format` 4（实际值为 `uuid` / `date-time` / `byte`）、`pattern` 42、`additionalProperties` 3（本快照三处均为 Schema Object）、`items` 23、`enum` 27、`required` 26、`default` 21 个关键字出现项；这些计数是该 source commit 的审计证据，Golden 应覆盖各实际出现语义，不应当作未来版本的固定数量。组合语义为 `allOf` 交集、`anyOf` 至少一个分支、`oneOf` 恰好一个分支；`pattern`、schema-valued `additionalProperties`、`nullable`、`format` 等不得丢弃 / 改写。OAS3 允许 boolean-valued `additionalProperties`，当前快照没有该形式；实现遇到时须按 OAS3 处理或明确 fail-closed，不得静默忽略。`default` 仅为注解，不自动填充输入。若可达闭包含不支持语义，使用 `SCHEMA_INVALID` 拒绝并输出 source file / JSON Pointer / Skill SourcePath；不得生成部分 Artifact。
+- **CEL 类型环境**：对 `anyOf` / `oneOf`，只有在每个可满足分支中均声明、均列入 `required` 且类型一致的字段，才能作为无条件可访问字段；其他字段仅在 CEL 类型系统显式支持 optional 时按 optional 暴露，否则不允许无条件访问。`allOf` 按交集组合属性约束并合并 required 集合，类型冲突拒绝；`nullable` 的 Null 与 Missing 分开处理。无法证明可用性的字段不进入无条件类型环境，不猜测为某个类型。Plugin 的完整 operation / multipart 校验仍由 SR-010 原生 OAS consumer 负责，Compiler 不复制 operation 逻辑。
 - **Host Context**：SR-030 Schema-only Package 仍只由 `Contract.contexts` 引用；它与 OpenAPI Source Bundle 是不同依赖 kind。两者都不产生 Capability / Callable Scope。
 - **机器字段门禁**：Source Bundle dependency kind、alias / URI / JSON Pointer 编码、Manifest / Lock / Build DTO 字段、OAS 3.0 validator 版本与 Golden 必须由 ca-skills / Compiler Owner 在正式 1.6.0 Schema / Golden 中冻结。当前没有正式发布，不允许 Harness 猜字段或宣称 READY。
 
@@ -406,3 +406,4 @@ SR-013 AC-013-07 需验证原版组件直接引用、跨文件 CommonData 闭包
 | 2026-11-27 | 0.2.15 | ChatGPT / GPT-6 | 本轮 IR-009 设计修正 | 固定 OpenAMSM 版本 + 原版 YAML 逐字节代发布；显式区分可选 Adapter 与 Provider Codec 输出 | 落实原版 YAML 不得改动、消除误把原版当 G.4 的风险 | Issue #47；SR-031/026/013 |
 | 2026-11-27 | 0.2.16 | ChatGPT / GPT-6.2 | §12 | 以原生 OAS3 外部 Schema Component 引用替代强制 Adapter；定义 dialect-aware Resolver、pin、嵌套 refs、类型推导与失败门槛 | G.4 与 OAS 3.0 是不同 dialect，不能用投影替代原版标准 | IR-009；Issue #47；SR-013/031 |
 | 2026-11-27 | 0.2.17 | ChatGPT / GPT-6.2 | §12 | 明确 selected-surface lazy Resolver、RFC 3986 / 6901 引用解析、PostSmContexts 四文件闭包及实际 OAS3 关键字 / 组合类型推导 | 避免全文件 eager resolve、漏锁传递引用和把 union / allOf 语义混为一谈 | IR-009；Issue #47；SR-013/031；EC01 |
+| 2026-11-27 | 0.2.18 | ChatGPT / GPT-6.2 | §12 | 将 CEL union 字段收紧为各分支 required；核准实际 additionalProperties / format 形态与 default 注解语义 | 防止静态类型误判可选字段，并使 Golden 覆盖真实 OAS3 dialect | IR-009；Issue #47；SR-013/031；EC01 |
