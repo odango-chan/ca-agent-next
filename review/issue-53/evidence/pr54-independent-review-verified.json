@@ -1,0 +1,42 @@
+﻿{
+    "id":  6083215845,
+    "node_id":  "PRR_kwDOV7AwNM8AAAABapaB5Q",
+    "user":  {
+                 "login":  "odango-chan",
+                 "id":  297766018,
+                 "node_id":  "U_kgDOEb-Mgg",
+                 "avatar_url":  "https://avatars.githubusercontent.com/u/297766018?v=4",
+                 "gravatar_id":  "",
+                 "url":  "https://api.github.com/users/odango-chan",
+                 "html_url":  "https://github.com/odango-chan",
+                 "followers_url":  "https://api.github.com/users/odango-chan/followers",
+                 "following_url":  "https://api.github.com/users/odango-chan/following{/other_user}",
+                 "gists_url":  "https://api.github.com/users/odango-chan/gists{/gist_id}",
+                 "starred_url":  "https://api.github.com/users/odango-chan/starred{/owner}{/repo}",
+                 "subscriptions_url":  "https://api.github.com/users/odango-chan/subscriptions",
+                 "organizations_url":  "https://api.github.com/users/odango-chan/orgs",
+                 "repos_url":  "https://api.github.com/users/odango-chan/repos",
+                 "events_url":  "https://api.github.com/users/odango-chan/events{/privacy}",
+                 "received_events_url":  "https://api.github.com/users/odango-chan/received_events",
+                 "type":  "User",
+                 "user_view_type":  "public",
+                 "site_admin":  false
+             },
+    "body":  "## 独立评审结论：REQUEST_CHANGES\n\n关联 Issue：#53。\n\n**行政说明：**当前 GitHub 身份 `odango-chan` 与 PR 作者相同，因此本次以 **COMMENT** 提交独立评审，不提交伪造的 APPROVE。技术结论仍为 **REQUEST_CHANGES**。\n\n固定基线：Base `34e99e0cc54cc82b6b40040286fc84673432ef76`，Head `7452f60ccbc68e1468b52018f59bdc2347cc32d5`，Refresh `f63bbce2709284c97d8cd150343d491a3f2958db`。完整证据、16 文件逐项结论、SR 状态表、F02/F08/F09 外部核验和文件级修复清单见：\n\n**[完整独立评审报告](https://github.com/odango-chan/ca-agent-next/blob/83c5ca2f9250ac80af54818f1dc0252c3e0be260/review/issue-53/PR54-INDEPENDENT-REVIEW.md)**  \n[可复现验证脚本](https://github.com/odango-chan/ca-agent-next/blob/83c5ca2f9250ac80af54818f1dc0252c3e0be260/review/issue-53/validate_pr54.py) · [机器结果](https://github.com/odango-chan/ca-agent-next/blob/83c5ca2f9250ac80af54818f1dc0252c3e0be260/review/issue-53/validation-results.json)\n\n### 阻断问题\n\n1. **P1 SR 统计错误**：`docs/治理/实施状态总览.md:17,25` 的 DRAFT=22 使表内合计为 28，权威实测应为 21、总数 27。\n2. **P1 SR-003 当前状态回退**：`实施状态总览:92`、`现有文档盘点与收敛计划:75`、`跨仓设计资产迁移与一致性审计:65` 与权威 SR-003 模块 VERIFIED、PR #34/#41/#42 和真实 CI 冲突。\n3. **P1 错误 Studio SHA**：`CA Agent Next 架构设计.md:245` 的完整 SHA 拼写错误；实际 main 为 `79bd2c3f64a90e7f0f169204c866a3218655bab1`。\n4. **P1 Studio 状态矛盾**：依赖审计 L100、迁移审计 L133、功能树 L168/L202 仍把 #272 写成 OPEN/DRAFT 或使用旧 main；实际 #272 已 MERGED，merge 为 `a863355…`。\n5. **P1 provenance 状态错误**：F09 L153/L165、实施状态 L66、SR-016 L31 把 Host fixture provenance 概括为未实现；当前 main 的默认 Host Context Example 已校验并持久化 `sourceStatus=DEVELOPMENT_FIXTURE`。普通 ZIP 全局策略、reload 与双根 Development 验收仍未完成，必须分开表述。\n6. **P2 可靠整合缺口**：迁移审计 L29/L31/L36/L37 的四列表被三列表覆盖，restore 中有效 CA-SL/Provider/Studio 约束被丢弃；另有多处版本指针、当前基线、PR 引用和修订历史冲突。\n\n### 必须完成的文件级修复\n\n- `docs/治理/实施状态总览.md`：DRAFT 算术、SR-003、sourceStatus、restore SHA、PR #13。\n- `docs/治理/现有文档盘点与收敛计划.md`：§6 统计、头版本、修订表及 16/19 比较口径。\n- `docs/架构设计/CA Agent Next 架构设计.md`：Studio SHA、restore/PR Head。\n- `docs/参考与审计/跨仓依赖与可行性审计.md`：#272、统计、0.2.12 修订记录、SR-003 快照。\n- `docs/参考与审计/跨仓设计资产迁移与一致性审计.md`：恢复四列表和有效内容，修 #272、Plugin Manager、版本与修订链。\n- `docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md`：按默认 fixture、普通 ZIP、剩余验收重写 provenance，拆分 #272 merge/main。\n- `docs/SR/SR-016-工作台设计移交与条件编辑.md`：同步 F09 版本，界定已实现 provenance 与剩余 AC。\n- `docs/治理/功能树与需求追踪基线.md`：#272、Studio main、SR-003 Head、F09 版本及修订链。\n- `docs/治理/文档总目录与索引.md`、`docs/IR/IR 总登记册.md`、`docs/SR/SR-025-MAS Owner Interface Package Publisher.md`：同步版本指针、目录计数与修订历史。\n- `docs/治理/SR 总索引.md`、`docs/验收与实施/演示验收基线.md`：修 PR #13/#54、Acceptance 自版本与双方修订历史。\n- F02/F08/外部能力域总览：修重复日期、修订表、快照日期及名实不符记录。\n\n修复后必须重跑全部静态检查和新 Head 的 Review Context；不得复用 `7452f60` 的 CI 作为新 Head 证据。\n\n### 已完成的独立验证\n\n- 27 项权威 SR 实测：4 VERIFIED / 1 READY / 1 IMPLEMENTED / 21 DRAFT，无重复漏项。\n- SR-003 模块 VERIFIED 有真实 Ubuntu/Windows CI；系统 EX-02/03/04/18 仍 NOT_RUN。\n- SR-025 v0.1.8 READY；ca-client-tools #43 OPEN，Publisher 未实施，AC-025 未执行。\n- 16 文件 Markdown 解析完成；504 links、302 本地链接、47 锚点，无缺失本地路径/锚点。\n- Git tree 实测：197 blobs / 157 Markdown / 247 recursive entries（50 directory trees）。\n- 本地 SR-001 回归 80/80 PASS，固定 Base/Head 的 Review Context 生成 PASS。\n- 当前 Head 的 Review Context Run #192/#193/#194/#195 均 SUCCESS；这些结果不覆盖上述设计与治理缺陷。\n- 独立静态总结果为 **FAIL**：版本/元数据/表格结构错误及 31 处 whitespace warning，详见机器结果。\n\n**最终回答：当前 PR #54 不能安全合入 restore；先完成上述修复并重新独立评审。**\n",
+    "state":  "COMMENTED",
+    "html_url":  "https://github.com/odango-chan/ca-agent-next/pull/54#pullrequestreview-6083215845",
+    "pull_request_url":  "https://api.github.com/repos/odango-chan/ca-agent-next/pulls/54",
+    "author_association":  "OWNER",
+    "is_copilot_code_review":  false,
+    "copilot_code_review_effort":  null,
+    "_links":  {
+                   "html":  {
+                                "href":  "https://github.com/odango-chan/ca-agent-next/pull/54#pullrequestreview-6083215845"
+                            },
+                   "pull_request":  {
+                                        "href":  "https://api.github.com/repos/odango-chan/ca-agent-next/pulls/54"
+                                    }
+               },
+    "submitted_at":  "2026-11-27T03:49:06Z",
+    "commit_id":  "7452f60ccbc68e1468b52018f59bdc2347cc32d5"
+}

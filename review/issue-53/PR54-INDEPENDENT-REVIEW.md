@@ -275,10 +275,11 @@ SR-003 模块 VERIFIED 有证据，但《实施状态总览》L92、《跨仓依
 
 ## 11. GitHub Review 留痕链接
 
-- 独立评审分支：`review/issue-53-independent-20261127`。
-- 本报告与机器结果：提交并推送后追加永久链接。
-- PR #54 Review：提交后追加链接。
-- Issue #53 更新：提交后追加链接。
+- 独立评审分支：[`review/issue-53-independent-20261127`](https://github.com/odango-chan/ca-agent-next/tree/review/issue-53-independent-20261127)。
+- 首次完整报告提交：[`83c5ca2f9250ac80af54818f1dc0252c3e0be260`](https://github.com/odango-chan/ca-agent-next/commit/83c5ca2f9250ac80af54818f1dc0252c3e0be260)。
+- PR #54 Review：[Review #6083215845](https://github.com/odango-chan/ca-agent-next/pull/54#pullrequestreview-6083215845)，状态 `COMMENTED`，绑定 Head `7452f60ccbc68e1468b52018f59bdc2347cc32d5`。
+- Issue #53 更新：[Issue Comment #7209304348](https://github.com/odango-chan/ca-agent-next/issues/53#issuecomment-7209304348)。
+- 本报告的最终提交 SHA 以独立评审分支当前 HEAD 为准；首次报告链接固定在 `83c5ca2`，不会随追加留痕而失效。
 
 ## 12. 未完成事项及其影响
 
