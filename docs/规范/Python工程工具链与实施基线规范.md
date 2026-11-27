@@ -182,7 +182,7 @@ Workflow 对所有 Pull Request 运行轻量检查；只有变更触及根 Pytho
 1. PR Base 必须使用基线清单允许的共享分支；PR #112 仅允许固定 Bootstrap Base。
 2. PR Base 必须是共享 uv 基线 SHA 的后代，并包含 `pyproject.toml`、`uv.lock`、`.python-version`、统一 unittest gate 和固定 setup-uv action 的 Python Workflows。
 3. 根目录新增 `requirements*.txt`、`Pipfile*`、`poetry.lock`、Conda/Mamba 环境或锁文件时失败；嵌套测试 fixture 不按根依赖入口处理。
-4. 新增/修改的可执行命令行不得使用 pip/pip-tools、Poetry/Conda/Mamba，不得裸运行 Python unittest/pytest/compileall/Agent Smoke 或根脚本；项目命令必须使用 `uv run --no-sync --locked`。
+4. 新增/修改的可执行命令行不得使用 pip/pip-tools、Poetry/Conda/Mamba，不得裸运行 Python unittest/pytest/compileall/Agent Smoke 或根脚本；项目命令必须使用 `uv run --no-sync --locked`；仅 `python-toolchain-policy.yml` 中执行 `test_python_toolchain_policy.py` 的标准库自测允许 `uv run --no-project`，不得将该例外用于应用测试。
 5. 禁止设置共享 `UV_PROJECT_ENVIRONMENT`，禁止 `uv run/sync --system` 或 `--active` 绕过 worktree 本地 `.venv/`。
 6. `pyproject.toml` 中依赖、Python 版本、dependency-groups 或 uv 解析配置变化时，同一 PR 必须更新 `uv.lock`。
 7. 策略测试覆盖允许/拒绝命令、锁文件范围、路径范围、Bootstrap Base 和后续 PR Base。
@@ -199,3 +199,4 @@ Workflow 通过会产生 `Python Toolchain Policy / Python Toolchain Policy` 检
 |---|---|---|---|---|---|---|
 | 2026-11-27 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 建立 Next 根 Python 工程共享 uv 工具链、实施分支继承、堆叠 PR、已有分支迁移和 Harness 提示词约束 | 避免 SR-028 尚未进入 main 时其他 Python 实施分支绕过 uv，形成多套依赖入口 | Issue #111；Issue #96；PR #99；SR-028；G02 |
 | 2026-11-27 | 0.2.0 | GPT-6.2（ChatGPT） | §9、修订记录 | 增加 Python Toolchain Policy CI、可信 Base 策略快照、命令/锁文件/基线继承检查与 Required Check 配置说明 | 将 uv 共享基线从提示词约束提升为自动 PR 检查，避免 PR 自行修改策略绕过门禁 | Issue #111；PR #112；PR #99 |
+| 2026-11-27 | 0.2.1 | GPT-6.2（ChatGPT） | §9.2、修订记录 | 收紧 `--no-project` 例外，仅允许门禁自身标准库测试；增加 Windows `py` 裸入口检测 | 避免通过 `uv run --no-project` 绕开项目锁定环境 | Issue #111；PR #112 |
