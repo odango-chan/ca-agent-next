@@ -9,7 +9,7 @@
 > 修订日期：2026-11-26  
 > 适用范围：Event Context、Run Context、Observation/Evidence 投影、Host-owned ArtifactStore、SBI multipart、Plugin Handoff、Codec 输入输出
 
-> 全局评审范围：继承根目录 Agent.md 的 review_scope。\
+> 全局评审范围：继承根目录 Agent.md 的 review_scope。
 > 本文局部非目标：详见 §13。
 
 ## 1. 目标与基本边界

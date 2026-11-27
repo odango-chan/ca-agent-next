@@ -7,7 +7,7 @@
 > 关联需求：IR-004、IR-005；SR-007、SR-010、SR-011、SR-018、SR-025\
 > 修订日期：2026-11-25  
 > 实现基线：env-openamsm main dc83ccbf5be54dcc7112dd43ba95ea6fa5975550\
-> 全局评审范围：继承根目录 Agent.md 的 review_scope\
+> 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：不重建 Agent Runtime、Provider、Plugin 或 Studio 内部实现；不扩展到生产级 DFX 或全量 3GPP 资格
 
 ## 1. 架构定位与权威归属
