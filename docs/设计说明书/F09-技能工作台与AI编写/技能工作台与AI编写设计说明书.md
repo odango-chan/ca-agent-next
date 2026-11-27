@@ -1,9 +1,9 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.9  
-> 状态：目标设计基线待评审；当前实现快照 2026-11-26：#272 MERGED、#276 OPEN/DRAFT/DIRTY、#269 OPEN；SR-024 VERIFIED、SR-025 READY  
-> 修订日期：2026-11-26  
+> 文档版本：0.3.10  
+> 状态：目标设计基线待评审；当前实现快照 2026-11-27：#272 MERGED、#276 OPEN/DRAFT/DIRTY、#269 OPEN；SR-024 VERIFIED、SR-025 READY  
+> 修订日期：2026-11-27  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级准入、额外 package-level digest、签名和 Trust Registry；仅保留 Compiler v2.1.0 Interface Package schema 明确要求的 `files[].sha256`  
 
