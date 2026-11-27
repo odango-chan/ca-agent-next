@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.55
+> 文档版本：0.3.56
 > 状态：29 项 SR：4 VERIFIED、1 IMPLEMENTED、24 DRAFT；PR #46 Review #6083641266 对 SR-028 的第五轮独立复评为 CHANGES_REQUESTED（固定 Head ee73ad48，0 P0 / 1 P1 / 3 P2）；第五轮 R028-17～20 已按 Issue #12 整改并推送，等待新 Head 第六轮独立复评，SR-028 仍 DRAFT、AC-028-01～10 产品执行 NOT_RUN、READY=0。
 > 修订日期：2026-11-27\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -115,6 +115,10 @@
 - **实施门槛**：24 项实施 SR 仍全部 DRAFT，READY=0；未创建实施 Issue/Goal，未运行 Compiler、uv 双平台、Host/Runtime/Codec、Echo、OpenAMSM 或真实 NF E2E。所有新 Head 结论须绑定完整 Head/Base SHA 和正式 GitHub Review。
 - **SR-028 专项门槛**：最新 Review #6083641266 对固定 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606` 给出 1 P1 / 3 P2；已完成 Issue #12 第五轮文档整改，G02 v0.2.6 / SR-028 v0.2.8 已推送，等待新 Head 第六轮独立复评，AC-028-01～10 产品执行仍 NOT_RUN。未取得新 Head 的 `APPROVE_FOR_READY` 前 READY=0。
 
+
+### 2.3 23 项逐 SR 独立评审与复评入口
+
+[23 项独立设计评审汇总](https://github.com/odango-chan/ca-agent-next/issues/12#issuecomment-7210551945)中，前 10 项绑定 Head `42a7fe2ce7826b7cda74110e843f39401571299c`，后 13 项绑定 `ee73ad48f9cf4132561f7a72065086ef00bb3606`，共同 Base 为 `3c7c48383c52504a4861900bc1f8b731442f16c2`。19 项获限定或静态设计认可；[SR-029 #90](https://github.com/odango-chan/ca-agent-next/issues/90#issuecomment-7209221629) 与 [SR-007 #71](https://github.com/odango-chan/ca-agent-next/issues/71#issuecomment-7209489999) 要求修订，SR-026/027 缺外部输入。SR-028 由专项跟踪。AC-029-10 和 AC-007-05 的本轮修订等待新快照独立复评。
 
 ## 3. 设计恢复与实施顺序
 
@@ -237,3 +241,4 @@
 | 2026-11-27 | 0.3.53 | GPT-6.2（ChatGPT） | 文档头、§2.1、§2.2、§3.2、修订记录 | 记录 SR-028 专项独立 Review #6082874849 的固定 Head/Base 与 CHANGES_REQUESTED 结论，覆盖旧 Head 限定认可；同步 Issue #12 整改状态 | 防止 SR-028 继续沿用已被新专项复评推翻的旧 Head 结论，保持 READY=0 | Issue #12；PR #46；Review #6082874849；SR-028 v0.2.6 |
 | 2026-11-27 | 0.3.54 | GPT-6.2（ChatGPT） | 文档头、§2.1.1、§2.2、§3.2、修订记录 | 回填 SR-028 第四轮独立 Review #6083225844 的固定 Head/Base、0 P0/4 P1/3 P2、AC 设计结论与产品 NOT_RUN；记录第四轮整改已推送并等待新 Head 复评 | 不沿用已被第四轮复评覆盖的旧 7 P1/2 P2 结论，不提前提升 READY | Issue #12；PR #46；Review #6083225844；G02 v0.2.5；SR-028 v0.2.7 |
 | 2026-11-27 | 0.3.55 | GPT-6.2（ChatGPT） | 文档头、§2.1.1、§2.2、§3.2、修订记录 | 回填 SR-028 第五轮独立 Review #6083641266 的固定 Head/Base、0 P0/1 P1/3 P2 与 R028-17～20；记录第五轮整改已推送的 G02 v0.2.6 / SR-028 v0.2.8 版本与第六轮复评门槛，READY=0、产品 AC NOT_RUN 不变 | 防止 SR 索引沿用第四轮问题统计或将本轮文档整改误认为产品实施/READY | Issue #12；PR #46；Review #6083641266；G02 v0.2.6；SR-028 v0.2.8 |
+| 2026-11-27 | 0.3.56 | Codex / GPT-6 | §2.3 | 归档 23 项评审和两项整改的复评范围 | 区分原评审结论、设计修订与实施状态 | Issue #12、#71、#90；PR #46 |
