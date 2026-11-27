@@ -1,0 +1,101 @@
+﻿{
+    "sha":  "780497a2918ad3e7bdff554ab64b0ba627e867e0",
+    "node_id":  "C_kwDOUFs9CdoAKDc4MDQ5N2EyOTE4YWQzZTdiZGZmNTU0YWI2NGIwYmE2MjdlODY3ZTA",
+    "commit":  {
+                   "author":  {
+                                  "name":  "odango-chan",
+                                  "email":  "sangachy@gmail.com",
+                                  "date":  "2026-11-25T09:10:30Z"
+                              },
+                   "committer":  {
+                                     "name":  "GitHub",
+                                     "email":  "noreply@github.com",
+                                     "date":  "2026-11-25T09:10:30Z"
+                                 },
+                   "message":  "docs: pin merged CA-SL v1alpha5 refresh in release record (#89)",
+                   "tree":  {
+                                "sha":  "519f2e367c54fc4b6c2bc1caccd5773a9299922e",
+                                "url":  "https://api.github.com/repos/odango-chan/ca-skills/git/trees/519f2e367c54fc4b6c2bc1caccd5773a9299922e"
+                            },
+                   "url":  "https://api.github.com/repos/odango-chan/ca-skills/git/commits/780497a2918ad3e7bdff554ab64b0ba627e867e0",
+                   "comment_count":  0,
+                   "verification":  {
+                                        "verified":  true,
+                                        "reason":  "valid",
+                                        "signature":  "-----BEGIN PGP SIGNATURE-----\n\nwsFcBAABCAAQBQJrBqYGCRC1aQ7uu5UhlAAAghUQAJTCfGRqBHUZe4QnWP59yHQN\n/0EwmoAyo2KDLSKWYKxv5nHZE0WgkIDBwIiOBSd3eCzAL2paH85lvIimTGz5Kx+i\neFz1hz1niABHcUTtE5tOqXyGhG/ad7QrZhHHH026lHcd9Ok8qOl2laMjvwM4Fov7\nhcc9VOgBdDy9kzEom2nSspheAgHMefZR4awmJh3BWOGy8r3aMKc1J0TiiyONeKtx\noYAPqOmqBomXc7FPTRpPAbdXKawGK7RAxr1Yfikhn2OxoUo0gvwOwDq+Uyjbqoeo\nIUwNw4yofLSx44JMhqQj/dcd0BY4UHpYzgk6cX/GloWJ1CmayAFSpbxca3ZgWYWC\npCxwV8XWnn4qmrr0cl65lI1SMAHENlz9it7v6N8MxeaCbQzQjz2nVJeSeNEhJal0\nKVm9YfQua0UU+5z+tdtyPXyjRz5CCpSiUVdDg0U0JZab5Urf7B2vAALXqTH3wKYZ\nKg5UtzB0nZi0RPgQjs22KZblttsUvNCQeZcsY2l2c6JtoNCg0Bt+saaqaE+Pti6p\nw7nxf8F1fgVaIOyskFtNmWHxo2zLrrmV5BFr5YAHPqSUS3eW2YzjuShvaiQnvrNG\njNq3am/JlspPnr4jfzwIDRvqEJk9FHie2pSjoBfomKRU43Ys+fnXaYslWtopGCCB\nEqHZGH4uNN5RRV2t50Ss\n=3XqL\n-----END PGP SIGNATURE-----\n",
+                                        "payload":  "tree 519f2e367c54fc4b6c2bc1caccd5773a9299922e\nparent 18d8184367982ccbc835756136c4a53f9096c3a0\nauthor odango-chan \u003csangachy@gmail.com\u003e 1795597830 +0800\ncommitter GitHub \u003cnoreply@github.com\u003e 1795597830 +0800\n\ndocs: pin merged CA-SL v1alpha5 refresh in release record (#89)",
+                                        "verified_at":  "2026-11-25T09:10:30Z"
+                                    }
+               },
+    "url":  "https://api.github.com/repos/odango-chan/ca-skills/commits/780497a2918ad3e7bdff554ab64b0ba627e867e0",
+    "html_url":  "https://github.com/odango-chan/ca-skills/commit/780497a2918ad3e7bdff554ab64b0ba627e867e0",
+    "comments_url":  "https://api.github.com/repos/odango-chan/ca-skills/commits/780497a2918ad3e7bdff554ab64b0ba627e867e0/comments",
+    "author":  {
+                   "login":  "odango-chan",
+                   "id":  297766018,
+                   "node_id":  "U_kgDOEb-Mgg",
+                   "avatar_url":  "https://avatars.githubusercontent.com/u/297766018?v=4",
+                   "gravatar_id":  "",
+                   "url":  "https://api.github.com/users/odango-chan",
+                   "html_url":  "https://github.com/odango-chan",
+                   "followers_url":  "https://api.github.com/users/odango-chan/followers",
+                   "following_url":  "https://api.github.com/users/odango-chan/following{/other_user}",
+                   "gists_url":  "https://api.github.com/users/odango-chan/gists{/gist_id}",
+                   "starred_url":  "https://api.github.com/users/odango-chan/starred{/owner}{/repo}",
+                   "subscriptions_url":  "https://api.github.com/users/odango-chan/subscriptions",
+                   "organizations_url":  "https://api.github.com/users/odango-chan/orgs",
+                   "repos_url":  "https://api.github.com/users/odango-chan/repos",
+                   "events_url":  "https://api.github.com/users/odango-chan/events{/privacy}",
+                   "received_events_url":  "https://api.github.com/users/odango-chan/received_events",
+                   "type":  "User",
+                   "user_view_type":  "public",
+                   "site_admin":  false
+               },
+    "committer":  {
+                      "login":  "web-flow",
+                      "id":  19864447,
+                      "node_id":  "MDQ6VXNlcjE5ODY0NDQ3",
+                      "avatar_url":  "https://avatars.githubusercontent.com/u/19864447?v=4",
+                      "gravatar_id":  "",
+                      "url":  "https://api.github.com/users/web-flow",
+                      "html_url":  "https://github.com/web-flow",
+                      "followers_url":  "https://api.github.com/users/web-flow/followers",
+                      "following_url":  "https://api.github.com/users/web-flow/following{/other_user}",
+                      "gists_url":  "https://api.github.com/users/web-flow/gists{/gist_id}",
+                      "starred_url":  "https://api.github.com/users/web-flow/starred{/owner}{/repo}",
+                      "subscriptions_url":  "https://api.github.com/users/web-flow/subscriptions",
+                      "organizations_url":  "https://api.github.com/users/web-flow/orgs",
+                      "repos_url":  "https://api.github.com/users/web-flow/repos",
+                      "events_url":  "https://api.github.com/users/web-flow/events{/privacy}",
+                      "received_events_url":  "https://api.github.com/users/web-flow/received_events",
+                      "type":  "User",
+                      "user_view_type":  "public",
+                      "site_admin":  false
+                  },
+    "parents":  [
+                    {
+                        "sha":  "18d8184367982ccbc835756136c4a53f9096c3a0",
+                        "url":  "https://api.github.com/repos/odango-chan/ca-skills/commits/18d8184367982ccbc835756136c4a53f9096c3a0",
+                        "html_url":  "https://github.com/odango-chan/ca-skills/commit/18d8184367982ccbc835756136c4a53f9096c3a0"
+                    }
+                ],
+    "stats":  {
+                  "total":  30,
+                  "additions":  14,
+                  "deletions":  16
+              },
+    "files":  [
+                  {
+                      "sha":  "f195d1bcac51716e7bdcfe36e900b24eadda6c5e",
+                      "filename":  "docs/releases/ca-sl-v1alpha5.md",
+                      "status":  "modified",
+                      "additions":  14,
+                      "deletions":  16,
+                      "changes":  30,
+                      "blob_url":  "https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs%2Freleases%2Fca-sl-v1alpha5.md",
+                      "raw_url":  "https://github.com/odango-chan/ca-skills/raw/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs%2Freleases%2Fca-sl-v1alpha5.md",
+                      "contents_url":  "https://api.github.com/repos/odango-chan/ca-skills/contents/docs%2Freleases%2Fca-sl-v1alpha5.md?ref=780497a2918ad3e7bdff554ab64b0ba627e867e0",
+                      "patch":  "@@ -1,30 +1,28 @@\n # CA-SL v1alpha5 Release Record\n \n-**Status:** REFRESH PROPOSAL — not yet released\n-**Current published release date:** 2026-11-17\n-**Proposed refresh date:** 2026-11-25\n+**Status:** FROZEN / RELEASED\n+**Refresh date:** 2026-11-25\n **Language target:** connectionagent.io/v1alpha5\n \n-## 1. Current published normative baseline\n+## 1. Original published baseline (historical)\n \n-Until the refresh proposal is reviewed and merged, the current published v1alpha5 baseline remains:\n+The 2026-11-17 v1alpha5 release remains available at its immutable source:\n \n - **Complete normative source:** [docs/skill-language-spec.v1alpha5.zh-CN.md at the published baseline](https://github.com/odango-chan/ca-skills/blob/0abfd0e1ab99f481a4ae01f3f47efc54783dd5e5/docs/skill-language-spec.v1alpha5.zh-CN.md)\n - **Published normative commit:** 0abfd0e1ab99f481a4ae01f3f47efc54783dd5e5\n - **Publication PR:** [ca-skills #66](https://github.com/odango-chan/ca-skills/pull/66)\n - **Merge commit:** 0abfd0e1ab99f481a4ae01f3f47efc54783dd5\n \n-This commit remains historical and reproducible. The refresh proposal does not silently rewrite the already published baseline.\n+This commit remains historical and reproducible.\n \n-## 2. Proposed same-version refresh\n+## 2. Published same-version refresh\n \n-- **Proposal branch:** refresh-ca-sl-v1alpha5-skill-selection-when\n-- **Candidate normative source:** [docs/skill-language-spec.v1alpha5.zh-CN.md at candidate commit](https://github.com/odango-chan/ca-skills/blob/697246a967067cdeddb01c2f43b11a3e56afa480/docs/skill-language-spec.v1alpha5.zh-CN.md)\n-- **Candidate commit:** 697246a967067cdeddb01c2f43b11a3e56afa480\n-- **Language identifier:** remains connectionagent.io/v1alpha5; no v1alpha6 is introduced.\n-- **Publication status:** pending review and merge. On approval, this candidate supersedes the 2026-11-17 normative text under the same language identifier.\n+- **Complete normative source:** [CA-SL v1alpha5 specification at the merged refresh](https://github.com/odango-chan/ca-skills/blob/18d8184367982ccbc835756136c4a53f9096c3a0/docs/skill-language-spec.v1alpha5.zh-CN.md)\n+- **Immutable normative commit:** `18d8184367982ccbc835756136c4a53f9096c3a0`\n+- **Publication source PR:** [ca-skills #88](https://github.com/odango-chan/ca-skills/pull/88)\n+- **Language identifier:** remains connectionagent.io/v1alpha5.\n \n-### Normative changes proposed\n+### Normative changes\n \n 1. Every Skill package has SKILL.md; assurance/ is optional.\n 2. contract.yaml remains inside assurance/ and is not required for SKILL.md-only Skills.\n@@ -52,7 +50,7 @@ The refresh does not change the IngressCatalog or its diagnostic registry.\n ## 4. Validation status\n \n - The 2026-11-17 release verification remains evidence for the original published baseline only.\n-- The `source-hygiene` check passed for candidate `697246a967067cdeddb01c2f43b11a3e56afa480`. Review the checks on the exact PR head before publication.\n+- The `source-hygiene` check passed on PR #88 head `144d27dfee0d329f702dfc780078fc005466ac3b` before squash merge.\n - Compiler, Studio/LSP, Host, Runtime, Skill Importer, Integration Adapter, Owner and live 5GC qualification are not established by this documentation change.\n - The Compiler must explicitly support the refreshed contract.when field and the Assurance-free Skill import boundary before those behaviors can be claimed as implemented.\n \n@@ -61,7 +59,7 @@ Do not treat normative text, a passing documentation validator or a merged speci\n ## 5. Compatibility and qualification\n \n - CA-SL v1alpha4 remains an immutable historical language target.\n-- The current published v1alpha5 baseline remains the 2026-11-17 release until this proposal is merged.\n-- The proposed refresh keeps the v1alpha5 language identifier and supersedes the previous v1alpha5 text only after review/merge.\n+- The refresh identified in §2 is the current normative baseline.\n+- The refresh supersedes the 2026-11-17 normative text under the same v1alpha5 language identifier.\n - No old-format compatibility mapping is introduced.\n - Compiler, Studio/LSP, Host, Runtime, Importer, Owner publication, deployment binding and 5GC E2E remain NOT_QUALIFIED until separately verified with real implementation and deployment evidence."
+                  }
+              ]
+}

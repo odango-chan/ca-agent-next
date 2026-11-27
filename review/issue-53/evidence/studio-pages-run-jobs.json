@@ -1,0 +1,301 @@
+﻿{
+    "total_count":  2,
+    "jobs":  [
+                 {
+                     "id":  139919579116,
+                     "run_id":  45822932612,
+                     "workflow_name":  "Deploy Skill Studio Pages",
+                     "head_branch":  "main",
+                     "run_url":  "https://api.github.com/repos/odango-chan/ca-skill-studio-demo/actions/runs/45822932612",
+                     "run_attempt":  1,
+                     "node_id":  "CR_kwDOVdvzsc8AAAAgk9tX7A",
+                     "head_sha":  "79bd2c3f64a90e7f0f169204c866a3218655bab1",
+                     "url":  "https://api.github.com/repos/odango-chan/ca-skill-studio-demo/actions/jobs/139919579116",
+                     "html_url":  "https://github.com/odango-chan/ca-skill-studio-demo/actions/runs/45822932612/job/139919579116",
+                     "status":  "completed",
+                     "conclusion":  "success",
+                     "created_at":  "2026-11-26T12:47:21Z",
+                     "started_at":  "2026-11-26T12:47:23Z",
+                     "completed_at":  "2026-11-26T12:51:42Z",
+                     "name":  "build",
+                     "steps":  [
+                                   {
+                                       "name":  "Set up job",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  1,
+                                       "started_at":  "2026-11-26T12:47:23Z",
+                                       "completed_at":  "2026-11-26T12:47:25Z"
+                                   },
+                                   {
+                                       "name":  "Checkout current published site from main",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  2,
+                                       "started_at":  "2026-11-26T12:47:25Z",
+                                       "completed_at":  "2026-11-26T12:47:26Z"
+                                   },
+                                   {
+                                       "name":  "Checkout isolated Theia experiment",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  3,
+                                       "started_at":  "2026-11-26T12:47:26Z",
+                                       "completed_at":  "2026-11-26T12:47:27Z"
+                                   },
+                                   {
+                                       "name":  "Install Node.js",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  4,
+                                       "started_at":  "2026-11-26T12:47:27Z",
+                                       "completed_at":  "2026-11-26T12:47:34Z"
+                                   },
+                                   {
+                                       "name":  "Install exact toolchain dependencies",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  5,
+                                       "started_at":  "2026-11-26T12:47:34Z",
+                                       "completed_at":  "2026-11-26T12:47:40Z"
+                                   },
+                                   {
+                                       "name":  "Run YAML AST / CST regression tests",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  6,
+                                       "started_at":  "2026-11-26T12:47:40Z",
+                                       "completed_at":  "2026-11-26T12:47:46Z"
+                                   },
+                                   {
+                                       "name":  "Check Procedure Designer TypeScript",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  7,
+                                       "started_at":  "2026-11-26T12:47:46Z",
+                                       "completed_at":  "2026-11-26T12:47:47Z"
+                                   },
+                                   {
+                                       "name":  "Check tracked active JavaScript syntax",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  8,
+                                       "started_at":  "2026-11-26T12:47:47Z",
+                                       "completed_at":  "2026-11-26T12:47:50Z"
+                                   },
+                                   {
+                                       "name":  "Build Theia Web extension for default online workbench",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  9,
+                                       "started_at":  "2026-11-26T12:47:50Z",
+                                       "completed_at":  "2026-11-26T12:47:56Z"
+                                   },
+                                   {
+                                       "name":  "Checkout pinned CA Skill Compiler v2.0.2 source",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  10,
+                                       "started_at":  "2026-11-26T12:47:56Z",
+                                       "completed_at":  "2026-11-26T12:47:56Z"
+                                   },
+                                   {
+                                       "name":  "Verify pinned CA Skill Compiler v2.0.2 source identity",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  11,
+                                       "started_at":  "2026-11-26T12:47:56Z",
+                                       "completed_at":  "2026-11-26T12:47:57Z"
+                                   },
+                                   {
+                                       "name":  "Go 1.26.6 for the pinned Compiler WASM build",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  12,
+                                       "started_at":  "2026-11-26T12:47:57Z",
+                                       "completed_at":  "2026-11-26T12:48:04Z"
+                                   },
+                                   {
+                                       "name":  "Build pinned Compiler v2.0.2 Go/WASM Core",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  13,
+                                       "started_at":  "2026-11-26T12:48:04Z",
+                                       "completed_at":  "2026-11-26T12:48:24Z"
+                                   },
+                                   {
+                                       "name":  "Stage prepared Compiler Worker and WASM assets",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  14,
+                                       "started_at":  "2026-11-26T12:48:24Z",
+                                       "completed_at":  "2026-11-26T12:48:24Z"
+                                   },
+                                   {
+                                       "name":  "Build Theia browser-only static workbench",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  15,
+                                       "started_at":  "2026-11-26T12:48:24Z",
+                                       "completed_at":  "2026-11-26T12:49:17Z"
+                                   },
+                                   {
+                                       "name":  "Real Chromium acceptance at the default Pages root",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  16,
+                                       "started_at":  "2026-11-26T12:49:17Z",
+                                       "completed_at":  "2026-11-26T12:51:32Z"
+                                   },
+                                   {
+                                       "name":  "Compose Theia-only Pages release",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  17,
+                                       "started_at":  "2026-11-26T12:51:32Z",
+                                       "completed_at":  "2026-11-26T12:51:32Z"
+                                   },
+                                   {
+                                       "name":  "Record and verify exact deployed source identity",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  18,
+                                       "started_at":  "2026-11-26T12:51:32Z",
+                                       "completed_at":  "2026-11-26T12:51:32Z"
+                                   },
+                                   {
+                                       "name":  "Configure Pages",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  19,
+                                       "started_at":  "2026-11-26T12:51:32Z",
+                                       "completed_at":  "2026-11-26T12:51:33Z"
+                                   },
+                                   {
+                                       "name":  "Upload static site",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  20,
+                                       "started_at":  "2026-11-26T12:51:33Z",
+                                       "completed_at":  "2026-11-26T12:51:38Z"
+                                   },
+                                   {
+                                       "name":  "Post Go 1.26.6 for the pinned Compiler WASM build",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  36,
+                                       "started_at":  "2026-11-26T12:51:38Z",
+                                       "completed_at":  "2026-11-26T12:51:38Z"
+                                   },
+                                   {
+                                       "name":  "Post Checkout pinned CA Skill Compiler v2.0.2 source",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  37,
+                                       "started_at":  "2026-11-26T12:51:38Z",
+                                       "completed_at":  "2026-11-26T12:51:38Z"
+                                   },
+                                   {
+                                       "name":  "Post Install Node.js",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  38,
+                                       "started_at":  "2026-11-26T12:51:38Z",
+                                       "completed_at":  "2026-11-26T12:51:38Z"
+                                   },
+                                   {
+                                       "name":  "Post Checkout isolated Theia experiment",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  39,
+                                       "started_at":  "2026-11-26T12:51:38Z",
+                                       "completed_at":  "2026-11-26T12:51:39Z"
+                                   },
+                                   {
+                                       "name":  "Post Checkout current published site from main",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  40,
+                                       "started_at":  "2026-11-26T12:51:39Z",
+                                       "completed_at":  "2026-11-26T12:51:39Z"
+                                   },
+                                   {
+                                       "name":  "Complete job",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  41,
+                                       "started_at":  "2026-11-26T12:51:39Z",
+                                       "completed_at":  "2026-11-26T12:51:39Z"
+                                   }
+                               ],
+                     "check_run_url":  "https://api.github.com/repos/odango-chan/ca-skill-studio-demo/check-runs/139919579116",
+                     "labels":  [
+                                    "ubuntu-latest"
+                                ],
+                     "runner_id":  1000023398,
+                     "runner_name":  "GitHub Actions 1000023398",
+                     "runner_group_id":  0,
+                     "runner_group_name":  "GitHub Actions"
+                 },
+                 {
+                     "id":  139921917781,
+                     "run_id":  45822932612,
+                     "workflow_name":  "Deploy Skill Studio Pages",
+                     "head_branch":  "main",
+                     "run_url":  "https://api.github.com/repos/odango-chan/ca-skill-studio-demo/actions/runs/45822932612",
+                     "run_attempt":  1,
+                     "node_id":  "CR_kwDOVdvzsc8AAAAgk_8HVQ",
+                     "head_sha":  "79bd2c3f64a90e7f0f169204c866a3218655bab1",
+                     "url":  "https://api.github.com/repos/odango-chan/ca-skill-studio-demo/actions/jobs/139921917781",
+                     "html_url":  "https://github.com/odango-chan/ca-skill-studio-demo/actions/runs/45822932612/job/139921917781",
+                     "status":  "completed",
+                     "conclusion":  "success",
+                     "created_at":  "2026-11-26T12:51:42Z",
+                     "started_at":  "2026-11-26T12:51:46Z",
+                     "completed_at":  "2026-11-26T12:51:59Z",
+                     "name":  "deploy",
+                     "steps":  [
+                                   {
+                                       "name":  "Set up job",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  1,
+                                       "started_at":  "2026-11-26T12:51:47Z",
+                                       "completed_at":  "2026-11-26T12:51:48Z"
+                                   },
+                                   {
+                                       "name":  "Deploy artifact to Pages",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  2,
+                                       "started_at":  "2026-11-26T12:51:48Z",
+                                       "completed_at":  "2026-11-26T12:51:54Z"
+                                   },
+                                   {
+                                       "name":  "Verify deployed Pages build identity",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  3,
+                                       "started_at":  "2026-11-26T12:51:54Z",
+                                       "completed_at":  "2026-11-26T12:51:57Z"
+                                   },
+                                   {
+                                       "name":  "Complete job",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  4,
+                                       "started_at":  "2026-11-26T12:51:57Z",
+                                       "completed_at":  "2026-11-26T12:51:57Z"
+                                   }
+                               ],
+                     "check_run_url":  "https://api.github.com/repos/odango-chan/ca-skill-studio-demo/check-runs/139921917781",
+                     "labels":  [
+                                    "ubuntu-latest"
+                                ],
+                     "runner_id":  1000023399,
+                     "runner_name":  "GitHub Actions 1000023399",
+                     "runner_group_id":  0,
+                     "runner_group_name":  "GitHub Actions"
+                 }
+             ]
+}

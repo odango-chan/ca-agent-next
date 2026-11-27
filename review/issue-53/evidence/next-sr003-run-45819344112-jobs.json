@@ -1,0 +1,301 @@
+﻿{
+    "total_count":  2,
+    "jobs":  [
+                 {
+                     "id":  139907221066,
+                     "run_id":  45819344112,
+                     "workflow_name":  "SR-003 Plugin Manager regression",
+                     "head_branch":  "docs/issue-28-sr-003-module-verified-20261126",
+                     "run_url":  "https://api.github.com/repos/odango-chan/ca-agent-next/actions/runs/45819344112",
+                     "run_attempt":  1,
+                     "node_id":  "CR_kwDOV7AwNM8AAAAgkx7GSg",
+                     "head_sha":  "c57395504a470b5293a5749c58daafd6ad564ff2",
+                     "url":  "https://api.github.com/repos/odango-chan/ca-agent-next/actions/jobs/139907221066",
+                     "html_url":  "https://github.com/odango-chan/ca-agent-next/actions/runs/45819344112/job/139907221066",
+                     "status":  "completed",
+                     "conclusion":  "success",
+                     "created_at":  "2026-11-26T12:24:24Z",
+                     "started_at":  "2026-11-26T12:24:26Z",
+                     "completed_at":  "2026-11-26T12:27:38Z",
+                     "name":  "Module tests (windows-latest, Python 3.14)",
+                     "steps":  [
+                                   {
+                                       "name":  "Set up job",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  1,
+                                       "started_at":  "2026-11-26T12:24:27Z",
+                                       "completed_at":  "2026-11-26T12:24:29Z"
+                                   },
+                                   {
+                                       "name":  "Checkout PR code",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  2,
+                                       "started_at":  "2026-11-26T12:24:29Z",
+                                       "completed_at":  "2026-11-26T12:24:34Z"
+                                   },
+                                   {
+                                       "name":  "Set up Python",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  3,
+                                       "started_at":  "2026-11-26T12:24:34Z",
+                                       "completed_at":  "2026-11-26T12:24:35Z"
+                                   },
+                                   {
+                                       "name":  "Set up Go from Echo module",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  4,
+                                       "started_at":  "2026-11-26T12:24:35Z",
+                                       "completed_at":  "2026-11-26T12:24:54Z"
+                                   },
+                                   {
+                                       "name":  "Install Python package and test requirements",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  5,
+                                       "started_at":  "2026-11-26T12:24:54Z",
+                                       "completed_at":  "2026-11-26T12:25:05Z"
+                                   },
+                                   {
+                                       "name":  "Build native Go Echo Plugin",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  6,
+                                       "started_at":  "2026-11-26T12:25:05Z",
+                                       "completed_at":  "2026-11-26T12:25:12Z"
+                                   },
+                                   {
+                                       "name":  "SR-003 Plugin manager tests",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  7,
+                                       "started_at":  "2026-11-26T12:25:12Z",
+                                       "completed_at":  "2026-11-26T12:26:37Z"
+                                   },
+                                   {
+                                       "name":  "SR-002 Host regression",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  8,
+                                       "started_at":  "2026-11-26T12:26:37Z",
+                                       "completed_at":  "2026-11-26T12:26:37Z"
+                                   },
+                                   {
+                                       "name":  "SR-001 Review Context regression",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  9,
+                                       "started_at":  "2026-11-26T12:26:37Z",
+                                       "completed_at":  "2026-11-26T12:27:31Z"
+                                   },
+                                   {
+                                       "name":  "Python compileall",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  10,
+                                       "started_at":  "2026-11-26T12:27:31Z",
+                                       "completed_at":  "2026-11-26T12:27:32Z"
+                                   },
+                                   {
+                                       "name":  "Capture Go Echo / Plugin evidence",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  11,
+                                       "started_at":  "2026-11-26T12:27:32Z",
+                                       "completed_at":  "2026-11-26T12:27:33Z"
+                                   },
+                                   {
+                                       "name":  "Post Set up Go from Echo module",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  20,
+                                       "started_at":  "2026-11-26T12:27:33Z",
+                                       "completed_at":  "2026-11-26T12:27:33Z"
+                                   },
+                                   {
+                                       "name":  "Post Set up Python",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  21,
+                                       "started_at":  "2026-11-26T12:27:33Z",
+                                       "completed_at":  "2026-11-26T12:27:34Z"
+                                   },
+                                   {
+                                       "name":  "Post Checkout PR code",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  22,
+                                       "started_at":  "2026-11-26T12:27:34Z",
+                                       "completed_at":  "2026-11-26T12:27:36Z"
+                                   },
+                                   {
+                                       "name":  "Complete job",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  23,
+                                       "started_at":  "2026-11-26T12:27:36Z",
+                                       "completed_at":  "2026-11-26T12:27:36Z"
+                                   }
+                               ],
+                     "check_run_url":  "https://api.github.com/repos/odango-chan/ca-agent-next/check-runs/139907221066",
+                     "labels":  [
+                                    "windows-latest"
+                                ],
+                     "runner_id":  1000023370,
+                     "runner_name":  "GitHub Actions 1000023370",
+                     "runner_group_id":  0,
+                     "runner_group_name":  "GitHub Actions"
+                 },
+                 {
+                     "id":  139907221489,
+                     "run_id":  45819344112,
+                     "workflow_name":  "SR-003 Plugin Manager regression",
+                     "head_branch":  "docs/issue-28-sr-003-module-verified-20261126",
+                     "run_url":  "https://api.github.com/repos/odango-chan/ca-agent-next/actions/runs/45819344112",
+                     "run_attempt":  1,
+                     "node_id":  "CR_kwDOV7AwNM8AAAAgkx7H8Q",
+                     "head_sha":  "c57395504a470b5293a5749c58daafd6ad564ff2",
+                     "url":  "https://api.github.com/repos/odango-chan/ca-agent-next/actions/jobs/139907221489",
+                     "html_url":  "https://github.com/odango-chan/ca-agent-next/actions/runs/45819344112/job/139907221489",
+                     "status":  "completed",
+                     "conclusion":  "success",
+                     "created_at":  "2026-11-26T12:24:24Z",
+                     "started_at":  "2026-11-26T12:24:26Z",
+                     "completed_at":  "2026-11-26T12:25:00Z",
+                     "name":  "Module tests (ubuntu-latest, Python 3.12)",
+                     "steps":  [
+                                   {
+                                       "name":  "Set up job",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  1,
+                                       "started_at":  "2026-11-26T12:24:27Z",
+                                       "completed_at":  "2026-11-26T12:24:28Z"
+                                   },
+                                   {
+                                       "name":  "Checkout PR code",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  2,
+                                       "started_at":  "2026-11-26T12:24:28Z",
+                                       "completed_at":  "2026-11-26T12:24:29Z"
+                                   },
+                                   {
+                                       "name":  "Set up Python",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  3,
+                                       "started_at":  "2026-11-26T12:24:29Z",
+                                       "completed_at":  "2026-11-26T12:24:29Z"
+                                   },
+                                   {
+                                       "name":  "Set up Go from Echo module",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  4,
+                                       "started_at":  "2026-11-26T12:24:29Z",
+                                       "completed_at":  "2026-11-26T12:24:36Z"
+                                   },
+                                   {
+                                       "name":  "Install Python package and test requirements",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  5,
+                                       "started_at":  "2026-11-26T12:24:36Z",
+                                       "completed_at":  "2026-11-26T12:24:39Z"
+                                   },
+                                   {
+                                       "name":  "Build native Go Echo Plugin",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  6,
+                                       "started_at":  "2026-11-26T12:24:39Z",
+                                       "completed_at":  "2026-11-26T12:24:42Z"
+                                   },
+                                   {
+                                       "name":  "SR-003 Plugin manager tests",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  7,
+                                       "started_at":  "2026-11-26T12:24:42Z",
+                                       "completed_at":  "2026-11-26T12:24:54Z"
+                                   },
+                                   {
+                                       "name":  "SR-002 Host regression",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  8,
+                                       "started_at":  "2026-11-26T12:24:54Z",
+                                       "completed_at":  "2026-11-26T12:24:54Z"
+                                   },
+                                   {
+                                       "name":  "SR-001 Review Context regression",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  9,
+                                       "started_at":  "2026-11-26T12:24:54Z",
+                                       "completed_at":  "2026-11-26T12:24:57Z"
+                                   },
+                                   {
+                                       "name":  "Python compileall",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  10,
+                                       "started_at":  "2026-11-26T12:24:57Z",
+                                       "completed_at":  "2026-11-26T12:24:57Z"
+                                   },
+                                   {
+                                       "name":  "Capture Go Echo / Plugin evidence",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  11,
+                                       "started_at":  "2026-11-26T12:24:57Z",
+                                       "completed_at":  "2026-11-26T12:24:57Z"
+                                   },
+                                   {
+                                       "name":  "Post Set up Go from Echo module",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  20,
+                                       "started_at":  "2026-11-26T12:24:57Z",
+                                       "completed_at":  "2026-11-26T12:24:57Z"
+                                   },
+                                   {
+                                       "name":  "Post Set up Python",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  21,
+                                       "started_at":  "2026-11-26T12:24:57Z",
+                                       "completed_at":  "2026-11-26T12:24:57Z"
+                                   },
+                                   {
+                                       "name":  "Post Checkout PR code",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  22,
+                                       "started_at":  "2026-11-26T12:24:57Z",
+                                       "completed_at":  "2026-11-26T12:24:57Z"
+                                   },
+                                   {
+                                       "name":  "Complete job",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  23,
+                                       "started_at":  "2026-11-26T12:24:57Z",
+                                       "completed_at":  "2026-11-26T12:24:57Z"
+                                   }
+                               ],
+                     "check_run_url":  "https://api.github.com/repos/odango-chan/ca-agent-next/check-runs/139907221489",
+                     "labels":  [
+                                    "ubuntu-latest"
+                                ],
+                     "runner_id":  1000023372,
+                     "runner_name":  "GitHub Actions 1000023372",
+                     "runner_group_id":  0,
+                     "runner_group_name":  "GitHub Actions"
+                 }
+             ]
+}

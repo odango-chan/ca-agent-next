@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "profile": "demo_prototype",
+  "target": {
+    "description": "建设业务中立的 Python Agent Core，通过可导入 Skill、Plugin 和 Tool Interface Package 扩展业务； 以 Generic Echo 验证公共机制，再以 OpenAMSM 作为第二个独立业务，验证不修改 Core 即可接入， 最终完成真实 OpenAMSM Create、Modify、UE-requested Release 的 Demo E2E。",
+    "sequence": [
+      "generic_echo_vertical_e2e",
+      "openamsm_second_business_without_core_business_changes",
+      "real_openamsm_create_modify_release_e2e"
+    ]
+  },
+  "in_scope": [
+    {
+      "id": "generic_agent_core",
+      "description": "Python Agent Core/Host/Runtime 保持业务中立，新增业务不要求修改 Core 业务路由或状态机。"
+    },
+    {
+      "id": "unified_plugin",
+      "description": "唯一 Plugin Manager、Plugin Package、IPC 和 Event/Delivery/Tools Extension 分发。"
+    },
+    {
+      "id": "skill_import_selection",
+      "description": "已发布 Skill 包导入、Core-owned SkillCatalog、when 选择和 Continuation 优先。"
+    },
+    {
+      "id": "published_assurance",
+      "description": "消费外部 Compiler 发布的 Assurance Artifact；Agent 不内置、不调用 Compiler。"
+    },
+    {
+      "id": "runtime_action_boundary",
+      "description": "Deterministic 与 LLM-guided 共用 Runtime Action Boundary 和 Tool Plugin 路径。"
+    },
+    {
+      "id": "owner_outcome_semantics",
+      "description": "Receipt、Commit Proof、Outcome、UNKNOWN、Wait/Resume/Reconcile 的正确语义。"
+    },
+    {
+      "id": "event_binary_handoff",
+      "description": "SBI JSON/multipart、Content-ID、N1/N2 原始二进制与 Host-owned Artifact Handoff。"
+    },
+    {
+      "id": "business_neutrality_e2e",
+      "description": "Echo 后接入 OpenAMSM，验证新增业务不要求修改 Agent Core，并完成声明的 Demo E2E。"
+    },
+    {
+      "id": "runnable_examples_acceptance",
+      "description": "新增外部可观察机制必须有可运行 Example 和自动化 Acceptance。"
+    }
+  ],
+  "always_required": [
+    {
+      "id": "basic_validation",
+      "description": "基本输入、Schema、版本、Manifest、引用和路径校验；错误明确并 fail-closed。"
+    },
+    {
+      "id": "runtime_scope_checks",
+      "description": "Runtime 必须检查所选 Skill 声明的 Capability/callable scope；LLM 不得绕过 Runtime 直接调用 Plugin。"
+    },
+    {
+      "id": "owner_commit_proof",
+      "description": "需要 Owner 提交证明的 mutation 不得由 HTTP/IPC 成功或模型文本判定为 COMMITTED；UNKNOWN 保持 UNKNOWN。"
+    },
+    {
+      "id": "continuation_and_replay",
+      "description": "重复 Event、Continuation 和旧消息不得导致重复 mutation 或推进错误 Run。"
+    },
+    {
+      "id": "binary_payload_fidelity",
+      "description": "原始 N1/N2 字节、Content-ID 关联和 artifactRef 的来源及传递边界必须正确。"
+    },
+    {
+      "id": "evidence_integrity",
+      "description": "DESIGN、IMPLEMENTED、PASS、NOT_RUN、BLOCKED 必须按真实证据区分，不得虚报测试或 E2E。"
+    }
+  ],
+  "non_goals": [
+    {
+      "id": "production_ha_dr",
+      "description": "生产级 HA、跨区域容灾、自动故障转移和灾难恢复。"
+    },
+    {
+      "id": "production_sla_capacity",
+      "description": "生产级容量规划、弹性扩缩容、性能 SLA/SLO 和多地域部署。"
+    },
+    {
+      "id": "enterprise_iam_governance",
+      "description": "企业级身份联邦、SSO、集中式生产 IAM 生命周期和复杂多租户治理；不包括 Runtime 基本 Capability/callable scope 检查。"
+    },
+    {
+      "id": "production_trust_admission",
+      "description": "独立 Skill Admission、生产审批、Owner Trust 治理和 Trust Registry。"
+    },
+    {
+      "id": "extra_package_integrity",
+      "description": "新增包签名、额外 SHA-256/Digest 或另一套包完整性体系；上游契约已有要求除外。"
+    },
+    {
+      "id": "production_key_management",
+      "description": "生产级密钥托管、轮换和生命周期管理平台。"
+    },
+    {
+      "id": "production_security_operations",
+      "description": "SIEM、安全运营平台、生产级审计流水线和合规报表体系；不包括必要的诊断日志。"
+    },
+    {
+      "id": "marketplace_and_auto_install",
+      "description": "Marketplace、通用安装器、自动下载、文件监听和通用 Plugin 热更新。"
+    },
+    {
+      "id": "full_protocol_qualification",
+      "description": "超出当前 Acceptance 声明子集的完整 3GPP 全量协议符合性。"
+    },
+    {
+      "id": "production_qualification",
+      "description": "生产发布准入、商业 SLA、正式 Production Qualification 和认证。"
+    }
+  ],
+  "review_policy": {
+    "default_review_target": "changed_files_and_direct_dependencies",
+    "blocker_requires_traceable_requirement": true,
+    "blocker_requires_verifiable_evidence": true,
+    "missing_non_goal_capability_is_blocking": false,
+    "production_best_practice_alone_is_defect": false,
+    "scope_change_requires_user_approval": true,
+    "unresolved_scope_conflict": "SCOPE_DECISION_REQUIRED",
+    "findings_must_include_requirement_location_evidence_and_current_goal_impact": true
+  },
+  "finding_classes": [
+    "BLOCKER",
+    "NON_BLOCKING",
+    "OUT_OF_SCOPE",
+    "DEFERRED",
+    "UNVERIFIED",
+    "SCOPE_DECISION_REQUIRED"
+  ]
+}

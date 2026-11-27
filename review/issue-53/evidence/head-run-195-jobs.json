@@ -1,0 +1,137 @@
+﻿{
+    "total_count":  1,
+    "jobs":  [
+                 {
+                     "id":  140285012705,
+                     "run_id":  45931519416,
+                     "workflow_name":  "Review Context",
+                     "head_branch":  "docs/issue-53-refresh-state-reconciliation",
+                     "run_url":  "https://api.github.com/repos/odango-chan/ca-agent-next/actions/runs/45931519416",
+                     "run_attempt":  1,
+                     "node_id":  "CR_kwDOV7AwNM8AAAAgqaNq4Q",
+                     "head_sha":  "7452f60ccbc68e1468b52018f59bdc2347cc32d5",
+                     "url":  "https://api.github.com/repos/odango-chan/ca-agent-next/actions/jobs/140285012705",
+                     "html_url":  "https://github.com/odango-chan/ca-agent-next/actions/runs/45931519416/job/140285012705",
+                     "status":  "completed",
+                     "conclusion":  "success",
+                     "created_at":  "2026-11-27T02:59:31Z",
+                     "started_at":  "2026-11-27T02:59:33Z",
+                     "completed_at":  "2026-11-27T02:59:46Z",
+                     "name":  "Generate review context",
+                     "steps":  [
+                                   {
+                                       "name":  "Set up job",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  1,
+                                       "started_at":  "2026-11-27T02:59:34Z",
+                                       "completed_at":  "2026-11-27T02:59:34Z"
+                                   },
+                                   {
+                                       "name":  "Checkout PR head commit",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  2,
+                                       "started_at":  "2026-11-27T02:59:34Z",
+                                       "completed_at":  "2026-11-27T02:59:36Z"
+                                   },
+                                   {
+                                       "name":  "Verify base and head commit objects",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  3,
+                                       "started_at":  "2026-11-27T02:59:36Z",
+                                       "completed_at":  "2026-11-27T02:59:36Z"
+                                   },
+                                   {
+                                       "name":  "Set up Python",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  4,
+                                       "started_at":  "2026-11-27T02:59:36Z",
+                                       "completed_at":  "2026-11-27T02:59:36Z"
+                                   },
+                                   {
+                                       "name":  "Install PyYAML",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  5,
+                                       "started_at":  "2026-11-27T02:59:36Z",
+                                       "completed_at":  "2026-11-27T02:59:37Z"
+                                   },
+                                   {
+                                       "name":  "Run SR-001 regression tests",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  6,
+                                       "started_at":  "2026-11-27T02:59:37Z",
+                                       "completed_at":  "2026-11-27T02:59:41Z"
+                                   },
+                                   {
+                                       "name":  "Generate review context",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  7,
+                                       "started_at":  "2026-11-27T02:59:41Z",
+                                       "completed_at":  "2026-11-27T02:59:41Z"
+                                   },
+                                   {
+                                       "name":  "Write workflow summary",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  8,
+                                       "started_at":  "2026-11-27T02:59:41Z",
+                                       "completed_at":  "2026-11-27T02:59:41Z"
+                                   },
+                                   {
+                                       "name":  "Upload review context artifacts",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  9,
+                                       "started_at":  "2026-11-27T02:59:41Z",
+                                       "completed_at":  "2026-11-27T02:59:42Z"
+                                   },
+                                   {
+                                       "name":  "Report failure",
+                                       "status":  "completed",
+                                       "conclusion":  "skipped",
+                                       "number":  10,
+                                       "started_at":  "2026-11-27T02:59:42Z",
+                                       "completed_at":  "2026-11-27T02:59:42Z"
+                                   },
+                                   {
+                                       "name":  "Post Set up Python",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  19,
+                                       "started_at":  "2026-11-27T02:59:42Z",
+                                       "completed_at":  "2026-11-27T02:59:42Z"
+                                   },
+                                   {
+                                       "name":  "Post Checkout PR head commit",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  20,
+                                       "started_at":  "2026-11-27T02:59:42Z",
+                                       "completed_at":  "2026-11-27T02:59:43Z"
+                                   },
+                                   {
+                                       "name":  "Complete job",
+                                       "status":  "completed",
+                                       "conclusion":  "success",
+                                       "number":  21,
+                                       "started_at":  "2026-11-27T02:59:43Z",
+                                       "completed_at":  "2026-11-27T02:59:43Z"
+                                   }
+                               ],
+                     "check_run_url":  "https://api.github.com/repos/odango-chan/ca-agent-next/check-runs/140285012705",
+                     "labels":  [
+                                    "ubuntu-latest"
+                                ],
+                     "runner_id":  1000023559,
+                     "runner_name":  "GitHub Actions 1000023559",
+                     "runner_group_id":  0,
+                     "runner_group_name":  "GitHub Actions"
+                 }
+             ]
+}

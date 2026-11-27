@@ -1,0 +1,336 @@
+{
+  "issue": 53,
+  "pr": 54,
+  "base": "34e99e0cc54cc82b6b40040286fc84673432ef76",
+  "head": "7452f60ccbc68e1468b52018f59bdc2347cc32d5",
+  "refresh": "f63bbce2709284c97d8cd150343d491a3f2958db",
+  "generated_at_utc": "2026-11-27T03:37:49.870537+00:00",
+  "python": "3.12.14 (main, Sep  1 2026, 14:17:39) [MSC v.1944 64 bit (AMD64)]",
+  "markdown_it": "3.0.0",
+  "overall": "FAIL",
+  "metrics": {
+    "changed_files": 16,
+    "tracked_blobs": 197,
+    "directory_trees": 50,
+    "recursive_entries": 247,
+    "markdown_files": 157,
+    "sr_total": 27,
+    "sr_states": {
+      "DRAFT": 21,
+      "IMPLEMENTED": 1,
+      "READY": 1,
+      "VERIFIED": 4
+    },
+    "sr_ids": {
+      "SR-001": "VERIFIED",
+      "SR-002": "VERIFIED",
+      "SR-003": "VERIFIED",
+      "SR-004": "DRAFT",
+      "SR-005": "DRAFT",
+      "SR-006": "DRAFT",
+      "SR-007": "DRAFT",
+      "SR-008": "DRAFT",
+      "SR-009": "DRAFT",
+      "SR-010": "DRAFT",
+      "SR-011": "DRAFT",
+      "SR-012": "DRAFT",
+      "SR-013": "DRAFT",
+      "SR-015": "IMPLEMENTED",
+      "SR-016": "DRAFT",
+      "SR-017": "DRAFT",
+      "SR-018": "DRAFT",
+      "SR-019": "DRAFT",
+      "SR-020": "DRAFT",
+      "SR-021": "DRAFT",
+      "SR-022": "DRAFT",
+      "SR-023": "DRAFT",
+      "SR-024": "VERIFIED",
+      "SR-025": "READY",
+      "SR-026": "DRAFT",
+      "SR-027": "DRAFT",
+      "SR-028": "DRAFT"
+    },
+    "diff_check_trailing_whitespace_count": 31,
+    "markdown_links": 504,
+    "local_links": 302,
+    "checked_anchors": 47
+  },
+  "per_file": {
+    "docs/IR/IR 总登记册.md": {
+      "markdown_parse": "PASS",
+      "tokens": 901,
+      "links": 69,
+      "headings": 9,
+      "tables": 1,
+      "errors_new": 0
+    },
+    "docs/SR/SR-016-工作台设计移交与条件编辑.md": {
+      "markdown_parse": "PASS",
+      "tokens": 634,
+      "links": 8,
+      "headings": 8,
+      "tables": 1,
+      "errors_new": 0
+    },
+    "docs/SR/SR-025-MAS Owner Interface Package Publisher.md": {
+      "markdown_parse": "PASS",
+      "tokens": 475,
+      "links": 7,
+      "headings": 11,
+      "tables": 2,
+      "errors_new": 0
+    },
+    "docs/参考与审计/跨仓依赖与可行性审计.md": {
+      "markdown_parse": "PASS",
+      "tokens": 1088,
+      "links": 14,
+      "headings": 16,
+      "tables": 3,
+      "errors_new": 1
+    },
+    "docs/参考与审计/跨仓设计资产迁移与一致性审计.md": {
+      "markdown_parse": "PASS",
+      "tokens": 2619,
+      "links": 41,
+      "headings": 20,
+      "tables": 9,
+      "errors_new": 4
+    },
+    "docs/架构设计/CA Agent Next 架构设计.md": {
+      "markdown_parse": "PASS",
+      "tokens": 1219,
+      "links": 26,
+      "headings": 20,
+      "tables": 5,
+      "errors_new": 0
+    },
+    "docs/架构设计/外部能力域架构总览.md": {
+      "markdown_parse": "PASS",
+      "tokens": 540,
+      "links": 33,
+      "headings": 7,
+      "tables": 4,
+      "errors_new": 0
+    },
+    "docs/治理/SR 总索引.md": {
+      "markdown_parse": "PASS",
+      "tokens": 1788,
+      "links": 72,
+      "headings": 8,
+      "tables": 3,
+      "errors_new": 0
+    },
+    "docs/治理/功能树与需求追踪基线.md": {
+      "markdown_parse": "PASS",
+      "tokens": 1913,
+      "links": 78,
+      "headings": 12,
+      "tables": 6,
+      "errors_new": 0
+    },
+    "docs/治理/实施状态总览.md": {
+      "markdown_parse": "PASS",
+      "tokens": 1686,
+      "links": 28,
+      "headings": 12,
+      "tables": 8,
+      "errors_new": 0
+    },
+    "docs/治理/文档总目录与索引.md": {
+      "markdown_parse": "PASS",
+      "tokens": 1618,
+      "links": 64,
+      "headings": 16,
+      "tables": 8,
+      "errors_new": 0
+    },
+    "docs/治理/现有文档盘点与收敛计划.md": {
+      "markdown_parse": "PASS",
+      "tokens": 1039,
+      "links": 9,
+      "headings": 13,
+      "tables": 4,
+      "errors_new": 5
+    },
+    "docs/设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md": {
+      "markdown_parse": "PASS",
+      "tokens": 883,
+      "links": 8,
+      "headings": 20,
+      "tables": 3,
+      "errors_new": 2
+    },
+    "docs/设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md": {
+      "markdown_parse": "PASS",
+      "tokens": 634,
+      "links": 5,
+      "headings": 9,
+      "tables": 4,
+      "errors_new": 6
+    },
+    "docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md": {
+      "markdown_parse": "PASS",
+      "tokens": 793,
+      "links": 28,
+      "headings": 17,
+      "tables": 5,
+      "errors_new": 4
+    },
+    "docs/验收与实施/演示验收基线.md": {
+      "markdown_parse": "PASS",
+      "tokens": 1910,
+      "links": 14,
+      "headings": 16,
+      "tables": 8,
+      "errors_new": 0
+    }
+  },
+  "errors": [
+    {
+      "kind": "REVISION_VERSION",
+      "path": "docs/参考与审计/跨仓依赖与可行性审计.md",
+      "line": 194,
+      "detail": "头部 0.2.12，最后修订记录 0.2.11"
+    },
+    {
+      "kind": "TABLE_COLUMNS",
+      "path": "docs/参考与审计/跨仓设计资产迁移与一致性审计.md",
+      "line": 29,
+      "detail": "预期 4 列，实际 3 列"
+    },
+    {
+      "kind": "TABLE_COLUMNS",
+      "path": "docs/参考与审计/跨仓设计资产迁移与一致性审计.md",
+      "line": 31,
+      "detail": "预期 4 列，实际 3 列"
+    },
+    {
+      "kind": "TABLE_COLUMNS",
+      "path": "docs/参考与审计/跨仓设计资产迁移与一致性审计.md",
+      "line": 36,
+      "detail": "预期 4 列，实际 3 列"
+    },
+    {
+      "kind": "TABLE_COLUMNS",
+      "path": "docs/参考与审计/跨仓设计资产迁移与一致性审计.md",
+      "line": 37,
+      "detail": "预期 4 列，实际 3 列"
+    },
+    {
+      "kind": "REVISION_VERSION",
+      "path": "docs/治理/现有文档盘点与收敛计划.md",
+      "line": 160,
+      "detail": "头部 0.3.17，最后修订记录 0.3.18"
+    },
+    {
+      "kind": "TABLE_COLUMNS",
+      "path": "docs/治理/现有文档盘点与收敛计划.md",
+      "line": 139,
+      "detail": "预期 3 列，实际 4 列"
+    },
+    {
+      "kind": "TABLE_COLUMNS",
+      "path": "docs/治理/现有文档盘点与收敛计划.md",
+      "line": 140,
+      "detail": "预期 3 列，实际 4 列"
+    },
+    {
+      "kind": "TABLE_COLUMNS",
+      "path": "docs/治理/现有文档盘点与收敛计划.md",
+      "line": 141,
+      "detail": "预期 3 列，实际 4 列"
+    },
+    {
+      "kind": "TABLE_COLUMNS",
+      "path": "docs/治理/现有文档盘点与收敛计划.md",
+      "line": 143,
+      "detail": "预期 3 列，实际 5 列"
+    },
+    {
+      "kind": "DUPLICATE_METADATA",
+      "path": "docs/设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md",
+      "line": 11,
+      "detail": "修订日期 重复：[(6, '2026-11-27'), (11, '2026-11-26')]"
+    },
+    {
+      "kind": "CONFLICTING_METADATA",
+      "path": "docs/设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md",
+      "line": 11,
+      "detail": "修订日期 冲突：[(6, '2026-11-27'), (11, '2026-11-26')]"
+    },
+    {
+      "kind": "TABLE_COLUMNS",
+      "path": "docs/设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md",
+      "line": 127,
+      "detail": "预期 6 列，实际 7 列"
+    },
+    {
+      "kind": "TABLE_COLUMNS",
+      "path": "docs/设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md",
+      "line": 128,
+      "detail": "预期 6 列，实际 7 列"
+    },
+    {
+      "kind": "TABLE_COLUMNS",
+      "path": "docs/设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md",
+      "line": 129,
+      "detail": "预期 6 列，实际 7 列"
+    },
+    {
+      "kind": "TABLE_COLUMNS",
+      "path": "docs/设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md",
+      "line": 130,
+      "detail": "预期 6 列，实际 7 列"
+    },
+    {
+      "kind": "TABLE_COLUMNS",
+      "path": "docs/设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md",
+      "line": 134,
+      "detail": "预期 6 列，实际 7 列"
+    },
+    {
+      "kind": "TABLE_COLUMNS",
+      "path": "docs/设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md",
+      "line": 135,
+      "detail": "预期 6 列，实际 7 列"
+    },
+    {
+      "kind": "TABLE_COLUMNS",
+      "path": "docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md",
+      "line": 178,
+      "detail": "预期 6 列，实际 7 列"
+    },
+    {
+      "kind": "TABLE_COLUMNS",
+      "path": "docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md",
+      "line": 179,
+      "detail": "预期 6 列，实际 7 列"
+    },
+    {
+      "kind": "TABLE_COLUMNS",
+      "path": "docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md",
+      "line": 180,
+      "detail": "预期 6 列，实际 7 列"
+    },
+    {
+      "kind": "TABLE_COLUMNS",
+      "path": "docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md",
+      "line": 181,
+      "detail": "预期 6 列，实际 7 列"
+    }
+  ],
+  "warnings": [
+    {
+      "kind": "TRAILING_WHITESPACE",
+      "path": "",
+      "line": null,
+      "detail": "git diff --check 报告 31 处行尾空格"
+    }
+  ],
+  "not_run": [
+    "外部 HTTP URL 的实时可达性",
+    "SR-003 Linux/Windows 测试的本地重跑（本脚本仅核验固定文档与 Git 对象）",
+    "外部仓库测试与产品 Acceptance",
+    "DeepSeek Harness 自动消费 Review Context Artifact"
+  ]
+}

@@ -1,0 +1,106 @@
+﻿{
+    "sha":  "7bcb2614aa3615d8358df31eecefd0909e894e40",
+    "node_id":  "C_kwDOVwDFj9oAKDdiY2IyNjE0YWEzNjE1ZDgzNThkZjMxZWVjZWZkMDkwOWU4OTRlNDA",
+    "commit":  {
+                   "author":  {
+                                  "name":  "odango-chan",
+                                  "email":  "sangachy@gmail.com",
+                                  "date":  "2026-11-24T08:44:49Z"
+                              },
+                   "committer":  {
+                                     "name":  "GitHub",
+                                     "email":  "noreply@github.com",
+                                     "date":  "2026-11-24T08:44:49Z"
+                                 },
+                   "message":  "Merge pull request #41 from odango-chan/docs/v1.2.0-published\n\ndocs: record the published v1.2.0 runtime bindings",
+                   "tree":  {
+                                "sha":  "84236c3c129fb1d2602ca5354a3c3c1a01fa4464",
+                                "url":  "https://api.github.com/repos/odango-chan/ca-client-tools/git/trees/84236c3c129fb1d2602ca5354a3c3c1a01fa4464"
+                            },
+                   "url":  "https://api.github.com/repos/odango-chan/ca-client-tools/git/commits/7bcb2614aa3615d8358df31eecefd0909e894e40",
+                   "comment_count":  0,
+                   "verification":  {
+                                        "verified":  true,
+                                        "reason":  "valid",
+                                        "signature":  "-----BEGIN PGP SIGNATURE-----\n\nwsFcBAABCAAQBQJrBU6BCRC1aQ7uu5UhlAAABrsQADyH1MeN/I9gSO1B/hyPlHI4\nqD7PqELa05BU86rGbdnqAZqo0GwpRc8Rx1ls507V5bcP56dJu6Ofpt4Fk6c0u7AD\nNpVwwNefICZre+mv73l7dWP0Wcj/x2c010K+9jtttHwQsqicgp+aQCkbLuR6FJ1B\nU4Yb6BbH9dTqRYouz/L0jy6yeYyOrd8VIJgBTpUhdXyxXROeRZilWjwxPuy1lJNQ\nWW8oVIxFUHg36Zs+VKJ210IBRl2Ycq0pNulBCXEXdrZn6MCFRsXL1fcmoFviF14e\n0voM1y2nW7+DfyQsorTH4pf/4bv3iasp13kXMQEg2G7Yg3tujIDErX96tUaMsgJl\ndvJhUFXt+XpPN8POLIv2iLZuRHDjKI6xRUgkh1gdmkPBiKOwkPrBjNgRMq2GfzFf\nOP0JNXCOAb+czM6WfBoXZiKIswSCjdW7nIyah/8XLbKZB6GSG3pOXZcHvfUu9Zzk\neYdPowh2LF2kTMj7AZuDUc/4EVmIGNUyCRnxbm4cH0v26/GaFYhQOS550lmHTNCS\nHcQeZ9hMrrCadO9Iff4xkfVbx3mWuSDGsOZKli4ywT3zAgLF+ALgsvwy5ULrLhV+\nooJgSPj3sXsqhuYXLWGS48wKLrqaytRn2jKOnnZuCc2dJHRJhRg+xldYDmsUmjM/\n0nn75DhIcFUUFwbMpJeS\n=4LK+\n-----END PGP SIGNATURE-----\n",
+                                        "payload":  "tree 84236c3c129fb1d2602ca5354a3c3c1a01fa4464\nparent fc44c3a745c68443fcfb12054c7eadf0ed7cc3f7\nparent 56fbdca2ba33b4d76a9378600701897918b2380f\nauthor odango-chan \u003csangachy@gmail.com\u003e 1795509889 +0800\ncommitter GitHub \u003cnoreply@github.com\u003e 1795509889 +0800\n\nMerge pull request #41 from odango-chan/docs/v1.2.0-published\n\ndocs: record the published v1.2.0 runtime bindings",
+                                        "verified_at":  "2026-11-24T08:44:49Z"
+                                    }
+               },
+    "url":  "https://api.github.com/repos/odango-chan/ca-client-tools/commits/7bcb2614aa3615d8358df31eecefd0909e894e40",
+    "html_url":  "https://github.com/odango-chan/ca-client-tools/commit/7bcb2614aa3615d8358df31eecefd0909e894e40",
+    "comments_url":  "https://api.github.com/repos/odango-chan/ca-client-tools/commits/7bcb2614aa3615d8358df31eecefd0909e894e40/comments",
+    "author":  {
+                   "login":  "odango-chan",
+                   "id":  297766018,
+                   "node_id":  "U_kgDOEb-Mgg",
+                   "avatar_url":  "https://avatars.githubusercontent.com/u/297766018?v=4",
+                   "gravatar_id":  "",
+                   "url":  "https://api.github.com/users/odango-chan",
+                   "html_url":  "https://github.com/odango-chan",
+                   "followers_url":  "https://api.github.com/users/odango-chan/followers",
+                   "following_url":  "https://api.github.com/users/odango-chan/following{/other_user}",
+                   "gists_url":  "https://api.github.com/users/odango-chan/gists{/gist_id}",
+                   "starred_url":  "https://api.github.com/users/odango-chan/starred{/owner}{/repo}",
+                   "subscriptions_url":  "https://api.github.com/users/odango-chan/subscriptions",
+                   "organizations_url":  "https://api.github.com/users/odango-chan/orgs",
+                   "repos_url":  "https://api.github.com/users/odango-chan/repos",
+                   "events_url":  "https://api.github.com/users/odango-chan/events{/privacy}",
+                   "received_events_url":  "https://api.github.com/users/odango-chan/received_events",
+                   "type":  "User",
+                   "user_view_type":  "public",
+                   "site_admin":  false
+               },
+    "committer":  {
+                      "login":  "web-flow",
+                      "id":  19864447,
+                      "node_id":  "MDQ6VXNlcjE5ODY0NDQ3",
+                      "avatar_url":  "https://avatars.githubusercontent.com/u/19864447?v=4",
+                      "gravatar_id":  "",
+                      "url":  "https://api.github.com/users/web-flow",
+                      "html_url":  "https://github.com/web-flow",
+                      "followers_url":  "https://api.github.com/users/web-flow/followers",
+                      "following_url":  "https://api.github.com/users/web-flow/following{/other_user}",
+                      "gists_url":  "https://api.github.com/users/web-flow/gists{/gist_id}",
+                      "starred_url":  "https://api.github.com/users/web-flow/starred{/owner}{/repo}",
+                      "subscriptions_url":  "https://api.github.com/users/web-flow/subscriptions",
+                      "organizations_url":  "https://api.github.com/users/web-flow/orgs",
+                      "repos_url":  "https://api.github.com/users/web-flow/repos",
+                      "events_url":  "https://api.github.com/users/web-flow/events{/privacy}",
+                      "received_events_url":  "https://api.github.com/users/web-flow/received_events",
+                      "type":  "User",
+                      "user_view_type":  "public",
+                      "site_admin":  false
+                  },
+    "parents":  [
+                    {
+                        "sha":  "fc44c3a745c68443fcfb12054c7eadf0ed7cc3f7",
+                        "url":  "https://api.github.com/repos/odango-chan/ca-client-tools/commits/fc44c3a745c68443fcfb12054c7eadf0ed7cc3f7",
+                        "html_url":  "https://github.com/odango-chan/ca-client-tools/commit/fc44c3a745c68443fcfb12054c7eadf0ed7cc3f7"
+                    },
+                    {
+                        "sha":  "56fbdca2ba33b4d76a9378600701897918b2380f",
+                        "url":  "https://api.github.com/repos/odango-chan/ca-client-tools/commits/56fbdca2ba33b4d76a9378600701897918b2380f",
+                        "html_url":  "https://github.com/odango-chan/ca-client-tools/commit/56fbdca2ba33b4d76a9378600701897918b2380f"
+                    }
+                ],
+    "stats":  {
+                  "total":  3,
+                  "additions":  2,
+                  "deletions":  1
+              },
+    "files":  [
+                  {
+                      "sha":  "d564dd33b9d742cd09b58964866d696e0cb174ba",
+                      "filename":  "docs/WORK.md",
+                      "status":  "modified",
+                      "additions":  2,
+                      "deletions":  1,
+                      "changes":  3,
+                      "blob_url":  "https://github.com/odango-chan/ca-client-tools/blob/7bcb2614aa3615d8358df31eecefd0909e894e40/docs%2FWORK.md",
+                      "raw_url":  "https://github.com/odango-chan/ca-client-tools/raw/7bcb2614aa3615d8358df31eecefd0909e894e40/docs%2FWORK.md",
+                      "contents_url":  "https://api.github.com/repos/odango-chan/ca-client-tools/contents/docs%2FWORK.md?ref=7bcb2614aa3615d8358df31eecefd0909e894e40",
+                      "patch":  "@@ -1,6 +1,6 @@\n # Work\n \n-## Runtime-only Development bindings (v1.2.0 candidate)\n+## Runtime-only Development bindings (published in v1.2.0)\n \n `ca-client-tools#37` is implemented on the release path. The pinned OpenAMSM\n Owner `v1alpha4` publication is vendored byte-for-byte at\n@@ -13,6 +13,7 @@ public Interface Package is unchanged (11 READ Tools, 2 Capabilities,\n 4 Schemas).\n \n Contract: [Runtime-only Provider binding sidecar](runtime-bindings-v1.md).\n+Release: [v1.2.0](https://github.com/odango-chan/ca-client-tools/releases/tag/v1.2.0), commit `fc44c3a7`; the Linux/Windows CI runs and the release workflow passed, and the published Windows archive was loaded by the Host with all 25 Runtime-only bindings resolved.\n Local gates: `go test ./...`, `go vet`, the real `skillc v2.1.0` Interface link\n gate, and `ca-client-tools-release generate`/`verify` produce a byte-stable\n package. The Host consumes the package: 11 public + 25 Runtime-only bindings"
+                  }
+              ]
+}

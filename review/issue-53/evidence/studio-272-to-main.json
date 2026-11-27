@@ -1,0 +1,295 @@
+﻿{
+    "url":  "https://api.github.com/repos/odango-chan/ca-skill-studio-demo/compare/a8633553615d786e360a62c2b0042a27ae92d9d3...79bd2c3f64a90e7f0f169204c866a3218655bab1",
+    "html_url":  "https://github.com/odango-chan/ca-skill-studio-demo/compare/a8633553615d786e360a62c2b0042a27ae92d9d3...79bd2c3f64a90e7f0f169204c866a3218655bab1",
+    "permalink_url":  "https://github.com/odango-chan/ca-skill-studio-demo/compare/odango-chan:a863355...odango-chan:79bd2c3",
+    "diff_url":  "https://github.com/odango-chan/ca-skill-studio-demo/compare/a8633553615d786e360a62c2b0042a27ae92d9d3...79bd2c3f64a90e7f0f169204c866a3218655bab1.diff",
+    "patch_url":  "https://github.com/odango-chan/ca-skill-studio-demo/compare/a8633553615d786e360a62c2b0042a27ae92d9d3...79bd2c3f64a90e7f0f169204c866a3218655bab1.patch",
+    "base_commit":  {
+                        "sha":  "a8633553615d786e360a62c2b0042a27ae92d9d3",
+                        "node_id":  "C_kwDOVdvzsdoAKGE4NjMzNTUzNjE1ZDc4NmUzNjBhNjJjMmIwMDQyYTI3YWU5MmQ5ZDM",
+                        "commit":  {
+                                       "author":  {
+                                                      "name":  "odango-chan",
+                                                      "email":  "sangachy@gmail.com",
+                                                      "date":  "2026-11-26T10:06:05Z"
+                                                  },
+                                       "committer":  {
+                                                         "name":  "GitHub",
+                                                         "email":  "noreply@github.com",
+                                                         "date":  "2026-11-26T10:06:05Z"
+                                                     },
+                                       "message":  "Merge pull request #272 from odango-chan/feat/compiler-v2.1-snapshot-digest-20261124\n\nBuild Compiler v2.1.0 Development requests from locked Interface Packages",
+                                       "tree":  {
+                                                    "sha":  "1f2d4ba35c94fd6904aa9d4df2107e878d6a263c",
+                                                    "url":  "https://api.github.com/repos/odango-chan/ca-skill-studio-demo/git/trees/1f2d4ba35c94fd6904aa9d4df2107e878d6a263c"
+                                                },
+                                       "url":  "https://api.github.com/repos/odango-chan/ca-skill-studio-demo/git/commits/a8633553615d786e360a62c2b0042a27ae92d9d3",
+                                       "comment_count":  0,
+                                       "verification":  {
+                                                            "verified":  true,
+                                                            "reason":  "valid",
+                                                            "signature":  "-----BEGIN PGP SIGNATURE-----\n\nwsFcBAABCAAQBQJrCASNCRC1aQ7uu5UhlAAAoqAQADM/71AllBKe4yu1SKXv+Ed6\nH/zB1ViEcZWDCuHSHKQoUOWnQiA4mihMdwtbPR8sValveMcB2xJLJUOwF83Qr4Tr\nXyapCzJjwYNWRTl9NKn30DnMoGSCUVqsQicFU7LZYu27YdqJb1xv8UR5hnhMIKqK\n/0S4XZWAHFA4bNZWtq7oimM4IqUd82E/Msg0z1H7P0kDjQAb5f6HC73QIOTaFdSE\nGohBYzvolhILhC9Jc/L82Ry26IzXtBx2jmDjH3NnYZT86PxuIFkvDX9+SqNV2AEZ\n4NiVt1WfzxwFV0N67WJj2UWxFrGGC7e3nzYtq/UvxKTL+yUcudra6yCdAmM7g05d\nNz/eGtuUyUVzM3J2T/V30XLTfcPnQOUvWYK4yG7lajUk/esvhr0AfwJy7fgZvxb9\nr3DW/9G0uzxFpS9svYj4cnyODNHSBB7706wQa8n4/yRVqrjVUphOfwsvsUWobHvm\nwjCaTwWNWwEr3e+yzMT2KqTpC+RAr1NGF9I/5pH4VH+H4UaAZU//qdX7WPiQakNY\n1J+mAAKkxHTBgwL0C4yW4I+goCOF6ZJkOd93mSjkMZLC5l+ybSi58iNVFr/+slru\n0lCz7PtGYOpwsRcsO8VJ+k7ktvHUOFvrOxSg+BAkKxjEeoBOQnlf/YODaIBVrEb2\ncOd2F1/CfA15bFKJsv5K\n=kRqQ\n-----END PGP SIGNATURE-----\n",
+                                                            "payload":  "tree 1f2d4ba35c94fd6904aa9d4df2107e878d6a263c\nparent 1082b635cfa7ecad16602f37f30e4b988efbc4d3\nparent a542df4dc3c0fac1d31ce182107bad3211568470\nauthor odango-chan \u003csangachy@gmail.com\u003e 1795687565 +0800\ncommitter GitHub \u003cnoreply@github.com\u003e 1795687565 +0800\n\nMerge pull request #272 from odango-chan/feat/compiler-v2.1-snapshot-digest-20261124\n\nBuild Compiler v2.1.0 Development requests from locked Interface Packages",
+                                                            "verified_at":  "2026-11-26T10:06:05Z"
+                                                        }
+                                   },
+                        "url":  "https://api.github.com/repos/odango-chan/ca-skill-studio-demo/commits/a8633553615d786e360a62c2b0042a27ae92d9d3",
+                        "html_url":  "https://github.com/odango-chan/ca-skill-studio-demo/commit/a8633553615d786e360a62c2b0042a27ae92d9d3",
+                        "comments_url":  "https://api.github.com/repos/odango-chan/ca-skill-studio-demo/commits/a8633553615d786e360a62c2b0042a27ae92d9d3/comments",
+                        "author":  {
+                                       "login":  "odango-chan",
+                                       "id":  297766018,
+                                       "node_id":  "U_kgDOEb-Mgg",
+                                       "avatar_url":  "https://avatars.githubusercontent.com/u/297766018?v=4",
+                                       "gravatar_id":  "",
+                                       "url":  "https://api.github.com/users/odango-chan",
+                                       "html_url":  "https://github.com/odango-chan",
+                                       "followers_url":  "https://api.github.com/users/odango-chan/followers",
+                                       "following_url":  "https://api.github.com/users/odango-chan/following{/other_user}",
+                                       "gists_url":  "https://api.github.com/users/odango-chan/gists{/gist_id}",
+                                       "starred_url":  "https://api.github.com/users/odango-chan/starred{/owner}{/repo}",
+                                       "subscriptions_url":  "https://api.github.com/users/odango-chan/subscriptions",
+                                       "organizations_url":  "https://api.github.com/users/odango-chan/orgs",
+                                       "repos_url":  "https://api.github.com/users/odango-chan/repos",
+                                       "events_url":  "https://api.github.com/users/odango-chan/events{/privacy}",
+                                       "received_events_url":  "https://api.github.com/users/odango-chan/received_events",
+                                       "type":  "User",
+                                       "user_view_type":  "public",
+                                       "site_admin":  false
+                                   },
+                        "committer":  {
+                                          "login":  "web-flow",
+                                          "id":  19864447,
+                                          "node_id":  "MDQ6VXNlcjE5ODY0NDQ3",
+                                          "avatar_url":  "https://avatars.githubusercontent.com/u/19864447?v=4",
+                                          "gravatar_id":  "",
+                                          "url":  "https://api.github.com/users/web-flow",
+                                          "html_url":  "https://github.com/web-flow",
+                                          "followers_url":  "https://api.github.com/users/web-flow/followers",
+                                          "following_url":  "https://api.github.com/users/web-flow/following{/other_user}",
+                                          "gists_url":  "https://api.github.com/users/web-flow/gists{/gist_id}",
+                                          "starred_url":  "https://api.github.com/users/web-flow/starred{/owner}{/repo}",
+                                          "subscriptions_url":  "https://api.github.com/users/web-flow/subscriptions",
+                                          "organizations_url":  "https://api.github.com/users/web-flow/orgs",
+                                          "repos_url":  "https://api.github.com/users/web-flow/repos",
+                                          "events_url":  "https://api.github.com/users/web-flow/events{/privacy}",
+                                          "received_events_url":  "https://api.github.com/users/web-flow/received_events",
+                                          "type":  "User",
+                                          "user_view_type":  "public",
+                                          "site_admin":  false
+                                      },
+                        "parents":  [
+                                        {
+                                            "sha":  "1082b635cfa7ecad16602f37f30e4b988efbc4d3",
+                                            "url":  "https://api.github.com/repos/odango-chan/ca-skill-studio-demo/commits/1082b635cfa7ecad16602f37f30e4b988efbc4d3",
+                                            "html_url":  "https://github.com/odango-chan/ca-skill-studio-demo/commit/1082b635cfa7ecad16602f37f30e4b988efbc4d3"
+                                        },
+                                        {
+                                            "sha":  "a542df4dc3c0fac1d31ce182107bad3211568470",
+                                            "url":  "https://api.github.com/repos/odango-chan/ca-skill-studio-demo/commits/a542df4dc3c0fac1d31ce182107bad3211568470",
+                                            "html_url":  "https://github.com/odango-chan/ca-skill-studio-demo/commit/a542df4dc3c0fac1d31ce182107bad3211568470"
+                                        }
+                                    ]
+                    },
+    "merge_base_commit":  {
+                              "sha":  "a8633553615d786e360a62c2b0042a27ae92d9d3",
+                              "node_id":  "C_kwDOVdvzsdoAKGE4NjMzNTUzNjE1ZDc4NmUzNjBhNjJjMmIwMDQyYTI3YWU5MmQ5ZDM",
+                              "commit":  {
+                                             "author":  {
+                                                            "name":  "odango-chan",
+                                                            "email":  "sangachy@gmail.com",
+                                                            "date":  "2026-11-26T10:06:05Z"
+                                                        },
+                                             "committer":  {
+                                                               "name":  "GitHub",
+                                                               "email":  "noreply@github.com",
+                                                               "date":  "2026-11-26T10:06:05Z"
+                                                           },
+                                             "message":  "Merge pull request #272 from odango-chan/feat/compiler-v2.1-snapshot-digest-20261124\n\nBuild Compiler v2.1.0 Development requests from locked Interface Packages",
+                                             "tree":  {
+                                                          "sha":  "1f2d4ba35c94fd6904aa9d4df2107e878d6a263c",
+                                                          "url":  "https://api.github.com/repos/odango-chan/ca-skill-studio-demo/git/trees/1f2d4ba35c94fd6904aa9d4df2107e878d6a263c"
+                                                      },
+                                             "url":  "https://api.github.com/repos/odango-chan/ca-skill-studio-demo/git/commits/a8633553615d786e360a62c2b0042a27ae92d9d3",
+                                             "comment_count":  0,
+                                             "verification":  {
+                                                                  "verified":  true,
+                                                                  "reason":  "valid",
+                                                                  "signature":  "-----BEGIN PGP SIGNATURE-----\n\nwsFcBAABCAAQBQJrCASNCRC1aQ7uu5UhlAAAoqAQADM/71AllBKe4yu1SKXv+Ed6\nH/zB1ViEcZWDCuHSHKQoUOWnQiA4mihMdwtbPR8sValveMcB2xJLJUOwF83Qr4Tr\nXyapCzJjwYNWRTl9NKn30DnMoGSCUVqsQicFU7LZYu27YdqJb1xv8UR5hnhMIKqK\n/0S4XZWAHFA4bNZWtq7oimM4IqUd82E/Msg0z1H7P0kDjQAb5f6HC73QIOTaFdSE\nGohBYzvolhILhC9Jc/L82Ry26IzXtBx2jmDjH3NnYZT86PxuIFkvDX9+SqNV2AEZ\n4NiVt1WfzxwFV0N67WJj2UWxFrGGC7e3nzYtq/UvxKTL+yUcudra6yCdAmM7g05d\nNz/eGtuUyUVzM3J2T/V30XLTfcPnQOUvWYK4yG7lajUk/esvhr0AfwJy7fgZvxb9\nr3DW/9G0uzxFpS9svYj4cnyODNHSBB7706wQa8n4/yRVqrjVUphOfwsvsUWobHvm\nwjCaTwWNWwEr3e+yzMT2KqTpC+RAr1NGF9I/5pH4VH+H4UaAZU//qdX7WPiQakNY\n1J+mAAKkxHTBgwL0C4yW4I+goCOF6ZJkOd93mSjkMZLC5l+ybSi58iNVFr/+slru\n0lCz7PtGYOpwsRcsO8VJ+k7ktvHUOFvrOxSg+BAkKxjEeoBOQnlf/YODaIBVrEb2\ncOd2F1/CfA15bFKJsv5K\n=kRqQ\n-----END PGP SIGNATURE-----\n",
+                                                                  "payload":  "tree 1f2d4ba35c94fd6904aa9d4df2107e878d6a263c\nparent 1082b635cfa7ecad16602f37f30e4b988efbc4d3\nparent a542df4dc3c0fac1d31ce182107bad3211568470\nauthor odango-chan \u003csangachy@gmail.com\u003e 1795687565 +0800\ncommitter GitHub \u003cnoreply@github.com\u003e 1795687565 +0800\n\nMerge pull request #272 from odango-chan/feat/compiler-v2.1-snapshot-digest-20261124\n\nBuild Compiler v2.1.0 Development requests from locked Interface Packages",
+                                                                  "verified_at":  "2026-11-26T10:06:05Z"
+                                                              }
+                                         },
+                              "url":  "https://api.github.com/repos/odango-chan/ca-skill-studio-demo/commits/a8633553615d786e360a62c2b0042a27ae92d9d3",
+                              "html_url":  "https://github.com/odango-chan/ca-skill-studio-demo/commit/a8633553615d786e360a62c2b0042a27ae92d9d3",
+                              "comments_url":  "https://api.github.com/repos/odango-chan/ca-skill-studio-demo/commits/a8633553615d786e360a62c2b0042a27ae92d9d3/comments",
+                              "author":  {
+                                             "login":  "odango-chan",
+                                             "id":  297766018,
+                                             "node_id":  "U_kgDOEb-Mgg",
+                                             "avatar_url":  "https://avatars.githubusercontent.com/u/297766018?v=4",
+                                             "gravatar_id":  "",
+                                             "url":  "https://api.github.com/users/odango-chan",
+                                             "html_url":  "https://github.com/odango-chan",
+                                             "followers_url":  "https://api.github.com/users/odango-chan/followers",
+                                             "following_url":  "https://api.github.com/users/odango-chan/following{/other_user}",
+                                             "gists_url":  "https://api.github.com/users/odango-chan/gists{/gist_id}",
+                                             "starred_url":  "https://api.github.com/users/odango-chan/starred{/owner}{/repo}",
+                                             "subscriptions_url":  "https://api.github.com/users/odango-chan/subscriptions",
+                                             "organizations_url":  "https://api.github.com/users/odango-chan/orgs",
+                                             "repos_url":  "https://api.github.com/users/odango-chan/repos",
+                                             "events_url":  "https://api.github.com/users/odango-chan/events{/privacy}",
+                                             "received_events_url":  "https://api.github.com/users/odango-chan/received_events",
+                                             "type":  "User",
+                                             "user_view_type":  "public",
+                                             "site_admin":  false
+                                         },
+                              "committer":  {
+                                                "login":  "web-flow",
+                                                "id":  19864447,
+                                                "node_id":  "MDQ6VXNlcjE5ODY0NDQ3",
+                                                "avatar_url":  "https://avatars.githubusercontent.com/u/19864447?v=4",
+                                                "gravatar_id":  "",
+                                                "url":  "https://api.github.com/users/web-flow",
+                                                "html_url":  "https://github.com/web-flow",
+                                                "followers_url":  "https://api.github.com/users/web-flow/followers",
+                                                "following_url":  "https://api.github.com/users/web-flow/following{/other_user}",
+                                                "gists_url":  "https://api.github.com/users/web-flow/gists{/gist_id}",
+                                                "starred_url":  "https://api.github.com/users/web-flow/starred{/owner}{/repo}",
+                                                "subscriptions_url":  "https://api.github.com/users/web-flow/subscriptions",
+                                                "organizations_url":  "https://api.github.com/users/web-flow/orgs",
+                                                "repos_url":  "https://api.github.com/users/web-flow/repos",
+                                                "events_url":  "https://api.github.com/users/web-flow/events{/privacy}",
+                                                "received_events_url":  "https://api.github.com/users/web-flow/received_events",
+                                                "type":  "User",
+                                                "user_view_type":  "public",
+                                                "site_admin":  false
+                                            },
+                              "parents":  [
+                                              {
+                                                  "sha":  "1082b635cfa7ecad16602f37f30e4b988efbc4d3",
+                                                  "url":  "https://api.github.com/repos/odango-chan/ca-skill-studio-demo/commits/1082b635cfa7ecad16602f37f30e4b988efbc4d3",
+                                                  "html_url":  "https://github.com/odango-chan/ca-skill-studio-demo/commit/1082b635cfa7ecad16602f37f30e4b988efbc4d3"
+                                              },
+                                              {
+                                                  "sha":  "a542df4dc3c0fac1d31ce182107bad3211568470",
+                                                  "url":  "https://api.github.com/repos/odango-chan/ca-skill-studio-demo/commits/a542df4dc3c0fac1d31ce182107bad3211568470",
+                                                  "html_url":  "https://github.com/odango-chan/ca-skill-studio-demo/commit/a542df4dc3c0fac1d31ce182107bad3211568470"
+                                              }
+                                          ]
+                          },
+    "status":  "ahead",
+    "ahead_by":  1,
+    "behind_by":  0,
+    "total_commits":  1,
+    "commits":  [
+                    {
+                        "sha":  "79bd2c3f64a90e7f0f169204c866a3218655bab1",
+                        "node_id":  "C_kwDOVdvzsdoAKDc5YmQyYzNmNjRhOTBlN2YwZjE2OTIwNGM4NjZhMzIxODY1NWJhYjE",
+                        "commit":  {
+                                       "author":  {
+                                                      "name":  "odango-chan",
+                                                      "email":  "sangachy@gmail.com",
+                                                      "date":  "2026-11-26T12:47:17Z"
+                                                  },
+                                       "committer":  {
+                                                         "name":  "GitHub",
+                                                         "email":  "noreply@github.com",
+                                                         "date":  "2026-11-26T12:47:17Z"
+                                                     },
+                                       "message":  "fix(lsp): preserve dependency aliases in callable references\n\nResolve external v1alpha5 Tool references by dependency alias and callable ID.\n\nShare the qualified catalog between Hover and Tool completion, reject duplicate alias-qualified declarations, and cover the published MAS ToolCatalog with browser LSP regression tests.\n\nCloses #297.",
+                                       "tree":  {
+                                                    "sha":  "45b0d540d37910434322ae89f3eadc8f2dda08e9",
+                                                    "url":  "https://api.github.com/repos/odango-chan/ca-skill-studio-demo/git/trees/45b0d540d37910434322ae89f3eadc8f2dda08e9"
+                                                },
+                                       "url":  "https://api.github.com/repos/odango-chan/ca-skill-studio-demo/git/commits/79bd2c3f64a90e7f0f169204c866a3218655bab1",
+                                       "comment_count":  0,
+                                       "verification":  {
+                                                            "verified":  true,
+                                                            "reason":  "valid",
+                                                            "signature":  "-----BEGIN PGP SIGNATURE-----\n\nwsFcBAABCAAQBQJrCCpVCRC1aQ7uu5UhlAAAo9AQACKv7b/ovYSxY7gNIA50nt4w\nVeOq1eYLvdYxya4kLF8oM5jWKWTsNnfbiHZgt1iaNM6XP70UA05m2HcTpBJJp2c9\nQIW7EzRFgkptAHdXLEaD/hqflriqJLaxj2AXcCcJFJYX33A2b8BLQum2IsFxJ1a1\n7bT+WofCJ4JBo976L7NcesBBv7rPrBCWws6vPGNmQH6HuH6S98DwiENn1kdnLqPA\n4loIxx2a5kpnW4/CchsA8L7o6DJuNg3m+Iz+zkie+J3F7r+UzoBuvAF2CfbZ8EAL\nAgq0vFfMBVOWouhPG/vVE1maq8dZXVxQbtnS+lqfm2+KpoQ/OCXfqovc+O3LMe7h\n8KqS8TKMrVr1bfGMY8lg1wxMUILcm56q2LdiM6z/lTDg1ChXGHjvxu3oUdTWhhWp\n2WVhh5An2GzN5damA7ror0DpCR43hbS4E9ldxZPD5wOClFliyYZPFevdiRhDsDQU\nGwAC9SxRwUeY60hhZCkooFsEhdUWRrv/NY8za1exyVSfsNFbkWRZ0KoKGTFp7lPg\n7wtxCfJlqSGkjrHes/ubE1Og8kmZRPqwtOKlejSN4co+VxshA3rT9c2pYMPXPSNC\nhKV9RGMUBymuAkGSKeEEi4bSiXGv4O53NzkMgG9w5j0fqoYIxjPyfhlFdqV1hczn\ng0J+uJIHs3WJBkr+Ra6h\n=P90x\n-----END PGP SIGNATURE-----\n",
+                                                            "payload":  "tree 45b0d540d37910434322ae89f3eadc8f2dda08e9\nparent a8633553615d786e360a62c2b0042a27ae92d9d3\nauthor odango-chan \u003csangachy@gmail.com\u003e 1795697237 +0800\ncommitter GitHub \u003cnoreply@github.com\u003e 1795697237 +0800\n\nfix(lsp): preserve dependency aliases in callable references\n\nResolve external v1alpha5 Tool references by dependency alias and callable ID.\n\nShare the qualified catalog between Hover and Tool completion, reject duplicate alias-qualified declarations, and cover the published MAS ToolCatalog with browser LSP regression tests.\n\nCloses #297.",
+                                                            "verified_at":  "2026-11-26T12:47:18Z"
+                                                        }
+                                   },
+                        "url":  "https://api.github.com/repos/odango-chan/ca-skill-studio-demo/commits/79bd2c3f64a90e7f0f169204c866a3218655bab1",
+                        "html_url":  "https://github.com/odango-chan/ca-skill-studio-demo/commit/79bd2c3f64a90e7f0f169204c866a3218655bab1",
+                        "comments_url":  "https://api.github.com/repos/odango-chan/ca-skill-studio-demo/commits/79bd2c3f64a90e7f0f169204c866a3218655bab1/comments",
+                        "author":  {
+                                       "login":  "odango-chan",
+                                       "id":  297766018,
+                                       "node_id":  "U_kgDOEb-Mgg",
+                                       "avatar_url":  "https://avatars.githubusercontent.com/u/297766018?v=4",
+                                       "gravatar_id":  "",
+                                       "url":  "https://api.github.com/users/odango-chan",
+                                       "html_url":  "https://github.com/odango-chan",
+                                       "followers_url":  "https://api.github.com/users/odango-chan/followers",
+                                       "following_url":  "https://api.github.com/users/odango-chan/following{/other_user}",
+                                       "gists_url":  "https://api.github.com/users/odango-chan/gists{/gist_id}",
+                                       "starred_url":  "https://api.github.com/users/odango-chan/starred{/owner}{/repo}",
+                                       "subscriptions_url":  "https://api.github.com/users/odango-chan/subscriptions",
+                                       "organizations_url":  "https://api.github.com/users/odango-chan/orgs",
+                                       "repos_url":  "https://api.github.com/users/odango-chan/repos",
+                                       "events_url":  "https://api.github.com/users/odango-chan/events{/privacy}",
+                                       "received_events_url":  "https://api.github.com/users/odango-chan/received_events",
+                                       "type":  "User",
+                                       "user_view_type":  "public",
+                                       "site_admin":  false
+                                   },
+                        "committer":  {
+                                          "login":  "web-flow",
+                                          "id":  19864447,
+                                          "node_id":  "MDQ6VXNlcjE5ODY0NDQ3",
+                                          "avatar_url":  "https://avatars.githubusercontent.com/u/19864447?v=4",
+                                          "gravatar_id":  "",
+                                          "url":  "https://api.github.com/users/web-flow",
+                                          "html_url":  "https://github.com/web-flow",
+                                          "followers_url":  "https://api.github.com/users/web-flow/followers",
+                                          "following_url":  "https://api.github.com/users/web-flow/following{/other_user}",
+                                          "gists_url":  "https://api.github.com/users/web-flow/gists{/gist_id}",
+                                          "starred_url":  "https://api.github.com/users/web-flow/starred{/owner}{/repo}",
+                                          "subscriptions_url":  "https://api.github.com/users/web-flow/subscriptions",
+                                          "organizations_url":  "https://api.github.com/users/web-flow/orgs",
+                                          "repos_url":  "https://api.github.com/users/web-flow/repos",
+                                          "events_url":  "https://api.github.com/users/web-flow/events{/privacy}",
+                                          "received_events_url":  "https://api.github.com/users/web-flow/received_events",
+                                          "type":  "User",
+                                          "user_view_type":  "public",
+                                          "site_admin":  false
+                                      },
+                        "parents":  [
+                                        {
+                                            "sha":  "a8633553615d786e360a62c2b0042a27ae92d9d3",
+                                            "url":  "https://api.github.com/repos/odango-chan/ca-skill-studio-demo/commits/a8633553615d786e360a62c2b0042a27ae92d9d3",
+                                            "html_url":  "https://github.com/odango-chan/ca-skill-studio-demo/commit/a8633553615d786e360a62c2b0042a27ae92d9d3"
+                                        }
+                                    ]
+                    }
+                ],
+    "files":  [
+                  {
+                      "sha":  "fbda43d52313e604d8357afcf5afd0c4397cf9df",
+                      "filename":  "experiments/ide-host/lsp-browser/server/src/browserServerMain.mjs",
+                      "status":  "modified",
+                      "additions":  18,
+                      "deletions":  36,
+                      "changes":  54,
+                      "blob_url":  "https://github.com/odango-chan/ca-skill-studio-demo/blob/79bd2c3f64a90e7f0f169204c866a3218655bab1/experiments%2Fide-host%2Flsp-browser%2Fserver%2Fsrc%2FbrowserServerMain.mjs",
+                      "raw_url":  "https://github.com/odango-chan/ca-skill-studio-demo/raw/79bd2c3f64a90e7f0f169204c866a3218655bab1/experiments%2Fide-host%2Flsp-browser%2Fserver%2Fsrc%2FbrowserServerMain.mjs",
+                      "contents_url":  "https://api.github.com/repos/odango-chan/ca-skill-studio-demo/contents/experiments%2Fide-host%2Flsp-browser%2Fserver%2Fsrc%2FbrowserServerMain.mjs?ref=79bd2c3f64a90e7f0f169204c866a3218655bab1",
+                      "patch":  "@@ -249,20 +249,25 @@ function scriptToolName(text) {\n   return /^# name: ([A-Za-z][A-Za-z0-9_-]*)$/m.exec(text)?.[1] ?? null;\n }\n \n-function projectOperationCatalog(snapshot,index) {\n+function projectOperationCatalog(snapshot) {\n   const unique = new Map();\n   const ambiguous = new Set();\n   for (const operation of snapshot.dependencyOperations ?? []) {\n-    if (!/^[A-Za-z0-9_][A-Za-z0-9_.-]{0,159}$/.test(operation?.id ?? \"\") ||\n-        typeof operation.dependencyId !== \"string\") continue;\n-    if (unique.has(operation.id) || index?.declarations.has(\"operation\\^@\" + operation.id))\n-      ambiguous.add(operation.id);\n-    unique.set(operation.id, operation);\n+    const alias = operation?.dependencyId;\n+    const id = operation?.id;\n+    if (!/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(alias ?? \"\") ||\n+        !/^[A-Za-z0-9_][A-Za-z0-9_.-]*$/.test(id ?? \"\")) continue;\n+    // A v1alpha5 external Tool reference is identified by BOTH its project\n+    // Dependency Alias and the package-local Callable ID. Two packages may\n+    // legitimately export the same Callable ID; they are not ambiguous until\n+    // the same alias-qualified identity is declared more than once.\n+    const reference = alias + \"::\" + id;\n+    if (unique.has(reference)) ambiguous.add(reference);\n+    unique.set(reference, { ...operation, reference });\n   }\n-  for (const id of ambiguous) unique.delete(id);\n+  for (const reference of ambiguous) unique.delete(reference);\n   return unique;\n }\n-\n function schemaTitleCatalog(snapshot) {\n   const found = new Map();\n   const ambiguous = new Set();\n@@ -369,7 +374,7 @@ connection.onDefinition(params =\u003e {\n     if(!declaration){\n       if(symbolHit.declarations.length||\n          ![\"skillOperation\",\"skillCapability\"].includes(symbolHit.token.type))return null;\n-      return projectOperationCatalog(snapshot,index).get(symbolHit.token.name)?.location??null;\n+      return projectOperationCatalog(snapshot).get(symbolHit.token.name)?.location??null;\n     }\n     const target=snapshotDocumentFor(snapshot,declaration.uri);\n     return location(declaration.uri,target,declaration.range);\n@@ -453,7 +458,7 @@ connection.onHover(params =\u003e {\n     const operation=!symbolHit.declarations.length\u0026\u0026snapshot.completeness===\"complete\"\u0026\u0026\n       index?.generation===snapshot.generation\u0026\u0026\n       [\"skillOperation\",\"skillCapability\"].includes(symbolHit.token.type)\n-      ? projectOperationCatalog(snapshot,index).get(symbolHit.token.name) : null;\n+      ? projectOperationCatalog(snapshot).get(symbolHit.token.name) : null;\n     let predicateSignature=null;\n     if(resolved\u0026\u0026symbolHit.token.type===\"skillPredicate\"){\n       const source=snapshot.documents.find(item=\u003e\n@@ -480,7 +485,7 @@ connection.onHover(params =\u003e {\n       }\n     }\n     const body=operation\n-      ? \"**Tool Operation** `\"+operation.id+\"`\\n\\nDeclared in project dependency `\"+\n+      ? \"**Tool Operation** `\"+operation.reference+\"`\\n\\nDeclared in project dependency `\"+\n         operation.dependencyId+\"`.\"\n       : resolved\n       ? \"**\"+kind+\"** `\"+(scriptName??predicateSignature??symbolHit.token.name)+\"`\\n\\nDeclared in `\"+declaration.relativePath+\"`\"\n@@ -864,11 +869,8 @@ function currentGrammarCompletions(value, document, prefix, offset, lineStart) {\n   if(tool \u0026\u0026 inNode \u0026\u0026 (stage===\"operation\"||stage===\"observation\")){\n     // Only list exact IDs explicitly supplied with the accepted snapshot.\n     // These are source hints; membership, Scope and Effect are not inferred.\n-    const ids=[...new Set((value.snapshot.dependencyOperations??[])\n-      .filter(item=\u003etypeof item?.dependencyId===\"string\"\u0026\u0026\n-        /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(item.dependencyId)\u0026\u0026\n-        typeof item.id===\"string\"\u0026\u0026/^[A-Za-z0-9_][A-Za-z0-9_.-]*$/.test(item.id))\n-      .map(item=\u003eitem.dependencyId+\"::\"+item.id))];\n+    const ids=[...projectOperationCatalog(value.snapshot).values()]\n+      .map(item=\u003eitem.reference);\n     return make(ids,tool[1],offset-tool[1].length,CompletionItemKind.Reference,\n       \"Unverified imported reference; Compiler must check exact Owner/Capability\");\n   }\n@@ -900,26 +902,6 @@ connection.onCompletion(params =\u003e {\n   const currentCompletions = currentGrammarCompletions(value,document,prefix,offset,lineStart);\n   if(currentCompletions!==null)return currentCompletions;\n \n-  if (document.relativePath === \"assurance/procedure.yaml\" \u0026\u0026\n-      value.analysis.state === \"READY\" \u0026\u0026 value.snapshot.completeness === \"complete\") {\n-    const index = symbolIndexes.get(value.snapshot.rootUri);\n-    const hit = skillSymbolAt(index,document.uri,offset) ??\n-      skillSymbolAt(index,document.uri,offset-1);\n-    if (hit?.token.type === \"skillOperation\") {\n-      const range = hit.token.range;\n-      const typed = document.text.slice(range.start,offset);\n-      const editRange = toLspRange(document.text,range);\n-      return [...projectOperationCatalog(value.snapshot,index).values()]\n-        .filter(item =\u003e item.id.startsWith(typed))\n-        .map(item =\u003e ({\n-          label: item.id,\n-          kind: CompletionItemKind.Reference,\n-          detail: \"Tool dependency · \" + item.dependencyId,\n-          ...(editRange ? { textEdit: { range: editRange, newText: item.id } } : {})\n-        }));\n-    }\n-  }\n-\n   if (document.relativePath === \"assurance/procedure.yaml\" \u0026\u0026\n       /^\\s*script:\\s*[^#]*$/.test(prefix) \u0026\u0026\n       value.analysis.state === \"READY\" \u0026\u0026"
+                  },
+                  {
+                      "sha":  "b2c6ef1fd62c64e99cfdf92814c9653acd158e63",
+                      "filename":  "experiments/ide-host/tests/lsp-browser-worker.test.mjs",
+                      "status":  "modified",
+                      "additions":  82,
+                      "deletions":  0,
+                      "changes":  82,
+                      "blob_url":  "https://github.com/odango-chan/ca-skill-studio-demo/blob/79bd2c3f64a90e7f0f169204c866a3218655bab1/experiments%2Fide-host%2Ftests%2Flsp-browser-worker.test.mjs",
+                      "raw_url":  "https://github.com/odango-chan/ca-skill-studio-demo/raw/79bd2c3f64a90e7f0f169204c866a3218655bab1/experiments%2Fide-host%2Ftests%2Flsp-browser-worker.test.mjs",
+                      "contents_url":  "https://api.github.com/repos/odango-chan/ca-skill-studio-demo/contents/experiments%2Fide-host%2Ftests%2Flsp-browser-worker.test.mjs?ref=79bd2c3f64a90e7f0f169204c866a3218655bab1",
+                      "patch":  "@@ -4,6 +4,7 @@ import { Worker } from \"node:worker_threads\";\n import { resolve } from \"node:path\";\n import { pathToFileURL } from \"node:url\";\n import { readFileSync } from \"node:fs\";\n+import { indexV1Alpha4ToolCatalogCallables } from \"../../../site/package-audit.mjs\";\n \n const workerEntry = new URL(\"./lsp-server-worker-thread.mjs\", import.meta.url);\n const serverBundle = pathToFileURL(resolve(\n@@ -387,6 +388,87 @@ test(\"browser LSP provides current CA-SL Definition, References, Hover, Python s\n });\n \n \n+test(\"browser LSP preserves Dependency Alias across the published MAS ToolCatalog\",async()=\u003e{\n+  const worker=new Worker(workerEntry,{workerData:{serverUrl:serverBundle}});\n+  try{\n+    worker.postMessage({jsonrpc:\"2.0\",id:71,method:\"initialize\",\n+      params:{processId:null,rootUri:\"file:///workspace\",capabilities:{}}});\n+    await waitForMessage(worker,message=\u003emessage?.id===71);\n+    worker.postMessage({jsonrpc:\"2.0\",method:\"initialized\",params:{}});\n+\n+    const snapshot=samplePackageSnapshot();\n+    const procedure=snapshot.documents.find(item=\u003e\n+      item.relativePath===\"assurance/procedure.yaml\");\n+    assert.ok(procedure);\n+    procedure.text=procedure.text\n+      .replace(\"tool: ca::sbi.udm.sm_data.get\",\n+        \"tool: mas::SC.VALIDATE_SUBSCRIPTION\")\n+      .replace(\"tool: ca::sbi.udm.sdm_subscription.create\",\n+        \"tool: mas-shadow::SC.VALIDATE_SUBSCRIPTION\");\n+    assert.ok(procedure.text.includes(\"tool: mas::SC.VALIDATE_SUBSCRIPTION\"));\n+    assert.ok(procedure.text.includes(\"tool: mas-shadow::SC.VALIDATE_SUBSCRIPTION\"));\n+\n+    // Use the actual published MAS ToolCatalog and its production projection\n+    // shape; a second dependency exports the same package-local Callable ID.\n+    const catalogText=readFileSync(\n+      \"site/samples/v1alpha5/owner-package/tool-catalog.yaml\",\"utf8\");\n+    const masCatalog=indexV1Alpha4ToolCatalogCallables(\"mas\",[\n+      {path:\"tool-catalog.yaml\",text:catalogText}\n+    ]);\n+    assert.equal(masCatalog.available,true);\n+    assert.ok(masCatalog.operations.some(item=\u003eitem.id===\"SC.VALIDATE_SUBSCRIPTION\"));\n+    const duplicate=masCatalog.operations.find(item=\u003eitem.id===\"SC.CREATE_SM_CONTEXT\");\n+    assert.ok(duplicate);\n+    snapshot.dependencyOperations=[\n+      ...masCatalog.operations,\n+      {...masCatalog.operations.find(item=\u003eitem.id===\"SC.VALIDATE_SUBSCRIPTION\"),\n+        dependencyId:\"mas-shadow\"},\n+      {...duplicate}\n+    ];\n+    const ready=waitForMessage(worker,message=\u003e\n+      message?.method===\"skillStudio/analysisStatus\"\u0026\u0026\n+      message.params?.rootUri===snapshot.rootUri\u0026\u0026\n+      message.params?.generation===snapshot.generation\u0026\u0026\n+      message.params?.state===\"READY\",15000);\n+    worker.postMessage({jsonrpc:\"2.0\",method:\"skillStudio/packageSnapshot\",params:snapshot});\n+    await ready;\n+\n+    const masHover=await lspRequest(worker,72,\"textDocument/hover\",{\n+      textDocument:{uri:procedure.uri},\n+      position:positionOf(procedure.text,\"mas::SC.VALIDATE_SUBSCRIPTION\")\n+    });\n+    assert.match(masHover.contents.value,/Tool Operation/);\n+    assert.match(masHover.contents.value,/mas::SC\\.VALIDATE_SUBSCRIPTION/);\n+    assert.match(masHover.contents.value,/Declared in project dependency `mas`/);\n+\n+    const shadowHover=await lspRequest(worker,73,\"textDocument/hover\",{\n+      textDocument:{uri:procedure.uri},\n+      position:positionOf(procedure.text,\"mas-shadow::SC.VALIDATE_SUBSCRIPTION\")\n+    });\n+    assert.match(shadowHover.contents.value,/mas-shadow::SC\\.VALIDATE_SUBSCRIPTION/);\n+    assert.match(shadowHover.contents.value,/Declared in project dependency `mas-shadow`/);\n+\n+    const allAliasCompletions=await lspRequest(worker,74,\"textDocument/completion\",{\n+      textDocument:{uri:procedure.uri},\n+      position:positionOf(procedure.text,\"tool: mas::SC.VALIDATE_SUBSCRIPTION\",\"tool: \".length)\n+    });\n+    assert.ok(allAliasCompletions.some(item=\u003eitem.label===\"mas::SC.VALIDATE_SUBSCRIPTION\"));\n+    assert.ok(allAliasCompletions.some(item=\u003eitem.label===\"mas-shadow::SC.VALIDATE_SUBSCRIPTION\"));\n+    assert.ok(!allAliasCompletions.some(item=\u003eitem.label===\"mas::SC.CREATE_SM_CONTEXT\"),\n+      \"duplicate declarations under the same alias must fail closed\");\n+\n+    const narrowedCompletions=await lspRequest(worker,75,\"textDocument/completion\",{\n+      textDocument:{uri:procedure.uri},\n+      position:positionOf(procedure.text,\"mas::SC.VALIDATE_SUBSCRIPTION\",\"mas::SC.\".length)\n+    });\n+    assert.ok(narrowedCompletions.some(item=\u003eitem.label===\"mas::SC.VALIDATE_SUBSCRIPTION\"));\n+    assert.ok(!narrowedCompletions.some(item=\u003eitem.label===\"mas-shadow::SC.VALIDATE_SUBSCRIPTION\"),\n+      \"a typed Dependency Alias must narrow completion to that exact package\");\n+  }finally{\n+    await worker.terminate();\n+  }\n+});\n+\n test(\"Package Audit Script diagnostics publish the complete YAML scalar range through LSP\",async()=\u003e{\n   const worker=new Worker(workerEntry,{workerData:{serverUrl:serverBundle}});\n   try{"
+                  }
+              ]
+}

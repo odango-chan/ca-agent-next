@@ -1,0 +1,25 @@
+﻿{
+    "total_count":  1,
+    "artifacts":  [
+                      {
+                          "id":  15168937497,
+                          "node_id":  "MDg6QXJ0aWZhY3QxNTE2ODkzNzQ5Nw==",
+                          "name":  "review-context-pr-54-45931519416-1",
+                          "size_in_bytes":  12065,
+                          "url":  "https://api.github.com/repos/odango-chan/ca-agent-next/actions/artifacts/15168937497",
+                          "archive_download_url":  "https://api.github.com/repos/odango-chan/ca-agent-next/actions/artifacts/15168937497/zip",
+                          "expired":  false,
+                          "digest":  "sha256:ef65087cfe857ae52220ded5e6ddc5eb11b20e7de5be1ab194b281fbeb57898a",
+                          "created_at":  "2026-11-27T02:59:42Z",
+                          "updated_at":  "2026-11-27T02:59:42Z",
+                          "expires_at":  "2026-12-27T02:59:41Z",
+                          "workflow_run":  {
+                                               "id":  45931519416,
+                                               "repository_id":  1471164468,
+                                               "head_repository_id":  1471164468,
+                                               "head_branch":  "docs/issue-53-refresh-state-reconciliation",
+                                               "head_sha":  "7452f60ccbc68e1468b52018f59bdc2347cc32d5"
+                                           }
+                      }
+                  ]
+}

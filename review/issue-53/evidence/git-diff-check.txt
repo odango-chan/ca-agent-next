@@ -1,0 +1,62 @@
+﻿docs/IR/IR 总登记册.md:4: trailing whitespace.
++> 文档版本：0.1.24  
+docs/IR/IR 总登记册.md:5: trailing whitespace.
++> 修订日期：2026-11-27  
+docs/SR/SR-016-工作台设计移交与条件编辑.md:4: trailing whitespace.
++> SR 版本：0.3.15  
+docs/SR/SR-016-工作台设计移交与条件编辑.md:7: trailing whitespace.
++> 修订日期：2026-11-27  
+docs/SR/SR-016-工作台设计移交与条件编辑.md:11: trailing whitespace.
++ > 设计依据：[F09 设计](../设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md#45-两个-contract-root-的正式-publisher-输出) v0.3.8 §4.5–8；[EC02 Development Build](../设计说明书/EC02-Compiler/Development%20Build设计.md#2-接口快照与锁) §2–4；[迁移审计 §3.3](../参考与审计/跨仓依赖与可行性审计.md#36-skill-studio作者导入compiler-request-与产品集成)  
+docs/参考与审计/跨仓依赖与可行性审计.md:4: trailing whitespace.
++> 文档版本：0.2.12  
+docs/参考与审计/跨仓依赖与可行性审计.md:5: trailing whitespace.
++> 状态：外部源仓基线已刷新；SR-001、SR-002、SR-003、SR-024 VERIFIED；SR-015 IMPLEMENTED；SR-025 READY / ca-client-tools #43 OPEN；Studio #272 MERGED、#276 DIRTY、#269/#279/#290/#295 OPEN；Next PR #34 MERGED 到恢复分支，系统 EX NOT_RUN  
+docs/参考与审计/跨仓依赖与可行性审计.md:6: trailing whitespace.
++> 审计日期：2026-11-27  
+docs/参考与审计/跨仓设计资产迁移与一致性审计.md:7: trailing whitespace.
++> 状态：原始资产迁移完成；SR-001/SR-002/SR-024 VERIFIED、SR-003 VERIFIED（模块 AC-003-01～04）、SR-015 IMPLEMENTED、SR-025 READY；PR #34/#41/#42 已 MERGED 到恢复分支；SR-003 模块 VERIFIED；系统 EX 与 DeepSeek Harness NOT_RUN  
+docs/参考与审计/跨仓设计资产迁移与一致性审计.md:8: trailing whitespace.
++> 修订日期：2026-11-27  
+docs/架构设计/CA Agent Next 架构设计.md:4: trailing whitespace.
++> 状态：目标架构基线；SR-002 Python Host/Model Loop 最小切片 VERIFIED；SR-003 v0.3.11 VERIFIED（模块 AC-003-01～04）；PR #34/#41/#42 已合入恢复分支，双平台 CI SUCCESS；系统 EX-02/03/04/18 未完成；完整 Runtime 尚未验收    
+docs/架构设计/CA Agent Next 架构设计.md:6: trailing whitespace.
++> 修订日期：2026-11-27  
+docs/架构设计/外部能力域架构总览.md:4: trailing whitespace.
++> 文档版本：0.2.2  
+docs/架构设计/外部能力域架构总览.md:6: trailing whitespace.
++> 修订日期：2026-11-27  
+docs/治理/SR 总索引.md:5: trailing whitespace.
++> 状态：4 VERIFIED（SR-001/SR-002/SR-003/SR-024）；1 READY（SR-025）；1 IMPLEMENTED（SR-015）；21 DRAFT；SR-003 仅模块 AC-003-01～04 VERIFIED；系统 EX NOT_RUN  
+docs/治理/SR 总索引.md:6: trailing whitespace.
++> 修订日期：2026-11-27  
+docs/治理/功能树与需求追踪基线.md:6: trailing whitespace.
++> 状态：4 VERIFIED、1 READY（SR-025）、1 IMPLEMENTED、21 DRAFT；SR-003 模块 VERIFIED（PR #34/#41/#42 MERGED 到恢复分支）；系统 EX/DeepSeek Harness NOT_RUN  
+docs/治理/功能树与需求追踪基线.md:7: trailing whitespace.
++> 修订日期：2026-11-27  
+docs/治理/实施状态总览.md:6: trailing whitespace.
++> 快照日期：2026-11-27  
+docs/治理/文档总目录与索引.md:6: trailing whitespace.
++> 修订日期：2026-11-27  
+docs/治理/现有文档盘点与收敛计划.md:4: trailing whitespace.
++> 状态：初始目录收敛与 79 份迁移源资产已完成；当前树 197 个 tracked files / 157 Markdown，含 48 份权威正式文档、27 SR、1 IR；本轮跨仓状态已刷新，当前静态门禁待执行；DeepSeek Harness NOT_RUN  
+docs/治理/现有文档盘点与收敛计划.md:6: trailing whitespace.
++> 修订日期：2026-11-27  
+docs/设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md:4: trailing whitespace.
++> 状态：CA-SL v1alpha5 已 RELEASED；when Runtime Artifact / Go-Python 产品互操作仍依赖 Compiler #61；Next 消费端尚未验收  
+docs/设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md:5: trailing whitespace.
++> 文档版本：0.2.13  
+docs/设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md:11: trailing whitespace.
++> 修订日期：2026-11-26  
+docs/设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md:5: trailing whitespace.
++> 状态：CA-SL v1alpha5 RELEASED；Compiler #61 OPEN；SR-027 DRAFT；产品 Build/Verify 与 Bundle 发布验收 NOT_RUN  
+docs/设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md:6: trailing whitespace.
++> 修订日期：2026-11-27  
+docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md:4: trailing whitespace.
++> 文档版本：0.3.10  
+docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md:5: trailing whitespace.
++> 状态：目标设计基线待评审；当前实现快照 2026-11-27：#272 MERGED、#276 OPEN/DRAFT/DIRTY、#269 OPEN；SR-024 VERIFIED、SR-025 READY  
+docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md:6: trailing whitespace.
++> 修订日期：2026-11-27  
+docs/验收与实施/演示验收基线.md:6: trailing whitespace.
++> 修订日期：2026-11-27  

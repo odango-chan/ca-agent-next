@@ -1,0 +1,28 @@
+query {
+  repository(owner: "odango-chan", name: "ca-agent-next") {
+    pullRequest(number: 54) {
+      reviewThreads(first: 100) {
+        nodes {
+          id
+          isResolved
+          isOutdated
+          path
+          line
+          originalLine
+          comments(first: 100) {
+            nodes {
+              id
+              databaseId
+              author { login }
+              body
+              url
+              createdAt
+              updatedAt
+              replyTo { id }
+            }
+          }
+        }
+      }
+    }
+  }
+}
