@@ -2,7 +2,8 @@
 
 > 文档类型：机制设计说明书  
 > 状态：CA-SL v1alpha5 已 RELEASED；when Runtime Artifact / Go-Python 产品互操作仍依赖 Compiler #61；Next 消费端尚未验收  
-> 文档版本：0.2.12
+> 文档版本：0.2.13  
+> 修订日期：2026-11-27
 > 功能归属：F02 — Skill 管理与选择  
 > 关联 SR：SR-004、SR-005、SR-006    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
