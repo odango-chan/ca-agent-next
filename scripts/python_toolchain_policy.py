@@ -204,7 +204,7 @@ def is_policy_gate_no_project(path: str, line: str) -> bool:
     prefix = "uv " + "run --no-project --python 3.14.6 "
     allowed_commands = (
         'python "$policy_dir/' + "python_toolchain_policy.py" + '" \\',
-        "python scripts/" + "python_toolchain_policy.py" + " \\",
+        "python " + "scripts/" + "python_toolchain_policy.py" + " \\",
         "python -m " + "unittest discover -s tests -p " + "test_python_toolchain_policy.py -v",
     )
     return any(
