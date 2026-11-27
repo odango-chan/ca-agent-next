@@ -1,13 +1,13 @@
 # SR-032：SKILL 作者规范、Node 拆分与注释原则
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.10  
+> SR 版本：0.1.11  
 > 状态：**DRAFT（中央作者规范已形成设计候选，待独立设计评审；实施 NOT_READY）**  
 > 创建日期：2026-11-27  
 > 修订日期：2026-11-27  
 > 上游需求：IR-008（关联 IR-003）  
 > 功能：EC01 / F01 / F02 / F03 / F04 / F05 / F08 / F09（作者规范由 EC01 维护；Host、Importer、Runtime、Compiler、Studio 消费）  
-> 设计依据：[EC01 CA-SL 与 Skill 作者体系架构](../架构设计/外部能力域/EC01-CA-SL与Skill作者体系架构设计.md) v0.1.6；[CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md) v0.1.6；[SKILL 作者规范](../规范/SKILL作者规范.md) v0.1.5  
+> 设计依据：[EC01 CA-SL 与 Skill 作者体系架构](../架构设计/外部能力域/EC01-CA-SL与Skill作者体系架构设计.md) v0.1.9；[CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md) v0.2.0；[SKILL 作者规范](../规范/SKILL作者规范.md) v0.1.8  
 > 目标仓：odango-chan/ca-agent-next（仅中央设计和规范）  
 > 上游来源仓：odango-chan/ca-skills，固定 main 780497a2918ad3e7bdff554ab64b0ba627e867e0  
 > 关联 Issue：[ca-agent-next #49](https://github.com/odango-chan/ca-agent-next/issues/49)、父级迁移 Issue #12、CA-SL 设计 Issue #40  
@@ -24,8 +24,8 @@
 - Precondition、Operation、Observation、Postcondition 四阶段的职责；
 - YAML 注释应解释什么、不能承担什么；
 - SKILL.md、Package 根目录共享 schemas/、scripts/、references/、assets/ 与可选 Assurance 的组织和所有权；
-- LLM 读取共享 Schema / Script 与通过 Host Script Execution Capability 调用登记脚本的边界；
-- Capability-only、显式 arguments、when、Wait、Evidence 和 UNKNOWN 的作者约束。
+- LLM 通过 Host Resource Read 读取共享资源、通过同一 Host Script Runner 调用全部登记 transform / predicate Script 的边界；
+- Capability-only、显式 arguments、when、Evidence 和 UNKNOWN 的作者约束；Skill 层不定义 Wait / await / polling。
 
 本 SR 是中央文档迁移与规范设计，不是 ca-skills、Compiler、Studio 或 Runtime 的代码实施授权。
 
@@ -54,7 +54,7 @@ ca-skills 固定源提交：780497a2918ad3e7bdff554ab64b0ba627e867e0。
 
 ### 3.1 作者规范
 
-新增《SKILL 作者规范》，并明确其与 CA-SL 1.6.0 语言规范的权威边界：语言规范定义 Package 根目录共享资源、Script Registry、operation.script / Predicate Script 和 Host Script Execution 的机器语义；作者规范定义资源组织、粒度、表达、注释和质量要求。
+新增《SKILL 作者规范》，并明确其与 CA-SL 1.6.0 语言规范的权威边界：语言规范定义原有 Procedure / Node / routes / arguments / PredicateSet 结构、Package 根目录共享资源、Script Registry、Script 输入输出 / Evidence / 错误语义和 Host Script Execution；作者规范定义资源组织、粒度、表达、注释和质量要求。不得为作者新增 Wait / await / polling 语法。
 
 ### 3.2 Skill 与 Capability 粒度
 
@@ -64,11 +64,11 @@ ca-skills 固定源提交：780497a2918ad3e7bdff554ab64b0ba627e867e0。
 
 一个业务 Node 表达一个主要业务动作，最多一个 Operation（公开 Capability 或纯本地 Script），可带一个直接相关的 READ Observation 和本动作的前后置 Predicate。
 
-必须拆分：两个不同 Operation Capability、独立业务提交边界、具有独立生命周期 / 权威来源 / Correlation 且需要独立消费的证据确认边界，或需要执行独立业务动作的恢复路径。
+必须拆分：两个不同 Operation Capability、独立业务提交边界、具有独立生命周期 / 权威来源 / Correlation 且需要独立消费的证据确认边界，或需要执行独立业务动作的恢复路径。异步完成不构成作者 Node；等待、轮询和恢复由 Operation / Host Runtime 负责。
 
 应保持合并：同一 Capability 内部的 Provider / HTTP / SBI / NAS / N2 / PFCP 子步骤；同一阶段的多个 Predicate；仅需通过 routes 跳转的 Outcome 分支；同一动作的直接 Observation / Postcondition 确认；简单参数映射。
 
-允许最终 Postcondition-only Node、独立 Observation-only Node 和有明确边界的纯 Script Node；禁止 start-only、wait-only、reconcile-only、HTTP-only、Provider handler-only、单 Predicate Node。
+允许最终 Postcondition-only Node、独立 Observation-only Node 和有明确边界的纯 Script Node；禁止 start-only、reconcile-only、HTTP-only、Provider handler-only、单 Predicate Node。
 
 ### 3.4 注释
 
@@ -76,11 +76,11 @@ ca-skills 固定源提交：780497a2918ad3e7bdff554ab64b0ba627e867e0。
 
 ### 3.5 共享资源与 Script Execution
 
-schemas/、scripts/、references/、assets/ 位于 Skill Package 根目录，不依赖 assurance/ 是否存在。Schema 使用 YAML 1.2 表示 JSON Schema 数据模型；Script 由 scripts/manifest.yaml 登记稳定 Script ID、精确包内入口、purpose、输入/输出 Schema。LLM 可读取 Schema / Script 源码，并通过 Host-owned host.skill-script.execute system Capability 调用当前 Skill Registry 中登记的脚本；LLM、Procedure 与 Predicate 共用同一 Script Runner，不设置逐脚本标记或额外 Host 开关。模型不得提交代码、路径、模块、函数或命令。Assurance Procedure / Predicate 与 LLM 使用同一脚本字节、Registry 和 Schema；脚本不得产生外部副作用。
+schemas/、scripts/、references/、assets/ 位于 Skill Package 根目录，不依赖 assurance/ 是否存在。Schema 使用 YAML 1.2 表示 JSON Schema 数据模型；Script 由 scripts/manifest.yaml 登记稳定 Script ID、精确包内入口、purpose、输入/输出 Schema。LLM 通过 Host Resource Read 按需读取当前 Package snapshot 的共享文本资源，并通过 Host-owned host.skill-script.execute system Capability 调用当前 Skill Registry 中登记的全部 transform / predicate Script；LLM、Procedure 与 Predicate 共用同一 Script Runner，不设置逐脚本标记或额外 Host 开关。Predicate Script 的直接 LLM 调用不产生 Evidence 或 Assurance Outcome。模型不得提交代码、路径、模块、函数、Evidence 或命令。Assurance Procedure / Predicate 与 LLM 使用同一脚本字节、Registry 和 Schema；脚本不得产生外部副作用。
 
 ### 3.6 AI Authoring
 
-F09 的 AI Authoring 必须使用同一作者规范生成和检查 Change Set；可读取共享 Schema / Script 作为上下文，但当前 Procedure-only Change Set 只修改 assurance/procedure.yaml，并可引用已有 Script ID，不得修改 schemas/、scripts/ 或 scripts/manifest.yaml。不得通过注释补足机器语义，不得暴露 Callable / backendOperationId，不得机械拆分 Node。Apply 后仍须通过同一 1.6.0 Compiler gate；本 SR 不宣称现有 Studio 已实现。
+F09 的 AI Authoring 必须使用同一作者规范和完整正向示例生成、检查 Change Set；通过 F05 host.skill-resource.read 读取共享 Schema / Script 作为上下文，但当前 Procedure-only Change Set 只修改 assurance/procedure.yaml，并可引用已有 Script ID，不得修改 schemas/、scripts/ 或 scripts/manifest.yaml。不得生成 Wait / await / polling，不得通过注释补足机器语义，不得暴露 Callable / backendOperationId，不得机械拆分 Node。Apply 后仍须通过同一 1.6.0 Compiler gate；本 SR 不宣称现有 Studio 已实现。
 
 ## 4. 非目标
 
@@ -95,9 +95,9 @@ F09 的 AI Authoring 必须使用同一作者规范生成和检查 Change Set；
 
 | 类型 | 依赖 | 影响 |
 |---|---|---|
-| 设计依赖 | CA-SL 1.6.0 v0.1.9 / SR-029；SKILL 作者规范 v0.1.7 | Node 字段、Capability 绑定、四阶段、共享资源根目录、Script Registry、Host Script Execution 和 when 语义必须一致；本 SR 明确补充语言包资源设计，不冻结 Compiler wire API |
+| 设计依赖 | CA-SL 1.6.0 v0.2.0 / SR-029；SKILL 作者规范 v0.1.8 | 原有 Node / routes / arguments / PredicateSet 语法、Capability 绑定、四阶段、共享资源根目录、Script Registry、Script I/O / Evidence / 错误契约、Host Resource Read / Script Execution 和 when 语义必须一致；Skill 层无 Wait / await / polling；本 SR 不冻结 Compiler wire API |
 | 历史来源 | SR-023 / ca-skills v1alpha5 | 只用于来源核对和历史归档 |
-| 消费者设计 | F01 / F02 / F03 / F04 / F05 / F08 / F09；SR-007 / SR-016 | Host Model Loop、Importer、Plugin Manager、Runtime Action Boundary、Package Resource Access、Compiler / Bundle 和 AI Authoring 必须消费同一共享资源与 Script Execution 契约；现有产品实现状态不自动变化 |
+| 消费者设计 | F01 / F02 / F03 / F04 / F05 / F08 / F09；SR-004 / SR-007 / SR-016 | Host Model Loop、Importer、Plugin Manager、Runtime Action Boundary、Host Resource Read、完整 Script Registry、Compiler / Bundle 和 AI Authoring 必须消费同一共享资源与 Script Execution 契约；现有产品实现状态不自动变化 |
 | 外部发布依赖 | ca-skills 1.6.0 正式 Schema / Golden / Release | 正式发布前，本规范与语言稿均保持设计候选，不声称产品可执行 |
 | 实施边界 | ca-agent-next | 本 SR 的目标仓仅为中央文档；如未来需要改动 ca-skills 或 Studio，另建目标仓实施 SR |
 
@@ -107,16 +107,18 @@ F09 的 AI Authoring 必须使用同一作者规范生成和检查 Change Set；
 |---|---|---|
 | AC-032-01 | 作者指南、作者模型、Skill Granularity、Authoring Syntax、Package Layout、Schema Ownership、创建工作流和实际 Skill 样本均有固定源路径、commit / blob SHA 和迁移裁决 | 作者规范 §12、历史归档文件、恢复清单 |
 | AC-032-02 | Skill package 粒度与 Node 粒度分开定义；Skill / Capability / Agent routing 边界明确 | 作者规范 §2、§6 |
-| AC-032-03 | Node 拆分与合并规则严格符合 1.6.0 四阶段顺序、每种阶段最多一个、Operation / Observation Capability 边界和静态 DAG；Outcome-only 路由不得触发机械拆分；Create / Modify / Release 样本只用于结构性裁决 | 作者规范 §5～§6.6；CA-SL 1.6.0 §6～§10；固定源 Procedure 样本 |
+| AC-032-03 | Node 拆分与合并规则严格符合 1.6.0 原有四阶段顺序、每种阶段最多一个、Operation / Observation Capability 边界和静态 DAG；Outcome-only 路由不得触发机械拆分；异步等待不成为作者 Node；Create / Modify / Release 样本只用于结构性裁决 | 作者规范 §5～§6.6；CA-SL 1.6.0 §6；固定源 Procedure 样本 |
 | AC-032-04 | 注释规则区分解释性内容与机器执行契约，给出明确正反例；注释示例不伪装成可构建 Procedure；不把旧资料未定义的规则伪称为迁移原文 | 作者规范 §7.5、§12 |
-| AC-032-05 | Package 文件职责、Schema 所有权、Capability-only、显式 arguments、when、Wait（含正固定 timeout 与阶段边界）、Evidence / UNKNOWN 与 1.6.0 设计一致 | 作者规范 §3～§5、§8～§9；CA-SL 1.6.0 §2、§5、§8～§11 |
+| AC-032-05 | Package 文件职责、Schema 所有权、Capability-only、显式 arguments、when、Evidence / UNKNOWN 与 1.6.0 设计一致；明确 Skill 层不定义 Wait / await / polling，异步由 Operation / Host Runtime 负责 | 作者规范 §3～§5、§8～§10；CA-SL 1.6.0 §2、§5、§6、§10～§11 |
 | AC-032-06 | F09 明确 AI Authoring 必须遵守同一作者规范，并保留用户确认和 Compiler gate | F09 §9.3 |
 | AC-032-07 | IR、功能树、SR 索引、实施状态、文档目录、迁移审计和修订记录完整互链；不误报 1.6.0 Release / 实施 / E2E 状态 | 本 SR、各治理索引、PR 静态检查 |
-| AC-032-08 | Procedure.inputs 只绑定精确 context SourcePath；调用 arguments 只使用受支持 SourcePath / 标量字面量；Node / Wait 输出引用精确到 NodeId.Stage.output / NodeId.wait.output；作者规范不得发明正式语言 Schema 未冻结的参数结构 | 作者规范 §4.2；CA-SL 1.6.0 §5.3 |
-| AC-032-09 | 无 assurance/ 的 Skill 仅 LLM-guided；存在 assurance/ 时所有必需文件与静态语义必须完整有效，不得静默降级；Wait 仅作为 Node-entry Host Runtime READ 控制，不创建 Wait-only Node 或作者级 polling | 作者规范 §3、§5；CA-SL 1.6.0 §2、§10 |
+| AC-032-08 | Procedure.inputs 只绑定精确 context SourcePath；Capability / Script arguments 使用具名映射，Predicate arguments 与参数签名有序对应；Node 输出只引用 NodeId.operation.output / NodeId.observation.output；不定义 wait.output；作者规范不得发明正式语言 Schema 未冻结的参数结构 | 作者规范 §4.2；CA-SL 1.6.0 §6.1～§6.3 |
+| AC-032-09 | 无 assurance/ 的 Skill 仅 LLM-guided，仍可携带并使用共享资源；存在 assurance/ 时所有必需文件与静态语义必须完整有效，不得静默降级；Skill 层无 Wait / await / polling 语法 | 作者规范 §3、§5；CA-SL 1.6.0 §2、§10 |
 | AC-032-10 | schemas/、scripts/、references/、assets/ 位于 Skill Package 根目录，不受 assurance/ 可选性影响；Schema / Script 路径相对 Package 根目录；Schema YAML 源与 JSON Schema G.4 语义明确；同一资源不在 assurance/ 复制 | CA-SL 1.6.0 §2、§5、§8；作者规范 §3～§4；Package 格式规范 §2～§4 |
-| AC-032-11 | Script Registry 精确登记 Script ID / file / entrypoint / purpose / I/O Schema；LLM、Procedure 与 Predicate 均通过 host.skill-script.execute / 同一 Script Runner 调用当前 Skill Registry 中登记的脚本；不设置逐脚本 LLM 标记或额外 Host 开关；禁止模型提交代码/路径/命令和脚本外部副作用 | CA-SL 1.6.0 §8；F03 / F04 / F05；作者规范 §3～§4 |
-| AC-032-12 | F01/F02/F03/F04/F05/F08/F09 对无 Assurance 共享资源、Host Script Execution、Compiler 资源闭包和 AI Change Set 边界无冲突；所有实现状态仍 NOT_RUN / NOT_IMPLEMENTED | 对应设计说明书版本、跨文档一致性审计和 PR 静态检查 |
+| AC-032-11 | Script Registry 精确登记 Script ID / file / entrypoint / purpose / I/O Schema；LLM 可调用全部已登记 transform / predicate Script，Procedure / Predicate 通过同一 Script Runner 调用；补齐 arguments → JSON input、Predicate Evidence projection / evidenceUsed、异常 / timeout / output invalid 诊断；无逐脚本 LLM 标记或额外 Host 开关；禁止模型提交代码/路径/命令和脚本外部副作用 | CA-SL 1.6.0 §8；F03 / F04 / F05 / F08；作者规范 §3～§4 |
+| AC-032-12 | F01/F02/F03/F04/F05/F08/F09 与总体架构、SR-004/SR-007/SR-016 对无 Assurance 共享资源、Host Resource Read、完整 Script Registry、Compiler 资源闭包和 AI Change Set 边界无冲突；所有实现状态仍 NOT_RUN / NOT_IMPLEMENTED | 对应设计说明书版本、跨文档一致性审计和 PR 静态检查 |
+| AC-032-13 | CA-SL 1.6.0 保留原有 Node / routes / arguments / PredicateSet YAML 形状并明确规范文法；Procedure / Node / Stage / Predicate / Script Registry 字段、基数、映射/序列区别、SourcePath 和终态完整；不得新增 Wait 语法。正式机器 Schema / Golden 的发布责任与 NOT_RELEASED 状态明确 | CA-SL 1.6.0 §6.1～§6.3、§8；原 v1alpha4/v1alpha5 只读源规范对照；ca-skills 正式 Schema / Golden release gate |
+| AC-032-14 | Host Resource Read 有精确请求 / 响应、当前 Run Package snapshot 绑定、路径根 / 路径穿越拒绝、文本媒体类型、单文件大小上限、拒绝诊断；F01/F02/F03/F04/F05/F08/F09/SR-004/SR-007/SR-016 均引用同一接口 | F05 §2.1；F01 / F03 / F04；SR-004 AC-004-01/02；SR-007 AC-007-08 |
 
 ## 7. 当前状态与门禁
 
@@ -142,3 +144,4 @@ F09 的 AI Authoring 必须使用同一作者规范生成和检查 Change Set；
 | 2026-11-27 | 0.1.8 | GPT-6.2（ChatGPT） | §5～§6 | 更新 CA-SL / 作者规范依赖版本；将 Host Script Execution 双门禁纳入 AC-032-11 | 使 SR 验收与 CA-SL、Host 配置及作者规范的最终边界一致 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.9 | GPT-6.2（ChatGPT） | §5～§6 | 删除 `llmInvocable` 与 `scriptExecution.llmEnabled` 双门禁，更新 AC-032-11 为同一 Script Runner | 明确 Demo 中 LLM 默认可执行当前 Skill scripts/ 登记脚本，与确定性执行使用相同脚本能力 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.10 | GPT-6.2（ChatGPT） | §6、设计依赖 | 将 SR-032 设计依赖版本更新至 CA-SL 1.6.0 v0.1.9 / SKILL 作者规范 v0.1.7 | 确保 SR 验收引用的机器语义与作者规则均为移除双门禁后的最新基线 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.1.11 | GPT-6.2（ChatGPT） | §1、§3～§6 | 移除 Skill 层 Wait / await / polling 语法；补齐 CA-SL 原有 YAML 机器结构、Script I/O / Evidence / 错误契约、Host Resource Read；新增 AC-032-13/14 并纳入 SR-004/007/016 | 回应独立评审的真实阻断项，同时恢复既定语言边界，不重构原有四阶段语法 | Issue #49；IR-008；SR-032 |
