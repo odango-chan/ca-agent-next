@@ -1,7 +1,7 @@
 # SR-025：MAS Owner Development Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.7
+> SR 版本：0.1.8
 > 状态：READY
 > 创建日期：2026-11-25
 > 所属阶段：外部 Publisher 实施移交
