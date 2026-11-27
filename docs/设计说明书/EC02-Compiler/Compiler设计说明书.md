@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.2.15\
+> 文档版本：0.2.16\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 修订日期：2026-11-27\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -362,17 +362,17 @@ Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId�
 
 上述目标规则已经可供设计评审；精确字段和可执行命令尚未发行，必须等正式发布后才能宣称对应产品验收 PASS。旧 v2.1.0 Development v1alpha1 和 v1alpha5 的历史设计/Golden 不在新二进制内实现兼容分支。
 
-## 12. OpenAMSM 版本锁定与原版 YAML / Adapter Link 边界（IR-009）
+## 12. OpenAMSM 原版 OpenAPI 3.0 引用与 Compiler dialect-aware Resolver（IR-009）
 
-本章覆盖本设计 §10.2 中此前将 SR-031 视为“可直接导出 G.4 的 3GPP 原版 Schema-only Package”的假设：
+- **SR-031 Source Bundle**：ca-skills 原样代发布 OpenAMSM 实际支持的 OpenAPI 3.0 YAML 与已选 operation / Schema Component 的完整可达 `$ref` 闭包。原文件 bytes、路径和相对 `$ref` 不改；Source Bundle 不是 Interface Package，不导出 Capability / Callable。
+- **本地 G.4 与外部 OAS 3.0 分离**：Skill-owned `requestSchema` 根及本地 Schema 节点继续使用 CA-SL 1.6.0 G.4。只有在 Skill 显式声明并 pin Source Bundle dependency 后，才能引用其中精确的 `#/components/schemas/...`；目标由 OAS 3.0 Schema Object validator 解释，不套用 G.4 白名单，不做 projection / Adapter。
+- **Resolver**：从 dependency alias 解析唯一 Source Bundle snapshot；只允许固定相对文件路径和 Schema Component JSON Pointer；递归解析同一 snapshot 内的 nested `$ref`；拒绝 arbitrary URL、dynamic latest、path traversal、unresolved ref、cross-commit mixing、non-schema pointer 和循环引用。Build / Verify 必须离线使用锁定快照。
+- **Dialect-aware 验证**：本地节点使用 G.4 validator；外部目标及其可达引用使用 OpenAPI 3.0 Schema Object semantics。`nullable`、`oneOf`、`anyOf`、`allOf`、`format` 等必须按 OAS 3.0 真实语义处理，不得丢弃 / 改写。若可达闭包含不支持语义，使用 `SCHEMA_INVALID` 拒绝并输出 source file / JSON Pointer / Skill SourcePath；不得生成部分 Artifact。
+- **CEL 类型环境**：仅暴露在所有可达 Schema 分支中类型一致、字段存在性可证明的字段；union 分支类型不一致或字段不确定时静态拒绝，不猜测为某个类型。Plugin 的完整 operation / multipart 校验仍由 SR-010 原生 OAS consumer 负责，Compiler 不复制 operation 逻辑。
+- **Host Context**：SR-030 Schema-only Package 仍只由 `Contract.contexts` 引用；它与 OpenAPI Source Bundle 是不同依赖 kind。两者都不产生 Capability / Callable Scope。
+- **机器字段门禁**：Source Bundle dependency kind、alias / URI / JSON Pointer 编码、Manifest / Lock / Build DTO 字段、OAS 3.0 validator 版本与 Golden 必须由 ca-skills / Compiler Owner 在正式 1.6.0 Schema / Golden 中冻结。当前没有正式发布，不允许 Harness 猜字段或宣称 READY。
 
-- **SR-031 Phase A**：ca-skills 只代发布 OpenAMSM 实际支持的原版 3GPP YAML（包含全部引用 YAML），**bytes/path/$ref 一字不改**。这只是原版 Source Bundle；Compiler **不能**把原始 OpenAPI YAML（可能含 `#/components`、`oneOf`、`format`）默认为合法 G.4 Schema-only 输入，也不能自动丢字段、修改源码让其通过。
-- **SR-031 Phase B（独立受审/可选）**：若要给 Skill 类型引用，发行**另一个标为 CA-SL Adapter 的 JSON Schema Package**；每个 G.4 闭合 Schema export、Package ID/版本/$id、Source Lock 与正式 Compiler Golden 均单独冻结。原版 YAML 不改变；Adapter 与官方原版不能共用同一 Schema identity。
-- **SR-030 Host Context** 仅由 `Contract.contexts` 显式引用；**Adapter** 类型可由 Skill-owned `requestSchema` 根的显式依赖 `$ref` 引用。A 原版不能直接被 $ref Link，B 必须精确 snapshot/alias/$id/闭包；二者均不会创建 Capability/Callable。
-- **Codec Result** 是 SR-026 Provider 正式 Output Schema，NAS/NGAP 版本证据跟随 OpenAMSM 已确认支持基线，而不是假设 TS29.502 SBI YAML 已经包含 NAS/NGAP 全部结构。T1 只检查已到场 Event 字段、T2 Codec READ 之后才能引用结果；禁止 `when` 提前解码。保持 Provider 查询 2/2 + 首批 Codec 1/1 = 3/3。
-- SR-013 AC-013-07 同时测试：A 原版不通过 G.4 Link 的**预期负例**、B 合法 Schema-only 0/0 的正例、不同 OpenAMSM 版本/未知 G.4 keyword/错误 T1→T2 字段/缺 Publisher 的拒绝。新 1.6.0 Package/Build/Verify 机器契约未发布，产品 `BLOCKED/NOT_RUN`。
-
-当前源 `env-openamsm@dc83ccbf` 及 `r19-20260402...` 路径为**历史来源候选**，实际使用基线需要正式 OpenAMSM Owner 取证，不能仅凭目录名声明 3GPP Release。完整说明见 [EC01.3GPP 权威设计](../EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。
+SR-013 AC-013-07 需验证原版组件直接引用、跨文件 CommonData 闭包、OAS 3.0 语义保真、G.4 / OAS3 dialect 边界、CEL 类型可确定性和 fail-closed。Source Bundle 原件 byte-compare PASS 不能代替 Compiler 产品 AC。
 
 ## 修订记录
 
@@ -403,3 +403,4 @@ Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId�
 | 2026-11-27 | 0.2.13 | Codex / GPT-6 | Provider 一对一映射 | 区分查询 2/2 与包含 Codec 的 3/3 | 与 SR-029、F06 的发布范围对齐 | Issue #12，PR #46 |
 | 2026-11-27 | 0.2.14 | ChatGPT / GPT-6 | 3GPP Schema 与阶段输入补充 | 明确公共 Schema-only 导出、选择期 Request 与执行期 Codec Result 的 Link / 业务字段来源 | 关闭 Create 选择前依赖 NAS 解码的循环、固定跨包类型门禁 | IR-009；Issue #47；SR-031/026/013 |
 | 2026-11-27 | 0.2.15 | ChatGPT / GPT-6 | 本轮 IR-009 设计修正 | 固定 OpenAMSM 版本 + 原版 YAML 逐字节代发布；显式区分可选 Adapter 与 Provider Codec 输出 | 落实原版 YAML 不得改动、消除误把原版当 G.4 的风险 | Issue #47；SR-031/026/013 |
+| 2026-11-27 | 0.2.16 | ChatGPT / GPT-6.2 | §12 | 以原生 OAS3 外部 Schema Component 引用替代强制 Adapter；定义 dialect-aware Resolver、pin、嵌套 refs、类型推导与失败门槛 | G.4 与 OAS 3.0 是不同 dialect，不能用投影替代原版标准 | IR-009；Issue #47；SR-013/031 |
