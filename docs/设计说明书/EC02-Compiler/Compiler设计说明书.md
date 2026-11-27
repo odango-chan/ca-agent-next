@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.2.19\
+> 文档版本：0.2.20\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 修订日期：2026-11-27\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -174,16 +174,17 @@ AC-013-01 报告采用 Go 1.26.6、cel-go 0.33.2、Go protobuf 1.36.10、CPython
 manifest.json
 skills/<skill-name>/compiled/procedure.json
 skills/<skill-name>/compiled/ingress-links.json
-skills/<skill-name>/compiled/request-schema/root.json
-skills/<skill-name>/compiled/request-schema/resources/<resource>.json
+skills/<skill-name>/compiled/request-schema/descriptor.json
+skills/<skill-name>/compiled/request-schema/g4/root.json
+skills/<skill-name>/compiled/request-schema/g4/resources/<resource>.json
 skills/<skill-name>/compiled/when.checked.pb
 skills/<skill-name>/compiled/when.types.pb
 ~~~
 
-- 只要 Contract 声明 requestSchema，就必须输出规范化的 G.4 Request Schema 根及完整、可解析的 $ref 资源闭包；与 when 是否存在、是否读取 input 无关。
+- 只要 Contract 声明 requestSchema，就必须在 Artifact 中输出 dialect-aware Request Schema 描述；与 when 是否存在、是否读取 input 无关。本地 G.4 根及本地 `$ref` 闭包规范化为 Artifact 文件；纯 `$ref` OAS3 根别名不生成 G.4 副本，改由 Manifest 引用显式 pin 的 Source Bundle 及其选定可达 OAS3 闭包。
 - 没有声明 requestSchema 时不输出 Request Schema 文件；event-only when 仍可编译，DescriptorSet 只需包含 event.type。
 - 只有声明 when 的 Skill 才输出 when.checked.pb 和 when.types.pb；无 when 时不生成空表达式或占位文件。
-- when.checked.pb 是 Any 序列化字节；when.types.pb 是 CEL 类型所需的 FileDescriptorSet。Request Schema 文件保留完整 G.4 断言，不能用 DescriptorSet 代替。
+- when.checked.pb 是 Any 序列化字节；when.types.pb 是 CEL 类型所需的 FileDescriptorSet。Request Schema 的本地 G.4 Artifact 文件保留完整 G.4 断言，不能用 DescriptorSet 代替；外部 OAS3 Schema 不转换为 G.4 文件，原版 YAML bytes 由锁定 Source Bundle 保留并按 OAS 3.0 dialect 解析。
 - 根 Schema 与所有闭包资源保留精确 $id；Artifact 内部以 Manifest 的资源表完成 ID 到文件路径映射，运行期不得访问远端或作者工作区。
 - 文件路径和资源映射是本设计候选值，Compiler Owner 必须在正式 Artifact Schema、Golden 和 PR 中定稿，不得同时保留多个兼容别名布局。
 
@@ -196,9 +197,9 @@ skills/<skill-name>/compiled/when.types.pb
 1. sourceRef：Contract.requestSchema 的作者相对路径。
 2. rootPath：Artifact 内根 Schema 文件路径。
 3. rootSchemaId：若根 Schema 声明 $id，则记录其精确值；未声明时省略，不得为其虚构 URI 身份，根以 sourceRef + rootPath 标识。
-4. resources[]：闭包中每个已解析资源的精确 schemaId 与 Artifact path，覆盖完整、无循环的 G.4 $ref 闭包；根 Schema 若声明 $id，也纳入资源映射。
+4. resources[]：闭包中每个已解析资源的精确身份和 dialect。若为本地 G.4，记录 `schemaId`（若声明）与 Artifact path，覆盖完整、无循环的本地 G.4 `$ref` 闭包；若为外部 OAS3，记录 Source Bundle dependency identity、原始 source file、JSON Pointer 和 OAS 3.0 Schema Object dialect，不提供 G.4 Artifact path。外部 OAS3 根没有 `$id` 时，以 dependency identity + source file + JSON Pointer 标识，不虚构 URI。
 
-requestSchema 对象与 when 是否存在无关；Host 依照 CA-SL **1.6.0** 正式 requestSchema/when 契约使用它验证 Event payload。所有根/资源文件同时进入该 Skill 的 compiledFiles[] 和 Manifest outputFiles[]。
+requestSchema 对象与 when 是否存在无关；Host 依照 CA-SL **1.6.0** 正式 requestSchema/when 契约使用它验证 Event payload。若为本地 G.4，根与本地闭包文件进入该 Skill 的 compiledFiles[] 和 Manifest outputFiles[]；若为外部 OAS3，原版 YAML 文件由精确 pin 的 Source Bundle dependency 提供，不进入 Compiler 生成的 compiledFiles[] / outputFiles[]，只在 Manifest 的 dependencyClosure / resources[] 中记录精确引用。Source Bundle 在 Published Skill Bundle 中只保留一次，运行期不得访问远端。
 
 仅为声明 when 的 Skill 增加 when 元数据对象，至少记录 checkedExprPath、descriptorSetPath、sourcePath 和 sourceRange（startLine/startColumn/endLine/endColumn）。当表达式引用 input 时，when 元数据还记录 requestSchemaRef 与 resolvedRequestSchemaPath，且必须与同一 Skill 的 requestSchema.rootSchemaId / sourceRef 一致；只访问 event.type 时可省略这两个引用字段。没有 when 时不输出 when 元数据。
 
@@ -371,7 +372,7 @@ Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId�
 - **Dialect-aware 验证**：本地节点使用 G.4 validator；外部目标及其可达引用使用 OpenAPI 3.0.0 Schema Object semantics。当前固定闭包实际包含 `allOf` 1、`anyOf` 25、`oneOf` 3、`nullable` 2、`format` 4（实际值为 `uuid` / `date-time` / `byte`）、`pattern` 42、`additionalProperties` 3（本快照三处均为 Schema Object）、`items` 23、`enum` 27、`required` 26、`default` 21 个关键字出现项；这些计数是该 source commit 的审计证据，Golden 应覆盖各实际出现语义，不应当作未来版本的固定数量。组合语义为 `allOf` 交集、`anyOf` 至少一个分支、`oneOf` 恰好一个分支；`pattern`、schema-valued `additionalProperties`、`nullable`、`format` 等不得丢弃 / 改写。OAS3 允许 boolean-valued `additionalProperties`，当前快照没有该形式；实现遇到时须按 OAS3 处理或明确 fail-closed，不得静默忽略。`default` 仅为注解，不自动填充输入。若可达闭包含不支持语义，使用 `SCHEMA_INVALID` 拒绝并输出 source file / JSON Pointer / Skill SourcePath；不得生成部分 Artifact。
 - **CEL 类型环境**：对 `anyOf` / `oneOf`，只有在每个可满足分支中均声明、均列入 `required` 且类型一致的字段，才能作为无条件可访问字段；其他字段仅在 CEL 类型系统显式支持 optional 时按 optional 暴露，否则不允许无条件访问。`allOf` 按交集组合属性约束并合并 required 集合，类型冲突拒绝；`nullable` 的 Null 与 Missing 分开处理。无法证明可用性的字段不进入无条件类型环境，不猜测为某个类型。Plugin 的完整 operation / multipart 校验仍由 SR-010 原生 OAS consumer 负责，Compiler 不复制 operation 逻辑。
 - **Host Context**：SR-030 Schema-only Package 仍只由 `Contract.contexts` 引用；它与 OpenAPI Source Bundle 是不同依赖 kind。两者都不产生 Capability / Callable Scope。
-- **机器字段门禁**：Source Bundle dependency kind、alias / URI / JSON Pointer 编码、Manifest / Lock / Build DTO 字段、OAS 3.0 validator 版本与 Golden 必须由 ca-skills / Compiler Owner 在正式 1.6.0 Schema / Golden 中冻结。当前没有正式发布，不允许 Harness 猜字段或宣称 READY。
+- **Artifact 表示与机器字段门禁**：本地 G.4 根使用规范化 Artifact 文件；外部 OAS3 根必须以纯 `$ref` 别名解析到显式 pin 的 Source Bundle，Artifact/Manifest 记录 Source Bundle dependency identity、source commit / Git blob pin、原始文件路径、根与传递引用的 JSON Pointer、每项资源的 OAS3 dialect 和完整选定闭包；原始 YAML bytes 在 Bundle 中保留一次，绝不投影、改写或复制为 G.4。运行期只从本地锁定 Bundle snapshot 解析。Source Bundle dependency kind、alias / URI / JSON Pointer wire 编码、Manifest / Lock / Build DTO 字段、OAS 3.0 validator 版本与 Golden 必须由 ca-skills / Compiler Owner 在正式 1.6.0 Schema / Golden 中冻结。当前没有正式发布，不允许 Harness 猜字段或宣称 READY。
 
 SR-013 AC-013-07 需验证原版组件直接引用、跨文件 CommonData 闭包、OAS 3.0 语义保真、G.4 / OAS3 dialect 边界、CEL 类型可确定性和 fail-closed。Source Bundle 原件 byte-compare PASS 不能代替 Compiler 产品 AC。
 
@@ -408,3 +409,4 @@ SR-013 AC-013-07 需验证原版组件直接引用、跨文件 CommonData 闭包
 | 2026-11-27 | 0.2.17 | ChatGPT / GPT-6.2 | §12 | 明确 selected-surface lazy Resolver、RFC 3986 / 6901 引用解析、PostSmContexts 四文件闭包及实际 OAS3 关键字 / 组合类型推导 | 避免全文件 eager resolve、漏锁传递引用和把 union / allOf 语义混为一谈 | IR-009；Issue #47；SR-013/031；EC01 |
 | 2026-11-27 | 0.2.18 | ChatGPT / GPT-6.2 | §12 | 将 CEL union 字段收紧为各分支 required；核准实际 additionalProperties / format 形态与 default 注解语义 | 防止静态类型误判可选字段，并使 Golden 覆盖真实 OAS3 dialect | IR-009；Issue #47；SR-013/031；EC01 |
 | 2026-11-27 | 0.2.19 | ChatGPT / GPT-6.2 | §12 Manifest / Build / Verify | 移除 sourceDigest 与 outputFiles SHA-256；Build / Verify 不计算或比较 SHA-256 / checksum / digest | 遵守 Demo 全链路无 hash 校验要求，避免 Compiler 产物另行引入完整性门禁 | IR-009；Issue #47；SR-013；CA-SL 1.6.0 |
+| 2026-11-27 | 0.2.20 | ChatGPT（GPT-6.2） | §5.2～§5.3、§12 | 将 Request Schema Artifact / Manifest 闭包按 dialect 分型；本地 G.4 写入规范化 Artifact，外部 OAS3 只引用精确 pin 的 Source Bundle 原件及 JSON Pointer，不列入编译输出文件 | 使 Manifest、Bundle、Host 对 OAS3 原始 bytes 和运行期离线闭包有唯一一致的所有权表达 | Issue #49/#47；IR-008/009；SR-013/031；PR #52 |
