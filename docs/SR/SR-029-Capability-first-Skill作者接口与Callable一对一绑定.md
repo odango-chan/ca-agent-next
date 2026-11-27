@@ -1,7 +1,7 @@
 # SR-029：Capability-first Skill 作者接口与 Callable 一对一绑定
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.4  
+> SR 版本：0.2.5  
 > 状态：待评审 / DESIGN_READY_FOR_REVIEW；非实施 READY；新版规范/产品 NOT_RELEASED
 > 创建日期：2026-11-26  
 > 上游需求：[IR-008](../IR/IR%20总登记册.md#ir-008)；关联需求：[IR-003](../IR/IR%20总登记册.md#ir-003)  
@@ -9,7 +9,7 @@
 > 设计 Issue：[ca-agent-next #40](https://github.com/odango-chan/ca-agent-next/issues/40)  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：见 §12（不包含下游仓代码修改、产品实施/发行或旧版兼容）
-> 固定设计基线：PR #44 Head 7f83bf6135d4572dca7d3d5bdb6243765440b0f6
+> 历史设计起点：PR #44 原 Head `7f83bf6135d4572dca7d3d5bdb6243765440b0f6`；该提交仅为初始审计快照。现行 #45 已整合已合入恢复分支的 #44，当前评审基线以 PR #45 的最新 Base/Head 固定记录为准
 > 工作分支：docs/issue-40-casl-160-capability-design-review
 > 本 SR 性质：中央架构与规范设计；不授权修改任何下游实现仓
 
@@ -255,7 +255,7 @@ Create / Release 继续分别使用原有 Schema 与 Evidence Guarantee；Modify
 ## 15. 设计评审记录
 
 - 2026-11-26，GPT-6（ChatGPT）：将历史基数审计移植到最新 1.6.0-only 中央设计分支，提交待评审；未声称正式 APPROVE。
-- GitHub PR 保持 Draft；未提交正式 APPROVE、未合并 PR、未修改 main。
+- **2026-11-26 历史状态**：#45 曾为 Draft。**2026-11-27 当前状态**：#45 OPEN / 非 Draft / 设计待独立复评；没有独立 GitHub APPROVE，未合并 #45 或修改 main。具体 Head / Base SHA 以本次 GitHub 检查点为准。
 - 待评审仅为技术设计审查状态；不是实施 READY、Compiler/Runtime/Studio 产品实现证据或 E2E PASS。
 
 ## 修订记录
@@ -268,3 +268,4 @@ Create / Release 继续分别使用原有 Schema 与 Evidence Guarantee；Modify
 | 2026-11-26 | 0.2.2 | GPT-6（ChatGPT） | 标题层级/修订记录 | 修正历史修订表列数与独立设计评审状态 | 满足 Markdown 设计评审门禁，避免编号或治理表歧义 | Issue #40；SR-029 |
 | 2026-11-26 | 0.2.3 | GPT-6（ChatGPT） | 文档头与修订记录 | 补齐 formal SR 正式 review_scope 与非目标声明 | 解除 PR #45 当前 Head Review Context formal-doc 校验失败 | Issue #40；PR #45 |
 | 2026-11-27 | 0.2.4 | GPT-6.2（ChatGPT） | §5、§13、修订记录 | 明确可选 when 唯一位于 assurance/contract.yaml 顶层；SKILL.md Front Matter 和 predicates.yaml 不声明 when；1.6.0 CEL/G.4 语义由正式规范冻结。 | 锁定作者字段归属，避免旧版本语义被隐式带入 1.6.0。 | Issue #40；IR-008；SR-013；EC02；F08 |
+| 2026-11-27 | 0.2.5 | GPT-6.2（ChatGPT） | 文档头、§15 评审历史、修订记录 | 历史 PR #44 原 Head、#45 Draft 观察值改为明确历史时点，当前 #45 非 Draft 且未独立 APPROVE | 不让已合并/重定向后的 PR 被旧历史文字误判为当前状态 | Issue #40；PR #44/#45；SR-029 |

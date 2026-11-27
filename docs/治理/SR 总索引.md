@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引\
-> 文档版本：0.3.43
+> 文档版本：0.3.44
 > 状态：28 项 SR：4 VERIFIED（SR-001/002/003/024）、1 READY（SR-025）、1 IMPLEMENTED（SR-015）、22 DRAFT（其中 SR-029 设计待评审）；SR-003 模块 AC PASS，系统 EX NOT_RUN
 > 修订日期：2026-11-27
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)\
@@ -95,7 +95,7 @@
 - 设计来源：ca-agent-next PR #1 的架构、设计、规范和 Acceptance 文档。
 - PR #1：已合并；只代表设计文档变更。
 - Next Runtime：README 声明尚无已验收 Runtime 实现。
-- 当前 27 项 SR 中 4 项 VERIFIED（SR-001、SR-002、SR-003、SR-024）、1 项 READY（SR-025）、1 项 IMPLEMENTED（SR-015 设计移交）、21 项 DRAFT；SR-003 已达到模块 VERIFIED，系统 EX 仍 NOT_RUN；[PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)已核对 58 个文件与 SHA256SUMS；归档报告为 Go/Python 18/18，当前审计复跑 NOT_RUN，不改变 SR-013 总体 DRAFT 状态。SR-009 仅覆盖 Event/Delivery Plugin 与本地 staging；SR-010 还覆盖 Next Host ArtifactStore、ca-host.artifact-store/v1 channel server、Provider v2 Driver 和 Codec 消费。
+- 当前 28 项 SR 中 4 项 VERIFIED（SR-001、SR-002、SR-003、SR-024）、1 项 READY（SR-025）、1 项 IMPLEMENTED（SR-015 设计移交）、22 项 DRAFT（含 SR-029 设计待评审）；SR-003 已达到模块 VERIFIED，系统 EX 仍 NOT_RUN；[PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)已核对 58 个文件与 SHA256SUMS；归档报告为 Go/Python 18/18，当前审计复跑 NOT_RUN，不改变 SR-013 总体 DRAFT 状态。SR-009 仅覆盖 Event/Delivery Plugin 与本地 staging；SR-010 还覆盖 Next Host ArtifactStore、ca-host.artifact-store/v1 channel server、Provider v2 Driver 和 Codec 消费。
 - Issue #12 追踪本轮中央设计资产恢复；PR #11/#13/#15/#16/#18 均在独立分支 OPEN/DRAFT，恢复分支已同步可复用的最新文档内容但尚未创建 PR；PR 状态不等于 SR 实施状态。
 - 恢复分支 docs/restore-original-designs-20261125 尚未创建指向 main 的总 PR；SR-002 设计 PR #20 与实施 PR #23 均已合并到恢复分支，SR-002 为 VERIFIED、AC-002-01～08 PASS；EX-01 仍 NOT_RUN。该恢复分支尚未合并 main。
 - ca-agent-demo、ca-client-tools、ca-skill-compiler、ca-skills 和 ca-openamsm-plugin 的现有代码/PR 只能作为外部复用或依赖证据，不能自动算作 Next SR 已实施。
@@ -162,3 +162,4 @@
 | 2026-11-27 | 0.3.41 | GPT-6.2（ChatGPT） | SR 清单、Phase C、修订记录 | 同步 1.6.0-only Compiler/Authoring 设计修订后的当前版本引用，保留 28 SR / 8 IR 状态与未发布门槛。 | 保证跨文档依赖指向同一组最新设计版本，避免评审与 Harness 使用过期契约。 | Issue #12/#40/#43；SR-004/013/027/029；PR #45 |
 | 2026-11-27 | 0.3.42 | GPT-6.2（ChatGPT） | SR 清单、Phase C、修订记录 | 同步 Compiler 1.6.0-only 新契约的 M.3 / Request Schema Owner Gate 与跨文档当前版本引用；旧 v1alpha5 仅保留历史冻结语义。 | 避免将历史 v1alpha5 规范或 DTO 隐式复用为 CA-SL 1.6.0 的规范性输入。 | Issue #40；SR-004/013/027/029；EC02；F08；PR #45 |
 | 2026-11-27 | 0.3.43 | GPT-6.2（ChatGPT） | 当前版本/依赖指针、修订记录 | 对齐 EC02 v0.2.12、F08 v0.3.16、F09 v0.3.16 和审计 v0.4.53；不改变历史证据与 SR 状态 | 避免评审与 Harness 误引用旧版；保持 1.6.0 NOT_RELEASED 与 DRAFT 边界。 | Issue #40/#43；PR #45；SR-004/013/027/029 |
+| 2026-11-27 | 0.3.44 | GPT-6.2（ChatGPT） | §4 当前基线说明、修订记录 | 纠正正文当前 SR 总计 27/21 与顶部当前 28/22 不一致；保留历史评审统计 | 修复审阅时点与当前权威状态混写，不改变任何 SR 状态 | Issue #40/#12；PR #45；SR-029 |
