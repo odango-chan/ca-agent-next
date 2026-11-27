@@ -1,13 +1,13 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.38\
+> 文档版本：0.3.39\
 > 状态：**设计待评审**（CA-SL 1.6.0；有 Assurance Skill 才允许 assurance/contract.yaml 顶层 when；SKILL.md Front Matter 不声明 when；无 Assurance Skill 不声明 when；AI Authoring / Schema Explorer 实施与发布 NOT_RUN）
 > 修订日期：2026-11-27\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级准入、额外 package-level digest、签名和 Trust Registry；历史 Compiler v2.1.0 的 `files[].sha256` 要求仅归旧版审计，不转为新版 Schema 要求
 
-关联 IR-006、IR-008、SR-015、SR-016、SR-020（参考宿主架构审计）、SR-024（旧 Development Host Publisher，仅历史）、SR-025（MAS Owner 1.6.0 Publisher）、SR-030（Host Context 1.6.0 Schema-only Publisher）、SR-032（中央 SKILL 作者规范）；新 1.6.0 Compiler 接口以 [EC02 Compiler 设计说明书](../EC02-Compiler/Compiler设计说明书.md) v0.2.19 和 [SR-013](../../SR/SR-013-Compiler已检查when与发布产物.md) v0.2.36 为准；历史 EC02 Development Build 设计只保留源审计，不作为当前 Compiler DTO/Worker/Bundle 发布入口。基线为 [docs/architecture/studio-boundaries.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/architecture/studio-boundaries.md)、[docs/design/ai-procedure-authoring.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/design/ai-procedure-authoring.md)。
+关联 IR-006、IR-008、SR-015、SR-016、SR-020（参考宿主架构审计）、SR-024（旧 Development Host Publisher，仅历史）、SR-025（MAS Owner 1.6.0 Publisher）、SR-030（Host Context 1.6.0 Schema-only Publisher）、SR-032（中央 SKILL 作者规范）；新 1.6.0 Compiler 接口以 [EC02 Compiler 设计说明书](../EC02-Compiler/Compiler设计说明书.md) v0.2.19 和 [SR-013](../../SR/SR-013-Compiler已检查when与发布产物.md) v0.2.37 为准；历史 EC02 Development Build 设计只保留源审计，不作为当前 Compiler DTO/Worker/Bundle 发布入口。基线为 [docs/architecture/studio-boundaries.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/architecture/studio-boundaries.md)、[docs/design/ai-procedure-authoring.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/design/ai-procedure-authoring.md)。
 
 ## 1. 编辑与语言服务
 
@@ -259,3 +259,4 @@ AI Authoring 的 Change Set 必须遵守中央 [SKILL 作者规范](../../规范
 | 2026-11-27 | 0.3.37 | GPT-6.2（ChatGPT） | 文档头、修订记录 | 同步 SR-013 v0.2.35 / F08 v0.3.31 最新 OAS3 产品阻塞状态 | 确保 Studio Schema Explorer / Compiler gate 引用当前 OAS3 dependency / Resolver / Golden 门槛 | Issue #49；IR-009；SR-013/016；PR #52 |
 
 | 2026-11-27 | 0.3.38 | GPT-6.2（ChatGPT） | 文档头、修订记录 | 同步 SR-013 v0.2.36 与 SKILL 作者规范 v0.2.3 最新作者 / Compiler 基线 | 保持 AI Authoring / Schema Explorer 设计引用最新 | Issue #49；IR-008/009；SR-013/016/032；PR #52 |
+| 2026-11-27 | 0.3.39 | ChatGPT（GPT-6） | 设计依据、修订记录 | 同步 SR-013 v0.2.37 与 SKILL 作者规范 v0.2.4 的最终单 Predicate 例外及 Node 示例修正，不改变 Studio 实施状态 | AI Authoring 继续以中央最新版 Node 规则与 Compiler 门槛为准 | Issue #49；IR-008；SR-013/016/032；PR #52 |
