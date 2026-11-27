@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.2.13\
+> 文档版本：0.2.14\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 修订日期：2026-11-27
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -226,14 +226,14 @@ requestSchema 对象与 when 是否存在无关；Host 依照 CA-SL 1.6.0 Publis
 
 - Artifact API version 与 languageTarget 精确受支持。
 - Manifest、文件清单、路径、重复归属和必需文件完整。
-- 每个已声明 Request Schema 的根文件与全部资源可解析，保留精确 $id、G.4 关键字和约束；不存在未解析、越界或重复资源。
+- Skill-owned G.4 Request Schema 根按 G.4 验证；引用的 OAS3 Schema resources 按 OpenAPI 3.0 dialect-aware 解析并保留其原生约束。原始 source bytes 与相对 `$ref` 不变；不存在未解析、越界或重复资源。
 - 每个 CheckedExpr Any 可反序列化，type URL 与标准类型一致。
 - 每个 DescriptorSet 可解析，所有 CheckedExpr 类型引用均可解析。
 - CheckedExpr 最终类型为 bool；引用 input 时，其类型闭包必须与该 Skill 的 Request Schema root/closure 精确匹配。event-only when 不得被强制要求 Request Schema。
 - when 源路径/位置、程序路径和 DescriptorSet 路径相互一致。
 - 不存在跨 Skill 私有 Schema 或 Descriptor 引用。
 - 无 when 的 Skill 不得带伪造/空的 when 程序；但若其 Contract 声明 requestSchema，仍必须携带 Schema 根和闭包。
-- DescriptorSet 只负责 CEL 类型，不得被当作完整 JSON Schema 验证器；Request Schema 快照必须保留 G.4 的 enum/const/范围/长度/数组约束。
+- DescriptorSet 只负责 CEL 类型，不得被当作完整 Schema 验证器；Request Schema 快照必须保留 Skill-owned G.4 根的 enum/const/范围/长度/数组约束，并保留被引用 OAS3 resources 的原生 dialect 约束，不得静默投影或丢弃 OAS3 关键字。
 - BuildResult、Manifest 与 OutputFiles 的集合和字节一致。
 
 新版 Verify 仅接受 1.6.0 新 BuildRequest/BuildResult/Artifact，执行完整重建/逐文件比较或 Compiler Owner 冻结的等价确定性复验；新 Compiler 不支持任何旧 v1alpha5 DTO、Artifact、双轨 dispatch 或兼容 fallback。旧 v2.1.0 Release 保留旧 BuildResult/Artifact v1alpha5 的原有行为；Development Build 仍由独立 Development API v1alpha1 处理。当前 CLI 已在写入目录前用同一 Verify 函数验证成功 BuildResult；新版本必须保持“先 Verify、后原子写盘”的既有不变量，不得假设存在一个已发布 Artifact 的独立 CLI verify 子命令。
@@ -376,3 +376,4 @@ Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId�
 | 2026-11-27 | 0.2.11 | GPT-6.2（ChatGPT） | §2、§5.3、修订记录 | 同步 Compiler 1.6.0-only 新契约的 M.3 / Request Schema Owner Gate 与跨文档当前版本引用；旧 v1alpha5 仅保留历史冻结语义。 | 避免将历史 v1alpha5 规范或 DTO 隐式复用为 CA-SL 1.6.0 的规范性输入。 | Issue #40；SR-004/013/027/029；EC02；F08；PR #45 |
 | 2026-11-27 | 0.2.12 | GPT-6.2（ChatGPT） | §3.3、修订记录 | 修复 G.4 布尔运算符 `\|\|` 在 Markdown 表格中被识别为列分隔符，保留原有 1.6.0 语义 | 确保 CA-SL 1.6.0-only 评审输入和当前文档结构无歧义。 | Issue #40/#12；PR #45；SR-013/SR-029 |
 | 2026-11-27 | 0.2.13 | GPT-6.2（ChatGPT） | §3.4、§5.2～§5.3、§6.1、§7、修订记录 | 明确 Skill-owned G.4 Request Schema root 与原版 OpenAPI 3.0 resources 的 dialect-aware $ref 边界；原件 source bytes/$ref 不变，不要求 Adapter；具体 resolver/Manifest 细节留给 SR-031/PR #48 冻结 | 避免 G.4 profile 误约束原版 OAS3 components，并防止在 PR #48 未合并时提前声称实现细节已冻结 | Issue #40；SR-013；SR-031；PR #45/#48 |
+| 2026-11-27 | 0.2.14 | GPT-6.2（ChatGPT） | §6.2 Verify、测试矩阵、修订记录 | 修正 Verify 对混合 G.4/OAS3 引用资源的 dialect-aware 验收，保留 OAS3 原生约束与 source bytes | 避免 Verify 将 G.4 根规则错误应用到原版 OpenAPI 3.0 resources | Issue #40；PR #45；SR-004/013/027；SR-031/PR #48 |

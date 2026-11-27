@@ -1,13 +1,13 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.15\
+> 文档版本：0.2.16\
 > 状态：**DRAFT（设计待评审）**；CA-SL 1.6.0-only Compiler 新契约待 Owner 冻结；产品实施/发布 NOT_RUN  
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-27
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：Next 消费端实现、生产准入、Owner Trust 治理、自动发布及真实 5GC/MAS 资格。
 
-上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。功能归属：EC02 Compiler、F08 技能编译与发布；消费端关联 F02。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.12、[F08 技能编译与发布设计说明书](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.16、[F02 Skill 管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md) v0.2.18。CA-SL 1.6.0 为唯一新目标且尚未发布；v1alpha5 SHA 仅作为历史审计来源。
+上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。功能归属：EC02 Compiler、F08 技能编译与发布；消费端关联 F02。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.14、[F08 技能编译与发布设计说明书](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.17、[F02 Skill 管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md) v0.2.19。CA-SL 1.6.0 为唯一新目标且尚未发布；v1alpha5 SHA 仅作为历史审计来源。
 
 目标仓：odango-chan/ca-skill-compiler。实施 Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)。文档刷新 Issue：[Next #14](https://github.com/odango-chan/ca-agent-next/issues/14)。目标代码基线：Compiler v2.1.0，commit 255ab85fa5abb4b0bf36656bf64250cafebf45cb。规范依赖：[ca-skills #88](https://github.com/odango-chan/ca-skills/pull/88) 已合并，历史发布身份见 [ca-skills v1alpha5 release record](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs/releases/ca-sl-v1alpha5.md)。
 
@@ -378,3 +378,4 @@ SR-013 只有 AC-013-01～05 均达到各自通过条件，Compiler Release 有�
 | 2026-11-27 | 0.2.13 | GPT-6.2（ChatGPT） | §1～7、§11、修订记录 | 统一 when/G.4/Request Schema/Manifest/BuildRequest/BuildResult 与 AC-013-02～04 的实施契约为 CA-SL 1.6.0-only；明确 v1alpha5 只读历史与旧 Golden 回归边界。 | 消除 1.6.0-only 与旧 v1alpha5 正式 Build/Manifest/DTO 之间的矛盾，防止 Harness 使用旧实现入口。 | Issue #40；SR-029；Compiler #61；EC02；F08 |
 | 2026-11-27 | 0.2.14 | GPT-6.2（ChatGPT） | 文档头、设计依据、修订记录 | 同步 Compiler 1.6.0-only 新契约的 M.3 / Request Schema Owner Gate 与跨文档当前版本引用；旧 v1alpha5 仅保留历史冻结语义。 | 避免将历史 v1alpha5 规范或 DTO 隐式复用为 CA-SL 1.6.0 的规范性输入。 | Issue #40；SR-004/013/027/029；EC02；F08；PR #45 |
 | 2026-11-27 | 0.2.15 | GPT-6.2（ChatGPT） | §1 设计依据、修订记录 | 与 EC02 v0.2.12、F08 v0.3.16 和 1.6.0-only 候选设计保持一致；未授予产品实施 READY | 更新 Compiler/F08 作者设计的精确版本引用，避免旧版设计入口。 | Issue #40/#43；PR #45；SR-013/SR-029 |
+| 2026-11-27 | 0.2.16 | GPT-6.2（ChatGPT） | 文档头设计依据、修订记录 | 同步 EC02 v0.2.14、F08 v0.3.17 与 F02 v0.2.19 的 Compiler/Runtime 设计依据 | 保持 SR、设计说明书、索引与跨仓审计引用同一当前版本，避免 Harness 读取过期设计 | Issue #40；PR #45；SR-004/013/027；SR-031/PR #48 |
