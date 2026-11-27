@@ -49,7 +49,7 @@ Go Echo Plugin 前置：在 `examples/echo/plugin/` 下设置 `GOWORK=off` 后 `
 
 ### 2.2 Python 实施分支共享基线
 
-凡修改 Next 根 Python 源码、测试、脚本、依赖或 Python CI 的分支，必须先读取[Python 工程工具链与实施基线规范](docs/规范/Python工程工具链与实施基线规范.md)，从 Issue #111 记录的当前共享基线分支及完整 SHA 派生；PR Base 必须是该共享基线或其后继。PR #99 尚未合并期间，不得从缺少 uv 的 main 或仅含设计的 PR #46 分支直接开展 Python 实施。无法证明分支包含共享基线时，停止并报告 `PYTHON_TOOLCHAIN_BASELINE_MISSING`，禁止回退 pip。历史 pip 受测命令只读保留，不是当前执行入口。
+凡修改 Next 根 Python 源码、测试、脚本、依赖或 Python CI 的分支，必须先读取[Python 工程工具链与实施基线规范](docs/规范/Python工程工具链与实施基线规范.md)，从 Issue #111 记录的当前共享基线分支及完整 SHA 派生；PR Base 必须是该共享基线或其后继。PR #99 尚未合并期间，不得从缺少 uv 的 main 或仅含设计的 PR #46 分支直接开展 Python 实施。无法证明分支包含共享基线时，停止并报告 `PYTHON_TOOLCHAIN_BASELINE_MISSING`，禁止回退 pip。所有 PR 还必须通过 `Python Toolchain Policy` CI：它从 Base 读取可信策略快照，核对 Base SHA/分支、uv 文件与版本，并检查新增 pip、裸 Python 测试命令、第二套锁文件和共享虚拟环境绕过。该 Check 必须由仓库 Branch protection/Ruleset 标记为 Required 才能阻止合并；未配置前不得声称已具备合并阻断。历史 pip 受测命令只读保留，不是当前执行入口。
 
 ## 3. 不可违反的架构约束
 
@@ -181,7 +181,7 @@ review_scope:
 
 | 日期 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
 |---|---|---|---|---|---|
-| 2026-11-27 | GPT-6.2（ChatGPT） | §2、§2.1、§2.2、修订记录 | 将 SR-028 已验收 uv 工具链确立为 Next 根 Python 工程共享基线；要求 Python 实施分支继承共享基线并禁止 pip 回退 | 防止 SR-028 未合入 main 时其他 SR 继续采用独立 pip 入口 | Issue #111；Issue #96；PR #99；SR-028 |
+| 2026-11-27 | GPT-6.2（ChatGPT） | §2、§2.1、§2.2、修订记录 | 将 SR-028 已验收 uv 工具链确立为 Next 根 Python 工程共享基线；要求 Python 实施分支继承共享基线、通过自动 CI 策略检查并禁止 pip 回退 | 防止 SR-028 未合入 main 时其他 SR 继续采用独立 pip 入口，并将规范约束落实为 PR 检查 | Issue #111；Issue #96；PR #99；PR #112；SR-028 |
 | 2026-11-27 | — | DeepSeek Harness（Goal 执行） | §2、§2.1、修订记录 | 回填 SR-028 实施后的当前 uv 安装、测试门禁、Smoke、Go Echo 前置和 Review Context 入口；说明 SR-028 已 READY 并在 Issue #96 实施 | 使协作入口与当前工具链一致，同时保留各 SR 历史 pip 受测记录 | Issue #96；PR #99；SR-028；G02 |
 | 2026-11-27 | GPT-6（ChatGPT） | §1 | 强制长时间运行 Goal 启动前建立并核验 GitHub 检查点；规定执行中增量更新、原 Goal 恢复/续跑，以及评审快照固定规则入口 | 防止 Goal 中断丢失进度、重复执行和因 PR 普通提交导致评审误暂停 | Issue #92；Issue #12；PR #46 |
 | 2026-11-25 | 历史修订者/模型未记录 | 原第 1～11 节及 review_scope | 既有协作约束和机器可读评审范围；逐章历史记录未建立 | 原始修订者未记录，本轮不臆造 | PR #1 |
