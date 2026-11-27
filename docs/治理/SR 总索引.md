@@ -1,8 +1,8 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.57
-> 状态：29 项 SR：4 VERIFIED、1 IMPLEMENTED、24 DRAFT；PR #46 Review #6083641266 对 SR-028 的第五轮独立复评为 CHANGES_REQUESTED（固定 Head ee73ad48，0 P0 / 1 P1 / 3 P2）；第五轮 R028-17～20 已按 Issue #12 整改并推送，等待新 Head 第六轮独立复评，SR-028 仍 DRAFT、AC-028-01～10 产品执行 NOT_RUN、READY=0。
+> 文档版本：0.3.58
+> 状态：29 项 SR：4 VERIFIED、1 IMPLEMENTED、24 DRAFT；PR #46 Review #6083872622 对 SR-028 的第六轮独立复评为 CHANGES_REQUESTED（固定 Head 2d20a128，0 P0 / 1 P1 / 2 P2）；R028-21～23 已按 Issue #12 完成文档整改并推送，等待新 Head 第七轮独立复评，SR-028 仍 DRAFT、AC-028-01～10 产品执行 NOT_RUN、READY=0。
 > 修订日期：2026-11-27\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
@@ -87,7 +87,7 @@
 | SR-025 | APPROVE_FOR_READY（限定） | 中央 MAS Owner Publisher 设计；正式发布仍阻塞 | DRAFT |
 | SR-026 | BLOCKED_EXTERNAL_INPUT | Codec 公开 ID、Schema、slot/mediaType、handler、Package/SemVer、正式 SHA 与进程证据缺失 | DRAFT |
 | SR-027 | BLOCKED_EXTERNAL_INPUT | 五根同批 1.6.0 作者提交、Echo Interface、新 Compiler Release/argv、Bundle 资产及授权缺失 | DRAFT |
-| SR-028 | CHANGES_REQUESTED（最新 Review #6083641266） | 0 P0 / 1 P1 / 3 P2；R028-17～20 已整改并推送、等待第六轮复评；AC-028-01～10 产品执行 NOT_RUN | DRAFT |
+| SR-028 | CHANGES_REQUESTED（最新 Review #6083872622） | 0 P0 / 1 P1 / 2 P2；R028-21 为 P1 阻断，R028-22/23 为 P2；第六轮问题已修订并推送、等待第七轮复评；AC-028-01～10 产品执行 NOT_RUN | DRAFT |
 | SR-029 | APPROVE_FOR_READY（限定） | 中央 1.6.0 Capability-first 设计；生产者机器契约未发布 | DRAFT |
 | SR-030 | APPROVE_FOR_READY（限定） | Schema-only 设计与 AC-030-01 固定源审计；新版 Publisher 未发布 | DRAFT |
 
@@ -100,12 +100,19 @@
 
 **最新第五轮正式评审：**[PR #46 Review #6083641266](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083641266)，平台事件 `COMMENTED`；固定 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`。模型结论 CHANGES_REQUESTED，0 P0 / 1 P1 / 3 P2；唯一 P1 R028-17 阻断 READY。
 
+**最新第六轮正式评审：**[PR #46 Review #6083872622](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083872622)，平台事件 `COMMENTED`；固定 Head `2d20a128a1574103d709d82f6c426580ecb47f48` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`。独立模型 `codearts/deepseek-v4.1-flash` / `reasoning_effort=low`，结论 CHANGES_REQUESTED（0 P0 / 1 P1 / 2 P2）。评审原任务 Head `07346aae` 曾漂移，经用户授权改以 `2d20a12` 固定快照；评审报告说明 G02/SR-028 在各中间快照逐字节一致。随后分支在本轮整改起点前推进至 `072248ff`，增量为其他 SR 与治理文档，不改 G02/SR-028。
+
+- **R028-21（P1）：**AC-028-08 受控负例同时要求测试通过和 head `Agent.md` 的 `review_scope` 无效，但测试模块导入时直接从仓库根 `Agent.md` 派生 fixture；破坏该配置会先令 gate 失败，生成器步骤被跳过，无法产生生成器诊断证据。
+- **R028-22（P2）：**AC-028-08 证据列缺少负例 PR 不合并、恢复后重新执行成功路径的明确证据。
+- **R028-23（P2）：**G02 §3.8 与 §4.3 gate 自动断言字段遗漏 `discovery_exception`。
+- R028-17～20 在第六轮复核中均为 CLOSED；前四轮 4 P1 / 3 P2 无回归。第六轮产品 AC-028-01～10 仍全部 NOT_RUN；Review #6083872622 只评审设计，不授权实施。
+- 当前整改追踪使用 Issue #12；原 G02 设计 Issue #35 已 CLOSED。第六轮修订采用方案 B：负例 PR 保持有效 `Agent.md` 和测试通过，仅在临时 Workflow PR 中将生成器 `--base` 注入全零 SHA，明确验证 generator failure Artifact；无效 `review_scope` 仍由临时仓库单元测试覆盖。
 - **R028-17（P1）：**G02 §3.8 将 gate JSON/log 与生成器证据放在 `if: always()` 上传，与 AC-028-08 正式 Artifact 恰含三份文件、现有 `if: success()` 和失败时不上传完成态 Artifact 的契约冲突；必须拆分诊断 Artifact 与正式三文件 Artifact，分别明确名称、文件集合和上传条件。
 - **R028-18（P2）：**`loader_errors` 字段语义/来源/计数未定义。
 - **R028-19（P2）：**SR-028 AC-028-07 的 `pull_request.paths` 枚举不完整，需与 G02 完整清单一致。
 - **R028-20（P2）：**SR §5.1 要求逐范围 `exit_code`，G02 仅定义整体 `exit_code`，需统一逐范围和整体定义。
 - 第五轮固定基线核验通过；G02 §4.1/§4.2 Bash 故障注入显示前轮 fail-fast/cleanup 规则 CLOSED，A-return 全部 `--no-sync`；该仿真不是 uv 0.13.10 产品运行证据。AC-028-01～10 产品执行仍全部 NOT_RUN。
-- 当前整改追踪使用 Issue #12；原 G02 设计 Issue #35 已 CLOSED。第五轮已按授权仅修改 SR-028/G02 与治理追踪文档，G02 v0.2.6、SR-028 v0.2.8 已推送，等待新 Head 第六轮独立复评；未创建实施 Issue/Goal，SR-028 保持 DRAFT，READY=0。
+- 当前整改追踪使用 Issue #12；原 G02 设计 Issue #35 已 CLOSED。第六轮整改已按授权仅修改 SR-028/G02 与治理追踪文档，G02 v0.2.7、SR-028 v0.2.9 已推送，等待新 Head 第七轮独立复评；未创建实施 Issue/Goal，SR-028 保持 DRAFT，READY=0。
 
 ### 2.2 第三轮发现的修订追踪与当前门槛
 
@@ -113,7 +120,7 @@
 - **P2（25 条）**：覆盖 SR-004/005/006/007/008/010/013/017/020/030、SR 总索引证据说明，以及 SR-005/013/017/018/019/020/021/022/023/025 十份修订账本；修订完成不等于原 Review 自动重新批准。
 - **外部阻塞**：SR-026/027 仍缺生产者正式输入；不允许以文档补写替代外部发布。
 - **实施门槛**：24 项实施 SR 仍全部 DRAFT，READY=0；未创建实施 Issue/Goal，未运行 Compiler、uv 双平台、Host/Runtime/Codec、Echo、OpenAMSM 或真实 NF E2E。所有新 Head 结论须绑定完整 Head/Base SHA 和正式 GitHub Review。
-- **SR-028 专项门槛**：最新 Review #6083641266 对固定 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606` 给出 1 P1 / 3 P2；已完成 Issue #12 第五轮文档整改，G02 v0.2.6 / SR-028 v0.2.8 已推送，等待新 Head 第六轮独立复评，AC-028-01～10 产品执行仍 NOT_RUN。未取得新 Head 的 `APPROVE_FOR_READY` 前 READY=0。
+- **SR-028 专项门槛**：最新 Review #6083872622 对固定 Head `2d20a128a1574103d709d82f6c426580ecb47f48` 给出 1 P1 / 2 P2；已按 Issue #12 完成第六轮文档整改，G02 v0.2.7 / SR-028 v0.2.9 已推送，等待新 Head 第七轮独立复评，AC-028-01～10 产品执行仍 NOT_RUN。未取得新 Head 的 `APPROVE_FOR_READY` 前 READY=0。
 
 
 ### 2.3 23 项逐 SR 独立评审与复评入口
@@ -273,3 +280,4 @@
 | 2026-11-27 | 0.3.55 | GPT-6.2（ChatGPT） | 文档头、§2.1.1、§2.2、§3.2、修订记录 | 回填 SR-028 第五轮独立 Review #6083641266 的固定 Head/Base、0 P0/1 P1/3 P2 与 R028-17～20；记录第五轮整改已推送的 G02 v0.2.6 / SR-028 v0.2.8 版本与第六轮复评门槛，READY=0、产品 AC NOT_RUN 不变 | 防止 SR 索引沿用第四轮问题统计或将本轮文档整改误认为产品实施/READY | Issue #12；PR #46；Review #6083641266；G02 v0.2.6；SR-028 v0.2.8 |
 | 2026-11-27 | 0.3.56 | Codex / GPT-6 | §2.3 | 归档 23 项评审和两项整改的复评范围 | 区分原评审结论、设计修订与实施状态 | Issue #12、#71、#90；PR #46 |
 | 2026-11-27 | 0.3.57 | Codex / GPT-6 | 分阶段门槛与追踪 | 登记 21 项下一阶段与直接依赖 | 依独立评审启动限定范围 | Issue #12；PR #46 |
+| 2026-11-27 | 0.3.58 | GPT-6.2（ChatGPT） | 文档头、§2.1.1、§2.2、SR-028 状态行、修订记录 | 回填第六轮 Review #6083872622 固定 Head/Base 与 0 P0/1 P1/2 P2；登记 R028-21～23 及方案 B 整改；同步 G02 v0.2.7、SR-028 v0.2.9 与第七轮复评门槛 | 保留前五轮历史结论并明确当前唯一阻断项；不将文档整改误报为 READY 或产品验收 | Issue #12；PR #46；Review #6083872622；G02 v0.2.7；SR-028 v0.2.9 |
