@@ -1,7 +1,7 @@
 # 3GPP 公共 OpenAPI 原版引用与 Skill 分阶段消费设计说明书
 
 > 文档类型：功能设计说明书（EC01.3GPP；关联 EC03/F02/F06/F08/F09）
-> 文档版本：0.3.2
+> 文档版本：0.3.3
 > 修订日期：2026-11-27
 > 状态：DRAFT / REVIEW_REQUESTED；原版 Source Bundle、OAS3 Consumer、Compiler 外部引用与 Codec 产品均未完成产品验收
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
@@ -90,7 +90,7 @@ ca-client-tools PR #39 的 Go 内部解码向量 / 方法不等于公开 Provide
 |---|---|---|
 | DS-3GPP-01 | 固定 OpenAMSM commit / 四文件 Schema 闭包 / 标准版本 / Git blob / 选定 requestBody surface；跨 commit 混源失败 | Source Lock 未签认，NOT_RUN |
 | DS-3GPP-02 | Source Bundle 逐文件 byte-for-byte；单字节 / 空格 / 注释 / CRLF 改动失败；不增加 per-file digest / package hash | Publisher 未发布，NOT_RUN |
-| DS-3GPP-03 | PostSmContexts 的 n1SmMsg / n2SmInfo / n2SmInfoExt1 contentId 分别匹配对应 MIME Content-ID；缺失、重复、错槽、孤立 part 失败 | Plugin / Compiler 未验收，NOT_RUN |
+| DS-3GPP-03 | PostSmContexts 的 n1SmMsg / n2SmInfo / n2SmInfoExt1 contentId 分别匹配对应 MIME Content-ID；引用目标缺失、重复 Content-ID、错槽、媒体类型不符时失败；未被 JSON 引用的 part 不得交给 Codec，额外 part 的拒绝 / 忽略由选定 ingress profile 决定 | Plugin / Compiler 未验收，NOT_RUN |
 | DS-3GPP-04 | Skill G.4 根直接引用 pin 后 OAS3 Schema Component；保留 anyOf / oneOf / allOf / nullable / pattern / additionalProperties / format；未选定 refs 不 eager resolve | Compiler Schema / Golden 未冻结，BLOCKED |
 | DS-3GPP-05 | Create T1 不要求 NAS-only 字段；T2 Codec Result 显式 SourcePath；SBI/N1 冲突在 mutation 前失败 | 作者源 / Provider Create Profile 未发布，BLOCKED |
 | DS-3GPP-06 | 0xD1 / 0xC1 / 0xC9 / N2 独立资格化；截断 / 错 Profile / 0xD4 误作新候选失败 | Provider 未发布，BLOCKED |
@@ -107,3 +107,4 @@ SR-031、SR-010、SR-013、SR-026、SR-027 各自独立验收；任何一层 PAS
 | 2026-11-27 | 0.3.0 | ChatGPT / GPT-6.2 | 全文 | 撤销强制 Adapter，确立 OAS3 原生消费与精确组件引用；补齐源版本 / blob、Compiler Resolver 和 Codec Output 边界 | 不应因 G.4 限制复制或投影 3GPP 标准 | Issue #47；SR-031/010/013/026/027 |
 | 2026-11-27 | 0.3.1 | ChatGPT / GPT-6.2 | §2、§4、§7 | 补齐 PostSmContexts 四文件 / 102 Component 的选定闭包、lazy ref 解析、OAS3 实际关键字与 RefToBinaryData Content-ID 对应关系 | 防止漏锁传递依赖、全文件 eager resolve 和 multipart 二进制错配 | Issue #47；SR-031/010/013；CA-SL 1.6.0 |
 | 2026-11-27 | 0.3.2 | ChatGPT / GPT-6.2 | §4、DS-3GPP-03～04 | 收紧 union 类型推导到 required 字段；明确未引用 multipart part 的消费隔离与 ingress profile 策略 | 不把可选字段误判为必有，也不超出原版 OpenAPI Schema 施加隐含拒绝 | Issue #47；SR-010/013；CA-SL 1.6.0 |
+| 2026-11-27 | 0.3.3 | ChatGPT / GPT-6.2 | DS-3GPP-03 | 将未引用 part 的处理收敛为 Codec 隔离，额外 part 策略交由 ingress profile | 避免把 OpenAPI Schema 未声明的额外 part 一概判为非法 | Issue #47；SR-010/031；F06 |
