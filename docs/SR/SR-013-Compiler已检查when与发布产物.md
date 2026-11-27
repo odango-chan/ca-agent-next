@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.32\
+> 文档版本：0.2.33\
 > 状态：整项 DRAFT；阶段 READY（中央只读核验，仅 AC-013-01 归档完整性）；AC-013-02/04 NOT_RUN，AC-013-03/05/06 依正式 Compiler Owner 契约，AC-013-07 BLOCKED / NOT_RUN（待正式 OAS3 dependency wire contract、Resolver / Validator 和 Golden）；Compiler 仅从有 Assurance Skill 的 assurance/contract.yaml 读取可选顶层 when；SKILL.md Front Matter 不声明 when；无 Assurance Skill 没有 Contract、不声明 when、不调用 Compiler。
 > 下一步：核对 PR #18 归档、58 项校验清单及原始报告。复跑单列；02/04 NOT_RUN，03/05/06 等 Compiler Owner 与正式契约；07 等待正式 OAS3 dependency wire contract、Resolver / Validator 和 Golden。  
 > 阶段依据：[独立评审 #77](https://github.com/odango-chan/ca-agent-next/issues/77#issuecomment-7209276846)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
@@ -10,7 +10,7 @@
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：Next 消费端实现、生产准入、Owner Trust 治理、自动发布及真实 5GC/MAS 资格。
 
-上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。功能归属：EC02 Compiler、F08 技能编译与发布；消费端关联 F02。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.19、[F08 技能编译与发布设计说明书](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.30、[F02 Skill 管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md) v0.4.2、[CA-SL 1.6.0 中央语言设计](../规范/CA-SL%201.6.0完整语言规范.md) v0.2.6、[SKILL 作者规范](../规范/SKILL作者规范.md) v0.2.1。
+上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。功能归属：EC02 Compiler、F08 技能编译与发布；消费端关联 F02。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.19、[F08 技能编译与发布设计说明书](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.30、[F02 Skill 管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md) v0.4.3、[CA-SL 1.6.0 中央语言设计](../规范/CA-SL%201.6.0完整语言规范.md) v0.2.6、[SKILL 作者规范](../规范/SKILL作者规范.md) v0.2.1。
 
 目标仓：odango-chan/ca-skill-compiler。实施 Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)。文档刷新 Issue：[Next #14](https://github.com/odango-chan/ca-agent-next/issues/14)。目标代码基线：Compiler v2.1.0，commit 255ab85fa5abb4b0bf36656bf64250cafebf45cb。历史来源：[ca-skills #88](https://github.com/odango-chan/ca-skills/pull/88) 已合并，正式发布身份见 [ca-skills release record](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs/releases/ca-sl-v1alpha5.md)。
 
@@ -460,3 +460,5 @@ OpenAPI operation / multipart ingress 验证由 SR-010 负责；Compiler 负责 
 | 2026-11-27 | 0.2.31 | GPT-6.2（ChatGPT） | §4.2、AC-013-07、设计依据、修订记录 | 将 3GPP 可选 requestType 的 has 守卫纳入正负 Golden；明确纯 $ref OAS3 根引用别名与 G.4 本地闭合根的两种 requestSchema 入口及 dialect-aware 验收 | 消除可选字段 CEL 访问与 G.4 根闭合 / OAS3 原版直接引用冲突，不投影或改写标准 | Issue #49；IR-009；SR-031；F08；PR #52 |
 
 | 2026-11-27 | 0.2.32 | GPT-6.2（ChatGPT） | 文档头、设计依据、修订记录 | 同步 CA-SL v0.2.6 的 G.4 closed-object / OAS3 native open-object 边界 | 确保 SR-013 AC-013-07 所依据的规范已消除开放对象语义冲突 | Issue #49；IR-009；PR #52 |
+
+| 2026-11-27 | 0.2.33 | GPT-6.2（ChatGPT） | 文档头、设计依据、修订记录 | 同步 F02 v0.4.3 的 purpose-specific Script Registry 消费契约 | 保持 Compiler 发布与 Importer 对 transform / predicate Script 输入输出语义一致 | Issue #49；IR-008；SR-004/007/032；PR #52 |
