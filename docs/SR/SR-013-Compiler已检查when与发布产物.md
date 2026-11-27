@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.30\
+> 文档版本：0.2.31\
 > 状态：整项 DRAFT；阶段 READY（中央只读核验，仅 AC-013-01 归档完整性）；AC-013-02/04 NOT_RUN，AC-013-03/05/06 依正式 Compiler Owner 契约；Compiler 仅从有 Assurance Skill 的 assurance/contract.yaml 读取可选顶层 when；SKILL.md Front Matter 不声明 when；无 Assurance Skill 没有 Contract、不声明 when、不调用 Compiler。
 > 下一步：核对 PR #18 归档、58 项校验清单及原始报告。复跑单列；02/04 NOT_RUN，03/05/06 等 Compiler Owner 与正式契约。  
 > 阶段依据：[独立评审 #77](https://github.com/odango-chan/ca-agent-next/issues/77#issuecomment-7209276846)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
@@ -10,7 +10,7 @@
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：Next 消费端实现、生产准入、Owner Trust 治理、自动发布及真实 5GC/MAS 资格。
 
-上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。功能归属：EC02 Compiler、F08 技能编译与发布；消费端关联 F02。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.13、[F08 技能编译与发布设计说明书](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.25、[F02 Skill 管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md) v0.4.1、[CA-SL 1.6.0 中央语言设计](../规范/CA-SL%201.6.0完整语言规范.md) v0.2.2、[SKILL 作者规范](../规范/SKILL作者规范.md) v0.1.9。
+上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。功能归属：EC02 Compiler、F08 技能编译与发布；消费端关联 F02。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.19、[F08 技能编译与发布设计说明书](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.30、[F02 Skill 管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md) v0.4.2、[CA-SL 1.6.0 中央语言设计](../规范/CA-SL%201.6.0完整语言规范.md) v0.2.5、[SKILL 作者规范](../规范/SKILL作者规范.md) v0.2.1。
 
 目标仓：odango-chan/ca-skill-compiler。实施 Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)。文档刷新 Issue：[Next #14](https://github.com/odango-chan/ca-agent-next/issues/14)。目标代码基线：Compiler v2.1.0，commit 255ab85fa5abb4b0bf36656bf64250cafebf45cb。历史来源：[ca-skills #88](https://github.com/odango-chan/ca-skills/pull/88) 已合并，正式发布身份见 [ca-skills release record](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs/releases/ca-sl-v1alpha5.md)。
 
@@ -143,7 +143,7 @@ PoC 中复用 Development Schema/Lock fixture 只证明共享 Schema 解析机�
 4. 对 nullable 联合类型使用经 AC-013-01 隔离验证的 oneof wrapper **算法**重新按 1.6.0 类型 Schema 落地；CheckedExpr 为标准 protobuf `cel.expr.CheckedExpr`，Any type URL 为 `type.googleapis.com/cel.expr.CheckedExpr`；DescriptorSet 为标准 `google.protobuf.FileDescriptorSet`。
 5. CheckedExpr 与 FileDescriptorSet 按 Skill 独立输出，Only event-type when 不引入不必要的 input 类型闭包；Schema root/完整资源闭包、类型与 SourcePath 在 Manifest 里必须可相互定位。
 
-**PostSmContexts 原版 OpenAPI 正例与类型负例：**`nsmf.create-sm-context` 的 `input` 根是 `PostSmContexts` multipart 中 `jsonData` 对应的 `SmContextCreateData`。该组件的 `requestType` 引用 `RequestType`，其 OAS3 Schema 为 string / string enum（保留未来字符串扩展），所以 `input.requestType == "INITIAL_REQUEST"` 必须通过类型检查，`input.requestType == 1` 必须以类型错误拒绝。固定 OpenAMSM 来源 commit `dc83ccbf5be54dcc7112dd43ba95ea6fa5975550`，原始 TS29502_Nsmf_PDUSession.yaml blob `3572be0315a782691ce8b5546b7bc1d5b22fcd64`；不得复制或改写上游 OAS3。
+**PostSmContexts 原版 OpenAPI 正例与类型负例：**`nsmf.create-sm-context` 的 `input` 根是 `PostSmContexts` multipart 中 `jsonData` 对应的 `SmContextCreateData`。该组件的 `requestType` 引用 `RequestType`，其 OAS3 Schema 为 string / string enum（保留未来字符串扩展）；该属性不在 `SmContextCreateData.required` 中，是可选字段。因此 `has(input.requestType) && input.requestType == "INITIAL_REQUEST"` 在 event 判断后的左到右 `&&` 守卫中必须通过类型检查；直接读取 `input.requestType` 而无 `has` 守卫必须以 `CEL_INVALID` 拒绝；`input.requestType == 1` 必须以类型错误拒绝。固定 OpenAMSM 来源 commit `dc83ccbf5be54dcc7112dd43ba95ea6fa5975550`，原始 TS29502_Nsmf_PDUSession.yaml blob `3572be0315a782691ce8b5546b7bc1d5b22fcd64`；不得复制或改写上游 OAS3.
 6. 诊断沿用当前中央 Compiler 规范语义：非法 CEL、类型不符、未知 input 成员/无声明 Schema 报 `CEL_INVALID`；Schema root/$ref 缺失报 `SCHEMA_MISSING` 或 `SCHEMA_INVALID`；未知作者字段报 `UNKNOWN_FIELD`；Capability/Cardinality 依 SR-029 的明确诊断枚举。诊断必须附 Skill、源码路径、行列和字段路径，不得吞错或降级成功。
 7. 输入顺序变化、并行 Skill、不同 Request Schema 同名字段和重复构建必须保持严格闭包隔离与确定性。任何失败没有部分 Artifact/BuildResult outputFiles。
 
@@ -393,17 +393,18 @@ SR-013 只有 AC-013-01～06 均达到各自通过条件，Compiler Release 有�
 
 ## 13. AC-013-07：原版 OpenAPI 3.0 直接引用与执行期 Codec Result
 
-新增独立 AC-013-07，不追溯改变 AC-013-01～06 的既有评审状态。本 AC 撤销“必须先发布 G.4 Adapter 才能引用 3GPP 类型”的假设。SR-031 发布不可变 OpenAMSM OpenAPI Source Bundle；Compiler 通过显式 pin 的 dependency 直接解析原版 OAS3 Schema Component。Skill-owned Request 根仍是本地 G.4，外部 OAS3 Schema Object 按自身 dialect 解释，不转换、不投影、不改原件。
+新增独立 AC-013-07，不追溯改变 AC-013-01～06 的既有评审状态。本 AC 撤销“必须先发布 G.4 Adapter 才能引用 3GPP 类型”的假设。SR-031 发布不可变 OpenAMSM OpenAPI Source Bundle；Compiler 通过显式 pin 的 dependency 直接解析原版 OAS3 Schema Component。Skill-owned `requestSchema` 入口文件有两种形式：本地 G.4 Schema 根（根对象闭合），或仅含一个 `$ref` 的 OAS3 根引用别名（无兄弟 Schema 关键字）；后者目标按 OAS 3.0 dialect 验证，不转换、不投影、不改原件。
 
 | 子例 | 固定输入 | 必须结果 |
 |---|---|---|
 | 07a Source Bundle pin | OpenAMSM commit `dc83ccbf5be54dcc7112dd43ba95ea6fa5975550`；TS 29.502 / 29.571 / 29.510 NFManagement / 29.518 Namf 四个 Git blob、各自标准版本、选定 surface | Lock 唯一不可变；仅锁 Git blob / byte length 与原始 bytes；dynamic latest / 混源 / 缺文件拒绝，不新增 per-file digest / package hash |
 | 07b operation / schema ref | `PostSmContexts.requestBody` → `multipart/related` → `jsonData` → `#/components/schemas/SmContextCreateData`；102 个可达 Schema Component、四文件闭包 | 原生 OAS3 解析；仅解析选定 surface 的可达 refs；未选定 operation refs 不 eager resolve；选定闭包所有 refs 同一 snapshot，原件 byte 不变 |
-| 07c dialect boundary | Skill G.4 root 内精确引用 OAS3 `components/schemas`；真实闭包含 `anyOf` / `oneOf` / `allOf` / `nullable` / `format` / `pattern` / `additionalProperties` | 本地按 G.4，外部按 OAS3 Schema Object；组合语义、pattern、schema-valued additionalProperties 等保留，不投影 |
-| 07d type inference | CEL 读取 OAS3 Schema Component 字段，含 union / intersection / optional / nullable / 不同分支类型 | `anyOf` / `oneOf` 只无条件暴露在每个可满足分支均声明、均 required 且同类型的字段；可选字段只有在 CEL 明确支持 optional 时才可按 optional 暴露；`allOf` 按交集组合；Null 与 Missing 分离；歧义字段静态拒绝 |
+| 07c dialect boundary | `requestSchema` 为本地 G.4 根或纯 `$ref` OAS3 根别名；真实闭包含 `anyOf` / `oneOf` / `allOf` / `nullable` / `format` / `pattern` / `additionalProperties` | G.4 根闭合并声明 `additionalProperties: false`；纯引用别名仅含 `$ref`、不附加 G.4 siblings；外部按 OAS3 Schema Object 验证，保留组合语义和默认值，不投影 |
+| 07d type inference | CEL 读取 OAS3 Schema Component 字段，含 union / intersection / optional / nullable / 不同分支类型 | `anyOf` / `oneOf` 只无条件暴露在每个可满足分支均声明、均 required 且同类型的字段；可选字段必须作为 optional 建模，并且只有在同一左到右 `&&` 表达式中由 `has(input.field)` 守卫后才允许读取；`allOf` 按交集组合；Null 与 Missing 分离；歧义字段静态拒绝 |
 | 07e stage availability | T1 when / Request；T2 已选 Procedure Codec READ Output / SourcePath | when 不读 T2 Result、不调用 Codec；T2 Result 只能由后继 Node 显式引用 |
-| 07f failure isolation | 缺 dependency、错误 alias/path/pointer、非法 pointer escape、规范化后逃出 Source Root、选定闭包 nested ref 缺失、unsupported OAS keyword、跨 source commit、dynamic latest | `SCHEMA_INVALID` / 稳定诊断，Build 无部分 Artifact；选定闭包外 refs 不阻塞当前消费；允许规范化后仍在 Source Root 内的 `../`；逃出 Source Root 拒绝；不回退 Adapter / projection |
+| 07f failure isolation | 缺 dependency、错误 alias/path/pointer、非法 pointer escape、规范化后逃出 Source Root、选定闭包 nested ref 缺失、unsupported OAS keyword、跨 source commit、dynamic latest、OAS3 alias 文件包含兄弟 Schema 关键字、OAS3 闭包反向引用 G.4 本地文件 | `SCHEMA_INVALID` / 稳定诊断，Build 无部分 Artifact；选定闭包外 refs 不阻塞当前消费；允许规范化后仍在 Source Root 内的 `../`；逃出 Source Root 拒绝；不回退 Adapter / projection |
 | 07g Bundle / Verify | 固定 Source Bundle + Skill Request + Provider Output Schema + Host Context / Owner dependencies | 离线 Build / Verify；Lock 保存选定闭包；无 Codec Skill 不强制依赖 Source Bundle / Codec |
+| 07h 3GPP optional-field CEL Golden | 原版 `SmContextCreateData.requestType` optional string enum；同一 Schema / DescriptorSet | `has(input.requestType) && input.requestType == "INITIAL_REQUEST"` 通过；无 `has` 守卫的直接读取为 `CEL_INVALID`；整数比较为类型错误 |
 
 OpenAPI operation / multipart ingress 验证由 SR-010 负责；Compiler 负责 Request Schema 跨 dialect 引用和类型检查。NAS / NGAP Output Schema 由 SR-026 Provider 发布，不能用 SBI binary slot 代替。一个 Codec Capability 是否可用单一封闭 Output Schema + 固定 enum selector 表达多 Profile，必须以 Provider Golden 证明；否则另提设计，不能静默增加 Callable 或放宽 1:1。
 
@@ -454,3 +455,5 @@ OpenAPI operation / multipart ingress 验证由 SR-010 负责；Compiler 负责 
 | 2026-11-27 | 0.2.28 | GPT-6.2（ChatGPT） | PR #46 / PR #48 集成刷新 | 合并 Compiler AC-013-01 阶段状态与 IR-009 原版 OAS3 直接引用、选定闭包和无 hash Build/Verify 设计 | 解决堆叠基线漂移，保留 PR #46 最新阶段门槛与 PR #48 的 Compiler dialect 设计 | Issue #47/#12；PR #46/#48；IR-009；SR-013/031 |
 | 2026-11-27 | 0.2.29 | GPT-6.2（ChatGPT） | 文档头、AC-013-01、AC-013-07、修订记录 | 合并 AC-013-01 中央只读核验阶段 READY 与有 Assurance Skill 的 Front Matter.when、无 Assurance 不编译规则；保留 3GPP OAS3 直接引用及无 hash Build/Verify | 同步 PR #46 阶段门槛与 Issue #49 作者入口，避免把 Contract.when 作为 Compiler 输入；历史错误入口判断，已由 0.2.30 撤销，不构成兼容方案| Issue #47/#49/#77；IR-008/009；SR-013/031/032 |
 | 2026-11-27 | 0.2.30 | GPT-6.2（ChatGPT） | 文档头、§1、§4、AC-013-02、修订记录 | 将 Compiler 唯一输入源恢复为 assurance/contract.yaml 顶层 when；SKILL.md Front Matter 不声明 when；补入 PostSmContexts requestType 字符串枚举的真实类型正负例 | 撤销 Front Matter 回归，固定 Compiler 对 3GPP 原版 OpenAPI 输入字段的类型检查要求 | Issue #49；IR-008/009；SR-031/032；F02/F08/F09 |
+
+| 2026-11-27 | 0.2.31 | GPT-6.2（ChatGPT） | §4.2、AC-013-07、设计依据、修订记录 | 将 3GPP 可选 requestType 的 has 守卫纳入正负 Golden；明确纯 $ref OAS3 根引用别名与 G.4 本地闭合根的两种 requestSchema 入口及 dialect-aware 验收 | 消除可选字段 CEL 访问与 G.4 根闭合 / OAS3 原版直接引用冲突，不投影或改写标准 | Issue #49；IR-009；SR-031；F08；PR #52 |
