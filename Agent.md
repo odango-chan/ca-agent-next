@@ -37,11 +37,11 @@ DeepSeek Harness 默认使用 Goal 模式。按[SR 管理规范](docs/规范/SR%
 - 不建立第二 Provider Manager、Tool Registry、Codec Manager、Event Registry 或第二套 IPC。
 - 每个 Skill 必须有 SKILL.md；schemas/、scripts/、references/、assets/ 是 Package 根目录共享资源，Assurance 可选且只含 contract.yaml / procedure.yaml / predicates.yaml。无 Assurance 仍可使用共享资源并仅 LLM-guided；有效发布 Assurance Artifact 支持 Deterministic 和 LLM-guided；无效 Assurance Artifact 导入失败。
 - when 是可选 Assurance Contract 的纯 CEL Skill 选择表达式；predicates.yaml 只用于执行期业务判断。
-- Skill 源编写与评审必须遵循[中央 SKILL 作者规范](docs/规范/SKILL作者规范.md)；CA-SL 1.6.0 完整语言规范仍是机器语义的唯一权威。作者规范还规定 Package 根目录共享 Schema / Script、Script Registry、Host Script Execution、SourcePath / arguments、when / Wait、Evidence / UNKNOWN、Node 四阶段与拆分 / 合并、注释原则及 AI Authoring 约束；v1alpha5 原文只读留档，不提供兼容或自动迁移。
+- Skill 源编写与评审必须遵循[中央 SKILL 作者规范](docs/规范/SKILL作者规范.md)；CA-SL 1.6.0 完整语言规范仍是机器语义的唯一权威。作者规范还规定 Package 根目录共享 Schema / Script、Script Registry、Host Resource Read / Script Execution、SourcePath / arguments、when、Evidence / UNKNOWN、原有 Node 四阶段与拆分 / 合并、注释原则及 AI Authoring 约束；Skill 层不定义 Wait / await / polling，异步由 Tool / Provider / SMF Operation 与 Host Runtime 负责；v1alpha5 原文只读留档，不提供兼容或自动迁移。
 - Agent 只消费外部已发布 Skill Bundle；存在 Assurance 时同时消费正式 Runtime Artifact。无 Assurance Bundle 可携带共享资源而不生成 Compiler Artifact；Agent 不调用 Compiler Check/Build/Inspect/Verify，不建立 Skill Admission，不把 Assurance 作者源作为运行时 Artifact。
 - Skill 选择先于模式选择；精确 Continuation 恢复原 Run，不重新选择 Skill。
 - SkillCatalog 由 Core/Host 拥有；更新原子切换 generation；在途 Invocation 固定 generation。
-- Deterministic 与 LLM-guided 共用 Runtime Action Boundary；LLM 不得直接调用 Plugin 或扩大业务 Capability Scope。当前 Skill 有 `scripts/manifest.yaml` 登记脚本时，Host 即通过 host.skill-script.execute system Capability 向 LLM 提供同一 Script Runner；LLM 与 Assurance 使用相同脚本集合，不设置逐脚本标记或额外 Host 开关。不得执行模型提交代码、任意路径或命令。
+- Deterministic 与 LLM-guided 共用 Runtime Action Boundary；LLM 不得直接调用 Plugin 或扩大业务 Capability Scope。Host 通过 `host.skill-resource.read` 按 F05 §2.1 只读访问当前 Run 的 Package snapshot；当前 Skill 有 `scripts/manifest.yaml` 登记脚本时，Host 即通过 host.skill-script.execute system Capability 向 LLM 提供全部登记 transform / predicate Script，与 Assurance 共用同一 Runner，不设置逐脚本标记或额外 Host 开关。Predicate Script 的直接 LLM 调用不产生 Evidence 或 Assurance Outcome。不得执行模型提交代码、任意路径、Evidence 或命令。
 - Owner Receipt / Commit Proof 是 mutation 结果权威；HTTP 200、IPC 成功或 Delivery 成功不能替代；UNKNOWN 不得变成 COMMITTED。
 - SBI 可携带 JSON、multipart 和二进制。Event Plugin 处理协议；Host 管理 ArtifactStore；Codec 按需作为现有 Tool Plugin 的 Operation 调用。
 - Event/Delivery Plugin 本地 staging 与 Host→Tool Artifact Channel 是两条不同路径。ca-host.artifact-store/v1 已冻结；ca-client-tools Provider v1.2.0 已实现消费，ca-agent Go Host main 447d0cc 有 P1 验收证据。Next Python Host 的 ArtifactStore / Channel 尚未实现，因此 Next 的 artifact-bearing Provider binding 仍必须 NOT_CONFIGURED，并在远端 I/O 前拒绝。必须遵循 v1 的随机 opaque artifactRef、Invocation/direction/slot 绑定、loopback HTTP/1.1 通道、大小/生命周期限制、逐 Artifact SHA-256 传输校验和原子发布；该 SHA-256 不是引用身份或内容寻址。不得把 Event stagingPath 传给 Provider，不得将原始 bytes/Base64 放入 NDJSON。
@@ -97,7 +97,7 @@ review_scope:
     - id: runtime_action_boundary
       description: Deterministic 与 LLM-guided 共用 Runtime Action Boundary 和 Tool Plugin 路径。
     - id: owner_outcome_semantics
-      description: Receipt、Commit Proof、Outcome、UNKNOWN、Wait/Resume/Reconcile 的正确语义。
+      description: Receipt、Commit Proof、Outcome、UNKNOWN、异步 Operation Continuation / Reconcile 的正确语义；Skill 层不定义 Wait 语法。
     - id: event_binary_handoff
       description: SBI JSON/multipart、Content-ID、N1/N2 原始二进制与 Host-owned Artifact Handoff。
     - id: business_neutrality_e2e
@@ -175,4 +175,5 @@ review_scope:
 | 2026-11-27 | GPT-6.2（ChatGPT） | §3、修订记录 | 将中央 SKILL 作者规范加入仓库协作入口，明确作者规范与 CA-SL 1.6.0 语言规范的权威边界 | 防止作者 / Harness 从历史 v1alpha5 资料或注释推断新版语法 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | GPT-6.2（ChatGPT） | §3、修订记录 | 扩展中央作者规范的协作摘要，覆盖 Package / Schema、数据流、when / Wait、Evidence / UNKNOWN 和 AI Authoring，而不只列 Node / 注释 | 避免 Agent.md 将规范范围缩窄，导致 Harness 漏读适用规则 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | GPT-6.2（ChatGPT） | §3、修订记录 | 将根目录共享资源、Host Script Execution system Capability 和无 Assurance Bundle 规则纳入全局架构约束 | 防止 Harness 将 schemas/scripts 放回可选 Assurance 或实现任意 Python 执行 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | GPT-6.2（ChatGPT） | §3、修订记录 | 更新 CA-SL 作者边界为无 Wait / await / polling；纳入 Host Resource Read、全部登记 Script 调用和 Predicate LLM 结果不产生 Evidence 的约束 | 使全局 Harness 指令与 CA-SL 1.6.0 v0.2.0、F05、F04 和 SR-032 一致 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | GPT-6.2（ChatGPT） | §3、修订记录 | 删除 Host Script Execution 的逐脚本与 Host 配置双门禁，改为 LLM 与 Assurance 共用 Registry / Script Runner | 保持模型与确定性执行能力一致，同时禁止任意代码、路径和命令 | Issue #49；IR-008；SR-032 |
