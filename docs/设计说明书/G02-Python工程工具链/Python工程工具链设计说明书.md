@@ -1,20 +1,20 @@
 # G02：Python 工程工具链与环境管理设计说明书
 
 > 文档类型：工程治理功能设计说明书  
-> 文档版本：0.2.7\
-> 状态：第六轮独立 Review [#6083872622](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083872622) 对固定 Head `2d20a128a1574103d709d82f6c426580ecb47f48` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2` 给出 CHANGES_REQUESTED（0 P0 / 1 P1 / 2 P2）；R028-21～23 已按 Issue #12 完成设计整改并推送，等待新 Head 第七轮独立复评；当前分支修订前 Head 为 `072248ff6a5deac40437ab47c892aaa2064781da`；SR-028 仍 DRAFT、AC-028-01～10 产品验收 NOT_RUN、READY=0\
+> 文档版本：0.2.8\
+> 状态：第七轮独立 Review [#6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6084094037) 对固定 Head `93f1389e7c5968cd30e8a74137207094864ecca0` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2` 给出 `APPROVE_FOR_READY`（0 P0 / 0 P1 / 2 P2）；SR-028 已提升为 READY，实施追踪 [Issue #96](https://github.com/odango-chan/ca-agent-next/issues/96)；AC-028-01～10 产品验收仍全部 NOT_RUN。两个非阻断 P2 已列入 Issue #96，必须在实施与 AC-028-08 证据回填时补齐\
 > 修订日期：2026-11-27\
 > 功能节点：G02 Python 工程工具链与环境管理  
 > 关联需求：[IR-007](../../IR/IR%20总登记册.md#ir-007)、[SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md)  
-> 追踪 Issue：[ca-agent-next #12](https://github.com/odango-chan/ca-agent-next/issues/12)（当前整改）；原设计 Issue [#35](https://github.com/odango-chan/ca-agent-next/issues/35) 已 CLOSED，仅作历史来源  
+> 追踪 Issue：[ca-agent-next #12](https://github.com/odango-chan/ca-agent-next/issues/12)（设计/治理追踪）；[实施 Issue #96](https://github.com/odango-chan/ca-agent-next/issues/96)；原设计 Issue [#35](https://github.com/odango-chan/ca-agent-next/issues/35) 已 CLOSED，仅作历史来源\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级供应链安全治理、跨仓批量迁移、Agent Runtime 架构变更
 
 ## 0. 设计评审入口（2026-11-26）
 
-本设计与 [SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md) 由 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12) 统一追踪；原设计 Issue #35 已 CLOSED。最新第六轮独立复评为 [PR #46 Review #6083872622](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083872622)，固定 Head `2d20a128a1574103d709d82f6c426580ecb47f48` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`，结论 CHANGES_REQUESTED（0 P0 / 1 P1 / 2 P2）。R028-21 为唯一 P1，R028-22/23 为 P2；本轮仅修订设计与验收定义，不授权产品实施。
+本设计与 [SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md) 由 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12) 追踪。第七轮独立复评 [PR #46 Review #6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6084094037) 绑定 Head `93f1389e7c5968cd30e8a74137207094864ecca0` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`，模型结论 `APPROVE_FOR_READY`（0 P0 / 0 P1 / 2 P2），平台事件 `COMMENTED`。R028-21 已 CLOSED；两个非阻断 P2 分别要求明确受控负例 PR 的已迁移 base/单文件 diff，以及核验 `run-context.txt` 三行和负例文件清单，均已纳入实施 [Issue #96](https://github.com/odango-chan/ca-agent-next/issues/96)。用户已批准按 SR 管理规范 §8.2 基于该未合并候选设计 SHA 开展范围受限实施；PR #46 保持 OPEN，实施从精确 SHA 派生独立分支，不修改设计分支或 main。
 
-**设计待评审与实施 READY 分离：**PR #32 的评审上下文 CI 已完成，不构成 uv 迁移验收；SR-028 保持 DRAFT。评审未通过不得生成实施提示词，不开展跨仓批量迁移或不必要的生产供应链 DFX。
+**设计评审与实施 READY 已通过，产品验收尚未开始：**SR-028 当前为 READY，实施 Issue #96 已建立。PR #32 的历史评审上下文 CI 仅证明旧入口，不构成 uv 迁移验收；AC-028-01～10 均从 NOT_RUN 开始。实施基于候选设计 SHA `93f1389e7c5968cd30e8a74137207094864ecca0` 按 §8.2 限定执行，不得扩展到跨仓批量迁移或生产级供应链 DFX。
 
 ## 1. 目标
 
@@ -759,7 +759,7 @@ I1 与 I3 可在 SR-028 实施 Issue 内按依赖顺序执行；I2 只在 SR-001
 
 ## 7. 验收映射
 
-具体验收 ID、命令和证据要求以 [SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md) v0.2.9 为准：AC-028-01～03 元数据/版本/依赖分组；AC-028-04 锁漂移 fail-closed；AC-028-05 双 worktree A→B→A；AC-028-06 本地 Go、测试计数与 Smoke；AC-028-07 双平台 CI 与独立堆叠 paths 验证 PR；AC-028-08 Review Context 真实 PR Artifact；AC-028-09 范围边界；AC-028-10 当前文档入口刷新。
+具体验收 ID、命令和证据要求以 [SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md) v0.2.10 为准：AC-028-01～03 元数据/版本/依赖分组；AC-028-04 锁漂移 fail-closed；AC-028-05 双 worktree A→B→A；AC-028-06 本地 Go、测试计数与 Smoke；AC-028-07 双平台 CI 与独立堆叠 paths 验证 PR；AC-028-08 Review Context 真实 PR Artifact；AC-028-09 范围边界；AC-028-10 当前文档入口刷新。
 
 设计文档、示例 YAML、历史 pip Run 或迁移前 Artifact 均不构成 uv 实施 PASS。每项产品 AC 只有在固定受测 SHA 上真实运行并留存命令、环境、结果和证据后才可更新状态。
 
@@ -787,3 +787,5 @@ I1 与 I3 可在 SR-028 实施 Issue 内按依赖顺序执行；I2 只在 SR-001
 | 2026-11-27 | 0.2.5 | GPT-6.2（ChatGPT） | §0、§3.6～3.8、§4.1～4.3、§6～§7 | 按 Review #6083225844 修复 Bash fail-open：锁漂移与 A→B→A 从块首 fail-fast 并使用保码 cleanup trap；A 返回阶段全部改用 `uv run --no-sync`；新增标准库 unittest gate 并在双平台 Workflow 自动断言 skipped=0/非空测试且上传报告；Python 检查使用显式 uv 项目环境；补齐 A/B/A sys.prefix、原始 direct_url、ignore 证据持久化；Go 构建子 shell 恢复 CWD，按 GOOS 生成 Windows `.exe`，澄清 Workflow shell 边界 | 消除 R028-10～16 的 fail-open、自动同步、CI skipped 假 PASS、隐式解释器及跨平台/证据歧义；保持产品 AC NOT_RUN 与 SR DRAFT | Issue #12；PR #46；Review #6083225844；SR-028 v0.2.7 |
 | 2026-11-27 | 0.2.6 | GPT-6.2（ChatGPT） | 文档头、§0、§3.6、§3.8、SR 引用 | 按第五轮 Review #6083641266 修复 Review Context 诊断 Artifact 与三文件正式 Artifact 的契约冲突；明确 `loader_errors` 来源/计数及 discovery 异常；统一逐范围与整体 `exit_code` | 关闭 R028-17 P1 与 R028-18 P2，确保失败诊断可留存且失败 Run 不产生完成态 Artifact；产品 AC 仍 NOT_RUN | Issue #12；PR #46；Review #6083641266；SR-028 v0.2.8 |
 | 2026-11-27 | 0.2.7 | GPT-6.2（ChatGPT） | 文档头、§0、§3.6、§3.8、§4.3、§7 | 按第六轮 Review #6083872622 修复 AC-028-08 受控负例：保留有效 Agent.md 与测试门禁，通过临时 Workflow PR 将生成器 `--base` 注入全零 SHA 形成可执行失败路径；run-context 记录实际/注入 SHA 与模式；补齐 AC 证据中的负例不合并、恢复后成功重跑；统一 gate 的 `discovery_exception=null` 断言 | 关闭 R028-21 P1 与 R028-22/23 P2；不修改测试代码或产品 Workflow，不将设计整改视为产品实施，SR-028 继续 DRAFT / NOT_RUN | Issue #12；PR #46；Review #6083872622；SR-028 v0.2.9 |
+
+| 2026-11-27 | 0.2.8 | GPT-6.2（ChatGPT） | 文档头、§0、§7、修订记录 | 回填第七轮独立 Review #6084094037 的固定 Head/Base 与 APPROVE_FOR_READY（0 P0 / 0 P1 / 2 P2）；SR-028 提升 READY 并关联实施 Issue #96；将两个非阻断 P2 纳入实施证据要求 | 区分设计 READY 与产品 AC NOT_RUN；按 SR 管理规范 §8.2 在未合并候选设计 SHA 上限定实施，不改 PR #46 或 main | Issue #12；Issue #96；PR #46；Review #6084094037；SR-028 v0.2.10 |
