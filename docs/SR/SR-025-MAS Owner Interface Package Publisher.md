@@ -7,7 +7,7 @@
 > 所属阶段：外部 Publisher 实施移交
 > 上游需求：[IR-006](../IR/IR%20总登记册.md#ir-006)
 > 功能：F03.05 / EC03（消费方关联 F09.07）
-> 设计依据：[F03.05 Tool Interface / Provider 设计](../../docs/设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) v0.3.9；[F09 §4.5](../../docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md#45-两个-contract-root-的正式-publisher-输出) v0.3.8；[SR-015](SR-015-工具契约设计移交.md)；[Compiler v2.1.0 Development BuildRequest](https://github.com/odango-chan/ca-skill-compiler/blob/v2.1.0/internal/compiler/development_request.go)
+> 设计依据：[F03.05 Tool Interface / Provider 设计](../../docs/设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) v0.3.9；[F09 §4.5](../../docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md#45-两个-contract-root-的正式-publisher-输出) v0.3.11；[SR-015](SR-015-工具契约设计移交.md)；[Compiler v2.1.0 Development BuildRequest](https://github.com/odango-chan/ca-skill-compiler/blob/v2.1.0/internal/compiler/development_request.go)
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：Provider v2 重构、Runtime Binding 重构、Owner Contract 语义修改、生产级 Trust/Admission/签名或额外包完整性体系
 
