@@ -1,7 +1,7 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录\
-> 文档版本：0.1.27\
+> 文档版本：0.1.28\
 > 修订日期：2026-11-27\
 > 状态：7 项 IR；IR-007 登记 Python 工程工具链统一需求，SR-028 为 DRAFT。\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope\
@@ -38,7 +38,7 @@ IR 编号稳定。GitHub Issue 用于讨论、分派和跟踪，一个 IR 可关
 
 使用发布产物导入、选择及续跑，保留跨语言语义与代际一致性。
 
-- 协作 Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)（EC02 外部实现）；[Next #14](https://github.com/odango-chan/ca-agent-next/issues/14) 跟踪中央设计文档刷新；[PR #16](https://github.com/odango-chan/ca-agent-next/pull/16) 为对应 Draft 文档评审，不代表实施。
+- 协作 Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)（EC02 外部实现）；[Next #14](https://github.com/odango-chan/ca-agent-next/issues/14) 跟踪 SR-013 中央设计刷新；[Next #40](https://github.com/odango-chan/ca-agent-next/issues/40) 决定 CA-SL 1.6.0 唯一新目标、无任何旧版兼容/迁移；[Next #43](https://github.com/odango-chan/ca-agent-next/issues/43) 跟踪 SR-004 1.6.0-only 导入契约与 readiness 评审；[PR #16](https://github.com/odango-chan/ca-agent-next/pull/16) 为历史 Draft 文档评审，不代表实施。
 - 实施分解：[SR-004](../SR/SR-004-已发布技能包导入.md)、[SR-005](../SR/SR-005-技能目录与条件程序消费.md)、[SR-006](../SR/SR-006-技能解析器与续跑选择.md)。
 - 架构、设计和规范：[Skill管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md)、[技能与确定性保障格式规范](../规范/技能与确定性保障格式规范.md)、[Runtime执行设计说明书](../设计说明书/F04-Runtime执行/Runtime执行设计说明书.md)。
 - 完成依据：对应 SR 的必需验收全部 VERIFIED；当前均为 DRAFT，证据未执行。
@@ -133,3 +133,6 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 | 2026-11-27 | 0.1.25 | GPT-6.2（ChatGPT） | IR-006 | 将 SR-025 设计依据更新为 v0.1.9；保留其 READY 与 ca-client-tools #43 OPEN 边界 | 使 IR→SR→目标仓实施入口指向本轮修订后的权威 SR，不把 Publisher 设计 READY 误报为已实施 | Issue #53；IR-006；SR-025 v0.1.9；ca-client-tools #43 |
 | 2026-11-27 | 0.1.26 | GPT-6.2（ChatGPT） | IR-006 | 将 SR-025 当前权威版本入口更新为 v0.1.10 | 保证需求登记册指向最新 READY Publisher 设计版本，保留 ca-client-tools #43 OPEN 的实施边界 | Issue #53；IR-006；SR-025 v0.1.10；ca-client-tools #43 |
 | 2026-11-27 | 0.1.27 | GPT-6.2（ChatGPT） | IR-006 | 将 SR-025 当前权威版本入口更新为 v0.1.11 | 保持需求登记册与最新 READY Publisher 设计及 F09 v0.3.13 依据一致；ca-client-tools #43 仍 OPEN，Publisher 尚未实施 | Issue #53；IR-006；SR-025 v0.1.11；F09 v0.3.13；ca-client-tools #43 |
+| 2026-11-26 | 0.1.23-pr44 | GPT-6.2（ChatGPT） | IR-003 | 登记 SR-004 独立设计 readiness Issue #43 | 使 Skill 导入与 Compiler/Bundle 依赖有单独的设计审查入口 | Issue #43；SR-004；SR-013；SR-027 |
+| 2026-11-26 | 0.1.24-pr44 | GPT-6.2（ChatGPT） | IR-003、修订记录 | 登记 Issue #40 的 CA-SL 1.6.0 单版本无兼容/迁移裁决，要求 SR-004 只消费新 Bundle | 避免 IR-003 上游仍允许旧 Assurance 运行输入 | Issue #40/#43；SR-004；SR-029 |
+| 2026-11-27 | 0.1.28 | Codex | 整合 | IR-003 的 SR-004 设计与 IR-006 的 Publisher 记录 | 对齐 #54 恢复基线与 #44 导入设计 | Issue #40、#43；PR #44 |

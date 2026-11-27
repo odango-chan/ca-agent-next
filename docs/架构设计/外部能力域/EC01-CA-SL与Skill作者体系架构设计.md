@@ -1,11 +1,13 @@
 # EC01 — CA-SL 与 Skill 作者体系架构设计
 
 > 文档类型：外部能力域架构设计（Next 中央权威设计）  
-> 文档版本：0.1.0  
+> 文档版本：0.1.2\
 > 状态：目标架构已重建；发布规范已迁入；Compiler when 运行时 Artifact 尚待 EC02 完成  
 > 功能归属：EC01；关联 F02、F06、F08、F09  
 > 关联需求：IR-003、IR-006；SR-004～SR-006、SR-011、SR-023  
-> 修订日期：2026-11-25  
+> 修订日期：2026-11-27\
+> 全局评审范围：继承根目录 Agent.md 的 review_scope
+> 本文局部非目标：Agent 运行时实现、生产准入与信任体系，详见 §9。
 > 来源：ca-skills main 780497a；CA-SL v1alpha5 发布规范 18d818436；PR #88/#89
 
 ## 1. 架构定位
@@ -15,7 +17,7 @@ EC01 负责 Skill 作者源格式、CA-SL 语言语义、Skill Package 内容组
 依赖关系：
 
 ~~~text
-CA-SL v1alpha5 normative specification
+Skill package (CA-SL 1.6.0 Assurance design target)
   ├─ SKILL.md metadata / package identity
   ├─ optional Assurance author source
   │    ├─ contract.yaml
@@ -37,7 +39,7 @@ EC01 与 EC02、F02、F09 的职责必须分离：EC01 定义作者语义；EC02
 
 ## 2. Skill Package 与作者输入
 
-SKILL.md 是每个 Skill 的基础身份和描述入口，至少提供稳定名称及描述。Assurance 是可选作者内容；存在时，其文件结构和语义必须符合冻结 CA-SL v1alpha5。
+SKILL.md 是每个 Skill 的基础身份和描述入口，至少提供稳定名称及描述。Assurance 是可选作者内容；新 Assurance 唯一目标为 CA-SL 1.6.0，语言与 Compiler Artifact 尚待正式发布。
 
 ~~~text
 <skill>/
@@ -57,7 +59,7 @@ SKILL.md 是每个 Skill 的基础身份和描述入口，至少提供稳定名�
 2. 存在 Assurance 时，Contract、Procedure、PredicateSet 和其引用必须整体有效；任何验证失败均拒绝导入，不得降级成 SKILL.md-only。
 3. Assurance 有效时，Skill 可供 Deterministic 与 LLM-guided 两种模式使用。
 4. 不允许 Agent 自行编译作者源；Agent 只导入发布好的 Skill Bundle。
-5. 不引入旧语言版本兼容映射；当前语言目标固定为 connectionagent.io/v1alpha5。
+5. 不引入旧语言版本兼容映射；历史 v1alpha5 规范只读。1.6.0 的机器标识由 ca-skills / Compiler 正式冻结。Skill 只引用 Capability，每个公开 Capability 对应唯一公开 Callable，反向亦唯一。Owner / Provider 实现侧 Operation ID 留在内部。
 
 ## 3. Contract、Procedure、Predicate 的语义分层
 
@@ -70,15 +72,19 @@ SKILL.md 是每个 Skill 的基础身份和描述入口，至少提供稳定名�
 | Schema | 输入输出字段、类型及约束 | 业务执行逻辑 |
 | Script / Tool binding | 受契约约束的具体操作实现或外部调用 | 取代 Owner 权威结果 |
 
-Node 的冻结阶段为 Precondition、Operation、Observation、Postcondition。Observation 是只读 Tool 能力；Node 的执行顺序、Wait 入口和结果语义以 CA-SL v1alpha5 完整规范为准。
+Node 的冻结阶段为 Precondition、Operation、Observation、Postcondition。Observation 是只读 Tool 能力；Node 的执行顺序、Wait 入口和结果语义由正式 CA-SL 契约定义，v1alpha5 完整规范保留其历史语义。
 
 ## 4. when 与执行期 Predicate 分离
 
-可选的 Skill 选择条件位于 assurance/contract.yaml 的顶层 when。它只回答“当前 Event/Input 是否适用这个 Skill”，不替代 predicates.yaml，也不执行任何业务操作。
+Compiler 只从 `skills/<skill-id>/assurance/contract.yaml` 读取可选顶层 when，按正式契约校验并编译。SKILL.md Front Matter 不声明 when。它只回答“当前 Event/Input 是否适用这个 Skill”，不替代 predicates.yaml，也不执行任何业务操作。
 
 ~~~yaml
-when: 'event.type == "nsmf.create-sm-context" && input.requestType == 1'
+when: 'event.type == "nsmf.create-sm-context" && input.requestType == "INITIAL_REQUEST"'
 ~~~
+
+此例仅说明作者源位置和表达式形式。字段路径、类型与枚举值须按所用正式 Request Schema 核对。
+
+SBI JSON 直接采用 OpenAMSM 对应版本的 3GPP/OpenAMSM 正式 OpenAPI YAML，保留原件及其引用。NAS/NGAP 二进制经 Codec 解码，解码字段遵循 Codec 发布的结果 Schema。`format: binary` 只描述传输形式。选择期只读取当时已存在的输入，Request Schema 解析与 when 的静态类型检查遵循正式 CA-SL / Compiler 契约。
 
 约束：
 
@@ -108,7 +114,7 @@ CA-SL v1alpha5 的 when 已进入已合并的 ca-skills #88/#89 发布刷新；�
 
 - Skill Bundle 的发布版本和 CA-SL languageTarget 是两个独立维度。
 - Host 导入时检查 Bundle 支持版本、必需文件、路径、引用、Schema/类型材料和依赖身份；不调用 Compiler。
-- 成功导入形成不可变 SkillCatalog generation，解析后的 metadata、when 程序和选择所需类型环境驻留内存。
+- SR-004 返回经校验的 candidate；SR-005 据此构建并原子激活不可变 SkillCatalog generation，解析后的 metadata、when 程序和选择所需类型环境驻留内存。
 - 每个新 Event 在当前 Catalog generation 上进行候选过滤和 when 求值，不重复读取磁盘作者源或重新解析 CEL。
 - Skill 导入、更新、卸载才改变 Catalog generation；在途 Run 固定原 Skill 身份与 generation。
 - 不建设额外分布式缓存、包管理器、自动更新服务或生产准入系统。
@@ -141,3 +147,5 @@ CA-SL v1alpha5 的 when 已进入已合并的 ca-skills #88/#89 发布刷新；�
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
 |---|---|---|---|---|---|
 | 2026-11-25 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 从 CA-SL v1alpha5、作者模型和 Compiler #61 还原作者体系架构，分离规范发布与 Compiler/Host 实现状态 | Issue #12；SR-023 |
+| 2026-11-27 | 0.1.1 | Codex | §1～6 | 校正新旧版本、选择条件示例、Schema 来源与导入职责 | Issue #40、#43；PR #44 |
+| 2026-11-27 | 0.1.2 | Codex | 文档头 | 补录全局评审范围及 §9 局部非目标，满足治理规范 §11.7 | Issue #43；PR #44 |

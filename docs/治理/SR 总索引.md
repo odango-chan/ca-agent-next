@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引\
-> 文档版本：0.3.35
+> 文档版本：0.3.37
 > 状态：4 VERIFIED（SR-001/SR-002/SR-003/SR-024）；1 READY（SR-025）；1 IMPLEMENTED（SR-015）；21 DRAFT；SR-003 仅模块 AC-003-01～04 VERIFIED；系统 EX NOT_RUN
 > 修订日期：2026-11-27\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)\
@@ -77,7 +77,7 @@
 - 治理自动化：SR-001 VERIFIED；[PR #32](https://github.com/odango-chan/ca-agent-next/pull/32) MERGED（`7a0fac41e573021207ab8201bbc718718c451e50`）；AC-REV-01～10 PASS、80 tests OK、Run [45793590532](https://github.com/odango-chan/ca-agent-next/actions/runs/45793590532) success；SR-028 仍为 DRAFT。
 - Phase A：SR-002（VERIFIED；PR #23 已集成；AC-002-01～08 PASS；EX-01 仍 NOT_RUN）。
 - Phase B：SR-003 v0.3.11 VERIFIED（模块 AC-003-01～04）；Issue [#28](https://github.com/odango-chan/ca-agent-next/issues/28) CLOSED，PR #34/#41/#42 MERGED 到恢复分支；双平台 [CI #45815167442](https://github.com/odango-chan/ca-agent-next/actions/runs/45815167442) / [CI #45817800342](https://github.com/odango-chan/ca-agent-next/actions/runs/45817800342) SUCCESS；Ubuntu/Python 3.12 与 Windows/Python 3.14 各 Plugin 87、Host 52、Review Context 80 tests PASS；系统 EX-02/03/04/18 NOT_RUN。
-- Phase C：SR-004。
+- Phase C：SR-004 DRAFT / NOT READY；[设计 Issue #43](https://github.com/odango-chan/ca-agent-next/issues/43) OPEN，SR-004 v0.2.6 已定义 AC-004-01～06。SKILL.md-only 子路径可独立设计；新 Assurance 路径面向 **CA-SL 1.6.0**（Issue #40 / SR-029；NOT_RELEASED），还需 Compiler #61 / SR-013 唯一 Capability Binding Artifact 与 ca-skills SR-027 正式 Bundle 契约/正例。冻结 Artifact v1alpha5 与 Development v1alpha1 均不作为当前正例；未达到 READY，不创建实施 Issue、不提供 Harness 提示词。
 - Phase D：SR-005、SR-006。
 - Phase E：SR-007。
 - Phase F：SR-008。
@@ -150,3 +150,9 @@
 | 2026-11-27 | 0.3.33 | GPT-6.2（ChatGPT） | §4、修订记录 | 明确 PR #13 CLOSED/superseded，回填 restore HEAD `34e99e0`、PR #34/#41/#42 合并链与 PR #54 仅进入 restore 的边界 | 修复 PR #13 OPEN/CLOSED 冲突，并确保 SR 状态索引不把恢复分支合并误报为 main 集成 | Issue #53；Issue #12；PR #13/#34/#41/#42/#54 |
 | 2026-11-27 | 0.3.34 | GPT-6.2（ChatGPT） | §4、修订记录 | 保留 0.3.30/0.3.31 restore 与 refresh 两侧的原始修订记录并增加来源后缀 | 避免同号历史记录互相覆盖；不改变 27 项权威 SR 状态及 4/1/1/21 统计 | Issue #53；PR #54；SR-003、SR-025 |
 | 2026-11-27 | 0.3.35 | GPT-6.2（ChatGPT） | 文档头、修订记录 | 删除元数据块末行多余反斜杠，避免 CommonMark 将其渲染为字面字符 | 保持文档头元数据渲染正确，不改变 SR 状态及 4/1/1/21 统计 | Issue #53；PR #54；R3-P3-01 |
+| 2026-11-26 | 0.3.32-pr44 | GPT-6.2（ChatGPT） | §3.2、修订记录 | 记录 SR-004 v0.2.0 当前 DRAFT/NOT READY、模块 AC 和 SR-013/SR-027 的实际设计依赖 | 避免将外部发布依赖尚未完成的 Assurance 路径误判为可实施 | Issue #43；SR-004；SR-013；SR-027 |
+| 2026-11-26 | 0.3.33-pr44 | GPT-6.2（ChatGPT） | §3.2、修订记录 | 将 SR-004 引用更新至 v0.2.1，确认新 Runtime Artifact 字段映射仍由 Compiler #61 冻结 | 防止 SR 索引引用过期 SR 版本 | Issue #43；SR-004；SR-013 |
+| 2026-11-26 | 0.3.34-pr44 | GPT-6.2（ChatGPT） | §3.2、修订记录 | 将 SR-004 引用更新至 v0.2.3，并纳入 Agent Skills Front Matter 契约 | 保持 SR 索引与最新导入设计一致 | Issue #43；SR-004 |
+| 2026-11-26 | 0.3.35-pr44 | GPT-6.2（ChatGPT） | Phase C、修订记录 | SR-004 指向 v0.2.4，新增 1.6.0/SR-029 Capability Binding 正式发布直接依赖 | 不提前把 Compiler v1alpha5 when 当成 1.6.0 完成；SR 仍 DRAFT | Issue #40/#43；SR-004；SR-029；SR-013 |
+| 2026-11-26 | 0.3.36 | GPT-6.2（ChatGPT） | Phase C、修订记录 | SR-004 v0.2.5 明确只接受 CA-SL 1.6.0 新 Artifact，拒绝旧包、兼容、fallback 与迁移 | 保持 1.6.0 单版本验收门禁；SR-004 仍 DRAFT | Issue #40/#43；SR-004；SR-029 |
+| 2026-11-27 | 0.3.37 | Codex | 整合 | Phase B 已验收证据与 Phase C 导入前置条件 | 对齐 #54 恢复基线与 #44 导入设计 | Issue #40、#43；PR #44 |
