@@ -1,0 +1,229 @@
+﻿# ca-agent-next 主干收敛计划
+
+> 文档类型：治理审计与执行计划  
+> 文档版本：0.1.2  
+> 状态：DRAFT / 待独立评审  
+> 审计日期：2026-11-27  
+> 关联 Issue：[ #50 主干同步政策与收敛审计](https://github.com/odango-chan/ca-agent-next/issues/50)  
+> 依据：[主干同步与收敛规范](../规范/主干同步与收敛规范.md)、[治理 Issue #5](https://github.com/odango-chan/ca-agent-next/issues/5)、[设计恢复 Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12)
+
+## 1. 执行结论
+
+**当前不建议把任何工作分支直接合入 main。**
+
+本轮审计确认 main 落后于主要设计/恢复分支；当前设计 PR 仍有未完成的独立评审，恢复分支与状态刷新分支存在分叉，部分 PR 的 base SHA 已过期。应先完成分支内容收敛和评审，再按功能依赖分批进入 main。
+
+本计划只确定审计事实和后续顺序，不执行 PR 合并、rebase、强推、分支删除或 SR 状态提升。
+
+## 2. 审计基线
+
+### 2.1 仓库与 main
+
+| 项目 | 审计结果 |
+|---|---|
+| 仓库 | odango-chan/ca-agent-next |
+| 默认分支 | main |
+| main HEAD | b2ed5eb84114f9c2556a0cd06ed974887b1b70ad |
+| main 提交时间 | 2026-11-25 09:27:07 UTC |
+| main branch protection | GitHub Branch API 返回 protected=false；本轮未单独检查组织级 Rulesets |
+| main HEAD combined status | 空；组织级 Rulesets 未单独核查 |
+| 远端分支数量 | 21（含 main；审计开始时快照） |
+| 非 main 分支数量 | 20（审计开始时快照） |
+
+本轮审计开始时有 21 个分支（含 main）。Issue #50 的治理交付分支 docs/issue-50-mainline-convergence 在审计开始后创建，因此当前远端分支总数为 22（含 main）；该计划分支不计入原始 20 个业务分支分类。main 的 GitHub Branch API 返回 protected=false；本轮未单独检查组织级 Rulesets。治理规范虽要求通过 PR 更新主干，但平台保护状态仍需正式核验。
+
+### 2.2 主要集成分支
+
+| 分支 | 当前 HEAD | 与 main 比较 | 说明 |
+|---|---|---|---|
+| docs/restore-original-designs-20261125 | 34e99e0cc54cc82b6b40040286fc84673432ef76 | ahead 331 / behind 0；191 个变更文件 | 当前恢复集成基线；HEAD 是 PR #42 的 merge commit |
+| docs/refresh-current-state-20261126 | f63bbce2709284c97d8cd150343d491a3f2958db | ahead 316 / behind 0；191 个变更文件 | 与恢复分支分叉；有 6 个分支独有提交 |
+| main | b2ed5eb84114f9c2556a0cd06ed974887b1b70ad | 基线 | 唯一正式主干 |
+
+restore 与 refresh 的双向比较结果为：restore 独有 21 个提交，refresh 独有 6 个提交；refresh 独有变更涉及 16 份文档：
+
+- docs/IR/IR 总登记册.md
+- docs/SR/SR-016-工作台设计移交与条件编辑.md
+- docs/SR/SR-025-MAS Owner Interface Package Publisher.md
+- docs/参考与审计/跨仓依赖与可行性审计.md
+- docs/参考与审计/跨仓设计资产迁移与一致性审计.md
+- docs/架构设计/CA Agent Next 架构设计.md
+- docs/架构设计/外部能力域架构总览.md
+- docs/治理/SR 总索引.md
+- docs/治理/功能树与需求追踪基线.md
+- docs/治理/实施状态总览.md
+- docs/治理/文档总目录与索引.md
+- docs/治理/现有文档盘点与收敛计划.md
+- docs/设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md
+- docs/设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md
+- docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md
+- docs/验收与实施/演示验收基线.md
+
+**处理要求：** 不得丢弃 refresh 的 6 个提交，也不得直接以 refresh 覆盖 restore。先逐文件审查 16 份文档，识别可直接移植、需手工合并和已被后续状态替代的内容，再将有效差异纳入恢复集成分支并重新跑链接/索引/状态检查。
+
+## 3. 当前开放 PR
+
+以下状态均为本轮实际查询快照；执行时必须重新读取。
+
+| PR | Base → Head | 状态 | Review / CI | 收敛判断 |
+|---|---|---|---|---|
+| #44 | restore @ 34e99e0 → issue-43 @ 7f83bf6 | OPEN、非 Draft、mergeable=true | 未见 Review；Review Context #78 SUCCESS | B：当前堆栈底层，先完成独立评审 |
+| #45 | issue-43 @ 7f83bf6 → issue-40 @ 3c7c483 | OPEN、非 Draft、mergeable=true | 未见 Review；Review Context #85/#86 SUCCESS | B：依赖 #44 |
+| #46 | issue-40 @ 3c7c483 → issue-12-draft @ 80f1558 | OPEN、非 Draft、mergeable=true | 仅作者 COMMENT；无独立 APPROVE/独立评审记录；Review Context #175 SUCCESS | B：依赖 #45；当前 24 项 DRAFT SR 仍未因 PR 状态而变 READY |
+| #48 | issue-12-draft @ ff767f74 → issue-47 @ ee4ab14 | OPEN、Draft、mergeable=false | 未见 Review；未发现关联 Workflow Run | B：依赖 #46，但 base SHA 早于 #46 当前 HEAD 80f1558，必须先刷新 base 并重验 |
+| #24 | restore @ 281ccb95 → issue-12-design-gate @ 0fdd991f | OPEN、非 Draft、mergeable=false | 未见 Review/Workflow Run | D：旧评审快照；与当前 #44～#48 主线重叠，先核对是否已被替代 |
+| #15 | main @ b2ed5eb → f09 @ b7b7b17 | OPEN、Draft、mergeable=true | 未见 Review；本轮未确认 CI | C：旧 Publisher/Studio 设计，需与当前 SR-015/SR-016/SR-020/SR-025/SR-030 逐项去重 |
+| #18 | main @ b2ed5eb → ac013 @ c3e5bb7 | OPEN、Draft、mergeable=true | 仅作者 COMMENT；无独立评审；未发现 Workflow Run | C：保留 AC-013-01 历史证据，先对齐当前 SR-013 1.6.0 语义 |
+| #16 | main @ b2ed5eb → issue-14 @ edd3834 | OPEN、Draft、mergeable=true | 未见 Review；本轮未确认 CI | D：旧 v1alpha5 when/Artifact 设计，已由 CA-SL 1.6.0 单版本设计替代 |
+| #11 | main @ 09c75c37 → issue-10 @ de85d153 | OPEN、Draft、mergeable=true | 未见 Review；本轮未确认 CI | D：base 已过期，旧 OpenAMSM 交接快照由 Issue #12 当前恢复审计替代 |
+
+### 3.1 关键评审与 CI 边界
+
+- PR #44/#45/#46 的 Review Context Workflow 成功，只证明该 Workflow 的上下文检查成功；不能替代独立设计评审或产品测试。
+- PR #46 当前 Review 事件仍只有作者 COMMENT，不能表述为独立 GitHub APPROVE；最新 Head 80f155835bc127547f0ef864c228b85514cd06c0 对应 Review Context #175 SUCCESS。
+- PR #48 的 base SHA 为 ff767f74efd35b5398f821bdc2e7df62491de786，而 PR #46 当前 Head 已为 80f155835bc127547f0ef864c228b85514cd06c0；当前 #48 不能沿用旧 base 作为最新评审基线。
+- PR #24 base SHA 281ccb957b9222e72175e210d1afed177aa8a14f 早于当前 restore HEAD 34e99e0。
+- main 的 combined status 查询未返回状态记录；不得据此声称产品 CI PASS 或 FAIL。
+
+## 4. 已合并到恢复分支的 PR
+
+以下 PR 已合并到 docs/restore-original-designs-20261125，不是合并到 main：
+
+| PR | 主题 | Merge Commit |
+|---|---|---|
+| #32 | SR-001 Review Context Generator | 7a0fac41e573021207ab8201bbc718718c451e50 |
+| #34 | SR-003 Plugin Manager 实施 | 32c7c1be5e93bddc83349234476b2ffa09e1ca23 |
+| #36 | G01/G02 治理与工具链设计 | 72da1211f48754f8b10c9111a912fea19041839c |
+| #37 | SR-015 Tool Interface / Provider / Codec 设计 | 0c19156e1c9843e0b43b9d119e03cbe3cf61a347 |
+| #38 | SR-015 集成状态回填 | b98e0d3fc2046bb0676c92dd54e0fafc6ebcc614 |
+| #39 | SR-024 证据与 SR-003 状态回填 | 69fe856fccfc471c5da9ed42969b79236b25a31e |
+| #41 | SR-003 IMPLEMENTED 状态回填 | a899409ea7bf2ffde20ea2d62a9b4a310fb5638c |
+| #42 | SR-003 模块 AC-003-01～04 VERIFIED | 34e99e0cc54cc82b6b40040286fc84673432ef76 |
+
+这些变更已进入恢复分支，不应再次作为独立 PR 重复合并到恢复分支。进入 main 前仍须核对恢复分支整体差异和每个子 PR 的评审/验收证据。
+
+## 5. 已关闭但未合并的 PR
+
+| PR | 主题 | 当前处理 |
+|---|---|---|
+| #4 | 初期跨仓治理迁移 | 被后续 #6 / #12 恢复工作替代，保留历史 |
+| #13 | 旧 Tool Interface / Provider 设计 | 已由 #37 的中央设计整合替代 |
+| #31 | SR-003 Acceptance 对齐 | 后续 #42 已回填模块验收，保留历史 |
+| #33 | SR-024 Publisher 证据 | 需保留原始审计记录，不直接重新打开或合并 |
+
+## 6. 20 个非 main 分支清单
+
+分类说明：A = 可立即进入 main；B = 有明确前置依赖；C = 仍在工作/待补证；D = 已替代、重复或已集成。本轮没有发现满足全部门槛的 A 类分支。
+
+| 分支 | 当前 HEAD | PR / 关系 | 分类 | 处理 |
+|---|---|---|---|---|
+| docs/ac-013-01-poc-evidence | c3e5bb78ff49306329bcbc2387da6108280903bc | PR #18 Draft | C | 保留历史 PoC；对齐 SR-013 1.6.0 语义后独立评审 |
+| docs/central-design-migration-20261125 | 3af8883ca24fc640895e9ae749e406e4e1223ac8 | PR #4 已关闭未合并 | D | 已被 #6 / #12 后续迁移替代 |
+| docs/f09-skill-studio-compiler-integration-20261125 | b7b7b175a6b6232ff2848fac8c98b06de038b6c6 | PR #15 Draft | C | 与当前 Publisher / Studio SR 去重，不能整支直接合并 |
+| docs/issue-10-openamsm-handoff | de85d153a00dbc6ba872629b2b284f808941e98d | PR #11 Draft，base 过期 | D | 由 Issue #12 当前审计替代；确认无独有内容后关闭 |
+| docs/issue-12-design-gate-review | 0fdd991f203f8468be155c35d81254eb84cd8ce5 | PR #24 mergeable=false | D | 旧评审快照；与 #46 对照后归档 |
+| docs/issue-12-draft-design-review-20261126 | 80f155835bc127547f0ef864c228b85514cd06c0 | PR #46 | B | 等待 #45；必须完成独立评审 |
+| docs/issue-12-sr-015-ready | 5fda3a708f47ecd3ceaecc10a135f28d016540c4 | 无当前开放 PR | D | 与下行分支同 SHA；保留审计，不重复合并 |
+| docs/issue-12-sr-015-tool-interface-provider | 638495991c450b104a170f0cd0ab936be08150c5 | PR #13 已关闭未合并 | D | 由 PR #37 后续版本替代 |
+| docs/issue-12-sr-024-implementation-evidence | 5fda3a708f47ecd3ceaecc10a135f28d016540c4 | 无当前开放 PR | D | 与 sr-015-ready 分支同 SHA；保留审计，不重复合并 |
+| docs/issue-14-sr-013-when-compiler-design | edd3834f5b0203d68c3fe6ec151c3e67bccb9f14 | PR #16 Draft | D | v1alpha5 设计已由 1.6.0 单版本方向替代 |
+| docs/issue-30-sr-003-acceptance-alignment | e6cb3ed3b0ca658673e4a216187b9c2a9eed4166 | PR #31 已关闭未合并 | D | 后续 #42 已回填 SR-003 模块验收 |
+| docs/issue-40-casl-160-capability-design-review | 3c7c48383c52504a4861900bc1f8b731442f16c2 | PR #45 | B | 等待 #44；独立评审后处理 |
+| docs/issue-40-sr-029-capability-first-skill-contract | a8e60d5ab98316fa26e0dc764de65c6913cbf4ec | 旧 SR-029 单独分支 | D | 当前 SR-029 已纳入 PR #45；先核对差异再归档 |
+| docs/issue-43-sr004-importer-readiness-20261126 | 7f83bf6135d4572dca7d3d5bdb6243765440b0f6 | PR #44 | B | 堆栈底层；先完成独立评审 |
+| docs/issue-47-3gpp-schema-codec-boundary | ee4ab14ef856baaf596ff4f6ebbeb522c728663b | PR #48 Draft | B | 等待 #46；刷新 base SHA、重新检查和独立评审 |
+| docs/issue-49-skill-authoring-guidelines | 4c55158dfa2042581d45b905c40a11aa89201f98 | Issue #49；尚无 PR | C | 已形成 SR-032 与 SKILL 作者规范/Node 原则增量；相对 #48 分支 ahead 27 commits，需审查依赖并单独评审 |
+| docs/refresh-current-state-20261126 | f63bbce2709284c97d8cd150343d491a3f2958db | 与 restore 分叉 | C | 逐项审查 6 个独有提交和 16 份文档，整合后重验 |
+| docs/restore-original-designs-20261125 | 34e99e0cc54cc82b6b40040286fc84673432ef76 | 当前恢复集成分支 | B | 先收敛 refresh 和活动设计 PR；不能直接整体合入 main |
+| feat/echo-plugin-example | c1268b4fea4fa181edfac3236cbb103161586013 | 无 PR；独立 Example | C | 23 个变更路径，需基于当前 SR-003 / Plugin 契约复核并单独建 PR |
+| feature/issue-28-sr-003-plugin-manager-refresh-20261126 | 69fe856fccfc471c5da9ed42969b79236b25a31e | 等于 PR #39 merge commit，已在 restore 历史中 | D | 已集成的历史指针，不得再次合并 |
+
+## 7. 主干收敛顺序
+
+### Phase 0：重新冻结远端快照
+
+开始任何合并前重新查询 main、全部活动分支、PR、Review、CI、Issue 和 SR。若任一 SHA 与本计划不同，先刷新本计划，不沿用旧结论。
+
+### Phase 1：整合恢复分支与状态刷新分支
+
+1. 审查 refresh 分支独有的 6 个提交和 16 份文档。
+2. 逐文件判断：直接保留、手工合并、已被更新版本替代。
+3. 将有效差异整合到 restore；不强推、不覆盖并行分支。
+4. 对 SR-016、SR-025、F02/F08/F09、IR/SR 索引和架构文档进行交叉一致性检查。
+5. 重新运行文档链接、锚点、目录、SR 数量和状态门禁。
+
+### Phase 1 当前执行状态（2026-11-27）
+
+- 差异处置已形成 [Issue #53](https://github.com/odango-chan/ca-agent-next/issues/53) 和 [Draft PR #54](https://github.com/odango-chan/ca-agent-next/pull/54)，PR #54 的 base 为 restore @ 34e99e0，head 为 docs/issue-53-refresh-state-reconciliation @ 7452f60，16 个文件变更。
+- refresh 的 6 个独有提交和原始分支保持不变；PR #54 是手工整合，不是 merge/cherry-pick/rebase。restore 原分支与 main 均未修改。
+- 处置矩阵位于 restore 候选文档《现有文档盘点与收敛计划》§10；当前 SR 状态按恢复分支证据为 4 VERIFIED / 1 READY / 1 IMPLEMENTED / 21 DRAFT，SR-003 仅模块 VERIFIED，系统 EX 仍 NOT_RUN。
+- Git tree 核验为 197 blobs（tracked files）/157 Markdown；247 recursive entries 含 50 个目录节点。对 16 份文档检查 504 个 Markdown 链接目标，未发现断裂的本地文件目标。
+- PR #54 当前仍为 Draft；Review Context Run #192/#193/#194 SUCCESS，Run #192 已上传 Artifact；尚无独立 Review。该 PR 只计划合入 restore，不代表进入 main。
+
+### Phase 2：按顺序完成设计 PR 堆栈
+
+依赖关系：
+
+- restore → PR #54（refresh 状态差异整合，待独立评审后只合入 restore）→ PR #44（SR-004）
+- PR #44 → PR #45（CA-SL 1.6.0 Capability-first）
+- PR #45 → PR #46（当前 24 项 DRAFT SR 设计评审）
+- PR #46 → PR #48（3GPP OpenAPI / Codec 分阶段设计）
+
+每层处理要求：
+
+1. #44：固定当前 Head，完成独立设计评审和必需检查；合并后刷新 restore SHA。
+2. #45：将 base 更新到最新 restore，重新检查差异、评审和 CI；不得沿用旧 base 的批准。
+3. #46：更新到最新 restore，完成 24 项逐 SR / 逐 AC 独立评审。实施主状态继续保持 DRAFT，只有各自门禁通过后才能单独提升。
+4. #48：将 base 更新到最新 #46 / restore 基线；解决当前 mergeable=false 和旧 base SHA；完成独立评审和必需检查。
+5. 每一层合并后都重新冻结下一层 base/head SHA。不得一次性合并整个堆栈。
+
+### Phase 3：处理独立工作分支
+
+- Issue #49 / SR-032：完成作者规范和 Node / 注释原则设计；单独建立 PR，明确其 CA-SL 1.6.0 依赖，不继承不必要的 #48 依赖。
+- AC-013-01：保留历史证据，区分 v1alpha5 历史 PoC 与 1.6.0 当前产品门禁；确认文件和 SR-013 当前版本的归档边界。
+- Echo Plugin Example：基于当前 Plugin Manager / IPC 契约重新验收，创建独立 PR，不直接把旧分支合入 main。
+- PR #15、#11、#16、#24：核对唯一有价值的差异；确认被替代后关闭并保留审计链接，不整体合并旧快照。
+
+### Phase 4：创建 mainline integration PR
+
+仅当以下条件全部满足时，才建立恢复分支到 main 的正式集成 PR：
+
+- restore 已吸收 refresh 的有效差异；
+- 所有计划纳入的子 PR 已按依赖顺序处理；
+- residual diff 有逐文件、逐 SR、逐 Issue 的映射；
+- 未审查变更为零，或被明确排除；
+- 文档、链接、索引、SR 状态和验收证据一致；
+- main protection 已启用，或用户明确批准有记录的一次性例外；
+- 正式集成 PR 的 Review 和 CI 绑定到最终固定 SHA。
+
+正式集成 PR 合并后，记录 main 新 SHA，并刷新所有权威索引、SR、Feature、实施状态和跨仓审计。
+
+## 8. 当前阻塞与停止条件
+
+| 阻塞 | 影响 | 解除条件 |
+|---|---|---|
+| restore / refresh 分叉 | 不能确定唯一集成树 | 逐文件审查并整合 refresh 的 6 个独有提交 |
+| #44/#45/#46 缺独立评审 | 不能认定设计已批准 | 精确 Head/Base 的独立模型评审与 GitHub Review 记录 |
+| #48 base 过期且 mergeable=false | 不能进入合并队列 | 更新 base，重新评审和运行检查 |
+| #24 mergeable=false 且旧 base | 不应与 #46 重复推进 | 核对差异，确认被替代后归档 |
+| main 无分支保护 | 主干门禁未被平台强制 | 配置 Branch Protection / Ruleset 或取得明确的一次性例外授权 |
+| Echo / AC-013 / Issue #49 尚未完成独立交接 | 不能作为当前主干批次直接合入 | 各自完成契约对齐、PR、Review 和验收 |
+
+任何分支在审计期间被推进、PR base/head 改变、Review/CI 状态变化或出现冲突时，必须停止受影响批次并重新查询。
+
+## 9. 最终建议
+
+- **当前 A 类：无。** 没有发现同时满足独立评审、依赖闭合、CI 和集成条件、可立即进入 main 的工作分支。
+- **当前 B 类：** restore 临时集成基线及 #44 → #45 → #46 → #48 设计堆栈。
+- **当前 C 类：** refresh 原始源分支（保留为审计证据，不直接合并）；PR #54（Draft，待独立评审）；Issue #49 作者规范、Echo Example、AC-013-01 证据，以及仍有独有内容待核对的 PR #15。
+- **当前 D 类：** 已被替代、已关闭或已集成的历史分支/PR；保留审计历史，不重复合并。
+
+本轮只完成审计、差异手工整合候选与计划；PR #54 尚未合并到 restore，更未进入 main；不修改 main 或原始 refresh/restore 分支，不改变任何 SR 状态。
+
+## 修订记录
+
+| 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
+|---|---|---|---|---|---|---|
+| 2026-11-27 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 建立分支、PR、Issue、SR 主干收敛审计和分阶段执行计划 | 避免长期分支无序累积及未经评审整体合入 main | Issue #50 |
+| 2026-11-27 | 0.1.1 | GPT-6.2（ChatGPT） | §3、§7、§9 | 登记 refresh 差异手工整合 Issue #53 / Draft PR #54；回填 16 文件处置、197 blobs/157 Markdown、504 链接路径检查及 Review Context 初次运行状态 | 将 Phase 1 从待处理事项更新为有明确 PR 的可审查候选，同时保留未合并/未进入 main 的边界 | Issue #50、#53；PR #51、#54 |
+| 2026-11-27 | 0.1.2 | GPT-6.2（ChatGPT） | §7、§9 | 将 PR #54 Head 更新为 `7452f60`，回填 Review Context Run #192/#193 SUCCESS 和 Artifact 上传 | 绑定当前 PR Head 的治理上下文检查结果，不复用旧 Head 的失败结果 | Issue #50、#53；PR #51、#54；Run #192/#193 |

@@ -70,7 +70,7 @@ GitHub `head_sha=7452f60ccbc68e1468b52018f59bdc2347cc32d5` 查询到且仅查询
 |---:|---|---|
 | 1 | IR 总登记册 | 主体整合正确，L33 保留 SR-003 v0.3.11 模块 VERIFIED；L88 的 SR-025 v0.1.7 未随实际 v0.1.8 更新（P2-03）。 |
 | 2 | SR-016 | refresh 的 READY Publisher、#272 MERGED、#276 DIRTY 与正确 Studio SHA 已纳入；但 L31 对 Host fixture provenance 的当前能力判断过宽且过时（P1-05），L11 的 F09 版本未同步（P2-03），历史 SHA 被回写（P2-04）。 |
-| 3 | SR-025 | v0.1.8 / READY、AC-025-01～08、127 exports、Issue #43 和 NOT_STARTED/NOT_RUN 完整保留；L10 的 F09 设计版本未同步（P2-03），本轮实质仅为版本/修订行追加（P3-02）。 |
+| 3 | SR-025 | v0.1.8 / READY、AC-025-01～08、127 exports、Issue #43 和 NOT_STARTED/NOT_RUN 完整保留；L10 的 F09 设计版本未同步（P2-03），L76 将下一作者模型预先写成 v1alpha6，与 CA-SL 1.6.0 机器标识待冻结的方向冲突（P2-09）；本轮实质仅为版本/修订行追加（P3-02）。 |
 | 4 | 跨仓依赖与可行性审计 | L100 把 #272 错写为 OPEN（P1-04）；L31 保留 23 SR/150 Markdown 旧统计（P2-08）；头版本 0.2.12 无对应修订记录（P2-02）；§8 仍是旧 SR-003 快照（P2-05）。 |
 | 5 | 跨仓设计资产迁移与一致性审计 | L133 把 #272 错写为开放 Draft（P1-04）；L65 把已实现 Plugin Manager 写成未完成（P1-02）；§2 四列表被三列表覆盖且丢失 restore 有效约束（P2-01）；多处版本、基线和修订链未收敛（P2-03～05）。 |
 | 6 | CA Agent Next 架构设计 | 核心架构边界未被改写；L245 的 Studio 完整 SHA 拼写错误（P1-03），L246/L253 保留旧 restore/PR Head（P2-05）。 |
@@ -134,7 +134,7 @@ SR-003 模块 VERIFIED 有证据，但《实施状态总览》L92、《跨仓依
 | Agent 通用性 / 业务解耦 | PASS | 总体架构 L16～18、L95～105；OpenAMSM 仅经 Skill/Plugin/Package/配置接入 |
 | Tool 作为特殊 Plugin | PASS | 总体架构 L146～158、F03.05 L19～22/L69～78；唯一 Plugin Manager，无第二 Registry |
 | Skill 选择 / Procedure 执行边界 | PASS | 总体架构 L121～164；when 仅选择，predicates 仅执行期，Procedure 不直接调 Plugin |
-| CA-SL 设计方向 | PASS（标识）；1.6.0 映射 NOT_VERIFIED | Release Record 与中央规范只标识 `connectionagent.io/v1alpha5`；未发现 1.6.0 的文字映射，不臆造等价关系 |
+| CA-SL 设计方向 | **当前 v1alpha5 历史基线正确；未来命名有 P2-09** | PR #51《主干收敛计划》L168-L183 和 PR #45 SR-029 L18-L20/L95-L100 均明确下一方向为 CA-SL 1.6.0、NOT_RELEASED、准确 languageTarget 待正式冻结；PR #54 不应提前引入该未来设计，但 SR-025 L76 也不应猜测为 v1alpha6 |
 | Schema / Scripts 对 LLM 可用性 | PASS | SKILL.md 面向 Agent；requestSchema 驱动输入校验，references/大型材料按需加载；未引入第二 Descriptor |
 | when 选择机制 | PASS | F02 L91～114、CA-SL Release Record L27～37；Schema 资格先于 CEL，false/error 不回退语义候选 |
 | Provider / Interface Package / Runtime Bindings | PASS | F03.05 L80～90；公开 Callable、Owner 语义和私有 backend 映射分层 |
@@ -188,6 +188,7 @@ SR-003 模块 VERIFIED 有证据，但《实施状态总览》L92、《跨仓依
 - **汇总文档不一致**：实施状态表算术为 28；盘点 §6、实施关联段、若干审计快照仍保留旧 SR-003 状态。
 - **Git tree 实测正确**：197 blobs / 157 Markdown；247 recursive entries 中 50 个 directory tree nodes。目录节点未计为文件。
 - **追踪引用不一致**：错误 Studio SHA、旧 PR Head、PR #13 OPEN/CLOSED 冲突、PR #53/#54 混淆、多个版本指针未更新。
+- **主干收敛计划已交叉核对**：PR #51 当前 Head `acb07bfbf7a01603b8ef86f8d3fc8785eb013196`，其《主干收敛计划》L147-L178 将 PR #54 限定为 Phase 1、仅进入 restore，再由 PR #44→#45→#46→#48 处理后续堆栈；PR #54 不应把后续 CA-SL 1.6.0 设计提前写成已发布。该计划本身仍为 DRAFT，不能当作合并授权。
 - **整合保真性不足**：迁移审计四列表被覆盖为三列表，restore 的有效 Provider/CA-SL/Studio 约束被丢弃；多个同号修订记录碰撞或历史被回写。
 - **静态门禁通过不代表治理通过**：Review Context SUCCESS 与 504 链接无断链均不能消除上述问题。
 
@@ -242,6 +243,7 @@ SR-003 模块 VERIFIED 有证据，但《实施状态总览》L92、《跨仓依
 | P2-06 | SR 总索引:97；实施状态:34,90；Acceptance:214 | PR #13 同时被写成 OPEN 和 CLOSED；Acceptance 把 Issue #53 错当整合 PR #53，实际整合 PR 为 #54。破坏追踪闭环。 | PR #13 单列为 CLOSED/superseded；Acceptance 改 PR #54 并核对链接。 | 是 |
 | P2-07 | F09:147 | “merge/main SHA `79bd2c3…`”混合两个身份；#272 merge 实际为 `a863355…`，当前 main 才是 `79bd2c3…`。 | 分列 merge SHA 与当前 main SHA。 | 否（随 P1-04 一并修复） |
 | P2-08 | 依赖审计:31；文档索引:43,65 | 当前表仍写 23 SR/150 Markdown/47 formal，与实际 27/157/48 冲突；文档索引本节 13 与 14 份设计冲突。 | 按 Git tree 和目录分类重算并统一。 | 否（随 P1/P2 统计修复一并处理） |
+| P2-09 | `docs/SR/SR-025-MAS Owner Interface Package Publisher.md:76`；对照 PR #45 `docs/SR/SR-029…md:18-20,95-100` | 当前 READY SR 把 Issue #40 的未来作者模型命名为“v1alpha6 Capability-first”；后续总体方向和 SR-029 明确为 CA-SL 1.6.0，且准确机器标识待 ca-skills/Compiler 正式冻结、禁止提前猜测。该命名会把未冻结的未来契约误写成已确定标识。 | 改为“CA-SL 1.6.0 Capability-first（NOT_RELEASED；准确 languageTarget 待正式冻结）”，保持本 SR 的 v1alpha5 包不变。 | 是（属于权威 SR 交叉设计不一致） |
 
 ### 9.4 P3
 
@@ -268,7 +270,7 @@ SR-003 模块 VERIFIED 有证据，但《实施状态总览》L92、《跨仓依
 6. `docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md`：按默认 fixture/普通 ZIP/剩余验收三个范围重写 provenance，拆分 #272 merge/main。
 7. `docs/SR/SR-016-工作台设计移交与条件编辑.md`：同步 F09 版本，准确界定已实现 provenance 与剩余 AC，不回写历史。
 8. `docs/治理/功能树与需求追踪基线.md`：修 #272、Studio main、SR-003 Head、F09 版本和修订链。
-9. `docs/治理/文档总目录与索引.md`、`docs/IR/IR 总登记册.md`、`docs/SR/SR-025-MAS Owner Interface Package Publisher.md`：同步版本指针，修目录计数和修订历史。
+9. `docs/治理/文档总目录与索引.md`、`docs/IR/IR 总登记册.md`、`docs/SR/SR-025-MAS Owner Interface Package Publisher.md`：同步版本指针，修目录计数和修订历史；SR-025 L76 改用 CA-SL 1.6.0 / NOT_RELEASED / 机器标识待冻结的准确边界，不猜测 v1alpha6。
 10. `docs/治理/SR 总索引.md`、`docs/验收与实施/演示验收基线.md`：修 PR #13/#54、Acceptance 自版本与双方修订历史。
 11. `docs/设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md`、`docs/设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md`、`docs/架构设计/外部能力域架构总览.md`：修重复日期、修订表、快照日期及名实不符记录。
 12. 修复后重跑本报告全部静态检查、SR 统计、外部状态核验和新 Head 的 Review Context；不得复用 `7452f60` 的 CI 作为新 Head 通过证据。
@@ -289,6 +291,6 @@ SR-003 模块 VERIFIED 有证据，但《实施状态总览》L92、《跨仓依
 | 外部 Studio/Compiler/Publisher 产品测试 | NOT_RUN | 仅核对 GitHub 状态与固定源码；完整产品 Acceptance 仍 NOT_VERIFIED |
 | 外部 HTTP URL 全量实时可达性 | NOT_RUN | 本地 Git 路径与 47 锚点已验证；不推断所有外部 URL 长期有效 |
 | DeepSeek Harness 自动消费 Review Context Artifact | NOT_RUN | 本地生成与 GitHub Artifact 存在已验证，不声称外部自动消费 |
-| CA-SL “1.6.0” 与 v1alpha5 的文字映射 | NOT_VERIFIED | 当前 Release Record/中央规范只证明 v1alpha5；未据此臆造版本冲突 |
+| CA-SL 1.6.0 正式规范与准确 languageTarget | NOT_RELEASED / 待正式冻结 | 已核对 PR #45 SR-029 的未来设计方向；不得把 1.6.0 或 v1alpha6 写成当前已发布契约 |
 | #261/#269/#279/#290/#295 完整验收 | NOT_VERIFIED | OPEN Issue、局部 merged 能力和完整产品验收必须分开 |
 | 本评审之后的新 Head | NOT_RUN | 修复一旦推送，必须重新固定 Base/Head/CI 并复审 |

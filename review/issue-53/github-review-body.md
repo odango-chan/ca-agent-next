@@ -17,6 +17,7 @@
 4. **P1 Studio 状态矛盾**：依赖审计 L100、迁移审计 L133、功能树 L168/L202 仍把 #272 写成 OPEN/DRAFT 或使用旧 main；实际 #272 已 MERGED，merge 为 `a863355…`。
 5. **P1 provenance 状态错误**：F09 L153/L165、实施状态 L66、SR-016 L31 把 Host fixture provenance 概括为未实现；当前 main 的默认 Host Context Example 已校验并持久化 `sourceStatus=DEVELOPMENT_FIXTURE`。普通 ZIP 全局策略、reload 与双根 Development 验收仍未完成，必须分开表述。
 6. **P2 可靠整合缺口**：迁移审计 L29/L31/L36/L37 的四列表被三列表覆盖，restore 中有效 CA-SL/Provider/Studio 约束被丢弃；另有多处版本指针、当前基线、PR 引用和修订历史冲突。
+7. **P2 CA-SL 未来命名不一致**：SR-025 L76 把 Issue #40 的未来模型写成 v1alpha6；PR #51《主干收敛计划》及 PR #45 SR-029 明确下一方向为 CA-SL 1.6.0，且 NOT_RELEASED、准确 languageTarget 待正式冻结，不能提前猜测机器标识。
 
 ### 必须完成的文件级修复
 
@@ -28,7 +29,7 @@
 - `docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md`：按默认 fixture、普通 ZIP、剩余验收重写 provenance，拆分 #272 merge/main。
 - `docs/SR/SR-016-工作台设计移交与条件编辑.md`：同步 F09 版本，界定已实现 provenance 与剩余 AC。
 - `docs/治理/功能树与需求追踪基线.md`：#272、Studio main、SR-003 Head、F09 版本及修订链。
-- `docs/治理/文档总目录与索引.md`、`docs/IR/IR 总登记册.md`、`docs/SR/SR-025-MAS Owner Interface Package Publisher.md`：同步版本指针、目录计数与修订历史。
+- `docs/治理/文档总目录与索引.md`、`docs/IR/IR 总登记册.md`、`docs/SR/SR-025-MAS Owner Interface Package Publisher.md`：同步版本指针、目录计数与修订历史；SR-025 L76 改为 CA-SL 1.6.0 / NOT_RELEASED / 机器标识待冻结，不猜测 v1alpha6。
 - `docs/治理/SR 总索引.md`、`docs/验收与实施/演示验收基线.md`：修 PR #13/#54、Acceptance 自版本与双方修订历史。
 - F02/F08/外部能力域总览：修重复日期、修订表、快照日期及名实不符记录。
 

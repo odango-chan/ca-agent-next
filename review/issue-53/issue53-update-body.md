@@ -14,6 +14,7 @@
 3. 总体架构中的 Studio 完整 SHA 拼写错误；其他文档仍把已合并 #272 写成 OPEN/DRAFT。
 4. Host Context 默认 Example 已持久化 `sourceStatus=DEVELOPMENT_FIXTURE`，PR 却将其概括为 NOT_IMPLEMENTED；普通 ZIP 与剩余验收须分开描述。
 5. 迁移审计四列表被三列表覆盖并丢失 restore 有效约束，另有版本、基线、PR 引用及修订链不一致。
+6. SR-025 L76 将未来模型预写为 v1alpha6；PR #45 SR-029 与 PR #51 主干收敛计划明确为 CA-SL 1.6.0，且 NOT_RELEASED、准确 languageTarget 待冻结，不能提前猜测。
 
 完整 P1/P2/P3 清单和逐文件修复要求见报告第 9～10 节。**当前 PR #54 不能安全合入 restore；需要修复后重新固定 Head 并独立复审。**
 
