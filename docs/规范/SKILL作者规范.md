@@ -1,7 +1,7 @@
 # SKILL 作者规范（CA-SL 1.6.0）
 
 > 文档类型：Skill 作者规范（Next 中央规范性设计稿）  
-> 文档版本：0.1.3  
+> 文档版本：0.1.4  
 > 状态：**DRAFT / REVIEW_REQUESTED**（作者规则待独立评审；CA-SL 1.6.0 尚未由 ca-skills 正式发布）  
 > 语言目标：CA-SL 1.6.0 only；不兼容任何历史作者语法  
 > 功能归属：EC01 — Skill 作者规范与业务 Skill；消费端关联 F02 / F09  
@@ -102,7 +102,8 @@ skill-root/
 | Contract.limits.maxActions | 可选正整数上界；只能收紧 Host / Deployment 的预算 |
 | Procedure.arguments | 每个调用点必须显式绑定；具体结构由 CA-SL 1.6.0 正式 Schema / Golden 冻结；Predicate arguments 与 Predicate.parameters 的有序签名一致 |
 | Predicate | 只做纯判断；UNKNOWN 不得转 PASS；Evidence 要求必须由正式 Predicate 契约声明 |
-| Observation | 只读查询，Capability 必须是 kind=observation 且 Effect=READ |
+| Operation | 一个 kind=operation 的公开 Capability，Effect 由 Package 定义（READ 或 MUTATION）；或一个纯本地 Procedure Script | kind=observation Capability、Callable ID、backendOperationId |
+| Observation | 一个 kind=observation 且 Effect=READ 的公开 Capability；每个 Observation 阶段最多一个 | MUTATION Capability、Callable ID、backendOperationId |
 | Reconcile | Owner / Host / Runtime 的内部结果确认机制，不是 Skill-facing Capability、作者阶段或独立 Node |
 | Goal | 不定义 Contract.goal；业务意图由 SKILL.md 描述，最终成功由可达 Postcondition 聚合 PASS 直接路由 SUCCEEDED |
 
@@ -133,9 +134,9 @@ skill-root/
 3. Observation
 4. Postcondition
 
-Procedure 必须是单一静态 DAG，具有 `start` 和 `nodes`；不得动态生成节点、任意循环或嵌套 Procedure Call。Node 至少包含一个业务阶段。阶段可以省略，但不得重排、重复或用注释补足。Precondition / Postcondition 阶段内部使用非空、有序的 `predicates` 列表。Operation 阶段最多调用一个公开 Capability 或一个纯本地 Procedure Script；Observation 阶段最多调用一个只读 Observation Capability。非末阶段的正常 Outcome 按语言规则进入下一阶段；当前 Node 的末阶段必须显式路由。
+Procedure 必须是单一静态 DAG，具有 `start` 和 `nodes`；不得动态生成节点、任意循环或嵌套 Procedure Call。Node 至少包含一个业务阶段。阶段可以省略，但不得重排、重复或用注释补足。Precondition / Postcondition 阶段内部使用非空、有序的 `predicates` 列表。Operation 阶段最多调用一个 `kind=operation` 的公开 Capability（Effect 由 Package 决定，可为 READ 或 MUTATION）或一个纯本地 Procedure Script；Observation 阶段最多调用一个 `kind=observation` 且 Effect=READ 的公开 Capability。各阶段的 `routes` 只作用于所属阶段，不得跨阶段借用。非末阶段的正常 Outcome 按语言规则进入下一阶段；当前 Node 的末阶段必须显式路由。
 
-Node-entry Wait 是目标 Node 入口的可选控制，不是第五阶段，不创建 Wait-only Node；它由 Host Runtime 的内部 READ 触发机制执行，并引用显式依赖中的 package-scoped Ingress Operation / Event Contract。作者不得自行声明 `payloadSchema`、复制协议 Schema、把 MUTATION Capability 当作 Wait trigger，也不得写作者级 await / poll 循环。Wait 的 timeout 只走 Wait-scoped `TIMEOUT` 路由；事件接受是隐式正常边，不声明 `EVENT_RECEIVED`；事件接受后仍须执行业务阶段和 Postcondition，不能直接证明成功。Mutation Reconcile 是 Runtime / Owner 的内部流程，不创建作者 Reconcile Node。
+Node-entry Wait 是目标 Node 入口的可选控制，不是第五阶段，不创建 Wait-only Node；它由 Host Runtime 的内部 READ 触发机制执行，并引用显式依赖中的 package-scoped Ingress Operation / Event Contract。作者不得自行声明 `payloadSchema`、复制协议 Schema、把 MUTATION Capability 当作 Wait trigger，也不得写作者级 await / poll 循环。Wait 的 timeout 必须是正的固定时长，只走 Wait-scoped `TIMEOUT` 路由；事件接受是隐式正常边，不声明 `EVENT_RECEIVED`；事件接受后仍须执行业务阶段和 Postcondition，不能直接证明成功。作者只引用已 pin 的 package-scoped Ingress Contract，不自行声明 Run、Node occurrence、generation 或 Correlation 绑定字段；这些由 Ingress / Host Runtime 契约负责。Mutation Reconcile 是 Runtime / Owner 的内部流程，不创建作者 Reconcile Node。
 
 ## 6. Node 拆分与合并原则
 
@@ -151,8 +152,8 @@ Node 不是 HTTP 请求、函数调用、文件、协议报文或 Provider backe
 
 1. **需要调用两个不同的公开 Operation Capability。** 一个 Operation 阶段只有一个 Capability；顺序调用两个公开业务动作时，分别建 Node，并通过显式输出和 arguments 传递结果。
 2. **存在独立业务提交边界。** 两个动作可以分别成功、失败、被拒绝或产生不同的业务结果，应分别表达。
-3. **存在独立的证据或权威确认边界。** 例如不同协议响应、不同 Owner 结果或不同 generation / correlation，需要独立 READ / Postcondition 证明。
-4. **存在真实业务分支或恢复路径。** 分支必须通过正式 Outcome 和 routes 表达；不同路径具有独立业务动作时建立对应 Node。
+3. **存在独立的证据或权威确认边界。** 只有当证据具有独立生命周期、权威来源、Correlation / generation，或必须被多个后续业务动作单独消费时，才拆为独立 Node。若 READ / Postcondition 只是对同一 Operation 的直接确认，且结果只服务于该动作，应留在同一 Node 的 Observation / Postcondition。
+4. **分支路径需要执行独立业务动作或恢复动作。** Outcome 本身不构成拆分理由：如果不同 Outcome 只需跳转到不同后续 Node 或终态，用当前阶段的 `routes` 表达；只有某条路径还需独立 Capability / 业务动作、独立提交边界或独立证据确认时，才建立对应 Node。
 5. **一个 Node 已无法用一个 Operation + 可选 Observation 清楚解释。** 不得把多个 Mutation 藏在一个作者 Node 的说明或脚本中。
 
 ### 6.3 应保持在同一个 Node 的情况
@@ -179,6 +180,19 @@ Node 不是 HTTP 请求、函数调用、文件、协议报文或 Provider backe
 - 不使用 call-tool-1、operation-03、backend-op-x、http-post 或按文件行号命名。
 - Node ID 在同一 Procedure 内唯一；重命名必须同步所有 start、routes、global precondition 和输出引用。
 - Node ID 不得复用 Callable ID、backendOperationId 或协议内部消息 ID。
+
+
+### 6.6 已核对真实样本的使用方式
+
+以下样本均来自固定的 ca-skills v1alpha5 源提交，只用于核对业务动作和证据边界；**Node 数量、旧 `tool:` 字段、Callable 名称和旧 arguments 结构都不是 1.6.0 的迁移目标**。
+
+| 历史样本 | 固定源文件 | 观察到的结构性事实 | 1.6.0 作者裁决 |
+|---|---|---|---|
+| Create | `examples/skills/establish-pdu-session-mas/assurance/procedure.yaml`（14 个历史 Node） | 覆盖订阅校验、SM Context、策略、UPF、N4、接入信令和最终建立验证 | 不把每个历史 Tool 调用机械映射为新 Capability / Node；先按新 Owner 发布的 Capability 边界重新归并，最终建立状态仍须由可达 Postcondition 证明 |
+| Modify | `examples/skills/modify-pdu-session-mas/assurance/procedure.yaml`（4 个历史 Node） | 将原始 N1 解码、QoS Delta Mutation 和最终完成验证分开表达 | 解码与修改是两个不同公开动作时必须分 Node；NAS 字节或 PFCP/N1/N2 内部步骤本身不是 Node |
+| Release | `examples/skills/release-pdu-session-mas/assurance/procedure.yaml`（10 个历史 Node） | 区分 N1 解析、命令构建、N1/N2 确认、资源清理和最终释放验证 | 只有独立公开动作、独立提交或独立确认边界才拆分；Owner 内部协议子步骤不拆成 Skill Node |
+
+这些样本是历史行为证据，不保证旧 Tool 与未来 Capability 一对一对应。新作者不得从旧 Callable 名称、旧 Node 数量或旧参数结构推导 1.6.0 契约；缺少正式 Capability / Schema / Evidence 发布物时必须等待生产者输入，不得自行补造。
 
 ## 7. 注释原则
 
@@ -225,13 +239,21 @@ Skill-facing 执行语义必须由正式 Contract、Schema、Capability 引用�
 
 ### 7.5 注释示例
 
-以下只展示注释写法，不是可构建的 Procedure 示例：
+反例（注释承担执行语义）：
 
 ~~~yaml
-# One public mutation boundary. The Owner owns the internal SBI/NAS/PFCP steps.
+# 错误：必须先 READ 到 qosFlow 已更新，才能把这次 Mutation 判为成功。
 ~~~
 
-该注释解释为什么不把 Owner 内部步骤拆成 Skill Node；真正的调用目标、arguments、Outcome 和 routes 必须由 CA-SL 1.6.0 的正式作者结构表达。若删除注释，执行语义不应改变。
+这句话实际定义了成功条件和必需的 READ，却没有可供 Compiler 检查的 Predicate、Evidence 与 Postcondition；不能只留在注释里。
+
+正例（注释解释作者意图）：
+
+~~~yaml
+# 此 Node 保留为独立 QoS 修改动作；PFCP、N1 和 N2 子步骤由 Owner 在一个公开 Capability 内完成。
+~~~
+
+该注释只解释 Node 粒度和 Owner 边界。真正的调用目标、arguments、Outcome、Evidence 和 routes 必须由 CA-SL 1.6.0 的正式作者结构及对应 Owner / Runtime 契约表达。删除正例注释不应改变执行语义。
 
 SKILL.md 正文与 YAML 注释遵循项目语言约定，并在同一 Skill Package 内保持一致；注释应简洁、可读，不因语言选择改变 CA-SL 语义。Next 的规范、设计和迁移文档使用中文。
 
@@ -278,6 +300,9 @@ SKILL.md 正文与 YAML 注释遵循项目语言约定，并在同一 Skill Pack
 - [ ] Precondition / Postcondition 中的 Predicate 有序聚合，没有单 Predicate Node。
 - [ ] 所有 arguments 和输出引用显式绑定，没有隐式上下文或字段猜测。
 - [ ] UNKNOWN 没有被转成 PASS；最终 Postcondition PASS 直接路由 SUCCEEDED。
+- [ ] Wait 使用已 pin 的 Ingress Contract、正的固定 timeout 和 Wait-scoped TIMEOUT；不创建 Wait-only Node / 作者级 polling。
+- [ ] Outcome-only 分支使用 routes；只有独立业务动作、提交或证据边界才拆 Node。
+- [ ] Create / Modify / Release 历史样本只用于识别业务边界，不复制旧 Callable / Node / arguments 结构。
 - [ ] 注释解释 why / source / 非显然约束；没有把执行语义写进注释。
 - [ ] 引用的外部标准、Owner / Provider Schema 和 OpenAPI Source Bundle 已固定版本与来源。
 - [ ] references 内容没有被误当作隐式 Runtime 输入。
@@ -331,3 +356,4 @@ Apply 前仍须由用户确认，并对同一候选源码与依赖锁执行正�
 | 2026-11-27 | 0.1.1 | GPT-6.2（ChatGPT） | §3.1、§4.1～4.2、§7～8、§10 | 修正 Procedure.inputs 仅允许 context SourcePath 的边界，补充 SourcePath 根与 Node Producer 引用；移除无依据的英文强制要求；区分 Skill 作者语义与 Owner / Runtime 契约所有权；修复示例的正常路由 | 避免作者指南超出 CA-SL 1.6.0 语言稿或引入无依据的语言约束 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.2 | GPT-6.2（ChatGPT） | §3、§5、§7、§10 | 补充 Assurance 有效性与模式边界、空 PredicateSet、静态 DAG 和 Node-entry Wait 的作者要求；将代码示例缩为不伪装可构建的注释片段 | 避免作者误把参考片段当作完整 1.6.0 Procedure 或把无效 Assurance 静默降级 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.3 | GPT-6.2（ChatGPT） | §4、§5 | 将 arguments 结构明确留给正式 1.6.0 Schema / Golden，不再由作者规范预设映射形状；补充 Wait 事件接受的隐式正常边约束 | 避免作者规范超出当前语言设计已冻结的语法边界 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.1.4 | GPT-6.2（ChatGPT） | §4～§7、§10、§12 | 对齐 Operation / Observation kind 与 Effect，明确 routes 的阶段归属、Wait timeout、分支拆分边界；加入 Create / Modify / Release 样本结构性裁决和注释正反例 | 消除 Node 过度拆分歧义，补齐 AC 所需的真实样本解释和注释反例 | Issue #49；IR-008；SR-032 |
