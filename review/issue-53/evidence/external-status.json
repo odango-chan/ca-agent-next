@@ -1,0 +1,96 @@
+{
+  "studio_main": "79bd2c3f64a90e7f0f169204c866a3218655bab1",
+  "studio_items": {
+    "261": {
+      "state": "open",
+      "title": "Import immutable Interface Package with Schema-driven CA-SL IntelliSense and read-only explorer",
+      "is_pull_request": false
+    },
+    "267": {
+      "state": "closed",
+      "title": "feat(studio): locked Interface ZIP and Schema-driven CA-SL IntelliSense (editor-only)",
+      "is_pull_request": true,
+      "draft": false,
+      "merged": true,
+      "merge_commit_sha": "11b124679746644f79bd82e296e253b7c463c179",
+      "head_sha": "78c626280629e42567746fecae4363809cfb158b",
+      "base_ref": "main",
+      "base_sha": "e716ad1bdb09ecb19c1c04e7b9eac315a58b5383",
+      "mergeable_state": "unknown"
+    },
+    "269": {
+      "state": "open",
+      "title": "Cut over Studio Compiler to v2.1.0 with exact locked Interface Package inputs",
+      "is_pull_request": false
+    },
+    "270": {
+      "state": "closed",
+      "title": "feat(example): ship pinned ca-client-tools v1.1.0 Interface Package in default Example",
+      "is_pull_request": true,
+      "draft": false,
+      "merged": true,
+      "merge_commit_sha": "d3b1d36e6574d7d9c87473a0ee2340727140fb71",
+      "head_sha": "d754d9aa948cbee086354fb2bc70b3f7f1f0deef",
+      "base_ref": "main",
+      "base_sha": "11b124679746644f79bd82e296e253b7c463c179",
+      "mergeable_state": "unknown"
+    },
+    "272": {
+      "state": "closed",
+      "title": "Build Compiler v2.1.0 Development requests from locked Interface Packages",
+      "is_pull_request": true,
+      "draft": false,
+      "merged": true,
+      "merge_commit_sha": "a8633553615d786e360a62c2b0042a27ae92d9d3",
+      "head_sha": "a542df4dc3c0fac1d31ce182107bad3211568470",
+      "base_ref": "main",
+      "base_sha": "db8353b93198d3c2751b6a3bef6597d04f6857a9",
+      "mergeable_state": "unknown"
+    },
+    "276": {
+      "state": "open",
+      "title": "Expose Compiler v2.1.0 Development Build and Verify in Studio Workers",
+      "is_pull_request": true,
+      "draft": true,
+      "merged": false,
+      "merge_commit_sha": null,
+      "head_sha": "7d6adebaca12f09d5ddc5e04f7457b8c15aa595e",
+      "base_ref": "feat/compiler-v2.1-snapshot-digest-20261124",
+      "base_sha": "3b3c4ac9d4b3a2f2e2380793d028d92f24c62c27",
+      "mergeable_state": "dirty"
+    },
+    "279": {
+      "state": "open",
+      "title": "P0: Establish Skill Studio Product Acceptance and complete architecture/code audit",
+      "is_pull_request": false
+    },
+    "290": {
+      "state": "open",
+      "title": "P1: Reconcile operational docs with current main and mark historical checkpoints",
+      "is_pull_request": false
+    },
+    "295": {
+      "state": "open",
+      "title": "fix(example): handle OPFS EntryNotFound for missing workspace settings during replacement",
+      "is_pull_request": false
+    },
+    "296": {
+      "state": "closed",
+      "title": "fix(example): retry transient settings read after publication",
+      "is_pull_request": true,
+      "draft": false,
+      "merged": true,
+      "merge_commit_sha": "73523df2f7538ad51d37f1eaca2a40ab07c1e9a1",
+      "head_sha": "0004982cfecbb2fbeeb07bc4c05f3af523115d22",
+      "base_ref": "main",
+      "base_sha": "665a0f5e6b07beef66b66706148d485c42c98ade",
+      "mergeable_state": "unknown"
+    }
+  },
+  "odango-chan/ca-client-tools": "7bcb2614aa3615d8358df31eecefd0909e894e40",
+  "odango-chan/ca-skills": "780497a2918ad3e7bdff554ab64b0ba627e867e0",
+  "odango-chan/ca-skill-compiler": "255ab85fa5abb4b0bf36656bf64250cafebf45cb",
+  "odango-chan/ca-agent-demo": "25168db031e996bfa4de440c4156ae94f4e19bce",
+  "ca-client-tools issue 43": "open",
+  "ca-skills issue 61": "open"
+}

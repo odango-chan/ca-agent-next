@@ -1,0 +1,655 @@
+{
+  "base_sha": "34e99e0cc54cc82b6b40040286fc84673432ef76",
+  "head_sha": "50a1c1496525c961b2ca6b1f9daaf2fb26ab3657",
+  "changed_files": 16,
+  "markdown_it_version": "4.3.0",
+  "git_version": "git version 2.55.0.windows.1",
+  "tree": {
+    "tracked_blobs": 197,
+    "markdown": 157,
+    "recursive_entries": 247,
+    "directory_trees": 50
+  },
+  "files": {
+    "docs/IR/IR 总登记册.md": {
+      "file": "docs/IR/IR 总登记册.md",
+      "lines": 135,
+      "parse": "OK",
+      "fences": 0,
+      "tables": 1,
+      "header_version": "0.1.26",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.1.26"
+      ],
+      "links": 69
+    },
+    "docs/SR/SR-016-工作台设计移交与条件编辑.md": {
+      "file": "docs/SR/SR-016-工作台设计移交与条件编辑.md",
+      "lines": 94,
+      "parse": "OK",
+      "fences": 0,
+      "tables": 1,
+      "header_version": "0.3.19",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.3.19"
+      ],
+      "links": 8
+    },
+    "docs/SR/SR-025-MAS Owner Interface Package Publisher.md": {
+      "file": "docs/SR/SR-025-MAS Owner Interface Package Publisher.md",
+      "lines": 140,
+      "parse": "OK",
+      "fences": 2,
+      "tables": 2,
+      "header_version": "0.1.10",
+      "header_date": null,
+      "last_revision": [
+        "2026-11-27",
+        "0.1.10"
+      ],
+      "links": 7
+    },
+    "docs/参考与审计/跨仓依赖与可行性审计.md": {
+      "file": "docs/参考与审计/跨仓依赖与可行性审计.md",
+      "lines": 201,
+      "parse": "OK",
+      "fences": 0,
+      "tables": 3,
+      "header_version": "0.2.18",
+      "header_date": null,
+      "last_revision": [
+        "2026-11-27",
+        "0.2.18"
+      ],
+      "links": 14
+    },
+    "docs/参考与审计/跨仓设计资产迁移与一致性审计.md": {
+      "file": "docs/参考与审计/跨仓设计资产迁移与一致性审计.md",
+      "lines": 319,
+      "parse": "OK",
+      "fences": 0,
+      "tables": 9,
+      "header_version": "0.4.44",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.4.44"
+      ],
+      "links": 51
+    },
+    "docs/架构设计/CA Agent Next 架构设计.md": {
+      "file": "docs/架构设计/CA Agent Next 架构设计.md",
+      "lines": 295,
+      "parse": "OK",
+      "fences": 2,
+      "tables": 5,
+      "header_version": "0.4.7",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.4.7"
+      ],
+      "links": 26
+    },
+    "docs/架构设计/外部能力域架构总览.md": {
+      "file": "docs/架构设计/外部能力域架构总览.md",
+      "lines": 98,
+      "parse": "OK",
+      "fences": 1,
+      "tables": 4,
+      "header_version": "0.2.3",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.2.3"
+      ],
+      "links": 33
+    },
+    "docs/治理/SR 总索引.md": {
+      "file": "docs/治理/SR 总索引.md",
+      "lines": 149,
+      "parse": "OK",
+      "fences": 0,
+      "tables": 3,
+      "header_version": "0.3.33",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.3.33"
+      ],
+      "links": 72
+    },
+    "docs/治理/功能树与需求追踪基线.md": {
+      "file": "docs/治理/功能树与需求追踪基线.md",
+      "lines": 279,
+      "parse": "OK",
+      "fences": 1,
+      "tables": 6,
+      "header_version": "0.6.28",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.6.28"
+      ],
+      "links": 74
+    },
+    "docs/治理/实施状态总览.md": {
+      "file": "docs/治理/实施状态总览.md",
+      "lines": 162,
+      "parse": "OK",
+      "fences": 0,
+      "tables": 8,
+      "header_version": "0.3.34",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.3.34"
+      ],
+      "links": 27
+    },
+    "docs/治理/文档总目录与索引.md": {
+      "file": "docs/治理/文档总目录与索引.md",
+      "lines": 229,
+      "parse": "OK",
+      "fences": 1,
+      "tables": 8,
+      "header_version": "0.4.38",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.4.38"
+      ],
+      "links": 64
+    },
+    "docs/治理/现有文档盘点与收敛计划.md": {
+      "file": "docs/治理/现有文档盘点与收敛计划.md",
+      "lines": 165,
+      "parse": "OK",
+      "fences": 0,
+      "tables": 4,
+      "header_version": "0.3.22",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.3.22"
+      ],
+      "links": 9
+    },
+    "docs/设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md": {
+      "file": "docs/设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md",
+      "lines": 222,
+      "parse": "OK",
+      "fences": 2,
+      "tables": 3,
+      "header_version": "0.2.14",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.2.14"
+      ],
+      "links": 8
+    },
+    "docs/设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md": {
+      "file": "docs/设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md",
+      "lines": 137,
+      "parse": "OK",
+      "fences": 1,
+      "tables": 4,
+      "header_version": "0.3.10",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.3.10"
+      ],
+      "links": 5
+    },
+    "docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md": {
+      "file": "docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md",
+      "lines": 192,
+      "parse": "OK",
+      "fences": 0,
+      "tables": 5,
+      "header_version": "0.3.12",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.3.12"
+      ],
+      "links": 29
+    },
+    "docs/验收与实施/演示验收基线.md": {
+      "file": "docs/验收与实施/演示验收基线.md",
+      "lines": 283,
+      "parse": "OK",
+      "fences": 1,
+      "tables": 8,
+      "header_version": "0.3.20",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.3.20"
+      ],
+      "links": 14
+    }
+  },
+  "markdown_parse_errors": [],
+  "table_errors": [],
+  "metadata": [
+    {
+      "file": "docs/IR/IR 总登记册.md",
+      "lines": 135,
+      "parse": "OK",
+      "fences": 0,
+      "tables": 1,
+      "header_version": "0.1.26",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.1.26"
+      ],
+      "links": 69
+    },
+    {
+      "file": "docs/SR/SR-016-工作台设计移交与条件编辑.md",
+      "lines": 94,
+      "parse": "OK",
+      "fences": 0,
+      "tables": 1,
+      "header_version": "0.3.19",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.3.19"
+      ],
+      "links": 8
+    },
+    {
+      "file": "docs/SR/SR-025-MAS Owner Interface Package Publisher.md",
+      "lines": 140,
+      "parse": "OK",
+      "fences": 2,
+      "tables": 2,
+      "header_version": "0.1.10",
+      "header_date": null,
+      "last_revision": [
+        "2026-11-27",
+        "0.1.10"
+      ],
+      "links": 7
+    },
+    {
+      "file": "docs/参考与审计/跨仓依赖与可行性审计.md",
+      "lines": 201,
+      "parse": "OK",
+      "fences": 0,
+      "tables": 3,
+      "header_version": "0.2.18",
+      "header_date": null,
+      "last_revision": [
+        "2026-11-27",
+        "0.2.18"
+      ],
+      "links": 14
+    },
+    {
+      "file": "docs/参考与审计/跨仓设计资产迁移与一致性审计.md",
+      "lines": 319,
+      "parse": "OK",
+      "fences": 0,
+      "tables": 9,
+      "header_version": "0.4.44",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.4.44"
+      ],
+      "links": 51
+    },
+    {
+      "file": "docs/架构设计/CA Agent Next 架构设计.md",
+      "lines": 295,
+      "parse": "OK",
+      "fences": 2,
+      "tables": 5,
+      "header_version": "0.4.7",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.4.7"
+      ],
+      "links": 26
+    },
+    {
+      "file": "docs/架构设计/外部能力域架构总览.md",
+      "lines": 98,
+      "parse": "OK",
+      "fences": 1,
+      "tables": 4,
+      "header_version": "0.2.3",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.2.3"
+      ],
+      "links": 33
+    },
+    {
+      "file": "docs/治理/SR 总索引.md",
+      "lines": 149,
+      "parse": "OK",
+      "fences": 0,
+      "tables": 3,
+      "header_version": "0.3.33",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.3.33"
+      ],
+      "links": 72
+    },
+    {
+      "file": "docs/治理/功能树与需求追踪基线.md",
+      "lines": 279,
+      "parse": "OK",
+      "fences": 1,
+      "tables": 6,
+      "header_version": "0.6.28",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.6.28"
+      ],
+      "links": 74
+    },
+    {
+      "file": "docs/治理/实施状态总览.md",
+      "lines": 162,
+      "parse": "OK",
+      "fences": 0,
+      "tables": 8,
+      "header_version": "0.3.34",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.3.34"
+      ],
+      "links": 27
+    },
+    {
+      "file": "docs/治理/文档总目录与索引.md",
+      "lines": 229,
+      "parse": "OK",
+      "fences": 1,
+      "tables": 8,
+      "header_version": "0.4.38",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.4.38"
+      ],
+      "links": 64
+    },
+    {
+      "file": "docs/治理/现有文档盘点与收敛计划.md",
+      "lines": 165,
+      "parse": "OK",
+      "fences": 0,
+      "tables": 4,
+      "header_version": "0.3.22",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.3.22"
+      ],
+      "links": 9
+    },
+    {
+      "file": "docs/设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md",
+      "lines": 222,
+      "parse": "OK",
+      "fences": 2,
+      "tables": 3,
+      "header_version": "0.2.14",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.2.14"
+      ],
+      "links": 8
+    },
+    {
+      "file": "docs/设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md",
+      "lines": 137,
+      "parse": "OK",
+      "fences": 1,
+      "tables": 4,
+      "header_version": "0.3.10",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.3.10"
+      ],
+      "links": 5
+    },
+    {
+      "file": "docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md",
+      "lines": 192,
+      "parse": "OK",
+      "fences": 0,
+      "tables": 5,
+      "header_version": "0.3.12",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.3.12"
+      ],
+      "links": 29
+    },
+    {
+      "file": "docs/验收与实施/演示验收基线.md",
+      "lines": 283,
+      "parse": "OK",
+      "fences": 1,
+      "tables": 8,
+      "header_version": "0.3.20",
+      "header_date": "2026-11-27",
+      "last_revision": [
+        "2026-11-27",
+        "0.3.20"
+      ],
+      "links": 14
+    }
+  ],
+  "metadata_mismatches": [],
+  "links": {
+    "total": 510,
+    "local": 312,
+    "same_file_anchors": 1,
+    "fragment_links": 47,
+    "missing_paths": [],
+    "missing_anchors": [],
+    "external_not_run": 197
+  },
+  "diff_check": {
+    "exit": 0,
+    "warnings": [],
+    "count": 0
+  },
+  "sr": {
+    "count": 27,
+    "distribution": {
+      "VERIFIED": 4,
+      "DRAFT": 21,
+      "IMPLEMENTED": 1,
+      "READY": 1
+    },
+    "files": {
+      "SR-001": {
+        "file": "docs/SR/SR-001-评审上下文自动生成.md",
+        "version": "0.3.10",
+        "status_raw": "VERIFIED（[PR #32](https://github.com/odango-chan/ca-agent-next/pull/32) MERGED，合并 SHA `7a0fac41e573021207ab8201bbc718718c451e50`；受测 HEAD `9d061c0c06d5d2ebba4be3cde9143ec6db413a3e` 的 AC-REV-01～10 全部 PASS，80 项专项测试、真实 Workflow 与三份 Artifact 已核对；外部 Harness 自动消费不是本 SR 范围）",
+        "status": "VERIFIED"
+      },
+      "SR-002": {
+        "file": "docs/SR/SR-002-Python 核心与宿主基础骨架.md",
+        "version": "0.2.10",
+        "status_raw": "VERIFIED；实现已集成，AC-002-01～AC-002-08 全部 PASS；EX-01 NOT_RUN",
+        "status": "VERIFIED"
+      },
+      "SR-003": {
+        "file": "docs/SR/SR-003-统一插件管理器与扩展通信.md",
+        "version": "0.3.11",
+        "status_raw": "VERIFIED（SR-003 模块 AC-003-01～04 全部 PASS；PR #34/#41 MERGED，双平台真实 CI SUCCESS）；系统 EX-02/03/04/18 NOT_RUN，Provider v2 wire DTO 归 SR-010",
+        "status": "VERIFIED"
+      },
+      "SR-004": {
+        "file": "docs/SR/SR-004-已发布技能包导入.md",
+        "version": "0.1.6\\",
+        "status_raw": "DRAFT；设计基线待评审，不允许实施",
+        "status": "DRAFT"
+      },
+      "SR-005": {
+        "file": "docs/SR/SR-005-技能目录与条件程序消费.md",
+        "version": "0.1.5\\",
+        "status_raw": "DRAFT；设计基线待评审，不允许实施",
+        "status": "DRAFT"
+      },
+      "SR-006": {
+        "file": "docs/SR/SR-006-技能解析器与续跑选择.md",
+        "version": "0.1.5\\",
+        "status_raw": "DRAFT；设计基线待评审，不允许实施",
+        "status": "DRAFT"
+      },
+      "SR-007": {
+        "file": "docs/SR/SR-007-统一运行时动作边界与双执行模式.md",
+        "version": "0.1.4\\",
+        "status_raw": "DRAFT；设计基线待评审，不允许实施",
+        "status": "DRAFT"
+      },
+      "SR-008": {
+        "file": "docs/SR/SR-008-Echo 垂直端到端示例.md",
+        "version": "0.1.9\\",
+        "status_raw": "DRAFT；设计基线待评审，不允许实施",
+        "status": "DRAFT"
+      },
+      "SR-009": {
+        "file": "docs/SR/SR-009-OpenAMSM SBI 事件插件与二进制产物交接.md",
+        "version": "0.2.0",
+        "status_raw": "DRAFT；设计基线待评审，不允许实施",
+        "status": "DRAFT"
+      },
+      "SR-010": {
+        "file": "docs/SR/SR-010-OpenAMSM 工具插件与按需编解码集成.md",
+        "version": "0.1.9",
+        "status_raw": "DRAFT；设计基线待评审，不允许实施",
+        "status": "DRAFT"
+      },
+      "SR-011": {
+        "file": "docs/SR/SR-011-真实 OpenAMSM 创建修改释放端到端验证.md",
+        "version": "0.2.1",
+        "status_raw": "DRAFT；设计基线待评审，不允许实施",
+        "status": "DRAFT"
+      },
+      "SR-012": {
+        "file": "docs/SR/SR-012-Compiler设计归档与跨仓收敛.md",
+        "version": "0.1.2",
+        "status_raw": "DRAFT",
+        "status": "DRAFT"
+      },
+      "SR-013": {
+        "file": "docs/SR/SR-013-Compiler已检查when与发布产物.md",
+        "version": "0.2.8\\",
+        "status_raw": "DRAFT（设计补充待评审；不得据此启动产品实施）",
+        "status": "DRAFT"
+      },
+      "SR-015": {
+        "file": "docs/SR/SR-015-工具契约设计移交.md",
+        "version": "0.3.8",
+        "status_raw": "IMPLEMENTED（设计移交 PR #37 已合入恢复分支；VERIFIED 仍待完整验收证据）",
+        "status": "IMPLEMENTED"
+      },
+      "SR-016": {
+        "file": "docs/SR/SR-016-工作台设计移交与条件编辑.md",
+        "version": "0.3.19",
+        "status_raw": "DRAFT",
+        "status": "DRAFT"
+      },
+      "SR-017": {
+        "file": "docs/SR/SR-017-业务插件设计移交.md",
+        "version": "0.2.5\\",
+        "status_raw": "DRAFT；原始候选设计已迁入，Plugin 实现 NOT_STARTED",
+        "status": "DRAFT"
+      },
+      "SR-018": {
+        "file": "docs/SR/SR-018-业务所有者设计移交.md",
+        "version": "0.2.1",
+        "status_raw": "DRAFT；Owner 原始设计与实现材料已迁入，Next 集成未验收",
+        "status": "DRAFT"
+      },
+      "SR-019": {
+        "file": "docs/SR/SR-019-仿真对端设计移交.md",
+        "version": "0.2.3\\",
+        "status_raw": "DRAFT；原始设计已迁入，Next 集成验收未执行",
+        "status": "DRAFT"
+      },
+      "SR-020": {
+        "file": "docs/SR/SR-020-参考宿主设计移交.md",
+        "version": "0.2.5\\",
+        "status_raw": "DRAFT；参考架构原文已迁入，Next 适配差异待评审",
+        "status": "DRAFT"
+      },
+      "SR-021": {
+        "file": "docs/SR/SR-021-原生宿主设计移交.md",
+        "version": "0.2.1",
+        "status_raw": "DRAFT；当前架构与契约原文已迁入，Next 晋级决策未作出",
+        "status": "DRAFT"
+      },
+      "SR-022": {
+        "file": "docs/SR/SR-022-执行内核设计移交.md",
+        "version": "0.2.2\\",
+        "status_raw": "DRAFT；原始设计已迁入，Next Runtime 对照验收待评审",
+        "status": "DRAFT"
+      },
+      "SR-023": {
+        "file": "docs/SR/SR-023-技能作者源与语言规范移交.md",
+        "version": "0.2.3",
+        "status_raw": "DRAFT；规范原文已迁入，Compiler/Next 消费端验收待完成",
+        "status": "DRAFT"
+      },
+      "SR-024": {
+        "file": "docs/SR/SR-024-Host Context Interface Package Publisher.md",
+        "version": "0.1.12",
+        "status_raw": "VERIFIED（AC-024-01～07 均有真实 PASS 证据；Publisher 已合并至 ca-agent-demo/main；GitHub Review 保持 COMMENTED、PR checks 为 SKIPPED，不将其冒记为 APPROVED/CI PASS；本地 AC-024-06 验收命令已 PASS）",
+        "status": "VERIFIED"
+      },
+      "SR-025": {
+        "file": "docs/SR/SR-025-MAS Owner Interface Package Publisher.md",
+        "version": "0.1.10",
+        "status_raw": "READY",
+        "status": "READY"
+      },
+      "SR-026": {
+        "file": "docs/SR/SR-026-Codec公开工具发布.md",
+        "version": "0.1.1",
+        "status_raw": "DRAFT",
+        "status": "DRAFT"
+      },
+      "SR-027": {
+        "file": "docs/SR/SR-027-技能Bundle构建与发布.md",
+        "version": "0.1.1",
+        "status_raw": "DRAFT",
+        "status": "DRAFT"
+      },
+      "SR-028": {
+        "file": "docs/SR/SR-028-Python工程工具链与uv环境管理.md",
+        "version": "0.1.2",
+        "status_raw": "DRAFT；设计待独立评审，不可实施",
+        "status": "DRAFT"
+      }
+    }
+  }
+}

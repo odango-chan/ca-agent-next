@@ -1,0 +1,32 @@
+[
+  {
+    "number": 34,
+    "state": "closed",
+    "merged": true,
+    "head_sha": "e8bcb1b89de5094a4b1b68f973af6720801c7fbd",
+    "base_ref": "docs/restore-original-designs-20261125",
+    "merge_commit_sha": "32c7c1be5e93bddc83349234476b2ffa09e1ca23",
+    "merged_at": "2026-11-26T12:04:09Z",
+    "title": "feat(plugin): SR-003 unified Plugin Manager and IPC extensions (#28)"
+  },
+  {
+    "number": 41,
+    "state": "closed",
+    "merged": true,
+    "head_sha": "f3f59b54e19d317e8e8056e5a15963c3fd038aaf",
+    "base_ref": "docs/restore-original-designs-20261125",
+    "merge_commit_sha": "a899409ea7bf2ffde20ea2d62a9b4a310fb5638c",
+    "merged_at": "2026-11-26T12:18:00Z",
+    "title": "docs(sr-003): record PR #34 MERGED and mark implementation IMPLEMENTED (#28)"
+  },
+  {
+    "number": 42,
+    "state": "closed",
+    "merged": true,
+    "head_sha": "c57395504a470b5293a5749c58daafd6ad564ff2",
+    "base_ref": "docs/restore-original-designs-20261125",
+    "merge_commit_sha": "34e99e0cc54cc82b6b40040286fc84673432ef76",
+    "merged_at": "2026-11-26T12:28:12Z",
+    "title": "docs(sr-003): verify module AC-003-01..04 and close implementation gate (#28)"
+  }
+]

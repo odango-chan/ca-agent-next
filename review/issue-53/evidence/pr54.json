@@ -1,0 +1,19 @@
+{
+  "number": 54,
+  "state": "open",
+  "draft": true,
+  "created_at": "2026-11-27T02:55:35Z",
+  "updated_at": "2026-11-27T05:44:03Z",
+  "merged": false,
+  "mergeable": true,
+  "mergeable_state": "clean",
+  "changed_files": 16,
+  "commits": 110,
+  "additions": 414,
+  "deletions": 242,
+  "merge_commit_sha": "42a8e0059514928aee605aded60ee7206be31546",
+  "base_ref": "docs/restore-original-designs-20261125",
+  "base_sha": "34e99e0cc54cc82b6b40040286fc84673432ef76",
+  "head_ref": "docs/issue-53-refresh-state-reconciliation",
+  "head_sha": "50a1c1496525c961b2ca6b1f9daaf2fb26ab3657"
+}
