@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.50
+> 文档版本：0.3.51
 > 状态：30 项 SR：4 VERIFIED、1 IMPLEMENTED、25 DRAFT（原 24 项 PR #46 评审批次 + SR-031 增量待评审），SR-003 模块 AC PASS，系统 EX NOT_RUN
 > 修订日期：2026-11-27\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -51,7 +51,7 @@
 | [SR-028](../SR/SR-028-Python工程工具链与uv环境管理.md) | [IR-007](../IR/IR%20总登记册.md#ir-007) | Python 工程工具链与 uv 环境管理 | DRAFT |
 | [SR-029](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) | [IR-008](../IR/IR%20总登记册.md#ir-008)（关联 IR-003） | CA-SL 1.6.0 Capability-first 作者模型与 Callable 双向一对一；完全无旧版兼容 | **DRAFT（设计待评审，非实施 READY）** |
 | [SR-030](../SR/SR-030-Host%20Context%201.6.0%20Schema-only%20Interface%20Package%20Publisher.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Host Context 1.6.0 Schema-only Interface Package Publisher | DRAFT |
-| [SR-031](../SR/SR-031-3GPP公共Schema-only-Publisher.md) | [IR-009](../IR/IR%20总登记册.md#ir-009) | 3GPP 公共 Schema-only Interface Package Publisher（ca-skills；0 Capability / 0 Callable） | **DRAFT（增量设计待评审、实施 BLOCKED_EXTERNAL_INPUT）** |
+| [SR-031](../SR/SR-031-3GPP公共Schema-only-Publisher.md) | [IR-009](../IR/IR%20总登记册.md#ir-009) | 3GPP 原版 YAML 代发布（ca-skills；可选独立 0/0 Adapter） | **DRAFT（增量设计待评审、实施 BLOCKED_EXTERNAL_INPUT）** |
 
 设计版本与章节、依赖、验收 ID、实施证据以各 SR 为准。逐项阻塞见[就绪审计](../参考与审计/跨仓设计资产迁移与一致性审计.md#8-设计就绪审计)。
 
@@ -96,7 +96,7 @@
 | SR-027 | 1.6.0 技能 Bundle 发布 | **BLOCKED_EXTERNAL_INPUT**（五根同批作者源、Echo Interface、Compiler 正式 Release/argv，见 SR-027 §5.1） | DRAFT |
 | SR-028 | uv Python 工程工具链 | **第三轮自评：DESIGN_READY_FOR_INDEPENDENT_REVIEW**（第二轮 CHANGES_REQUESTED 为历史；uv 全量回归与仅改 Review Context workflow 的双平台触发，待独立结论） | DRAFT |
 | SR-029 | 1.6.0 Capability-first 一对一绑定 | **第三轮自评：DESIGN_READY_FOR_INDEPENDENT_REVIEW**（第二轮 CHANGES_REQUESTED 为历史；1.6.0 唯一语言、Owner 24/24、Provider 2/2 与全量 3/3，待独立结论） | DRAFT |
-| SR-031 | 3GPP 公共 Schema-only Publisher 与 Create/Modify 类型来源 | **新增 IR-009 / Issue #47**：DRAFT / REVIEW_REQUESTED，未进入 PR #46 原 24 项第二轮独立评审；待正式 ca-skills 1.6.0 Package Schema/Golden、源标准锁及 Codec Producer/Compiler 交接后才可实施 READY | DRAFT |
+| SR-031 | OpenAMSM 3GPP 原版 YAML 原样代发布与可选类型 Adapter | **新增 IR-009 / Issue #47**：DRAFT / REVIEW_REQUESTED，未进入 PR #46 原 24 项第二轮独立评审；待正式 ca-skills 1.6.0 Package Schema/Golden、源标准锁及 Codec Producer/Compiler 交接后才可实施 READY | DRAFT |
 | SR-030 | Host Context 1.6.0 Schema-only Publisher；0 Capability / 0 Callable，精确 Schema export；与 SR-013 AC-013-06 联合验收 | APPROVE_FOR_READY（Schema-only 设计与 AC-030-01 固定源审计） | DRAFT |
 
 上述专项评审按单版本 1.6.0 和 Capability↔Callable 一对一原则校核；历史 v1alpha5、Compiler v2.1.0、Owner v1alpha4 和 Provider v1.2.0 只可作迁移/审计来源。旧来源中的身份、Build DTO、Artifact、Bundle 或测试不得自动证明新版发布/可实施。SR-029 新契约尚未发布，Compiler #61、Publisher、Skill Bundle 等真实前置仍保持各自 BLOCKED/NOT_RUN；SR-028 的 uv 工具链设计可独立于这些外部发布审查。
@@ -118,7 +118,7 @@ PR #46 上述十项第二轮 CHANGES_REQUESTED 已按各自反例复核并登记
 | 1 | SR-023 | CA-SL v1alpha5、作者源与发布基线恢复 | ca-skills | 先固定语言、Skill 作者源与版本边界；Compiler #61 仍是外部 OPEN 依赖 |
 | 2 | SR-015 | Tool Interface / Provider / Codec 设计恢复 | ca-client-tools → Next F03.05 | IMPLEMENTED；SR-015 合并时 F03.05 v0.3.9（现行 v0.4.4）；SR-015 v0.3.8；PR #37 MERGED，产品代码未实现 |
 | 3 | SR-025 | MAS Owner 1.6.0 Capability-first Interface Package Publisher | ca-client-tools → Next F03.05 / F09 | 新 Owner 24/24 Capability↔Callable 发布；历史 24/25、Development v1alpha1 和 1.0.0 仅审计；具体新机器 Schema/版本待 Owner/Compiler 冻结 |
-| 4a | SR-031 | 3GPP 公共 Schema-only Publisher | ca-skills → Next EC01/F06 | DRAFT / REVIEW_REQUESTED；独立于 SR-030 Host Context；新 Package Source Lock/Schema exports/Compiler 字段未发布，AC-031-01～07 NOT_RUN |
+| 4a | SR-031 | 3GPP 原版 YAML 代发布及可选 Adapter | ca-skills → Next EC01/F06 | DRAFT / REVIEW_REQUESTED；独立于 SR-030 Host Context；新 Package Source Lock/Schema exports/Compiler 字段未发布，AC-031-01～07 NOT_RUN |
 | 4 | SR-030 | Host Context 1.6.0 Schema-only Interface Package Publisher | ca-agent-demo → Next F09 | DRAFT；固定原始 Schema 来源；0 Capability / 0 Callable；新 Package Schema、languageTarget 和 SemVer 待冻结，AC-030-01～07 NOT_RUN；SR-024 VERIFIED 仅作为旧 v1alpha5 Development Publisher 历史证据 |
 | 5 | SR-018 | OpenAMSM Owner 权威状态恢复 | env-openamsm | 固定 Callable、Receipt、Commit Proof、Reconcile 和 Modify/Release 边界 |
 | 6 | SR-019 | Mock AMF / 5GC 仿真对端恢复 | env-5gc-sim | 固定协议对端、World、进程和真实测试边界 |
@@ -149,6 +149,8 @@ PR #46 上述十项第二轮 CHANGES_REQUESTED 已按各自反例复核并登记
 ### 3.3 实质修订与设计复评追踪
 
 本轮 #46 以 1.6.0-only 的规范性内容实际替换旧 Compiler/Studio/Publisher 实施要求：EC02、SR-013 统一新 Parser/BuildRequest/Binding；F09/SR-016、SR-025 重写新版本验收；F02/F03/F03.05/F04/F06/F08 修正新旧规范冲突；SR-005～011 分开四类依赖、定义模块 AC；SR-012 和 SR-017～023 明确设计移交的独立静态 AC。设计评审与实际发布、实施和系统 E2E 分离，**当前 24 项实施 SR 仍为 DRAFT**；新 1.6.0 机器 Schema、正式 Owner/Compiler/Bundle 发布物尚未交付，产品验收 NOT_RUN。
+
+**IR-009 / SR-031 范围裁决（2026-11-27）**：[EC01.3GPP](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md) 第一阶段只代发布 **OpenAMSM 真正支持版本的 3GPP 原版 YAML**，所有文件逐字节不改；可选 CA-SL 1.6.0 G.4 Adapter 必须另行签认发布，原版 Bundle 不可冒充编译可用 Schema-only 包。SR-026 的 Codec Output Schema/消息 Profile 属于 ca-client-tools，与原件版本锁对应；此裁决不改变 PR #46 原 24 项的独立评审结论或已拆分的模块 AC。SR-031 Phase A 独立 Source Lock/byte compare AC 可先评议，B/Codec/Bundle 未发布仍 BLOCKED。
 
 ## 4. 当前基线说明
 - SR-002 设计 PR [#20](https://github.com/odango-chan/ca-agent-next/pull/20) 已 MERGED（`281ccb957b9222e72175e210d1afed177aa8a14f`）；实施 PR [#23](https://github.com/odango-chan/ca-agent-next/pull/23) 已 MERGED（`49964464e19d13d219ea0b3513d2223fe81d2435`）；设计 Issue #19 与治理 Issue #21 已关闭。SR-002 为 VERIFIED，AC-002-01～08 PASS；EX-01、CPython 3.11/3.12/3.13 矩阵及 DeepSeek Harness 仍 NOT_RUN。实施 Issue [#22](https://github.com/odango-chan/ca-agent-next/issues/22) 由本次证据回填 PR #25 合并关闭。
@@ -226,3 +228,4 @@ PR #46 上述十项第二轮 CHANGES_REQUESTED 已按各自反例复核并登记
 | 2026-11-27 | 0.3.48 | GPT-6（ChatGPT） | §2.1～2.2、修订记录 | 十项第二轮需修订的设计登记第三轮自评候选，十二项限定认可保留，SR-026/027 精确列缺件；主状态 24 DRAFT 不变 | 为外部独立评审形成逐项可复核入口，禁止把作者自评误作实施 READY | Issue #12；PR #46；SR-004～030 |
 | 2026-11-27 | 0.3.49 | GPT-6（ChatGPT） | §2.1～2.2、修订记录 | 调整第三轮自评段落与原有规范性来源警示的阅读顺序，改用稳定文件路径 | 避免拆断规范性段落或误导评审者访问未经核实的自动生成锚点 | Issue #12；PR #46 |
 | 2026-11-27 | 0.3.50 | ChatGPT / GPT-6 | §2～4、修订记录 | 新增 IR-009/SR-031，登记原 24 项评审批次之外的 3GPP 公共 Schema 发布与 T1/T2 Codec 消费分期，统计为 30 项 | 保留历史评审结论边界，不把新增类型契约冒充 READY | Issue #47；SR-031；SR-026/010/013/027 |
+| 2026-11-27 | 0.3.51 | ChatGPT / GPT-6 | IR-009 标准代发布原则 | 只随 OpenAMSM 采用版本发布原件，YAML 不做任何修改，独立 Adapter 与 Codec Output 分界 | 落实最新版本/原版无变更裁决并修正导航 | Issue #47；SR-031 |
