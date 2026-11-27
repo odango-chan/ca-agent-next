@@ -39,7 +39,7 @@ Deterministic Procedure 与 LLM-guided **统一提交概念 Action Request**：`
 Runtime 分发前必须按固定顺序：
 
 1. 验证 Run 状态、当前绑定的 Skill、固定 Catalog generation，以及当前 stage 对应合法 Procedure/LLM 执行上下文。
-2. 对业务 Capability，从 **1.6.0 已发布 Artifact 的 `capabilityBindings`** 根据该 Skill/Capability ID 精确查出唯一公开 Callable；Binding 缺失、多个命中、重复归属、未授权或处于历史 API 的输入全部 fail-closed。对 `host.skill-script.execute`，不查业务 Artifact Binding，转入 Host Script Execution 专用检查：必须存在当前 Skill 固定 Package snapshot 的 scripts/manifest.yaml，且目标 scriptId 的 llmInvocable=true、purpose=transform，并受 Host policy 允许；任何不满足条件均 fail-closed。
+2. 对业务 Capability，从 **1.6.0 已发布 Artifact 的 `capabilityBindings`** 根据该 Skill/Capability ID 精确查出唯一公开 Callable；Binding 缺失、多个命中、重复归属、未授权或处于历史 API 的输入全部 fail-closed。对 `host.skill-script.execute`，不查业务 Artifact Binding，转入 Host Script Execution 专用检查：必须存在当前 Skill 固定 Package snapshot 的 scripts/manifest.yaml，且目标 scriptId 的 llmInvocable=true、purpose=transform，并且 `scriptExecution.llmEnabled=true`；该设置默认 false。任何不满足条件均 fail-closed。
 3. 验证 Capability 处于该 Skill 的已检查授权集合；`operation.capability` 只能使用 kind=operation，`observation.capability` 只能使用 kind=observation 且 Effect=READ。Callable 的 kind/Effect/Schema/Owner identity 来自已编译 Binding 和部署固定的正式契约，不能由模型覆盖。
 4. 验证 Provider Interface 或 Owner Contract Package 的固定来源身份、Version/Publication/Manifest identity、准确 Callable exports 与 Schema；Provider 安装的 Interface snapshot/Runtime Bindings sidecar 必须与 Artifact 绑定的身份一致。缺失、版本不符、歧义、Scope 不匹配不得派发。
 5. 在 Host-owned ArtifactStore 内校验本次 Invocation 的 Artifact Reference 及 Schema、Effect、deadline/budget 和 continuation 约束；**所有拒绝发生在 Plugin IPC 之前**，其 dispatch/Owner mutation 计数必须为 0。
@@ -57,7 +57,7 @@ Runtime 分发前必须按固定顺序：
 
 没有 Assurance Artifact 的 Skill 只能使用 LLM-guided。有有效 Assurance Artifact 的 Skill 也可以使用 LLM-guided，但仍然受该 Skill 的 Callable Scope、Context 和 Runtime Action Boundary 约束。LLM 提出的 Action 不编译成临时 Procedure，不为每个 Action 调用 Compiler。
 
-对于没有 Assurance 的 Skill，业务 Capability Scope 仍为空；模型可生成指导答复或请求澄清。若 Package 同时包含 scripts/manifest.yaml，且至少一个 transform Script 标记 llmInvocable=true，Host policy 也启用脚本执行，则 Host 可额外提供 `host.skill-script.execute` system Capability。该系统能力只允许调用当前 Skill 的精确 Script ID，不增加业务 Capability Scope。模型文本、已安装的 ToolCatalog 和 Plugin 列表均不能赋予业务调用权限。若模型提出未授权业务 Tool Action、未登记 Script ID 或任意代码/路径，Runtime 在 dispatch 前拒绝并记录诊断。
+对于没有 Assurance 的 Skill，业务 Capability Scope 仍为空；模型可生成指导答复或请求澄清。若 Package 同时包含 scripts/manifest.yaml，且至少一个 transform Script 标记 llmInvocable=true，Host 配置 `scriptExecution.llmEnabled=true`，则 Host 可额外提供 `host.skill-script.execute` system Capability。该系统能力只允许调用当前 Skill 的精确 Script ID，不增加业务 Capability Scope。模型文本、已安装的 ToolCatalog 和 Plugin 列表均不能赋予业务调用权限。若模型提出未授权业务 Tool Action、未登记 Script ID 或任意代码/路径，Runtime 在 dispatch 前拒绝并记录诊断。
 
 Deterministic Procedure 的 `operation.script` 经 Compiler 映射到 Host Script Runner；LLM-guided Script Action 使用相同的 Registry、脚本字节、输入/输出 Schema 和 Runner。Predicate Script 由 Runtime 内部纯求值入口调用，不作为模型 Action 暴露。两种模式共享同一个 Runtime Action Boundary、Plugin Manager 和 Script Runner；只有业务 Capability Action 产生 Owner Outcome / Evidence，纯 Script 不产生业务提交证明。
 
@@ -133,7 +133,7 @@ Runtime 从当前 Artifact 的 capabilityBindings 中按 Capability ID 解析唯
 
 Host Script Execution 是 Host-owned system Capability `host.skill-script.execute`，由现有 Plugin Manager 下的 Host 内建 Tools Extension 实现；不新增 Plugin Manager、Tool Registry 或第二条 IPC。它不是 Owner / Provider 业务 Capability，不进入 Contract.capabilities，也不占用外部 Capability Binding。
 
-Action 输入固定为 `scriptId` 与 JSON `input`。Runtime 必须校验当前 Run / Skill / Package snapshot、Script Registry 条目、`purpose=transform`、`llmInvocable=true`、Host policy、输入 Schema、deadline / budget；Script Runner 解析 manifest 中的精确 file / entrypoint，执行后校验 outputSchema。模型不得提交 file、entrypoint、源代码、模块、命令或任意路径。
+Action 输入固定为 `scriptId` 与 JSON `input`。Runtime 必须校验当前 Run / Skill / Package snapshot、Script Registry 条目、`purpose=transform`、`llmInvocable=true`、`scriptExecution.llmEnabled=true`、输入 Schema、deadline / budget；Script Runner 解析 manifest 中的精确 file / entrypoint，执行后校验 outputSchema。模型不得提交 file、entrypoint、源代码、模块、命令或任意路径。
 
 Deterministic Procedure 的 `operation.script` 使用同一 Runner，但 Script ID 由已编译 Procedure 固定；LLM-guided 只能调用 Registry 显式开放的 Script ID。Predicate Script 由内部 Predicate evaluator 调用，不出现在模型 Action 列表。所有脚本只允许纯本地计算，禁止网络、任意文件系统、子进程、环境秘密、时钟、随机数、动态加载、Tool / Capability 调用和外部副作用。需要业务副作用必须调用正式业务 Capability。
 
