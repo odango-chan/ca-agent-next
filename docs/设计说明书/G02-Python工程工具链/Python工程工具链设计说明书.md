@@ -239,7 +239,7 @@ uv run --locked --group dev --extra plugins python -m ca_agent_next --smoke
 | `ubuntu-latest` | `3.12` | 从 `examples/echo/plugin/go.mod` 读取，满足 `go 1.24` |
 | `windows-latest` | `3.14.6` | 从 `examples/echo/plugin/go.mod` 读取，满足 `go 1.24` |
 
-不得使用浮动的 Windows `3.14`。两个矩阵 Job 均显式安装/查找矩阵解释器，记录 `python --version`；Windows 必须精确断言 `Python 3.14.6`。两个 Job 的 uv sync/run 必须显式传入 `--python "$PY"`。Linux Job 使用 `shell: bash`，Windows Job 使用 `shell: pwsh`；分别使用 Bash 的 `PY="$(uv python find "$PYTHON_VERSION")"` 和 PowerShell 的 `$PY = (uv python find $env:PYTHON_VERSION)` 原生变量语法。命令示例按对应 shell 单独给出，不得跨 shell 复制变量表达式。
+不得使用浮动的 Windows `3.14`。两个矩阵 Job 均显式安装/查找矩阵解释器，记录 `python --version`；Windows 必须精确断言 `Python 3.14.6`。两个 Job 的 uv sync/run 必须显式传入 `--python "$PY"`。Python/uv 步骤在 Linux 使用 `shell: bash`、在 Windows 使用 `shell: pwsh`；Go Echo 构建步骤在两个 Runner 上均使用 `shell: bash`。Windows Git Bash 下 `go env GOOS` 为 `windows` 时必须生成并清理 `echo-plugin.exe`。不得把 Python/uv shell 约定扩大到 Go 步骤。
 
 拟实施的矩阵步骤（示例不是运行证据）：
 
@@ -266,11 +266,10 @@ steps:
     run: |
       set -euo pipefail
       mkdir -p bin
-      if [ "$RUNNER_OS" = "Windows" ]; then
-        rm -f bin/echo-plugin.exe
+      rm -f bin/echo-plugin bin/echo-plugin.exe
+      if [ "$(go env GOOS)" = "windows" ]; then
         go build -trimpath -o bin/echo-plugin.exe .
       else
-        rm -f bin/echo-plugin
         go build -trimpath -o bin/echo-plugin .
       fi
   - name: Install and test Linux matrix Python
@@ -281,12 +280,12 @@ steps:
       uv python install "$PYTHON_VERSION"
       PY="$(uv python find "$PYTHON_VERSION")"
       "$PY" --version
+      mkdir -p artifacts/sr028/unittest-gate
       uv sync --python "$PY" --locked --group dev --extra plugins
-      uv run --python "$PY" --locked --group dev --extra plugins python -m unittest discover -s tests -p test_host.py -v
-      uv run --python "$PY" --locked --group dev --extra plugins python -m unittest discover -s tests -p test_plugin.py -v
-      uv run --python "$PY" --locked --group dev --extra plugins python -m unittest discover -s tests -p test_review_context.py -v
-      uv run --python "$PY" --locked --group dev --extra plugins python -m unittest discover -s tests -v
-      uv run --python "$PY" --locked --group dev --extra plugins python -m ca_agent_next --smoke
+      uv run --python "$PY" --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --output-dir artifacts/sr028/unittest-gate
+      uv run --python "$PY" --no-sync --locked --group dev --extra plugins python -m compileall -q src tests
+      uv run --python "$PY" --no-sync --locked --group dev --extra plugins python -m ca_agent_next --smoke
+      uv run --python "$PY" --no-sync --locked --group dev --extra plugins python tests/capture_sr003_evidence.py > artifacts/sr028/sr003-evidence.json
   - name: Install and test Windows matrix Python
     if: runner.os == 'Windows'
     shell: pwsh
@@ -300,36 +299,45 @@ steps:
       if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       Write-Host $version
       if ($version -ne 'Python 3.14.6') { throw "Expected Python 3.14.6, got $version" }
+      New-Item -ItemType Directory -Force artifacts/sr028/unittest-gate | Out-Null
       uv sync --python "$PY" --locked --group dev --extra plugins
       if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      uv run --python "$PY" --locked --group dev --extra plugins python -m unittest discover -s tests -p test_host.py -v
+      uv run --python "$PY" --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --output-dir artifacts/sr028/unittest-gate
       if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      uv run --python "$PY" --locked --group dev --extra plugins python -m unittest discover -s tests -p test_plugin.py -v
+      uv run --python "$PY" --no-sync --locked --group dev --extra plugins python -m compileall -q src tests
       if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      uv run --python "$PY" --locked --group dev --extra plugins python -m unittest discover -s tests -p test_review_context.py -v
+      uv run --python "$PY" --no-sync --locked --group dev --extra plugins python -m ca_agent_next --smoke
       if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      uv run --python "$PY" --locked --group dev --extra plugins python -m unittest discover -s tests -v
+      uv run --python "$PY" --no-sync --locked --group dev --extra plugins python tests/capture_sr003_evidence.py > artifacts/sr028/sr003-evidence.json
       if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      uv run --python "$PY" --locked --group dev --extra plugins python -m ca_agent_next --smoke
-      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+  - name: Upload SR-028 test and Plugin evidence
+    if: always()
+    uses: actions/upload-artifact@v4
+    with:
+      name: sr028-${{ matrix.os }}-${{ matrix.python-version }}
+      path: artifacts/sr028/
+      if-no-files-found: error
 ```
 
-矩阵 Job 还必须保存 Host、Plugin、Review Context、完整总计的 discovered/passed/failures/errors/skipped/exit code；所有必需套件和总计 discovered 均大于 0，必需用例 skipped=0，failures/errors=0，退出码为 0。Go Echo build、compileall 和证据采集仍保留。`GOWORK=off` 必须应用于 Go 构建与 Plugin 测试。
+两个矩阵 Job 都必须通过 `scripts/unittest_gate.py` 自动运行 Host、Plugin、Review Context 和完整总计；脚本逐范围断言 `discovered>0`、`tests_run=discovered`、`failures/errors/skipped/expected_failures/unexpected_successes/loader_errors=0`，并在任何范围失败时最终非零退出。每项 JSON、log、summary、Smoke 和 Go Echo 证据由 `if: always()` Artifact 上传步骤保存。只记录绿色 Job 不足以 PASS；必须检查 gate 报告中四个范围的字段和退出码。`GOWORK=off` 必须应用于 Go 构建与 Plugin 测试。
+
+#### Review Context Workflow
+
+`.github/workflows/review-context.yml` 在迁移后使用相同 uv 版本与 `uv sync --locked`；安装完成后调用 `uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --suite review-context --output-dir artifacts/sr028/unittest-gate`，然后运行 Review Context 生成器。它必须在 `if: always()` 下上传 Review Context gate JSON/log 和生成器证据。AC-028-08 仍需真实 PR Run、Summary 和三文件 Artifact 验收。
 
 #### paths 与独立堆叠验证 PR
 
-迁移后的 `sr003-plugin-ci.yml` 的 `pull_request.paths` 至少包括 `pyproject.toml`、`uv.lock`、`.python-version`、`.gitignore`、`src/**`、`tests/**`、`examples/echo/**`、`scripts/review_context.py`、`docs/SR/SR-003-*`、`.github/workflows/review-context.yml` 和 `.github/workflows/sr003-plugin-ci.yml` 自身。每一类指定单文件变更均须触发两个矩阵 Job。`review-context.yml` 保持 PR 事件入口，运行 Review Context 测试与生成器；其项目解释器固定使用 CPython 3.14.6，依赖安装使用 uv locked 模式。
+迁移后的 `sr003-plugin-ci.yml` 的 `pull_request.paths` 至少包括 `pyproject.toml`、`uv.lock`、`.python-version`、`.gitignore`、`src/**`、`tests/**`、`examples/echo/**`、`scripts/review_context.py`、`scripts/unittest_gate.py`、`docs/SR/SR-003-*`、`.github/workflows/review-context.yml` 和 `.github/workflows/sr003-plugin-ci.yml` 自身。每一类指定单文件变更均须触发两个矩阵 Job。
 
 “仅修改 `review-context.yml`”必须用独立堆叠验证 PR 证明，不能用主实施 PR 内某个单文件 commit 冒充，因为 `paths` 按 PR base...head 的累积文件差异判定：
 
-1. 主实施 PR 完成 pyproject/uv.lock/.python-version、两个 Workflow 和相关配置迁移，先核验其常规双平台 CI 与 Review Context 生成器。
+1. 主实施 PR 完成 pyproject/uv.lock/.python-version、`scripts/unittest_gate.py` 和两个 Workflow 迁移，先核验其常规双平台 CI 与 AC-028-06/08。
 2. 创建验证分支，以主实施 PR 的 head branch 作为验证 PR 的 base；该 base 已包含更新后的 `sr003-plugin-ci.yml`，其中 paths 明确包含 `.github/workflows/review-context.yml`。
 3. 验证 PR 相对 base 的三点差异文件清单必须且只能是 `.github/workflows/review-context.yml`。仅在该文件增加一条路径验证注释，不修改其他文件。打开 PR 后再向同一文件推送第二个 commit，产生 `pull_request.synchronize`。
-4. 对同一次 synchronize，核验 Review Context Workflow 与 SR-003 Workflow 均由相同 PR number 和 head SHA 触发；Review Context Job 成功，SR-003 的 Ubuntu 3.12 与 Windows 3.14.6 两个 Job 均实际运行且非 skipped。保存两个 Run URL、事件、head SHA、Job 日志、解释器版本和测试统计。
+4. 对同一次 synchronize，核验 Review Context Workflow 与 SR-003 Workflow 均由相同 PR number 和 head SHA 触发；Review Context Job 成功，SR-003 的 Ubuntu 3.12 与 Windows 3.14.6 两个 Job 均实际运行且非 skipped。保存两个 Run URL、事件、head SHA、Job 日志、解释器版本、四范围 gate JSON/log 和退出码。
 5. 验证 PR 不合并；主实施 PR 和验证 PR 的合并都须另行授权。
 
 PR #32 原有 pip/单 Ubuntu Run 只证明迁移前 SR-001 基线有效，不得计为 uv、双平台、paths 触发或 AC-028-07/08 PASS。
-
 ## 4. 本地与 CI 流程
 
 ### 4.1 新 worktree 与 A→B→A 隔离验收
