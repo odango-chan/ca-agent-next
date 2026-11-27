@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.57
+> 文档版本：0.3.58
 > 状态：31 项 SR：4 VERIFIED、1 IMPLEMENTED、26 DRAFT（原 24 项 PR #46 评审批次 + SR-031 / SR-032 两项独立增量设计），SR-003 模块 AC PASS，系统 EX NOT_RUN
 > 修订日期：2026-11-27\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -52,7 +52,7 @@
 | [SR-029](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) | [IR-008](../IR/IR%20总登记册.md#ir-008)（关联 IR-003） | CA-SL 1.6.0 Capability-first 作者模型与 Callable 双向一对一；完全无旧版兼容 | **DRAFT（设计待评审，非实施 READY）** |
 | [SR-030](../SR/SR-030-Host%20Context%201.6.0%20Schema-only%20Interface%20Package%20Publisher.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Host Context 1.6.0 Schema-only Interface Package Publisher | DRAFT |
 | [SR-031](../SR/SR-031-3GPP公共Schema-only-Publisher.md) | [IR-009](../IR/IR%20总登记册.md#ir-009) | OpenAMSM 3GPP OpenAPI 原版 Source Bundle 原样代发布（ca-skills） | **DRAFT（增量设计待评审、Publisher / Consumer 产品 NOT_RUN）** |
-| [SR-032](../SR/SR-032-SKILL作者规范与Node设计原则.md) | [IR-008](../IR/IR%20总登记册.md#ir-008) | SKILL 作者规范、共享 Package 资源、Script Registry / LLM 与 Assurance 共用 Script Runner、Node 粒度与注释原则（CA-SL 1.6.0-only） | **DRAFT（Issue #49 增量设计待独立评审；仅中央文档，非实施 READY）** |
+| [SR-032](../SR/SR-032-SKILL作者规范与Node设计原则.md) | [IR-008](../IR/IR%20总登记册.md#ir-008) | SKILL 作者规范、原有 CA-SL 四阶段 / DAG 结构、共享 Package 资源、Host Resource Read、全 Registry Script Runner、Script I/O / Evidence / 错误契约、Node 粒度与注释原则（无 Skill Wait） | **DRAFT（Issue #49 增量设计待独立评审；仅中央文档，非实施 READY）** |
 
 设计版本与章节、依赖、验收 ID、实施证据以各 SR 为准。逐项阻塞见[就绪审计](../参考与审计/跨仓设计资产迁移与一致性审计.md#8-设计就绪审计)。
 
@@ -74,7 +74,7 @@
 
 | SR | 本轮评审焦点 | 设计评审 | 实施主状态 |
 |---|---|---|---|
-| SR-004 | Skill Importer candidate 与旧 Artifact 拒绝 | **第三轮自评：DESIGN_READY_FOR_INDEPENDENT_REVIEW**（第二轮 CHANGES_REQUESTED 为历史；SKILL.md-only/Importer candidate + 06A/06B；新 Bundle/Compiler 依赖仍分离，待独立结论） | DRAFT |
+| SR-004 | Skill Importer candidate 与旧 Artifact 拒绝 | **第三轮自评：DESIGN_READY_FOR_INDEPENDENT_REVIEW**（第二轮 CHANGES_REQUESTED 为历史；无 Assurance Package / Importer candidate + 06A/06B；新 Bundle/Compiler 依赖仍分离，待独立结论） | DRAFT |
 | SR-005 | Catalog 代际、CheckedExpr 与原子激活 | APPROVE_FOR_READY（Catalog 原子激活与热路径，实施依赖 SR-004） | DRAFT |
 | SR-006 | Skill Resolver 与 Continuation 选择 | **第三轮自评：DESIGN_READY_FOR_INDEPENDENT_REVIEW**（第二轮 CHANGES_REQUESTED 为历史；直接文本候选、when/error、Event 去重和原 Run Continuation，待独立结论） | DRAFT |
 | SR-007 | 统一 Runtime Scope、Owner Outcome | **第三轮自评：DESIGN_READY_FOR_INDEPENDENT_REVIEW**（第二轮 CHANGES_REQUESTED 为历史；双模式单一 Action Boundary 与精确 Owner Proof/UNKNOWN，待独立结论） | DRAFT |
@@ -111,7 +111,7 @@ PR #46 上述十项第二轮 CHANGES_REQUESTED 已按各自反例复核并登记
 
 **IR-009 增量设计（不追溯改变 PR #46 历史评议）：**新增 [SR-031](../SR/SR-031-3GPP公共Schema-only-Publisher.md) 与 [3GPP OpenAPI 原版引用设计](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。其独立设计评审和代码实施门槛均另行判定；AC-013-07、AC-010-10、AC-026-04～06、AC-027-05 为新设计验收要求，尚未获得原 12 项限定评审的背书。
 
-**IR-008 作者规范增量设计（Issue #49）：**新增 [SR-032](../SR/SR-032-SKILL作者规范与Node设计原则.md) 与 [SKILL 作者规范](../规范/SKILL作者规范.md)，迁移 ca-skills 作者材料并新增 Node 拆分、注释原则；只覆盖中央规范，不修改 ca-skills，不改变 CA-SL 语法。它是独立设计评审候选，不属于 PR #46 原 24 项或 Issue #47 / IR-009 批次。当前总数 31：4 VERIFIED / 1 IMPLEMENTED / 26 DRAFT，READY=0。
+**IR-008 作者规范增量设计（Issue #49）：**新增 [SR-032](../SR/SR-032-SKILL作者规范与Node设计原则.md) 与 [SKILL 作者规范](../规范/SKILL作者规范.md)，迁移 ca-skills 作者材料并新增 Node 拆分、注释原则；只覆盖中央规范，不修改 ca-skills；CA-SL 1.6.0 仅做 Capability-first / 共享资源 / Script 契约等必要修订，保留原有四阶段 / DAG / arguments / PredicateSet 结构，不定义 Skill Wait / await / polling。它是独立设计评审候选，不属于 PR #46 原 24 项或 Issue #47 / IR-009 批次。当前总数 31：4 VERIFIED / 1 IMPLEMENTED / 26 DRAFT，READY=0。
 
 ## 3. 设计恢复与实施顺序
 
@@ -239,3 +239,4 @@ PR #46 上述十项第二轮 CHANGES_REQUESTED 已按各自反例复核并登记
 | 2026-11-27 | 0.3.55 | GPT-6.2（ChatGPT） | SR-032 清单 | 更新 SR-032 对共享 Package 资源、Script Registry 和 Host Script Execution 的描述 | 使索引与最新 SR-032 / CA-SL 1.6.0 设计一致 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.3.56 | GPT-6.2（ChatGPT） | Phase C | 将 SKILL.md-only 子路径更正为可携带共享资源的无 Assurance Package 子路径 | 保持 SR-004 实施阶段导航与 Package 根目录结构一致 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.3.57 | GPT-6.2（ChatGPT） | SR-032 清单 | 更新 SR-032 的脚本执行原则为 LLM / Procedure / Predicate 共用同一 Script Runner | 使治理索引反映移除逐脚本与 Host LLM 双门禁后的最新设计 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.3.58 | GPT-6.2（ChatGPT） | SR-004、SR-007、SR-016、SR-032 清单 | 将 SR-004 子路径改为无 Assurance Package；同步 SR-007 Host Resource Read / Script Runner、SR-016 作者规范 Change Set、SR-032 无 Wait / 原有语法 / Script 契约验收 | 让 SR 索引与 Issue #49 修订后的实施边界一致 | Issue #49；IR-008；SR-032 |
