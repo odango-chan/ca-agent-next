@@ -2,8 +2,8 @@
 
 > 文档类型：总体架构设计  
 > 状态：**CA-SL 1.6.0 Capability-first 架构增量待评审**；已通过的 SR-002/003 模块历史验收独立保留，1.6.0 新 Runtime/Compiler/Bundle/Studio 尚未发布    
-> 文档版本：0.4.5
-> 修订日期：2026-11-26  
+> 文档版本：0.4.6
+> 修订日期：2026-11-27  
 > 适用范围：ca-agent-next 通用 Agent Core、Host、Runtime、Skill 与 Plugin 公共机制  
 > 权威边界：本文是本仓唯一总体架构文档；字段级契约见规范，机制细节见设计说明书  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
@@ -56,6 +56,8 @@ CA Agent Next 是一个通用 Agent。Agent Core 不内置 OpenAMSM、5GC 或其
 | ca-skill-studio-demo / EC06 | Theia Browser、Package/Source-first、LSP、AI Authoring | Skill 作者工作台，不执行 Skill |
 | env-5gc-sim / EC07 | 5GC reference simulator、Mock AMF SBI test peer | 独立测试对端；Mock AMF 不是 Owner |
 | ai-gateway / ca-dsh / G01 | 模型服务网关和 DeepSeek Harness 执行环境 | 工程基础设施，不是 Agent Core/Runtime |
+
+**外部标准契约与业务域契约：** CA-Agent 优先消费已有的权威标准契约；标准未覆盖的业务语义由对应业务 Owner 定义自己的契约（例如 MAS Owner Contract Package）。二者可以在同一 Skill 中组合，但必须保留各自来源、Schema、版本和所有权。标准定义的协议字段及其语义不得被业务契约覆盖；当 3GPP SBI Request 触发 MAS 业务操作时，Request 仍是 3GPP 契约，MAS Contract 约束 Owner Capability / Callable 及其结果，Procedure 显式映射二者，不把 MAS 字段注入 3GPP JSON。
 
 Agent Core、Host、Importer、Resolver 和 Runtime 使用 Python。独立 Plugin 可以使用 Go。Go Plugin 不意味着 Go Host，也不改变 Core 的语言决策。
 
@@ -141,7 +143,16 @@ SkillCatalog 由 Core/Host 拥有，是进程内不可变快照。启动或显�
 7. when=false 或运行期错误的 Skill 不得重新进入无条件语义候选。
 8. 无候选则澄清或拒绝，不允许无 Skill 绑定地回退到 Generic Agent。
 
-when 是纯 CEL Skill 选择表达式，作者源位置为可选 Assurance 的 contract.yaml；predicates.yaml 只用于执行期业务判断。不新增 activation.yaml、constraint.yaml、独立 Package 或第二份 Contract。
+when 是纯 CEL Skill 选择表达式；它只读取 Ingress/Host 生成的 `event.type` 和当前已验证 Request Schema 的 `input`，不得读取 Context、Tool Result、Observation、Evidence 或 Codec 执行期结果。predicates.yaml 只用于执行期业务判断。不新增 activation.yaml、constraint.yaml、独立 Package 或第二份 Contract。
+
+### 7.1 Request Schema 与契约来源
+
+- `event.type` 是 Ingress / Host 根据接口身份生成的规范化 Event 元数据，不是 SBI JSON Body 字段。
+- `input` 是当前 Event 对应的 Request Schema 根所描述、已验证的输入对象；它不是由 Agent 自行重建的通用 envelope。
+- 对 3GPP SBI，Request Schema 直接引用 OpenAMSM 实际支持版本的原始 OpenAPI 3.0 Schema Component。以 `PostSmContexts` 为例，选定面为 `requestBody → multipart/related → jsonData → SmContextCreateData`，因此 `input` 对应 `jsonData` 对象，而不是完整 multipart envelope；若该根直接引用 `SmContextCreateData`，字段路径从 `input` 开始。
+- NAS / NGAP 二进制 part 不混入 JSON `input`，而是保留为独立 Artifact slots。JSON 直接解析和 Schema 校验，不调用 Codec；仅在选中 Skill 后，Procedure 确实需要二进制内部字段时才调用对应 Codec READ。
+- 如果入站接口没有适用的标准契约，则使用相应业务 Owner / Event Plugin 正式发布的领域 Request Schema。MAS Owner Contract Package 可以定义标准未覆盖的 MAS 业务 Capability / Callable / Outcome；但除非它明确发布了该入站 Request Schema，否则不得把 Owner Callable IO Schema 当作 Event Request Schema。
+- 同一 Skill 同时引用标准 Request 与领域 Owner Contract 时，保持两套契约分离，并在 Procedure 中显式映射 Request 字段到 Capability arguments；不得扁平化、重命名或将领域字段伪装成标准字段。
 
 ## 8. Plugin 与 Tool 统一机制
 
@@ -153,7 +164,7 @@ when 是纯 CEL Skill 选择表达式，作者源位置为可选 Assurance 的 c
 
 Tool 是 Plugin 的 Operation，不是独立进程、Manager 或 Runtime。Tool Plugin 是导出 tools Extension 的 Plugin。一个 Plugin 可以同时导出 Event、Delivery 和多个 Tool Operation。不得增加独立 Provider Manager、Tool Registry、Codec Manager 或第二条授权/分发路径。
 
-Provider 自有 Tool 的公开 Callable、Schema、Effect 和 Capability 归 Provider Interface Package。MAS 等业务 Owner 的公开 Callable、Schema、Effect、Capability、权威业务结果、Receipt、Commit Proof 与 Reconcile 均归 Owner Contract；部署侧按已发布绑定交接 Artifact；Provider Runtime Bindings 映射 Provider 私有 Backend operation。三者边界见 [F03.05 Tool Interface 与 Provider 集成设计](../设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) 和[公共契约与所有权规范](../规范/公共契约与所有权规范.md)。
+Provider 自有 Tool 的公开 Callable、Schema、Effect 和 Capability 归 Provider Interface Package。MAS 等业务 Owner 的公开 Callable、Schema、Effect、Capability、权威业务结果、Receipt、Commit Proof 与 Reconcile 均归 Owner Contract；当 3GPP 等外部标准未定义相应业务语义时，Owner 可以在自己的契约中补充，但不得覆盖标准协议字段或语义。部署侧按已发布绑定交接 Artifact；Provider Runtime Bindings 映射 Provider 私有 Backend operation。三者边界见 [F03.05 Tool Interface 与 Provider 集成设计](../设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) 和[公共契约与所有权规范](../规范/公共契约与所有权规范.md)。
 
 Plugin Manifest 只声明进程和 Extension，不复制 Callable 定义。Provider v2 是 Provider 自身的进程协议，不是 Next Plugin IPC；唯一 Plugin Manager 通过 ProviderV2 Driver 适配它。
 
@@ -167,7 +178,7 @@ READ Tool 结果作为带来源的 Observation；MUTATION 结果依据 Owner Rec
 
 ## 10. SBI 二进制载荷与 Codec
 
-SBI 不限于 JSON。Event Plugin 负责 HTTP/SBI 外层解析、JSON、multipart/related、Content-ID 关联和原始 N1/N2 字节提取；Host 管理本地 staging、ArtifactStore、opaque artifactRef、Run 关联和访问授权。原始字节不进入 NDJSON 帧或模型 Context。
+SBI 不限于 JSON。对于 3GPP 已定义的 SBI 接口，原始 OpenAPI 3.0 是协议契约权威来源，Event Plugin 按原始 operation / requestBody 解析 HTTP、JSON、multipart/related 和 Content-ID，不维护第二套协议 Schema。JSON Data 直接解析并按原始 Schema 校验；原始 JSON 字段不经过 Codec。Event Plugin 负责原始 N1/N2/N2 Ext1 字节提取；Host 管理本地 staging、ArtifactStore、opaque artifactRef、Run 关联和访问授权。原始字节不进入 NDJSON 帧或模型 Context。
 
 必须区分两条二进制路径：
 
@@ -176,7 +187,7 @@ SBI 不限于 JSON。Event Plugin 负责 HTTP/SBI 外层解析、JSON、multipar
 
 **当前限制：** `ca-host.artifact-store/v1` 已冻结（contract pin `2c0b07f`）；ca-client-tools Provider v1.2.0 已实现 consumer 与共享 fixtures；ca-agent Go Host main `447d0cc` 的 P1 外部参考验收为 43/43（read-only 11/11），real-NF multipart 仍 NOT_VERIFIED。Next Python Host 的 channel server/adapter 尚未实现；在 SR-010 完成并通过共享 fixtures 前，所有 artifact-bearing Provider binding 必须 NOT_CONFIGURED，并在任何远端 I/O 前拒绝。不得自行发明 Provider 私有文件路径协议。
 
-Codec 不作为 Agent Core 的内置能力。Skill 不需要协议内部字段时，直接把授权 artifactRef 交给业务 Tool；需要结构化字段时，按需调用 ca-client-tools tools Extension 中正式发布的 Codec Callable。Codec 解码结果不能替换原始字节。Event Plugin 只允许为共享 SBI Operation 提取最小必要 NAS discriminator 来规范化 Event，不承担完整协议解码或 Skill 选择。只声明实际发布和测试过的 NAS/NGAP 消息子集。
+Codec 不作为 Agent Core 的内置能力。Skill 不需要协议内部字段时，直接把授权 artifactRef 交给业务 Tool；需要结构化字段时，按需调用 ca-client-tools tools Extension 中正式发布的 Codec Callable。Codec 解码结果不能替换原始字节，也不能作为 T1 Skill 选择期输入。Event Plugin 只允许为共享 SBI Operation 提取最小必要 NAS discriminator 来规范化 Event，不承担完整协议解码或 Skill 选择。只声明实际发布和测试过的 NAS/NGAP 消息子集。
 
 ## 11. 关键端到端流程
 
@@ -298,3 +309,4 @@ sequenceDiagram
 | 2026-11-26 | 0.4.3 | Codex / GPT-6 | 见本行变更 | §Tool 更正业务公共契约所有权 | 对齐跨仓实现与独立复验 | Issue #12 |
 | 2026-11-26 | 0.4.4 | GPT-6（ChatGPT） | §3、§15、修订记录 | 加入 CA-SL 1.6.0-only Capability-first 总体约束与完整责任矩阵 | 避免语言旧版兼容、Runtime Tool 选择和 Compiler 内嵌回归 | Issue #40；IR-008；SR-029 |
 | 2026-11-26 | 0.4.5 | GPT-6（ChatGPT） | 文档头与修订记录 | 把 review_scope 继承语句改为 CI 规范的一次精确声明 | 解除 PR #45 当前 Head Review Context formal-doc 校验失败 | Issue #40；PR #45 |
+| 2026-11-27 | 0.4.6 | GPT-6.2（ChatGPT） | §3、§7.1、§8、§10 | 明确标准契约优先、业务 Owner 契约补位、Request 与 Owner Contract 分离、3GPP jsonData 输入根及 JSON/Binary/Codec 边界 | 将 3GPP 标准消费与 MAS 领域自有契约组合规则纳入总体架构，防止领域字段污染标准 Request | IR-009；Issue #47；PR #48 |
