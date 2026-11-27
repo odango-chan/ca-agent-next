@@ -290,24 +290,26 @@ cd ../.sr028-a
 unset UV_PROJECT_ENVIRONMENT
 uv python install
 uv sync --locked --group dev --extra plugins
-uv run --locked --group dev --extra plugins python -c 'import importlib.metadata as m, json, pathlib, sys, urllib.parse, urllib.request, ca_agent_next; root=pathlib.Path.cwd().resolve(); venv=(root/".venv").resolve(); d=json.loads(m.distribution("ca-agent-next").read_text("direct_url.json")); source=pathlib.Path(urllib.request.url2pathname(urllib.parse.urlparse(d["url"]).path)).resolve(); module=pathlib.Path(ca_agent_next.__file__).resolve(); assert pathlib.Path(sys.prefix).resolve()==venv and (venv/"pyvenv.cfg").is_file(); assert module.is_relative_to(root/"src") and d["dir_info"]["editable"] is True and source==root; print(root, venv, module, source)'
+uv run --locked --group dev --extra plugins python -c 'import importlib.metadata as m, json, pathlib, sys, urllib.parse, urllib.request, ca_agent_next; root=pathlib.Path.cwd().resolve(); venv=(root/".venv").resolve(); d=json.loads(m.distribution("ca-agent-next").read_text("direct_url.json")); source=pathlib.Path(urllib.request.url2pathname(urllib.parse.urlparse(d["url"]).path)).resolve(); module=pathlib.Path(ca_agent_next.__file__).resolve(); assert pathlib.Path(sys.prefix).resolve()==venv and (venv/"pyvenv.cfg").is_file(); assert module.is_relative_to(root/"src") and d["dir_info"]["editable"] is True and source==root; print(json.dumps({"root":str(root),"venv":str(venv),"module":str(module),"source":str(source)})) > /tmp/sr028-a-paths.json'
 uv run --locked --group dev --extra plugins python -m unittest discover -s tests -p test_host.py -v
 
 cd ../.sr028-b
 unset UV_PROJECT_ENVIRONMENT
 uv python install
 uv sync --locked --group dev --extra plugins
-uv run --locked --group dev --extra plugins python -c 'import importlib.metadata as m, json, pathlib, sys, urllib.parse, urllib.request, ca_agent_next; root=pathlib.Path.cwd().resolve(); venv=(root/".venv").resolve(); d=json.loads(m.distribution("ca-agent-next").read_text("direct_url.json")); source=pathlib.Path(urllib.request.url2pathname(urllib.parse.urlparse(d["url"]).path)).resolve(); module=pathlib.Path(ca_agent_next.__file__).resolve(); assert pathlib.Path(sys.prefix).resolve()==venv and (venv/"pyvenv.cfg").is_file(); assert module.is_relative_to(root/"src") and d["dir_info"]["editable"] is True and source==root; print(root, venv, module, source)'
+uv run --locked --group dev --extra plugins python -c 'import importlib.metadata as m, json, pathlib, sys, urllib.parse, urllib.request, ca_agent_next; root=pathlib.Path.cwd().resolve(); venv=(root/".venv").resolve(); d=json.loads(m.distribution("ca-agent-next").read_text("direct_url.json")); source=pathlib.Path(urllib.request.url2pathname(urllib.parse.urlparse(d["url"]).path)).resolve(); module=pathlib.Path(ca_agent_next.__file__).resolve(); assert pathlib.Path(sys.prefix).resolve()==venv and (venv/"pyvenv.cfg").is_file(); assert module.is_relative_to(root/"src") and d["dir_info"]["editable"] is True and source==root; print(json.dumps({"root":str(root),"venv":str(venv),"module":str(module),"source":str(source)})) > /tmp/sr028-b-paths.json'
 uv run --locked --group dev --extra plugins python -m unittest discover -s tests -p test_host.py -v
 
 cd ../.sr028-a
 unset UV_PROJECT_ENVIRONMENT
-uv run --locked --group dev --extra plugins python -c 'import importlib.metadata as m, json, pathlib, sys, urllib.parse, urllib.request, ca_agent_next; root=pathlib.Path.cwd().resolve(); venv=(root/".venv").resolve(); d=json.loads(m.distribution("ca-agent-next").read_text("direct_url.json")); source=pathlib.Path(urllib.request.url2pathname(urllib.parse.urlparse(d["url"]).path)).resolve(); module=pathlib.Path(ca_agent_next.__file__).resolve(); assert pathlib.Path(sys.prefix).resolve()==venv and (venv/"pyvenv.cfg").is_file(); assert module.is_relative_to(root/"src") and d["dir_info"]["editable"] is True and source==root; print(root, venv, module, source)'
+uv run --locked --group dev --extra plugins python -c 'import importlib.metadata as m, json, pathlib, sys, urllib.parse, urllib.request, ca_agent_next; root=pathlib.Path.cwd().resolve(); venv=(root/".venv").resolve(); d=json.loads(m.distribution("ca-agent-next").read_text("direct_url.json")); source=pathlib.Path(urllib.request.url2pathname(urllib.parse.urlparse(d["url"]).path)).resolve(); module=pathlib.Path(ca_agent_next.__file__).resolve(); assert pathlib.Path(sys.prefix).resolve()==venv and (venv/"pyvenv.cfg").is_file(); assert module.is_relative_to(root/"src") and d["dir_info"]["editable"] is True and source==root; print(json.dumps({"root":str(root),"venv":str(venv),"module":str(module),"source":str(source)})) > /tmp/sr028-a-return-paths.json'
 uv run --locked --group dev --extra plugins python -m unittest discover -s tests -p test_host.py -v
+python -c 'import json; from pathlib import Path; a=json.loads(Path("/tmp/sr028-a-paths.json").read_text()); b=json.loads(Path("/tmp/sr028-b-paths.json").read_text()); a2=json.loads(Path("/tmp/sr028-a-return-paths.json").read_text()); assert all(a[k]!=b[k] for k in ("root","venv","module","source")); assert a2==a; print("A/B/A isolation PASS")'
 
 cd "$ROOT"
 git worktree remove --force ../.sr028-a
 git worktree remove --force ../.sr028-b
+rm -f /tmp/sr028-a-paths.json /tmp/sr028-b-paths.json /tmp/sr028-a-return-paths.json
 ```
 
 保存 A/B 各自 root、`.venv`、`sys.prefix`、`ca_agent_next.__file__` 和 `direct_url.json` 的 file URL。必须观察到 A 与 B 的路径不同；B sync 后再次进入 A，不重新 sync，A 的路径仍指向 A 且 Host 测试通过。Windows 在 Git Bash 或 WSL 中执行此 Bash 验收；不将 PowerShell 变量语法混入该命令块。
