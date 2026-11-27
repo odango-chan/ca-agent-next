@@ -37,7 +37,7 @@ DeepSeek Harness 默认使用 Goal 模式。按[SR 管理规范](docs/规范/SR%
 - 不建立第二 Provider Manager、Tool Registry、Codec Manager、Event Registry 或第二套 IPC。
 - 每个 Skill 必须有 SKILL.md；Assurance 可选。无 Assurance 仅 LLM-guided；有效发布 Artifact 支持 Deterministic 和 LLM-guided；无效发布 Artifact 导入失败。
 - when 是可选 Assurance Contract 的纯 CEL Skill 选择表达式；predicates.yaml 只用于执行期业务判断。
-- Skill 源编写与评审必须遵循[中央 SKILL 作者规范](docs/规范/SKILL作者规范.md)；CA-SL 1.6.0 完整语言规范仍是语法与机器字段的唯一权威。作者规范只规定 Skill / Capability / Node 粒度、Node 拆分 / 合并和注释原则；v1alpha5 原文只读留档，不提供兼容或自动迁移。
+- Skill 源编写与评审必须遵循[中央 SKILL 作者规范](docs/规范/SKILL作者规范.md)；CA-SL 1.6.0 完整语言规范仍是语法与机器字段的唯一权威。作者规范还规定 Package 文件职责、Schema 所有权、SourcePath / 显式 arguments、when / Wait、Evidence / UNKNOWN、Node 四阶段与拆分 / 合并、注释原则及 AI Authoring 约束；v1alpha5 原文只读留档，不提供兼容或自动迁移。
 - Agent 只消费外部已发布 Runtime Artifact，不调用 Compiler Check/Build/Inspect/Verify，不建立 Skill Admission，不导入作者源作为运行时 Artifact。
 - Skill 选择先于模式选择；精确 Continuation 恢复原 Run，不重新选择 Skill。
 - SkillCatalog 由 Core/Host 拥有；更新原子切换 generation；在途 Invocation 固定 generation。
@@ -173,3 +173,4 @@ review_scope:
 | 2026-11-26 | GPT-6.2（ChatGPT） | 第 1、2、5 节 | 明确设计/实施/AC/EX 分阶段门禁，分离设计与实施 Issue，并要求实施 Commit/Push 后核对远端 SHA | 防止独立 SR 被无关下游依赖或系统级 EX 阻塞，并确保交付可追溯 | Issue #21；SR 管理规范 §6.1；PR #20 |
 | 2026-11-26 | GPT-6（ChatGPT） | §3、修订记录 | 明确 CA-SL 1.6.0 Capability-first 双向一对一、Compiler Binding、全链路绝不兼容旧版和设计待评审与实施 READY 分离 | 避免 Harness 为历史 v1alpha5 擅自构建兼容适配或提前实施 | Issue #40；IR-008；SR-029 |
 | 2026-11-27 | GPT-6.2（ChatGPT） | §3、修订记录 | 将中央 SKILL 作者规范加入仓库协作入口，明确作者规范与 CA-SL 1.6.0 语言规范的权威边界 | 防止作者 / Harness 从历史 v1alpha5 资料或注释推断新版语法 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | GPT-6.2（ChatGPT） | §3、修订记录 | 扩展中央作者规范的协作摘要，覆盖 Package / Schema、数据流、when / Wait、Evidence / UNKNOWN 和 AI Authoring，而不只列 Node / 注释 | 避免 Agent.md 将规范范围缩窄，导致 Harness 漏读适用规则 | Issue #49；IR-008；SR-032 |
