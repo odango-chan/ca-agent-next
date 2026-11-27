@@ -156,7 +156,7 @@ Host Script Execution 是 Host-owned system Capability（逻辑 ID：`host.skill
 
 ### 12.1 1.6.0 模块验收与历史隔离
 
-唯一业务能力路径：Skill 提出业务 Capability，Compiler Artifact 保有唯一 Callable Binding，经 Runtime Scope/kind/Effect/Schema 检查后再由 Plugin Manager Tools Extension 分发。Host Script Execution 是独立的 Host system Capability：Runtime 按当前 Skill 的 Script Registry / Host policy 校验后，经同一 Plugin Manager 的内建 Tools Extension 执行精确包内 entrypoint。无业务绑定、重复、阶段不符、错误 Schema、越权 Script ID、任意代码/路径或 Reconcile 由普通 Skill 提出均在 dispatch 前拒绝。历史 11 READ/24:25/Development 1.0.0 仅为历史来源，不证明查询子集 2/2、含 Codec 的 Provider 全量 3/3 和 Owner 24/24 Package 已发布；Plugin IPC 宿主协议本身可继续使用现行冻结规范，不因语言版本更名而修改 IPC wire。
+唯一业务能力路径：Skill 提出业务 Capability，Compiler Artifact 保有唯一 Callable Binding，经 Runtime Scope/kind/Effect/Schema 检查后再由 Plugin Manager Tools Extension 分发。Host Script Execution 是独立的 Host system Capability：Runtime 按当前 Skill 的 Script Registry / `scriptExecution.llmEnabled` 配置校验后，经同一 Plugin Manager 的内建 Tools Extension 执行精确包内 entrypoint。无业务绑定、重复、阶段不符、错误 Schema、越权 Script ID、任意代码/路径或 Reconcile 由普通 Skill 提出均在 dispatch 前拒绝。历史 11 READ/24:25/Development 1.0.0 仅为历史来源，不证明查询子集 2/2、含 Codec 的 Provider 全量 3/3 和 Owner 24/24 Package 已发布；Plugin IPC 宿主协议本身可继续使用现行冻结规范，不因语言版本更名而修改 IPC wire。
 
 ## 修订记录
 
