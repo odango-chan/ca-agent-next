@@ -6,7 +6,7 @@
 > 功能归属：F05 — Context 与 Artifact 管理  
 > 关联 SR：SR-009；交叉 SR：SR-007、SR-010、SR-011、SR-015、SR-017、SR-030、SR-032\
 > 关联 IR：IR-004、IR-005、IR-006、IR-008  
-> 修订日期：2026-11-26  
+> 修订日期：2026-11-27  
 > 适用范围：Event Context、Run Context、Observation/Evidence 投影、Host-owned ArtifactStore、SBI multipart、Plugin Handoff、Codec 输入输出
 
 > 全局评审范围：继承根目录 Agent.md 的 review_scope。
