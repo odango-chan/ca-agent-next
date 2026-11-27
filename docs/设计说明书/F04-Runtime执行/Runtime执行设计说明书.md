@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
-> 文档版本：0.3.14
+> 文档版本：0.3.15
 > 功能归属：F04 — Runtime 执行  
 > 关联 SR：SR-007、SR-032    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -133,7 +133,7 @@ Runtime 从当前 Artifact 的 capabilityBindings 中按 Capability ID 解析唯
 
 Host Script Execution 是 Host-owned system Capability `host.skill-script.execute`，由现有 Plugin Manager 下的 Host 内建 Tools Extension 实现；不新增 Plugin Manager、Tool Registry 或第二条 IPC。它不是 Owner / Provider 业务 Capability，不进入 Contract.capabilities，也不占用外部 Capability Binding。
 
-Action 输入固定为 `scriptId` 与 JSON `input`。Runtime 必须校验当前 Run / Skill / Package snapshot、Script Registry 条目、输入 Schema、deadline / budget；Script Runner 解析 manifest 中的精确 file / entrypoint。`purpose=transform` 执行后按 Registry `outputSchema` 校验；`purpose=predicate` 不声明 `outputSchema`，按 CA-SL 1.6.0 固定 PredicateEvaluationResult 契约校验，并核验 `evidenceUsed` 仅引用本次 Host 注入的 Evidence projection。LLM 直接调用 Predicate Script 时 Evidence projection 为空。模型不得提交 file、entrypoint、源代码、模块、命令或任意路径。
+Action 输入固定为 `scriptId` 与 JSON `input`。Runtime 必须校验当前 Run / Skill / Package snapshot、Script Registry 条目、输入 Schema、deadline / budget；Script Runner 解析 manifest 中的精确 file / entrypoint。`purpose=transform` 执行后按 Registry `outputSchema` 校验；`purpose=predicate` 不声明 `outputSchema`，按 CA-SL 1.6.0 固定 PredicateEvaluationResult 契约校验，并核验 `evidenceUsed` 仅引用本次 Host 注入的 Evidence projection。LLM 直接调用 Predicate Script 时 Evidence projection 为空。每次 Script Execution（包括 Procedure transform、Procedure Predicate evaluator 与 LLM 直接调用）各消耗一个 Host-owned per-Run Runtime Action Budget 单位；该预算与 `Contract.limits.maxActions` 分离，后者只统计业务 Capability Actions。Host Runtime Action Budget 同时约束 `host.skill-resource.read`；Skill 不得放宽 Host / Deployment 上限。模型不得提交 file、entrypoint、源代码、模块、命令或任意路径。
 
 Deterministic Procedure 的 `operation.script` 使用同一 Runner，Script ID 由已编译 Procedure 固定；LLM-guided 可以按 Script ID 调用当前 Skill Registry 中登记的全部脚本，包括 Predicate Script。Predicate Script 的直接 LLM 调用不会触发 Procedure 路由，也不会产生 Evidence。所有脚本只允许纯本地计算，禁止网络、任意文件系统、子进程、环境秘密、时钟、随机数、动态加载、Tool / Capability 调用和外部副作用。需要业务副作用必须调用正式业务 Capability。
 
@@ -183,3 +183,5 @@ MAS.RECONCILE 不是 Skill-facing Capability.普通 Skill / LLM Action 必须在
 | 2026-11-27 | 0.3.13 | GPT-6.2（ChatGPT） | §2～§4、§6、§8、§10 | 明确 Skill 层没有 Wait / await / polling，Runtime 仅处理异步 Operation Continuation；LLM 可调用全部登记 Predicate / Transform Script；新增 Host Resource Read 的 Action Boundary | 恢复既定异步职责边界，修复 Predicate Script 与 LLM 能力矛盾，接通 F05 资源读取契约 | Issue #49；IR-008；SR-032 |
 
 | 2026-11-27 | 0.3.14 | GPT-6.2（ChatGPT） | §10.3、修订记录 | 明确 Transform Script 通过 Registry outputSchema 校验，Predicate Script 使用固定 PredicateEvaluationResult / evidenceUsed 契约，不声明 outputSchema | 对齐 CA-SL §8.2～§8.4，避免 Host Runner 对两类 Script 使用错误的输出校验方式 | Issue #49；IR-008；SR-007/032；PR #52 |
+
+| 2026-11-27 | 0.3.15 | GPT-6.2（ChatGPT） | §10.3、修订记录 | 明确 Script Execution 各调用计入 Host per-Run Runtime Action Budget，并与只统计业务 Capability Actions 的 Contract.limits.maxActions 分离 | 避免 LLM / Procedure 重复调用 Script 绕过 Host 预算，且与 F05 Resource Read 预算口径一致 | Issue #49；IR-008；SR-007/032；PR #52 |
