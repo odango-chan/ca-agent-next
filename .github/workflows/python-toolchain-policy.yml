@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: python-toolchain-policy-\${{ github.event.pull_request.number }}
+  group: python-toolchain-policy-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
@@ -22,15 +22,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      BASE_SHA: \${{ github.event.pull_request.base.sha }}
-      HEAD_SHA: \${{ github.event.pull_request.head.sha }}
-      BASE_REF: \${{ github.event.pull_request.base.ref }}
-      PR_NUMBER: \${{ github.event.pull_request.number }}
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      BASE_REF: ${{ github.event.pull_request.base.ref }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
     steps:
       - name: Checkout PR head and full history
         uses: actions/checkout@v4
         with:
-          ref: \${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
       - name: Fetch exact PR base and head commits
@@ -40,8 +40,8 @@ jobs:
           test -n "$BASE_SHA"
           test -n "$HEAD_SHA"
           git fetch --no-tags origin "$BASE_SHA" "$HEAD_SHA"
-          git cat-file -e "\${BASE_SHA}^{commit}"
-          git cat-file -e "\${HEAD_SHA}^{commit}"
+          git cat-file -e "${BASE_SHA}^{commit}"
+          git cat-file -e "${HEAD_SHA}^{commit}"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
