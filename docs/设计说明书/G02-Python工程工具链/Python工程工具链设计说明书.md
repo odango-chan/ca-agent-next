@@ -398,9 +398,9 @@ Review Context gate 使用 `uv run --no-sync --locked --group dev --extra plugin
     exit "$generator_rc"
 ```
 
-诊断 Artifact 上传步骤必须排在上述生成器步骤之后、成功 Summary 和正式 Artifact 上传步骤之前；使用 `if: always()`。正式 Artifact 仍只能在诊断 Artifact 上传成功、生成器成功且所有前置步骤成功时按 `if: success()` 上传。
+诊断 Artifact 上传步骤必须排在上述生成器步骤之后、成功 Summary/失败报告和正式 Artifact 上传步骤之前；使用 `if: always()`。`Report failure` 步骤使用 `if: failure()`，并排在正式 Artifact 之前；正式 Artifact 必须是 Job 最后一步，且仅在诊断 Artifact、生成器、成功 Summary 等所有前置步骤均成功时按 `if: success()` 上传。
 
-必须先上传诊断 Artifact，再写成功 Summary 和上传正式 Artifact。诊断 Artifact 的名称固定为 `review-context-diagnostics-pr-${PR_NUMBER}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}`，上传条件为 `if: always()`，路径仅为 `$RUNNER_TEMP/review-context-diagnostics/`，`if-no-files-found: error`，保留 30 天。它用于失败诊断，不是完成态交付物；即使 gate 或生成器失败，也必须尝试上传。
+必须先上传诊断 Artifact，再执行成功 Summary（`if: success()`）或失败报告（`if: failure()`）；正式三文件 Artifact 上传步骤必须排在失败报告步骤之后，作为 Job 的最后一个步骤，并保持 `if: success()`。这样任一 gate、生成器、诊断上传或 Summary/失败报告步骤失败时，正式 Artifact 均不会执行；正式 Artifact 上传成功后也不再有后续步骤将该 Run 改为失败。诊断 Artifact 的名称固定为 `review-context-diagnostics-pr-${PR_NUMBER}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}`，上传条件为 `if: always()`，路径仅为 `$RUNNER_TEMP/review-context-diagnostics/`，`if-no-files-found: error`，保留 30 天。它用于失败诊断，不是完成态交付物；即使 gate 或生成器失败，也必须尝试上传。
 
 正式完成态 Artifact 沿用现有名称 `review-context-pr-${PR_NUMBER}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}`，上传条件必须保持 `if: success()`，`if-no-files-found: error`，保留 30 天；`path` 必须显式列出且只能列出 `$RUNNER_TEMP/review-context/review-scope.json`、`$RUNNER_TEMP/review-context/评审上下文.md`、`$RUNNER_TEMP/review-context/统一评审提示词.md`。不得将 gate、日志、manifest、Summary 或其他文件加入该 Artifact。上传后下载解包，文件集合必须恰好为这三份，不得多也不得少。
 
