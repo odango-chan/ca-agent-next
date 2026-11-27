@@ -6,7 +6,7 @@
 > 修订日期：2026-11-27  
 > 适用仓库：`odango-chan/ca-agent-next` 根 Python 工程  
 > 设计与实施来源：[G02 Python 工程工具链与环境管理](../设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md)、[SR-028](../SR/SR-028-Python工程工具链与uv环境管理.md)、[Issue #96](https://github.com/odango-chan/ca-agent-next/issues/96)、[PR #99](https://github.com/odango-chan/ca-agent-next/pull/99)  
-> 本规范追踪：[Issue #111](https://github.com/odango-chan/ca-agent-next/issues/111)  
+> 本规范追踪：[Issue #111](https://github.com/odango-chan/ca-agent-next/issues/111)；堆叠治理 PR：[PR #112](https://github.com/odango-chan/ca-agent-next/pull/112)（Draft）  
 > 本文局部非目标：不自动迁移其他仓库，不改变 Agent/Host/Runtime 行为，不建立生产级供应链安全或包准入机制
 
 ## 1. 目的与原则
