@@ -1,7 +1,7 @@
 # Python 工程工具链与实施基线规范
 
 > 文档类型：工程治理规范  
-> 文档版本：0.2.0  
+> 文档版本：0.2.2  
 > 状态：DRAFT（本规范由 Issue #111 跟踪；评审合并前作为本任务明确授权的过渡执行规则，合并后成为 Next 根 Python 工程的权威工具链与分支继承规范）  
 > 修订日期：2026-11-27  
 > 适用仓库：`odango-chan/ca-agent-next` 根 Python 工程  
@@ -161,35 +161,47 @@ Goal 在开始前建立 GitHub 检查点，执行期间每完成一个独立工�
 
 ### 9.1 Workflow 与可信策略快照
 
-- PR 自动检查入口：`.github/workflows/python-toolchain-policy.yml`，Job 名称为 `Python Toolchain Policy`。
+- 可信策略入口：`.github/workflows/python-toolchain-policy-trusted.yml`，使用 `pull_request_target`，Job 名称为 `Python Toolchain Policy`。它由 PR Base 中的 Workflow 启动，只检出可信 Base；仅 fetch PR Head 的 Git commit 对象，不 checkout、不执行 PR Head 的代码。
+- PR Head 辅助入口：`.github/workflows/python-toolchain-policy.yml`。它只承担一次性 Bootstrap（PR #112）和无密钥的 `uv lock --check` 锁一致性检查，不作为普通 PR 的可信策略来源。
 - 机器可读基线：`.github/python-toolchain-baseline.json`。当前固定工具链来源为 PR #99 Head `83d23e8c04b1c05eb304c2a24a3392f6459ed0f1`；共享分支、允许 Base、uv/Python 版本和必需文件都由该清单声明。
 - 检查器：`scripts/python_toolchain_policy.py`；正反例测试：`tests/test_python_toolchain_policy.py`。实现只依赖 Python 标准库。
-- 对普通 PR，Workflow 必须从 PR Base SHA 读取并执行策略脚本与基线清单，而不是执行 PR Head 自己修改的版本。PR #112 是唯一一次 Bootstrap 例外，且 Base ref、完整 Base SHA 和清单 baseline SHA 都必须精确匹配 PR #99 固定 Head。后续 PR 若 Base 中不存在策略文件或清单，直接失败。
+- 普通 PR 的可信 Workflow 从 PR Base SHA 读取并执行策略脚本、基线清单和自测，而不是执行 PR Head 自己修改的版本。PR #112 是唯一一次 Bootstrap 例外，且 Base ref、完整 Base SHA 和清单 baseline SHA 都必须精确匹配 PR #99 固定 Head。后续 PR 若 Base 中不存在策略文件或清单，直接失败。
+- 普通 PR 不得修改策略脚本、基线清单、可信 Workflow、Bootstrap/锁检查 Workflow 或策略自测；策略维护必须另行建立独立评审与授权，不能与普通产品实施 PR 混合。
 - Workflow 同时核对 Base 分支远端最新 SHA 与 PR 事件 Base SHA；快照已过期时 fail-closed，要求刷新后重跑。
 
 ### 9.2 触发范围与检查内容
 
-Workflow 对所有 Pull Request 运行轻量检查；只有变更触及根 Python 工程时才执行门禁，纯文档与独立 Go 示例不会被误判为 Python 实施。当前触发范围包括：
+可信 Workflow 对所有 Pull Request 运行轻量检查；只有变更触及根 Python 工程时才执行阻断策略，纯文档与独立 Go 示例不会被误判为 Python 实施。当前触发范围包括：
 
 - `src/**`、`tests/**`；
 - 根目录 Python `scripts/*.py`；
 - 根 `pyproject.toml`、`uv.lock`、`.python-version`、`.gitignore`；
 - 根 Python CI 的 `.github/workflows/*.yml|yaml`；
-- 根替代依赖/锁文件新增。
+- 根替代依赖/锁文件新增；
+- 含根 Python 命令的 Makefile、Dockerfile、Justfile 等可执行入口。
 
 门禁检查：
 
 1. PR Base 必须使用基线清单允许的共享分支；PR #112 仅允许固定 Bootstrap Base。
-2. PR Base 必须是共享 uv 基线 SHA 的后代，并包含 `pyproject.toml`、`uv.lock`、`.python-version`、统一 unittest gate 和固定 setup-uv action 的 Python Workflows。
+2. PR Base 必须是共享 uv 基线 SHA 的后代，并包含 `pyproject.toml`、`uv.lock`、`.python-version`、统一 unittest gate、策略文件和固定 setup-uv action 的 Python Workflows；PR Head 也必须保留这些文件、固定解释器/uv 版本和根 `.venv/` 忽略规则。
 3. 根目录新增 `requirements*.txt`、`Pipfile*`、`poetry.lock`、Conda/Mamba 环境或锁文件时失败；嵌套测试 fixture 不按根依赖入口处理。
-4. 新增/修改的可执行命令行不得使用 pip/pip-tools、Poetry/Conda/Mamba，不得裸运行 Python unittest/pytest/compileall/Agent Smoke 或根脚本；项目命令必须使用 `uv run --no-sync --locked`；仅 `python-toolchain-policy.yml` 中执行 `test_python_toolchain_policy.py` 的标准库自测允许 `uv run --no-project`，不得将该例外用于应用测试。
-5. 禁止设置共享 `UV_PROJECT_ENVIRONMENT`，禁止 `uv run/sync --system` 或 `--active` 绕过 worktree 本地 `.venv/`。
-6. `pyproject.toml` 中依赖、Python 版本、dependency-groups 或 uv 解析配置变化时，同一 PR 必须更新 `uv.lock`。
-7. 策略测试覆盖允许/拒绝命令、锁文件范围、路径范围、Bootstrap Base 和后续 PR Base。
+4. 新增/修改的可执行命令行不得使用 pip/pip-tools（包括 `uv pip install/sync`）、Poetry/Conda/Mamba，不得裸运行 Python unittest/pytest/compileall/Agent Smoke 或根脚本；项目命令必须使用 `uv run --no-sync --locked`；`uv sync` 必须带 `--locked`。
+5. `uv run --no-project` 只允许可信门禁中的固定标准库检查器和专用自测命令；禁止通过命令拼接扩大例外，不得将该例外用于应用测试。
+6. 所有新增/修改的 Python Workflow 必须使用清单固定 SHA 的 setup-uv Action，并显式固定 uv 版本。
+7. 禁止设置共享 `UV_PROJECT_ENVIRONMENT`，禁止 `uv run/sync --system` 或 `--active` 绕过 worktree 本地 `.venv/`。
+8. `pyproject.toml` 中依赖、Python 版本、dependency-groups 或 uv 解析配置变化时，同一 PR 必须更新 `uv.lock`；Head 工作流执行 `uv lock --check` 验证锁文件与项目配置同步。
+9. 策略测试覆盖允许/拒绝命令、锁文件范围、路径范围、Bootstrap Base、可信 Workflow 和策略文件变更。
 
 ### 9.3 合并门禁
 
-Workflow 通过会产生 `Python Toolchain Policy / Python Toolchain Policy` 检查结果。**要让失败状态真正阻止合并，仓库管理员还必须在目标分支的 Branch protection / Ruleset 中将该 Check 标记为 Required。** 在 Required Check 生效前，Workflow 只能提供自动失败状态，不能单独保证 GitHub 拒绝合并；不得把“Workflow 已存在”误报成“分支保护已配置”。
+目标分支应同时将以下两个 Check 配置为 Required：
+
+- `Python Toolchain Policy / Python Toolchain Policy`：可信 Base 策略检查；
+- `Python Toolchain Policy Bootstrap / Python Lock Consistency`：PR Head 的锁文件一致性检查。
+
+PR #112 的一次性检查为 `Python Toolchain Policy Bootstrap / Bootstrap Policy Check`，只用于固定 Bootstrap，不作为后续普通 PR 的 Required Check。
+
+**Workflow 通过不等于已启用合并阻断。** 仓库管理员必须在实际接收 PR 的目标分支 Branch protection / Ruleset 中配置 Required Checks；未配置前，CI 只能提供自动失败状态，不能保证 GitHub 拒绝合并。不得把“Workflow 已存在”误报成“分支保护已配置”。
 
 本门禁只约束 Next 根 Python 工程，不替代 SR 的设计 READY、实施授权、模块 AC 或系统 EX，也不自动改变其他仓库的 CI。
 
@@ -200,3 +212,4 @@ Workflow 通过会产生 `Python Toolchain Policy / Python Toolchain Policy` 检
 | 2026-11-27 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 建立 Next 根 Python 工程共享 uv 工具链、实施分支继承、堆叠 PR、已有分支迁移和 Harness 提示词约束 | 避免 SR-028 尚未进入 main 时其他 Python 实施分支绕过 uv，形成多套依赖入口 | Issue #111；Issue #96；PR #99；SR-028；G02 |
 | 2026-11-27 | 0.2.0 | GPT-6.2（ChatGPT） | §9、修订记录 | 增加 Python Toolchain Policy CI、可信 Base 策略快照、命令/锁文件/基线继承检查与 Required Check 配置说明 | 将 uv 共享基线从提示词约束提升为自动 PR 检查，避免 PR 自行修改策略绕过门禁 | Issue #111；PR #112；PR #99 |
 | 2026-11-27 | 0.2.1 | GPT-6.2（ChatGPT） | §9.2、修订记录 | 收紧 `--no-project` 例外，仅允许门禁自身标准库测试；增加 Windows `py` 裸入口检测 | 避免通过 `uv run --no-project` 绕开项目锁定环境 | Issue #111；PR #112 |
+| 2026-11-27 | 0.2.2 | GPT-6.2（ChatGPT） | §9、修订记录 | 增加 `pull_request_target` 可信 Base 门禁、策略文件保护、Python Workflow 固定版本检查、`uv lock --check` 和 `uv sync --locked` 检查 | 防止 PR 修改自身 Workflow 绕过可信策略，并验证锁文件与配置一致 | Issue #111；PR #112 |
