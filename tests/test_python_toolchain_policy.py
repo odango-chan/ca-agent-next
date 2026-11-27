@@ -1,16 +1,23 @@
 from __future__ import annotations
 
 import unittest
+from importlib.util import module_from_spec, spec_from_file_location
+from pathlib import Path
 
-from scripts.python_toolchain_policy import (
-    PolicyError,
-    command_violations,
-    dependency_surface,
-    extract_added_lines,
-    forbidden_root_lockfiles,
-    is_python_scope_path,
-    validate_base_ref,
-)
+_policy_path = Path(__file__).resolve().parents[1] / "scripts" / "python_toolchain_policy.py"
+_policy_spec = spec_from_file_location("ca_agent_next_python_toolchain_policy", _policy_path)
+if _policy_spec is None or _policy_spec.loader is None:
+    raise RuntimeError(f"cannot load Python toolchain policy from {_policy_path}")
+_policy_module = module_from_spec(_policy_spec)
+_policy_spec.loader.exec_module(_policy_module)
+
+PolicyError = _policy_module.PolicyError
+command_violations = _policy_module.command_violations
+dependency_surface = _policy_module.dependency_surface
+extract_added_lines = _policy_module.extract_added_lines
+forbidden_root_lockfiles = _policy_module.forbidden_root_lockfiles
+is_python_scope_path = _policy_module.is_python_scope_path
+validate_base_ref = _policy_module.validate_base_ref
 
 
 class PythonToolchainPolicyTests(unittest.TestCase):
