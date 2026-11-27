@@ -1,7 +1,7 @@
 # SKILL 作者规范（CA-SL 1.6.0）
 
 > 文档类型：Skill 作者规范（Next 中央规范性设计稿）  
-> 文档版本：0.2.3  
+> 文档版本：0.2.4  
 > 状态：**DRAFT / REVIEW_REQUESTED**（作者规则待独立评审；CA-SL 1.6.0 尚未由 ca-skills 正式发布）  
 > 语言目标：CA-SL 1.6.0 only；不兼容任何历史作者语法  
 > 功能归属：EC01 — Skill 作者规范与业务 Skill；消费端关联 F02 / F09  
@@ -558,7 +558,7 @@ SKILL.md 正文与 YAML 注释遵循项目语言约定，并在同一 Skill Pack
 - [ ] Procedure 是单一静态 DAG；每个 Node 的阶段顺序正确，每种阶段不重复；末阶段正常 Outcome 显式路由。
 - [ ] 每个 Operation 阶段最多一个 Capability / 纯 Script；每个 Observation 阶段最多一个 READ Capability。
 - [ ] Node 拆分依据是业务动作、独立提交或证据边界，而不是 HTTP / Provider 内部步骤。
-- [ ] Precondition / Postcondition 中的 Predicate 有序聚合，没有单 Predicate Node。
+- [ ] Precondition / Postcondition 内的 Predicate 按有序列表聚合；不得为单个中间判断人为拆出 Predicate-only Node；最终 Goal 验证可为只有一个 Predicate 的 Postcondition-only Node，且聚合 PASS 直接路由 SUCCEEDED。
 - [ ] 所有 arguments 和输出引用显式绑定，没有隐式上下文或字段猜测。
 - [ ] UNKNOWN 没有被转成 PASS；最终 Postcondition PASS 直接路由 SUCCEEDED。
 - [ ] Procedure 不包含 Wait / await / polling / `wait.output`；异步完成由 Tool / Provider / SMF Operation 与 Host Runtime 负责。
@@ -633,3 +633,4 @@ Apply 前仍须由用户确认，并对同一候选源码与依赖锁执行正�
 | 2026-11-27 | 0.2.2 | GPT-6.2（ChatGPT） | §6.4、修订记录 | 明确禁止人为拆出的中间 Predicate-only Node，但允许最终 Goal Postcondition-only Node 仅含一个 Predicate | 消除“单 Predicate Node 禁止”与“最终 Postcondition-only Node 允许”之间的作者歧义 | Issue #49；IR-008；SR-032；PR #52 |
 
 | 2026-11-27 | 0.2.3 | GPT-6.2（ChatGPT） | §6.4、§6.7、修订记录 | 将 QoS 正向示例的请求校验 Predicate 合并到 `normalize-qos` Node 的 Precondition，删除孤立 `validate-request` Predicate-only Node；保留 PASS 自动进入 Operation 与 FAIL/UNKNOWN 路由 | 使完整示例遵守同一业务 Node 的阶段合并规则，不再与禁止中间 Predicate-only Node 的作者原则冲突 | Issue #49；IR-008；SR-032；PR #52 |
+| 2026-11-27 | 0.2.4 | ChatGPT（GPT-6） | §10 作者检查清单、文档头与修订记录 | 将“没有单 Predicate Node”的绝对表述改为禁止人为拆分中间判断，并显式允许最终单 Predicate Postcondition-only Goal 验证 Node | 使检查清单与 §6.4 特殊 Node 合法例外、SR-032 AC-032-03 一致 | Issue #49；IR-008；SR-032；PR #52 |
