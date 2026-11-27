@@ -1,7 +1,7 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.21\
+> 文档版本：0.3.22\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
 > 修订日期：2026-11-27\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -239,3 +239,4 @@ AI Authoring 的 Change Set 必须遵守中央 [SKILL 作者规范](../../规范
 | 2026-11-27 | 0.3.19 | ChatGPT / GPT-6.2 | §10 | 将 Studio 从 Adapter Schema Explorer 改为原版 OAS3 只读展示 / 精确组件导航；Project Lock 固定 Source Bundle | 遵循原版标准直接引用且不允许编辑 | IR-009；Issue #47；SR-031/013/026 |
 | 2026-11-27 | 0.3.20 | GPT-6.2（ChatGPT） | §9.3、修订记录 | AI Authoring 明确消费统一 SKILL 作者规范，加入 Node 粒度与注释非执行语义约束 | 防止 AI 生成的 Procedure 违背中央作者规则或用注释代替机器契约 | IR-008；Issue #49；SR-032 |
 | 2026-11-27 | 0.3.21 | GPT-6.2（ChatGPT） | 文档头、§9.3 | 将 SR-032 纳入 F09 追踪；明确 Procedure Change Set 的允许字段、引用来源、非目标及 OUT_OF_SCOPE 行为，并区分 when 独立编辑路径 | 防止 AI Authoring 以“正式作者字段”为由擅自修改 Contract / Schema / Package 或发明外部身份 | IR-008；Issue #49；SR-032 |
+| 2026-11-27 | 0.3.22 | GPT-6.2（ChatGPT） | §9.3 | 明确当 Procedure 修改需要同步 contract.precondition 时，Procedure-only Change Set 必须 OUT_OF_SCOPE | 防止 Node ID 变更导致跨文件引用悬空或部分应用 | Issue #49；SR-032 |
