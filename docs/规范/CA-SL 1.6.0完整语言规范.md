@@ -228,7 +228,7 @@ PredicateSet          = map(predicates: map<PredicateId, Predicate>) ;
 Predicate             = map(parameters: NonEmptyList<ParameterDeclaration>,
                             evidence?: EvidenceRequirements,
                             evaluator: CELEvaluator | PredicateScriptEvaluator) ;
-ParameterDeclaration  = map<ParameterName: PrimitiveType | QualifiedSchemaId) ;
+ParameterDeclaration  = map(ParameterName: PrimitiveType | QualifiedSchemaId) ;
 CELEvaluator          = map(type: "cel", expression: CELExpression) ;
 PredicateScriptEvaluator = map(type: "script", script: ScriptId) ;
 
@@ -356,7 +356,7 @@ scripts:
 
 - Predicate 的 `evaluator.script` 只能引用 `purpose=predicate`。
 - Predicate 的有序 arguments 按 `Predicate.parameters` 的参数名组装为 JSON Object；Host 额外注入只读保留命名空间 `evidence`。业务参数不得命名为 `evidence`。
-- `input.evidence` 的形状固定为 `{ parameterName: { refs: string[] } }`；它只包含 Runtime 已附加到本次 Predicate 调用的 Evidence Ref，不包含可由 Script 创建的证明。
+- `input.evidence` 的形状固定为 `{ parameterName: { refs: string[] } }`；每个 Predicate 参数都具有一个 `refs` 数组，没有适用 Evidence 时为空数组。Registry 的 predicate `inputSchema` 必须描述全部业务参数和该保留 Evidence projection；它只包含 Runtime 已附加到本次 Predicate 调用的 Evidence Ref，不包含可由 Script 创建的证明。
 - 唯一入口为 `evaluate(input: PredicateInput) -> PredicateEvaluationResult`。PredicateInput 包含声明的业务参数和 Host 注入的 Evidence projection。
 - PredicateEvaluationResult 固定为闭合 JSON Object：`result` 为 PASS / FAIL / UNKNOWN，`reasonCode` 为非空字符串，`evidenceUsed` 为字符串数组。缺失字段、额外字段、非法枚举或类型错误均为无效结果。
 - Runtime 在路由前检查 `evidenceUsed` 中每个 Ref 是否属于本次输入 `input.evidence.<parameter>.refs` 的并集。Script 不得创建、重绑、扩大或伪造 Evidence；LLM 直接调用 Predicate Script 时 Host 注入空 Evidence projection，因此 `evidenceUsed` 必须为空。
@@ -542,14 +542,14 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 | §10～11 文件、YAML、Contract | 重写为本文件 §2～5；无 goal 字段；新增 contexts；Capability-only；when / requestSchema 仍为 Contract 顶层 |
 | §12～14 Procedure、Arguments、PredicateSet | 采用静态 DAG / 四阶段 / 显式 arguments / PredicateSet；重写 Capability 引用和 Procedure.inputs |
 | §15～18 Observation、Evidence、Fact | 采用只读 Observation、Owner Evidence、Scope / Correlation / Freshness 与 UNKNOWN 不提升规则 |
-| §19～25 Invocation、READ / MUTATION、Reconcile、Wait、Outcome、错误 | 采用结果与恢复语义；Wait 重写为 Node-entry Host Runtime READ trigger；Reconcile 仅内部 |
+| §19～25 Invocation、READ / MUTATION、Reconcile、Outcome、错误 | 采用 Invocation、READ / MUTATION、Outcome 和恢复语义；Skill 层不定义 Wait / await / polling；异步由 Operation 与 Host Runtime continuation 负责；Reconcile 仅内部 |
 | §26～31 5GC 教学示例 | 不作为新规范示例；由当前 OpenAMSM Create / Modify / Release 1.6.0 Capability 示例替代 |
 | §32～35 Script、Cases、Dependencies、Studio | 采用纯本地 Script、显式依赖闭包与 LSP；移除旧 Alias::Callable |
 | §36～41 参考语言与定位 | 仅资料性参考，不产生作者语义 |
 | §42～45 安全、版本、冻结 | 重写为 1.6.0 单版本、无兼容、无迁移 |
 | §46～91 技术解释 / 历史裁决 | 作为设计依据审查；有规范效力的内容必须在本文件对应条款中重新表述，不直接引用旧条款作为 1.6.0 规范 |
 | 附录 A～K 决策、诊断、符合性、Schema / Evidence / CEL | 逐项审查；本文件 §12～13 重新冻结当前 Schema / CEL / 诊断；未纳入的历史诊断不自动成为 1.6.0 要求 |
-| 附录 L Node-entry Event Wait | 保留 Node-entry、typed input、Correlation、Response Obligation 等语义；新语法和 Host Runtime READ 边界以本文件 §10 为准 |
+| 附录 L Node-entry Event Wait | **不纳入 CA-SL 1.6.0 Skill 作者语法**；不定义 Wait Node、wait 字段、wait.output、await 或 polling。异步协议完成由 Tool / Provider / SMF Operation 与 Host Runtime 负责；不得从历史附录恢复作者级 Wait 语法 |
 | 附录 M Optional Assurance / when | 采用 Optional Assurance 与 Contract.when 选择模型；按本文件 §2、§4、§9、§16 重新定义 1.6.0 |
 
 任何历史条款未明确映射到本文件、F02、F03.05、F04、F05、F06、F08、F09 或 EC02 的规范性要求，必须在独立评审中作为遗漏处理；不得由实现者自行沿用旧语义。
@@ -590,3 +590,4 @@ Host Context Schema-only Package 仍只经 `Contract.contexts` 引用，与 Open
 | 2026-11-27 | 0.1.8 | GPT-6.2（ChatGPT） | §2、§7 | 统一无 Assurance Package 的术语，避免误读为只能包含 SKILL.md 单文件 | 明确无 Assurance 包仍可携带共享 Schema / Script / references / assets | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.9 | GPT-6.2（ChatGPT） | §2、§8、§16 | 删除 `llmInvocable` 与 `scriptExecution.llmEnabled` 双重门禁；LLM、Procedure 和 Predicate 统一调用当前 Package Registry 中的脚本 | Demo 不区分脚本调用者权限；保留固定 Package snapshot、精确入口、I/O Schema 和无副作用边界 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.2.0 | GPT-6.2（ChatGPT） | §1～§18 | 恢复原有四阶段 DAG / arguments / PredicateSet 结构语法，补齐 Predicate Evidence 与 Script 输入输出 / 异常契约；删除 Skill 层 Node-entry Wait / await / polling；定义 Host Resource Read Action 与完整 Script Registry 调用模型 | 避免作者语法重构和 Wait 回流；使 CA-SL 1.6.0 的机器形状、运行时边界和评审验收闭合 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.2.1 | GPT-6.2（ChatGPT） | §6.1、§8.3、§17 | 修正文法记法，明确 Predicate Script inputSchema 包含 Host Evidence projection，并将 v1alpha5 Node-entry Wait 附录明确裁决为不纳入 1.6.0 | 防止历史 Wait 语义回流，补齐 Predicate 输入 Schema 与原有语法迁移依据 | Issue #49；IR-008；SR-032 |
