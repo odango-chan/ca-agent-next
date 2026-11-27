@@ -2,7 +2,7 @@
 
 > 文档类型：总体架构设计  
 > 状态：**CA-SL 1.6.0 Capability-first 架构增量待评审**；已通过的 SR-002/003 模块历史验收独立保留，1.6.0 新 Runtime/Compiler/Bundle/Studio 尚未发布    
-> 文档版本：0.4.7
+> 文档版本：0.4.8
 > 修订日期：2026-11-26  
 > 适用范围：ca-agent-next 通用 Agent Core、Host、Runtime、Skill 与 Plugin 公共机制  
 > 权威边界：本文是本仓唯一总体架构文档；字段级契约见规范，机制细节见设计说明书  
@@ -122,13 +122,13 @@ SKILL.md 是 Agent-facing 的自然语言指导。Procedure 是唯一确定性�
 
 Agent 只消费已发布 Skill 包，不负责从作者源构建 Artifact：
 
-1. 无 Assurance Package（必须有 SKILL.md，可附共享资源）直接导入；Front Matter 不得声明 `when`，若声明则拒绝；Importer 校验 Package 相对路径和共享资源 / Script Registry，不调用 Compiler。
+1. 无 Assurance Package（必须有 SKILL.md，可附共享资源）直接导入；它没有 `assurance/contract.yaml`，因此没有 `when`；SKILL.md Front Matter 不得声明 `when`，若声明则按未知字段拒绝；Importer 校验 Package 相对路径和共享资源 / Script Registry，不调用 Compiler。
 2. 含已发布 Assurance Artifact 的包，执行基本结构、必需文件、格式、类型数据和依赖检查后导入。
 3. 缺失文件、格式不支持、CEL/type data 损坏、路径不安全或 Tool/Capability 依赖无法解析时，导入失败；不得把无效 Assurance 降级成无 Assurance Package。
 
 Agent 不调用 Compiler 的 Check/Build/Inspect/Verify，不实现独立 Skill Admission。发布前的 CA-SL 语法、类型、链接和 Artifact 完整验证属于外部 Compiler/发布流程。Agent 只做消费端必要的结构检查与依赖解析，不重复实现 Compiler 语义。
 
-SkillCatalog 由 Core/Host 拥有，是进程内不可变快照。启动或显式导入/更新时读取 SKILL.md 和 Artifact 一次，反序列化已检查的 when 程序，构建新代际并在全部成功后原子激活。在途 Invocation 固定其开始时使用的 Catalog 代际。新 Event 每次用当前输入求值，不缓存上一个 Event 的布尔结果；references 和大型知识资产按需加载。
+SkillCatalog 由 Core/Host 拥有，是进程内不可变快照。启动或显式导入/更新时读取 SKILL.md、发布 Artifact 与其已检查的 when 程序一次；作者源 `when` 唯一来自 `assurance/contract.yaml`，Compiler 编译后由 Artifact 提供 CheckedExpr / DescriptorSet。构建新代际并在全部成功后原子激活。在途 Invocation 固定其开始时使用的 Catalog 代际。新 Event 每次用当前输入求值，不缓存上一个 Event 的布尔结果；references 和大型知识资产按需加载。
 
 新 Event 的选择顺序：
 
@@ -141,7 +141,7 @@ SkillCatalog 由 Core/Host 拥有，是进程内不可变快照。启动或显�
 7. when=false 或运行期错误的 Skill 不得重新进入无条件语义候选。
 8. 无候选则澄清或拒绝，不允许无 Skill 绑定地回退到 Generic Agent。
 
-`when` 是纯 CEL Skill 选择表达式，作者源位置为有 Assurance Skill 的 SKILL.md YAML Front Matter（CA-Agent 扩展）；无 Assurance Skill 不声明 when，且 `assurance/contract.yaml` 不包含该字段。`predicates.yaml` 只用于执行期业务判断。不新增 activation.yaml、constraint.yaml、独立 Package 或第二份 Contract。
+`when` 是纯 CEL Skill 选择表达式，作者源唯一位于有 Assurance Skill 的 `assurance/contract.yaml` 顶层；SKILL.md Front Matter 不声明该字段，出现时拒绝。无 Assurance Skill 没有 Contract，不声明 when。`predicates.yaml` 只用于执行期业务判断。不新增 activation.yaml、constraint.yaml、独立 Package 或第二份 Contract。
 
 ## 8. Plugin 与 Tool 统一机制
 
@@ -300,3 +300,4 @@ sequenceDiagram
 | 2026-11-26 | 0.4.5 | GPT-6（ChatGPT） | 文档头与修订记录 | 把 review_scope 继承语句改为 CI 规范的一次精确声明 | 解除 PR #45 当前 Head Review Context formal-doc 校验失败 | Issue #40；PR #45 |
 | 2026-11-27 | 0.4.6 | GPT-6.2（ChatGPT） | §6、§7、§15 | 将 SKILL.md-only 统一修正为可携带共享资源的无 Assurance Package；明确 Host Resource Read / Script Execution 和无 Skill Wait 语法边界 | 使总体架构、Importer、Runtime 与 CA-SL 1.6.0 / F05 一致 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.4.7 | GPT-6.2（ChatGPT） | §6～§7、§15 | 将 `when` 作者源位置统一为有 Assurance Skill 的 SKILL.md Front Matter；无 Assurance Skill 不声明 when，并由 Importer 拒绝 | 对齐 CA-SL 1.6.0、F02、Compiler 与作者规范的统一入口 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.4.8 | GPT-6.2（ChatGPT） | §6～§7、修订记录 | 将 `when` 作者源唯一位置恢复为 assurance/contract.yaml 顶层；Front Matter 不声明 when；无 Assurance 无 Contract | 撤销入口位置回归，统一架构、CA-SL、Compiler 与 Importer 契约 | Issue #49；IR-008；SR-032；F02/F08/F09/SR-004/013 |
