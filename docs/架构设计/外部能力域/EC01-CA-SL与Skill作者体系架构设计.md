@@ -1,7 +1,7 @@
 # EC01 — CA-SL 与 Skill 作者体系架构设计
 
 > 文档类型：外部能力域架构设计（Next 中央权威设计）  
-> 文档版本：0.2.0\
+> 文档版本：0.2.1\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 唯一新目标；作者规范/Compiler/Bundle 未发布）  
 > 功能归属：EC01；关联 F01、F02、F03、F04、F05、F06、F08、F09  
 > 关联需求：IR-003、IR-006、IR-008；SR-004～SR-006、SR-011、SR-023、SR-032  
@@ -145,7 +145,7 @@ CA-SL v1alpha5 的 when 已进入已合并的 ca-skills #88/#89 发布刷新；�
 | CA-SL v1alpha5 规范刷新 | ca-skills #88、#89 已合并；发布记录固定规范提交 18d818436 | IMPLEMENTED / RELEASED |
 | 作者模型与指南 | ca-skills main 有 authoring-model.md、authoring.zh-CN.md；Next Issue #49 / SR-032 新增 1.6.0 作者规则 | 历史 v1alpha5 作者材料已归档；1.6.0 作者规范 DRAFT / REVIEW_REQUESTED，ca-skills Release NOT_RELEASED |
 | when 作者语义 | 已进入 CA-SL v1alpha5 正式发布记录；main 文档头部仍有 Proposed Refresh 字样，与 Release Record 状态冲突 | RELEASED；源仓文档状态不一致，需后续清理 |
-| Compiler when CheckedExpr / DescriptorSet | ca-skill-compiler Issue #61 OPEN；Compiler v2.1.0 当前没有 Contract.when AST / 运行时选择程序 | NOT_IMPLEMENTED |
+| Compiler when CheckedExpr / DescriptorSet | ca-skill-compiler Issue #61 OPEN；Compiler v2.1.0 当前没有 SKILL.md Front Matter.when AST / 运行时选择程序 | NOT_IMPLEMENTED |
 | Next Bundle Importer / Catalog generation / when evaluator | 当前设计待完整实施验收 | NOT_VERIFIED |
 | Skill-first OpenAMSM 新 Event 选择 | 需 F02/F06 与 EC04 集成验收 | NOT_RUN |
 
@@ -177,3 +177,4 @@ CA-SL v1alpha5 的 when 已进入已合并的 ca-skills #88/#89 发布刷新；�
 | 2026-11-27 | 0.1.8 | GPT-6.2（ChatGPT） | §2～§3 | 删除逐脚本 `llmInvocable` 和 Host `scriptExecution.llmEnabled`；所有已登记 Package Script 对 LLM 与 Assurance 使用同一执行入口 | 避免 Demo 引入不必要的调用者授权分层 | IR-008；Issue #49；SR-032 |
 | 2026-11-27 | 0.1.9 | GPT-6.2（ChatGPT） | §2～§3 | 移除 Skill 层 Wait / await / polling 作者语义，新增 Host Resource Read 系统 Action，并明确 LLM 可调用全部登记 Script | 使 EC01 架构边界与 CA-SL 1.6.0、F05 和统一 Script Runner 一致 | IR-008；Issue #49；SR-032 |
 | 2026-11-27 | 0.2.0 | GPT-6.2（ChatGPT） | §2～§4、§10 | 将 `when` 作者源位置统一为有 Assurance Skill 的 SKILL.md Front Matter；无 Assurance Skill 不声明 when | 对齐 CA-SL 1.6.0、F02、Compiler 和作者规范的统一入口，避免双重 Contract 语义 | IR-008；Issue #49；SR-032；F02/F08/F09 |
+| 2026-11-27 | 0.2.1 | GPT-6.2（ChatGPT） | §4、§8、修订记录 | 将 Compiler when 状态描述改为 SKILL.md Front Matter 扩展来源 | 与 1.6.0 作者入口统一，避免把历史 Contract.when 状态误作当前实现 | IR-008；Issue #49；SR-032；SR-013 |
