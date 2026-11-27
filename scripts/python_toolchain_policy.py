@@ -170,12 +170,12 @@ def command_violations(added_lines: Iterable[tuple[str, str]]) -> list[str]:
         for code, pattern, message in FORBIDDEN_COMMANDS:
             if pattern.search(line):
                 violations.append(f"{code}: {path}: {line} — {message}")
-        if re.search(r"\\bUV_PROJECT_ENVIRONMENT\\s*=", line):
+        if re.search(r"\bUV_PROJECT_ENVIRONMENT\s*=", line):
             violations.append(
                 f"SHARED_UV_ENVIRONMENT: {path}: {line} — "
                 "每个 worktree 必须使用本地 .venv，禁止设置共享 UV_PROJECT_ENVIRONMENT。"
             )
-        if re.search(r"\\buv\\s+(?:run|sync)\\b.*(?:--system|--active)\\b", line):
+        if re.search(r"\buv\s+(?:run|sync)\b.*(?:--system|--active)\b", line):
             violations.append(
                 f"UV_ENVIRONMENT_BYPASS: {path}: {line} — "
                 "禁止使用 --system/--active 绕过项目虚拟环境。"
