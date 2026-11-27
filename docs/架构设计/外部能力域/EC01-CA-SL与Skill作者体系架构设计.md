@@ -1,7 +1,7 @@
 # EC01 — CA-SL 与 Skill 作者体系架构设计
 
 > 文档类型：外部能力域架构设计（Next 中央权威设计）  
-> 文档版本：0.2.2\
+> 文档版本：0.2.3\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 唯一新目标；作者规范/Compiler/Bundle 未发布）  
 > 功能归属：EC01；关联 F01、F02、F03、F04、F05、F06、F08、F09  
 > 关联需求：IR-003、IR-006、IR-008；SR-004～SR-006、SR-011、SR-023、SR-032  
@@ -89,14 +89,14 @@ Node 仍包含 Precondition、Operation、Observation、Postcondition 阶段；�
 
 ~~~yaml
 # assurance/contract.yaml
-when: 'event.type == "nsmf.create-sm-context" && input.requestType == "INITIAL_REQUEST"'
+when: 'event.type == "nsmf.create-sm-context" && has(input.requestType) && input.requestType == "INITIAL_REQUEST"'
 requestSchema: schemas/create-sm-context-request.schema.yaml
 ~~~
 
 约束：
 
 - when 只在新业务 Event 的 Skill 选择阶段评估。
-- 表达式使用 Event 与同一 Contract 的 requestSchema 所定义的输入类型；静态检查必须在发布阶段完成。
+- 表达式使用 Event 与同一 Contract 的 requestSchema 所定义的输入类型；静态检查必须在发布阶段完成。原版 `SmContextCreateData.requestType` 是可选字段，读取前必须以 `has(input.requestType)` 守卫，并依赖左到右 `&&` 短路事实。
 - when 不得引用运行期 Evidence、Owner 状态或未声明字段。
 - 无 Assurance Skill 不声明 when，直接通过 Skill 元数据和语义选择进入候选；有 Assurance 但无 when 的 Skill 也可进入语义候选；when 返回 false 的 Assurance Skill 不得被选择。
 - CEL 解析/类型/求值错误必须 fail closed，不得把错误或 UNKNOWN 变成 true。
@@ -178,3 +178,5 @@ CA-SL v1alpha5 的 when 已进入已合并的 ca-skills #88/#89 发布刷新；�
 | 2026-11-27 | 0.2.1 | GPT-6.2（ChatGPT） | §4、§8、修订记录 | 将 Compiler when 状态描述改为 SKILL.md Front Matter 扩展来源 | 与 1.6.0 作者入口统一，避免把历史 Contract.when 状态误作当前实现；历史错误入口判断，已由 0.2.2 撤销，不构成兼容方案| IR-008；Issue #49；SR-032；SR-013 |
 
 | 2026-11-27 | 0.2.2 | GPT-6.2（ChatGPT） | §2～§4、§8、修订记录 | 恢复 `assurance/contract.yaml` 顶层 `when` 为唯一入口，修正 Create 示例为原版 OpenAPI 字符串枚举 | 撤销 Front Matter 旧方案，确保 EC01、CA-SL、Compiler 与 3GPP 输入契约一致 | IR-008/009；Issue #49；SR-013/031/032 |
+
+| 2026-11-27 | 0.2.3 | GPT-6.2（ChatGPT） | §4、修订记录 | 修正 3GPP Create `when` 示例，为可选 `input.requestType` 增加 has 守卫，并明确左到右短路约束 | 使 EC01 示例与 CA-SL §3.6 / §12.1、SR-013 Golden 一致，避免示例无法通过 Compiler 类型检查 | Issue #49；IR-009；SR-013/032；PR #52 |
