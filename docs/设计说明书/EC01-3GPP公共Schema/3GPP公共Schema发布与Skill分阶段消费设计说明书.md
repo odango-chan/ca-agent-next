@@ -1,7 +1,7 @@
 # 3GPP 公共 OpenAPI 原版引用与 Skill 分阶段消费设计说明书
 
 > 文档类型：功能设计说明书（EC01.3GPP；关联 EC03/F02/F06/F08/F09）
-> 文档版本：0.3.3
+> 文档版本：0.3.4
 > 修订日期：2026-11-27
 > 状态：DRAFT / REVIEW_REQUESTED；原版 Source Bundle、OAS3 Consumer、Compiler 外部引用与 Codec 产品均未完成产品验收
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
@@ -40,7 +40,7 @@ OpenAPI `info.version` 是 API 文档版本，不是 3GPP TS 版本。TS 29.571 
 | 工件 | Owner | 责任 |
 |---|---|---|
 | OpenAPI Source Bundle | ca-skills / SR-031 | 原版 OAS3 YAML + 可达 refs，byte-for-byte 不变；无 Capability / Callable |
-| SBI Ingress Consumer | Plugin / SR-010 | 原生解析 method/path/operationId、requestBody、multipart、JSON / binary parts、media type、Content-ID；只做 ingress 验证和原始 bytes staging |
+| SBI Ingress Consumer | Plugin / SR-010 | 原生解析 method/path/operationId、requestBody、multipart、JSON / binary parts、media type、Content-ID；只做 ingress 验证，并原样 staging N1 / N2 / N2 Ext1 bytes |
 | Compiler OAS3 Resolver | Compiler / SR-013 | 对 Skill-owned G.4 Request 根中的精确外部 `components/schemas` 引用做 dialect-aware Link / Validate / Lock |
 | Codec READ + Output Schema | ca-client-tools / SR-026 | 按授权 artifact slot 解码已资格化 NAS/NGAP Profile，发布 Provider Output Schema |
 | Skill Request / Host Context | ca-skills / SR-029、SR-030 | Request 根归 Skill；Host Context 只经 `Contract.contexts`；Codec Result 只在 Procedure 执行期可用 |
@@ -108,3 +108,4 @@ SR-031、SR-010、SR-013、SR-026、SR-027 各自独立验收；任何一层 PAS
 | 2026-11-27 | 0.3.1 | ChatGPT / GPT-6.2 | §2、§4、§7 | 补齐 PostSmContexts 四文件 / 102 Component 的选定闭包、lazy ref 解析、OAS3 实际关键字与 RefToBinaryData Content-ID 对应关系 | 防止漏锁传递依赖、全文件 eager resolve 和 multipart 二进制错配 | Issue #47；SR-031/010/013；CA-SL 1.6.0 |
 | 2026-11-27 | 0.3.2 | ChatGPT / GPT-6.2 | §4、DS-3GPP-03～04 | 收紧 union 类型推导到 required 字段；明确未引用 multipart part 的消费隔离与 ingress profile 策略 | 不把可选字段误判为必有，也不超出原版 OpenAPI Schema 施加隐含拒绝 | Issue #47；SR-010/013；CA-SL 1.6.0 |
 | 2026-11-27 | 0.3.3 | ChatGPT / GPT-6.2 | DS-3GPP-03 | 将未引用 part 的处理收敛为 Codec 隔离，额外 part 策略交由 ingress profile | 避免把 OpenAPI Schema 未声明的额外 part 一概判为非法 | Issue #47；SR-010/031；F06 |
+| 2026-11-27 | 0.3.4 | ChatGPT / GPT-6.2 | §2、§4 | 将 SBI Ingress Consumer 摘要补齐 N2 Ext1 原始 bytes staging，与三组 Content-ID 映射对齐 | 避免汇总表遗漏第三个二进制槽 | Issue #47；SR-010/031；F03.05/F06 |
