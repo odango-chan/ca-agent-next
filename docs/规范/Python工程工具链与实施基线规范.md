@@ -161,11 +161,11 @@ Goal 在开始前建立 GitHub 检查点，执行期间每完成一个独立工�
 
 ### 9.1 Workflow 与可信策略快照
 
-- 可信策略入口：`.github/workflows/python-toolchain-policy-trusted.yml`，使用 `pull_request_target`，Job 名称为 `Python Toolchain Policy`。它由 PR Base 中的 Workflow 启动，只检出可信 Base；仅 fetch PR Head 的 Git commit 对象，不 checkout、不执行 PR Head 的代码。
+- 可信策略入口：`.github/workflows/python-toolchain-policy-trusted.yml`，使用 `pull_request_target`，Job 名称为 `Python Toolchain Policy`。GitHub 的 `pull_request_target` Workflow 文件与执行上下文来自仓库默认分支；因此该 Workflow 必须先进入默认分支才会触发。运行时只检出默认分支的可信策略快照，再 fetch PR Base/Head 的 Git commit 对象；不 checkout、不执行 PR Head 的代码。
 - PR Head 辅助入口：`.github/workflows/python-toolchain-policy.yml`。它只承担一次性 Bootstrap（PR #112）和无密钥的 `uv lock --check` 锁一致性检查，不作为普通 PR 的可信策略来源。
 - 机器可读基线：`.github/python-toolchain-baseline.json`。当前固定工具链来源为 PR #99 Head `83d23e8c04b1c05eb304c2a24a3392f6459ed0f1`；共享分支、允许 Base、uv/Python 版本和必需文件都由该清单声明。
 - 检查器：`scripts/python_toolchain_policy.py`；正反例测试：`tests/test_python_toolchain_policy.py`。实现只依赖 Python 标准库。
-- 普通 PR 的可信 Workflow 从 PR Base SHA 读取并执行策略脚本、基线清单和自测，而不是执行 PR Head 自己修改的版本。PR #112 是唯一一次 Bootstrap 例外，且 Base ref、完整 Base SHA 和清单 baseline SHA 都必须精确匹配 PR #99 固定 Head。后续 PR 若 Base 中不存在策略文件或清单，直接失败。
+- 普通 PR 的可信 Workflow 从默认分支读取并执行策略脚本、基线清单和自测，而不是执行 PR Base/Head 自己修改的版本；随后独立核验 PR Base 是否继承固定 uv 基线并包含所需策略文件。PR #112 是唯一一次 Bootstrap 例外，且 Base ref、完整 Base SHA 和清单 baseline SHA 都必须精确匹配 PR #99 固定 Head。PR #112 合并到默认分支前，`pull_request_target` 可信门禁尚未激活；此期间 PR #112 自身只运行固定 Bootstrap 检查和锁一致性检查。
 - 普通 PR 不得修改策略脚本、基线清单、可信 Workflow、Bootstrap/锁检查 Workflow 或策略自测；策略维护必须另行建立独立评审与授权，不能与普通产品实施 PR 混合。
 - Workflow 同时核对 Base 分支远端最新 SHA 与 PR 事件 Base SHA；快照已过期时 fail-closed，要求刷新后重跑。
 
@@ -194,12 +194,12 @@ Goal 在开始前建立 GitHub 检查点，执行期间每完成一个独立工�
 
 ### 9.3 合并门禁
 
-普通 PR 的目标分支应同时将以下两个 Check 配置为 Required：
+当可信 Workflow 已进入默认分支并开始运行后，普通 PR 的目标分支应同时将以下两个 Check 配置为 Required：
 
 - `Python Toolchain Policy / Python Toolchain Policy`：可信 Base 策略检查；
 - `Python Toolchain Policy Bootstrap / Python Lock Consistency`：PR Head 的锁文件一致性检查。
 
-PR #112 是一次性 Bootstrap：其 Base 尚未包含可信 Base Workflow，因此合并 PR #112 前，接收分支应将 `Python Toolchain Policy Bootstrap / Bootstrap Policy Check` 与 `Python Toolchain Policy Bootstrap / Python Lock Consistency` 配置为 Required。PR #112 合并后，后续普通 PR 使用上面两项常规 Required Checks；`Bootstrap Policy Check` 在普通 PR 中跳过，不应继续作为必需项。
+PR #112 是一次性 Bootstrap：其 Base 尚未包含可信 Workflow，且默认分支在 PR #112 合并前也尚未包含该 Workflow，因此合并 PR #112 前，接收分支应将 `Python Toolchain Policy Bootstrap / Bootstrap Policy Check` 与 `Python Toolchain Policy Bootstrap / Python Lock Consistency` 配置为 Required。PR #112 合并后，后续普通 PR 使用上面两项常规 Required Checks；`Bootstrap Policy Check` 在普通 PR 中跳过，不应继续作为必需项。
 
 **Workflow 通过不等于已启用合并阻断。** 仓库管理员必须在实际接收 PR 的目标分支 Branch protection / Ruleset 中配置 Required Checks；未配置前，CI 只能提供自动失败状态，不能保证 GitHub 拒绝合并。不得把“Workflow 已存在”误报成“分支保护已配置”。
 
