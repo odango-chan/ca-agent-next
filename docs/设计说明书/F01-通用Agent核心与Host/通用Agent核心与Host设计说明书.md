@@ -1,7 +1,7 @@
 # 通用 Agent Core 与 Host 设计说明书
 
 > 文档类型：功能设计说明书  
-> 文档版本：0.3.8\
+> 文档版本：0.3.9\
 > 状态：Next 目标设计；本仓实现状态需独立验收，不以参考仓 PASS 代替  
 > 功能归属：F01 — 通用 Agent Core 与 Host  
 > 关联 SR：SR-002、SR-020、SR-021、SR-032  
@@ -326,3 +326,4 @@ SR-002 的独立模块验收为 AC-002-01～AC-002-08，详见《演示验收基
 
 | 2026-11-26 | 0.3.7 | GPT-6（ChatGPT） | 当前目标契约 | 将 Model Loop 可见输入和 Action Proposal 从 Callable ID 改为 Capability ID，Callable 仅由 Host 从已验证 Binding 内部解析 | 切换到 1.6.0 Capability-first 单一作者入口 | Issue #12/#40；PR #46 |
 | 2026-11-27 | 0.3.8 | GPT-6.2（ChatGPT） | §5 | 将 Skill Package 根目录共享 Schema / Script 加入模型按需资源视图，并纳入 Host Script Execution system Capability 的 Action 校验 | 使 LLM 可以使用公共 Script，但不暴露宿主路径或任意代码执行 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.3.9 | GPT-6.2（ChatGPT） | §3、§5 | 将 LLM Script Action 的 Host 显式配置门禁固定为 `scriptExecution.llmEnabled`，默认关闭 | 防止仅凭 Script Registry 标记就向模型暴露脚本执行能力 | Issue #49；IR-008；SR-032 |
