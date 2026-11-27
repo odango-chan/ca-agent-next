@@ -1,11 +1,11 @@
 # EC01 — CA-SL 与 Skill 作者体系架构设计
 
 > 文档类型：外部能力域架构设计（Next 中央权威设计）  
-> 文档版本：0.1.4\
+> 文档版本：0.1.5\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 唯一新目标；作者规范/Compiler/Bundle 未发布）  
 > 功能归属：EC01；关联 F02、F06、F08、F09  
-> 关联需求：IR-003、IR-006；SR-004～SR-006、SR-011、SR-023  
-> 修订日期：2026-11-26
+> 关联需求：IR-003、IR-006、IR-008；SR-004～SR-006、SR-011、SR-023、SR-032  
+> 修订日期：2026-11-27
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：以本文第 §9 节为准；Demo 不引入生产级准入、签名或兼容层  
 > 来源：ca-skills main 780497a；CA-SL v1alpha5 发布规范 18d818436；PR #88/#89
@@ -22,8 +22,10 @@ CA-SL 1.6.0 complete author specification draft (not released; v1alpha5 archival
   ├─ optional Assurance author source
   │    ├─ contract.yaml
   │    ├─ procedure.yaml
-  │    └─ predicates.yaml
-  ├─ schemas / scripts / references
+  │    ├─ predicates.yaml
+  │    ├─ schemas/
+  │    └─ scripts/
+  ├─ references/
   └─ business Skill source
        ↓
 ca-skill-compiler (EC02, external build-time owner)
@@ -48,8 +50,8 @@ SKILL.md 是每个 Skill 的基础身份和描述入口，至少提供稳定名�
     contract.yaml
     procedure.yaml
     predicates.yaml
-  schemas/
-  scripts/
+    schemas/
+    scripts/
   references/
 ~~~
 
@@ -70,7 +72,7 @@ SKILL.md 是每个 Skill 的基础身份和描述入口，至少提供稳定名�
 | Procedure | 有序 Node、路由、输入绑定和操作/观察/后置条件 | Skill 选择 |
 | PredicateSet | 执行期事实判断与 Assurance | Skill 选择条件 |
 | Schema | 输入输出字段、类型及约束 | 业务执行逻辑 |
-| Script / Tool binding | 受契约约束的具体操作实现或外部调用 | 取代 Owner 权威结果 |
+| Script / Capability reference | Script 仅是 Skill 自有的纯本地 Python 转换 / Predicate evaluator；外部操作只引用已发布 Capability，由 Package / Compiler 绑定唯一 Callable | 用 Script 实现外部副作用；作者或模型直接选择 Callable / backendOperationId；取代 Owner 权威结果 |
 
 Node 仍包含 Precondition、Operation、Observation、Postcondition 阶段；新 1.6.0 的 Operation / Observation 仅引用 Capability ID，Observation 要求 `kind=observation` 且 `Effect=READ`；具体 1.6.0 Schema 由 ca-skills 正式发布并通过 SR-029 审核。历史 v1alpha5 的节点语义只读留档，不被新版解释器兼容。
 
@@ -120,7 +122,7 @@ CA-SL v1alpha5 的 when 已进入已合并的 ca-skills #88/#89 发布刷新；�
 - 完整新规范设计：[CA-SL 1.6.0 完整语言规范](../../规范/CA-SL%201.6.0完整语言规范.md)；历史来源：[CA-SL v1alpha5 完整语言规范](../../规范/CA-SL%20v1alpha5完整语言规范.md)，仅只读审计。
 - 作者模型原文：[CA-SL 作者模型](../../设计说明书/外部能力域/EC01-CA-SL/CA-SL作者模型原文.md)。
 - 作者指南原文：[CA-SL 作者指南中文原文](../../设计说明书/外部能力域/EC01-CA-SL/CA-SL作者指南原文.md)、[英文原文](../../设计说明书/外部能力域/EC01-CA-SL/CA-SL作者指南英文原文.md)。
-- **当前作者规则权威**：[SKILL 作者规范](../../规范/SKILL作者规范.md)，定义 Skill / Capability / Node 粒度、四阶段 Node 拆分 / 合并、注释原则和 AI Authoring 消费要求；不覆盖 CA-SL 1.6.0 语言语法。
+- **当前作者规则权威**：[SKILL 作者规范](../../规范/SKILL作者规范.md)，定义 Skill / Capability 粒度、Package 文件职责与 Schema 所有权、显式 SourcePath / arguments、when / Wait / Evidence / UNKNOWN、四阶段 Node 拆分 / 合并、注释原则和 AI Authoring 消费要求；不覆盖 CA-SL 1.6.0 语言语法。
 - 配套历史原文归档：[作者模型](../../设计说明书/外部能力域/EC01-CA-SL/CA-SL作者模型原文.md)、[Skill Granularity](../../设计说明书/外部能力域/EC01-CA-SL/CA-SL%20Skill%20Granularity%20原文.md)、[Authoring Syntax](../../设计说明书/外部能力域/EC01-CA-SL/CA-SL%20Authoring%20Syntax%20原文.md)、[Package Layout](../../设计说明书/外部能力域/EC01-CA-SL/CA-SL%20Package%20Layout%20原文.md)、[Schema Ownership](../../设计说明书/外部能力域/EC01-CA-SL/CA-SL%20Schema%20Ownership%20原文.md)、[Create Skill 工作流](../../设计说明书/外部能力域/EC01-CA-SL/CA-SL%20Create%20Skill%20工作流原文.md)。
 - Ingress Operation 契约：[原始设计](../../设计说明书/外部能力域/EC01-CA-SL/Ingress%20Operation契约设计原文.md)。
 - Schema 闭包：[原始设计](../../设计说明书/外部能力域/EC01-CA-SL/Schema闭包摘要设计原文.md)。
@@ -158,3 +160,4 @@ CA-SL v1alpha5 的 when 已进入已合并的 ca-skills #88/#89 发布刷新；�
 
 | 2026-11-26 | 0.1.3 | GPT-6（ChatGPT） | 1.6.0 新目标与历史边界 | 将 EC01 完整规范入口切换至 CA-SL 1.6.0，固定 languageTarget 候选并明确 v1alpha5 只读 | Issue #12/#40；PR #46 |
 | 2026-11-27 | 0.1.4 | GPT-6.2（ChatGPT） | §7～8、修订记录 | 增加 1.6.0 SKILL 作者规范权威入口，迁入 Granularity、Syntax、Package Layout、Schema Ownership 和创建工作流原文 | 将作者规则、语言语法和历史 v1alpha5 来源分层，明确新规范未发布 | IR-008；Issue #49；SR-032 |
+| 2026-11-27 | 0.1.5 | GPT-6.2（ChatGPT） | 文档头、§1～3、§7 | 将 EC01 包形状与 CA-SL 1.6.0 对齐，将 schemas/scripts 归入 assurance；删除旧 Tool binding 作者概念并明确 Capability / Script 边界；补齐 IR-008 / SR-032 范围 | 修复架构入口与中央语言规范、作者规范的目录和术语冲突 | IR-008；Issue #49；SR-032 |
