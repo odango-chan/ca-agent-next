@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.24\
+> 文档版本：0.2.25\
 > 状态：DRAFT（实施主状态）。PR #46 第二轮独立评审（1bf748db）：APPROVE_FOR_READY（原限定的 Compiler 设计及 AC-013-01 归档复核）。产品验收依各 AC 单列。
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-27\
@@ -24,7 +24,7 @@
 
 ## 1. 目标、范围与契约边界
 
-为下一正式 **CA-SL 1.6.0** 的可选 assurance/contract.yaml.when 提供 Compiler 发布阶段静态检查、跨语言 CheckedExpr、Request Schema、Schema-only Interface Package 依赖和 SR-029 唯一 Capability→Callable Binding，构建全新的单版本 BuildRequest/BuildResult、Runtime Artifact、Check/Build/Verify 和正式发布证据。历史 v1alpha5 PoC/发行物仅做审计，不能复用其 Build DTO 或计作新版产品验收。
+为下一正式 **CA-SL 1.6.0** 的有 Assurance Skill 可选 `SKILL.md` Front Matter `when` 提供 Compiler 发布阶段静态检查、跨语言 CheckedExpr、Request Schema、Schema-only Interface Package 依赖和 SR-029 唯一 Capability→Callable Binding，构建全新的单版本 BuildRequest/BuildResult、Runtime Artifact、Check/Build/Verify 和正式发布证据。无 Assurance Skill 不声明 when，不进入 Compiler 构建。历史 v1alpha5 PoC/发行物仅做审计，不能复用其 Build DTO 或计作新版产品验收。
 
 必须保持：
 
@@ -34,7 +34,7 @@
 - 单一 Go Compiler Core；Native CLI 与 WASM Worker 共用。
 - Compiler 只负责源解析、静态检查、链接、Artifact、Build/Verify 和发布证据。
 - Agent 只消费已发布 Bundle；Agent 不内置 Compiler、不调用 Compiler、不实现 Skill Admission。
-- when 只在 assurance/contract.yaml；不在 SKILL.md Front Matter；不新增 constraint.yaml、activation.yaml 或第二份 Contract；不进入 predicates.yaml。
+- `when` 仅位于有 Assurance Skill 的 SKILL.md Front Matter；`assurance/contract.yaml` 不包含 when。无 Assurance Skill 不声明 when。不得新增 constraint.yaml、activation.yaml 或第二份 Contract；when 不进入 predicates.yaml。
 - Next 的 Artifact 导入、Catalog、Skill Resolver 和运行时求值由 SR-004/005/006 负责，不混入本 SR 的 Compiler 代码范围。
 
 ## 2. 前置条件、固定输入和当前状态
@@ -56,7 +56,7 @@ SR-013 整体仍为 DRAFT。AC-013-01 的隔离 PoC 完成不自动把 SR-013 �
 | AC | 当前状态 | 下一步 |
 |---|---|---|
 | AC-013-01 | PASS（已归档的隔离 PoC 报告）；本轮复跑 NOT_RUN | 固定归档 SHA；产品验收继续按 AC-013-02～06 取证 |
-| AC-013-02 | NOT_RUN | 正式 Contract.when AST、G.4、Schema-aware Guard / Nullable lowering | 
+| AC-013-02 | NOT_RUN | 正式 SKILL.md Front Matter.when AST、G.4、Schema-aware Guard / Nullable lowering | 
 | AC-013-03 | BLOCKED（依赖 AC-013-02 和 Owner Gate） | Compiler Owner 确认新版 Artifact API 与 Manifest | 
 | AC-013-04 | NOT_RUN | 新版 Build / Verify、Go/Python、Native/WASM/Chromium 与旧契约回归 | 
 | AC-013-05 | BLOCKED（依赖 AC-013-01～04、AC-013-06 和发布授权） | 经授权发布 Compiler Release 并记录资产和 smoke 证据 |
@@ -124,17 +124,17 @@ AC-013-01 可记录为 **PASS（隔离 PoC 范围）**，但必须同时保留�
 
 PoC 中复用 Development Schema/Lock fixture 只证明共享 Schema 解析机制和序列化互操作，不允许正式产品路径依赖 Development Artifact 或改变 Development v1alpha1。
 
-## 4. AC-013-02：CA-SL 1.6.0 Contract.when、Request Schema 与静态检查
+## 4. AC-013-02：CA-SL 1.6.0 SKILL.md Front Matter.when、Request Schema 与静态检查
 
 ### 4.1 唯一目标与可复用输入
 
 - **唯一规范输入**是 ca-skills 正式冻结的 **CA-SL 1.6.0** 作者 Schema、规范条款与 Golden（发布前按 [SR-029](SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) 候选语义进行设计评审；实施前必须校验发布身份）。历史 v1alpha5 SHA、Compiler v2.1.0 和 AC-013-01 PoC 仅供算法、性能、Guard Facts 与跨语言类型互操作参考；不能作为新 Parser 的合法语言入口。
-- 对新 Compiler Parser、AST、SourcePath 与 Check 使用同一 1.6.0 作者契约；不新增独立 YAML parser，也不加载旧版作者源。Contract.when 为可选非空 CEL bool 表达式；无 when 则无 CheckedExpr。Contract.requestSchema 可独立声明，不与 when 强制捆绑。
+- 对新 Compiler Parser、AST、SourcePath 与 Check 使用同一 1.6.0 作者契约；不新增独立 YAML parser，也不加载旧版作者源。`SKILL.md` Front Matter `when` 为 Assurance Skill 的可选非空 CEL bool 扩展字段；无 when 则无 CheckedExpr。`assurance/contract.yaml` 的 Contract.requestSchema 可独立声明，不与 when 强制捆绑。无 Assurance Skill 不声明 when，且不进入 Compiler Check / Build。
 - 新 Compiler 必须先完成 SR-029 的 Capability→唯一 Callable Link 静态规则：未声明、未解析、重复归属、多成员、kind/Effect/Schema 不符均拒绝；只有全部 Skill 输入通过才能产出 Artifact，绝不从旧 Alias::Callable 反推新 Capability。
 
 ### 4.2 实施算法与结果
 
-1. 将 `assurance/contract.yaml.when` 和 `requestSchema` 接入唯一 1.6.0 Parser、AST 与 SourcePath，保留精确行列；旧 v1alpha5 Contract/Procedure 和旧 BuildRequest 一律拒绝。
+1. 将 `SKILL.md` Front Matter `when` 与 `assurance/contract.yaml` 的 `requestSchema` 分别接入唯一 1.6.0 Parser、AST 与 SourcePath，保留精确文件/行列；`when` 仅在 Assurance Package 中合法；旧 v1alpha5 Contract/Procedure 和旧 BuildRequest 一律拒绝。
 2. 每个 Skill 独立建立 `event.type` 类型环境；只有 when 引用 `input` 时，必须存在已声明 Request Schema，使用对应 Schema Registry/root/$ref 闭包加载输入字段类型。单纯 `event.type` 判断不强制声明 requestSchema；已声明的 Schema 无论 when 是否引用仍需完整校验和发布。
 3. 仅允许规范规定的 CEL 白名单：静态成员路径、bool 结果、显式 `has`、null/non-null guard 与左到右 AND/OR/NOT 的 path-sensitive short-circuit facts；所有 optional/nullable 祖先必须被证明安全，禁止 DynType、数组索引、动态构造、未声明函数、时钟、随机数、外部状态。
 4. 对 nullable 联合类型使用经 AC-013-01 隔离验证的 oneof wrapper **算法**重新按 1.6.0 类型 Schema 落地；CheckedExpr 为标准 protobuf `cel.expr.CheckedExpr`，Any type URL 为 `type.googleapis.com/cel.expr.CheckedExpr`；DescriptorSet 为标准 `google.protobuf.FileDescriptorSet`。
@@ -146,8 +146,9 @@ PoC 中复用 Development Schema/Lock fixture 只证明共享 Schema 解析机�
 
 | 样例 | 预期 |
 |---|---|
-| 无 when、无 requestSchema，合法 1.6.0 Skill | 静态校验通过，无 CheckedExpr/Schema 资产 |
-| event.type-only when，未声明 requestSchema | 通过；checked bool program 存在、input type closure 为空 |
+| 有 Assurance、无 when、无 requestSchema | 静态校验通过，无 CheckedExpr/Schema 资产 |
+| 有 Assurance、event.type-only Front Matter when，未声明 requestSchema | 通过；checked bool program 存在、input type closure 为空 |
+| 无 Assurance 但 Front Matter 声明 when | 不进入 Compiler；由 SR-004 Importer 明确拒绝，无 candidate |
 | 声明 requestSchema、event.type-only when | 通过；requestSchema 根和完整资源仍发布 |
 | input 字段 when + 正确 Request Schema | 通过；CheckedExpr 与 DescriptorSet 路径、类型、SourcePath 闭合 |
 | input when 无 requestSchema、未知字段、缺 optional/null 守卫、非 bool、非法 CEL | `CEL_INVALID`，具体失败位置可定位，产物为空 |
@@ -301,7 +302,7 @@ ca-skills 的 Skill Bundle 组装与发布由 SR-027 负责；Next 导入与运�
 AC-013-01  隔离 PoC（归档报告 PASS；本轮复跑 NOT_RUN）
      |
      v
-AC-013-02  正式 Contract.when / G.4 / Schema-aware 编译
+AC-013-02  正式 SKILL.md Front Matter.when / G.4 / Schema-aware 编译
      |
      v
 AC-013-03  新版 Runtime Artifact API / Manifest / 文件布局
@@ -441,3 +442,4 @@ OpenAPI operation / multipart ingress 验证由 SR-010 负责；Compiler 负责 
 | 2026-11-27 | 0.2.22 | ChatGPT / GPT-6 | 3GPP Schema 与阶段输入补充 | 明确公共 Schema-only 导出、选择期 Request 与执行期 Codec Result 的 Link / 业务字段来源 | 关闭 Create 选择前依赖 NAS 解码的循环、固定跨包类型门禁 | IR-009；Issue #47；SR-031/026/013 |
 | 2026-11-27 | 0.2.23 | ChatGPT / GPT-6 | 本轮 IR-009 设计修正 | 固定 OpenAMSM 版本 + 原版 YAML 逐字节代发布；显式区分可选 Adapter 与 Provider Codec 输出 | 落实原版 YAML 不得改动、消除误把原版当 G.4 的风险 | Issue #47；SR-031/026/013 |
 | 2026-11-27 | 0.2.24 | ChatGPT / GPT-6.2 | AC-013-07 | 改为原版 OAS3 组件直接引用；新增跨 dialect Resolver、闭包、语义保真、CEL 类型推导和 T1/T2 负例 | 撤销强制 Adapter 假设，避免复制或改写标准 | IR-009；Issue #47；SR-031/010/026/027 |
+| 2026-11-27 | 0.2.25 | GPT-6.2（ChatGPT） | §0、§4、AC-013-02、依赖图、修订记录 | 将 Compiler 输入的 `when` 来源改为有 Assurance Skill 的 SKILL.md Front Matter；明确无 Assurance Skill 不声明 when 且不进入 Compiler | 对齐用户确认的入口决策，避免 Compiler 继续读取已废弃的 Contract.when | Issue #49；IR-008；SR-032；F02/F08 |
