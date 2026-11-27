@@ -1,13 +1,13 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.29\
+> 文档版本：0.3.30\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
 > 修订日期：2026-11-27\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级准入、额外 package-level digest、签名和 Trust Registry；历史 Compiler v2.1.0 的 `files[].sha256` 要求仅归旧版审计，不转为新版 Schema 要求
 
-关联 IR-006、IR-008、SR-015、SR-016、SR-020（参考宿主架构审计）、SR-024（旧 Development Host Publisher，仅历史）、SR-025（MAS Owner 1.6.0 Publisher）、SR-030（Host Context 1.6.0 Schema-only Publisher）、SR-032（中央 SKILL 作者规范）；新 1.6.0 Compiler 接口以 [EC02 Compiler 设计说明书](../EC02-Compiler/Compiler设计说明书.md) v0.2.13 和 [SR-013](../../SR/SR-013-Compiler已检查when与发布产物.md) v0.2.21 为准；历史 EC02 Development Build 设计只保留源审计，不作为当前 Compiler DTO/Worker/Bundle 发布入口。基线为 [docs/architecture/studio-boundaries.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/architecture/studio-boundaries.md)、[docs/design/ai-procedure-authoring.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/design/ai-procedure-authoring.md)。
+关联 IR-006、IR-008、SR-015、SR-016、SR-020（参考宿主架构审计）、SR-024（旧 Development Host Publisher，仅历史）、SR-025（MAS Owner 1.6.0 Publisher）、SR-030（Host Context 1.6.0 Schema-only Publisher）、SR-032（中央 SKILL 作者规范）；新 1.6.0 Compiler 接口以 [EC02 Compiler 设计说明书](../EC02-Compiler/Compiler设计说明书.md) v0.2.13 和 [SR-013](../../SR/SR-013-Compiler已检查when与发布产物.md) v0.2.26 为准；历史 EC02 Development Build 设计只保留源审计，不作为当前 Compiler DTO/Worker/Bundle 发布入口。基线为 [docs/architecture/studio-boundaries.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/architecture/studio-boundaries.md)、[docs/design/ai-procedure-authoring.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/design/ai-procedure-authoring.md)。
 
 ## 1. 编辑与语言服务
 
@@ -247,3 +247,4 @@ AI Authoring 的 Change Set 必须遵守中央 [SKILL 作者规范](../../规范
 | 2026-11-27 | 0.3.27 | GPT-6.2（ChatGPT） | §9.3 | AI Authoring 只禁止在 Studio Worker 自建执行器；正常 Agent Runtime 的 Script Action 使用完整 Registry 和共享 Script Runner，不增加双门禁 | 区分 Authoring 工作台与 Agent Runtime 的职责，不限制 LLM 在运行时使用 Package scripts/ | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.3.28 | GPT-6.2（ChatGPT） | §9.3 | 删除 Procedure Change Set 的 Node-entry Wait 字段；AI Authoring 通过 F05 Resource Read 读取共享资源，正常 Runtime 可调用全部登记 Script | 保持 Studio 作者体验与无 Wait CA-SL 语法、共享资源读取和统一 Script Runner 一致 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.3.29 | GPT-6.2（ChatGPT） | §3、§9.3 | 将 `when` 编辑与校验路径改为有 Assurance Skill 的 SKILL.md Front Matter；明确无 Assurance Skill 不声明 when | 对齐用户确认的 Skill 入口方案，避免 Studio 仍编辑已废弃的 Contract.when | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.3.30 | GPT-6.2（ChatGPT） | 文档头、设计依据 | 同步 SR-013 最新版本引用 | 确保 Studio 的 when / Compiler gate 设计引用当前 Front Matter.when 入口 | Issue #49；IR-008；SR-032；SR-013 |
