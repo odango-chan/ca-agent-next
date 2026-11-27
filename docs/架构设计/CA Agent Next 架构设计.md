@@ -2,11 +2,11 @@
 
 > 文档类型：总体架构设计  
 > 状态：目标架构基线；SR-002 Python Host/Model Loop 最小切片 VERIFIED；SR-003 v0.3.11 VERIFIED（模块 AC-003-01～04）；PR #34/#41/#42 已合入恢复分支，双平台 CI SUCCESS；系统 EX-02/03/04/18 未完成；完整 Runtime 尚未验收    
-> 文档版本：0.4.5
+> 文档版本：0.4.6
 > 修订日期：2026-11-27  
 > 适用范围：ca-agent-next 通用 Agent Core、Host、Runtime、Skill 与 Plugin 公共机制  
 > 权威边界：本文是本仓唯一总体架构文档；字段级契约见规范，机制细节见设计说明书  
-> 全局评审范围：继承根目录 Agent.md 的 review_scope；本文局部非目标见 §2.2
+> 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：以本文范围与非目标章节为准；无额外扩展  
 
 关联需求项见 [IR-002](../IR/IR%20总登记册.md#ir-002)、[IR-003](../IR/IR%20总登记册.md#ir-003)、[IR-004](../IR/IR%20总登记册.md#ir-004)、[IR-005](../IR/IR%20总登记册.md#ir-005)。
@@ -290,3 +290,4 @@ sequenceDiagram
 | 2026-11-26 | 0.4.3 | Codex / GPT-6 | 见本行变更 | §Tool 更正业务公共契约所有权 | 对齐跨仓实现与独立复验 | Issue #12 |
 | 2026-11-26 | 0.4.4 | GPT-6.2（ChatGPT） | 文档头、§13～§14 | 更新 ca-skills、ca-client-tools、ca-agent-demo、Studio 与 Next 当前 main/PR 状态；记录 #34 MERGED 到恢复分支及 SR-025 READY/#43 OPEN | 避免将 PR 合并、模块 CI 和系统 EX 混为一谈；同步外部 Publisher 与 Studio 消费状态 | Issue #12；IR-006；SR-003、SR-016、SR-024、SR-025；ca-client-tools #43；Studio #269/#272/#276 |
 | 2026-11-27 | 0.4.5 | GPT-6.2（ChatGPT） | 文档头、§13～§14 | 将 Studio main 更新为 `79bd2c3`；按 SR-003 v0.3.11 和 PR #41/#42 回填模块 VERIFIED 与双平台 CI，保留系统 EX NOT_RUN | 整合外部状态时保留恢复分支较新的模块验收结果，不将历史 IN_PROGRESS 快照带入当前架构状态 | Issue #53；Issue #12；SR-003、SR-016、SR-024、SR-025；PR #34/#41/#42；Studio #261/#269/#272/#276/#279/#290/#295 |
+| 2026-11-27 | 0.4.6 | GPT-6.2（ChatGPT） | 文档头 | 将全局 review_scope 声明调整为仓库治理规范要求的唯一规范文本；局部非目标继续由独立章节承载 | 修复 Review Context 正式文档头检查失败，不改变总体架构语义 | Issue #53；PR #54 |
