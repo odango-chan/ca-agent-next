@@ -1,7 +1,7 @@
 # SKILL 作者规范（CA-SL 1.6.0）
 
 > 文档类型：Skill 作者规范（Next 中央规范性设计稿）  
-> 文档版本：0.1.1  
+> 文档版本：0.1.2  
 > 状态：**DRAFT / REVIEW_REQUESTED**（作者规则待独立评审；CA-SL 1.6.0 尚未由 ca-skills 正式发布）  
 > 语言目标：CA-SL 1.6.0 only；不兼容任何历史作者语法  
 > 功能归属：EC01 — Skill 作者规范与业务 Skill；消费端关联 F02 / F09  
@@ -66,12 +66,16 @@ skill-root/
 | 文件 / 目录 | 作者职责 | 不应放入的内容 |
 |---|---|---|
 | SKILL.md | Agent-facing 身份、用途、适用场景、业务输入、完成语义、限制与指导 | Capability Grant、Procedure、when、Tool 权限、Provider 内部细节 |
-| assurance/contract.yaml | 唯一作者 Contract：when、requestSchema、contexts、dependencies、capabilities、单一全局 precondition、limits | 第二份 Contract、独立 Goal 字段、Callable ID、下载 URL / branch / digest |
+| assurance/contract.yaml | 唯一作者 Contract：when、requestSchema、contexts、dependencies、capabilities、单一全局 precondition、limits | 第二份 Contract、独立 Goal 字段、Callable ID、Git URL / branch / 下载指令 / 作者自选 Callable |
 | assurance/procedure.yaml | 唯一静态 Procedure DAG、显式 inputs、Node 阶段和 routes | 动态生成图、隐式状态传递、私有 backendOperationId |
-| assurance/predicates.yaml | Predicate 参数签名、Evidence 要求和 evaluator | Skill 选择条件、隐藏副作用 |
+| assurance/predicates.yaml | Predicate 参数签名、Evidence 要求和 evaluator；没有 Predicate 时仍保留合法空 PredicateSet | Skill 选择条件、隐藏副作用 |
 | assurance/schemas/ | Skill 自有 Request 根及明确声明的本地 Schema | 复制 Owner / Provider / Host 的外部 Schema |
 | assurance/scripts/ | 可选的纯本地 Procedure / Predicate Script | HTTP、SBI、文件、数据库或 Provider 副作用 |
 | references/ | 按需加载的协议说明、标准映射、长篇业务背景和来源材料 | 隐式 Runtime 输入或执行权限 |
+
+没有 `assurance/` 的 Skill 仅支持 LLM-guided。存在 `assurance/` 时，`contract.yaml`、`procedure.yaml`、`predicates.yaml`（无 Predicate 时也须是合法空 PredicateSet）、Schema、依赖和所有静态语义必须全部有效，才同时具备 Deterministic 与 LLM-guided 两种模式；Assurance 不完整或无效时必须拒绝，不得静默降级为 LLM-guided。
+
+`assurance/scripts/` 只允许 Skill 自有的纯本地 Python Script：Procedure Script 是 Operation 阶段的纯数据转换，Predicate Script 是纯判断 evaluator；不得访问网络、任意文件系统、子进程、秘密或产生外部副作用。
 
 旧版 ca-skills 的根目录 schemas/、scripts/、cases/ 等布局仅保留历史参考。除非 CA-SL 1.6.0 正式 Package Schema 明确增加，不得把旧目录结构直接搬入新版 Bundle。Skill Studio 的工作区目录（例如 lib / output）也不是 Skill Package 的作者文件。
 
@@ -129,9 +133,9 @@ skill-root/
 3. Observation
 4. Postcondition
 
-Node 至少包含一个阶段。阶段可以省略，但不得重排、重复或用注释补足。Precondition / Postcondition 阶段内部使用非空、有序的 predicates 列表。Operation 阶段最多调用一个公开 Capability 或一个纯本地 Procedure Script；Observation 阶段最多调用一个只读 Observation Capability。
+Procedure 必须是单一静态 DAG，具有 `start` 和 `nodes`；不得动态生成节点、任意循环或嵌套 Procedure Call。Node 至少包含一个业务阶段。阶段可以省略，但不得重排、重复或用注释补足。Precondition / Postcondition 阶段内部使用非空、有序的 `predicates` 列表。Operation 阶段最多调用一个公开 Capability 或一个纯本地 Procedure Script；Observation 阶段最多调用一个只读 Observation Capability。非末阶段的正常 Outcome 按语言规则进入下一阶段；当前 Node 的末阶段必须显式路由。
 
-Node-entry Wait 是目标 Node 入口的可选控制，不是第五阶段，不创建 Wait-only Node；作者不得写 await / poll 循环。Mutation Reconcile 是 Runtime / Owner 的内部流程，不创建作者 Reconcile Node。
+Node-entry Wait 是目标 Node 入口的可选控制，不是第五阶段，不创建 Wait-only Node；它由 Host Runtime 的内部 READ 触发机制执行，并引用显式依赖中的 package-scoped Ingress Operation / Event Contract。作者不得自行声明 `payloadSchema`、复制协议 Schema、把 MUTATION Capability 当作 Wait trigger，也不得写作者级 await / poll 循环。Wait 的 timeout 只走 Wait-scoped `TIMEOUT` 路由；事件接受后仍须执行业务阶段和 Postcondition，不能直接证明成功。Mutation Reconcile 是 Runtime / Owner 的内部流程，不创建作者 Reconcile Node。
 
 ## 6. Node 拆分与合并原则
 
@@ -221,21 +225,13 @@ Skill-facing 执行语义必须由正式 Contract、Schema、Capability 引用�
 
 ### 7.5 注释示例
 
-以下为 Procedure 片段，后续 `verify-context` Node 的定义省略；Mutation 的正常结果只路由到后续验证，不直接证明 Invocation 成功。
+以下只展示注释写法，不是可构建的 Procedure 示例：
 
 ~~~yaml
-nodes:
-  # One public mutation boundary. The Owner owns the internal SBI/NAS/PFCP steps.
-  create-context:
-    operation:
-      capability: mas.sc.context.create
-      arguments:
-        psi: inputs.psi
-      routes:
-        SUCCEEDED: verify-context
+# One public mutation boundary. The Owner owns the internal SBI/NAS/PFCP steps.
 ~~~
 
-上例中的注释解释为什么不把 Owner 内部步骤拆成 Skill Node；真正的调用目标和参数仍由 capability / arguments 表达。若删除注释，执行语义不应改变。
+该注释解释为什么不把 Owner 内部步骤拆成 Skill Node；真正的调用目标、arguments、Outcome 和 routes 必须由 CA-SL 1.6.0 的正式作者结构表达。若删除注释，执行语义不应改变。
 
 SKILL.md 正文与 YAML 注释遵循项目语言约定，并在同一 Skill Package 内保持一致；注释应简洁、可读，不因语言选择改变 CA-SL 语义。Next 的规范、设计和迁移文档使用中文。
 
@@ -276,7 +272,7 @@ SKILL.md 正文与 YAML 注释遵循项目语言约定，并在同一 Skill Pack
 - [ ] 新 Assurance 只使用 CA-SL 1.6.0；没有旧版字段、Callable 或兼容入口。
 - [ ] Contract.when 位于 contract.yaml；只读取 event.type 和 requestSchema input。
 - [ ] requestSchema、contexts、dependencies、capabilities 的所有权与身份准确。
-- [ ] 每个 Node 的阶段顺序正确，每种阶段不重复。
+- [ ] Procedure 是单一静态 DAG；每个 Node 的阶段顺序正确，每种阶段不重复；末阶段正常 Outcome 显式路由。
 - [ ] 每个 Operation 阶段最多一个 Capability / 纯 Script；每个 Observation 阶段最多一个 READ Capability。
 - [ ] Node 拆分依据是业务动作、独立提交或证据边界，而不是 HTTP / Provider 内部步骤。
 - [ ] Precondition / Postcondition 中的 Predicate 有序聚合，没有单 Predicate Node。
@@ -333,3 +329,4 @@ Apply 前仍须由用户确认，并对同一候选源码与依赖锁执行正�
 |---|---|---|---|---|---|
 | 2026-11-27 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 从 ca-skills 作者指南、作者模型、Granularity、Package Layout、Schema Ownership、创建工作流和真实 Skill 样本中提炼仍有效原则；按 CA-SL 1.6.0 重建作者包、Node 粒度与注释规则 | Issue #49；IR-008；SR-032；SR-023/029 |
 | 2026-11-27 | 0.1.1 | GPT-6.2（ChatGPT） | §3.1、§4.1～4.2、§7～8、§10 | 修正 Procedure.inputs 仅允许 context SourcePath 的边界，补充 SourcePath 根与 Node Producer 引用；移除无依据的英文强制要求；区分 Skill 作者语义与 Owner / Runtime 契约所有权；修复示例的正常路由 | 避免作者指南超出 CA-SL 1.6.0 语言稿或引入无依据的语言约束 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.1.2 | GPT-6.2（ChatGPT） | §3、§5、§7、§10 | 补充 Assurance 有效性与模式边界、空 PredicateSet、静态 DAG 和 Node-entry Wait 的作者要求；将代码示例缩为不伪装可构建的注释片段 | 避免作者误把参考片段当作完整 1.6.0 Procedure 或把无效 Assurance 静默降级 | Issue #49；IR-008；SR-032 |
