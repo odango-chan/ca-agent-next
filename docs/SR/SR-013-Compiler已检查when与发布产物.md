@@ -1,7 +1,7 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.21\
-> 状态：DRAFT（实施主状态）。PR #46 第二轮独立评审（1bf748db）：APPROVE_FOR_READY（原限定的 Compiler 设计及 AC-013-01 归档复核）。产品验收依各 AC 单列。
+> 文档版本：0.2.22\
+> 状态：DRAFT（实施主状态）；独立模型 Review #6082541121（固定 Head 3d5f17b7）：APPROVE_FOR_READY（仅原限定 Compiler 设计及 AC-013-01 归档复核）；本轮 P2 R3-SR013-01/02 已修订，AC-013-02/04 NOT_RUN、AC-013-03/05/06 BLOCKED，READY=0。
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-27\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -49,7 +49,7 @@
 | 合并 / 发布 | 必须单独授权；本轮不包含 |
 | 规范门槛 | **未满足**；CA-SL 1.6.0 规范/机器标识/Capability Binding 尚未正式发布；历史 v1alpha5 不能替代 |
 | PoC | [PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)已核对 58 个文件与 SHA256SUMS；归档报告为 Go/Python 18/18，当前审计复跑 NOT_RUN |
-| 产品实施 | AC-013-02～04 NOT_RUN；AC-013-05/06 BLOCKED（依赖正式 Schema / Package Schema / 发布授权） |
+| 产品实施 | AC-013-02/04 NOT_RUN；AC-013-03/05/06 BLOCKED（依赖正式 Schema / Package Schema / 发布授权） |
 
 SR-013 整体仍为 DRAFT。AC-013-01 的隔离 PoC 完成不自动把 SR-013 提升为 READY，也不授权修改 Compiler 主线、合并 PR 或发布 Release。
 
@@ -208,6 +208,8 @@ request-schema 根与完整 G.4 $ref 资源闭包只要 Contract 声明 requestS
 - 按新版 Manifest 装配确定性 Artifact。
 - 无错误时返回完整 Artifact；任何错误都返回空 OutputFiles，不返回部分产物。
 - RFC 8785 JCS、排序和现有确定性规则保持；不写时间、随机值或环境路径。
+- 所有 protobuf 产物（包括 `cel.expr.CheckedExpr`、`google.protobuf.FileDescriptorSet`、Any wrapper）必须使用 Go protobuf `proto.MarshalOptions{Deterministic:true}` 编码；Any 内层消息先按确定性模式编码。DescriptorSet 的 FileDescriptor、dependency、message/field declaration 与 source info 顺序必须由稳定排序生成。禁止使用默认 `proto.Marshal` 作为产品 Artifact 序列化路径。
+- 确定性保证绑定同一固定 Compiler Release / protobuf runtime 版本与相同输入；不声称跨任意 protobuf runtime 版本的字节兼容。
 
 ### 6.2 Verify
 
@@ -218,6 +220,7 @@ request-schema 根与完整 G.4 $ref 资源闭包只要 Contract 声明 requestS
 - 验证所有类型引用可解析，Request Schema identity 与该 Skill 一致。
 - 验证 SourcePath、表达式位置、程序文件与 Manifest 一致。
 - 验证不存在跨 Skill Descriptor 引用。
+- 对相同固定输入执行两次全新 Build；逐个比较所有 `.pb` 文件的原始字节，验收记录必须列出每个路径及 `changed_between_runs=0`；任一 `.pb` 不同即 AC-013-04 FAIL，不得只凭 JCS/JSON 一致宣称 Build 确定。
 - 新 Runtime Build 只接受 CA-SL 1.6.0 的**新 BuildRequest/BuildResult/Artifact**；VerifyBuildResult 只验证该唯一新结果，执行完整重建和逐文件比较或 Compiler Owner 批准的等价确定性复验。旧 BuildRequest v1alpha5、旧 Artifact/Bundle/Development v1alpha1 均被新 Compiler/Agent 拒绝，无兼容、自动迁移或 fallback。旧 v1alpha5 Runtime Verify 行为由旧 v2.1.0 Release 保持，不在新二进制内兼容路由；历史 Development Verify 仅由旧 v2.1.0 发布物保留供审计，**新 Compiler 不提供兼容调用入口**。现有 CLI 写盘前 Verify 的不变量必须保留。
 - 旧 v2.1.0 Release 继续保持历史原状；本新 Compiler 不内置旧 v1alpha5 或 Development v1alpha1 Runtime Verify 兼容路由。
 
@@ -239,7 +242,7 @@ git diff --check
 
 - 新版 Build / Verify 正向、负向、损坏产物、缺文件、缺 Descriptor、错误 Any type URL、Request Schema 根/资源缺失或引用不闭合和多 Skill 隔离全部通过。
 - 覆盖 requestSchema/when 组合：无二者、仅 requestSchema、仅 event.type when、requestSchema + event.type when、requestSchema + input when；input when 无 requestSchema 必须 CEL_INVALID。
-- 新版重复 Build 字节确定。
+- 新版重复 Build 字节确定：对 `when.checked.pb`、`when.types.pb` 及其他所有 `.pb` 逐文件记录两次独立 Build 的 SHA/字节比较结果，必须 `changed_between_runs=0`；同时记录完整 Artifact 的字节比较。默认 protobuf 序列化导致的任何 `.pb` 差异均 FAIL，即使 JSON/JCS 部分完全一致。
 - **零 Capability roots 正例**：合法 Assurance 没有外部 Capability 引用时，BuildRequest 的 Capability roots 可以为空；若也没有外部 Schema 引用，Package dependency closure 可以为空，并产生不含外部 Tool Effect 的新 1.6.0 Artifact。若 Contract.contexts 显式引用 Schema-only Package，则 dependency closure 必须包含该 Package 的精确 Schema export / $ref 闭包，但 Capability roots、Callable bindings 仍为空；该组合由 AC-013-06 独立验收。**反例**：引用任何外部 Capability 却缺少显式依赖，静态报告 `CAPABILITY_UNRESOLVED` 且 outputFiles 为空；不得把“零 Capability roots”错误解释成“禁止 Schema-only 依赖”，也不得为旧非空根限制虚构 Tool / Callable。
 - 冻结 Artifact v1alpha5 的 Schema/Golden 与旧 v2.1.0 Release Verify 行为不变；新 Runtime Build 不提供旧 BuildResult v1alpha5 兼容路由。Development v1alpha1 的 Schema/Golden 和独立 Verify 行为只在**旧 v2.1.0 发布物**中保留，不作为新 Compiler 的兼容 API 或 Agent 发布包。
 - Native、WASM、CLI E2E、Chromium Worker parity 与 Python 互操作全部有真实执行日志。
@@ -411,12 +414,11 @@ SR-013 只有 AC-013-01～06 均达到各自通过条件，Compiler Release 有�
 | 2026-11-26 | 0.2.12 | GPT-6（ChatGPT） | 活跃版本互引与修订记录 | Compiler 实施设计引用 F08 新唯一 1.6.0 Build DTO 版本 | 不将旧基线或历史修订版本冒充当前待评审设计 | Issue #40；SR-029 |
 | 2026-11-26 | 0.2.13 | GPT-6（ChatGPT） | 文档头、§0、设计依据 | 登记统一 1.6.0 专项设计评审、阻塞与证据边界；不改变产品实施主状态 | 设计集中评审、避免历史来源冒充新发布 | Issue #12；SR-029；PR #45 |
 | 2026-11-26 | 0.2.14 | GPT-6（ChatGPT） | 核心规范与验收章节 | 重写 AC-013-02 新规范算法/正负矩阵，修复旧 BuildRequest/Parser/Manifest/Development 兼容冲突 | 收敛 CA-SL 1.6.0 单版本可评审契约；旧 PoC 只作证据 | Issue #12/#40；SR-013；SR-029；PR #46 |
-| 2026-11-27 | 0.2.21 | Codex / GPT-6 | 评审状态 | 登记第二轮限定范围及外部依赖 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
-
 | 2026-11-26 | 0.2.15 | GPT-6（ChatGPT） | 设计依据与新版本路径 | 刷新 1.6.0 正式目标设计引用：v0.2.9→v0.2.10、v0.3.12→v0.3.13 | 避免旧 Compiler/Publisher 章节被当成新实施入口 | Issue #12/#40；PR #46 |
-
 | 2026-11-26 | 0.2.16 | GPT-6（ChatGPT） | 最终一致性复评 / 规范性描述 | 补齐零外部根依赖的 Build/Verify 正反验收、旧 Development 仅历史保留及 1.6.0 Request Schema 权威 | 消除 1.6.0 与历史 Development 的模糊措辞，修正后续评审的可执行门槛 | Issue #12/#40；PR #46 |
 | 2026-11-26 | 0.2.17 | GPT-6（ChatGPT） | §1～§2、AC-013-04～06、依赖图、READY 与修订记录 | 新增 AC-013-06，定义 Schema-only Interface Package 与零 Capability roots / 非空 Schema dependency closure 的区别；修正 AC-013-04 对空 roots/closure 的表述 | SR-030 已要求 Host Context Schema-only Package，但 SR-013 原先缺少对应 Compiler AC；防止 Compiler 将零 Capability roots 错误解释为零 Schema dependencies，或虚构 Tool/Callable | Issue #12/#40；SR-029、SR-030；EC02；F08；PR #46 |
 | 2026-11-26 | 0.2.18 | GPT-6（ChatGPT） | AC-013-06 语义边界、READY 定义、修订记录 | 将 Schema-only Package 的使用范围收敛为 Contract.contexts；明确 requestSchema 始终由 Skill 自有 Schema 提供 | 与 CA-SL 1.6.0 Request Schema / Context Schema 所有权边界保持一致 | Issue #12/#40；CA-SL 1.6.0；SR-030；PR #46 |
 | 2026-11-26 | 0.2.19 | Codex / GPT-6 | 设计依据、§9、§11～12 | 修复 F08 链接、Bundle 归属和发布依赖方向，明确候选联验与推送证据 | 避免以 Compiler 自身 Release 阻塞实现，或拿旧 Golden 做兼容 | Issue #12/#40，PR #46，SR-013/027/030 |
 | 2026-11-27 | 0.2.20 | Codex / GPT-6 | 评审入口 | 回填独立评审批准评议的具体范围 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
+| 2026-11-27 | 0.2.21 | Codex / GPT-6 | 评审状态 | 登记第二轮限定范围及外部依赖 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
+| 2026-11-27 | 0.2.22 | GPT-6（ChatGPT） | §2、§6.1～6.4、修订记录 | 明确 CheckedExpr/DescriptorSet/Any 的确定性 protobuf 序列化与逐 `.pb` 字节验收；统一 AC-013-02/04 NOT_RUN、AC-013-03/05/06 BLOCKED；按版本恢复连续修订账本 | 处理独立模型 Review #6082541121 的 R3-SR013-01/02 与 R3-LEDGER-01，避免 protobuf 默认 Marshal 导致 Build 非确定及状态表冲突 | Issue #12；PR #46；Review #6082541121 |

@@ -1,8 +1,8 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.51
-> 状态：29 项 SR：4 VERIFIED、1 IMPLEMENTED、24 DRAFT；第三轮独立评审尚未提交正式 GitHub Review，READY=0
+> 文档版本：0.3.52
+> 状态：29 项 SR：4 VERIFIED、1 IMPLEMENTED、24 DRAFT；第三轮独立模型 Review #6082541121 已留存（仅固定旧 Head），当前后续 Head 待独立复评，READY=0。
 > 修订日期：2026-11-27\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
@@ -55,56 +55,49 @@
 
 设计版本与章节、依赖、验收 ID、实施证据以各 SR 为准。逐项阻塞见[就绪审计](../参考与审计/跨仓设计资产迁移与一致性审计.md#8-设计就绪审计)。
 
-### 2.1 本批 DRAFT 的设计待评审清单（与实施主状态正交）
+### 2.1 第三轮独立模型评审记录（2026-11-27）
 
-首轮评审（fd80c74）为 6 项限定可评议、18 项需修订。第二轮独立设计评审固定在 `1bf748db86c553dfcbf140477928fd68d811e67e`，结论 PARTIALLY_APPROVED。下表登记该轮的 12 项限定 APPROVE_FOR_READY、10 项 CHANGES_REQUESTED 与 2 项 BLOCKED_EXTERNAL_INPUT。该轮已关闭 D2、D4、D6～D8、D11、D12 的指定设计范围。D1、D3、D5、D9、D10、D13、D15 对应的中央文字已修订，待第三轮独立核查。D14 等待 Provider Owner 发布。24 项实施主状态均为 DRAFT。
+**正式评审证据：**[GitHub Review #6082541121](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6082541121)，事件为 `COMMENTED`，提交时间 2026-11-27T02:02:40Z；评审模型为 DeepSeek Harness Goal / `opencode-go/deepseek-v4.1-flash` / reasoning effort `low`。用户确认作者模型与评审模型不同，因此这是**独立模型评审**；同一 GitHub 登录不否定模型层独立性。GitHub event 仍是 COMMENTED，不得写成平台 APPROVED。
 
-| 复评项 | 权威位置与核查内容 |
-|---|---|
-| D1～D3 | SR-029 / F03.05 / EC02 与 F06 的 2/2、3/3；F02 / F08、SR-004/005 的 Schema-only、Program 构造及代际激活。 |
-| D4～D6 | SR-004、演示验收与 Phase C 检查 06A/06B；SR-005/006/007 验证事件计数、直接文本和从原 Run 续跑。 |
-| D7～D8 | F06 §6～7、SR-010/011 核对双路 originalInvocationId、Owner Proof 及 06a/06b 测试环境。 |
-| D9～D10 | SR-008/011 的进程或隔离环境，SR-016 的六宿主，G02 / SR-028 的完整依赖与双平台触发路径。各入口的存在性及产品输入单列。 |
-| D11～D12 | SR-012 固定源逐文件清单及计数，SR-025 的 F03.05、F09、EC02 权威入口。 |
-| D13～D14 | SR-027 §2.1 固定五个作者根、组装和测试目标；正式 1.6.0 作者 SHA、Compiler 命令与 Echo Interface 等生产者输入仍缺。SR-026 §4 记录 Owner 未冻结的公开 ID、Schema、handler、Package 与版本。 |
-| D15 | 逐 SR 文档头和治理导航按同树文档版本核对；SR-017 补 F05，SR-020 补 F04/F05。 |
+- **固定评审基线：**Head `3d5f17b7f921788d5d38378edb2a14165ea0e03e`；Base `3c7c48383c52504a4861900bc1f8b731442f16c2`；29 条 inline comments 均绑定该 Head。
+- **历史第二轮证据限制：**仓内曾登记第二轮评审基线 `1bf748db86c553dfcbf140477928fd68d811e67e`，但其原始 GitHub Review URL/ID 在当前可访问 Review API 与 PR Conversation 中不可恢复；该结论仅为仓内登记，原始证据不可访问，不作为正式独立审批证据。
+- **第三轮结论：**19 项限定范围 `APPROVE_FOR_READY`、3 项 `CHANGES_REQUESTED`（SR-007/009/011）、2 项 `BLOCKED_EXTERNAL_INPUT`（SR-026/027）；0 P0 / 4 P1 / 25 P2。限定认可不是整项 SR READY，也不代表产品 AC/EX/OM PASS。
+- **评审边界：**本 Review 只覆盖固定 Head `3d5f17b7...`，不外推至其后提交。当前分支的修订必须以最终 Head 重新独立评审。
 
-**截至本候选提交，24/24 项实施主状态为 DRAFT 的 SR 已具有中央设计待评审入口。** 这仅表示提供了公开可核的评审候选，**不是**独立设计批准、`READY` 实施授权，也不是外部发布或 AC/EX/OM 验收通过。总范围见 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12)，1.6.0 唯一作者/运行时目标见 [SR-029](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md)；SR-004 / SR-029 原有专项 PR #44/#45 的依赖顺序保持不变。
-
-| SR | 本轮评审焦点 | 设计评审 | 实施主状态 |
+| SR | 第三轮独立模型评审结论 | 限定范围 / 未解决边界 | 实施主状态 |
 |---|---|---|---|
-| SR-004 | Skill Importer candidate 与旧 Artifact 拒绝 | **第三轮自评：DESIGN_READY_FOR_INDEPENDENT_REVIEW**（第二轮 CHANGES_REQUESTED 为历史；SKILL.md-only/Importer candidate + 06A/06B；新 Bundle/Compiler 依赖仍分离，待独立结论） | DRAFT |
-| SR-005 | Catalog 代际、CheckedExpr 与原子激活 | APPROVE_FOR_READY（Catalog 原子激活与热路径，实施依赖 SR-004） | DRAFT |
-| SR-006 | Skill Resolver 与 Continuation 选择 | **第三轮自评：DESIGN_READY_FOR_INDEPENDENT_REVIEW**（第二轮 CHANGES_REQUESTED 为历史；直接文本候选、when/error、Event 去重和原 Run Continuation，待独立结论） | DRAFT |
-| SR-007 | 统一 Runtime Scope、Owner Outcome | **第三轮自评：DESIGN_READY_FOR_INDEPENDENT_REVIEW**（第二轮 CHANGES_REQUESTED 为历史；双模式单一 Action Boundary 与精确 Owner Proof/UNKNOWN，待独立结论） | DRAFT |
-| SR-008 | 1.6.0 Echo 双 Skill 示例 | **第三轮自评：DESIGN_READY_FOR_INDEPENDENT_REVIEW**（第二轮 CHANGES_REQUESTED 为历史；guide/deterministic/guided 三独立进程、READ Evidence，待独立结论） | DRAFT |
-| SR-009 | OpenAMSM SBI Plugin 与二进制 | APPROVE_FOR_READY（第二轮 AC-009-01～06 原限定模块设计；本次扩展 AC-009-04 合法回调子例，**增量独立复评待完成**） | DRAFT |
-| SR-010 | Provider/Codec 与 Artifact Channel | **第三轮自评：DESIGN_READY_FOR_INDEPENDENT_REVIEW**（第二轮 CHANGES_REQUESTED 为历史；Host channel、旧包三层拒绝/零 IPC、Codec 正式发布子项，待独立结论） | DRAFT |
-| SR-011 | 真实 OpenAMSM Create/Modify/Release | **第三轮自评：DESIGN_READY_FOR_INDEPENDENT_REVIEW**（第二轮 CHANGES_REQUESTED 为历史；隔离 NF、listener 排空、key reuse、两路 Proof，待独立结论） | DRAFT |
-| SR-012 | Compiler 中央设计归档 | **第三轮自评：DESIGN_READY_FOR_INDEPENDENT_REVIEW**（第二轮 CHANGES_REQUESTED 为历史；Compiler 固定源 docs/design 12 / docs 218、EC02 中央链接门槛，待独立结论） | DRAFT |
-| SR-013 | Compiler when、Request Schema、新 Artifact / Build API、Schema-only Package / zero Capability roots（AC-013-06） | APPROVE_FOR_READY（原限定的 Compiler 设计及 AC-013-01 归档复核） | DRAFT |
-| SR-016 | Skill Studio 与 1.6.0 集成；零 Capability roots / Schema-only closure 消费 | **第三轮自评：DESIGN_READY_FOR_INDEPENDENT_REVIEW**（第二轮 CHANGES_REQUESTED 为历史；Studio 1.6.0 同源 Worker、Schema-only、六宿主，待独立结论） | DRAFT |
-| SR-017 | OpenAMSM Event/Delivery Plugin 设计移交 | APPROVE_FOR_READY（业务插件静态移交） | DRAFT |
-| SR-018 | MAS Owner 权威契约移交 | APPROVE_FOR_READY（历史 Owner，AC-018-01/02/04） | DRAFT |
-| SR-019 | Mock AMF 与仿真对端 | APPROVE_FOR_READY（仿真对端静态移交，AC-019-01～04） | DRAFT |
-| SR-020 | Python Generic Host 参考审计 | APPROVE_FOR_READY（Python Host 参考审计） | DRAFT |
-| SR-021 | Go Native Host 目标参考 | APPROVE_FOR_READY（Go Host 参考，AC-021-01～04） | DRAFT |
-| SR-022 | ca-runtime 语义迁移对照 | APPROVE_FOR_READY（Runtime 语义对照，AC-022-01～04） | DRAFT |
-| SR-023 | 历史 CA-SL 规范只读移交 | APPROVE_FOR_READY（历史作者规范移交，AC-023-01～04） | DRAFT |
-| SR-025 | MAS Owner 新 Interface Package 发布 | APPROVE_FOR_READY（中央 MAS Owner Publisher 设计） | DRAFT |
-| SR-026 | Codec 对外 Capability 发布 | **BLOCKED_EXTERNAL_INPUT**（Provider Owner 正式 Capability / Callable / Schema / 版本 / handler，见 SR-026 §4.1） | DRAFT |
-| SR-027 | 1.6.0 技能 Bundle 发布 | **BLOCKED_EXTERNAL_INPUT**（五根同批作者源、Echo Interface、Compiler 正式 Release/argv，见 SR-027 §5.1） | DRAFT |
-| SR-028 | uv Python 工程工具链 | **第三轮自评：DESIGN_READY_FOR_INDEPENDENT_REVIEW**（第二轮 CHANGES_REQUESTED 为历史；uv 全量回归与仅改 Review Context workflow 的双平台触发，待独立结论） | DRAFT |
-| SR-029 | 1.6.0 Capability-first 一对一绑定 | **第三轮自评：DESIGN_READY_FOR_INDEPENDENT_REVIEW**（第二轮 CHANGES_REQUESTED 为历史；1.6.0 唯一语言、Owner 24/24、Provider 2/2 与全量 3/3，待独立结论） | DRAFT |
-| SR-030 | Host Context 1.6.0 Schema-only Publisher；0 Capability / 0 Callable，精确 Schema export；与 SR-013 AC-013-06 联合验收 | APPROVE_FOR_READY（Schema-only 设计与 AC-030-01 固定源审计） | DRAFT |
+| SR-004 | APPROVE_FOR_READY（限定） | 仅 SKILL.md-only、Importer candidate、AC-004-01/02/05/06A；AC-004-03/04/06B 依赖正式 1.6.0 输入，整项不 READY | DRAFT |
+| SR-005 | APPROVE_FOR_READY（限定） | Catalog 原子激活/热路径；AC-005-06 需区分 Importer 与 Catalog 证据归属 | DRAFT |
+| SR-006 | APPROVE_FOR_READY（限定） | 直接文本、when 三态、幂等冲突与原代际 Continuation | DRAFT |
+| SR-007 | CHANGES_REQUESTED | P1：AC-007-05 缺 Owner Proof 完整身份字段与同 ID Proof 负例 | DRAFT |
+| SR-008 | APPROVE_FOR_READY（限定） | 三场景静态设计；真实 Echo 运行仍阻塞 | DRAFT |
+| SR-009 | CHANGES_REQUESTED | P1：Plugin Run 所有权矛盾；completion Event type / payload Schema / fixtures 未冻结 | DRAFT |
+| SR-010 | APPROVE_FOR_READY（限定） | Host ArtifactStore/Channel 与 06A；06B/07/08 依赖正式 Codec 等资产 | DRAFT |
+| SR-011 | CHANGES_REQUESTED | P1：AC-011-04 缺 N1/N2 乱序、交错、多事务与旧代际断言 | DRAFT |
+| SR-012 | APPROVE_FOR_READY（限定） | 固定源 docs/design=12、docs=218；源仓正文替换仍等默认分支链接 | DRAFT |
+| SR-013 | APPROVE_FOR_READY（限定） | Compiler/Schema-only 设计与历史 PoC 归档；新产品 AC 未运行 | DRAFT |
+| SR-016 | APPROVE_FOR_READY（限定） | Studio 同源与六宿主设计；正式发布和六宿主实测未完成 | DRAFT |
+| SR-017 | APPROVE_FOR_READY（限定） | 业务 Plugin 静态移交；需补 SR-009 completion 对照 | DRAFT |
+| SR-018 | APPROVE_FOR_READY（限定） | 仅历史 Owner AC-018-01/02/04；不代表新版包或 Next PASS | DRAFT |
+| SR-019 | APPROVE_FOR_READY（限定） | Mock peer 静态移交；运行和真实 NF/E2E 未执行 | DRAFT |
+| SR-020 | APPROVE_FOR_READY（限定） | Python Host 参考审计；AC-020-04 需补 SR-030 新 Publisher 边界 | DRAFT |
+| SR-021 | APPROVE_FOR_READY（限定） | Go Host 只读参考；不替换 Next Python Host | DRAFT |
+| SR-022 | APPROVE_FOR_READY（限定） | Runtime 语义对照；不倒灌 Next 产品验收 | DRAFT |
+| SR-023 | APPROVE_FOR_READY（限定） | 历史作者规范移交；设计依据需补版本/章节 | DRAFT |
+| SR-025 | APPROVE_FOR_READY（限定） | 中央 MAS Owner Publisher 设计；正式发布仍阻塞 | DRAFT |
+| SR-026 | BLOCKED_EXTERNAL_INPUT | Codec 公开 ID、Schema、slot/mediaType、handler、Package/SemVer、正式 SHA 与进程证据缺失 | DRAFT |
+| SR-027 | BLOCKED_EXTERNAL_INPUT | 五根同批 1.6.0 作者提交、Echo Interface、新 Compiler Release/argv、Bundle 资产及授权缺失 | DRAFT |
+| SR-028 | APPROVE_FOR_READY（限定） | G02 设计可独立评议；uv 与双平台迁移 AC 未运行 | DRAFT |
+| SR-029 | APPROVE_FOR_READY（限定） | 中央 1.6.0 Capability-first 设计；生产者机器契约未发布 | DRAFT |
+| SR-030 | APPROVE_FOR_READY（限定） | Schema-only 设计与 AC-030-01 固定源审计；新版 Publisher 未发布 | DRAFT |
 
-上述专项评审按单版本 1.6.0 和 Capability↔Callable 一对一原则校核；历史 v1alpha5、Compiler v2.1.0、Owner v1alpha4 和 Provider v1.2.0 只可作迁移/审计来源。旧来源中的身份、Build DTO、Artifact、Bundle 或测试不得自动证明新版发布/可实施。SR-029 新契约尚未发布，Compiler #61、Publisher、Skill Bundle 等真实前置仍保持各自 BLOCKED/NOT_RUN；SR-028 的 uv 工具链设计可独立于这些外部发布审查。
+### 2.2 第三轮发现的修订追踪与当前门槛
 
-### 2.2 第三轮自评登记（不改变主状态）
+- **P1（4 条）**：SR-007、SR-009、SR-011 的阻断问题已在本分支修订；各自新增 AC/契约断言仍须对最终 Head 独立复评。
+- **P2（25 条）**：覆盖 SR-004/005/006/007/008/010/013/017/020/030、SR 总索引证据说明，以及 SR-005/013/017/018/019/020/021/022/023/025 十份修订账本；修订完成不等于原 Review 自动重新批准。
+- **外部阻塞**：SR-026/027 仍缺生产者正式输入；不允许以文档补写替代外部发布。
+- **实施门槛**：24 项实施 SR 仍全部 DRAFT，READY=0；未创建实施 Issue/Goal，未运行 Compiler、uv 双平台、Host/Runtime/Codec、Echo、OpenAMSM 或真实 NF E2E。所有新 Head 结论须绑定完整 Head/Base SHA 和正式 GitHub Review。
 
-PR #46 上述十项第二轮 CHANGES_REQUESTED 已按各自反例复核并登记 **DESIGN_READY_FOR_INDEPENDENT_REVIEW（仅作者自评）**：SR-004/006/007/008/010/011/012/016/028/029。第二轮的独立 CHANGES_REQUESTED 结论仍为历史事实，须由第三轮独立评审逐项确认是否关闭；本自评不是正式 APPROVE_FOR_READY。
-
-12 项第二轮限定 APPROVE_FOR_READY 保持：SR-005/009/013/017/018/019/020/021/022/023/025/030；其中 SR-009 AC-009-04 合法 continuation 子例的增量修改另需独立确认。SR-026/027 仍 BLOCKED_EXTERNAL_INPUT，只可审查部分来源/构建设计，未得到 Publisher 正式输入前不得发实施 Goal。**24 项主状态仍 DRAFT，READY=0，系统 EX/OM、正式 1.6.0 产品 AC NOT_RUN/BLOCKED。** 逐项判据与当前已核实的外部事实见[跨仓一致性审计 §15](../参考与审计/跨仓设计资产迁移与一致性审计.md)。
 
 ## 3. 设计恢复与实施顺序
 
@@ -223,3 +216,4 @@ PR #46 上述十项第二轮 CHANGES_REQUESTED 已按各自反例复核并登记
 | 2026-11-27 | 0.3.49 | GPT-6（ChatGPT） | §2.1～2.2、修订记录 | 调整第三轮自评段落与原有规范性来源警示的阅读顺序，改用稳定文件路径 | 避免拆断规范性段落或误导评审者访问未经核实的自动生成锚点 | Issue #12；PR #46 |
 | 2026-11-27 | 0.3.50 | GPT-6（ChatGPT） | 文档头、§1、修订记录 | 同步 SR 管理规范 v0.8.0 的 GitHub 正式评审留存要求；明确 PR #46 第三轮独立评审尚未留存、READY=0 | 防止仅凭作者自评或聊天结论推进 SR 状态 | Issue #12；PR #46 |
 | 2026-11-27 | 0.3.51 | GPT-6（ChatGPT） | 文档头、§1、修订记录 | 同步独立评审模型身份规则：允许同一 GitHub 账号由不同模型承担独立评审，区分模型结论与 GitHub Review event | 与 SR 管理规范 v0.8.1 一致，避免账号身份误判评审独立性 | Issue #12；PR #46 |
+| 2026-11-27 | 0.3.52 | GPT-6（ChatGPT） | 文档头、§2.1～2.2、修订记录 | 回填独立模型 Review #6082541121 的固定 Head/Base、19/3/2 结论和 29 条 inline 留痕；明确第二轮原始 Review 证据不可访问；将自评矩阵替换为真实独立评审结果 | 处理 R3-GOV-01，避免将仓内登记或作者自评冒充正式独立审批，并确保新 Head 不继承旧 Review 结论 | Issue #12；PR #46；Review #6082541121 |

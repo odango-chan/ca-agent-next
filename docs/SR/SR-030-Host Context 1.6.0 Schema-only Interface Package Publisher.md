@@ -1,7 +1,7 @@
 # SR-030：Host Context 1.6.0 Schema-only Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.4
+> SR 版本：0.1.5
 > 状态：DRAFT（实施主状态）。PR #46 第二轮独立评审（1bf748db）：APPROVE_FOR_READY（Schema-only 设计与 AC-030-01 固定源审计）。产品验收依各 AC 单列。
 > 创建日期：2026-11-26
 > 修订日期：2026-11-27
@@ -9,6 +9,7 @@
 > 功能：F09.06 — Host Context Interface Package Publisher
 > 目标仓：odango-chan/ca-agent-demo
 > 中央设计：F09、F08、EC02 Compiler、CA-SL 1.6.0 完整语言规范、SR-013、SR-016、SR-029
+> 设计依据：[F09 技能工作台与 AI 编写](../设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md) v0.3.16 §5～9；[F08 技能编译与发布](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.16；[EC02 Compiler](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.13 §10～11；[CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md) v0.1.2 §5.2、§14～16；[SR-013](SR-013-Compiler已检查when与发布产物.md) v0.2.22 §5～6
 > 设计 Issue：[ca-agent-next #40](https://github.com/odango-chan/ca-agent-next/issues/40)
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：Host Trust / Admission、运行期 Context 实例、Capability / Callable、生产级资格、签名、额外摘要、Trust Registry、Agent 内置 Compiler
@@ -16,7 +17,7 @@
 
 ## 1. 目标与责任
 
-**独立评审记录**（PR #46，固定 `fd80c74`）：APPROVE_FOR_READY 仅限Schema-only 设计及 AC-030-01 固定源审计。实施主状态 DRAFT，其他产品 AC 依各自输入门槛判定。
+**第三轮独立模型评审记录**：[GitHub Review #6082541121](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6082541121)，固定 Head `3d5f17b7f921788d5d38378edb2a14165ea0e03e` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`；`APPROVE_FOR_READY` 仅限 Schema-only 设计及 AC-030-01 固定源审计，不代表新版 Publisher 已实现或发布。
 
 将 ca-agent-demo 中 Host-owned 的静态 Subject Context Schema，按 CA-SL 1.6.0 / Compiler 新 Interface Package 契约重新发布为 **Schema-only Package**，供 Skill Contract.contexts 的 Host Context Schema 依赖闭包使用；Contract.requestSchema 始终指向 Skill 自有 Request Schema，不引用本 Host Context Package。
 
@@ -79,9 +80,9 @@ Publisher 必须从固定 Revision 读取原始 Schema 字节并核对 Git blob�
 ## 6. 依赖与阶段门槛
 
 **设计依赖：**
-- CA-SL 1.6.0 完整语言规范、F08、EC02 与 SR-013 明确允许 Schema-only Package；
-- SR-029 / CA-SL 1.6.0 规范明确 Contract.contexts 引用 Host Context Schema，requestSchema 则是 Skill 自有请求 Schema；
-- F09 / SR-016 明确 Package Manifest 与 Project Lock provenance 的边界。
+- CA-SL 1.6.0 完整语言规范 v0.1.2 §5.2、§14～16；F08 v0.3.16；EC02 v0.2.13 §10～11；SR-013 v0.2.22 §5～6 明确 Schema-only Package / Context Schema closure 与零 Capability roots 的处理。
+- SR-029 / CA-SL 1.6.0 规范明确 Contract.contexts 引用 Host Context Schema，requestSchema 则是 Skill 自有请求 Schema。
+- F09 v0.3.16 §5～9 / SR-016 明确 Package Manifest 与 Project Lock provenance 的边界。
 
 **实施依赖：**
 - 固定 Compiler Owner 正式公布的 1.6.0 Package Schema、BuildRequest / DependencyInspection 与 Schema-only Link 规则的版本、SHA、Golden 和来源。机器契约可独立于 Compiler 二进制发行；契约尚未公布时，不得生成候选。
@@ -100,3 +101,4 @@ Publisher 必须从固定 Revision 读取原始 Schema 字节并核对 Git blob�
 | 2026-11-26 | 0.1.2 | Codex / GPT-6 | §6，修订记录 | 区分机器 Schema 发布、真实 Publisher 候选、Compiler 联验和二进制发行 | 消除相互等待 | Issue #12/#40，PR #46，SR-013/030 |
 | 2026-11-27 | 0.1.3 | Codex / GPT-6 | 评审入口 | 回填独立评审批准评议的具体范围 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
 | 2026-11-27 | 0.1.4 | Codex / GPT-6 | 评审状态 | 登记第二轮限定范围及外部依赖 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
+| 2026-11-27 | 0.1.5 | GPT-6（ChatGPT） | 文档头、§1、§6、修订记录 | 补齐 F09/F08/EC02/CA-SL 1.6.0/SR-013 的固定版本与章节；修复修订账本排序 | 处理独立模型 Review #6082541121 的 R3-SR030-01 与 R3-LEDGER-01，避免 Schema-only Publisher 的核心设计依据不可定位 | Issue #12；PR #46；Review #6082541121 |
