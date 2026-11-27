@@ -7,7 +7,8 @@
 > 功能归属：F02 — Skill 管理与选择\
 > 关联 SR：SR-004、SR-005、SR-006\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
-> <br />本文局部非目标：以本文范围与非目标章节为准；无额外扩展\
+> <br />
+> 本文局部非目标：以本文范围与非目标章节为准；无额外扩展
 > 适用范围：Skill 包导入、SkillCatalog、Resolver、已发布 CA-SL Runtime Artifact 与 Python CEL Runtime
 
 关联需求项见 [IR-003](../../IR/IR%20总登记册.md#ir-003)。
