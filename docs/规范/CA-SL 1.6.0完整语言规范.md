@@ -6,7 +6,7 @@
 > languageTarget 候选：connectionagent.io/v1.6.0（本设计建议值；发布前由 ca-skills 与 Compiler Owner 在正式 Schema / Golden 中确认）
 > 状态：**DRAFT / REVIEW_REQUESTED**；CA-SL 1.6.0 唯一正式语言设计，Assurance 可选；有 Assurance Skill 时 `assurance/contract.yaml` 可声明顶层 `when`；`SKILL.md` Front Matter 不声明 when；无 Assurance Skill 不声明 when；未发布、未冻结。
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
-> 修订日期：2026-11-26
+> 修订日期：2026-11-27
 > 规范所有者：ca-agent-next（中央设计）；正式作者 Schema / Golden / Release 由 ca-skills 发布
 > 关联：IR-003、IR-008；Issue #40、#49；SR-023、SR-029、SR-013、SR-027、SR-032
 > 本文局部非目标：Compiler API / Artifact 字段级 Schema、Provider / Owner 发布物字段、Agent Runtime 实现、生产 Admission、签名、Trust Registry、生产 Qualification
