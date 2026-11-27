@@ -64,7 +64,7 @@ SKILL.md 是每个 Skill 的基础身份和描述入口，至少提供稳定名�
 2. 有无 Assurance 都使用同一份 Package 根目录共享资源；Schema 和 Script 不复制到 assurance/。
 3. 存在 Assurance 时，Contract、Procedure、PredicateSet 和其引用必须整体有效；任何验证失败均拒绝导入，不得降级成无 Assurance Skill。
 4. Assurance 有效时，Skill 可供 Deterministic 与 LLM-guided 两种模式使用。
-5. LLM 可读取共享 Schema / Script；只有 Script Registry 明确标记 llmInvocable=true、且 Host 策略启用时，才可通过 Host-owned host.skill-script.execute Capability 调用 transform Script。
+5. LLM 可读取共享 Schema / Script；只有 Script Registry 明确标记 llmInvocable=true、且 Host 配置 `scriptExecution.llmEnabled=true`（默认 false）时，才可通过 Host-owned host.skill-script.execute Capability 调用 transform Script。
 6. 不允许 Agent 自行编译作者源；Agent 只导入发布好的 Skill Bundle。
 7. **唯一新语言目标 CA-SL 1.6.0**；languageTarget 建议值为 connectionagent.io/v1.6.0，须由 ca-skills / Compiler 在正式 Schema / Golden 中共同确认；完全不支持 v1alpha5 旧语法、旧 Build DTO/Artifact/Bundle、双轨、转换、迁移或 fallback。
 
