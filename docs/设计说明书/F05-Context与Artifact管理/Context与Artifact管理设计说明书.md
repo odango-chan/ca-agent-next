@@ -1,7 +1,7 @@
 # Context 与 Artifact 管理设计说明书
 
 > 文档类型：机制设计说明书  
-> 文档版本：0.4.6\
+> 文档版本：0.4.7\
 > 状态：目标设计已重建；ca-host.artifact-store/v1 已冻结并由 Provider v1.2.0 消费；ca-agent Go Host P1 已验收；Next Python Host / ArtifactStore / Channel NOT_IMPLEMENTED  
 > 功能归属：F05 — Context 与 Artifact 管理  
 > 关联 SR：SR-009；交叉 SR：SR-007、SR-010、SR-011、SR-015、SR-017、SR-030、SR-032\
@@ -389,3 +389,4 @@ Demo 必须具备：本地 Host-owned ArtifactStore、精确 slot、相对路径
 | 2026-11-26 | 0.4.4 | GPT-6（ChatGPT） | 文档头、F05/Host Context 责任映射 | 统一正式评审范围/局部非目标声明，并将 1.6.0 Host Context Schema-only Publisher 纳入 SR-030 交叉追踪 | 修复 review context CI 头部门禁；区分 Host Context Schema 发布与其他 Context/Artifact 职责 | Issue #12；SR-030；PR #46 |
 | 2026-11-26 | 0.4.5 | GPT-6（ChatGPT） | Host Context Package 消费边界、修订记录 | 明确 SR-030 Schema-only Package 只由 Contract.contexts 引用，不替代 Skill 自有 requestSchema | 与 CA-SL 1.6.0 §4 的 Request / Context Schema 分工一致，避免 Schema root 语义混淆 | Issue #12/#40；CA-SL 1.6.0；SR-030；PR #46 |
 | 2026-11-27 | 0.4.6 | GPT-6.2（ChatGPT） | §2、§4 | 将 Skill schemas/scripts 纳入 Host 只读 Package Resource Access；区分资源读取与 Host Script Execution Capability | 让 LLM 与 Assurance 共用同一资源快照，不把 Package 资源混入 ArtifactStore 或任意文件访问 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.4.7 | GPT-6.2（ChatGPT） | §2、§4 | 将 Host Script Execution 的 LLM 暴露条件对齐为 `scriptExecution.llmEnabled` 与 Registry `llmInvocable` 双门禁 | 使 Package Resource Access 与脚本执行授权保持独立、明确 | Issue #49；IR-008；SR-032 |
