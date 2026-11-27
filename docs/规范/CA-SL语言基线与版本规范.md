@@ -1,9 +1,9 @@
 # CA-SL 语言基线与版本规范
 
 > 文档类型：语言版本与运行时消费规范  
-> 文档版本：0.2.4  
-> 状态：历史 CA-SL v1alpha5 FROZEN / RELEASED；**下一正式目标 CA-SL 1.6.0 DESIGN / NOT_RELEASED**；Compiler/Bundle 产品门槛未完成  
-> 修订日期：2026-11-26  
+> 文档版本：0.2.5\
+> 状态：历史 CA-SL v1alpha5 FROZEN / RELEASED；**下一正式目标 CA-SL 1.6.0 DESIGN / NOT_RELEASED**；Compiler/Bundle 产品门槛未完成\
+> 修订日期：2026-11-27\
 > 关联 IR：IR-003、IR-006；SR-023、SR-013  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：旧版兼容、Agent 内置 Compiler、Skill Admission、签名、Trust Registry 和额外 SHA-256
@@ -32,9 +32,10 @@
 - Assurance 可选；不存在 Assurance 的 Skill 可用于 LLM-guided，不要求 Compiler。
 - Assurance 存在时必须整体有效；导入失败不得降级成 SKILL.md-only。
 - 有效发布 Assurance Artifact 可用于 Deterministic 和 LLM-guided。
-- Contract 位于 assurance/contract.yaml；when 是可选顶层字段。
+- Compiler 只从 `skills/<skill-id>/assurance/contract.yaml` 读取、校验并编译可选顶层 when。SKILL.md Front Matter 不声明 when。
+- SBI JSON 直接采用 OpenAMSM 对应版本的 3GPP/OpenAMSM 正式 OpenAPI YAML，保留原件及其引用。NAS/NGAP 二进制经 Codec 解码，解码字段遵循 Codec 发布的结果 Schema。`format: binary` 只描述传输形式。选择期只读取当时已存在的输入，Request Schema 解析与 when 的静态类型检查遵循正式 CA-SL / Compiler 契约。
 - predicates.yaml 只描述执行期 Predicate；when 只负责新 Event 的 Skill 选择。
-- Node 阶段、Wait、Observation、Operation、Postcondition 及 Procedure Graph 语义以完整 CA-SL v1alpha5 规范为准。
+- 历史 Node、Wait 与 Procedure Graph 语义可查冻结 v1alpha5 规范。新实现仅消费正式发布的 1.6.0 契约。
 - Next Agent 只导入正式发布 Bundle，不读取作者源进行运行时编译，不内置或调用 Compiler。
 
 ## 3. when 的发布与运行时依赖
@@ -83,3 +84,4 @@ CA-SL 语义变化必须：
 | 2026-11-26 | 0.2.2 | Codex / GPT-6 | 见本行变更 | 区分数字版本的新发布物和固定来源的实际机器标识 | Issue #12 |
 | 2026-11-26 | 0.2.3 | GPT-6.2（ChatGPT） | 文档头、§1、§6、修订记录 | 根据 Issue #40 明确下一正式目标改为 CA-SL 1.6.0（不使用 v1alpha6），定义 Capability-first 与历史冻结发布边界；避免反复 alpha 命名、静默重解释 v1alpha5 或提前宣称 1.6.0 已发布 | Issue #40；SR-029；SR-004；SR-013；SR-027 |
 | 2026-11-26 | 0.2.4 | GPT-6.2（ChatGPT） | §1、§4、§6、修订记录 | 将无兼容要求冻结为 1.6.0 全链路单版本强制规则：不接受旧语法、旧 Build DTO、旧 Bundle、旧 Artifact、迁移或 fallback；历史记录仅审计留档，不让旧产物成为新版合法输入 | Issue #40/#43；SR-029；SR-004 |
+| 2026-11-27 | 0.2.5 | Codex | §2 | 对齐 1.6.0 作者源、输入 Schema 与编译职责 | Issue #40、#43；PR #44 |
