@@ -125,7 +125,7 @@ Contract 的 precondition 是至多一个全局阶段引用；该引用必须指
 
 ### 5.1 Request Schema
 
-- requestSchema 指向 Skill Package 根目录下的 Skill 自有 Schema 资源，定义规范化 Event payload 的业务输入契约。源文件采用 YAML 1.2 序列化的 JSON Schema 数据模型（`.schema.yaml`）；Compiler 解析为 JSON 数据模型后按 G.4 JSON Schema Profile 校验。Schema 引用路径始终相对 Skill Package 根目录，不相对 assurance/。
+- `requestSchema` 指向 Skill Package 根目录下由 Skill 自己拥有的 `.schema.yaml` 入口文件，定义规范化 Event payload 的业务输入契约；路径始终相对 Skill Package 根目录，不相对 `assurance/`。源文件采用 YAML 1.2 序列化 JSON Schema 数据模型，Compiler 解析为 JSON 数据模型。若入口为本地 G.4 Schema 根，则按 G.4 Profile 校验；若入口为纯单 `$ref` OAS3 根引用别名，则该目标和其外部闭包按 OAS 3.0 Schema Object dialect 校验，不把外部目标套入 G.4。
 - Host 先验证 Plugin Event Schema，再独立验证 Skill Request Schema；两者不是同一 Schema，也不得把完整 3GPP multipart Schema 复制到 Skill。
 - `requestSchema` 必须指向 Skill Package 根目录下的 Skill-owned `.schema.yaml` 入口文件。若入口是本地 G.4 对象 Schema，根必须明确 `additionalProperties: false` 并保持闭合；若入口文件仅含一个 `$ref`、精确指向显式 pin 的 OpenAPI 3.0 `components/schemas`，则它是跨 dialect 引用别名，不是本地对象 Schema，不对别名文件套用 G.4 对象闭合断言。别名文件不得包含 `$ref` 以外的兄弟关键字；目标和完整可达闭包按 OAS 3.0 原生语义验证。
 - 对存在 Assurance 的 Skill，Contract 顶层 `when` 与 Contract `requestSchema` 是否存在相互独立。只使用 event.type 的 `when` 不要求 requestSchema；`when` 访问 input 成员时必须在 `assurance/contract.yaml` 声明 requestSchema。可选字段必须先以 `has(input.field)` 守卫，并依赖左到右 `&&` 短路事实后再读取。无 Assurance Skill 没有 Contract，不声明 when；任何 Skill 的 SKILL.md Front Matter `when` 都是非法未知字段。
@@ -461,7 +461,7 @@ CA-SL 1.6.0 增加受限的跨 dialect 引用入口，不是把 OpenAPI 3.0 并�
 4. 外部目标按 OpenAPI 3.0 Schema Object 语义解析，不套用 G.4 白名单。必须保留可达的 `nullable`、`oneOf`、`anyOf`、`allOf`、`format`、`pattern`、`additionalProperties`、`items`、`enum`、`required`、`default` 等语义；不得重写、丢弃、降级或投影。特别是 OAS3 Schema Object 未声明 `additionalProperties` 时，按 OAS 3.0 默认语义处理（允许额外属性），不得补写 `false`。其组合语义分别为：`allOf` 交集（所有子 Schema 均须满足）、`anyOf` 至少一个分支满足、`oneOf` 恰好一个分支满足。
 5. `requestSchema` 不得直接引用 Path Item、Operation、RequestBody、Response 或完整 multipart envelope；完整 operation / multipart 由 Plugin 原生 OAS3 ingress consumer 负责。NAS / NGAP binary slot 不构成解码后字段 Schema。
 6. Resolver 必须显式跟踪每个节点的 dialect：本地 G.4 节点按 G.4 解析；进入 pin 后的 OAS3 目标后，其所有可达 `$ref` 均继续按同一 OAS3 Source Bundle / OAS 3.0 dialect 解析。OAS3 闭包不得反向引用 Skill-local G.4 文件，不得跳到其他 dependency 或 Source Bundle。禁止任意网络 URL、dynamic latest、未声明依赖、绝对路径、规范化后逃出 pin Source Root 的路径、Bundle 外文件、未解析 pointer、跨 OpenAMSM commit 混源和循环闭包；运行期不得下载未锁定资源。仅选定闭包内的未解析引用构成错误，闭包外未选定 operation 的引用不构成当前消费失败。
-7. Compiler / Host 必须采用 dialect-aware Resolver / Validator。CEL 静态类型推导对 `anyOf` / `oneOf` 只无条件暴露在每个可满足分支中均声明、均列入 `required` 且类型一致的字段；其他字段仅在现有 CEL 类型系统能显式表示 optional 时按 optional 暴露，否则不得无条件访问。`allOf` 按交集合并属性约束和 required 集合，冲突类型拒绝；`nullable` 的 Null 与 Missing 必须区分。分支可用性不能证明时禁止猜测。
+7. Compiler / Host 必须采用 dialect-aware Resolver / Validator。CEL 静态类型推导对 `anyOf` / `oneOf` 只无条件暴露在每个可满足分支中均声明、均列入 `required` 且类型一致的字段；其他字段必须按 optional 建模，不得无条件访问。若在同一左到右 `&&` 表达式中先通过 `has(input.field)` 守卫，则右侧可基于 path-sensitive short-circuit facts 安全读取该字段；无守卫时拒绝。`allOf` 按交集合并属性约束和 required 集合，冲突类型拒绝；`nullable` 的 Null 与 Missing 必须区分。分支可用性不能证明时禁止猜测。
 8. 可达 OAS3 Schema 出现尚未支持的关键字 / 语义时，以稳定 `SCHEMA_INVALID` 失败并输出文件 / pointer / SourcePath；不得静默忽略或生成部分 Artifact。
 9. dependency alias、URI / pointer wire 编码、Source Bundle identity 与 Lock 字段由 ca-skills / Compiler Owner 在正式 CA-SL 1.6.0 Schema / Golden 冻结；本设计不预造机器字段名。
 
@@ -524,11 +524,11 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 | Operation 引用 observation kind 或 Observation 引用 MUTATION | 静态拒绝 |
 | 仅 event.type 的 when，无 requestSchema | 可通过 CEL 静态检查 |
 | when 引用 input 但无 requestSchema | CEL_INVALID |
-| `input.requestType` 为可选字段且无 `has` 守卫 | CEL_INVALID；有 `has(input.requestType) && ...` 左到右短路守卫 | 类型检查通过 |
-| 3GPP `input.requestType == 1` | CEL 类型不匹配，CEL_INVALID | 拒绝 |
-| OAS3 根引用别名文件恰好只有一个 `$ref`，目标位于 pin 闭包 | 按 OAS3 dialect 验证目标和可达闭包，保留原始默认语义 | 通过 |
-| OAS3 根引用别名文件含 `additionalProperties: false` 等兄弟 Schema 关键字 | `SCHEMA_INVALID`；不把 OAS3 目标投影为 G.4 | 拒绝 |
-| OAS3 Schema 未声明 `additionalProperties` | 保留 OAS 3.0 默认允许额外属性的语义 | 不得补写 `false` |
+| `input.requestType` 为可选字段 | 无 `has` 守卫时 `CEL_INVALID`；先 `has(input.requestType)` 再访问时通过类型检查 |
+| 3GPP `input.requestType == 1` | CEL 类型不匹配，`CEL_INVALID`，拒绝 |
+| OAS3 根引用别名文件恰好只有一个 `$ref`，目标位于 pin 闭包 | 按 OAS3 dialect 验证目标和可达闭包，保留原始默认语义，通过 |
+| OAS3 根引用别名文件含 `additionalProperties: false` 等兄弟 Schema 关键字 | `SCHEMA_INVALID`，拒绝；不得把 OAS3 目标投影为 G.4 |
+| OAS3 Schema 未声明 `additionalProperties` | 保留 OAS 3.0 默认允许额外属性的语义，不得补写 `false` |
 | requestSchema 存在但无 when | Schema 仍验证并发布闭包 |
 | Schema-only Package：0 Capability / 0 Callable，含已声明 Schema export | 可作为 Contract.contexts 的 Host Context Schema 依赖；requestSchema 仍必须指向 Skill 自有请求 Schema |
 | 未声明依赖却引用 Capability / Schema | 静态拒绝 |
