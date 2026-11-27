@@ -1,13 +1,13 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.25\
+> 文档版本：0.2.26\
 > 状态：DRAFT（实施主状态）。PR #46 第二轮独立评审（1bf748db）：APPROVE_FOR_READY（原限定的 Compiler 设计及 AC-013-01 归档复核）。产品验收依各 AC 单列。
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-27\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：Next 消费端实现、生产准入、Owner Trust 治理、自动发布及真实 5GC/MAS 资格。
 
-上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。功能归属：EC02 Compiler、F08 技能编译与发布；消费端关联 F02。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.13、[F08 技能编译与发布设计说明书](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.16、[F02 Skill 管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md) §7/§11、[CA-SL 1.6.0 中央语言设计](../规范/CA-SL%201.6.0完整语言规范.md)。
+上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。功能归属：EC02 Compiler、F08 技能编译与发布；消费端关联 F02。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.13、[F08 技能编译与发布设计说明书](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.25、[F02 Skill 管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md) v0.4.1、[CA-SL 1.6.0 中央语言设计](../规范/CA-SL%201.6.0完整语言规范.md) v0.2.2、[SKILL 作者规范](../规范/SKILL作者规范.md) v0.1.9。
 
 目标仓：odango-chan/ca-skill-compiler。实施 Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)。文档刷新 Issue：[Next #14](https://github.com/odango-chan/ca-agent-next/issues/14)。目标代码基线：Compiler v2.1.0，commit 255ab85fa5abb4b0bf36656bf64250cafebf45cb。历史来源：[ca-skills #88](https://github.com/odango-chan/ca-skills/pull/88) 已合并，正式发布身份见 [ca-skills release record](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs/releases/ca-sl-v1alpha5.md)。
 
@@ -443,3 +443,4 @@ OpenAPI operation / multipart ingress 验证由 SR-010 负责；Compiler 负责 
 | 2026-11-27 | 0.2.23 | ChatGPT / GPT-6 | 本轮 IR-009 设计修正 | 固定 OpenAMSM 版本 + 原版 YAML 逐字节代发布；显式区分可选 Adapter 与 Provider Codec 输出 | 落实原版 YAML 不得改动、消除误把原版当 G.4 的风险 | Issue #47；SR-031/026/013 |
 | 2026-11-27 | 0.2.24 | ChatGPT / GPT-6.2 | AC-013-07 | 改为原版 OAS3 组件直接引用；新增跨 dialect Resolver、闭包、语义保真、CEL 类型推导和 T1/T2 负例 | 撤销强制 Adapter 假设，避免复制或改写标准 | IR-009；Issue #47；SR-031/010/026/027 |
 | 2026-11-27 | 0.2.25 | GPT-6.2（ChatGPT） | §0、§4、AC-013-02、依赖图、修订记录 | 将 Compiler 输入的 `when` 来源改为有 Assurance Skill 的 SKILL.md Front Matter；明确无 Assurance Skill 不声明 when 且不进入 Compiler | 对齐用户确认的入口决策，避免 Compiler 继续读取已废弃的 Contract.when | Issue #49；IR-008；SR-032；F02/F08 |
+| 2026-11-27 | 0.2.26 | GPT-6.2（ChatGPT） | 文档头、设计依据 | 同步 F02、F08、CA-SL 1.6.0 与 SKILL 作者规范的最新版本引用 | 防止 SR-013 继续引用旧版作者入口或过期的 Resolver / Bundle 设计 | Issue #49；IR-008；SR-032；F02/F08 |
