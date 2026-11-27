@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.2.14\
+> 文档版本：0.2.15\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 修订日期：2026-11-27\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -362,13 +362,17 @@ Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId�
 
 上述目标规则已经可供设计评审；精确字段和可执行命令尚未发行，必须等正式发布后才能宣称对应产品验收 PASS。旧 v2.1.0 Development v1alpha1 和 v1alpha5 的历史设计/Golden 不在新二进制内实现兼容分支。
 
-## 12. 3GPP 共享 Schema Link 与阶段输入（IR-009）
+## 12. OpenAMSM 版本锁定与原版 YAML / Adapter Link 边界（IR-009）
 
-早期 §10.2、SR-013 AC-013-06 对 **Host Context Schema-only** 的 `contexts` 入口限制继续生效，但不能推广为“任何 Schema-only Package 只能由 contexts 引用”。新增 **ca-skills / SR-031 的 3GPP Common Schema-only Package**：Skill-owned `requestSchema` 根可通过显式依赖 `$ref` 引用其**类型导出**，并不是引用它作为 Request 根；Host Context Package 仍只由 `contexts` 引用。
+本章覆盖本设计 §10.2 中此前将 SR-031 视为“可直接导出 G.4 的 3GPP 原版 Schema-only Package”的假设：
 
-Compiler 1.6.0 Check/Link/Build/Verify 的新增门槛（由 SR-013 AC-013-07 记录）：(1) 区分 Host Context schema、3GPP shared type 和 Provider Codec Output Schema 的所有权；(2) 各 $ref 必须为不带 fragment 的精确 schemaId、声明 alias、固定不可变 Package snapshot，闭包可解析；(3) Request 校验只依赖 Event T1 已存在字段，SourcePath 引用 Codec Result 必须在 Procedure T2 调用之后，禁止将工具结果注入 when；(4) Codec Output Schema 与公共 3GPP 类型使用一致固定来源和版本、Provider 同一 1:1 READ binding；(5) Schema-only 0/0 不生成 Capability/Callable/Scope，Provider 查询 2/2+Codec 1/1 仍为 3/3；(6) 同源不同版本、缺失 export、开口对象、旧版构建、错误阶段依赖均 fail-closed，无部分 Artifact。
+- **SR-031 Phase A**：ca-skills 只代发布 OpenAMSM 实际支持的原版 3GPP YAML（包含全部引用 YAML），**bytes/path/$ref 一字不改**。这只是原版 Source Bundle；Compiler **不能**把原始 OpenAPI YAML（可能含 `#/components`、`oneOf`、`format`）默认为合法 G.4 Schema-only 输入，也不能自动丢字段、修改源码让其通过。
+- **SR-031 Phase B（独立受审/可选）**：若要给 Skill 类型引用，发行**另一个标为 CA-SL Adapter 的 JSON Schema Package**；每个 G.4 闭合 Schema export、Package ID/版本/$id、Source Lock 与正式 Compiler Golden 均单独冻结。原版 YAML 不改变；Adapter 与官方原版不能共用同一 Schema identity。
+- **SR-030 Host Context** 仅由 `Contract.contexts` 显式引用；**Adapter** 类型可由 Skill-owned `requestSchema` 根的显式依赖 `$ref` 引用。A 原版不能直接被 $ref Link，B 必须精确 snapshot/alias/$id/闭包；二者均不会创建 Capability/Callable。
+- **Codec Result** 是 SR-026 Provider 正式 Output Schema，NAS/NGAP 版本证据跟随 OpenAMSM 已确认支持基线，而不是假设 TS29.502 SBI YAML 已经包含 NAS/NGAP 全部结构。T1 只检查已到场 Event 字段、T2 Codec READ 之后才能引用结果；禁止 `when` 提前解码。保持 Provider 查询 2/2 + 首批 Codec 1/1 = 3/3。
+- SR-013 AC-013-07 同时测试：A 原版不通过 G.4 Link 的**预期负例**、B 合法 Schema-only 0/0 的正例、不同 OpenAMSM 版本/未知 G.4 keyword/错误 T1→T2 字段/缺 Publisher 的拒绝。新 1.6.0 Package/Build/Verify 机器契约未发布，产品 `BLOCKED/NOT_RUN`。
 
-实际 Package Schema / Build DTO / Manifest 字段、跨包 $ref 算法及 Golden 由 ca-skills / Compiler / Provider Owner 正式发布，不能凭本章推断接口已经可用。[权威设计](../EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)；产品验证 NOT_RUN、依赖发布 BLOCKED。
+当前源 `env-openamsm@dc83ccbf` 及 `r19-20260402...` 路径为**历史来源候选**，实际使用基线需要正式 OpenAMSM Owner 取证，不能仅凭目录名声明 3GPP Release。完整说明见 [EC01.3GPP 权威设计](../EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。
 
 ## 修订记录
 
@@ -398,3 +402,4 @@ Compiler 1.6.0 Check/Link/Build/Verify 的新增门槛（由 SR-013 AC-013-07 �
 | 2026-11-26 | 0.2.12 | GPT-6（ChatGPT） | §10.2、§11.1、修订记录 | 收紧 Schema-only Package 的引用入口为 Contract.contexts，requestSchema 仍由 Skill 自有 Schema 提供 | 与 CA-SL 1.6.0 / SR-030 的 Request Schema 与 Host Context Schema 所有权边界一致 | Issue #12/#40；CA-SL 1.6.0；SR-013、SR-030；PR #46 |
 | 2026-11-27 | 0.2.13 | Codex / GPT-6 | Provider 一对一映射 | 区分查询 2/2 与包含 Codec 的 3/3 | 与 SR-029、F06 的发布范围对齐 | Issue #12，PR #46 |
 | 2026-11-27 | 0.2.14 | ChatGPT / GPT-6 | 3GPP Schema 与阶段输入补充 | 明确公共 Schema-only 导出、选择期 Request 与执行期 Codec Result 的 Link / 业务字段来源 | 关闭 Create 选择前依赖 NAS 解码的循环、固定跨包类型门禁 | IR-009；Issue #47；SR-031/026/013 |
+| 2026-11-27 | 0.2.15 | ChatGPT / GPT-6 | 本轮 IR-009 设计修正 | 固定 OpenAMSM 版本 + 原版 YAML 逐字节代发布；显式区分可选 Adapter 与 Provider Codec 输出 | 落实原版 YAML 不得改动、消除误把原版当 G.4 的风险 | Issue #47；SR-031/026/013 |
