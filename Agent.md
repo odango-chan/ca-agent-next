@@ -181,6 +181,7 @@ review_scope:
 
 | 日期 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
 |---|---|---|---|---|---|
+| 2026-11-27 | GPT-6.2（ChatGPT） | §2、§2.1、§2.2、修订记录 | 将 SR-028 已验收 uv 工具链确立为 Next 根 Python 工程共享基线；要求 Python 实施分支继承共享基线、通过自动 CI 策略检查并禁止 pip 回退 | 防止 SR-028 未合入 main 时其他 SR 继续采用独立 pip 入口，并将规范约束落实为 PR 检查 | Issue #111；Issue #96；PR #99；PR #112；SR-028 |
 | 2026-11-27 | GPT-6.2（ChatGPT） | §2.2、修订记录 | 明确常规可信策略检查从默认分支运行的 `pull_request_target` Workflow 读取策略；Head 锁检查独立运行；标明 PR #112 Bootstrap 与默认分支激活边界 | 避免误认为 `pull_request_target` 会从 PR Base 读取 Workflow，或在其进入默认分支前声称可信门禁已激活 | Issue #111；PR #112 |
 | 2026-11-27 | — | DeepSeek Harness（Goal 执行） | §2、§2.1、修订记录 | 回填 SR-028 实施后的当前 uv 安装、测试门禁、Smoke、Go Echo 前置和 Review Context 入口；说明 SR-028 已 READY 并在 Issue #96 实施 | 使协作入口与当前工具链一致，同时保留各 SR 历史 pip 受测记录 | Issue #96；PR #99；SR-028；G02 |
 | 2026-11-27 | GPT-6（ChatGPT） | §1 | 强制长时间运行 Goal 启动前建立并核验 GitHub 检查点；规定执行中增量更新、原 Goal 恢复/续跑，以及评审快照固定规则入口 | 防止 Goal 中断丢失进度、重复执行和因 PR 普通提交导致评审误暂停 | Issue #92；Issue #12；PR #46 |
