@@ -30,7 +30,8 @@
 读取了 PR #52 的**完整增量文件列表（35 个）**及全部 diff，并对以下最低范围做了交叉核对：
 
 - 规范：`CA-SL 1.6.0完整语言规范`、`SKILL作者规范`（新增）、`技能与确定性保障格式规范`、`文件结构规范`
-- 设计与架构：`CA Agent Next 架构设计`、`EC01-CA-SL与Skill作者体系架构设计`、F01、F02、F03、F04、F05、F08、F09
+- 设计与架构：`CA Agent Next 架构设计`、`EC01-CA-SL与Skill作者体系架构设计`、`EC02 Compiler设计说明书`（本 PR 未修改但属 §五 必查范围，见 P0-01）、F01、F02、F03、F04、F05、F08、F09
+- 版本基线：`CA-SL语言基线与版本规范`（本 PR 未修改，见 P1-03）
 - SR：SR-004、SR-007、SR-013、SR-016、SR-032（新增）、SR-029、SR-031
 - 治理：IR 总登记册、SR 总索引、功能树与需求追踪基线、实施状态总览、文档总目录与索引、现有文档盘点与收敛计划、原始架构与设计资产恢复清单、跨仓设计资产迁移与一致性审计
 - 交叉：`EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书`（PR #48 设计，作为 PR #52 的 Base）
@@ -42,7 +43,7 @@
 
 ## 3. 架构一致性结论（对照 4.1）
 
-**总体方向一致，无 P0 级架构冲突。** 具体：
+**总体方向一致，但存在 1 个 P0 级架构冲突：EC02 Compiler 权威设计（本 PR 未修改）仍把 `when` 的唯一作者位置规定为 `assurance/contract.yaml` 并明确禁止 SKILL.md Front Matter 的 `when`（见 PR52-R1-P0-01）。** 该文件属于任务 §五 最低交叉检查范围（EC02）与 §4.7 Compiler 设计一致性要求，直接抵消本 PR 的核心入口变更。具体：
 
 | 检查点 | 结论 | 证据 |
 |---|---|---|
@@ -95,7 +96,7 @@
 ### 4.6 Compiler 设计一致性（对照 EC02/F08/SR-013）
 - `when` 解析与编译来源改为 SKILL.md Front Matter、无 Assurance 不进 Compiler —— ✅（F08 §2 L3708；SR-013 §4 L389-401）。
 - 类型检查、输入 Schema 绑定、CheckedExpr/DescriptorSet、诊断、产物、依赖闭包、Build/Verify 职责 —— ✅（SR-013 §4.2；F08 §3/§3.1）。
-- **Compiler 不会错误读取 Contract.when** —— 主体正确；但 CA-SL §17 L540 仍写「when 为 Contract 顶层」（P1-02），需清理以免实现者回退。
+- **Compiler 不会错误读取 Contract.when** —— ❌ **不成立（P0-01）**：`EC02 Compiler设计说明书` v0.2.19（本 PR 未修改）§3 L43 仍写「唯一作者位置：skills/<skill-name>/assurance/contract.yaml 的可选顶层 when」，L46 写「不在 SKILL.md Front Matter 增加 when」；而 F08 §2/§3.1 又把 Compiler 静态检查委托给 EC02 §3–7。此外 CA-SL §17 L540 仍写「when 为 Contract 顶层」（P1-02）。即权威 Compiler 设计仍要求从 Contract YAML 读取 when，与本 PR 要求相反。
 
 ### 4.7 Skill Studio / AI Authoring（对照 F09）
 - 可编辑新 SKILL.md；Front Matter `when` 提示与诊断 —— ✅（F09 §3）。
@@ -118,7 +119,7 @@
 | EC01 架构 ↔ CA-SL ↔ SKILL作者规范 | ⚠️ 部分 | `when` 归属在 CA-SL §17 / EC01 §3 残留 Contract 表述（P1-02）；EC01 版本头 0.2.1，多处引用 0.1.9/0.2.0 |
 | F01 / F03 / F04 / F05 ↔ Host Resource Read | ✅ | `host.skill-resource.read` 由 F05 §2.1 唯一定义，其余引用不复制格式 |
 | F03 / F04 ↔ Host Script Execution | ✅ | 统一 host.skill-script.execute、唯一 Plugin Manager、无第二 Registry/IPC |
-| F08 ↔ SR-013 ↔ EC02 | ✅ | `when` 来源统一为 Front Matter；无 Assurance 不编译 |
+| F08 ↔ SR-013 ↔ EC02 | ❌ 冲突 | `when` 来源：CA-SL/F08/F02/SR-013 已改为 Front Matter，但 **EC02 Compiler 权威设计仍强制 contract.yaml**（P0-01），F08 又把检查委托给 EC02；无 Assurance 不编译一致 |
 | F09 ↔ SR-016 ↔ SKILL作者规范 | ✅（版本漂移） | Change Set 边界清晰；SR-016 AC-016-11 引用作者规范 v0.1.8（实际 0.1.9） |
 | SR-004 ↔ 格式规范 ↔ CA-SL | ✅（版本漂移） | 导入规则一致；SR-004 引用 CA-SL v0.2.2/F08 v0.3.25（实际 0.2.3/0.3.28） |
 | SR-031 / IR-009 ↔ SKILL作者规范 | ⚠️ 部分 | 原版 OAS3 直引原则一致；但作者规范示例未走 OAS 直引（P1-01） |
@@ -145,13 +146,25 @@
 | AC-032-12 F01～F09 与架构无冲突、状态 NOT_RUN | ⚠️ PARTIAL | 主体一致；EC01 §3 L76 Contract 仍含「Skill 选择条件」（P1-02） |
 | AC-032-13 CA-SL 保留原有语法并给规范文法、无 Wait | ✅ PASS | CA-SL §6.1 EBNF、§10 |
 | AC-032-14 Host Resource Read 精确请求/响应/边界/诊断 | ✅ PASS | F05 §2.1 |
-| AC-032-15 when 为 Front Matter、Assurance-only、不属于 Contract、Compiler/Importer 对账 | ⚠️ PARTIAL | 正文正确；CA-SL §17 L540 / EC01 §3 L76 残留 Contract 表述（P1-02） |
+| AC-032-15 when 为 Front Matter、Assurance-only、不属于 Contract、Compiler/Importer 对账 | ❌ NOT MET | 正文正确，但 EC02 Compiler 权威设计仍强制 when 在 contract.yaml（P0-01）、CA-SL §17 L540 / EC01 §3 L76 残留 Contract 表述（P1-02），无法完成 Compiler 对账 |
 
-**统计：11 PASS / 3 PARTIAL / 1 NOT MET。**
+**统计：10 PASS / 3 PARTIAL / 2 NOT MET（AC-032-07、AC-032-15）。**
 
 ---
 
 ## 7. Finding 清单
+
+### P0-01（阻断，架构方向冲突）— EC02 Compiler 权威设计仍强制 `when` 位于 `assurance/contract.yaml`
+
+- **Finding ID：** PR52-R1-P0-01
+- **优先级：** P0
+- **对应 SR / IR：** SR-032（AC-032-15）；SR-013；IR-008；F08
+- **文件与行号：** `docs/设计说明书/EC02-Compiler/Compiler设计说明书.md` v0.2.19（**本 PR 未修改**）：§3 L43「唯一作者位置：skills/<skill-name>/assurance/contract.yaml 的可选顶层 when」、L46「不在 SKILL.md Front Matter 增加 when」；另 §1.5 L17「Contract.when、Request Schema 根/闭包与 Capability→Callable Binding 必须共同进入…Runtime Artifact」、§2 L29「Contract.when 进入同一 Skill 语义链」、§3.7 L137「保留 assurance/contract.yaml 中 when 的原始 SourcePath」。相关次级权威：`docs/规范/CA-SL语言基线与版本规范.md` v0.2.6（**本 PR 未修改**）L35「Contract 位于 assurance/contract.yaml；when 是可选顶层字段」、L42「1.6.0 唯一目标中 when 位于 Contract 顶层」。
+- **当前设计事实：** 本 PR 将 `when` 的规范入口改为「有 Assurance Skill 的 SKILL.md Front Matter」，并在 CA-SL §2/§4/§9、F02 §7、F08 §2、SR-013 §4、SR-032 AC-032-15 全面声明 when **不再**位于 Contract YAML；但 Compiler 的唯一权威设计 EC02 仍规定唯一作者位置为 contract.yaml 且明确禁止 Front Matter，且 F08 §2 把 Compiler 静态检查委托给 EC02 §3–7。
+- **与架构要求的冲突：** 直接违反评审要求 §4.7「必须确认 Compiler 不会错误读取 Contract.when」与 4.2A「不允许将 `when` 放进 Contract YAML」；并违反 AC-032-15。EC02 与 CA-SL 语言基线属任务 §五 最低交叉检查范围（EC02）与消费者权威引用。
+- **实际影响：** 若按 EC02 实现 Compiler，它会从 `assurance/contract.yaml` 读取 when、并拒绝 SKILL.md Front Matter 的 when，与 F08/F02/SR-013/作者规范完全相反；DeepSeek Harness 将无法确定以哪份权威为准，必然自造或实现错误入口。这是架构方向的实质性冲突，而非措辞问题。
+- **必须采取的修正：** 更新 `EC02 Compiler设计说明书`（§1.5、§2、§3、§3.7 等）与 `CA-SL语言基线与版本规范`（L35/L42），将 when 唯一作者位置改为「有 Assurance Skill 的 SKILL.md YAML Front Matter」，并明确 Compiler 从 Front Matter 读取、contract.yaml 不含 when；若这两份文档不在本 PR 范围内，则本 PR 必须在 SR-032 §7 与 F08 中显式登记「EC02 / CA-SL 语言基线需另行同步，未同步前不得声称 Compiler 一致」并保持相应 AC NOT_RUN，而不得宣称「完整一致」。
+- **可验证关闭条件：** EC02 §3 与 CA-SL 语言基线不再出现「when 唯一/顶层位于 contract.yaml」或「不在 SKILL.md Front Matter 增加 when」的表述；F08 §2 委托的 Compiler 检查来源与 Front Matter 入口一致；SR-032 AC-032-15 可核对。
 
 ### P1-01（阻断）— 唯一完整正向示例为 3GPP SBI 事件自造 Request 契约，违反 4.2A/C/D 与 4.3
 
@@ -184,6 +197,17 @@
 - **实际影响：** 实施者依处置表/语义表会把 `when` 实现进 contract.yaml，或在 Compiler/Studio 保留 Contract.when 读取分支，重现本次明确要废弃的旧入口。
 - **必须采取的修正：** 改写 CA-SL L540 为「when 位于有 Assurance Skill 的 SKILL.md Front Matter；requestSchema 为 Contract 顶层」；删除 EC01 L76 Contract 行中的「Skill 选择条件」。
 - **可验证关闭条件：** 权威文档（CA-SL、EC01、F02/F08/F09、格式规范）除明确标注为历史 v1alpha5 只读原文外，不存在「when 属于/位于 contract.yaml 或 Contract」的表述。
+
+### P1-03（阻断，次级权威仍规定 when 在 Contract）— `CA-SL语言基线与版本规范` 与 Front Matter 入口冲突
+
+- **Finding ID：** PR52-R1-P1-03
+- **优先级：** P1
+- **对应 SR / IR：** SR-032（AC-032-15）；SR-029；IR-008；F02
+- **文件与行号：** `docs/规范/CA-SL语言基线与版本规范.md` v0.2.6（**本 PR 未修改**）：L35「Contract 位于 assurance/contract.yaml；when 是可选顶层字段」、L42「1.6.0 唯一目标中 when 位于 Contract 顶层」。
+- **当前设计事实：** 该规范被 F02 §12 等作为「CA-SL 版本策略」权威引用，仍规定 when 在 Contract 顶层。
+- **与架构要求的冲突：** 与 CA-SL 1.6.0 §2/§9、F02 §7、SR-032 AC-032-15 相反，违反 4.2A 与 AC-032-15。
+- **实际影响：** 与 P0-01 同一根因的次级权威残留；实施者/复评者会引用该版本基线得到错误入口。
+- **必须采取的修正 / 关闭条件：** 将 when 位置改为 SKILL.md Front Matter（Assurance-only），或在 SR-032 显式登记该文件需另行同步且 AC NOT_RUN；关闭条件为该规范不再表述 when 位于 Contract 顶层。
 
 ### P2-01 — SR-032 内部依赖版本与文档头、实际对象版本不一致
 
@@ -227,12 +251,12 @@
 
 **结论：`NEEDS_REVISION`**
 
-- P0 = 0
-- P1 = 2（PR52-R1-P1-01、PR52-R1-P1-02）
+- P0 = 1（PR52-R1-P0-01：EC02 Compiler 权威设计仍强制 when 位于 contract.yaml）
+- P1 = 3（PR52-R1-P1-01、PR52-R1-P1-02、PR52-R1-P1-03）
 - P2 = 3（PR52-R1-P2-01、PR52-R1-P2-02、PR52-R1-P2-03）
-- 核心 AC：11 PASS / 3 PARTIAL / 1 NOT MET
+- 核心 AC：10 PASS / 3 PARTIAL / 2 NOT MET（AC-032-07、AC-032-15）
 
-**判定理由：** SR-032 与 SKILL 作者规范整体架构方向正确，CA-SL 1.6.0、Compiler、Runtime、Plugin、Tool、Skill Studio 的主要契约基本一致，四阶段 Node、Capability-only、Script Runner、Host Resource Read、无 Skill Wait 等边界清晰。但存在两个关键的、会导致实施者自造契约或回退旧入口的设计歧义：(1) 唯一完整正向示例以自造 Request Schema 表达 3GPP SBI 事件；(2) 两份权威文档仍把 `when` 表述为 Contract 顶层。另有跨文档版本漂移与修订记录删改。故**不满足 `APPROVE_FOR_READY`（要求 P0=P1=0 且无关键歧义）**，应修订 P1 后重新独立复评。
+**判定理由：** SR-032 与 SKILL 作者规范的正文方向正确，CA-SL 1.6.0、Runtime、Plugin、Tool、Skill Studio 的主要契约基本一致，四阶段 Node、Capability-only、Script Runner、Host Resource Read、无 Skill Wait 等边界清晰。但评审要求 §4.7 / §五 强制交叉检查的 **EC02 Compiler 权威设计（本 PR 未修改）仍规定 `when` 唯一作者位置为 `assurance/contract.yaml` 并明确禁止 SKILL.md Front Matter**，与本 PR 的核心入口变更正面冲突且 F08 把 Compiler 检查委托给它——构成 P0 级架构冲突；另有次级权威 `CA-SL语言基线与版本规范` 同样残留（P1）、以及 P1-01 示例自造 3GPP Request 契约、P1-02 两处权威文档残留 Contract 表述。故**不满足 `APPROVE_FOR_READY`（要求 P0=P1=0 且无关键歧义）**，应修订后重新独立复评。
 
 > 说明：`APPROVE_FOR_READY` 仅指具备进入实施 READY 门槛的资格，不代表产品已实施或验收通过。本结论不改变任何 SR 的实施状态。
 
