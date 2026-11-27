@@ -1,7 +1,7 @@
 # Python 工程工具链与实施基线规范
 
 > 文档类型：工程治理规范  
-> 文档版本：0.2.2  
+> 文档版本：0.2.3  
 > 状态：DRAFT（本规范由 Issue #111 跟踪；评审合并前作为本任务明确授权的过渡执行规则，合并后成为 Next 根 Python 工程的权威工具链与分支继承规范）  
 > 修订日期：2026-11-27  
 > 适用仓库：`odango-chan/ca-agent-next` 根 Python 工程  
@@ -213,3 +213,4 @@ PR #112 是一次性 Bootstrap：其 Base 尚未包含可信 Workflow，且默�
 | 2026-11-27 | 0.2.0 | GPT-6.2（ChatGPT） | §9、修订记录 | 增加 Python Toolchain Policy CI、可信 Base 策略快照、命令/锁文件/基线继承检查与 Required Check 配置说明 | 将 uv 共享基线从提示词约束提升为自动 PR 检查，避免 PR 自行修改策略绕过门禁 | Issue #111；PR #112；PR #99 |
 | 2026-11-27 | 0.2.1 | GPT-6.2（ChatGPT） | §9.2、修订记录 | 收紧 `--no-project` 例外，仅允许门禁自身标准库测试；增加 Windows `py` 裸入口检测 | 避免通过 `uv run --no-project` 绕开项目锁定环境 | Issue #111；PR #112 |
 | 2026-11-27 | 0.2.2 | GPT-6.2（ChatGPT） | §9、修订记录 | 增加 `pull_request_target` 可信 Base 门禁、策略文件保护、Python Workflow 固定版本检查、`uv lock --check` 和 `uv sync --locked` 检查 | 防止 PR 修改自身 Workflow 绕过可信策略，并验证锁文件与配置一致 | Issue #111；PR #112 |
+| 2026-11-27 | 0.2.3 | GPT-6.2（ChatGPT） | §9.1、§9.3、修订记录 | 明确 `pull_request_target` 从仓库默认分支加载 Workflow/策略，且必须进入默认分支后才激活；区分 PR #112 Bootstrap Required Check 与常规 PR Required Checks | 避免误判 PR Base Workflow 为可信来源，并明确过渡期实际门禁边界 | Issue #111；PR #112 |
