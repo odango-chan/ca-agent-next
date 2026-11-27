@@ -1,13 +1,13 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.33\
+> 文档版本：0.3.34\
 > 状态：**设计待评审**（CA-SL 1.6.0；有 Assurance Skill 才允许 assurance/contract.yaml 顶层 when；SKILL.md Front Matter 不声明 when；无 Assurance Skill 不声明 when；AI Authoring / Schema Explorer 实施与发布 NOT_RUN）
 > 修订日期：2026-11-27\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级准入、额外 package-level digest、签名和 Trust Registry；历史 Compiler v2.1.0 的 `files[].sha256` 要求仅归旧版审计，不转为新版 Schema 要求
 
-关联 IR-006、IR-008、SR-015、SR-016、SR-020（参考宿主架构审计）、SR-024（旧 Development Host Publisher，仅历史）、SR-025（MAS Owner 1.6.0 Publisher）、SR-030（Host Context 1.6.0 Schema-only Publisher）、SR-032（中央 SKILL 作者规范）；新 1.6.0 Compiler 接口以 [EC02 Compiler 设计说明书](../EC02-Compiler/Compiler设计说明书.md) v0.2.19 和 [SR-013](../../SR/SR-013-Compiler已检查when与发布产物.md) v0.2.31 为准；历史 EC02 Development Build 设计只保留源审计，不作为当前 Compiler DTO/Worker/Bundle 发布入口。基线为 [docs/architecture/studio-boundaries.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/architecture/studio-boundaries.md)、[docs/design/ai-procedure-authoring.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/design/ai-procedure-authoring.md)。
+关联 IR-006、IR-008、SR-015、SR-016、SR-020（参考宿主架构审计）、SR-024（旧 Development Host Publisher，仅历史）、SR-025（MAS Owner 1.6.0 Publisher）、SR-030（Host Context 1.6.0 Schema-only Publisher）、SR-032（中央 SKILL 作者规范）；新 1.6.0 Compiler 接口以 [EC02 Compiler 设计说明书](../EC02-Compiler/Compiler设计说明书.md) v0.2.19 和 [SR-013](../../SR/SR-013-Compiler已检查when与发布产物.md) v0.2.32 为准；历史 EC02 Development Build 设计只保留源审计，不作为当前 Compiler DTO/Worker/Bundle 发布入口。基线为 [docs/architecture/studio-boundaries.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/architecture/studio-boundaries.md)、[docs/design/ai-procedure-authoring.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/design/ai-procedure-authoring.md)。
 
 ## 1. 编辑与语言服务
 
@@ -202,7 +202,7 @@ AI Authoring 的 Change Set 必须遵守中央 [SKILL 作者规范](../../规范
 ## 10. 原版 3GPP OpenAPI 只读展示与直接 Schema Component 引用（IR-009）
 
 - 工作台可展示 SR-031 原样代发布的 OpenAMSM OpenAPI 3.0 Source Bundle，作为只读标准来源视图；保留原始 bytes、文件名 / 路径 / 相对 `$ref`，不提供自动格式化、重写、修补或保存原件修改。当前 `PostSmContexts.requestBody → jsonData → SmContextCreateData` 选定闭包为四份原版 YAML / 102 个 Schema Component；不要求展示或导入全部 472 份 YAML。任何 AI Change Set 试图修改原版 YAML 必须拒绝。
-- Schema Explorer / LSP 可沿已 pin Source Bundle 的精确 `components/schemas` 外部引用显示定义、来源文件、JSON Pointer、OpenAMSM commit 和标准版本；仅解析选定闭包可达 refs，不全局 eager resolve 未选定 operation。可展示 `RefToBinaryData.contentId` 与 N1/N2/N2 Ext1 multipart slot 的映射；未被 JSON 引用的 part 不得交给 Codec，额外 part 的拒绝 / 忽略策略由 ingress profile 定义。Compiler 才是跨 dialect Schema Link / Build / Verify 权威。不得把原版 OAS3 Schema Object 重写为 G.4 Adapter；本地 Skill-owned Request 根仍遵循 G.4。
+- Schema Explorer / LSP 可沿已 pin Source Bundle 的精确 `components/schemas` 外部引用显示定义、来源文件、JSON Pointer、OpenAMSM commit 和标准版本；仅解析选定闭包可达 refs，不全局 eager resolve 未选定 operation。可展示 `RefToBinaryData.contentId` 与 N1/N2/N2 Ext1 multipart slot 的映射；未被 JSON 引用的 part 不得交给 Codec，额外 part 的拒绝 / 忽略策略由 ingress profile 定义。Compiler 才是跨 dialect Schema Link / Build / Verify 权威。不得把原版 OAS3 Schema Object 重写为 G.4 Adapter。Skill-owned `requestSchema` 入口有两种形式：本地 G.4 Schema 根按 G.4 闭合规则校验；纯单 `$ref` 根引用别名不套用 G.4 闭合规则，其目标和可达外部闭包按 OAS 3.0 dialect 原样验证。
 - Studio / Project Lock 必须记录正式 Source Bundle dependency identity、选定 operation / requestBody / Schema Component roots 与对应可达文件快照；正式 Lock wire 字段由 Publisher / Compiler Owner 冻结，不新增自定义 per-file digest / package hash。不解析动态 latest、不从任意 URL 下载，也不让无 3GPP 依赖的项目被强制导入该 Bundle。
 - Procedure 可引用 ca-client-tools 正式 Codec READ Capability 与 Output Schema，但不能展示私有 Handler / Callable；当 T1 `when` 企图读取 T2 才解码的 NAS 字段，Compiler 应给稳定的 SourcePath / 可用性诊断，不能偷偷触发解码。
 - NAS / NGAP Output Schema 是 Provider 独立发布物，不从 SBI `format: binary` 推导。没有正式 Compiler OAS3 Resolver / Provider Golden 时，不生成假 Schema、不宣称产品 PASS；现行产品验收 NOT_RUN。
@@ -249,3 +249,5 @@ AI Authoring 的 Change Set 必须遵守中央 [SKILL 作者规范](../../规范
 | 2026-11-27 | 0.3.32 | GPT-6.2（ChatGPT） | 文档头、§3、§9.3、修订记录 | 将 when 编辑与校验入口恢复为 assurance/contract.yaml 顶层；SKILL.md Front Matter 不声明 when；Procedure-only Change Set 不编辑 Contract | 纠正 Studio 作者入口和独立编辑路径，保持 Procedure Change Set 范围不变 | Issue #49；IR-008；SR-032；F02/F08/SR-013 |
 
 | 2026-11-27 | 0.3.33 | GPT-6.2（ChatGPT） | 文档头、§3、修订记录 | 同步 EC02 / SR-013 当前版本；增加有 Assurance 与无 Assurance 两种 Front Matter.when 均拒绝，以及可选 input 字段缺少 has 守卫的 Studio 诊断验收 | 防止编辑器对两种包采用不同入口容忍度，并确保 CEL 可选字段安全规则进入作者体验 | Issue #49；IR-008/009；SR-016/032；PR #52 |
+
+| 2026-11-27 | 0.3.34 | GPT-6.2（ChatGPT） | §10、修订记录 | 明确 Schema Explorer 对应的 Skill-owned requestSchema 根可为本地 G.4 根或纯 $ref OAS3 根引用别名；同步 SR-013 v0.2.32 | 避免 Studio 的 OAS3 只读导航设计被“Skill-owned 根遵循 G.4”表述误导为必须投影 / 闭合 | Issue #49；IR-009；SR-013/016；PR #52 |
