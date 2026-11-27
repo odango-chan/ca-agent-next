@@ -55,7 +55,7 @@
 
 ### 4.1 设计依赖
 
-- G02 v0.2.7 与 SR-002 v0.2.10 的 Python distribution/build metadata 是稳定输入；SR-003 v0.3.11 的 Go Echo 构建和 Plugin 测试是本地完整测试的直接前置。
+- G02 v0.2.8 与 SR-002 v0.2.10 的 Python distribution/build metadata 是稳定输入；SR-003 v0.3.11 的 Go Echo 构建和 Plugin 测试是本地完整测试的直接前置。
 - 设计评审不依赖 SR-001 的代码合并；可以独立评审 uv 与 worktree 方案。
 
 ### 4.2 实施依赖
