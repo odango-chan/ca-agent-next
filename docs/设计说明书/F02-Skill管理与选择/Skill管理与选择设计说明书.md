@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：**设计待评审**（唯一新目标 CA-SL 1.6.0；全链路不兼容任何旧作者语法、Build DTO、Artifact、Bundle；1.6.0 产品未发布）
-> 文档版本：0.3.7
+> 文档版本：0.3.8
 > 功能归属：F02 — Skill 管理与选择  
 > 关联 SR：SR-004、SR-005、SR-006、SR-032    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -41,7 +41,7 @@ skills/<skill-id>/
     └── predicates.yaml
 ~~~
 
-SKILL.md 必须存在，其 YAML Front Matter 按 [Agent Skills Specification](https://agentskills.io/specification) 处理，不属于 CA-SL v1alpha5 语法。必需字段为 `name` / `description`；`name` 1～64 字符、匹配包根目录名、只允许小写字母/数字/连字符且不得有首尾/连续连字符；`description` 1～1024 字符且非空。可选字段为 `license`、`compatibility`（1～500 字符）、`metadata`（string→string）和实验性 `allowed-tools`。Next 严格拒绝未知 Front Matter 字段；`allowed-tools` 只作为元数据，不授予 Callable/Capability 权限。assurance/ 可选；schemas/、scripts/、references/、assets/ 是不依赖 Assurance 的 Package 根目录共享资源。Schema 文件以 YAML 1.2 表示 JSON Schema 数据模型；Script Registry scripts/manifest.yaml 声明精确 entrypoint、purpose、input/output Schema 与 llmInvocable。LLM 可读取共享资源；仅 llmInvocable=true 的 transform Script 且 Host 配置 `scriptExecution.llmEnabled=true`（默认 false）时，才可通过 host.skill-script.execute 调用。新作者源的唯一目标为 **CA-SL 1.6.0 Capability-first**，现仍未正式发布；历史 v1alpha5 作者源码与 Release 保留追溯，不能当作 1.6.0 输入或自动迁移。存在 Assurance 时由外部 Compiler 按已正式发布的版本处理。contract.yaml 位于 assurance/ 内，不是每个 Skill 的必需文件。when 是 contract.yaml 的可选字段；assurance/predicates.yaml 只承载执行期业务判断。
+SKILL.md 必须存在，其 YAML Front Matter 按 [Agent Skills Specification](https://agentskills.io/specification) 处理，不属于 CA-SL v1alpha5 语法。必需字段为 `name` / `description`；`name` 1～64 字符、匹配包根目录名、只允许小写字母/数字/连字符且不得有首尾/连续连字符；`description` 1～1024 字符且非空。可选字段为 `license`、`compatibility`（1～500 字符）、`metadata`（string→string）和实验性 `allowed-tools`。Next 严格拒绝未知 Front Matter 字段；`allowed-tools` 只作为元数据，不授予 Callable/Capability 权限。assurance/ 可选；schemas/、scripts/、references/、assets/ 是不依赖 Assurance 的 Package 根目录共享资源。Schema 文件以 YAML 1.2 表示 JSON Schema 数据模型；Script Registry scripts/manifest.yaml 声明精确 entrypoint、purpose、input/output Schema。LLM 可读取共享资源，并可通过 host.skill-script.execute 调用当前 Skill Registry 中登记的脚本；LLM 与 Assurance 共用同一 Script Runner，不设置逐脚本标记或额外 Host 开关。新作者源的唯一目标为 **CA-SL 1.6.0 Capability-first**，现仍未正式发布；历史 v1alpha5 作者源码与 Release 保留追溯，不能当作 1.6.0 输入或自动迁移。存在 Assurance 时由外部 Compiler 按已正式发布的版本处理。contract.yaml 位于 assurance/ 内，不是每个 Skill 的必需文件。when 是 contract.yaml 的可选字段；assurance/predicates.yaml 只承载执行期业务判断。
 
 ### 2.2 运行时发布包
 
@@ -63,7 +63,7 @@ Bundle 始终保留共享资源原始文件。无 Assurance 的 Skill 不生成 
 
 | 输入 | 版本/语义 | Agent 处理 |
 |---|---|---|
-| 无 Assurance（可含 schemas/、scripts/、references/、assets/） | Agent Skills Specification；没有 Assurance 作者源和 Runtime Artifact | 可导入；仅 LLM-guided；仅在 `scriptExecution.llmEnabled=true` 时可调用 Registry 显式开放的 Script |
+| 无 Assurance（可含 schemas/、scripts/、references/、assets/） | Agent Skills Specification；没有 Assurance 作者源和 Runtime Artifact | 可导入；仅 LLM-guided；可通过 Host Script Execution Capability 调用当前 Skill Registry 登记的脚本 |
 | 当前冻结 Compiler Artifact | `connectionagent.io/compiler-artifact/v1alpha5`；不含新版 Request Schema 根/闭包和 when CheckedExpr/DescriptorSet | 不作为本设计的当前 Assurance Runtime Bundle；SR-004 拒绝该 API，不推断缺失语义 |
 | Development Artifact | `connectionagent.io/compiler-development-artifact/v1alpha1`；`executionStatus=NOT_ADMITTED` | 必须拒绝，不得运行 |
 | CA-SL 1.6.0 Runtime Artifact（未发布） | ca-skills 1.6.0 + SR-029 Capability Binding + Compiler #61 / SR-013 新 API 联合交付；准确 `languageTarget` 机器标识尚待发布 | **唯一新增 Assurance 支持目标**；只按正式 Release 的 apiVersion/Manifest/Binding 消费 |
@@ -89,7 +89,7 @@ Agent 只执行以下消费端检查：
 - Artifact 的 apiVersion 必须属于 SR-004 明确支持的 Compiler 正式 Runtime Artifact API；当前目标是 Compiler/SR-029 联合发布的 **CA-SL 1.6.0** Runtime Artifact（精确机器标识仍待发布）。历史冻结 Artifact v1alpha5、Development Artifact v1alpha1、未知 API 均拒绝，不做兼容映射。
 - 必需 Artifact 文件存在且路径位于包根目录内。
 - Manifest 引用的文件、Schema/type data 和本地依赖可解析；scripts/manifest.yaml 中每个 file、entrypoint、inputSchema / outputSchema 都必须在当前 Package snapshot 内精确解析，拒绝路径穿越、缺文件、未知 Script ID、错误 purpose 或无效 Schema。
-- LLM Script Action 只允许 host.skill-script.execute；Runtime 必须校验当前 Run / Skill / Package snapshot、Registry llmInvocable 标记和 `scriptExecution.llmEnabled=true`，并按该 Script 的 inputSchema / outputSchema 验证。模型不得提供路径、模块、函数、代码或命令。
+- LLM Script Action 只允许 host.skill-script.execute；Runtime 必须校验当前 Run / Skill / Package snapshot、Script Registry ID，并按该 Script 的 inputSchema / outputSchema 验证；不设置逐脚本 LLM 标记或额外 Host 开关。模型不得提供路径、模块、函数、代码或命令。
 - 新版 **CA-SL 1.6.0** Artifact 必须包含 Compiler 静态解析的唯一 Capability→Callable Binding，携带精确依赖包身份、kind、Effect、Schema、operation/observation exports 并供 Runtime 生成闭合 Callable allowlist；具体 Manifest 字段与路径由 SR-029 + Compiler #61 / SR-013 正式契约冻结。Callable 依赖可来自 Provider Interface 或业务 Owner Contract；contexts 的 Schema-only 依赖按 §2.3 保存，仅贡献 Schema。Provider Interface 快照按 `provider.yaml.interfacePackagePath` / `interfaceSnapshotDigest` 固定；Owner publication 由 Runtime Bindings sidecar identity 固定。旧 v1alpha5 MAS alias/Callable 作者格式属于冻结历史，不得拿来作为 1.6.0 运行时数据。
 - when 的 CheckedExpr 和类型描述数据可被指定 Python CEL Runtime 反序列化。
 - Artifact 文件、路径或依赖不满足要求时给出明确错误并拒绝导入。所有旧 CA-SL / 旧 Build DTO / 旧 Manifest / 旧 Runtime Artifact / v1alpha6 候选包均明确拒绝；不进行版本协商、兼容映射、旧 Scope 重解释、自动迁移、回退或混合 Catalog。
@@ -160,7 +160,7 @@ CheckedExpr、google.protobuf.Any、FileDescriptorSet、DescriptorPool、字段�
 
 | Skill 状态 | 可用模式 |
 |---|---|
-| 无 Assurance Artifact（可含共享资源） | LLM-guided only；如 Registry 声明 llmInvocable Script 且 `scriptExecution.llmEnabled=true`，可用 host.skill-script.execute |
+| 无 Assurance Artifact（可含共享资源） | LLM-guided only；当前 Skill Registry 非空时可用 host.skill-script.execute |
 | 有效发布 Assurance Artifact（可含共享资源） | Deterministic 或 LLM-guided；两种模式共用同一份 Schema / Script |
 | Assurance Artifact、Script Registry 或资源引用缺失 / 格式错误 / 依赖不完整 | 导入失败，不得降级 |
 
@@ -182,7 +182,7 @@ Agent 不调用 Compiler Inspect/Verify，也不实现 Skill Admission。Compile
 
 ## 10. 验收要求
 
-- 无 Assurance 包不调用 Compiler；Importer 按 Agent Skills Specification 校验 Front Matter，并检查共享资源 / Script Registry；Catalog 激活后仅 LLM-guided。Host 仅在 llmInvocable 与 `scriptExecution.llmEnabled=true` 同时满足时提供 host.skill-script.execute；`allowed-tools` 不构成业务 Capability 授权，也不授予任意脚本执行权限。
+- 无 Assurance 包不调用 Compiler；Importer 按 Agent Skills Specification 校验 Front Matter，并检查共享资源 / Script Registry；Catalog 激活后仅 LLM-guided。Host 对当前 Skill Registry 中登记的脚本提供 host.skill-script.execute；`allowed-tools` 不构成业务 Capability 授权，也不授予任意脚本执行权限。
 - Assurance Bundle 仅接受 Compiler 正式发布的新版 Runtime Artifact API 与 ca-skills 正式 Bundle；不接受冻结 Artifact v1alpha5、Development v1alpha1 或未知 API。
 - Assurance 作者源存在但没有受支持 Runtime Artifact 时明确失败，不得降级为无 Assurance Package。
 - Importer 只返回候选；Catalog generation、原子激活、失败回滚和 Invocation pinning 由 SR-005 验收。
@@ -291,3 +291,4 @@ T2 的 Provider Codec Result 只在选定 Skill Procedure 的 READ 后可用，�
 | 2026-11-27 | 0.3.5 | GPT-6.2（ChatGPT） | §2～5、§8～10 | 将 schemas/scripts 作为根目录共享资源，允许无 Assurance Skill 使用资源；增加 Host Script Execution Capability 的导入与运行边界 | 使 LLM-guided 与 Deterministic 共用资源，同时不授予任意 Python 执行 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.3.6 | GPT-6.2（ChatGPT） | §2、§4、§8、§10 | 将 Host Script Execution 的 LLM 暴露条件统一为 Registry 标记与 `scriptExecution.llmEnabled` 双门禁；统一 Assurance 文件路径 | 消除 F02 与 CA-SL / Host 配置之间的口径歧义 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.3.7 | GPT-6.2（ChatGPT） | §2、§3、§5、§8、§10 | 将 SKILL.md-only 误称统一为无 Assurance Package，明确无 Assurance 包仍可含共享资源并参与语义选择 | 避免选择、导入和模式派生误把共享资源包排除在 LLM-guided 之外 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.3.8 | GPT-6.2（ChatGPT） | §2、§4、§8、§10 | 移除 Script Registry `llmInvocable` 与 Host `scriptExecution.llmEnabled` 双门禁；LLM 和 Assurance 共用同一 Script Runner | 使无 Assurance Skill 的模型默认具备与确定性执行相同的包内脚本调用能力 | Issue #49；IR-008；SR-032 |
