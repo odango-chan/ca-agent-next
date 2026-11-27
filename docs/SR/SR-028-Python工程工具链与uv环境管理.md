@@ -69,7 +69,7 @@
 | ID | 验收条件 | 必需证据 |
 |---|---|---|
 | AC-028-01 | 根 pyproject 保留 `ca-agent-next`、版本 `0.1.0`、`requires-python >=3.11`、setuptools build backend、src package discovery 和空运行时依赖；保留 SR-003 的 plugins extra，仅增加 uv 与开发依赖配置 | pyproject diff；distribution metadata 检查；确认 PyYAML 不在 Requires-Dist runtime metadata |
-| AC-028-02 | `.python-version` 文件内容精确为 `3.14.6`；uv CLI 固定为 0.13.10；setup-uv 使用 v10.4.0 不可变 commit `1db35dd8eee11c5894872e0b383ae6c406cf738d` 并显式设置 version | 文件内容、`uv --version`、`python --version`、Workflow 日志和配置 |
+| AC-028-02 | `.python-version` 文件内容精确为 `3.14.6`；uv CLI 固定为 0.13.10；setup-uv 使用 v10.4.0 不可变 commit `1db35dd8eee11c5894872e0b383ae6c406cf738d` 并显式设置 version | 文件内容、`uv --version`、`uv run --no-sync --locked --group dev --extra plugins python --version`、Workflow 日志和配置 |
 | AC-028-03 | PyYAML 位于 `[dependency-groups].dev`，不进入 Agent Core 运行时依赖 | pyproject/uv.lock；distribution metadata 测试 |
 | AC-028-04 | 在干净临时 worktree 先以明确正例证明 `uv sync --locked --group dev --extra plugins` 与 `uv lock --check` 均退出 0；随后只把 `pyproject.toml` 中唯一的 `PyYAML>=6.0,<7` 临时改为 `PyYAML>=6.0,<8`，不运行 `uv lock`。两条负例分别在 `if` 中捕获退出码，必须非零且诊断匹配 `lockfile ... needs to be updated`；每次失败后 `git diff --exit-code HEAD -- uv.lock` 与 `git status --porcelain -- uv.lock` 均证明锁文件未变化。恢复 pyproject 后两文件均 clean。整个 Bash 块从首行 `set -euo pipefail`，EXIT trap 清理 worktree、保留原始退出码并保留证据目录；初始正例、修改、诊断、锁文件断言、恢复或 cleanup 任一失败均整体非零。修改约束的 Python 命令必须使用已 locked sync 的 `uv run --no-sync --locked --group dev --extra plugins python -c ...`，不得调用裸 `python` | 干净基线 SHA；两条正例的日志/退出码；临时依赖约束 diff；两条负例完整 stdout/stderr、诊断匹配结果和非零退出码；每次 `uv.lock` 未变化证明；恢复后的 clean diff；EXIT trap 清理结果；保留的证据目录绝对路径 |
 | AC-028-05 | 用两个临时 Git worktree 执行 A→B→A：A sync/断言/Host gate，B sync/断言/Host gate，再返回 A，不重新 sync 而重复断言和 Host gate。每次先清除继承的 `UV_PROJECT_ENVIRONMENT`。A/B 各自断言 `.venv/pyvenv.cfg` 存在、`sys.prefix` 指向本 worktree `.venv`、`sys.executable` 位于本 venv、`ca_agent_next.__file__` 位于本 worktree `src/`，`direct_url.json` 的 `dir_info.editable=true` 且原始 file URL 指向本 worktree。返回 A 的检查、Host gate 和最终比较必须全部通过 `uv run --no-sync --locked --group dev --extra plugins`，不得运行 `uv sync`、`uv python install` 或普通 `uv run`。A-before/A-return 的完整环境 JSON 与 direct_url.json 必须逐字一致；A/B 的 root、venv、sys.prefix、executable、module、direct_url URL 和 source 必须不同。脚本从首行 `set -euo pipefail`，EXIT trap 清理 worktree、保留原始退出码；证据目录不随 cleanup 删除 | 两个 worktree 的创建/清理命令与 trap 退出码；A-before/B/A-return 三份完整 JSON（root、venv、sys_prefix、executable、module、原始 direct_url URL、direct_url_source、editable）；三份原始 direct_url.json；A/B/A 的 `git check-ignore -v .venv/pyvenv.cfg` 输出；三次 Host gate JSON/log/exit code；A-before 与 A-return 的逐字相等证明；证据目录绝对路径和归档附件 |
@@ -88,9 +88,9 @@
 | 统计范围 | 命令/选择器 |
 |---|---|
 | Host | `uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --suite host --output-dir "$EVIDENCE_DIR/host"` |
-| Plugin | `--suite plugin` |
-| Review Context | `--suite review-context` |
-| 完整总计 | `--suite total` |
+| Plugin | `uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --suite plugin --output-dir "$EVIDENCE_DIR/plugin"` |
+| Review Context | `uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --suite review-context --output-dir "$EVIDENCE_DIR/review-context"` |
+| 完整总计 | `uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --suite total --output-dir "$EVIDENCE_DIR/total"` |
 | 全部四范围 | `uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --output-dir "$EVIDENCE_DIR/unittest-gate"` |
 | Host Smoke | `uv run --no-sync --locked --group dev --extra plugins python -m ca_agent_next --smoke` |
 
