@@ -241,9 +241,18 @@ uv run --no-sync --locked --group dev --extra plugins python -m ca_agent_next --
 
 不得使用浮动的 Windows `3.14`。两个矩阵 Job 均显式安装/查找矩阵解释器，记录 `python --version`；Windows 必须精确断言 `Python 3.14.6`。两个 Job 的 uv sync/run 必须显式传入 `--python "$PY"`。Python/uv 步骤在 Linux 使用 `shell: bash`、在 Windows 使用 `shell: pwsh`；Go Echo 构建步骤在两个 Runner 上均使用 `shell: bash`。Windows Git Bash 下 `go env GOOS` 为 `windows` 时必须生成并清理 `echo-plugin.exe`。不得把 Python/uv shell 约定扩大到 Go 步骤。
 
-拟实施的矩阵步骤（示例不是运行证据）：
+拟实施的矩阵步骤（示例不是运行证据；以下片段位于具体 Job 下）：
 
 ```yaml
+strategy:
+  fail-fast: false
+  matrix:
+    include:
+      - os: ubuntu-latest
+        python-version: '3.12'
+      - os: windows-latest
+        python-version: '3.14.6'
+runs-on: ${{ matrix.os }}
 env:
   GOWORK: 'off'
   PYTHONUTF8: '1'
