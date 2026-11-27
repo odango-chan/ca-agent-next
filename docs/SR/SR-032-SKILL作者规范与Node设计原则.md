@@ -1,7 +1,7 @@
 # SR-032：SKILL 作者规范、Node 拆分与注释原则
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.7  
+> SR 版本：0.1.8  
 > 状态：**DRAFT（中央作者规范已形成设计候选，待独立设计评审；实施 NOT_READY）**  
 > 创建日期：2026-11-27  
 > 修订日期：2026-11-27  
@@ -95,7 +95,7 @@ F09 的 AI Authoring 必须使用同一作者规范生成和检查 Change Set；
 
 | 类型 | 依赖 | 影响 |
 |---|---|---|
-| 设计依赖 | CA-SL 1.6.0 v0.1.6 / SR-029 | Node 字段、Capability 绑定、四阶段、共享资源根目录、Script Registry、Host Script Execution 和 when 语义必须一致；本 SR 明确补充语言包资源设计，不冻结 Compiler wire API |
+| 设计依赖 | CA-SL 1.6.0 v0.1.7 / SR-029；SKILL 作者规范 v0.1.6 | Node 字段、Capability 绑定、四阶段、共享资源根目录、Script Registry、Host Script Execution 和 when 语义必须一致；本 SR 明确补充语言包资源设计，不冻结 Compiler wire API |
 | 历史来源 | SR-023 / ca-skills v1alpha5 | 只用于来源核对和历史归档 |
 | 消费者设计 | F01 / F02 / F03 / F04 / F05 / F08 / F09；SR-007 / SR-016 | Host Model Loop、Importer、Plugin Manager、Runtime Action Boundary、Package Resource Access、Compiler / Bundle 和 AI Authoring 必须消费同一共享资源与 Script Execution 契约；现有产品实现状态不自动变化 |
 | 外部发布依赖 | ca-skills 1.6.0 正式 Schema / Golden / Release | 正式发布前，本规范与语言稿均保持设计候选，不声称产品可执行 |
@@ -115,7 +115,7 @@ F09 的 AI Authoring 必须使用同一作者规范生成和检查 Change Set；
 | AC-032-08 | Procedure.inputs 只绑定精确 context SourcePath；调用 arguments 只使用受支持 SourcePath / 标量字面量；Node / Wait 输出引用精确到 NodeId.Stage.output / NodeId.wait.output；作者规范不得发明正式语言 Schema 未冻结的参数结构 | 作者规范 §4.2；CA-SL 1.6.0 §5.3 |
 | AC-032-09 | 无 assurance/ 的 Skill 仅 LLM-guided；存在 assurance/ 时所有必需文件与静态语义必须完整有效，不得静默降级；Wait 仅作为 Node-entry Host Runtime READ 控制，不创建 Wait-only Node 或作者级 polling | 作者规范 §3、§5；CA-SL 1.6.0 §2、§10 |
 | AC-032-10 | schemas/、scripts/、references/、assets/ 位于 Skill Package 根目录，不受 assurance/ 可选性影响；Schema / Script 路径相对 Package 根目录；Schema YAML 源与 JSON Schema G.4 语义明确；同一资源不在 assurance/ 复制 | CA-SL 1.6.0 §2、§5、§8；作者规范 §3～§4；Package 格式规范 §2～§4 |
-| AC-032-11 | Script Registry 精确登记 Script ID / file / entrypoint / purpose / I/O Schema / llmInvocable；LLM 只可读取源码，并通过 host.skill-script.execute 调用当前 Skill 中显式允许的 transform；Procedure / Predicate 与 LLM 共用同一脚本资源；禁止模型提交代码/路径/命令和脚本外部副作用 | CA-SL 1.6.0 §8；F03 / F04 / F05；作者规范 §3～§4 |
+| AC-032-11 | Script Registry 精确登记 Script ID / file / entrypoint / purpose / I/O Schema / llmInvocable；LLM 只可读取源码，并且仅在 Script Registry `llmInvocable=true` 与 Host `scriptExecution.llmEnabled=true`（默认 false）同时满足时，通过 host.skill-script.execute 调用当前 Skill 中显式允许的 transform；Procedure / Predicate 与 LLM 共用同一脚本资源；禁止模型提交代码/路径/命令和脚本外部副作用 | CA-SL 1.6.0 §8；F03 / F04 / F05；作者规范 §3～§4 |
 | AC-032-12 | F01/F02/F03/F04/F05/F08/F09 对无 Assurance 共享资源、Host Script Execution、Compiler 资源闭包和 AI Change Set 边界无冲突；所有实现状态仍 NOT_RUN / NOT_IMPLEMENTED | 对应设计说明书版本、跨文档一致性审计和 PR 静态检查 |
 
 ## 7. 当前状态与门禁
@@ -139,3 +139,4 @@ F09 的 AI Authoring 必须使用同一作者规范生成和检查 Change Set；
 | 2026-11-27 | 0.1.5 | GPT-6.2（ChatGPT） | 文档头、设计依据 | 将 EC01 架构设计基线更新至 v0.1.5 | 确保 SR 评审引用与 PR Head 中的架构文档一致 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.6 | GPT-6.2（ChatGPT） | §1、§3～§6 | 将 Package 根目录共享资源、YAML Schema 源、Script Registry 与 Host Script Execution 纳入作者规范范围，更新 F01～F09 依赖和 AC-032-10～12 | 修复 schemas/scripts 归入可选 Assurance 导致 LLM-only Skill 无法共享资源的架构问题 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.7 | GPT-6.2（ChatGPT） | 文档头、设计消费者 | 扩展 SR-032 功能归属至 F01/F03/F04/F05/F08，覆盖 Model Context、Host 内建 Tools Extension、Runtime Action Boundary、资源快照和 Bundle | 确保 Host Script Execution 的跨模块消费方纳入同一设计门禁 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.1.8 | GPT-6.2（ChatGPT） | §5～§6 | 更新 CA-SL / 作者规范依赖版本；将 Host Script Execution 双门禁纳入 AC-032-11 | 使 SR 验收与 CA-SL、Host 配置及作者规范的最终边界一致 | Issue #49；IR-008；SR-032 |
