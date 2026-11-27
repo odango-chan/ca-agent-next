@@ -4,14 +4,14 @@
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 文档版本：0.3.8
 > 功能归属：F03 — Plugin 平台  
-> 关联 SR：SR-003、SR-010    
+> 关联 SR：SR-003、SR-010、SR-032    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
 > 本文局部非目标：以本文范围与非目标章节为准；无额外扩展  
 > 修订日期：2026-11-27\
 > 适用范围：Python Plugin Manager、独立进程 Plugin、Package、IPC 与 Extension 分发  
 > 对应规范：[插件包与进程通信协议规范](../../规范/插件包与进程通信协议规范.md)
 
-关联需求项见 [IR-002](../../IR/IR%20总登记册.md#ir-002)、[IR-005](../../IR/IR%20总登记册.md#ir-005)。
+关联需求项见 [IR-002](../../IR/IR%20总登记册.md#ir-002)、[IR-005](../../IR/IR%20总登记册.md#ir-005)、[IR-008](../../IR/IR%20总登记册.md#ir-008)。Host Script Execution 内建 Extension 设计增量由 Issue #49 / SR-032 追踪。
 
 ## 1. 背景与目标
 
