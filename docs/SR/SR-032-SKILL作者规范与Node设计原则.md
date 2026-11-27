@@ -1,7 +1,7 @@
 # SR-032：SKILL 作者规范、Node 拆分与注释原则
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.9  
+> SR 版本：0.1.10  
 > 状态：**DRAFT（中央作者规范已形成设计候选，待独立设计评审；实施 NOT_READY）**  
 > 创建日期：2026-11-27  
 > 修订日期：2026-11-27  
@@ -95,7 +95,7 @@ F09 的 AI Authoring 必须使用同一作者规范生成和检查 Change Set；
 
 | 类型 | 依赖 | 影响 |
 |---|---|---|
-| 设计依赖 | CA-SL 1.6.0 v0.1.7 / SR-029；SKILL 作者规范 v0.1.6 | Node 字段、Capability 绑定、四阶段、共享资源根目录、Script Registry、Host Script Execution 和 when 语义必须一致；本 SR 明确补充语言包资源设计，不冻结 Compiler wire API |
+| 设计依赖 | CA-SL 1.6.0 v0.1.9 / SR-029；SKILL 作者规范 v0.1.7 | Node 字段、Capability 绑定、四阶段、共享资源根目录、Script Registry、Host Script Execution 和 when 语义必须一致；本 SR 明确补充语言包资源设计，不冻结 Compiler wire API |
 | 历史来源 | SR-023 / ca-skills v1alpha5 | 只用于来源核对和历史归档 |
 | 消费者设计 | F01 / F02 / F03 / F04 / F05 / F08 / F09；SR-007 / SR-016 | Host Model Loop、Importer、Plugin Manager、Runtime Action Boundary、Package Resource Access、Compiler / Bundle 和 AI Authoring 必须消费同一共享资源与 Script Execution 契约；现有产品实现状态不自动变化 |
 | 外部发布依赖 | ca-skills 1.6.0 正式 Schema / Golden / Release | 正式发布前，本规范与语言稿均保持设计候选，不声称产品可执行 |
@@ -141,3 +141,4 @@ F09 的 AI Authoring 必须使用同一作者规范生成和检查 Change Set；
 | 2026-11-27 | 0.1.7 | GPT-6.2（ChatGPT） | 文档头、设计消费者 | 扩展 SR-032 功能归属至 F01/F03/F04/F05/F08，覆盖 Model Context、Host 内建 Tools Extension、Runtime Action Boundary、资源快照和 Bundle | 确保 Host Script Execution 的跨模块消费方纳入同一设计门禁 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.8 | GPT-6.2（ChatGPT） | §5～§6 | 更新 CA-SL / 作者规范依赖版本；将 Host Script Execution 双门禁纳入 AC-032-11 | 使 SR 验收与 CA-SL、Host 配置及作者规范的最终边界一致 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.9 | GPT-6.2（ChatGPT） | §5～§6 | 删除 `llmInvocable` 与 `scriptExecution.llmEnabled` 双门禁，更新 AC-032-11 为同一 Script Runner | 明确 Demo 中 LLM 默认可执行当前 Skill scripts/ 登记脚本，与确定性执行使用相同脚本能力 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.1.10 | GPT-6.2（ChatGPT） | §6、设计依赖 | 将 SR-032 设计依赖版本更新至 CA-SL 1.6.0 v0.1.9 / SKILL 作者规范 v0.1.7 | 确保 SR 验收引用的机器语义与作者规则均为移除双门禁后的最新基线 | Issue #49；IR-008；SR-032 |
