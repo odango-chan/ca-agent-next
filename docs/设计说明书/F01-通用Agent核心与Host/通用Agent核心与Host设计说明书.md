@@ -1,7 +1,7 @@
 # 通用 Agent Core 与 Host 设计说明书
 
 > 文档类型：功能设计说明书  
-> 文档版本：0.3.7\
+> 文档版本：0.3.8\
 > 状态：Next 目标设计；本仓实现状态需独立验收，不以参考仓 PASS 代替  
 > 功能归属：F01 — 通用 Agent Core 与 Host  
 > 关联 SR：SR-002、SR-020、SR-021  
@@ -82,11 +82,12 @@ Host 至少维护：
 Model Loop 不承担 Tool dispatch。每一轮模型输入由 Host 组装，至少包含：
 - 当前 Goal/Event 的规范化视图；
 - 已绑定 Skill 的 SKILL.md；
+- 当前 Skill Package 根目录的 schemas/ 与 scripts/manifest.yaml、按需读取的 Script 源码 / references / assets；资源读取只限当前不可变 Package snapshot；
 - 当前 Skill 已授权的 Capability 描述和公开 Input / Output Schema 摘要；模型不得看到 Callable ID 或 backendOperationId；
 - 已授权 Context / Observation；
 - 当前 Run 位置和剩余 response obligation。
 
-模型输出必须转换为结构化 Action Proposal。Host / Runtime 校验 Skill identity、Capability ID、参数 Schema、Artifact refs、Run state 和 invocation identity；再从已验证 Artifact 的唯一 capabilityBinding 解析内部 Callable，才允许调用 Plugin。模型不得提交或替换 Callable ID、backendOperationId、URL 或 Provider selector；未知 Capability、绑定歧义、参数不完整或越权时停止，不自动猜测修复。
+模型输出必须转换为结构化 Action Proposal。Host / Runtime 校验 Skill identity、Capability ID、参数 Schema、Artifact refs、Run state 和 invocation identity；业务 Capability 从已验证 Artifact 的唯一 capabilityBinding 解析内部 Callable，才允许调用 Plugin。若 Action 为 Host Script Execution system Capability `host.skill-script.execute`，Runtime 则校验当前 Skill 的 scripts/manifest.yaml、llmInvocable 标记、Host policy 和输入 Schema，再由 Host 内建 Tools Extension 调用精确 Script entrypoint。模型不得提交或替换 Callable ID、backendOperationId、URL、Provider selector、脚本路径、代码或命令；未知 Capability、绑定歧义、参数不完整或越权时停止，不自动猜测修复。
 
 Model Client 是可替换适配器；自动化测试必须支持 Fake Model Client。模型 Provider、Gateway URL、模型 ID 和凭据属于部署配置，不进入业务 Skill 契约。
 
@@ -324,3 +325,4 @@ SR-002 的独立模块验收为 AC-002-01～AC-002-08，详见《演示验收基
 | 2026-11-26 | 0.3.6 | GPT-6.2（ChatGPT） | §5.5 | 澄清默认 Smoke Fake 的成功输出与测试注入边界；注入型 ModelClient 只用于 CLI 失败路径测试，成功调用次数由 Fake 单元测试记录断言。 | 消除任意注入 Fake 的调用计数接口歧义，不新增生产 Protocol 或公共属性。 | Issue #19；Issue #21；SR-002 v0.2.7；AC-002-01～08；PR #20 |
 
 | 2026-11-26 | 0.3.7 | GPT-6（ChatGPT） | 当前目标契约 | 将 Model Loop 可见输入和 Action Proposal 从 Callable ID 改为 Capability ID，Callable 仅由 Host 从已验证 Binding 内部解析 | 切换到 1.6.0 Capability-first 单一作者入口 | Issue #12/#40；PR #46 |
+| 2026-11-27 | 0.3.8 | GPT-6.2（ChatGPT） | §5 | 将 Skill Package 根目录共享 Schema / Script 加入模型按需资源视图，并纳入 Host Script Execution system Capability 的 Action 校验 | 使 LLM 可以使用公共 Script，但不暴露宿主路径或任意代码执行 | Issue #49；IR-008；SR-032 |
