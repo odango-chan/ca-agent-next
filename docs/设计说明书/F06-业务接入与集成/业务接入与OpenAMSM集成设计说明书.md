@@ -1,12 +1,12 @@
 # 业务接入与 OpenAMSM 集成设计说明书
 
 > 文档类型：业务集成设计说明书  
-> 文档版本：0.2.5  
-> 状态：目标集成设计已重建；外部 Owner 能力已实现，Next Plugin/Host 端到端尚未验收  
+> 文档版本：0.2.7  
+> 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
 > 功能归属：F06 — 业务接入与集成；EC04、EC05、EC07  
 > 关联 IR：IR-004、IR-005、IR-006  
 > 关联 SR：SR-009、SR-010、SR-011、SR-017、SR-018、SR-019  
-> 修订日期：2026-11-26
+> 修订日期：2026-11-28
 > 全局评审范围：继承根目录 Agent.md 的 review_scope。  
 > 本文局部非目标：生产级资格、完整 NAS/NGAP 和 Core 业务分支。
 
@@ -73,14 +73,16 @@ Plugin 不负责：
 | multipart/related、Content-ID、N1/N2 slot | 3GPP OpenAPI 与 OpenAMSM 实际行为 | EC04 + F05 |
 | NAS 5GSM 消息与字段 | 3GPP NAS 标准、已资格化 Codec | Skill 按需调用 Codec Tool |
 | NGAP N2 PDU Session Resource 消息 | 3GPP NGAP 标准、已资格化 Codec | Skill 按需调用 Codec Tool |
-| Skill requestSchema / when | CA-SL v1alpha5 | F02 Resolver |
+| Skill requestSchema / when / Event metadata | **CA-SL 1.6.0 正式 Publisher**（待正式发布），Next F02/SR-013/EC02 仅定义候选消费设计；v1alpha5 仅历史只读审计 | F02 T1 Resolver、Compiler 静态检查 |
 | Tool Callable / IO Schema / Effect / Capability | Provider 自有 Callable 取自 Provider Interface Package，MAS Callable 取自 Owner Contract | F04 / Plugin Manager |
 | Owner 状态、Receipt、Commit Proof、Reconcile | env-openamsm MAS Owner v1alpha4 | Runtime 结果解释 |
 | 原始二进制 Artifact refs | Next Host ArtifactStore | F05 |
 
 SBI requestSchema 是业务 Skill 输入契约，不应复制完整 3GPP multipart schema 或把原始 N1/N2 变成模型可见字符串。
 
-对于 MAS Skill，作者源 `contract.capabilities` 的 Capability ID 由 Compiler Build-time 对 Owner `CapabilityContracts` 校验；冻结 v1alpha5 Artifact 不序列化 Capability ID。Runtime 的实际 Callable allowlist 只从 Artifact `operation` / `observation` exports 建立，并按部署固定 Owner Contract 验证 Callable membership / Effect。`MAS.RECONCILE` 的 internal-only 约束由 F03.05 定义：Runtime 从 Mutation sidecar `commitProof.reconcile.bindingId` 派生目标集合，普通 Skill/LLM 调用必须在 Provider IPC 前拒绝；只有 Coordinator 内部入口可使用原 Invocation 查询。
+对 **CA-SL 1.6.0 目标**，作者源只声明 Capability ID；Compiler 从正式 Publisher 的 Owner/Provider Package 静态验证公开 Capability↔Callable 双向一对一，并把唯一 Callable Binding、Effect/Schema 与依赖闭包写入新版 Runtime Artifact；F02/F04 仅消费已检查 Binding，不从作者源或 Provider backend catalog 自行推导。正式机器合同未冻结前不得实施。历史 v1alpha5 Artifact 不序列化 Capability ID 的事实只用于审计，绝不成为 1.6.0 兼容路径。`MAS.RECONCILE` 仍是 Runtime Coordinator internal-only target：普通 Skill/LLM 不得调用，只允许按原 Invocation 与 Owner sidecar 精确 Reconcile。
+
+**时序不变量：** T0 只做原版 OAS3 SBI、multipart/Content-ID 和原始 Artifact staging；T1 只能读取当前到场且 Publisher 冻结的 Event metadata / SBI Request Schema 字段，最小 0xC9/0xD1 discriminator 仅供选择，不属于业务解析；T2 在绑定 Skill 与 Run 后由正式 Provider Codec READ 解码，验证发布的 Result Schema 并填入后继 typed arguments；T3 Owner mutation/Receipt/Proof/Reconcile；T4 0xD4/N2 confirmation 只恢复原 Run。不得把 T2 Codec 输出偷渡到 T1 when/requestSchema，也不得把 OAS3 `format: binary` 当作解码后的 NAS/NGAP Result Schema。
 
 ## 5. CreateSMContext
 
@@ -101,9 +103,10 @@ UpdateSMContext + N1 0xC9
   -> EC04 minimal discriminator
   -> Skill Resolver selects Modify Skill
   -> F05 artifactRef carries original N1 bytes
-  -> optional Codec Tool parse
-  -> mas::SSM.PARSE_N1_MODIFY (READ)
-  -> mas::UPN.MODIFY_QOS_DELTA
+  -> T2: required qualified Provider Codec READ Capability (0xC9 profile; ID/Schema not yet published)
+  -> validate decoded NAS Result Schema; typed QoS delta
+  -> Owner business-only validation (if published; no raw NAS decode)
+  -> Owner UPN.MODIFY_QOS_DELTA Capability (mutation; unique Compiler Binding)
   -> PFCP Update QER 52/53
   -> SSM / Relay delivers N1 0xCB + N2 PDU_RES_MOD_REQ
   -> Owner waits for correlated completion
@@ -113,7 +116,7 @@ UpdateSMContext + N1 0xC9
 
 约束：
 - 原始 N1 字节始终保留在 Host ArtifactStore。
-- Codec Tool 是普通 Tool，通过 Runtime Action Boundary 调用；不得另建 Codec Manager。
+- Codec 是现有 Tools Extension 中**正式发布的 Provider READ Capability**，必须解码 0xC9 并经 Result Schema 校验；不是可选步骤，不得另建 Codec Manager。当前 0xC9 profile 未资格化，故新版 Modify 依赖路径 BLOCKED，禁止回退历史 Owner Parser。
 - Agent 不自行解码 NAS、不计算 QER、不发 PFCP。
 - PFCP 已应用但 N1/N2 Transfer 未确认时不得报告成功；Owner 可能返回 UNKNOWN/失败语义。
 - N1/N2 completion response 不得重新启动 Modify mutation。
@@ -129,8 +132,10 @@ UE-requested PDU Session Release 是 UpdateSMContext 携带 NAS 5GSM 0xD1 的场
 UpdateSMContext + N1 0xD1
   -> EC04 discriminator
   -> Skill Resolver selects UE Release Skill
-  -> mas::SSM.PARSE_N1_RELEASE (READ)
-  -> mas::SSM.BUILD_RELEASE_COMMAND
+  -> T2: required qualified Provider Codec READ Capability (0xD1 profile; formal ID/Schema pending)
+  -> validate NAS Release Request Result Schema
+  -> Owner business-only validation (if published; no second NAS decode)
+  -> Owner SSM.BUILD_RELEASE_COMMAND Capability (Compiler-internal Callable Binding)
   -> N1 Release Command 0xD3 + N2 PDU_RES_REL_CMD
   -> SMF sends Namf N1N2MessageTransfer to AMF
   -> mas::SSM.RELEASE_CONFIRM_N1 (0xD4)
@@ -143,9 +148,18 @@ UpdateSMContext + N1 0xD1
   -> Owner Receipt / final result
 ~~~
 
-当前发布的 `SSM.RELEASE_CONFIRM_N1` 与 `SSM.RELEASE_CONFIRM_N2` 均为 MUTATION，须按各自原始 Invocation 验证 Owner 结果。收到回调、读到字节或验证关联本身不能证明确认动作已提交。CA-SL Wait 的触发只允许声明的 READ，不得将这两个确认操作填入 READ trigger。
+当前发布的 `SSM.RELEASE_CONFIRM_N1` 与 `SSM.RELEASE_CONFIRM_N2` 均为 MUTATION，须按各自原始 Invocation 验证 Owner 结果。当前 Owner v1alpha4 的 `SSM.PARSE_N1_RELEASE` 属历史 Skill-facing READ；在 Owner 签认其真实 handler/Schema 与纯业务重构前，1.6.0 不允许拿它替代 Codec。收到回调、读到字节或验证关联本身不能证明确认动作已提交。CA-SL Wait 的触发只允许声明的 READ，不得将这两个确认操作填入 READ trigger。
 
 N1 与 N2 确认是两个独立输入，必须绑定同一个 Owner generation、releaseTxn、原始 Invocation 和 Run。重复、迟到、乱序、旧 generation 或错误 Session 的消息都不得触发清理。只有两者都确认后才可执行最终清理。
+
+### 7.1 历史 Owner N1 Parser 审计与冻结门槛
+
+固定源：`env-openamsm@dc83ccbf5be54dcc7112dd43ba95ea6fa5975550` 的 `contracts/mas/v1alpha4/capability-contracts.yaml`、`tool-catalog.yaml` 明确列出 `mas.ssm.n1.modify.parse / SSM.PARSE_N1_MODIFY` 与 `mas.ssm.n1.release.parse / SSM.PARSE_N1_RELEASE`，均为 READ。进一步核对 `patches/openamsm/0007-ssm-n1-modify-parse.patch`：`ssm_parse_n1_modify` 实际调用 `ogs_nas_5gsm_decode` 并投影 QoS 字段，因此 Modify Parser 确实实施协议解码，不能以“业务 READ”名义保留原调用。Release 的完整 handler 与数据流需要 Owner 独立审计，此处不能凭 ID 断言它也执行同一 decoder。
+
+1. **唯一解码权威**：新 1.6.0 Skill 执行期 NAS/NGAP 协议 Decode 归已资格化 Codec Provider；Owner 保留业务语义、session 校验、mutation、Receipt/Proof/Reconcile。Owner 不得对收到的原始 NAS 再解码。
+2. **待 Owner 签认的互斥方案**：若两个旧 Parser 仅为协议解析，移出新版 Skill-facing Owner Package；若仍提供独立业务校验，则重构为只接受已验证 Codec Result 的纯业务 READ，并由 Owner 冻结新的接口与 Schema。不要擅自删除旧发布文件，也不要将历史 ID/Schema 默认为新版重构身份；详情见 SR-029 §3.1。
+3. **产品状态**：Provider Codec 目标 3/3 是设计结构，Release Request 0xD1、Modify 0xC9、NGAP 各自需要正式 Capability、Result Schema、handler、版本与 Golden。未满足的路径一律 BLOCKED / NOT_RUN，不以历史 Owner Parser 或 Plugin 最小路由分类降级。
+4. **跨仓实施映射**：Next #40/#113 统一治理；未来 ca-client-tools Issue 负责 Codec Publisher/Release，env-openamsm Issue 负责 Parser 审计、业务 READ 合同选择与发布，二者仅在对应中央 SR READY 后建立。
 
 ## 8. Owner Receipt 与 UNKNOWN
 
@@ -183,8 +197,8 @@ EC07 Mock AMF SBI Test Peer 负责发送协议准确的 Create/Update/UE-request
 ## 11. 验收门槛
 
 - Event Plugin 只做协议解析、最小分类和响应 Delivery；不选择 Skill。
-- Create、Modify、UE-requested Release 分别有规范 Event fixture、Skill 选择和完整 Owner callable 路径。
-- 0xC9 与 0xD1 的正负向分类测试覆盖 malformed/unknown/unsupported。
+- Create、Modify、UE-requested Release 分别有规范 Event fixture、T1 Skill 选择与 T2 Codec→Owner 结构化路径；当正式 0xD1/0xC9 Codec 或 Owner 合同缺失时该路径保持 BLOCKED，不能宣称完成。
+- 0xC9 与 0xD1 的 T1 正负向最小分类测试覆盖 malformed/unknown/unsupported，且验证此分类不提供协议解码结果；T2 必须分别校验 Codec Profile/Schema 与不合格消息拒绝。
 - N1/N2 原始 bytes 不进入 NDJSON 或 LLM Context；Artifact refs 按 Run/Invocation 授权。
 - Modify PFCP 52/53 与 N1/N2 response correlation 通过。
 - UE Release N1 0xD4 + N2 PDU_RES_REL_RSP 的双确认、generation、releaseTxn 和 Run 绑定通过。
@@ -224,6 +238,69 @@ ca-skills `780497a2` 的三个 MAS `examples/skills/*-pdu-session-mas/assurance/
 
 `ca-agent-demo@57e277ff/src/ca_agent_host/integrations/fivegc/nsmf_http.py::_create_request` 对 `INITIAL_REQUEST` 投影为 1，从 N1 解出 PDU Session Type 与 SSC mode，并拒绝客户端在 SBI JSON 中注入同名字段。它还交叉检查 N1 与 JSON 的 PSI。当前 MAS Create 又在选择前要求这些字段。仅移植最小 discriminator 不能满足该契约。应在 ca-skills 的作者契约和 Procedure 中区分选择输入与绑定后的业务读取，由已声明的 Owner/Codec READ 根据原始 Artifact 获取后者。实施前把每个字段的来源、读取操作、Schema 和消费者写入同一 fixture，以固定作者 revision 验证；若没有已发布的所需 READ，保留该依赖的 BLOCKED。稳定重试与共享 /modify 路径的分类可用独立 fixture 先验收。
 
+## 13. OpenAMSM Capability-first Skill 映射（1.6.0 目标）
+
+本节是 CA-SL 1.6.0 新 MAS Skill 重写草案；历史 v1alpha5 只作事实审计，不可在新版 Compiler/Agent 运行，也不提供迁移工具。
+
+### 13.1 Create
+
+~~~yaml
+record-session-establishment-event:
+  operation:
+    capability: mas.se.establishment-event.record
+    arguments:
+      ue_identity: context.supi
+      psi: context.request.pduSessionId
+      event: "ESTABLISHED"
+      sessionKeys: create-sm-context.operation.output.session_keys
+~~~
+
+该 Capability 唯一映射 Owner Callable SE.EMIT_EVENTS，保留 ESTABLISHED 输入 Schema 和 se.establishment-event-recorded Evidence Guarantee。
+
+### 13.2 Modify
+
+**数据流约束（不是可直接编译的 CA-SL 片段）：**
+
+| 阶段 | 输入 | 产出与消费者 |
+|---|---|---|
+| T1 Resolve | 规范化 Event + 当前 SBI JSON + 0xC9 最小分类 | 选择 Modify Skill；不需要解码得到的 QFI/5QI/GBR |
+| T2 Codec READ Node | Host 授权的原始 N1 `artifactRef` + Publisher 冻结的 0xC9 profile/slot | ca-client-tools Codec Capability→唯一 Callable；按正式 Result Schema 返回 QFI、5QI、GFBR/MBR 等**在发布 Schema 中真实存在的字段** |
+| T2 Owner business-only READ（如需要） | **经过 Schema 校验的 Codec Result** 与 session identity | Owner 校验/业务决策，禁止重新解码 N1；具体 Callable/Schema 由 env-openamsm 后续冻结 |
+| T2 Owner Mutation | 经验证的业务参数/会话身份 | 现有 QoS Delta 的 Capability-only 调用；Effect/Receipt/Proof 仍由 Owner 合同决定 |
+| T3/T4 | Owner Receipt / correlated N1/N2 completion | commit 判定/原 Run 续跑；不触发第二次 mutation |
+
+`codec-n1` 之类的本地节点名、`codecResult.qfi` 等字段路径此处**不预先发明为正式 CA-SL 机器接口**；作者在实际 0xC9 Codec Result Schema、Callable.kind、Owner 业务参数 Schema 冻结后，再按正式语法将 Codec Node 输出绑定到后继 Node `arguments`。不得继续引用旧的 `parse-n1.operation.output` 作为 Owner 原始 NAS 解码结果。当前 0xC9 Profile、Codec 1.6.0 Release、Owner 冻结裁决均 NOT_RELEASED / BLOCKED。Modify 的 Goal、Receipt、QoS 和 N1/N2 业务语义不变。
+
+### 13.3 UE-requested Release
+
+~~~yaml
+emit-release-event:
+  operation:
+    capability: mas.se.release-event-marker.write
+    arguments:
+      ue_identity: context.supi
+      psi: context.request.pduSessionId
+      ev: "RELEASED"
+~~~
+
+该 Capability 唯一映射 Owner Callable SE.EMIT_RELEASE_EVENT_C，保留 RELEASED 输入 Schema 和 se.release-event-marker-written Evidence Guarantee。它与 Create 的建立事件 Capability 分离，不把本地释放标记描述为外部 Delivery。
+
+### 13.4 Provider Observation
+
+Provider 的 SMF Context Read 和 NF Metrics Read 分别使用一个 READ Observation Capability，并通过封闭 selector 选择查询资源：
+
+- openamsm.smf.mas.context.read：contextKind 为 sc / pa / upn / ssm / iam / ups / ca / saa。
+- openamsm.nf.metrics.read：resourceKind 为 amf.ue-info / amf.gnb-info / smf.pdu-info。
+
+selector 是公开 Callable Input Schema 的字段；11 个旧 backendOperationId 保留在 Provider 内部，不进入 Skill 源。
+
+### 13.5 业务流程不变
+
+Create → Modify → Release 的顺序、Owner authoritative state、Receipt / Commit Proof、UNKNOWN / Reconcile、N1/N2 generation 和 Evidence Goal 均保持现有定义。此次只改变 Capability / Callable 契约表达，不重写 5GC 业务流程，也不声明新 E2E 已通过。
+
+**1.6.0-only 待评审硬门槛：** MAS Skill 必须按 1.6.0 重新编写与发布；旧 E2E PASS 不证明新版本；此处只是目标设计，产品和 E2E 均 NOT_RUN。
+
+
 ## 修订记录
 
 
@@ -236,3 +313,5 @@ ca-skills `780497a2` 的三个 MAS `examples/skills/*-pdu-session-mas/assurance/
 | 2026-11-26 | 0.2.3 | Codex / GPT-6 | 见本行变更 | §2、4、6、7 校正候选判定、HTTP 响应义务和真实 Owner Callable；§12 增补 EC04 固定协议来源、请求投影与独立复验 | 历史记录未单独分列原因 | Issue #12 |
 | 2026-11-26 | 0.2.4 | Codex / GPT-6 | 见本行变更 | 补足 Create 的真实 NAS 字段来源及跨仓设计缺口；补齐正式文档的评审范围与非目标；明确可控 peer/Plugin 的重试身份；§7 依据 Owner catalog 区分确认 mutation 和 Wait READ | 历史记录未单独分列原因 | Issue #12 |
 | 2026-11-26 | 0.2.5 | GPT-6.2（ChatGPT） | §4、§8 | 同步冻结 v1alpha5 Capability Build-time / Runtime 边界及 MAS.RECONCILE internal-only 保证 | 让 OpenAMSM 业务集成流程引用 F03.05 的唯一 Tool/Provider Runtime 设计 | IR-006 · SR-015 · Issue #12 |
+| 2026-11-26 | 0.2.6 | GPT-6（ChatGPT） | 新增 Capability-first 1.6.0 章节与状态 | 移植旧分支设计并按无兼容最新基线校正 | 仅设计待评审，不将历史 E2E 视为新版本通过 | Issue #40；SR-029 |
+| 2026-11-28 | 0.2.7 | GPT-6（ChatGPT） | §4、§6～7、§11、§13.2 | 修正 1.6.0 Publisher 权威；区分 T1/T2，移除 Owner Parser 作为 Codec 后继/替代调用，保留历史代码证据与 Owner 二选一待签认；Modify/Release 阻塞门槛显式化 | 处理 PR #45 第六轮 P1-01、P2-02，避免跨阶段解码与假定 Codec 已发布 | Issue #40/#113；PR #45；SR-026/029 |

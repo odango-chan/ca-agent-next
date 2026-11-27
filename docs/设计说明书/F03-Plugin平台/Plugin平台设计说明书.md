@@ -1,8 +1,8 @@
 # Plugin 平台设计说明书
 
 > 文档类型：机制设计说明书  
-> 状态：目标设计，待实现和验收  
-> 文档版本：0.3.3
+> 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
+> 文档版本：0.3.6
 > 功能归属：F03 — Plugin 平台  
 > 关联 SR：SR-003、SR-010    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -21,8 +21,8 @@
 
 1. 全系统只有一个 Plugin Manager。
 2. 一个 Plugin 进程可以导出一种或多种 Extension。
-3. Tool 是 Plugin 导出的可调用 Operation，不是独立进程。
-4. 一个 Plugin 可以导出多个 Capability，一个 Capability 可以包含多个 Operation。
+3. Tool 是 Plugin 导出的公开 Callable 契约/调用入口，不是独立进程；CA-SL Procedure 的 Operation / Observation 是 Node 阶段，不额外创建独立 Operation ID。
+4. 一个 Plugin 可以导出多个 Skill-facing Capability；在 CA-SL 1.6.0 中，每个 Capability 必须且只能映射一个公开 Callable，每个公开 Callable 也只能归属一个 Capability。Provider 可在内部通过封闭 Schema selector 将一个公开 Callable 路由到多个私有 `backendOperationId`。
 5. Plugin Manager 负责生命周期、握手、IPC 和 Extension 分发，不负责 Skill 选择、Action 授权或 Owner 结果判断。
 6. Provider Interface Package 负责 Provider 自身导出的 Callable 契约；业务 Owner Contract Package 负责 Owner Callable、Schema、Capability membership 和结果语义；Provider Runtime Bindings 只提供私有执行映射。当前 OpenAMSM MAS Skill 的 `mas::` Callable 来自 Owner Contract Package，不从 ca-client-tools 11-READ Interface Package 推导。Plugin Manifest 不复制 Tool 定义。
 7. ToolCatalog 只是可发现能力的只读视图，不管理生命周期，也不构成第二个 Registry。
@@ -136,15 +136,32 @@ Plugin Package/IPC v1alpha1 是 PR #1 中的目标契约，不等于已完成实
 F03.05 的详细设计见 [Tool Interface 与 Provider 集成设计说明书](Tool%20Interface%20与%20Provider%20集成设计说明书.md)。该子设计固定三类跨组件契约：公开 Tool Interface Package、Owner Contract Package、Provider Runtime Bindings，并界定 Provider Backend Binding Catalog v2 的内部边界；同时定义 ca-client-tools v1.2.0 的 ProviderV2 Driver 如何纳入唯一 Plugin Manager。EC03 的 Go 实现、发布物和运行说明仍由 ca-client-tools 维护；Next 不复制其机器契约或实现代码。详见[分仓证据](../../参考与审计/跨仓设计资产迁移与一致性审计.md)。
 
 
+## 12. Capability Package 与 Provider 分发
+
+Capability 是 Skill-facing Package API；Callable 是 Compiler / Runtime / Provider 使用的调用身份。Plugin Manager 仍是唯一 Manager，Provider 仍是 Tools Extension，不新增 Capability Manager、Tool Registry 或第二条授权路径。
+
+- Owner Contract Package 的 CapabilityContracts 与 Provider Interface Package 的 capabilities.json 发布 Capability→Callable membership；Skill-facing 每个 Capability 必须恰好一个 Callable，每个 Callable 也只归属一个 Capability。
+- Plugin Manager 负责 Provider Package 加载、生命周期、握手和 Tools Extension 分发，不授予 Skill Capability，也不把安装状态解释为 Grant。
+- Compiler 在 Build 时完成 Capability Link 并写入 Artifact Binding；Runtime 按该 Binding 派发 Callable。ProviderV2 Driver 只接收已声明的内部 Callable 身份，不让模型选择 Callable。
+- Provider Backend Binding Catalog 仍为 Provider 私有；一个公开 Callable 可根据封闭 Schema selector 路由多个 backendOperationId。Catalog 只做显式 binding availability 核对，不发现或扩张 Skill-facing Capability。
+- Reconcile 是 Runtime Coordinator 专用目标，不出现在 Skill-facing Package Explorer 或模型 Action 列表。
+- Skill Studio 的能力导航见 F09；Provider 的一对一基数和 MAS 例外见 F03.05。
+
+**1.6.0-only 设计评审硬门槛：** 唯一 Plugin Manager 不增加兼容分发、动态授权或第二套能力管理器。 此章节仅描述目标设计，外部代码/Release/E2E 均 NOT_RUN。
+
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修订内容 | 原因 | 关联 |
 |---|---|---|---|---|---|---|
 | 2026-11-25 | 0.1.0 | 历史修订者/模型未记录 | 原始设计全文 | 既有功能机制设计基线；逐章历史记录未建立 | 原文档未记录历史作者，本轮不臆造 | PR #1 |
 | 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 第 1～10 章 | 归入对应 Feature 并补充外部能力边界 | 按 F03 归档，明确统一 Plugin Manager 与外部 Tool Interface 权威边界 | F03；SR-003/010；EC03/EC04；PR #1 |
-| 2026-11-25 | 0.2.1 | 刷新需求追踪、目录或证据引用 | 对齐最新分支与 IR/SR 基线 | 见关联 SR |
+| 2026-11-25 | 0.2.1 | 未记录（历史资料） | 历史治理刷新 | 刷新需求追踪、目录或证据引用 | 对齐最新分支与 IR/SR 基线 | 见关联 SR |
 | 2026-11-25 | 0.2.2 | Codex / GPT-6 | Tool Interface 与 Provider | 合并有效边界与分仓证据入口 | 跨仓设计移交 | IR-006 |
 | 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | 第 3、5、7、10、11 章 | 拆分 Interface Package、Owner Contract Package 与 Provider Runtime Bindings；固定 Provider v2 迁移 Driver 和 F03.05 子设计入口 | 消除 Owner 结果权威与 Provider 私有映射混淆，按 ca-client-tools v1.2.0 和 ca-agent-demo main 校准 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.3.1 | GPT-6.2（ChatGPT） | 第 3、7、11 章 | 增加 Provider Backend Binding Catalog v2 的内部边界，并引用 11/25/31/44 库存闭合 | 防止将 Provider 私有目录误当作第二份公开 Tool Catalog | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.3.2 | GPT-6.2（ChatGPT） | 第 2、3、5、7 章 | 明确 Provider Interface 与 Owner Contract 分别提供不同 Skill-facing Callable；MAS `mas::` 依赖由 Owner snapshot 解析 | 对齐 ca-skills v1alpha5 作者源和 F03.05 契约依赖设计 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-26 | 0.3.3 | Codex / GPT-6 | 见本行变更 | §5、10 明确启动顺序与整包注册，消除依赖当前 Skill 的装载循环 | 对齐跨仓实现与独立复验 | Issue #12 |
+| 2026-11-26 | 0.3.4 | GPT-6（ChatGPT） | 新增 1.6.0 目标章节、状态及修订记录 | 移植一对一 Binding / Selector / Action 设计并标为待评审 | 无旧版兼容或产品完成承诺 | Issue #40；SR-029 |
+| 2026-11-26 | 0.3.5 | GPT-6（ChatGPT） | 历史修订表及修订记录 | 补齐历史缺失列为未记录，保留既有内容，不改历史业务断言 | 保证待审设计的表结构有效 | Issue #40；SR-029 |
+| 2026-11-27 | 0.3.6 | GPT-6.2（ChatGPT） | §2、§12、修订记录 | 统一 Tool/Capability/Callable 概念；废止 1.6.0 Skill-facing Capability→多 Operation 旧表述，明确双向一对一及 Provider 私有多 backend 路由 | 消除概述原则与 Capability-first 目标设计冲突 | Issue #40；SR-029；PR #45 |

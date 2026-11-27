@@ -1,9 +1,9 @@
 # CA-SL 语言基线与版本规范
 
 > 文档类型：语言版本与运行时消费规范  
-> 文档版本：0.2.5\
-> 状态：历史 CA-SL v1alpha5 FROZEN / RELEASED；**下一正式目标 CA-SL 1.6.0 DESIGN / NOT_RELEASED**；Compiler/Bundle 产品门槛未完成\
-> 修订日期：2026-11-27\
+> 文档版本：0.2.7\
+> 状态：历史 CA-SL v1alpha5 FROZEN / RELEASED；**下一正式目标 CA-SL 1.6.0 DESIGN / NOT_RELEASED**，设计待评审；Compiler/Bundle 产品门槛未完成
+> 修订日期：2026-11-27
 > 关联 IR：IR-003、IR-006；SR-023、SR-013  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：旧版兼容、Agent 内置 Compiler、Skill Admission、签名、Trust Registry 和额外 SHA-256
@@ -43,11 +43,11 @@
 when 的作者语义已进入 CA-SL v1alpha5 正式发布。它使用 Event 与 Skill requestSchema 类型环境，必须在发布阶段完成 CEL 解析、静态类型检查和 G.4 限制检查。
 
 但语言规范发布不等于 Compiler 发布物已完成：
-- ca-skill-compiler Issue #61 当前 OPEN。
+- ca-skill-compiler Issue #61 当前 OPEN，但仅对应 v1alpha5 历史范围；CA-SL 1.6.0-only 新 Compiler 实施由 Issue [#62](https://github.com/odango-chan/ca-skill-compiler/issues/62) 独立跟踪。
 - Compiler v2.1.0 当前 ContractAST 尚无 when 节点。
 - 冻结 Artifact v1alpha5 不得原地添加 when 字段/文件。
 - Development Artifact v1alpha1 保持 NOT_ADMITTED，不可作为 Next 可运行 Skill Bundle。
-- 新版发布 Artifact、CheckedExpr、DescriptorSet 和 Python cel-expr-python 互操作必须由 Issue #61 的后续实现和 Release 证明。
+- CA-SL 1.6.0 新版发布 Artifact、CheckedExpr、DescriptorSet 和 Python cel-expr-python 互操作必须由 Issue #62 的实现和正式 Release 证明；Issue #61 不作为 1.6.0 依据。
 
 Next 不得通过重新解析 CEL 原文、DynType 或自制 evaluator 绕过该依赖。Compiler 产物未发布前，带 when 的 Assurance Bundle 不得声称跨语言运行时互操作 PASS。
 
@@ -70,7 +70,7 @@ CA-SL 语义变化必须：
 
 - Skill-facing Contract / Procedure 仅使用 Capability ID，不再用 `tool: alias::CALLABLE_ID`；Skill-facing Capability 与公开 Callable **一对一**。Callable ID 保留在内部 Package/Compiler/Provider/Runtime 绑定和诊断中。
 - Operation / Observation 仍为 Node 阶段而非外部 Operation ID，按 Callable kind、Effect、Schema 校验；Compiler 必须链接出唯一 Capability→Callable Binding。Provider 内部可用封闭枚举路由多个 backend handler，但不能扩大 Skill Scope。
-- 1.6.0 的作者示例、Schema、Compiler API、Runtime Artifact、Provider/Owner 发布身份、ca-skills Bundle、Studio 浏览及真实回归须按 SR-029、SR-013、SR-027 和相关模块分别冻结/验收；**Compiler #61 针对历史 v1alpha5 的 when 设计不自动等同 1.6.0 产品发布**。
+- 1.6.0 的作者示例、Schema、Compiler API、Runtime Artifact、Provider/Owner 发布身份、ca-skills Bundle、Studio 浏览及真实回归须按 SR-029、SR-013、SR-027 和相关模块分别冻结/验收；**Compiler #61 针对历史 v1alpha5 的 when 设计不自动等同 1.6.0 产品发布；1.6.0 Compiler 新实施由 #62 独立追踪**。
 - 当前未发布 1.6.0；只可规划新实现，不得把旧 `v1alpha5` Builder、Development v1alpha1 Artifact 或候选机器标识当作 1.6.0 正式产物。
 - **全链路单版本约束：** 新 ca-skills 作者源、新 Compiler Check/Build/Verify 与 BuildRequest/BuildResult、新 Runtime Artifact、新 Agent Importer/Runtime、Skill Studio 只支持 **CA-SL 1.6.0**。不解析/编译/导入/执行历史 v1alpha5 或任何 v1alpha6 候选；不建立双语法、版本协商、兼容映射、fallback、自动转换或 Agent 内编译。旧 Skill 必须由作者按 1.6.0 重新编写、由新 Compiler 重新构建和发布，**不提供迁移工具**。旧包和旧 `languageTarget` 在新运行时均明确拒绝；历史 v1alpha5 规范、Release Record 与 Artifact 字节只读留档，仅供审计溯源。
 
@@ -85,3 +85,5 @@ CA-SL 语义变化必须：
 | 2026-11-26 | 0.2.3 | GPT-6.2（ChatGPT） | 文档头、§1、§6、修订记录 | 根据 Issue #40 明确下一正式目标改为 CA-SL 1.6.0（不使用 v1alpha6），定义 Capability-first 与历史冻结发布边界；避免反复 alpha 命名、静默重解释 v1alpha5 或提前宣称 1.6.0 已发布 | Issue #40；SR-029；SR-004；SR-013；SR-027 |
 | 2026-11-26 | 0.2.4 | GPT-6.2（ChatGPT） | §1、§4、§6、修订记录 | 将无兼容要求冻结为 1.6.0 全链路单版本强制规则：不接受旧语法、旧 Build DTO、旧 Bundle、旧 Artifact、迁移或 fallback；历史记录仅审计留档，不让旧产物成为新版合法输入 | Issue #40/#43；SR-029；SR-004 |
 | 2026-11-27 | 0.2.5 | Codex | §2 | 对齐 1.6.0 作者源、输入 Schema 与编译职责 | Issue #40、#43；PR #44 |
+| 2026-11-27 | 0.2.6 | GPT-6.2（ChatGPT） | 文档头、修订记录 | 合并 #45 的 1.6.0-only 设计增量并保留恢复分支当前状态，避免回滚 #44 与后续修订。 | Issue #12/#40/#43；PR #44/#45 |
+| 2026-11-27 | 0.2.7 | GPT-6.2（ChatGPT） | §3/§6 CA-SL 1.6.0 版本边界 | 将 1.6.0 新发布 Artifact 的实施追踪改为 Compiler #62，保留 #61 历史范围。；原因：让版本规范和跨仓实施追踪保持一致，避免版本目标错位。 | Issue #40/#62；PR #45 |

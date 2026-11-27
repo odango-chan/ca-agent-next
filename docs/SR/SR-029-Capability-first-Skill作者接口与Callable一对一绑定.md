@@ -1,0 +1,288 @@
+# SR-029：Capability-first Skill 作者接口与 Callable 一对一绑定
+
+> 文档类型：软件需求（SR）  
+> SR 版本：0.2.6  
+> 状态：待评审 / DESIGN_READY_FOR_REVIEW；非实施 READY；新版规范/产品 NOT_RELEASED
+> 创建日期：2026-11-26  
+> 上游需求：[IR-008](../IR/IR%20总登记册.md#ir-008)；关联需求：[IR-003](../IR/IR%20总登记册.md#ir-003)  
+> 功能：F02、F03.05、F04、F06、F08、F09、EC02  
+> 设计 Issue：[ca-agent-next #40](https://github.com/odango-chan/ca-agent-next/issues/40)  
+> 全局评审范围：继承根目录 Agent.md 的 review_scope
+> 本文局部非目标：见 §12（不包含下游仓代码修改、产品实施/发行或旧版兼容）
+> 历史设计起点：PR #44 原 Head `7f83bf6135d4572dca7d3d5bdb6243765440b0f6`；该提交仅为初始审计快照。现行 #45 已整合已合入恢复分支的 #44，当前评审基线以 PR #45 的最新 Base/Head 固定记录为准
+> 工作分支：docs/issue-40-casl-160-capability-design-review
+> 本 SR 性质：中央架构与规范设计；不授权修改任何下游实现仓
+
+## 0. 设计评审与无兼容门槛
+
+本 SR 仅是 CA-SL 1.6.0 Capability-first 的待评审设计。**无兼容**指：新作者规范、Compiler Parser/BuildRequest/BuildResult/Check/Build/Verify、Runtime Artifact、Agent Importer/Runtime、Studio 与 Bundle 全部只接受 1.6.0。没有旧包解析、别名、映射、双轨、版本协商、fallback、自动迁移或混合 Catalog。旧 Skill 必须人工重新编写、重新编译并发布，历史 v1alpha5 规范和 Golden 仅做只读审计。
+
+Skill-facing Capability 与公开 Callable 严格双向一对一；Operation / Observation 只是 Node 阶段，Callable 和 backendOperationId 只保留在 Package/Compiler/Provider/Runtime 内部。1.6.0 的机器标识、正式 Schema、新 Compiler API、Owner/Provider Package、发布 Bundle 和跨仓 Golden 尚待外部 Publisher 冻结，**不能据本设计启动产品实施**。
+
+## 1. 目标与范围
+
+建立 Capability-first Skill 作者模型，使 Skill 只声明业务 Capability，不直接引用 Owner / Provider Callable ID。每个 Skill-facing Capability 必须唯一映射一个公开 Callable；Callable ID 只存在于 Package、Compiler、Runtime 和 Provider 的内部绑定 / 诊断中。
+
+本 SR 同时闭合 CA-SL 作者语法、Owner / Provider Package、Compiler Link、Runtime Artifact / Action Boundary、Skill Studio Package Explorer，以及 OpenAMSM Create / Modify / Release 的真实示例映射。
+
+本 SR 是中央设计候选，仅可提交独立技术评审，不表示实现可启动、下游已发布或 E2E 通过。
+
+## 2. 固定基线与来源证据
+
+| 来源 | 固定版本 / SHA | 本 SR 使用范围 |
+|---|---|---|
+| ca-skills | main 780497a2918ad3e7bdff554ab64b0ba627e867e0；CA-SL v1alpha5 发布规范 18d8184367982ccbc835756136c4a53f9096c3a0 | 当前 Contract.capabilities 与 tool: alias::Callable 作者源；v1alpha5 正式发布语义 |
+| env-openamsm | main dc83ccbf5be54dcc7112dd43ba95ea6fa5975550；CapabilityContracts blob 4fdd22f0eda2c2f2b5096cd167bc705f5a29e06e；ToolCatalog blob 88d9709aac62c6d608d057dc797ada6f2189611f | Owner v1alpha4 Capability / Callable / Schema / Evidence / Reconcile |
+| ca-client-tools | Release tag v1.2.0；provider-bindings blob 8e42e24eedc9e3211171f76a674c6be6bd6b1984 | Provider Interface 11 个 READ Callable、2 个 Capability、私有 backendOperationId |
+| ca-skill-compiler | 产品 v2.1.0；Compiler 设计由 Next EC02 / SR-013 追踪 | v1alpha5 冻结 Build；Artifact v2 / BuildResult v2 候选 Owner Gate |
+| ca-skill-studio-demo | 当前 main / PR 状态以 SR-016、F09 为准 | Package Explorer、LSP、AI Authoring 消费边界；本 SR 不写该仓 |
+
+以上来源是历史基数审计证据，不表示 1.6.0 已发布，也不授权下游写入或任何兼容。
+
+## 3. 当前契约基数审计
+
+### 3.1 Owner CapabilityContracts v1alpha4
+
+当前共有 24 个 Capability 条目、25 个 Callable membership。唯一多成员 Capability 是 mas.se.events.emit，关联 SE.EMIT_EVENTS 与 SE.EMIT_RELEASE_EVENT_C。
+
+两个 Callable 的 Input Schema 不同：SE.EMIT_EVENTS 要求 event=ESTABLISHED 和 sessionKeys；SE.EMIT_RELEASE_EVENT_C 要求 ev=RELEASED。它们的 Evidence Guarantee 也不同：se.establishment-event-recorded 与 se.release-event-marker-written。因此不得把它们当成等价实现或硬合并为泛化 Callable。
+
+目标拆分为：
+
+| Capability ID | 唯一 Callable | 保留的契约语义 |
+|---|---|---|
+| mas.se.establishment-event.record | SE.EMIT_EVENTS | ESTABLISHED + sessionKeys；se.establishment-event-recorded |
+| mas.se.release-event-marker.write | SE.EMIT_RELEASE_EVENT_C | RELEASED marker；se.release-event-marker-written |
+
+当前 mas.reconcile.exact_original / MAS.RECONCILE 出现在 CapabilityContracts，但它是 Runtime internal-only Reconcile target。目标 CapabilityContracts 移除此 Skill-facing Capability；MAS.RECONCILE 仍保留在 Owner ToolCatalog 和 Mutation Reconcile binding 中。mas.receipt.query / MAS.RECEIPT_QUERY 仍保留普通 READ Callable / Capability 语义。
+
+上述事件拆分及 internal-only Reconcile 收敛后的**未处理 N1 Parser 条件基数**为 24 Capability / 24 Callable membership；现有 Owner v1alpha4 ToolCatalog 的 25 contracts（21 MUTATION + 4 READ）仅是固定历史审计，不是新 1.6.0 发布承诺。
+
+**Codec/Owner 的待决权威边界（R6-P1-01）：**现有 `mas.ssm.n1.modify.parse → SSM.PARSE_N1_MODIFY` 和 `mas.ssm.n1.release.parse → SSM.PARSE_N1_RELEASE` 都是历史 Skill-facing READ。前者已在固定源 `env-openamsm@dc83ccbf5be54dcc7112dd43ba95ea6fa5975550` 的 `patches/openamsm/0007-ssm-n1-modify-parse.patch` 中直接调用 `ogs_nas_5gsm_decode`，所以**不能当作纯业务校验**。后者可在 CapabilityContracts/ToolCatalog 核实公开身份，仍需 Owner 提供 handler 源码和输入/输出实证，不能仅凭名称推定其解码行为。
+
+1. **唯一协议权威：**正式 1.6.0 Skill 的 T2 NAS/NGAP 协议解码只可通过 ca-client-tools 正式发布、相应消息 Profile 已资格化的 Codec READ Capability；Owner 不得再次对原始 N1/N2 bytes 做协议解码，也不允许在 Codec 缺失时回退旧 Owner Parser。
+2. **Owner 冻结决策 A：**若这两个 Parser 只做协议解码，则从新 Skill-facing Owner CapabilityContracts 移出两个 Parser，其他变更不变时 Owner **目标 22 Capability / 22 membership**；其历史 callable 是否保留为内部兼容代码不属于 1.6.0 Runtime 可调用面，须在 Owner Issue 决定。
+3. **Owner 冻结决策 B：**若仍需要 Owner 业务校验/会话授权，则由 Owner 发布者把它们改造或替换为**只接受已验证 Codec Result 的纯业务 READ**，禁止接收原始 NAS bytes 或调用 NAS decoder；只有 Owner 正式冻结新的 ID、Schema、Evidence/业务语义后，才能决定是否保留两个 Skill-facing Capability。若保留两项且仍满足一对一，条件目标为 **24/24**；若合并或移除则重新计算。不得把旧 Parser 的输入/输出 Schema 原样视作新合同。
+4. 以上是两个互斥的设计分支，**未获得 Owner 冻结裁决之前，不宣称任何一种最终基数已经发布，也不自动删除历史契约**。Owner ToolCatalog/CapabilityContracts/Receipt/Reconcile 修改须由 env-openamsm 后续实施 Issue 单独追踪，Next 仅冻结设计边界。
+
+### 3.2 Provider Interface v1.2.0
+
+当前 Provider Interface 有 2 个 Capability、11 个公开 READ Observation Callable：
+
+- openamsm.smf.mas.context.read：8 个 Callable，共用 mas-context-query-input 和 mas-context-result Schema。
+- openamsm.nf.metrics.read：3 个 Callable，共用 metrics-page-query 和 metrics-page Schema。
+
+目标把既有两个查询 Capability 各收敛为一个公开 Callable，Capability ID 分别保持 `openamsm.smf.mas.context.read` 和 `openamsm.nf.metrics.read`。SMF Context Read 的 Input 增加封闭 contextKind 枚举 sc / pa / upn / ssm / iam / ups / ca / saa；NF Metrics Read 的 Input 增加封闭 resourceKind 枚举 amf.ue-info / amf.gnb-info / smf.pdu-info。原 8+3 个 backendOperationId 只作为 Provider 私有路由保留。
+
+**新 1.6.0 Provider 目标为 3 个公开 Capability / 3 个唯一 Callable（3/3，不是 2/2）：**两个上述查询入口，加上 SR-026 设计的一个独立 NAS Codec READ Capability/唯一 Callable。Codec 的机器 ID、Schema、slot、mediaType、result Profile、handler 与纯数字 SemVer **均须由 ca-client-tools Publisher 正式冻结**，本文不得虚构；3/3 是设计目标而非现有 v1.2.0 发布事实。首个候选已核实向量是 0xD1 Release Request；Modify 0xC9、其他 NAS 和 NGAP 都不能因“同为 Codec”自动获得资格。若后续不同消息无法在**一个封闭选择器与封闭输出 Schema** 中表达，应在下一设计版本拆分新的 1:1 Capability/Callable，并同步重算基数，禁止动态任意 profile。
+
+## 4. 规范性设计决策
+
+### 4.1 Capability ↔ Callable 一对一
+
+- 每个 Skill-facing Capability 恰好映射一个公开 Callable。
+- 每个公开 Callable 恰好属于一个 Skill-facing Capability。
+- Capability 可以被多个 Skill 或 Procedure Node 重复引用；不改变 Package 内部的一对一映射。
+- 一个 Capability 不得包含零个或多个公开 Callable；一个 Callable 不得被多个 Capability 共享。
+- 公开 Callable 可由多个 Provider 内部 backendOperationId / handler 实现，但必须由 Callable Input Schema 的封闭 enum / tagged union 决定；不接受任意字符串、模型选择或动态 catalog 扩权。
+- 若两个入口的业务语义、Schema、Effect 或 Evidence Guarantee 不同，应拆成两个 Capability / Callable，不为追求复用而合并。
+
+### 4.2 Operation / Observation
+
+Operation / Observation 是 CA-SL Procedure Node 阶段，不新增 Operation ID 身份。Callable.kind 决定阶段：
+
+- operation.capability → kind=operation；Effect 由 ToolCatalog 决定，可为 READ 或 MUTATION。
+- observation.capability → kind=observation 且 Effect=READ。
+- Skill 不声明或覆盖 Callable.kind、Effect、Schema、Evidence 或 Owner identity。
+
+### 4.3 Reconcile 与 Receipt Query
+
+MAS.RECONCILE 是 Runtime Coordinator 的 internal-only target，不是 Skill-facing Capability。普通 Skill / LLM Action 在 Provider IPC 前拒绝并返回 INTERNAL_RECONCILE_ONLY，Provider IPC 次数必须为零。Coordinator 仅按原 Mutation Invocation、Scope 和 Correlation 调用。
+
+MAS.RECEIPT_QUERY 继续是受 Capability / Scope 约束的普通 READ Callable，不适用 Reconcile 排除规则。
+
+## 5. CA-SL 1.6.0 作者语法草案（待正式规范冻结）
+
+CA-SL v1alpha5 已正式发布并冻结：其 operation.tool / observation.tool 继续表示 Alias::Callable，不做重解释或自动迁移。
+
+Capability-first 直接使用 CA-SL 1.6.0 下一正式版本目标（尚未发布）。准确 languageTarget 机器标识由 ca-skills / Compiler 正式 Schema 与 Golden 冻结，禁止提前猜测。**可选 `when` 的唯一作者位置仍为 `skills/<skill-id>/assurance/contract.yaml` 的顶层字段**；SKILL.md Front Matter 不声明 when，`predicates.yaml` 只承载执行期 Predicate。1.6.0 的 CEL/G.4 语法、类型与诊断由 ca-skills 正式规范冻结；不得默认为 v1alpha5 自动兼容。下列 Contract 是示例候选而非已冻结语法：
+
+~~~yaml
+dependencies:
+  mas: urn:openamsm:mas:tool-contracts
+capabilities:
+  - mas.sc.context.create
+  - mas.se.establishment-event.record
+~~~
+
+Procedure 外部调用只引用 Capability：
+
+~~~yaml
+record-session-establishment-event:
+  operation:
+    capability: mas.se.establishment-event.record
+    arguments:
+      ue_identity: context.supi
+      psi: context.request.pduSessionId
+      event: "ESTABLISHED"
+      sessionKeys: create-sm-context.operation.output.session_keys
+~~~
+
+~~~yaml
+emit-release-event:
+  operation:
+    capability: mas.se.release-event-marker.write
+    arguments:
+      ue_identity: context.supi
+      psi: context.request.pduSessionId
+      ev: "RELEASED"
+~~~
+
+~~~yaml
+read-sm-context:
+  observation:
+    capability: openamsm.smf.mas.context.read
+    arguments:
+      contextKind: sc
+      supi: context.supi
+      pduSessionId: context.request.pduSessionId
+~~~
+
+dependencies 仍固定精确 Package 来源；Procedure 不再写 dependency alias::Callable。Compiler 在显式依赖闭包中唯一解析 Capability ID。未声明 Grant、未解析、重复导出和跨包歧义均 fail-closed。`when` 仍为 `assurance/contract.yaml` 的可选顶层纯 CEL 选择表达式；其位置固定，1.6.0 表达式剖面由正式语言规范冻结。`predicates.yaml` 仅用于执行期 Predicate；Operation Script、Precondition、Postcondition、Wait 和 Continuation 的 1.6.0 语义由作者规范分别定义。
+
+## 6. Package / Publisher 契约
+
+Owner CapabilityContracts 与 Provider Interface Package capabilities.json 是 Skill-facing Capability 来源；ToolCatalog / Provider tool-catalog.yaml 是 Callable 契约来源。当前数组结构可保留，但每个 Skill-facing Capability 的 membership 数量必须为 1，每个 Callable 只能归属一个 Capability。
+
+Owner 1.6.0 目标：
+
+- 事件 Capability 拆分为 establishment-event.record 与 release-event-marker.write；mas.reconcile.exact_original 不属于 Skill-facing，MAS.RECONCILE 继续为 Runtime internal-only。
+- **N1 Parser 必须先由 Owner 签认二选一：**移出两个旧 Parser 后目标为 **22/22**；或把需要的入口重新定义为只消费已校验 Codec Result 的业务 READ，在保留两项的条件下目标为 **24/24**（其他选择应重算）。未签认前不宣称目标基数冻结，历史 ToolCatalog 的 25 contracts 仅为审计证据。
+- Owner 仍权威拥有业务状态、策略校验、mutation、Receipt/Proof/Reconcile 和最终提交决策；不得在 1.6.0 Skill 路径内对原始 NAS/NGAP 重新协议解码。
+
+Provider Interface 目标：
+
+- **目标 3 Capability / 3 公开 Callable：**SMF Context Read、NF Metrics Read，以及独立 Codec READ（SR-026）。前两者的 8+3 个旧 backendOperationId 只保留为内部路由。
+- Codec Capability / 唯一 Callable 的实际 ID、Schema、消息 Profile、slot/mediaType、handler、版本及正反向向量由 ca-client-tools 发布者冻结；正式发布前标记 BLOCKED / NOT_RELEASED。任何 0xC9 Modify 或 NGAP 消费均须有各自资格化 Profile 和机器校验结果 Schema，不可由首批 0xD1 反推。
+- 同一公开 Callable 仅允许按**封闭选择器和封闭 Input/Output Schema** 路由多个内部 handler；超出正式声明的 Profile 必须拒绝，不能使用 Owner Parser fallback。
+
+Package 版本由各 Publisher 在后续目标仓 SR 中固定；本 SR 不擅自发明 Owner / Provider 版本号，也不修改任何下游 Package。
+
+## 7. Compiler Link 与 Runtime Artifact
+
+Compiler 必须对每个 Capability 使用点执行：
+
+1. Capability ID 必须出现在当前 Skill Contract.capabilities。
+2. 在显式依赖闭包中唯一命中一个 Capability export。
+3. 该 Capability 必须恰有一个 Callable membership。
+4. 该 Callable 只能归属一个 Skill-facing Capability。
+5. 同一 Package / Owner ToolCatalog 中 Callable ID、Owner、kind、Effect、Input/Output Schema 必须一致。
+6. Procedure 阶段必须与 Callable.kind 匹配；Observation 还必须 Effect=READ。
+7. 复用既有 Schema closure、Evidence、Scope identity / provenance、Receipt / Commit Proof / Reconcile 校验。
+8. 未使用 Grant 报 CAPABILITY_GRANT_UNUSED；不生成部分 Artifact。
+
+稳定诊断至少包括：CAPABILITY_UNRESOLVED、CAPABILITY_AMBIGUOUS、CAPABILITY_NOT_GRANTED、CAPABILITY_GRANT_UNUSED、CAPABILITY_CALLABLE_CARDINALITY_INVALID、CALLABLE_CAPABILITY_CARDINALITY_INVALID、CAPABILITY_PHASE_KIND_MISMATCH、CAPABILITY_SCHEMA_MISMATCH、CAPABILITY_BINDING_MISSING。
+
+Compiler Artifact / BuildResult v2 候选只面向 languageTarget=（1.6.0 的机器标识待正式冻结）。每个 Skill 的 capabilityBindings[] 至少记录 capabilityId、dependencyId、stablePackageId、Owner / Publisher identity、callableId、kind、effect、inputSchemaRef 和 outputSchemaRef。Procedure 节点保留 capabilityId；Artifact dependencyClosure.exports[] 保留精确 Callable allowlist。Callable ID 是内部 Binding，不是模型 Action 参数。
+
+v1alpha5 已发布 Artifact、Compiler v2.1.0 历史行为和 Golden 不变；Development v1alpha1 保持冻结并 NOT_ADMITTED。Artifact v2 / BuildResult v2 API 名称仍须 Compiler Owner Gate 确认；新 Compiler/Agent 不提供任何旧版语法、旧 Build DTO/Artifact/Bundle、双轨或 fallback。
+
+## 8. Runtime Action Boundary
+
+Runtime 以 Capability ID 为 Skill / Procedure 作者侧 Action 入口，从当前 Artifact 的唯一 capabilityBindings 项解析 Callable ID。通过精确 Callable allowlist、Package identity、kind、Effect、Schema、Run 状态、HostInvocation、Scope、deadline 和 budget 检查后，才经唯一 Plugin Manager 的 Tools Extension / ProviderV2 Driver 内部派发。
+
+模型不能提交或替换 Callable ID，也不能枚举 backendOperationId。Provider 可在一个 Callable 内按封闭 Schema selector 选择私有 backend。MAS.RECONCILE 仅允许 Runtime Coordinator 内部入口使用。
+
+## 9. Skill Studio Package Explorer / LSP
+
+- Package Explorer 以 Capabilities 为唯一 Skill-facing 能力导航；不展示平级 Tools / Operations / Callable 树。
+- Capability 详情可显示描述、kind、Effect、Schema、Evidence 和来源 Package。
+- Callable ID 只出现在内部 Binding 详情或编译诊断，不作为作者可选入口。
+- LSP 对 Contract.capabilities、operation.capability、observation.capability 提供补全、悬停、定义跳转和静态诊断；来源为已导入 Package，不是 Provider 动态 catalog。
+- AI Authoring 只能生成 Capability ID，不得生成 Callable ID 或 backendOperationId。
+- **新 Studio 仅接受 1.6.0 项目**。v1alpha5 作者源码和旧项目快照只能作为历史审计资料保留，不能导入新版 Studio，不提供转换/自动迁移、双语法或混合语言项目。
+
+## 10. OpenAMSM 示例映射
+
+| Skill | 当前 v1alpha5 Callable 引用 | 1.6.0 Capability 引用 |
+|---|---|---|
+| Create | SE.EMIT_EVENTS | mas.se.establishment-event.record |
+| Modify | UPN.MODIFY_QOS_DELTA | mas.upn.up.qos.delta |
+| Release | SE.EMIT_RELEASE_EVENT_C | mas.se.release-event-marker.write |
+
+Create / Release 继续分别使用原有 Schema 与 Evidence Guarantee；Modify 的 QoS Delta、Receipt、UNKNOWN 和 N1/N2 流程不变。Provider Observation 使用两个通用 READ Capability 和封闭 selector。此表是作者源映射，不是当前 ca-skills 已更新证据。
+
+### 10.1 Codec → Owner 的唯一 T2 数据流
+
+`T0` 校验原版 3GPP OAS 3.0 SBI ingress、multipart、Content-ID 与 N1/N2 slot；`T1` 的 F02 选择只读取 Publisher 已冻结的 Event metadata 和当前已到场的 SBI/requestSchema 字段，绝不调用 Codec，不能要求未来解码得到的 PSI/PTI/QoS 等字段。`T2` 在 Skill/Run 已绑定之后读取 Host-owned opaque artifactRef，由**已发布 Provider Codec READ Capability** 调用唯一 Callable/Provider 私有 handler，对已授权消息 Profile 解码；输出必须先经过发布的 Decoder Result Schema 验证，再写入后继 Procedure Node 的 typed context/arguments。Owner 业务 READ（若存在）只能消费这个结构化 Codec Result，不能重新读原始 NAS 做解码；Owner mutation 在业务校验通过后才可调用。`T3` 按 Owner Receipt/Proof/Reconcile 判定提交，`T4` 仅续跑原 Run 的 0xD4/N2 completion。
+
+依赖门槛：没有正式 Codec Package/Result Schema 时，0xD1 的产品路径 BLOCKED；0xC9 Modify 和需要 NGAP 解码的消费面还须各自通过 Profile 资格审查。绝不将 PR #39 库向量、历史 Owner Parser 或 Event Plugin 最小消息类型 discriminator 冒充正式 T2 解码能力。Event Plugin 的最小 discriminator 只为 T1 路由，不产生业务解码结果。
+
+Owner 待决事项在 Next [Issue #40](https://github.com/odango-chan/ca-agent-next/issues/40) / [Issue #113](https://github.com/odango-chan/ca-agent-next/issues/113) 跟踪。实际 ca-client-tools 与 env-openamsm 的生产端实施 Issue 必须在对应 SR 通过独立设计评审达到 READY 后再建立，各自只承载代码、Schema、Golden、Release 和签认，不另立权威设计副本。
+
+## 11. 实施分解与跨仓责任
+
+本 SR 只完成中央设计。后续代码实施必须先按目标仓拆分独立实施 SR / Issue，至少覆盖：
+
+1. ca-skills：1.6.0 规范、作者语法、Owner-linked Create / Modify / Release 示例和发布记录。
+2. env-openamsm：Owner CapabilityContracts 事件拆分、Reconcile Capability 移除及新 Owner Package 发布。
+3. ca-client-tools：Provider Interface 两个通用 Callable、selector Schema 和内部 backend 路由。
+4. ca-skill-compiler：1.6.0 Parser / Linker、Artifact v2 capabilityBindings、Build / Verify / Golden。
+5. ca-agent-next：F02 / F04 Runtime 消费和 Action Boundary。
+6. ca-skill-studio-demo：Package Explorer、LSP、Completion、AI Authoring。
+7. ca-skills Bundle / OpenAMSM E2E：按固定 Compiler / Package / Skill 发布物完成端到端回归。
+
+实施顺序：先冻结 1.6.0 作者格式、Owner/Provider 一对一映射与 Schema；ca-skills 正式发布 1.6.0；Compiler 发布新 BuildRequest/BuildResult/Artifact/唯一 Capability Binding；Runtime/Studio 消费；MAS Skill 由作者按 1.6.0 重新编写、重新 Build/Verify/Bundle 后才跑真实 E2E。每个目标仓另设实施 Issue/AC 与授权；本 SR 待评审不代表实施 READY。
+
+## 12. 非目标
+
+- 不修改已发布 CA-SL v1alpha5、Compiler v2.1.0 Artifact / Golden。
+- 不做旧版本兼容、自动迁移或双语法运行时。
+- 不新增 Capability Manager、Tool Registry、Provider Manager 或第二套 IPC。
+- 不增加生产 Admission、签名、Trust Registry、额外包级 hash、复杂 IAM 或生产 Qualification。
+- 不把 Provider 私有 backendOperationId 提升为 Skill-facing Callable。
+- 不修改 ca-skills、ca-skill-compiler、ca-client-tools、env-openamsm、ca-skill-studio-demo 的代码、文档、Issue 或 PR。
+
+## 13. 验收条件
+
+| AC | 验收内容 | 结果 |
+|---|---|---|
+| AC-029-01 | Owner CapabilityContracts 当前 24/25 基数与唯一多成员关系有固定来源审计 | 来源审计已记录，待独立评审 |
+| AC-029-02 | Provider 历史 2/11 基数与 8+3 查询分组有固定来源；1.6.0 目标 **3/3（含 Codec）**，机器合同/发布仍 BLOCKED | 设计已记录；Codec Publisher 未冻结 |
+| AC-029-03 | Capability ↔ Callable 双向一对一、Operation/Observation kind、Effect、Schema 规则明确 | 设计已记录，待独立评审 |
+| AC-029-04 | Owner 事件 Capability 拆分、Reconcile internal-only、Receipt Query 保留规则明确 | 设计已记录，待独立评审 |
+| AC-029-05 | Provider 两个通用 READ + Codec READ 的 **3/3** 设计；封闭选择器/Schema、私有 backend 路由与正式发布门槛明确 | 设计待独立评审；产品 BLOCKED |
+| AC-029-06 | 1.6.0 正式命名、完全无兼容/自动迁移、准确机器标识与作者 Schema 发布责任清晰 | 待独立设计评审 |
+| AC-029-07 | Compiler Link、诊断、Artifact v2 capabilityBindings 与 Build/Verify 边界明确 | 设计已记录，待独立评审 |
+| AC-029-08 | Runtime Action、Callable allowlist、Reconcile 内部入口明确 | 设计已记录，待独立评审 |
+| AC-029-09 | Skill Studio Capability-only Explorer / LSP / AI Authoring 明确 | 设计已记录，待独立评审 |
+| AC-029-10 | MAS Create / Modify / Release 的 T1/T2 分层、Codec 唯一协议解码与 Owner Parser 待决 22/22 或 24/24 条件目标明确；0xC9/NGAP 需独立资格化 | 设计待独立评审；Owner/Codec 产品 BLOCKED |
+| AC-029-11 | F02/F03.05/F04/F06/F08/F09/EC02、IR/SR、版本规范/功能树/目录与 SR-004 一致；静态门禁 | 待静态检查与独立评审 |
+| AC-029-12 | 未修改下游仓；未把设计目标误报为实现或 E2E PASS | 待独立评审 |
+
+## 14. 依赖与状态边界
+
+- 设计依据：SR-015 的历史 Tool/Provider 审计，SR-004 1.6.0-only Importer，SR-013 新 Compiler Artifact，SR-027 正式 Bundle；旧 v1alpha5 仅留档。
+- SR-029 的设计不依赖 Compiler / Provider / Studio 代码已实现；稳定契约足以完成设计评审。
+- SR-013 需要将 when/Schema/Artifact 与 SR-029 Capability Binding 一并升级为 1.6.0-only 新 Compiler API；旧 when 设计/旧 CI 不能证明 1.6.0 发布。
+- 当前 GitHub Issue #40 是设计 Issue，不是下游实施 Issue。
+- 本轮 DeepSeek Harness、Compiler Build / Verify、Studio 浏览器测试、MAS E2E 均 NOT_RUN；未修改下游仓。
+
+## 15. 设计评审记录
+
+- 2026-11-26，GPT-6（ChatGPT）：将历史基数审计移植到最新 1.6.0-only 中央设计分支，提交待评审；未声称正式 APPROVE。
+- **2026-11-26 历史状态**：#45 曾为 Draft。**2026-11-27 当前状态**：#45 OPEN / 非 Draft / 设计待独立复评；没有独立 GitHub APPROVE，未合并 #45 或修改 main。具体 Head / Base SHA 以本次 GitHub 检查点为准。
+- 待评审仅为技术设计审查状态；不是实施 READY、Compiler/Runtime/Studio 产品实现证据或 E2E PASS。
+
+## 修订记录
+
+| 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
+|---|---|---|---|---|---|---|
+| 2026-11-26 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 建立 Capability-first Skill 作者接口、一对一 Callable、Package cardinality 审计及 Compiler / Runtime / Studio 闭环 | 消除 Skill 源码与 Provider / Owner 内部 Callable ID 的耦合，并明确 v1alpha5 冻结与 1.6.0 候选边界 | IR-008、IR-003、Issue #40 |
+| 2026-11-26 | 0.2.0 | GPT-6（ChatGPT） | §0～15、修订记录 | 移植 Capability-first 与 Owner/Provider cardinality 审计，刷新为 1.6.0-only、无旧兼容，状态改为待独立评审 | 保留历史基数证据、明确设计评审与产品交付分离 | Issue #40；SR-029；SR-004；SR-013；SR-027 |
+| 2026-11-26 | 0.2.1 | GPT-6（ChatGPT） | 版本隔离与修订记录 | 补齐 Studio 拒绝旧项目边界，设计待评审 | 避免历史代码/测试被视为新版有效输入 | Issue #40；SR-029 |
+| 2026-11-26 | 0.2.2 | GPT-6（ChatGPT） | 标题层级/修订记录 | 修正历史修订表列数与独立设计评审状态 | 满足 Markdown 设计评审门禁，避免编号或治理表歧义 | Issue #40；SR-029 |
+| 2026-11-26 | 0.2.3 | GPT-6（ChatGPT） | 文档头与修订记录 | 补齐 formal SR 正式 review_scope 与非目标声明 | 解除 PR #45 当前 Head Review Context formal-doc 校验失败 | Issue #40；PR #45 |
+| 2026-11-27 | 0.2.4 | GPT-6.2（ChatGPT） | §5、§13、修订记录 | 明确可选 when 唯一位于 assurance/contract.yaml 顶层；SKILL.md Front Matter 和 predicates.yaml 不声明 when；1.6.0 CEL/G.4 语义由正式规范冻结。 | 锁定作者字段归属，避免旧版本语义被隐式带入 1.6.0。 | Issue #40；IR-008；SR-013；EC02；F08 |
+| 2026-11-27 | 0.2.5 | GPT-6.2（ChatGPT） | 文档头、§15 评审历史、修订记录 | 历史 PR #44 原 Head、#45 Draft 观察值改为明确历史时点，当前 #45 非 Draft 且未独立 APPROVE | 不让已合并/重定向后的 PR 被旧历史文字误判为当前状态 | Issue #40；PR #44/#45；SR-029 |
+| 2026-11-28 | 0.2.6 | GPT-6（ChatGPT） | §3、§6、§10.1、§11、§13 | 补入 Provider Codec 目标 3/3、T1/T2 唯一解码链，固定 Owner 两 Parser 证据与二选一 22/22/24/24 条件基数 | 处理第六轮 R6-P1-01，避免凭名称删除 Owner 接口或让旧 NAS Parser 充当 Codec fallback | Issue #40/#113；PR #45；SR-026；F06 |
