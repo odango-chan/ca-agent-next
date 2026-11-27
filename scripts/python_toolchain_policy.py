@@ -253,6 +253,7 @@ def validate_base_ref(
 def validate_base_contents(
     repo_root: Path,
     base_sha: str,
+    pr_number: int,
     manifest: dict[str, Any],
 ) -> None:
     baseline_sha = manifest["baseline"]["sha"]
@@ -270,7 +271,11 @@ def validate_base_contents(
             "禁止从旧 main/设计分支直接实施 Python 变更。"
         )
 
-    required = manifest.get("required_base_files", [])
+    required = list(manifest.get("required_base_files", []))
+    if pr_number != manifest.get("bootstrap", {}).get("pr_number"):
+        for path in manifest.get("required_policy_files", []):
+            if path not in required:
+                required.append(path)
     for path in required:
         content = git_blob(repo_root, base_sha, path)
         if content is None:
@@ -333,7 +338,7 @@ def evaluate(
     manifest: dict[str, Any],
 ) -> tuple[bool, list[str], list[str]]:
     validate_base_ref(manifest, base_ref, base_sha, pr_number)
-    validate_base_contents(repo_root, base_sha, manifest)
+    validate_base_contents(repo_root, base_sha, pr_number, manifest)
 
     changed_result = run_git(
         repo_root,
