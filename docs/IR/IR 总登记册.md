@@ -1,9 +1,9 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录  
-> 文档版本：0.1.32\
+> 文档版本：0.1.33\
 > 修订日期：2026-11-27\
-> 状态：9 项 IR（含 IR-009 3GPP 公共 Schema）；IR-008 登记 CA-SL 1.6.0 Capability-first 严格一对一与完全无旧版兼容，SR-029 设计待评审；IR-006 下 SR-030 Host Context Schema-only Publisher 设计待评审；SR-028 仍 DRAFT。\
+> 状态：9 项 IR（含 IR-009 3GPP 公共 Schema）；IR-008 登记 CA-SL 1.6.0 Capability-first 严格一对一与完全无旧版兼容，SR-029 设计待评审，SR-032 中央作者规范待独立评审；IR-006 下 SR-030 Host Context Schema-only Publisher 设计待评审；SR-028 仍 DRAFT。\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级需求管理平台
 
@@ -109,7 +109,7 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 - 版本边界：**CA-SL 1.6.0 是唯一新作者/产品版本**，没有旧解析器、兼容映射、迁移工具、双轨编译、旧 Build DTO、旧 Artifact / Bundle 或混合 Catalog。历史 v1alpha5 仅供只读审计，旧 Skill 必须按新格式重新编写/编译/发布。
 - 设计入口：F02、F03.05、F04、F06、F08、F09、EC02，以及 [CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md)和[版本基线](../规范/CA-SL语言基线与版本规范.md)；SR-004 导入只支持新 Assurance Bundle，SR-027 负责正式发布，SR-030 负责 Host Context Schema-only Package。
 - 外部发行依赖：ca-skills 1.6.0 规范/机器标识；Owner 24/24 Package、Provider 3/3（含 Codec）和 Host Context Schema-only Package；Compiler 新 BuildRequest / BuildResult / Binding / Runtime Artifact；Studio 与 Agent 的 1.6.0 产品回归与 MAS Create→Modify→Release E2E。
-- 作者规范：SR-032 将 Skill package 粒度、Procedure Node 拆分 / 合并、注释、Schema 所有权和 AI Authoring 约束纳入统一作者规范；不修改 CA-SL 1.6.0 语法。
+- 作者规范：SR-032 将 Skill package 粒度、Package 文件职责、Schema 所有权、SourcePath / 显式 arguments、when / Wait、Evidence / UNKNOWN、Procedure Node 四阶段与拆分 / 合并、注释和 AI Authoring Change Set 边界纳入统一作者规范；不修改 CA-SL 1.6.0 语法。
 - 验收与状态：SR-029 的完整语言规范与 Capability-first 设计 AC、SR-030 的 Host Context Schema-only Publisher、SR-032 的作者规范均需分别独立审查；代码实施 Issue / 受测 SHA / Golden / 正式 Release / E2E 尚无 1.6.0 证据，不能宣称 READY / VERIFIED。
 
 ## IR-009
@@ -164,3 +164,4 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 | 2026-11-27 | 0.1.30 | ChatGPT / GPT-6 | IR-009 | 冻结 OpenAMSM 版本作为唯一来源与 YAML 字节原样代发布；将可选 G.4 Adapter 和 Codec Output 分离 | 明确仅代为发布、不改 3GPP YAML 的最新要求 | Issue #47；SR-031 |
 | 2026-11-27 | 0.1.31 | ChatGPT / GPT-6.2 | IR-009 | 撤销强制 G.4 Adapter；登记 OAS3 原生 operation / Schema Component 消费、OpenAMSM 标准版本与 blob 样本、NAS/NGAP 原生来源及 Compiler dialect-aware Resolver | 依据实际源文件核查，避免投影和标准影子副本 | Issue #47；SR-031/010/013/026/027 |
 | 2026-11-27 | 0.1.32 | GPT-6.2（ChatGPT） | IR-008 | 新增 SR-032，明确作者规范与 CA-SL 语法规范的职责分离 | 将 ca-skills 作者经验、Node 粒度和注释原则纳入中央追踪，保持 1.6.0-only | Issue #49；SR-032；IR-008 |
+| 2026-11-27 | 0.1.33 | GPT-6.2（ChatGPT） | IR-008、文档头 | 将 SR-032 的 Package / Schema / SourcePath / when / Wait / Evidence / AI Change Set 范围纳入 IR-008 摘要 | 让需求登记册完整表达中央作者规范的实际覆盖范围 | Issue #49；SR-032 |
