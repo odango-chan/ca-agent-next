@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：**设计待评审**（唯一新目标 CA-SL 1.6.0；全链路不兼容任何旧作者语法、Build DTO、Artifact、Bundle；1.6.0 产品未发布）
-> 文档版本：0.3.6
+> 文档版本：0.3.7
 > 功能归属：F02 — Skill 管理与选择  
 > 关联 SR：SR-004、SR-005、SR-006、SR-032    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -77,7 +77,7 @@ Bundle 始终保留共享资源原始文件。无 Assurance 的 Skill 不生成 
 |---|---|---|
 | 无 Assurance 的 Skill Package（可附 schemas/、scripts/、references/、assets/） | 读取指导与共享资源，校验 Script Registry，返回 candidate，由 Catalog 原子激活；仅 LLM-guided | 不调用 |
 | SKILL.md + 已发布 Assurance Artifact | 基本结构/必需文件/格式/类型数据检查，解析 Tool/Capability 及 contexts Schema 闭包，返回 candidate，由 Catalog 原子激活 | 不调用 |
-| 无效或不完整的发布包 | 显式导入失败，不得降级为 SKILL.md-only | 不调用 |
+| 无效或不完整的发布包 | 显式导入失败，不得降级为无 Assurance Package | 不调用 |
 
 Agent 不接收尚未发布的 Assurance 作者源作为可执行 Skill。LLM 创建或修改 Assurance 源码后，必须经外部发布流程编译并发布新的运行包，才能进入 Agent Catalog。LLM 创建或修改没有 Assurance 的 Package（含共享资源）则可按普通导入流程更新；Host Script Execution 只调用 Registry 中显式登记的包内入口。
 
@@ -122,7 +122,7 @@ Agent 不实现文件监视器、自动下载、分布式缓存或通用 Plugin 
 4. 对新 Event，按各已发布 Assurance Skill 声明的 `requestSchema` 验证规范化 payload。失败时记录关联 Skill 和失败原因的输入校验诊断，在两个候选集合之外处理该 Skill，跳过 CEL。通过或无需 Schema 校验的 Skill 若声明 `when`，使用 Artifact 中已检查的 CEL 程序求值。
 5. when=true 形成显式候选；when=false 排除；运行期求值错误 fail-closed 并排除该 Skill。
 6. 一个显式候选直接选择；多个显式候选只允许在精确候选集合内由 LLM 消歧，并校验返回的 Skill ID。
-7. 没有显式候选时，只对 SKILL.md-only 和通过前述 Schema 资格检查、未声明 when 的 Assurance Skill 做 SKILL.md 语义选择。
+7. 没有显式候选时，只对无 Assurance Skill Package 和通过前述 Schema 资格检查、未声明 when 的 Assurance Skill 做 SKILL.md 语义选择。
 8. when=false 或求值错误的 Skill 不得重新进入无条件语义候选集合。
 9. 无候选时澄清或拒绝；不得无 Skill 绑定地回退到 Generic Agent。
 10. 精确绑定 Skill 后，才选择 Deterministic 或 LLM-guided 模式。
@@ -142,7 +142,7 @@ when 只能读取规范化 Event 的 event.type 和 Contract.requestSchema 声�
 | Request Schema 校验失败 | 排除，跳过 CEL | 排除 | 记录 Skill ID + Schema 失败诊断，不启动该 Skill |
 | when=true | 保留 | 无关 | 仅在显式 true 集合内选择；一个直接绑定、多个由模型在该集合内消歧 |
 | when=false / CEL evaluation error | 排除 | 无关 | 不再回退到无条件候选；错误保持可观察但不扩大可选集合 |
-| 无任何 when=true | 空 | 可纳入已通过资格的 SKILL.md-only / Assurance(no when) | 语义选择仍只允许返回精确候选 ID |
+| 无任何 when=true | 空 | 可纳入已通过资格的无 Assurance / Assurance(no when) Skill | 语义选择仍只允许返回精确候选 ID |
 | 无有效候选 | 空 | 空 | 澄清或拒绝，禁止 Generic Agent 无 Skill 回退 |
 | continuation 指向现有 Run | 不重新求值 | 不重新求值 | 仅恢复绑定的 Skill + 固定 Catalog generation；缺失或过期则拒绝 |
 
@@ -164,7 +164,7 @@ CheckedExpr、google.protobuf.Any、FileDescriptorSet、DescriptorPool、字段�
 | 有效发布 Assurance Artifact（可含共享资源） | Deterministic 或 LLM-guided；两种模式共用同一份 Schema / Script |
 | Assurance Artifact、Script Registry 或资源引用缺失 / 格式错误 / 依赖不完整 | 导入失败，不得降级 |
 
-不增加 supportedModes 字段。执行模式从发布包是否含有效 Assurance Artifact 派生。SKILL.md-only Skill 不得启动确定性 Procedure。
+不增加 supportedModes 字段。执行模式从发布包是否含有效 Assurance Artifact 派生。无 Assurance Skill Package 不得启动确定性 Procedure。
 
 ## 9. 外部依赖与状态边界
 
@@ -184,7 +184,7 @@ Agent 不调用 Compiler Inspect/Verify，也不实现 Skill Admission。Compile
 
 - 无 Assurance 包不调用 Compiler；Importer 按 Agent Skills Specification 校验 Front Matter，并检查共享资源 / Script Registry；Catalog 激活后仅 LLM-guided。Host 仅在 llmInvocable 与 `scriptExecution.llmEnabled=true` 同时满足时提供 host.skill-script.execute；`allowed-tools` 不构成业务 Capability 授权，也不授予任意脚本执行权限。
 - Assurance Bundle 仅接受 Compiler 正式发布的新版 Runtime Artifact API 与 ca-skills 正式 Bundle；不接受冻结 Artifact v1alpha5、Development v1alpha1 或未知 API。
-- Assurance 作者源存在但没有受支持 Runtime Artifact 时明确失败，不得降级为 SKILL.md-only。
+- Assurance 作者源存在但没有受支持 Runtime Artifact 时明确失败，不得降级为无 Assurance Package。
 - Importer 只返回候选；Catalog generation、原子激活、失败回滚和 Invocation pinning 由 SR-005 验收。
 - 已发布 Assurance Artifact 包不调用任何 Compiler 命令。
 - 缺失文件、未知 Artifact 格式、无效 CEL/type data、路径越界和未解析依赖均导入失败，不降级。
@@ -290,3 +290,4 @@ T2 的 Provider Codec Result 只在选定 Skill Procedure 的 READ 后可用，�
 | 2026-11-27 | 0.3.4 | ChatGPT / GPT-6.2 | §13 | 改为原版 OAS3 组件直接引用与 T1/T2 阶段约束；移除 Adapter 前置 | 对齐原始标准直接引用与 Compiler dialect-aware 解析 | IR-009；Issue #47；SR-031/013/026 |
 | 2026-11-27 | 0.3.5 | GPT-6.2（ChatGPT） | §2～5、§8～10 | 将 schemas/scripts 作为根目录共享资源，允许无 Assurance Skill 使用资源；增加 Host Script Execution Capability 的导入与运行边界 | 使 LLM-guided 与 Deterministic 共用资源，同时不授予任意 Python 执行 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.3.6 | GPT-6.2（ChatGPT） | §2、§4、§8、§10 | 将 Host Script Execution 的 LLM 暴露条件统一为 Registry 标记与 `scriptExecution.llmEnabled` 双门禁；统一 Assurance 文件路径 | 消除 F02 与 CA-SL / Host 配置之间的口径歧义 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.3.7 | GPT-6.2（ChatGPT） | §2、§3、§5、§8、§10 | 将 SKILL.md-only 误称统一为无 Assurance Package，明确无 Assurance 包仍可含共享资源并参与语义选择 | 避免选择、导入和模式派生误把共享资源包排除在 LLM-guided 之外 | Issue #49；IR-008；SR-032 |
