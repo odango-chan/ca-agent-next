@@ -4,6 +4,8 @@
 > 原始状态：v1alpha5 Package 目录与所有权说明  
 > 迁移追踪：ca-agent-next Issue #49 / SR-032。本文保留原始内容供溯源；其 CA-SL v1alpha5 字段、目录和示例不构成 CA-SL 1.6.0 规范。  
 > 注意：原文相对链接按 ca-skills 原目录解析；当前权威规则以 Next 的《SKILL 作者规范》和 CA-SL 1.6.0 语言设计为准。
+> 全局评审范围：继承根目录 Agent.md 的 review_scope  
+> 本文局部非目标：只读历史源文归档；不作为 CA-SL 1.6.0 规范或产品验收证据，不改写原文及源相对链接。
 
 ---
 
