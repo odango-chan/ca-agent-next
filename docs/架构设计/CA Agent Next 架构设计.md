@@ -299,5 +299,5 @@ sequenceDiagram
 | 2026-11-26 | 0.4.4 | GPT-6（ChatGPT） | §3、§15、修订记录 | 加入 CA-SL 1.6.0-only Capability-first 总体约束与完整责任矩阵 | 避免语言旧版兼容、Runtime Tool 选择和 Compiler 内嵌回归 | Issue #40；IR-008；SR-029 |
 | 2026-11-26 | 0.4.5 | GPT-6（ChatGPT） | 文档头与修订记录 | 把 review_scope 继承语句改为 CI 规范的一次精确声明 | 解除 PR #45 当前 Head Review Context formal-doc 校验失败 | Issue #40；PR #45 |
 | 2026-11-27 | 0.4.6 | GPT-6.2（ChatGPT） | §6、§7、§15 | 将 SKILL.md-only 统一修正为可携带共享资源的无 Assurance Package；明确 Host Resource Read / Script Execution 和无 Skill Wait 语法边界 | 使总体架构、Importer、Runtime 与 CA-SL 1.6.0 / F05 一致 | Issue #49；IR-008；SR-032 |
-| 2026-11-27 | 0.4.7 | GPT-6.2（ChatGPT） | §6～§7、§15 | 将 `when` 作者源位置统一为有 Assurance Skill 的 SKILL.md Front Matter；无 Assurance Skill 不声明 when，并由 Importer 拒绝 | 对齐 CA-SL 1.6.0、F02、Compiler 与作者规范的统一入口 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.4.7 | GPT-6.2（ChatGPT） | §6～§7、§15 | 将 `when` 作者源位置统一为有 Assurance Skill 的 SKILL.md Front Matter；无 Assurance Skill 不声明 when，并由 Importer 拒绝 | 对齐 CA-SL 1.6.0、F02、Compiler 与作者规范的统一入口；历史错误入口判断，已由 0.4.8 撤销，不构成兼容方案| Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.4.8 | GPT-6.2（ChatGPT） | §6～§7、修订记录 | 将 `when` 作者源唯一位置恢复为 assurance/contract.yaml 顶层；Front Matter 不声明 when；无 Assurance 无 Contract | 撤销入口位置回归，统一架构、CA-SL、Compiler 与 Importer 契约 | Issue #49；IR-008；SR-032；F02/F08/F09/SR-004/013 |
