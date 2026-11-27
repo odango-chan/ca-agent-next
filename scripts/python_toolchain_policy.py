@@ -35,8 +35,16 @@ ROOT_LOCKFILE_NAMES = {
     "environment.yaml",
 }
 EXECUTABLE_SUFFIXES = {
-    ".py", ".sh", ".bash", ".ps1", ".yml", ".yaml", ".toml",
-    ".ini", ".cfg", ".bat", ".cmd",
+    ".py", ".sh", ".bash", ".ps1", ".psm1", ".yml", ".yaml", ".toml",
+    ".ini", ".cfg", ".bat", ".cmd", ".fish", ".zsh", ".mk",
+}
+EXECUTABLE_NAMES = {"makefile", "dockerfile", "justfile"}
+POLICY_CONTROL_FILES = {
+    BASELINE_MANIFEST_PATH,
+    "scripts/python_toolchain_policy.py",
+    ".github/workflows/python-toolchain-policy.yml",
+    ".github/workflows/python-toolchain-policy-trusted.yml",
+    "tests/test_python_toolchain_policy.py",
 }
 DEPENDENCY_SURFACE_KEYS = {
     "requires-python",
@@ -57,7 +65,8 @@ FORBIDDEN_COMMANDS = (
     (
         "PIP_INSTALL",
         re.compile(
-            r"\b(?:python(?:\d+(?:\.\d+)?)?\s+-m\s+pip|pip(?:3)?)\s+install\b"
+            r"\b(?:python(?:\d+(?:\.\d+)?)?\s+-m\s+pip|pip(?:3(?:\.\d+)?)?)\s+"
+            r"(?:install|sync|compile)\b"
             r"|\bpip-(?:compile|sync)\b",
             re.IGNORECASE,
         ),
@@ -83,7 +92,7 @@ BARE_TEST_RUNNER = re.compile(r"(?<![\w./-])pytest(?:\s|$)", re.IGNORECASE)
 PROJECT_RUN_MARKERS = re.compile(
     r"\b(?:python(?:\d+(?:\.\d+)?)?|py(?:\.exe)?)\s+"
     r"(?:-m\s+(?:unittest|pytest|compileall|ca_agent_next)\b|"
-    r"(?:scripts|tests)/)|(?<![\w./-])pytest(?:\s|$)",
+    r"(?:scripts|tests)/|[^\s]+\.py(?:\s|$))|(?<![\w./-])pytest(?:\s|$)",
     re.IGNORECASE,
 )
 
@@ -184,10 +193,26 @@ def forbidden_root_lockfiles(changed_paths: Iterable[str]) -> list[str]:
     return sorted(path for path in changed_paths if is_root_lockfile(path))
 
 
+def is_policy_gate_no_project(path: str, line: str) -> bool:
+    if path not in {
+        ".github/workflows/python-toolchain-policy.yml",
+        ".github/workflows/python-toolchain-policy-trusted.yml",
+    }:
+        return False
+    normalized = line.strip()
+    allowed = (
+        r'uv run --no-project --python 3\.14\.6 python "\$policy_dir/python_toolchain_policy\.py" \\',
+        r"uv run --no-project --python 3\.14\.6 python scripts/python_toolchain_policy\.py \\",
+        r"uv run --no-project --python 3\.14\.6 python -m unittest discover -s tests -p test_python_toolchain_policy\.py -v",
+    )
+    return any(re.fullmatch(pattern, normalized) for pattern in allowed)
+
+
 def command_violations(added_lines: Iterable[tuple[str, str]]) -> list[str]:
     violations: list[str] = []
     for path, raw_line in added_lines:
-        if Path(path).suffix.lower() not in EXECUTABLE_SUFFIXES:
+        candidate = Path(path)
+        if candidate.suffix.lower() not in EXECUTABLE_SUFFIXES and candidate.name.lower() not in EXECUTABLE_NAMES:
             continue
         line = raw_line.strip()
         if not line or line.startswith(("#", "//", "REM ")):
@@ -206,6 +231,11 @@ def command_violations(added_lines: Iterable[tuple[str, str]]) -> list[str]:
                 f"UV_ENVIRONMENT_BYPASS: {path}: {line} — "
                 "禁止使用 --system/--active 绕过项目虚拟环境。"
             )
+        if re.search(r"\buv\s+sync\b", line) and "--locked" not in line:
+            violations.append(
+                f"UV_SYNC_NOT_LOCKED: {path}: {line} — "
+                "CI/实施环境同步依赖必须使用 uv sync --locked。"
+            )
 
         has_uv_run = re.search(r"\buv\s+run\b", line) is not None
         has_no_project = "--no-project" in line
@@ -217,17 +247,10 @@ def command_violations(added_lines: Iterable[tuple[str, str]]) -> list[str]:
                         "项目测试/Smoke/脚本必须经 uv run 执行。"
                     )
             elif has_no_project:
-                is_policy_gate_test = (
-                    path == ".github/workflows/python-toolchain-policy.yml"
-                    and (
-                        "python_toolchain_policy.py" in line
-                        or "-s tests -p test_python_toolchain_policy.py" in line
-                    )
-                )
-                if not is_policy_gate_test:
+                if not is_policy_gate_no_project(path, line):
                     violations.append(
                         f"UV_NO_PROJECT_BYPASS: {path}: {line} — "
-                        "仅 Python Toolchain Policy 自身的标准库测试可使用 --no-project；"
+                        "仅门禁自身的固定标准库检查器/自测命令可使用 --no-project；"
                         "其他项目命令必须使用项目锁定环境。"
                     )
             elif "--no-sync" not in line or "--locked" not in line:
@@ -235,6 +258,50 @@ def command_violations(added_lines: Iterable[tuple[str, str]]) -> list[str]:
                     f"UV_RUN_NOT_LOCKED: {path}: {line} — "
                     "项目命令必须同时使用 uv run --no-sync --locked。"
                 )
+    return violations
+
+
+def policy_control_file_violations(
+    changed_paths: Iterable[str],
+    pr_number: int,
+    manifest: dict[str, Any],
+) -> list[str]:
+    if pr_number == manifest.get("bootstrap", {}).get("pr_number"):
+        return []
+    changed = sorted(set(changed_paths).intersection(POLICY_CONTROL_FILES))
+    if not changed:
+        return []
+    return [
+        "POLICY_SOURCE_CHANGE: "
+        + ", ".join(changed)
+        + " — 策略脚本、基线清单、可信 Workflow 和自测不得在普通实施 PR 中修改；"
+        "需要独立的策略维护评审与授权。"
+    ]
+
+
+def workflow_toolchain_violations(
+    path: str,
+    content: str,
+    manifest: dict[str, Any],
+) -> list[str]:
+    if not path.startswith(".github/workflows/") or not path.endswith((".yml", ".yaml")):
+        return []
+    if not is_python_scope_path(path, content):
+        return []
+    violations: list[str] = []
+    action = manifest.get("uv_setup_action")
+    if not isinstance(action, str) or action not in content:
+        violations.append(
+            f"WORKFLOW_UV_ACTION: {path} — Python Workflow 必须使用共享基线固定 SHA 的 setup-uv action。"
+        )
+    version = manifest.get("uv_version")
+    if not isinstance(version, str) or not re.search(
+        rf"(?m)^\s*version:\s*['\"]?{re.escape(version)}['\"]?\s*$",
+        content,
+    ):
+        violations.append(
+            f"WORKFLOW_UV_VERSION: {path} — Python Workflow 必须显式固定 uv {version}。"
+        )
     return violations
 
 
@@ -359,6 +426,75 @@ def validate_base_contents(
             raise PolicyError(f"PR Base 的 {path} 未显式固定 uv 版本。")
 
 
+def validate_head_contents(
+    repo_root: Path,
+    head_sha: str,
+    manifest: dict[str, Any],
+) -> None:
+    required = list(manifest.get("required_base_files", []))
+    for path in manifest.get("required_policy_files", []):
+        if path not in required:
+            required.append(path)
+    for path in required:
+        if git_blob(repo_root, head_sha, path) is None:
+            raise PolicyError(f"PR Head 删除或缺少共享工具链必需文件：{path}")
+
+    root_entries = run_git(repo_root, "ls-tree", "--name-only", head_sha).stdout.splitlines()
+    existing_alternates = sorted(name for name in root_entries if is_root_lockfile(name))
+    if existing_alternates:
+        raise PolicyError(
+            "PR Head 包含禁止的根级替代依赖/锁文件：" + ", ".join(existing_alternates)
+        )
+
+    gitignore = git_blob(repo_root, head_sha, ".gitignore") or ""
+    if ".venv/" not in gitignore.splitlines():
+        raise PolicyError("PR Head 的 .gitignore 必须继续忽略根本地虚拟环境 .venv/。")
+
+    python_version = git_blob(repo_root, head_sha, ".python-version")
+    if python_version is None or python_version.strip() != manifest.get("python_version"):
+        raise PolicyError(
+            f"PR Head 的 .python-version 必须保持 {manifest.get('python_version')}。"
+        )
+
+    pyproject = git_blob(repo_root, head_sha, "pyproject.toml") or ""
+    required_uv = f'required-version = "=={manifest.get("uv_version")}"'
+    if required_uv not in pyproject:
+        raise PolicyError(
+            f"PR Head 的 pyproject.toml 必须继续固定 uv {manifest.get('uv_version')}。"
+        )
+
+    for path in required:
+        if path.startswith(".github/workflows/"):
+            workflow = git_blob(repo_root, head_sha, path) or ""
+            problems = workflow_toolchain_violations(path, workflow, manifest)
+            if problems:
+                raise PolicyError("; ".join(problems))
+
+
+def validate_changed_python_workflows(
+    repo_root: Path,
+    base_sha: str,
+    head_sha: str,
+    changed_paths: Iterable[str],
+    manifest: dict[str, Any],
+) -> list[str]:
+    violations: list[str] = []
+    for path in sorted(changed_paths):
+        if not path.startswith(".github/workflows/") or not path.endswith((".yml", ".yaml")):
+            continue
+        base_content = git_blob(repo_root, base_sha, path) or ""
+        head_content = git_blob(repo_root, head_sha, path) or ""
+        if not is_python_scope_path(path, base_content + "\n" + head_content):
+            continue
+        if not head_content:
+            violations.append(
+                f"WORKFLOW_REMOVED: {path} — 不得删除或清空根 Python 工程必需的 Python Workflow。"
+            )
+            continue
+        violations.extend(workflow_toolchain_violations(path, head_content, manifest))
+    return violations
+
+
 def validate_dependency_lock(
     repo_root: Path,
     base_sha: str,
@@ -412,12 +548,18 @@ def evaluate(
 
     validate_base_ref(manifest, base_ref, base_sha, pr_number)
     validate_base_contents(repo_root, base_sha, pr_number, manifest)
+    validate_head_contents(repo_root, head_sha, manifest)
+
+    violations = policy_control_file_violations(changed_paths, pr_number, manifest)
+    violations.extend(validate_changed_python_workflows(
+        repo_root, base_sha, head_sha, changed_paths, manifest
+    ))
 
     lockfiles = forbidden_root_lockfiles(changed_paths)
-    violations = [
+    violations.extend(
         f"SECOND_LOCKFILE: {path} — 根 Python 工程只允许 pyproject.toml + uv.lock。"
         for path in lockfiles
-    ]
+    )
 
     diff = run_git(
         repo_root,
