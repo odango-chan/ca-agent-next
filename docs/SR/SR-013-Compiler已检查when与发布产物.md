@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.26\
+> 文档版本：0.2.27\
 > 状态：DRAFT（实施主状态）。PR #46 第二轮独立评审（1bf748db）：APPROVE_FOR_READY（原限定的 Compiler 设计及 AC-013-01 归档复核）。产品验收依各 AC 单列。
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-27\
@@ -186,7 +186,7 @@ request-schema 根与完整 G.4 $ref 资源闭包只要 Contract 声明 requestS
 
 新 Manifest **只由 1.6.0 的唯一正式 Schema 定义**；可复用有用字段的含义，但不得把 v1alpha5 Manifest 或旧 BuildResult 当成兼容输入。每个声明 requestSchema 的 Skill 必须有 requestSchema 对象，记录 sourceRef、rootPath、可选 rootSchemaId（仅根 Schema 声明 $id 时记录）和完整 resources[]（schemaId/path）；该对象与 when 是否存在无关，供 Host 按正式 **CA-SL 1.6.0** Request Schema/when 契约验证 Event payload。根与资源文件同时进入 compiledFiles[] 和 Manifest outputFiles[]。
 
-每个有 when 的 Skill 增加 when 对象，记录 checkedExprPath、descriptorSetPath、sourcePath 和 sourceRange（startLine/startColumn/endLine/endColumn）；仅当表达式引用 input 时，额外记录 requestSchemaRef 与 resolvedRequestSchemaPath，并与同一 Skill 的 requestSchema 元数据一致。when.checked.pb 与 when.types.pb 同时进入 compiledFiles[] 和 Manifest outputFiles[]。逐文件 sha256 复用既有 outputFiles 机制，不增加额外摘要字段。Any type URL 固定为 type.googleapis.com/cel.expr.CheckedExpr；payload 为标准 cel.dev/expr.CheckedExpr。DescriptorSet 是标准 google.protobuf.FileDescriptorSet，只承担 CEL 类型描述，不替代 G.4 Schema 验证数据。
+每个有 when 的 Skill 增加 when 对象，记录 checkedExprPath、descriptorSetPath、sourcePath 和 sourceRange（startLine/startColumn/endLine/endColumn）；仅当表达式引用 input 时，额外记录 requestSchemaRef 与 resolvedRequestSchemaPath，并与同一 Skill 的 requestSchema 元数据一致。when.checked.pb 与 when.types.pb 同时进入 compiledFiles[] 和 Manifest outputFiles[]。Manifest `outputFiles[]` 只列文件路径 / 角色等非摘要元数据；不定义 `sha256` / `sourceDigest` / `dependencyDigest` / `packageDigest`。Build / Verify 只检查路径、存在性、Schema、依赖闭包和语义结果，不计算或比较 SHA-256 / checksum / digest。Any type URL 固定为 type.googleapis.com/cel.expr.CheckedExpr；payload 为标准 cel.dev/expr.CheckedExpr。DescriptorSet 是标准 google.protobuf.FileDescriptorSet，只承担 CEL 类型描述，不替代 G.4 Schema 验证数据。
 
 ### 5.4 AC-013-03 验收
 
@@ -443,3 +443,4 @@ OpenAPI operation / multipart ingress 验证由 SR-010 负责；Compiler 负责 
 | 2026-11-27 | 0.2.24 | ChatGPT / GPT-6.2 | AC-013-07 | 改为原版 OAS3 组件直接引用；新增跨 dialect Resolver、闭包、语义保真、CEL 类型推导和 T1/T2 负例 | 撤销强制 Adapter 假设，避免复制或改写标准 | IR-009；Issue #47；SR-031/010/026/027 |
 | 2026-11-27 | 0.2.25 | ChatGPT / GPT-6.2 | AC-013-07 | 固定 PostSmContexts requestBody 四文件 / 102 Component 选定闭包、lazy resolution、真实 OAS3 keyword 与 allOf/union 类型规则；移除额外 Source Bundle digest 要求 | 使跨 dialect Resolver 的验收与真实 OpenAMSM Schema 结构一致 | IR-009；Issue #47；SR-031/010/027；EC01/EC02 |
 | 2026-11-27 | 0.2.26 | ChatGPT / GPT-6.2 | AC-013-07 | 将 CEL union 静态可访问字段收紧为每个分支 required，optional 仅在 CEL 明确支持时暴露 | 避免把 Schema 中声明但并非必填的字段误判为总是存在 | IR-009；Issue #47；SR-031/010；EC01/EC02 |
+| 2026-11-27 | 0.2.27 | ChatGPT / GPT-6.2 | Manifest / Build / Verify | 移除 outputFiles SHA-256 与 sourceDigest；不执行 hash / checksum / digest 校验 | 保持 Compiler 产物与 Demo 全链路无 hash 校验边界一致 | IR-009；Issue #47；SR-031；EC02/F08 |
