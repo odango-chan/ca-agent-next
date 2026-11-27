@@ -1,6 +1,6 @@
 > 迁移来源：ca-skills/docs/authoring-model.md  
 > 固定源提交：780497a2918ad3e7bdff554ab64b0ba627e867e0  
-> 固定源 Blob SHA：e0af9361e40429db33b2bf8ae274990f573627fe  
+> 固定源 Blob SHA：3d63b5f3c8a58c6a86c85adfca5c95b9ec9fb429  
 > 原始状态：CA-SL v1alpha5 作者模型伴随说明（只读历史资料）  
 > 迁移追踪：ca-agent-next Issue #12（初始迁移）；Issue #49 / SR-032（作者规范核对）。以下保留源文内容；规范正文的权威版本身份以对应 Release Record 和固定源提交为准。  
 > 注意：源文相对链接保持原样，按 ca-skills 原目录结构解释，不作为 Next 内部导航。
