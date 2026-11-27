@@ -2,13 +2,12 @@
 
 > 文档类型：机制设计说明书  
 > 状态：CA-SL v1alpha5 已 RELEASED；when Runtime Artifact / Go-Python 产品互操作仍依赖 Compiler #61；Next 消费端尚未验收  
-> 文档版本：0.2.13  
-> 修订日期：2026-11-27
+> 文档版本：0.2.14  
+> 修订日期：2026-11-27  
 > 功能归属：F02 — Skill 管理与选择  
 > 关联 SR：SR-004、SR-005、SR-006    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
 > 本文局部非目标：以本文范围与非目标章节为准；无额外扩展  
-> 修订日期：2026-11-26  
 > 适用范围：Skill 包导入、SkillCatalog、Resolver、已发布 CA-SL Runtime Artifact 与 Python CEL Runtime
 
 关联需求项见 [IR-003](../../IR/IR%20总登记册.md#ir-003)。
@@ -219,3 +218,4 @@ Next 在 Skill 导入时反序列化已检查程序和类型环境，建立运�
 | 2026-11-26 | 0.2.11 | GPT-6.2（ChatGPT） | §4、§9 | 明确冻结 v1alpha5 Artifact 不序列化 Skill Capability ID；Compiler Build-time 校验作者源 Capability，Runtime Scope 只从 operation/observation exports 建立 | 对齐 F03.05 与 Compiler v2.1.0 frozen artifact schema，避免实现者读取不存在字段 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-26 | 0.2.12 | GPT-6.2（ChatGPT） | 文档头、§9～§10 | 将 CA-SL v1alpha5 发布状态固定到 Release Record 与规范 SHA；更新 #88/#89 MERGED、#87 OPEN、Compiler #61 OPEN | 区分语言规范 RELEASED 与 when Runtime Artifact / Go-Python 产品互操作未完成，不把规范发布扩大为产品验收 | IR-003、IR-006；SR-005、SR-006、SR-013、SR-023；ca-skills #87/#88/#89；Compiler #61 |
 | 2026-11-27 | 0.2.13 | GPT-6.2（ChatGPT） | 文档头、§9～§10 | 将 CA-SL v1alpha5 RELEASED 身份与 Release Record 固定 SHA 纳入恢复分支；确认 ca-skills #87、Compiler #61 仍 OPEN | 将规范 RELEASED 与 when Runtime Artifact / Go-Python 产品互操作未完成严格分离 | Issue #53；IR-003、IR-006；SR-005、SR-006、SR-013、SR-023；ca-skills #87/#88/#89；Compiler #61 |
+| 2026-11-27 | 0.2.14 | GPT-6.2（ChatGPT） | 文档头 | 清理重复修订日期并对齐整合分支元数据 | 保留 CA-SL v1alpha5 RELEASED、when Runtime Artifact 与 Go-Python 产品互操作仍由 Compiler #61 跟踪的边界 | Issue #53；IR-003；SR-004/005/006；Compiler #61 |
