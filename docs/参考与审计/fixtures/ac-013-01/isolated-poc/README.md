@@ -40,7 +40,6 @@ isolated-poc/
 | `repro/` | 在干净的 `255ab85` worktree 中用同一源码重新执行 | VERIFIED |
 | `determinism/` | 同一源码写入两个全新输出目录后逐文件比对 | VERIFIED |
 | `ac013-poc.patch` | 干净副本中以 `git diff` 生成 | VERIFIED |
-
 | `vet.log` | 固定 PR #18 tree 中不存在 | NOT_ARCHIVED / NOT_INDEPENDENTLY_VERIFIABLE |
 
 固定归档完整性补充（2026-11-27）：
