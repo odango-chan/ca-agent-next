@@ -61,7 +61,7 @@ SR-013 整体仍为 DRAFT。AC-013-01 的隔离 PoC 完成不自动把 SR-013 �
 | AC-013-01 | FAIL（归档完整性未完全闭合）；历史隔离 PoC 报告 18/18；本轮复跑 NOT_RUN | 修正 audit 登记、校验路径和 vet 日志缺项；产品验收继续按 AC-013-02～06 取证 |
 | AC-013-02 | NOT_RUN（外部输入未发布） | 正式 Contract.when AST、G.4、Schema-aware Guard / Nullable lowering；直接前置：ca-skills 1.6.0 作者 Schema/Golden 与 Compiler 正式 AST/G.4/Schema Profile 发布，未发布前不得派发产品实施 |
 | AC-013-03 | BLOCKED（依赖 AC-013-02 和 Owner Gate） | Compiler Owner 确认新版 Artifact API 与 Manifest | 
-| AC-013-04 | NOT_RUN（直接前置未齐） | 新版 Build / Verify、Go/Python、Native/WASM/Chromium 与旧契约回归；直接前置：AC-013-02 正式规范/Schema、AC-013-03 Compiler Owner Gate/Artifact API，以及可运行的 1.6.0 Build/Verify 实现 | 
+| AC-013-04 | NOT_RUN（直接前置未齐） | 新版 Build / Verify、Go/Python、Native/WASM/Chromium 与旧契约回归；直接前置：AC-013-02 正式规范/Schema、AC-013-03 Compiler Owner Gate/Artifact API，以及可运行的 1.6.0 Build/Verify 实现 |
 | AC-013-05 | BLOCKED（依赖 AC-013-01～04、AC-013-06 和发布授权） | 经授权发布 Compiler Release 并记录资产和 smoke 证据 |
 | AC-013-06 | BLOCKED（依赖 1.6.0 Package Schema / DependencyInspection / Golden） | 验证 Schema-only Package、Schema closure 与零 Capability roots 的分离语义；与 SR-030 AC-030-03 联合验收 |
 
