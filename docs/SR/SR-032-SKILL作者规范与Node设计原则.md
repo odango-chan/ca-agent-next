@@ -95,7 +95,7 @@ F09 的 AI Authoring 必须使用同一作者规范和完整正向示例生成�
 
 | 类型 | 依赖 | 影响 |
 |---|---|---|
-| 设计依赖 | CA-SL 1.6.0 v0.2.4 / SR-029；SKILL 作者规范 v0.2.0 | 原有 Node / routes / arguments / PredicateSet 语法、Capability 绑定、四阶段、共享资源根目录、Script Registry、Script I/O / Evidence / 错误契约、Host Resource Read / Script Execution 和 when 语义必须一致；Skill 层无 Wait / await / polling；本 SR 不冻结 Compiler wire API |
+| 设计依赖 | CA-SL 1.6.0 v0.2.5 / SR-029；SKILL 作者规范 v0.2.1 | 原有 Node / routes / arguments / PredicateSet 语法、Capability 绑定、四阶段、共享资源根目录、Script Registry、Script I/O / Evidence / 错误契约、Host Resource Read / Script Execution 和 when 语义必须一致；Skill 层无 Wait / await / polling；本 SR 不冻结 Compiler wire API |
 | 历史来源 | SR-023 / ca-skills v1alpha5 | 只用于来源核对和历史归档 |
 | 消费者设计 | F01 / F02 / F03 / F04 / F05 / F08 / F09；SR-004 / SR-007 / SR-016 | Host Model Loop、Importer、Plugin Manager、Runtime Action Boundary、Host Resource Read、完整 Script Registry、Compiler / Bundle 和 AI Authoring 必须消费同一共享资源与 Script Execution 契约；现有产品实现状态不自动变化 |
 | 外部发布依赖 | ca-skills 1.6.0 正式 Schema / Golden / Release | 正式发布前，本规范与语言稿均保持设计候选，不声称产品可执行 |
