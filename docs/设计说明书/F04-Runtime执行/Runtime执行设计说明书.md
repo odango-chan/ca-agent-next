@@ -91,7 +91,7 @@ Skill/Artifact 无效、Callable Scope 不匹配、普通 Skill 调用 internal-
 ## 8. 验收要求
 
 - Deterministic 和 LLM-guided 两种模式都经过同一 Action Boundary。
-- LLM 可读取当前 Skill 的 schemas/ 与 scripts/；只有 Registry 明确标记 llmInvocable=true 且 Host policy 启用时，才可通过 host.skill-script.execute 调用精确 transform Script。
+- LLM 可读取当前 Skill 的 schemas/ 与 scripts/；只有 Registry 明确标记 llmInvocable=true 且 `scriptExecution.llmEnabled=true`（默认 false）时，才可通过 host.skill-script.execute 调用精确 transform Script。
 - Script Action 只能使用 scriptId + JSON input；任意路径、代码、模块名、函数名、命令和其他 Skill 的 Script ID 均拒绝。
 - Script 输入/输出按 Registry 引用的 Schema 校验；Script 不得产生外部副作用或替代业务 Capability。
 - LLM 无法直接访问 Plugin，也无法扩大 Skill 声明的 Callable Scope。
