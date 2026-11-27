@@ -2,7 +2,7 @@
 
 > 文档类型：总体架构设计\
 > 状态：目标架构基线；SR-002 Python Host/Model Loop 最小切片 VERIFIED；SR-003 v0.3.11 VERIFIED（模块 AC-003-01～04）；PR #34/#41/#42 已合入恢复分支，双平台 CI SUCCESS；系统 EX-02/03/04/18 未完成；完整 Runtime 尚未验收\
-> 文档版本：0.4.9
+> 文档版本：0.4.10
 > 修订日期：2026-11-27\
 > 适用范围：ca-agent-next 通用 Agent Core、Host、Runtime、Skill 与 Plugin 公共机制\
 > 权威边界：本文是本仓唯一总体架构文档；字段级契约见规范，机制细节见设计说明书\
@@ -275,7 +275,7 @@ sequenceDiagram
 - [演示验收基线](../验收与实施/演示验收基线.md)
 
 - PR #54 第二轮独立复评快照：Base `34e99e0cc54cc82b6b40040286fc84673432ef76`，Head `50a1c1496525c961b2ca6b1f9daaf2fb26ab3657`，`git merge-base(Base, Head)` 为 `34e99e0`；refresh 原分支为 `f63bbce2709284c97d8cd150343d491a3f2958db`，与 restore 的分叉点为 `32c7c1b`。该 Head 是历史复评输入，不是当前 PR Head。
-- PR #54 修复后当前快照：Base `34e99e0cc54cc82b6b40040286fc84673432ef76`，Head `99a26c5d7775aeeefc393f1b98601c3457d4f25c`；PR OPEN / Draft / mergeable，16 files；GitHub Actions Run #312 (`45959283144`) SUCCESS，SR-001 回归 80/80、review_scope 机器校验 PASS，Artifact `review-context-pr-54-45959283144-1` 绑定该 Head。`git merge-base(Base, Head)` 仍为 `34e99e0`。GitHub Branch API 显示 main/restore/refresh `protected=false`，不应称为已启用分支保护；本任务仍禁止直接修改这些分支。
+- PR #54 最近已验证快照（后续版本指针同步前）：Base `34e99e0cc54cc82b6b40040286fc84673432ef76`，Head `99a26c5d7775aeeefc393f1b98601c3457d4f25c`；PR OPEN / Draft / mergeable，16 files；GitHub Actions Run #312 (`45959283144`) SUCCESS，SR-001 回归 80/80、review_scope 机器校验 PASS，Artifact `review-context-pr-54-45959283144-1` 绑定该 Head。`git merge-base(Base, Head)` 仍为 `34e99e0`。GitHub Branch API 显示 main/restore/refresh `protected=false`，不应称为已启用分支保护；本任务仍禁止直接修改这些分支。
 
 ## 修订记录
 
@@ -297,3 +297,4 @@ sequenceDiagram
 | 2026-11-27 | 0.4.7 | GPT-6.2（ChatGPT） | §13～§14 | 修正 Studio main 完整 SHA、#272 merge SHA 与 #296 merge 状态；明确 restore 当前 HEAD 和 PR #34/#41/#42 merge chain、PR #54 仅目标 restore | 避免把外部 main、PR merge SHA、PR head 和恢复分支 merge commit 混为同一身份 | Issue #53；Issue #12；PR #34/#41/#42/#54；Studio #261/#267/#269/#270/#272/#276/#279/#290/#295/#296 |
 | 2026-11-27 | 0.4.8 | GPT-6.2（ChatGPT） | 外部依赖快照、当前实现状态快照、修订记录 | 区分 PR #34 merge 与当前 restore HEAD；补齐 PR #34/#41/#42 merge chain、SR-003 tree/测试证据和 PR #54 第二轮评审 Base/Head/merge-base；标注 main/restore/refresh 的 branch protection API 观察 | 防止将历史分叉点误作当前 HEAD，明确第二轮评审的固定基线及分支保护真实状态 | Issue #53；PR #34/#41/#42/#54；SR-003；restore 34e99e0；refresh f63bbce |
 | 2026-11-27 | 0.4.9 | GPT-6.2（ChatGPT） | PR #54 当前快照、修订记录 | 区分第二轮复评历史 Head `50a1c149` 与修复后当前 Head `99a26c5`；记录 Run #312 SUCCESS、80/80 回归、review_scope PASS 和精确绑定当前 Head 的 Artifact | 防止继续引用已过期评审 Head；保留 PR OPEN/Draft、未合并和 restore/main 未修改的边界 | Issue #53；PR #54；Run #312；Artifact `review-context-pr-54-45959283144-1` |
+| 2026-11-27 | 0.4.10 | GPT-6.2（ChatGPT） | PR #54 验证快照、修订记录 | 将 `99a26c5` 明确为 Run #312 的最近已验证检查点，而非随后版本指针同步提交后的当前 PR Head | 避免架构快照硬编码 PR 自身的过期 Head；当前 PR Head 始终以远端 PR #54 引用为准 | Issue #53；PR #54；Run #312；Artifact `review-context-pr-54-45959283144-1` |
