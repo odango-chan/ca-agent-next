@@ -1,9 +1,9 @@
 # EC01 — CA-SL 与 Skill 作者体系架构设计
 
 > 文档类型：外部能力域架构设计（Next 中央权威设计）  
-> 文档版本：0.1.6\
+> 文档版本：0.1.7\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 唯一新目标；作者规范/Compiler/Bundle 未发布）  
-> 功能归属：EC01；关联 F02、F06、F08、F09  
+> 功能归属：EC01；关联 F01、F02、F03、F04、F05、F06、F08、F09  
 > 关联需求：IR-003、IR-006、IR-008；SR-004～SR-006、SR-011、SR-023、SR-032  
 > 修订日期：2026-11-27
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
@@ -168,3 +168,4 @@ CA-SL v1alpha5 的 when 已进入已合并的 ca-skills #88/#89 发布刷新；�
 | 2026-11-27 | 0.1.4 | GPT-6.2（ChatGPT） | §7～8、修订记录 | 增加 1.6.0 SKILL 作者规范权威入口，迁入 Granularity、Syntax、Package Layout、Schema Ownership 和创建工作流原文 | 将作者规则、语言语法和历史 v1alpha5 来源分层，明确新规范未发布 | IR-008；Issue #49；SR-032 |
 | 2026-11-27 | 0.1.5 | GPT-6.2（ChatGPT） | 文档头、§1～3、§7 | 将 EC01 包形状与 CA-SL 1.6.0 对齐，将 schemas/scripts 归入 assurance；删除旧 Tool binding 作者概念并明确 Capability / Script 边界；补齐 IR-008 / SR-032 范围 | 修复架构入口与中央语言规范、作者规范的目录和术语冲突 | IR-008；Issue #49；SR-032 |
 | 2026-11-27 | 0.1.6 | GPT-6.2（ChatGPT） | §2～3、§10 | 将 schemas/scripts/reference/assets 定为根目录共享资源；补充 Script Registry 与 Host Script Execution Capability，明确 LLM-only 与 Assurance 共用同一资源 | 修正可选 Assurance 造成的资源可见性与执行能力矛盾 | IR-008；Issue #49；SR-032 |
+| 2026-11-27 | 0.1.7 | GPT-6.2（ChatGPT） | 文档头、§2 | 扩展 EC01 功能追踪至 F01/F03/F04/F05，并将 Host Script Execution 的 LLM 暴露门禁固定为显式 Host 配置 | 确保 Model Context、Plugin Extension、Runtime、Resource Access 均纳入统一架构边界 | IR-008；Issue #49；SR-032 |
