@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.54
+> 文档版本：0.3.55
 > 状态：31 项 SR：4 VERIFIED、1 IMPLEMENTED、26 DRAFT（原 24 项 PR #46 评审批次 + SR-031 / SR-032 两项独立增量设计），SR-003 模块 AC PASS，系统 EX NOT_RUN
 > 修订日期：2026-11-27\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -52,7 +52,7 @@
 | [SR-029](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) | [IR-008](../IR/IR%20总登记册.md#ir-008)（关联 IR-003） | CA-SL 1.6.0 Capability-first 作者模型与 Callable 双向一对一；完全无旧版兼容 | **DRAFT（设计待评审，非实施 READY）** |
 | [SR-030](../SR/SR-030-Host%20Context%201.6.0%20Schema-only%20Interface%20Package%20Publisher.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Host Context 1.6.0 Schema-only Interface Package Publisher | DRAFT |
 | [SR-031](../SR/SR-031-3GPP公共Schema-only-Publisher.md) | [IR-009](../IR/IR%20总登记册.md#ir-009) | OpenAMSM 3GPP OpenAPI 原版 Source Bundle 原样代发布（ca-skills） | **DRAFT（增量设计待评审、Publisher / Consumer 产品 NOT_RUN）** |
-| [SR-032](../SR/SR-032-SKILL作者规范与Node设计原则.md) | [IR-008](../IR/IR%20总登记册.md#ir-008) | SKILL 作者规范、Skill / Capability / Node 粒度与注释原则（CA-SL 1.6.0-only） | **DRAFT（Issue #49 增量设计待独立评审；仅中央文档，非实施 READY）** |
+| [SR-032](../SR/SR-032-SKILL作者规范与Node设计原则.md) | [IR-008](../IR/IR%20总登记册.md#ir-008) | SKILL 作者规范、共享 Package 资源、Script Registry / Host Script Execution、Node 粒度与注释原则（CA-SL 1.6.0-only） | **DRAFT（Issue #49 增量设计待独立评审；仅中央文档，非实施 READY）** |
 
 设计版本与章节、依赖、验收 ID、实施证据以各 SR 为准。逐项阻塞见[就绪审计](../参考与审计/跨仓设计资产迁移与一致性审计.md#8-设计就绪审计)。
 
@@ -236,3 +236,4 @@ PR #46 上述十项第二轮 CHANGES_REQUESTED 已按各自反例复核并登记
 | 2026-11-27 | 0.3.52 | ChatGPT / GPT-6.2 | IR-009 / SR-031 | 将 SR-031 从 Schema-only / Adapter Publisher 修正为原版 OAS3 Source Bundle Publisher；同步 Compiler direct refs 与 Plugin native OAS3 consumer | 统一原始标准直接消费路径 | Issue #47；SR-031/010/013/026/027 |
 | 2026-11-27 | 0.3.53 | GPT-6.2（ChatGPT） | SR 清单、IR-008 增量设计、修订记录 | 新增 SR-032 与 SKILL 作者规范，更新至 31 项 SR / 26 项 DRAFT | 将作者规则从历史资料提升为 Next 唯一中央规范入口，且不改变 PR #46 / Issue #47 历史评议 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.3.54 | GPT-6.2（ChatGPT） | §3、修订记录 | 清除 §3 中残留的 30 项 / 25 DRAFT 旧统计，统一当前 SR 状态 | 避免摘要与清单、实施状态总览不一致 | Issue #49；SR-032 |
+| 2026-11-27 | 0.3.55 | GPT-6.2（ChatGPT） | SR-032 清单 | 更新 SR-032 对共享 Package 资源、Script Registry 和 Host Script Execution 的描述 | 使索引与最新 SR-032 / CA-SL 1.6.0 设计一致 | Issue #49；IR-008；SR-032 |
