@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.25\
+> 文档版本：0.2.26\
 > 状态：整项 DRAFT；阶段 READY（中央只读核验）。AC-013-01 归档完整性。  
 > 下一步：修复 PR #18 归档中 audit 登记不一致、绝对式校验路径及 vet 日志缺项后重新静态复核。复跑单列；02/04 NOT_RUN，03/05/06 等 Compiler Owner 与正式契约。\
 > 阶段依据：[独立评审 #77](https://github.com/odango-chan/ca-agent-next/issues/77#issuecomment-7209276846)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
@@ -59,9 +59,9 @@ SR-013 整体仍为 DRAFT。AC-013-01 的隔离 PoC 完成不自动把 SR-013 �
 | AC | 当前状态 | 下一步 |
 |---|---|---|
 | AC-013-01 | FAIL（归档完整性未完全闭合）；历史隔离 PoC 报告 18/18；本轮复跑 NOT_RUN | 修正 audit 登记、校验路径和 vet 日志缺项；产品验收继续按 AC-013-02～06 取证 |
-| AC-013-02 | NOT_RUN | 正式 Contract.when AST、G.4、Schema-aware Guard / Nullable lowering | 
+| AC-013-02 | NOT_RUN（外部输入未发布） | 正式 Contract.when AST、G.4、Schema-aware Guard / Nullable lowering；直接前置：ca-skills 1.6.0 作者 Schema/Golden 与 Compiler 正式 AST/G.4/Schema Profile 发布，未发布前不得派发产品实施 | 
 | AC-013-03 | BLOCKED（依赖 AC-013-02 和 Owner Gate） | Compiler Owner 确认新版 Artifact API 与 Manifest | 
-| AC-013-04 | NOT_RUN | 新版 Build / Verify、Go/Python、Native/WASM/Chromium 与旧契约回归 | 
+| AC-013-04 | NOT_RUN（直接前置未齐） | 新版 Build / Verify、Go/Python、Native/WASM/Chromium 与旧契约回归；直接前置：AC-013-02 正式规范/Schema、AC-013-03 Compiler Owner Gate/Artifact API，以及可运行的 1.6.0 Build/Verify 实现 | 
 | AC-013-05 | BLOCKED（依赖 AC-013-01～04、AC-013-06 和发布授权） | 经授权发布 Compiler Release 并记录资产和 smoke 证据 |
 | AC-013-06 | BLOCKED（依赖 1.6.0 Package Schema / DependencyInspection / Golden） | 验证 Schema-only Package、Schema closure 与零 Capability roots 的分离语义；与 SR-030 AC-030-03 联合验收 |
 
@@ -90,17 +90,17 @@ SR-013 整体仍为 DRAFT。AC-013-01 的隔离 PoC 完成不自动把 SR-013 �
 - Compiler 隔离源：255ab85fa5abb4b0bf36656bf64250cafebf45cb。
 - Go：Windows amd64，Go 1.26.6、cel-go 0.33.2、cel.dev/expr 0.25.1、Go protobuf 1.36.10。
 - Python：CPython 3.14.6、cel-expr-python 0.1.4、protobuf 7.36.2。
-- go vet ./internal/compiler：退出码 0。
+- go vet ./internal/compiler：EVIDENCE.md 记载退出码 0；固定归档缺少 vet.log，本轮未复跑，因此该历史退出码不可独立复核。
 - go test -run '^TestAC013PocGenerate$'：退出码 0。
 - Python 直接加载 Go 生成的同一组 protobuf 产物：18/18 一致。
-- 完整命令、退出码、版本、哈希和逐项结果见本地证据单 .agent-tmp/ac-013-01-poc/EVIDENCE.md。
+- 原始执行记录见 [PR #18 固定归档 EVIDENCE.md](https://github.com/odango-chan/ca-agent-next/blob/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc/EVIDENCE.md)。该固定归档当前存在 inventory、校验路径及 vet.log 缺项，完整性 FAIL；修复由 [Issue #102](https://github.com/odango-chan/ca-agent-next/issues/102) 追踪。
 
 ### 3.3 产物与回填位置
 
-- 证据单：.agent-tmp/ac-013-01-poc/EVIDENCE.md。
-- 产物目录：.agent-tmp/ac-013-01-poc/artifacts/，含 cases.json 及逐用例 .checked.pb / .types.pb。
+- 证据单：[PR #18 固定归档 EVIDENCE.md](https://github.com/odango-chan/ca-agent-next/blob/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc/EVIDENCE.md)；当前完整性 FAIL，复验前不可作为可搬移证据。
+- 产物目录：[PR #18 固定归档 artifacts/](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc/artifacts)，含 cases.json 及逐用例 .checked.pb / .types.pb。
 - 隔离源码：compiler-255ab85/internal/compiler/ac013_poc_test.go。
-- [PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)已核对 58 个文件与 SHA256SUMS；归档报告为 Go/Python 18/18，当前审计复跑 NOT_RUN。原始提交 78dddd5 的追溯保留在 PR #18 的提交 trailer。
+- [PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)固定归档包含 58 个非清单文件；Issue #95 审计发现 audit.json、SHA256SUMS 和 vet.log 缺项，归档完整性 FAIL（详见 Issue #102）。历史 Go/Python 18/18 报告保留；本轮复跑 NOT_RUN。原始提交 78dddd5 的追溯保留在 PR #18 的提交 trailer。
 - 已检查归档清单与 Git blob；PR #18 报告在干净 Compiler 基线独立复跑。当前审计未重新执行 Go/Python。
 
 ### 3.4 未覆盖边界
