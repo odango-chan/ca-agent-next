@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.21\
+> 文档版本：0.2.22\
 > 状态：DRAFT（实施主状态）。PR #46 第二轮独立评审（1bf748db）：APPROVE_FOR_READY（原限定的 Compiler 设计及 AC-013-01 归档复核）。产品验收依各 AC 单列。
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-27\
@@ -382,6 +382,20 @@ SR-013 只有 AC-013-01～06 均达到各自通过条件，Compiler Release 有�
 - 精确 machine languageTarget、API 名称、字段、Schema 与 Golden 必须由 ca-skills / Compiler Owner 在正式 Issue/PR/Release 冻结；历史 Go/Python CEL PoC 可作为算法审计，但不能宣称 1.6.0 产品 PASS。
 - 相关设计门禁为 [SR-029](SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md)、[SR-004](SR-004-已发布技能包导入.md)、[SR-027](SR-027-技能Bundle构建与发布.md)。按 §9、§11 评审各阶段 READY。Compiler Release 是 AC-013-05 的交付结果；禁止把它列为 AC-013-02～04 或 AC-013-06 的启动条件。AC-013-06 使用按正式 Schema 生成的真实 Publisher 候选做联合验证，记录候选来源和受测 Compiler 提交；AC-013-05 另验发行资产。当前设计仍待独立评审。
 
+## 13. AC-013-07：3GPP 公共类型跨 Package $ref 与执行期 Codec Result Link
+
+独立于 AC-013-06（Host Context），新增**设计中的** Compiler AC-013-07，需联合 SR-031 真实 1.6.0 3GPP Schema-only Publisher 与 SR-026 正式 Codec Provider 验证。
+
+| 子例 | 固定输入 | 必须的结果 |
+|---|---|---|
+| 07a 正向 | Skill 自有关闭 Request 根通过精确 $id 引用受信 3GPP Schema-only Package 类型，`when` 仅读 Event 字段 | Link 保留 Request 根/全 ref 闭包与发布快照；Schema-only 0 Capability/0 Callable；无合成 Tool |
+| 07b 正向 | Procedure 的 Codec READ Action 输出与固定公共 3GPP 类型一致，后继 Node SourcePath 消费 | 输出 Schema 已检查；T2 之后可消费、T1 前不可消费；Provider Capability↔Callable 1:1、READ Scope 不变 |
+| 07c 负向 | 未声明依赖、重复导出 ID、不同标准版本、错误 $ref fragment、开口对象、无效 enum/nullable | 稳定 Schema/Link 诊断、无 Build Artifact、不动态下载或回退 |
+| 07d 负向 | when/请求根引用只在解码后才出现的 NAS 字段；Procedure 在 READ Node 前消费 Codec 字段 | 选择期类型检查或阶段可用性检查失败，无隐式 Codec 调用 |
+| 07e 区分 | `Contract.contexts` 引用 Host Context、Request 引用公共 3GPP 类型、Codec Tool 引用 Provider Output Schema | 三种依赖清晰区分，0/0 Schema Package 不扩大 Callable allowlist；缺正式 Publisher 时 BLOCKED |
+
+本 AC 不推翻 AC-013-01～06 的既有独立评审结论，也不将新设计自动提升为 READY。由 Compiler Owner 冻结 Build/Verify 命令、Machine IDs、Go/WASM/Chromium Golden、诊断与真实发布源；在完成以前 `AC-013-07=BLOCKED/NOT_RUN`。[权威设计](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修订内容 | 原因 | 关联 |
@@ -420,3 +434,4 @@ SR-013 只有 AC-013-01～06 均达到各自通过条件，Compiler Release 有�
 | 2026-11-26 | 0.2.18 | GPT-6（ChatGPT） | AC-013-06 语义边界、READY 定义、修订记录 | 将 Schema-only Package 的使用范围收敛为 Contract.contexts；明确 requestSchema 始终由 Skill 自有 Schema 提供 | 与 CA-SL 1.6.0 Request Schema / Context Schema 所有权边界保持一致 | Issue #12/#40；CA-SL 1.6.0；SR-030；PR #46 |
 | 2026-11-26 | 0.2.19 | Codex / GPT-6 | 设计依据、§9、§11～12 | 修复 F08 链接、Bundle 归属和发布依赖方向，明确候选联验与推送证据 | 避免以 Compiler 自身 Release 阻塞实现，或拿旧 Golden 做兼容 | Issue #12/#40，PR #46，SR-013/027/030 |
 | 2026-11-27 | 0.2.20 | Codex / GPT-6 | 评审入口 | 回填独立评审批准评议的具体范围 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
+| 2026-11-27 | 0.2.22 | ChatGPT / GPT-6 | 3GPP Schema 与阶段输入补充 | 明确公共 Schema-only 导出、选择期 Request 与执行期 Codec Result 的 Link / 业务字段来源 | 关闭 Create 选择前依赖 NAS 解码的循环、固定跨包类型门禁 | IR-009；Issue #47；SR-031/026/013 |
