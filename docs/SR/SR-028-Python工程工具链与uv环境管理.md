@@ -119,7 +119,7 @@ Host Smoke 必须退出 0，成功 stdout 符合演示验收基线，stderr 为�
 
 ## 7. 当前状态与停止条件
 
-SR-028 当前仍为 DRAFT。最新独立复评 Review #6082874849 对固定 Head `37d22e9862d22bdc07edb48ffd84b976663a48f4` 给出 CHANGES_REQUESTED；本轮整改只修改 G02/SR-028 与治理文档。AC-028-01～10 的产品执行全部 NOT_RUN；不得创建实施 Issue、修改 `pyproject.toml`、生成 `uv.lock`、添加 `.python-version`、修改 Workflow 或向 DeepSeek Harness 发出产品实施提示词。
+SR-028 当前仍为 DRAFT。最新独立复评 Review #6083225844 对固定 Head `42a7fe2ce7826b7cda74110e843f39401571299c` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2` 给出 CHANGES_REQUESTED（0 P0 / 4 P1 / 3 P2）。本轮按 Issue #12 仅整改 G02/SR-028 与治理文档；AC-028-01～10 的产品执行全部 NOT_RUN；不得创建实施 Issue、修改 `pyproject.toml`、生成 `uv.lock`、添加 `.python-version`、修改 Workflow 或向 DeepSeek Harness 发出产品实施提示词。整改后必须对新 Head 独立复评。
 
 若评审发现 G02 与 SR-002 的 setuptools/运行时依赖约束冲突，先修订设计，不允许实施者自行选择替代后端或把开发依赖升级为运行时依赖。
 
