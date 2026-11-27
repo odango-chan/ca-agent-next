@@ -1,7 +1,7 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录\
-> 文档版本：0.1.30\
+> 文档版本：0.1.31\
 > 修订日期：2026-11-27
 > 状态：8 项 IR；IR-008 登记 CA-SL 1.6.0 Capability-first 严格一对一与完全无旧版兼容，SR-029 设计待评审；SR-028 仍 DRAFT。
 > 全局评审范围：继承根目录 Agent.md 的 review_scope\
@@ -108,7 +108,7 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 
 - 决策与协作：[Next Issue #40](https://github.com/odango-chan/ca-agent-next/issues/40)；对应 [SR-029](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) **设计待评审 / 实施未 READY**。
 - 版本边界：**CA-SL 1.6.0 是唯一新作者/产品版本**，没有旧解析器、兼容映射、迁移工具、双轨编译、旧 Build DTO、旧 Artifact / Bundle 或混合 Catalog。历史 v1alpha5 仅供只读审计，旧 Skill 必须按新格式重新编写/编译/发布。
-- 设计入口：F02、F03.05、F04、F06、F08、F09、EC02，以及 [CA-SL 版本规范](../规范/CA-SL语言基线与版本规范.md)；SR-004 导入只支持新 Assurance Bundle，SR-027 负责正式发布。
+- 设计入口：F02、F03.05、F04、F06、F08、F09、EC02，以及 [CA-SL 版本规范](../规范/CA-SL语言基线与版本规范.md)；SR-004 导入只支持新 Assurance Bundle，SR-027 负责正式发布。SR-029 v0.2.6 明确 Provider **3/3 含 Codec**、Owner 两 N1 Parser 待签认（移除条件 22/22；重构保留两项条件 24/24），F06 T1/T2 严格隔离；Codec 契约见 SR-026 与中央 [Issue #113](https://github.com/odango-chan/ca-agent-next/issues/113)。生产端实施 Issue 仅在中央 SR 独立评审 READY 后建立。
 - 外部发行依赖：ca-skills 1.6.0 规范/机器标识；Owner/Provider 一对一 Package；Compiler 1.6.0-only 新 BuildRequest / BuildResult / Binding / Runtime Artifact 由 [Compiler #62](https://github.com/odango-chan/ca-skill-compiler/issues/62) 独立追踪（旧 #61 仅为 v1alpha5 历史范围）；Studio 与 Agent 的 1.6.0 产品回归与 MAS Create→Modify→Release E2E。
 - 验收与状态：SR-029 的设计 AC 需独立审查；代码实施 Issue / 受测 SHA / Golden / 正式 Release / E2E 尚无 1.6.0 证据，不能宣称 READY / VERIFIED。
 
@@ -150,3 +150,4 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 | 2026-11-27 | 0.1.28 | Codex | 整合 | IR-003 的 SR-004 设计与 IR-006 的 Publisher 记录 | 对齐 #54 恢复基线与 #44 导入设计 | Issue #40、#43；PR #44 |
 | 2026-11-27 | 0.1.29 | GPT-6.2（ChatGPT） | IR-008、修订记录 | 整合 1.6.0-only Capability-first 设计与最新恢复基线；设计待评审，实施/发布 NOT_RUN | 整合 PR #45 的 CA-SL 1.6.0 Capability-first 设计与恢复分支最新状态，避免回滚已合入的 #44 及后续基线。 | Issue #12/#40/#43；PR #44/#45 |
 | 2026-11-28 | 0.1.30 | GPT-6.2（ChatGPT） | IR-003、IR-008 | 将 1.6.0 Compiler 实施入口统一指向 Compiler #62，保留 #61 的 v1alpha5 历史范围。 | 避免将 v1alpha5 历史 Issue 误作 1.6.0-only 实施和验收依据。 | Issue #40/#62；SR-013；PR #45 |
+| 2026-11-28 | 0.1.31 | GPT-6（ChatGPT） | IR-008、修订记录 | 回链 SR-029 Provider Codec 3/3 与 Owner Parser 待签认、F06 T1/T2、Next #113 | 建立第六轮 R6-P1-01 的跨仓治理入口，设计授权不外溢为外仓实施 | Issue #40/#113；PR #45 |
