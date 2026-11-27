@@ -1,7 +1,7 @@
 # EC01 — CA-SL 与 Skill 作者体系架构设计
 
 > 文档类型：外部能力域架构设计（Next 中央权威设计）  
-> 文档版本：0.2.1\
+> 文档版本：0.2.2\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 唯一新目标；作者规范/Compiler/Bundle 未发布）  
 > 功能归属：EC01；关联 F01、F02、F03、F04、F05、F06、F08、F09  
 > 关联需求：IR-003、IR-006、IR-008；SR-004～SR-006、SR-011、SR-023、SR-032  
@@ -85,20 +85,18 @@ Node 仍包含 Precondition、Operation、Observation、Postcondition 阶段；�
 
 ## 4. when 与执行期 Predicate 分离
 
-可选的 Skill 选择条件 `when` 位于有 Assurance Skill 的 SKILL.md YAML Front Matter，是 CA-Agent 对 Agent Skills Front Matter 的扩展字段。它只回答“当前 Event/Input 是否适用这个 Skill”，不属于 `assurance/contract.yaml`，不替代 predicates.yaml，也不执行任何业务操作。没有 Assurance 的 Skill 不声明 when，保持 LLM-guided 语义选择。
+可选的 Skill 选择条件 `when` 唯一位于有 Assurance Skill 的 `assurance/contract.yaml` 顶层。SKILL.md Front Matter 只遵循 Agent Skills Specification，不声明 `when`；Front Matter 出现该字段必须拒绝。`when` 只回答“当前 Event/Input 是否适用这个 Skill”，不替代 predicates.yaml，也不执行任何业务操作。没有 Assurance 的 Skill 没有 Contract，不声明 when，保持 LLM-guided 语义选择。
 
 ~~~yaml
----
-name: mas-create-sm-context
-description: Handle a PDU Session establishment request.
-when: 'event.type == "nsmf.create-sm-context" && input.requestType == 1'
----
+# assurance/contract.yaml
+when: 'event.type == "nsmf.create-sm-context" && input.requestType == "INITIAL_REQUEST"'
+requestSchema: schemas/create-sm-context-request.schema.yaml
 ~~~
 
 约束：
 
 - when 只在新业务 Event 的 Skill 选择阶段评估。
-- 表达式使用 Event 与该 Skill `assurance/contract.yaml` 中 requestSchema 所定义的输入类型；静态检查必须在发布阶段完成。
+- 表达式使用 Event 与同一 Contract 的 requestSchema 所定义的输入类型；静态检查必须在发布阶段完成。
 - when 不得引用运行期 Evidence、Owner 状态或未声明字段。
 - 无 Assurance Skill 不声明 when，直接通过 Skill 元数据和语义选择进入候选；有 Assurance 但无 when 的 Skill 也可进入语义候选；when 返回 false 的 Assurance Skill 不得被选择。
 - CEL 解析/类型/求值错误必须 fail closed，不得把错误或 UNKNOWN 变成 true。
@@ -145,7 +143,7 @@ CA-SL v1alpha5 的 when 已进入已合并的 ca-skills #88/#89 发布刷新；�
 | CA-SL v1alpha5 规范刷新 | ca-skills #88、#89 已合并；发布记录固定规范提交 18d818436 | IMPLEMENTED / RELEASED |
 | 作者模型与指南 | ca-skills main 有 authoring-model.md、authoring.zh-CN.md；Next Issue #49 / SR-032 新增 1.6.0 作者规则 | 历史 v1alpha5 作者材料已归档；1.6.0 作者规范 DRAFT / REVIEW_REQUESTED，ca-skills Release NOT_RELEASED |
 | when 作者语义 | 已进入 CA-SL v1alpha5 正式发布记录；main 文档头部仍有 Proposed Refresh 字样，与 Release Record 状态冲突 | RELEASED；源仓文档状态不一致，需后续清理 |
-| Compiler when CheckedExpr / DescriptorSet | ca-skill-compiler Issue #61 OPEN；Compiler v2.1.0 当前没有 SKILL.md Front Matter.when AST / 运行时选择程序 | NOT_IMPLEMENTED |
+| Compiler when CheckedExpr / DescriptorSet | ca-skill-compiler Issue #61 OPEN；Compiler v2.1.0 当前没有 CA-SL 1.6.0 `contract.yaml.when` AST / 运行时选择程序 | NOT_IMPLEMENTED |
 | Next Bundle Importer / Catalog generation / when evaluator | 当前设计待完整实施验收 | NOT_VERIFIED |
 | Skill-first OpenAMSM 新 Event 选择 | 需 F02/F06 与 EC04 集成验收 | NOT_RUN |
 
@@ -178,3 +176,5 @@ CA-SL v1alpha5 的 when 已进入已合并的 ca-skills #88/#89 发布刷新；�
 | 2026-11-27 | 0.1.9 | GPT-6.2（ChatGPT） | §2～§3 | 移除 Skill 层 Wait / await / polling 作者语义，新增 Host Resource Read 系统 Action，并明确 LLM 可调用全部登记 Script | 使 EC01 架构边界与 CA-SL 1.6.0、F05 和统一 Script Runner 一致 | IR-008；Issue #49；SR-032 |
 | 2026-11-27 | 0.2.0 | GPT-6.2（ChatGPT） | §2～§4、§10 | 将 `when` 作者源位置统一为有 Assurance Skill 的 SKILL.md Front Matter；无 Assurance Skill 不声明 when | 对齐 CA-SL 1.6.0、F02、Compiler 和作者规范的统一入口，避免双重 Contract 语义 | IR-008；Issue #49；SR-032；F02/F08/F09 |
 | 2026-11-27 | 0.2.1 | GPT-6.2（ChatGPT） | §4、§8、修订记录 | 将 Compiler when 状态描述改为 SKILL.md Front Matter 扩展来源 | 与 1.6.0 作者入口统一，避免把历史 Contract.when 状态误作当前实现 | IR-008；Issue #49；SR-032；SR-013 |
+
+| 2026-11-27 | 0.2.2 | GPT-6.2（ChatGPT） | §2～§4、§8、修订记录 | 恢复 `assurance/contract.yaml` 顶层 `when` 为唯一入口，修正 Create 示例为原版 OpenAPI 字符串枚举 | 撤销 Front Matter 旧方案，确保 EC01、CA-SL、Compiler 与 3GPP 输入契约一致 | IR-008/009；Issue #49；SR-013/031/032 |
