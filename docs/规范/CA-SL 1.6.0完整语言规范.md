@@ -1,7 +1,7 @@
 # CA-SL 1.6.0 完整语言规范（中央设计稿）
 
 > 文档类型：CA-SL 作者语言规范（中央规范性设计稿）
-> 文档版本：0.1.8
+> 文档版本：0.1.9
 > 语言版本：CA-SL 1.6.0
 > languageTarget 候选：connectionagent.io/v1.6.0（本设计建议值；发布前由 ca-skills 与 Compiler Owner 在正式 Schema / Golden 中确认）
 > 状态：**DRAFT / REVIEW_REQUESTED**；未发布、未冻结、不得作为已发布产品规范
@@ -28,7 +28,7 @@ CA-SL 1.6.0 定义 Skill 可选 Assurance 的作者语言。它不定义 SKILL.m
 5. Skill-facing 接口只声明 Capability。每个公开 Capability 与一个公开 Callable 双向一对一；Callable ID 只存在于 Package / Compiler / Runtime / Provider 内部。
 6. Procedure 的 Operation / Observation 是 Node 阶段，不是作者级 Operation ID。
 7. Assurance 是可选的；存在但无效时必须拒绝导入，不得降级成 SKILL.md-only Skill。
-8. Demo 不增加生产 Admission、签名、额外包级 hash、Trust Registry、复杂 IAM 或完整生产 DFX。
+8. Demo 不做 SHA-256 / checksum / digest 内容校验、签名、Trust Registry 或生产准入。外部 digest 字段仅为元数据，不重新计算、不比对、不作为 Build / Verify / Runtime 门禁；Source Bundle 原件要求的 byte-for-byte 相等比较是原始字节比较，不使用哈希。此限制不改变 Host Runtime 的授权边界与 Owner Commit Proof。
 
 ## 2. 语言分层与包形状
 
@@ -411,3 +411,4 @@ Host Context Schema-only Package 仍只经 `Contract.contexts` 引用，与 Open
 | 2026-11-27 | 0.1.6 | ChatGPT / GPT-6.2 | §12.1、§19 | 冻结选定消费面与 lazy `$ref` 闭包；补齐 OAS3 组合 / nullable / pattern / additionalProperties 语义及 Content-ID 到 multipart slot 的精确映射 | 防止对未选定 operation 全局解析，并确保 SBI 二进制引用与 MIME part 一致 | Issue #47；SR-031/010/013；EC01/EC02 |
 | 2026-11-27 | 0.1.7 | ChatGPT / GPT-6.2 | §12.1、§19 | 将 union 字段推导收紧为每分支 required；明确未引用 multipart part 不得交给 Codec，但是否拒绝由 ingress profile 决定 | 避免把可选字段误判为必有，避免超出原版 OAS3 schema 的额外拒绝 | Issue #47；SR-031/010/013；EC01/EC02 |
 | 2026-11-27 | 0.1.8 | ChatGPT / GPT-6.2 | §12.1 | 将 Ingress 摘要中的二进制槽明确为 N1/N2/N2 Ext1，与三组 Content-ID 绑定保持一致 | 避免摘要遗漏 N2 Ext1 槽 | Issue #47；SR-010/031；EC01/F06 |
+| 2026-11-27 | 0.1.9 | ChatGPT / GPT-6.2 | §1 Demo 限制 | 明确 Demo 全链路不做 SHA-256 / checksum / digest 内容校验，Source Bundle 只做原始 bytes 比较 | 统一语言规范与 Compiler / Provider / ArtifactStore 的 Demo 边界 | Issue #47；SR-010/013/031；EC02/F03.05 |
