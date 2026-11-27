@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引\
-> 文档版本：0.3.46
+> 文档版本：0.3.47
 > 状态：28 项 SR：4 VERIFIED（SR-001/002/003/024）、1 READY（SR-025）、1 IMPLEMENTED（SR-015）、22 DRAFT（其中 SR-029 设计待评审）；SR-003 模块 AC PASS，系统 EX NOT_RUN
 > 修订日期：2026-11-27
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)\
@@ -78,13 +78,13 @@
 - 治理自动化：SR-001 VERIFIED；[PR #32](https://github.com/odango-chan/ca-agent-next/pull/32) MERGED（`7a0fac41e573021207ab8201bbc718718c451e50`）；AC-REV-01～10 PASS、80 tests OK、Run [45793590532](https://github.com/odango-chan/ca-agent-next/actions/runs/45793590532) success；SR-028 仍为 DRAFT。
 - Phase A：SR-002（VERIFIED；PR #23 已集成；AC-002-01～08 PASS；EX-01 仍 NOT_RUN）。
 - Phase B：SR-003 v0.3.11 VERIFIED（模块 AC-003-01～04）；Issue [#28](https://github.com/odango-chan/ca-agent-next/issues/28) CLOSED，PR #34/#41/#42 MERGED 到恢复分支；双平台 [CI #45815167442](https://github.com/odango-chan/ca-agent-next/actions/runs/45815167442) / [CI #45817800342](https://github.com/odango-chan/ca-agent-next/actions/runs/45817800342) SUCCESS；Ubuntu/Python 3.12 与 Windows/Python 3.14 各 Plugin 87、Host 52、Review Context 80 tests PASS；系统 EX-02/03/04/18 NOT_RUN。
-- Phase C：SR-004 DRAFT / NOT READY；[设计 Issue #43](https://github.com/odango-chan/ca-agent-next/issues/43) OPEN，SR-004 v0.2.14 已定义 AC-004-01～06。SKILL.md-only 子路径可独立设计；新 Assurance 路径面向 **CA-SL 1.6.0**（Issue #40 / SR-029；NOT_RELEASED），还需 [Compiler #62](https://github.com/odango-chan/ca-skill-compiler/issues/62) / SR-013 唯一 Capability Binding Artifact 与 ca-skills SR-027 正式 Bundle 契约/正例；Compiler #61 仅保留 v1alpha5 历史范围。冻结 Artifact v1alpha5 与 Development v1alpha1 均不作为当前正例；未达到 READY，不提供实施提示词。
+- Phase C：SR-004 DRAFT / NOT READY；[设计 Issue #43](https://github.com/odango-chan/ca-agent-next/issues/43) OPEN，SR-004 v0.2.15 已定义 AC-004-01～06。SKILL.md-only 子路径可独立设计；新 Assurance 路径面向 **CA-SL 1.6.0**（Issue #40 / SR-029；NOT_RELEASED），还需 [Compiler #62](https://github.com/odango-chan/ca-skill-compiler/issues/62) / SR-013 唯一 Capability Binding Artifact 与 ca-skills SR-027 正式 Bundle 契约/正例；Compiler #61 仅保留 v1alpha5 历史范围。冻结 Artifact v1alpha5 与 Development v1alpha1 均不作为当前正例；未达到 READY，不提供实施提示词。
 - Phase D：SR-005、SR-006。
 - Phase E：SR-007。
 - Phase F：SR-008。
 - Phase G：SR-009、SR-010。
 - Phase H：SR-011。
-- Capability-first 新版本设计：[SR-029](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) / [Issue #40](https://github.com/odango-chan/ca-agent-next/issues/40)：**CA-SL 1.6.0-only / 完全无旧版兼容 / 设计待独立评审**。F02/F03.05/F04/F06/F08/F09/EC02 已加入待评审章节；Compiler/Publisher/Runtime/Studio/Bundle 新契约尚未发布，不启动代码实施。
+- Capability-first 新版本设计：[SR-029 v0.2.6](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) / [Issue #40](https://github.com/odango-chan/ca-agent-next/issues/40)：**CA-SL 1.6.0-only / 完全无旧版兼容 / 设计待独立评审**。Provider 目标由历史查询 2/2 扩展为含 Codec READ 的 **3/3**；Owner 历史 Parser 二选一重构/剔除，目标基数依发布者签认为 **22/22 或 24/24**。T1 不读 T2 Codec Result；Modify 0xC9/NGAP 未资格化 BLOCKED。F02/F03.05/F04/F06/F08/F09/EC02 均按候选设计约束，Compiler/Publisher/Runtime/Studio/Bundle 新契约尚未发布，不启动代码实施；下游 PR #46/#48 冲突另设集成任务，不直接修改。
 - Compiler 外部发布依赖：SR-012、SR-013；SR-013 的 [PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)已核对 58 个文件与 SHA256SUMS；归档报告为 Go/Python 18/18，当前审计复跑 NOT_RUN，不代表 Compiler 产品发布或完整 SR VERIFIED。
 
 阶段顺序仅约束实际实施依赖，不限制独立设计评审。每个 SR 达到 READY 后，只有当前实施阶段的直接实施依赖满足才可启动；未满足的依赖只阻塞其消费者，不得阻塞独立 SR/AC。Goal 模式可将同一依赖批次中的多个 READY SR 合并执行，但不得跨越未满足的实施依赖或把 DRAFT SR 当成可执行任务。
@@ -165,3 +165,4 @@
 | 2026-11-27 | 0.3.44 | GPT-6.2（ChatGPT） | §4 当前基线说明、修订记录 | 纠正正文当前 SR 总计 27/21 与顶部当前 28/22 不一致；保留历史评审统计 | 修复审阅时点与当前权威状态混写，不改变任何 SR 状态 | Issue #40/#12；PR #45；SR-029 |
 | 2026-11-27 | 0.3.45 | GPT-6.2（ChatGPT） | Phase C、修订记录 | 将 SR-004 当前版本指针更新至 v0.2.13 | 保持 SR 索引与当前需求记录一致 | Issue #40/#43；PR #45；SR-004 |
 | 2026-11-27 | 0.3.46 | GPT-6.2（ChatGPT） | SR 总索引 §3.2 | 将 SR-004 Assurance 路径的 Compiler 实施依赖统一指向 #62，并保留 SR-023 的 v1alpha5 历史记录。 | 让阶段索引反映实际的新实施追踪且不改变 SR-004 DRAFT 状态。 | Issue #40/#62；PR #45 |
+| 2026-11-28 | 0.3.47 | GPT-6（ChatGPT） | §3.2/Phase C | 同步 SR-004 v0.2.15、SR-029 v0.2.6、Provider Codec 3/3 与 Owner Parser 待决；保持 28 SR 阶段统计原样 | 保留设计/产品状态分离，登记第六轮 P1 的正式冻结依赖 | Issue #40/#113；PR #45；SR-026/029 |
