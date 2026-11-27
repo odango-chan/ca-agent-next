@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.60
+> 文档版本：0.3.61
 > 状态：31 项 SR：4 VERIFIED、1 IMPLEMENTED、26 DRAFT；PR #46 原 24 项批次的 23 项独立评审已归档；SR-031（IR-009）与 SR-032（IR-008）为独立增量设计候选，AC-031/032 产品验收 NOT_RUN；READY 不因本次文档集成自动变化。
 > 修订日期：2026-11-27\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -89,7 +89,7 @@
 | SR-025 | APPROVE_FOR_READY（限定） | 中央 MAS Owner Publisher 设计；正式发布仍阻塞 | DRAFT |
 | SR-026 | BLOCKED_EXTERNAL_INPUT | Codec 公开 ID、Schema、slot/mediaType、handler、Package/SemVer、正式 SHA 与进程证据缺失 | DRAFT |
 | SR-027 | BLOCKED_EXTERNAL_INPUT | 五根同批 1.6.0 作者提交、Echo Interface、新 Compiler Release/argv、Bundle 资产及授权缺失 | DRAFT |
-| SR-028 | CHANGES_REQUESTED（最新 Review #6083872622） | 0 P0 / 1 P1 / 2 P2；R028-21 为 P1 阻断，R028-22/23 为 P2；第六轮问题已修订并推送、等待第七轮复评；AC-028-01～10 产品执行 NOT_RUN | DRAFT |
+| SR-028 | APPROVE_FOR_READY（第七轮 Review #6084094037；固定 Head `93f1389e`） | 0 P0 / 0 P1 / 2 P2（非阻断，P2-1/2 已按 Issue #96 comment #7212463039 关闭）；READY 回填 PR #97 OPEN / 未合并；实施 PR #99 OPEN / 未合并；AC-028-01/02/03/06/07/08/09/10 独立核验 PASS，AC-028-04/05 脚本级证据已补充、更新独立复核待完成 | DRAFT |
 | SR-029 | APPROVE_FOR_READY（限定） | 中央 1.6.0 Capability-first 设计；生产者机器契约未发布 | DRAFT |
 | SR-030 | APPROVE_FOR_READY（限定） | Schema-only 设计与 AC-030-01 固定源审计；新版 Publisher 未发布 | DRAFT |
 
@@ -102,27 +102,31 @@
 
 **最新第五轮正式评审：**[PR #46 Review #6083641266](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083641266)，平台事件 `COMMENTED`；固定 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`。模型结论 CHANGES_REQUESTED，0 P0 / 1 P1 / 3 P2；唯一 P1 R028-17 阻断 READY。
 
-**最新第六轮正式评审：**[PR #46 Review #6083872622](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083872622)，平台事件 `COMMENTED`；固定 Head `2d20a128a1574103d709d82f6c426580ecb47f48` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`。独立模型 `codearts/deepseek-v4.1-flash` / `reasoning_effort=low`，结论 CHANGES_REQUESTED（0 P0 / 1 P1 / 2 P2）。评审原任务 Head `07346aae` 曾漂移，经用户授权改以 `2d20a12` 固定快照；评审报告说明 G02/SR-028 在各中间快照逐字节一致。随后分支在本轮整改起点前推进至 `072248ff`，增量为其他 SR 与治理文档，不改 G02/SR-028。
+**历史第六轮正式评审：**[PR #46 Review #6083872622](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083872622)，平台事件 `COMMENTED`；固定 Head `2d20a128a1574103d709d82f6c426580ecb47f48` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`。独立模型 `codearts/deepseek-v4.1-flash` / `reasoning_effort=low`，结论 CHANGES_REQUESTED（0 P0 / 1 P1 / 2 P2）。评审原任务 Head `07346aae` 曾漂移，经用户授权改以 `2d20a12` 固定快照；评审报告说明 G02/SR-028 在各中间快照逐字节一致。随后分支在本轮整改起点前推进至 `072248ff`，增量为其他 SR 与治理文档，不改 G02/SR-028。
+
+**最新第七轮正式评审：**[PR #46 Review #6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6084094037)，固定 Head `93f1389e7c5968cd30e8a74137207094864ecca0` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`，结论 `APPROVE_FOR_READY`（0 P0 / 0 P1 / 2 P2）；P2-1/P2-2 不阻断 READY，后续实施证据必须包含负例 PR base / 文件清单和 `run-context.txt` 中真实 `base_sha`、注入 `generator_base_sha`、`failure_injection=invalid-base`。关闭检查点见 [Issue #96 comment #7212463039](https://github.com/odango-chan/ca-agent-next/issues/96#issuecomment-7212463039)。
+
+**实施状态（截至 2026-11-27）：**READY 回填 PR #97（Head `66a82f0`）OPEN / 未合并；实施 PR #99（Head `83d23e8`）OPEN / 未合并。PR #99 独立实施复核 #6085168356 已确认 AC-028-01/02/03/06/07/08/09/10；当时 AC-028-04/05 仍因缺少脚本级执行闭环。Issue #96 comments [#7213406863](https://github.com/odango-chan/ca-agent-next/issues/96#issuecomment-7213406863) 与 [#7213473388](https://github.com/odango-chan/ca-agent-next/issues/96#issuecomment-7213473388) 随后补齐 stdout/stderr、整体及子步骤退出码、cleanup、worktree list、`EVIDENCE_DIR` 与最终工作区状态；这两项更新证据尚待独立复评。故实施 PR 仍 OPEN，SR-028 不得标记 VERIFIED。
 
 - **R028-21（P1）：**AC-028-08 受控负例同时要求测试通过和 head `Agent.md` 的 `review_scope` 无效，但测试模块导入时直接从仓库根 `Agent.md` 派生 fixture；破坏该配置会先令 gate 失败，生成器步骤被跳过，无法产生生成器诊断证据。
 - **R028-22（P2）：**AC-028-08 证据列缺少负例 PR 不合并、恢复后重新执行成功路径的明确证据。
 - **R028-23（P2）：**G02 §3.8 与 §4.3 gate 自动断言字段遗漏 `discovery_exception`。
-- R028-17～20 在第六轮复核中均为 CLOSED；前四轮 4 P1 / 3 P2 无回归。第六轮产品 AC-028-01～10 仍全部 NOT_RUN；Review #6083872622 只评审设计，不授权实施。
-- 当前整改追踪使用 Issue #12；原 G02 设计 Issue #35 已 CLOSED。第六轮修订采用方案 B：负例 PR 保持有效 `Agent.md` 和测试通过，仅在临时 Workflow PR 中将生成器 `--base` 注入全零 SHA，明确验证 generator failure Artifact；无效 `review_scope` 仍由临时仓库单元测试覆盖。
+- R028-17～23 均已 CLOSED；前四轮 4 P1 / 3 P2 无回归。第七轮设计结论 APPROVE_FOR_READY；产品证据按 PR #99 及 Issue #96 逐 AC 记录，AC-028-04/05 更新证据的独立复核待完成。
+- 当前设计追踪 Issue #12 已完成第七轮评审；原 G02 设计 Issue #35 已 CLOSED。方案 B 负例采用有效 `Agent.md` + gate PASS + 临时 Workflow PR 注入全零 base SHA；实施证据已归档至 Issue #96。
 - **R028-17（P1）：**G02 §3.8 将 gate JSON/log 与生成器证据放在 `if: always()` 上传，与 AC-028-08 正式 Artifact 恰含三份文件、现有 `if: success()` 和失败时不上传完成态 Artifact 的契约冲突；必须拆分诊断 Artifact 与正式三文件 Artifact，分别明确名称、文件集合和上传条件。
 - **R028-18（P2）：**`loader_errors` 字段语义/来源/计数未定义。
 - **R028-19（P2）：**SR-028 AC-028-07 的 `pull_request.paths` 枚举不完整，需与 G02 完整清单一致。
 - **R028-20（P2）：**SR §5.1 要求逐范围 `exit_code`，G02 仅定义整体 `exit_code`，需统一逐范围和整体定义。
-- 第五轮固定基线核验通过；G02 §4.1/§4.2 Bash 故障注入显示前轮 fail-fast/cleanup 规则 CLOSED，A-return 全部 `--no-sync`；该仿真不是 uv 0.13.10 产品运行证据。AC-028-01～10 产品执行仍全部 NOT_RUN。
-- 当前整改追踪使用 Issue #12；原 G02 设计 Issue #35 已 CLOSED。第六轮整改已按授权仅修改 SR-028/G02 与治理追踪文档，G02 v0.2.7、SR-028 v0.2.9 已推送，等待新 Head 第七轮独立复评；未创建实施 Issue/Goal，SR-028 保持 DRAFT，READY=0。
+- 第五轮固定基线核验通过；G02 §4.1/§4.2 Bash 故障注入显示前轮 fail-fast/cleanup 规则 CLOSED，A-return 全部 `--no-sync`；该仿真不是 uv 0.13.10 产品运行证据。当前产品证据由 PR #99 / Issue #96 管理，AC-028-04/05 更新后的脚本级证据待独立复评。
+- 第七轮设计复评已 APPROVE_FOR_READY；READY 回填 PR #97 与实施 PR #99 均 OPEN / 未合并。当前分支仍保留基线 DRAFT 状态；PR #99 已有 AC-028-01～10 产品证据，AC-028-04/05 更新后的脚本级证据等待独立复评；未合并前不标记 VERIFIED。
 
 ### 2.2 第三轮发现的修订追踪与当前门槛
 
 - **P1（4 条）**：SR-007、SR-009、SR-011 的阻断问题已在本分支修订；各自新增 AC/契约断言仍须对最终 Head 独立复评。
 - **P2（25 条）**：覆盖 SR-004/005/006/007/008/010/013/017/020/030、SR 总索引证据说明，以及 SR-005/013/017/018/019/020/021/022/023/025 十份修订账本；修订完成不等于原 Review 自动重新批准。
 - **外部阻塞**：SR-026/027 仍缺生产者正式输入；不允许以文档补写替代外部发布。
-- **实施门槛**：24 项实施 SR 仍全部 DRAFT，READY=0；未创建实施 Issue/Goal，未运行 Compiler、uv 双平台、Host/Runtime/Codec、Echo、OpenAMSM 或真实 NF E2E。所有新 Head 结论须绑定完整 Head/Base SHA 和正式 GitHub Review。
-- **SR-028 专项门槛**：最新 Review #6083872622 对固定 Head `2d20a128a1574103d709d82f6c426580ecb47f48` 给出 1 P1 / 2 P2；已按 Issue #12 完成第六轮文档整改，G02 v0.2.7 / SR-028 v0.2.9 已推送，等待新 Head 第七轮独立复评，AC-028-01～10 产品执行仍 NOT_RUN。未取得新 Head 的 `APPROVE_FOR_READY` 前 READY=0。
+- **实施门槛**：PR #46 原 24 项批次的整项主状态在本分支仍按 DRAFT 记录；SR-028 已有第七轮 APPROVE_FOR_READY，但 READY 回填 PR #97 与实施 PR #99 均 OPEN / 未合并，故本基线 READY=0。PR #99 产品证据已提交，AC-028-04/05 更新后的独立复核待完成；不得将 OPEN PR 视为已合并实施。其他 SR 的产品门槛仍按各自 AC/依赖独立记录。
+- **SR-028 专项门槛**：第七轮 Review #6084094037 对固定 Head `93f1389e7c5968cd30e8a74137207094864ecca0` 给出 `APPROVE_FOR_READY`（0 P0 / 0 P1 / 2 P2）；READY 回填 PR #97 OPEN / 未合并，实施 PR #99 OPEN / 未合并；AC-028-04/05 补充的脚本级执行闭环证据待独立复评，未合并前不标记 VERIFIED。
 
 
 ### 2.3 23 项逐 SR 独立评审与复评入口
@@ -184,7 +188,7 @@
 
 ### 3.2 Next 实施阶段
 
-- 治理自动化：SR-001 VERIFIED；[PR #32](https://github.com/odango-chan/ca-agent-next/pull/32) MERGED（`7a0fac41e573021207ab8201bbc718718c451e50`）；AC-REV-01～10 PASS、80 tests OK、Run [45793590532](https://github.com/odango-chan/ca-agent-next/actions/runs/45793590532) success。SR-028 仍为 DRAFT；最新专项 Review #6083872622 为 CHANGES_REQUESTED，第六轮设计整改已推送，等待第七轮独立复评，uv 尚未实施。
+- 治理自动化：SR-001 VERIFIED；[PR #32](https://github.com/odango-chan/ca-agent-next/pull/32) MERGED（`7a0fac41e573021207ab8201bbc718718c451e50`）；AC-REV-01～10 PASS、80 tests OK、Run [45793590532](https://github.com/odango-chan/ca-agent-next/actions/runs/45793590532) success。SR-028 第七轮 Review #6084094037 已 APPROVE_FOR_READY；READY 回填 PR #97 与实施 PR #99 均 OPEN / 未合并，实施证据见 Issue #96；AC-028-04/05 补证后的独立复核待完成，不标记 VERIFIED。
 - Phase A：SR-002（VERIFIED；PR #23 已集成；AC-002-01～08 PASS；EX-01 仍 NOT_RUN）。
 - Phase B：**SR-003 VERIFIED（模块）**；[实施 PR #34](https://github.com/odango-chan/ca-agent-next/pull/34) 与 [治理回填 PR #41](https://github.com/odango-chan/ca-agent-next/pull/41) 均 MERGED。最终实施 Head `e8bcb1b` 与 Merge `32c7c1be` tree 一致；治理回填 Head `f3f59b54` 与 Merge `a899409` tree 一致。[CI #45815167442](https://github.com/odango-chan/ca-agent-next/actions/runs/45815167442)、[CI #45817800342](https://github.com/odango-chan/ca-agent-next/actions/runs/45817800342) 均 SUCCESS：Linux Python 3.12 + Windows Python 3.14 每平台 Plugin 87 / Host 52 / Review Context 80 tests PASS，Go Echo build、compileall 与证据采集 PASS；AC-003-01～04 均 PASS。系统 EX-02/03/04/18 仍 NOT_RUN；Provider v2 wire DTO 属 SR-010，不影响 SR-003 模块结论。
 - Phase C：SR-004 DRAFT / NOT READY；[设计 Issue #43](https://github.com/odango-chan/ca-agent-next/issues/43) OPEN，SR-004 v0.2.12 已定义 AC-004-01～06。无 Assurance Package 子路径（可携带共享资源）可独立设计；新 Assurance 路径面向 **CA-SL 1.6.0**（Issue #40 / SR-029；NOT_RELEASED），还需 Compiler #61 / SR-013 唯一 Capability Binding Artifact 与 ca-skills SR-027 正式 Bundle 契约/正例。冻结 Artifact v1alpha5 与 Development v1alpha1 均不作为当前正例；未达到 READY，不创建实施 Issue、不提供 Harness 提示词。
@@ -289,3 +293,4 @@
 | 2026-11-27 | 0.3.58 | GPT-6.2（ChatGPT） | 文档头、§2.1.1、§2.2、SR-028 状态行、修订记录；SR-004、SR-007、SR-016、SR-032 清单 | 回填第六轮 Review #6083872622 固定 Head/Base 与 0 P0/1 P1/2 P2；登记 R028-21～23 及方案 B 整改；同步 G02 v0.2.7、SR-028 v0.2.9 与第七轮复评门槛；将 SR-004 子路径改为无 Assurance Package；同步 SR-007 Host Resource Read / Script Runner、SR-016 作者规范 Change Set、SR-032 无 Wait / 原有语法 / Script 契约验收 | 保留前五轮历史结论并明确当前唯一阻断项；不将文档整改误报为 READY 或产品验收；让 SR 索引与 Issue #49 修订后的实施边界一致 | Issue #12；PR #46；Review #6083872622；G02 v0.2.7；SR-028 v0.2.9；Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.3.59 | GPT-6.2（ChatGPT） | PR #46 / PR #48 集成刷新 | 合并 PR #46 的 23 项独立评审追踪与 SR-031 / IR-009 新增条目、状态及实施阻塞；保持 30 项 SR、4 VERIFIED、1 IMPLEMENTED、25 DRAFT | 避免 3GPP 增量覆盖既有 SR 评审状态，统一总索引与跨仓设计审计 | Issue #47/#12；PR #46/#48；SR-031；IR-009 |
 | 2026-11-27 | 0.3.60 | GPT-6.2（ChatGPT） | SR-031/032、PR #46 评审追踪、修订记录 | 合并 PR #46 23 项独立设计评审追踪与 SR-031 / SR-032 两项独立增量设计；统一为 31 项 SR、4 VERIFIED、1 IMPLEMENTED、26 DRAFT | 防止 PR #48 的 IR-009 与 PR #52 的 IR-008 相互覆盖，保留各自产品 NOT_RUN / BLOCKED 边界 | Issue #47/#49/#12；PR #46/#48/#52；IR-008/009；SR-031/032 |
+| 2026-11-27 | 0.3.61 | GPT-6.2（ChatGPT） | §2.1.1、§2.2、§3.2、修订记录 | 回填 SR-028 第七轮 Review #6084094037 APPROVE_FOR_READY、P2-1/2 关闭、PR #97 READY 回填与 PR #99 实施进度；补入 AC-028-04/05 脚本级证据补充及独立复核待完成状态，修正实施门槛与 SR-028 最新状态入口 | 避免继续引用第六轮 CHANGES_REQUESTED / 全部 NOT_RUN 作为最新结论，也不将 OPEN PR 或未复核证据误报为 VERIFIED | Issue #96；PR #46/#97/#99；Review #6084094037/#6085168356；Issue comments #7212463039/#7213406863/#7213473388 |
