@@ -1,7 +1,7 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录  
-> 文档版本：0.1.30\
+> 文档版本：0.1.31\
 > 修订日期：2026-11-27\
 > 状态：9 项 IR（含 IR-009 3GPP 公共 Schema）；IR-008 登记 CA-SL 1.6.0 Capability-first 严格一对一与完全无旧版兼容，SR-029 设计待评审；IR-006 下 SR-030 Host Context Schema-only Publisher 设计待评审；SR-028 仍 DRAFT。\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -113,15 +113,16 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 
 ## IR-009
 
-**OpenAMSM 支持的 3GPP 原版 YAML 原样代发布与 Skill 分阶段 Codec 消费**
+**OpenAMSM 3GPP OpenAPI 原版 Source Bundle、原生 OAS3 引用与 Skill 分阶段 Codec 消费**
 
-标准版本只取 OpenAMSM **实际支持/构建使用**的 3GPP OpenAPI YAML 版本及完整相对引用闭包。ca-skills 只是**原样代发布者**，不能修改 YAML 的任何字节、字段、格式、注释、换行或 $ref；不能自主升级标准版本或把不同 OpenAMSM 来源混拼。只有确实需要 CA-SL 1.6.0 Compiler 类型时，才在原始 YAML 外**另行受审发布 Adapter Schema-only 包**。原件本身并不自动符合 G.4。Codec NAS/NGAP Output Schema 仍由 ca-client-tools Provider 发布，须匹配 OpenAMSM 采用的版本。
+3GPP SBI 标准来源只取 OpenAMSM 实际支持 / 构建使用的 OpenAPI 3.0 YAML 与所选 operation / Schema Component 的完整可达 `$ref` 闭包。ca-skills / SR-031 只做 byte-for-byte 原样代发布，不修改任何 YAML。**不要求 G.4 Adapter**：Plugin 原生消费 OpenAPI 3.0 operation / multipart；Compiler 对显式 pin 的 Source Bundle 中精确 `components/schemas` 直接引用并按 OAS3 Schema Object dialect 处理。Skill-owned `requestSchema` 根和本地 Schema 节点仍遵循 G.4；外部 OAS3 Schema 不投影、不重写。NAS / NGAP Codec Output Schema 由 ca-client-tools Provider 独立发布，不能由 SBI binary slot 推导。
 
 - 协作设计 Issue：[Next #47](https://github.com/odango-chan/ca-agent-next/issues/47)；仅中央设计，不授权外仓实施。
-- 权威设计：[3GPP 原版代发布与 Skill 分阶段消费](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)；关联 F02/F03.05/F06/F08/F09/EC02 与 CA-SL 1.6.0。
-- 分解：[SR-031](../SR/SR-031-3GPP公共Schema-only-Publisher.md)（ca-skills：Phase A 原版 Source Bundle，Phase B 可选独立 Adapter）、[SR-026](../SR/SR-026-Codec公开工具发布.md)（ca-client-tools Provider 真实 Decoder/Output Schema）、[SR-010](../SR/SR-010-OpenAMSM%20工具插件与按需编解码集成.md)（Next 运行时消费）、[SR-013](../SR/SR-013-Compiler已检查when与发布产物.md)（Adapter 的 Link/拒绝）、[SR-027](../SR/SR-027-技能Bundle构建与发布.md)（依赖快照）。
-- Skill 选择 T1 只能校验 EC04 已提供的 SBI/最小分类字段；NAS-only PDU Session Type/SSC mode 在已选 Skill 的 Procedure 经 Codec READ T2 才获得；0xD4/N2 completion 只续跑原 Run，Codec Result 不能当 Owner Commit Proof。
-- 验收：Source Lock 必须取真实 OpenAMSM commit、文件闭包、相对路径、版本判据；每个发布 YAML 逐字节与源匹配（单字节负例失败）。正式 Adapter/Codec/Compiler/1.6.0 Bundle 缺失时相应产品 AC 保持 BLOCKED/NOT_RUN，不将原版代发布算作全系统 READY/VERIFIED。
+- 权威设计：[3GPP OpenAPI 原版引用与 Skill 分阶段消费](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)；关联 F02/F03.05/F06/F08/F09/EC02 与 CA-SL 1.6.0。
+- 分解：[SR-031](../SR/SR-031-3GPP公共Schema-only-Publisher.md)（ca-skills 原版 Source Bundle）、[SR-010](../SR/SR-010-OpenAMSM%20工具插件与按需编解码集成.md)（Plugin 原生 OAS3 ingress）、[SR-013](../SR/SR-013-Compiler已检查when与发布产物.md)（Compiler OAS3 直接引用）、[SR-026](../SR/SR-026-Codec公开工具发布.md)（Provider NAS/NGAP Result）、[SR-027](../SR/SR-027-技能Bundle构建与发布.md)（固定依赖快照）。
+- 已核实样本：OpenAMSM `dc83ccbf5be54dcc7112dd43ba95ea6fa5975550`；TS 29.502 V19.5.0 / OpenAPI `info.version 1.4.0`；TS 29.571 V19.6.0 / OpenAPI `info.version 1.6.1`。`info.version` 不等于 3GPP TS 版本。正式发行仍需 Owner 确认 source baseline。
+- Skill 选择 T1 只能校验已到场 SBI / 归一化字段；NAS-only PDU Session Type / SSC mode 在已选 Procedure 的 Codec READ T2 才获得；0xD4 / N2 completion 只续跑原 Run，Codec Result 不能当 Owner Commit Proof。
+- 验收：Source Lock 固定 commit / 文件 blob / operation / 引用闭包；原版逐字节匹配；OAS3 direct component refs 保留 dialect semantics；未支持语义 fail-closed；正式 Source Bundle / Compiler Resolver / Codec / 1.6.0 Bundle 缺失时相应产品 AC 保持 BLOCKED / NOT_RUN，不将原版代发布算作全系统 READY / VERIFIED。
 
 ## 修订记录
 
@@ -160,3 +161,4 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 | 2026-11-26 | 0.1.27 | GPT-6（ChatGPT） | IR-006/IR-008、修订记录 | 同步 SR-030 新版 Host Context 1.6.0 Schema-only Publisher 需求与 SR-024 历史 v1alpha5 Publisher 边界 | 使 IR→SR 追踪明确区分旧版已验证证据和新版待评审需求 | Issue #12/#40；IR-006/008；SR-024、SR-030；PR #46 |
 | 2026-11-27 | 0.1.29 | ChatGPT / GPT-6 | IR-009 | 登记公共 3GPP Schema-only、选择期与执行期 Codec 输入来源并分解 SR-031 等跨仓任务 | 关闭 Create 选择前解码的架构与追踪断点 | Issue #47；SR-031/026/010/013/027 |
 | 2026-11-27 | 0.1.30 | ChatGPT / GPT-6 | IR-009 | 冻结 OpenAMSM 版本作为唯一来源与 YAML 字节原样代发布；将可选 G.4 Adapter 和 Codec Output 分离 | 明确仅代为发布、不改 3GPP YAML 的最新要求 | Issue #47；SR-031 |
+| 2026-11-27 | 0.1.31 | ChatGPT / GPT-6.2 | IR-009 | 撤销强制 G.4 Adapter；登记 OAS3 原生 operation / Schema Component 消费、OpenAMSM 标准版本与 blob 样本、NAS/NGAP 原生来源及 Compiler dialect-aware Resolver | 依据实际源文件核查，避免投影和标准影子副本 | Issue #47；SR-031/010/013/026/027 |
