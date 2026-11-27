@@ -1,7 +1,7 @@
 # 业务接入与 OpenAMSM 集成设计说明书
 
 > 文档类型：业务集成设计说明书  
-> 文档版本：0.3.1\
+> 文档版本：0.3.2\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
 > 功能归属：F06 — 业务接入与集成；EC04、EC05、EC07  
 > 关联 IR：IR-004、IR-005、IR-006  
@@ -197,8 +197,8 @@ EC07 Mock AMF SBI Test Peer 负责发送协议准确的 Create/Update/UE-request
 
 | 对象 | 当前证据 | 状态 |
 |---|---|---|
-| env-openamsm MAS Owner v1alpha4 | main dc83ccbf；23 业务 Callable + 2 证据 READ；Receipt/Proof/Reconcile | IMPLEMENTED |
-| Scheme C Modify / UE-requested Release | Owner 设计和补丁记录；真实 PFCP 52/53、54/55 与 N1/N2 流程证据 | IMPLEMENTED（Owner/隔离演示范围） |
+| env-openamsm MAS Owner v1alpha4 | 固定 main `dc83ccbf`；23 业务 Callable + 2 证据 READ；Receipt/Proof/Reconcile；候选分支 `c83be9c` 的静态修复由 SR-018 / env-openamsm#28 跟踪 | 历史 Owner 实现证据保留；候选修复未合并，Publisher/Python/C/native/E2E NOT_RUN |
+| Scheme C Modify / UE-requested Release | Owner 历史设计、补丁和真实 PFCP 52/53、54/55 与 N1/N2 流程证据；SR-018 当前 Release 子项另有仓名/证据未闭合 | IMPLEMENTED（历史 Owner/隔离演示范围）；候选回归 NOT_RUN；SR-018 Release 子项 NOT_COVERED / BLOCKED / NOT_RUN |
 | env-5gc-sim Mock AMF | main 6ba1dc4；完整设计、实现记录和 E2E 场景 | IMPLEMENTED（测试对端范围；按证据限定） |
 | ca-client-tools Provider v1.2.0 | main 7bcb261；Provider package/typed callables | IMPLEMENTED；Next adapter 未验收 |
 | ca-client-tools Codec Phase B | PR #39 OPEN（非 Draft）；Phase B FINAL_PASS / PHASE_C_READY，尚未合并 | NOT_MERGED |
@@ -206,6 +206,8 @@ EC07 Mock AMF SBI Test Peer 负责发送协议准确的 Create/Update/UE-request
 | ca-openamsm-plugin | main eb83c8f 仅 README；PR #1 OPEN/Draft | NOT_IMPLEMENTED |
 | ca-agent-demo Provider runtime cutover | PR #246 OPEN；#248/#249 OPEN；#251 OPEN/Draft（Contract.when 设计提案，未进入 main） | NOT_MERGED |
 | Next OpenAMSM Skill-first E2E | 依赖 F02/F03/F04/F05/EC04/EC05 | NOT_RUN |
+
+**SR-018 Owner 状态边界（2026-11-27）**：Issue #95 对固定 `env-openamsm main dc83ccbf5be54dcc7112dd43ba95ea6fa5975550` 的 AC-018-01/02 静态审计仍为 FAIL。候选分支 `fix/sr-018-owner-evidence-exact-reconcile` @ `c83be9c803c1ffd3a04964f6c2d80787c3798190` 已有静态修正与 58/58 Manifest artifact SHA 核对，但尚未合并，且生成器、Python、19 Patch、C/native 构建和真实 PFCP UNKNOWN→Receipt Query→Reconcile 均 NOT_RUN；源仓执行由 [env-openamsm#28](https://github.com/odango-chan/env-openamsm/issues/28) 负责。AC-018-03 仍归 SR-025；Release 子项仍 NOT_COVERED / BLOCKED / NOT_RUN。历史 Owner 证据不代表当前候选分支、Next Runtime 或 Next E2E PASS。
 
 ## 11. 验收门槛
 
@@ -349,3 +351,4 @@ Create → Modify → Release 的顺序、Owner authoritative state、Receipt / 
 | 2026-11-26 | 0.2.8 | GPT-6（ChatGPT） | 1.6.0 Capability / Codec 目标 | 补齐 Provider Codec 1:1 Capability 与 Host Context Schema-only Package 的业务集成边界 | 修正历史 Callable-only 描述和 Provider 能力基数遗漏 | Issue #12/#40；SR-025/026/030 |
 | 2026-11-27 | 0.3.0 | Codex / GPT-6 | §5～7、§13.5 | 明确作者 Capability、两路收据、Schema 与 Provider 基数 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
 | 2026-11-27 | 0.3.1 | GPT-6（ChatGPT） | §4.1、§5～7、修订记录 | 冻结三个 OpenAMSM normalized Event type、operationId、payload.request、NAS/N2 discriminator、Content-ID/slot 与 Host-owned continuation/response obligation 边界；固定 3GPP OpenAPI 源 SHA | 处理独立模型 Review #6082541121 的 SR-009 P1，消除 Event type/schema/Run 所有权歧义，避免插件实现猜测 | Issue #12；PR #46；SR-009；Review #6082541121 |
+| 2026-11-27 | 0.3.2 | GPT-6.2（ChatGPT） | §10、修订记录 | 区分 OpenAMSM Owner 历史实现证据、候选修复分支和未运行验收；登记 env-openamsm#28 | 防止把旧 Owner E2E/静态候选代码外推为当前 Reconcile 或 Next 集成通过 | SR-018；ca-agent-next#104；env-openamsm#28 |
