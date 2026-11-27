@@ -214,6 +214,23 @@ AI Authoring 的 Change Set 必须遵守中央 [SKILL 作者规范](../../规范
 |---|---|---|---|---|---|
 | 2026-11-26 | 0.3.14 | GPT-6（ChatGPT） | §4.4～§6、§9.5、修订记录 | 明确零 Capability roots 不等于零 Package dependency closure；增加 Schema-only Host Context Package 的 Compiler gate、Studio 测试和 AC-016-04 映射 | 消除 F09 原“零根不调用 Compiler”与“无外部依赖 Assurance 可 Build”之间的矛盾，确保 Schema-only 依赖可被正确消费 | Issue #12/#40；SR-013 AC-013-06；SR-016 AC-016-04；SR-030；PR #46 |
 | 2026-11-26 | 0.3.15 | GPT-6（ChatGPT） | §5～§9、修订记录 | 同步 EC02 v0.2.12 与 SR-013 v0.2.18，保持 Schema-only Package / zero Capability roots 依赖契约一致 | 使 Studio Package Audit / AI Authoring 消费与 Compiler AC-013-06 使用同一 Schema-only 语义 | Issue #12/#40；EC02、SR-013、SR-016、SR-030；PR #46 |
+| 2026-11-25 | 0.1.0 | Codex / GPT-6 | 全文 | 整合已核对的跨仓基线和候选变更，建立分仓验收入口。 | F09 · IR-006 · SR-016 |
+| 2026-11-25 | 0.2.0 | GPT-6 | §4–7 | 明确 Studio 项目锁与 Compiler Lock 的边界、当前 MAS roots 的 package-kind 不匹配、no-root 行为、统一 Development Build gate 和当前 PR 新鲜度门禁。 | Studio #261、#267、#269、#270、#272、#276；EC02 Development Build |
+| 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | §3–7 | 明确 when 位于 `assurance/contract.yaml`；补齐 MAS Owner / Host Context Interface Package 的 Publisher 字段、导出闭包、精确来源与 Development provenance 边界，并关联 SR-015 / SR-020。 | IR-006 · SR-015 · SR-016 · SR-020 · Studio #269 |
+| 2026-11-25 | 0.3.1 | GPT-6.2（ChatGPT） | §4.4～7 | 将 Host Context Interface Package Publisher 从 SR-020 拆分到新 SR-024；SR-020 保留参考宿主架构审计职责；明确仅使用 Compiler v2.1.0 schema 要求的 files[].sha256；避免一个 SR ID 承载两项不同工作，并区分既有 Interface Package 文件摘要与 CA-SL Skill Artifact 的非目标完整性体系 | IR-006；SR-015、SR-016、SR-020、SR-024；Studio #261/#269/#272/#276 |
+| 2026-11-25 | 0.3.2 | GPT-6.2（ChatGPT） | §1、§4.4～7 | 修复 SR-024 Publisher 文档链接并同步 F02/F08/SR-016/SR-024 版本；明确 SR-020 只承担参考宿主审计；解决 SR-020/SR-024 责任冲突，确保 Publisher 入口唯一 | IR-006；SR-015、SR-016、SR-020、SR-024 |
+| 2026-11-25 | 0.3.3 | GPT-6.2（ChatGPT） | §4.5、§5.2、§7 | 对照 Studio #267 合入代码，明确 `source.sourceStatus` 尚未写入 lock，并将其归入 SR-016/#269；区分项目来源元数据与 Compiler BuildResult.sourceStatus；避免把设计要求误报为当前持久化能力，防止两个 sourceStatus 语义混淆 | Issue #12；SR-016、SR-024；Studio #267/#269 |
+| 2026-11-25 | 0.3.4 | GPT-6.2（ChatGPT） | §8 | 将 EC06 ADR-0001/0002 与 Plugin-managed/C4 原文纳入中央仓，并将 F09 历史决策和原始设计引用切换为 Next 内部链接；关闭原始设计缺失与跨仓引用断链；不改变历史决策内容 | Issue #12；EC06-ADR-0001～0005；SR-016、SR-024 |
+| 2026-11-27 | 0.3.16 | Codex / GPT-6 | §5～6、设计依据 | 固定 Schema、候选、Compiler 联验与正式发布的先后关系 | Issue #12，PR #46 |
+| 2026-11-25 | 0.3.5 | GPT-6.2（ChatGPT） | §4.5、§6～7 | 将 MAS Owner Publisher 独立归入 SR-025、Host Publisher 归入 SR-024；按 Compiler v2.1.0 修正 MAS exports 为 25/24/25/53；发现 v1alpha4/v1 非 SemVer，提出 package/source version 分离决策门槛；防止发布无法被 Development Build 接受的版本，同时保持 Owner/Host 源身份与 Studio lock 边界 | IR-006 · SR-015 · SR-016 · SR-024 · SR-025 · Studio #269 |
+| 2026-11-25 | 0.3.6 | Codex / GPT-6 | 正文 | 同步两个 Publisher 的 1.0.0 身份与消费边界 | Issue #12 |
+| 2026-11-25 | 0.3.7 | Codex / GPT-6 | 正文 | §4.5 依据 v2.1.0 源函数实测修正 +build 与项目包身份限制 | Issue #12 |
+| 2026-11-26 | 0.3.8 | GPT-6（ChatGPT） | 新增 1.6.0 目标设计 | 仅支持新版本，无兼容或迁移 | Issue #40；SR-029 |
+| 2026-11-26 | 0.3.9 | GPT-6（ChatGPT） | 版本隔离与修订记录 | 隔离历史 Development Compiler 流程，1.6.0-only Studio 仅用新 Worker/Build DTO | Issue #40；SR-029 |
+| 2026-11-26 | 0.3.10 | GPT-6（ChatGPT） | 修订表/记录 | 合并历史修订行的内容与原因列，仅保留原文字义，不改历史断言 | Issue #40；SR-029 |
+| 2026-11-26 | 0.3.11 | GPT-6（ChatGPT） | 目标合同、实施 AC 和旧版留档 | §3～§9 重建 1.6.0-only Studio Package/Compiler/AI/zero-root 工作流和独立验收，旧 Development 只读留档 | Issue #12/#40；SR-016/025/029；PR #46 |
+| 2026-11-26 | 0.3.12 | GPT-6（ChatGPT） | 文档头与 1.6.0 当前设计依据 | 修复 PR #46 Review Context 文档头检查及旧 Development Build 设计依据，更新新 Compiler/SR-013 正式入口 | Issue #12/#40；PR #46；CI #45837224652 |
+| 2026-11-26 | 0.3.13 | GPT-6（ChatGPT） | 1.6.0 Host Context Publisher / 依赖边界 | 纠正 SR-024 仅为旧 Development Publisher，新增 SR-030 Schema-only 1.6.0 Host Context 发布链，并将来源 provenance 放回 Project Lock | Issue #12/#40；IR-006/008；SR-030 |
 | 2026-11-27 | 0.3.17 | ChatGPT / GPT-6 | 3GPP Schema/Codec 分阶段消费 | 对齐 SR-031 公共类型、T1 Request 与 T2 Codec Result，新增分期拒绝/验收范围 | 修复标准输入来源与实现门禁的跨仓断点 | IR-009；Issue #47；SR-031/026 |
 | 2026-11-27 | 0.3.18 | ChatGPT / GPT-6 | 3GPP 原版发布裁决 | 版本随 OpenAMSM、原版 YAML 完全不改；将只读 Source Bundle 与可选 Adapter / Codec Output 分离 | 防止标准原件被类型适配误改 | Issue #47；SR-031/026 |
 | 2026-11-27 | 0.3.19 | ChatGPT / GPT-6.2 | §10 | 将 Studio 从 Adapter Schema Explorer 改为原版 OAS3 只读展示 / 精确组件导航；Project Lock 固定 Source Bundle | 遵循原版标准直接引用且不允许编辑 | IR-009；Issue #47；SR-031/013/026 |
