@@ -1,8 +1,8 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.2.9\
+> 文档版本：0.2.10\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
-> 修订日期：2026-11-26  
+> 修订日期：2026-11-27
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产准入、Owner 信任运营、签名、Trust Registry、生产资格及真实 5GC/MAS 认证。
 
@@ -34,14 +34,14 @@ Native CLI 与 Go/WASM Worker 必须继续调用同一个 Go Compiler Core。现
 
 AC-013-01 的 PoC 通过 Development 多 Skill 共享 Lock fixture，复用了 buildSchemaRegistry、resolveReferenceFrom 和 resolveSchemaRoot 等真实 Schema 解析能力。这证明的是可复用的 Schema 解析与跨语言序列化路径，不代表产品 Build 应调用 validateDevelopmentRequest、buildDevelopmentLinkScope 或 newDevelopmentSemantics。
 
-**正式实现约束：** 新 when 编译必须进入正式 CA-SL v1alpha5 发布 Build 的统一 Core。若现有 Schema Registry 实现被 Development 入口包裹，先将必要的纯解析/闭包能力抽到共享内部层，再由正式与 Development 语义路径各自调用；不得让正式发布 Build 依赖 Development Request、Development Artifact、Host Admission Requirements 或 NOT_ADMITTED 状态，也不得改变 Development v1alpha1 的契约与行为。
+**1.6.0 正式实现约束：** 新 when 编译必须进入 CA-SL 1.6.0 唯一 Runtime Build 路径和统一 Go Compiler Core。若现有 Schema Registry 实现被 Development 入口包裹，先将必要的纯解析/闭包能力抽到共享内部层，再由正式与 Development 语义路径各自调用；不得让正式发布 Build 依赖 Development Request、Development Artifact、Host Admission Requirements 或 NOT_ADMITTED 状态，也不得改变 Development v1alpha1 的契约与行为。
 
 ## 3. Contract.when 静态编译设计
 
 ### 3.1 作者源与 AST
 
 - 唯一作者位置：skills/<skill-name>/assurance/contract.yaml 的可选顶层 when。
-- when 是非空 YAML 字符串；其内容是 CA-SL v1alpha5 G.4 允许的 CEL 表达式，静态结果类型必须为 bool。
+- when 是非空 YAML 字符串；其内容是 CA-SL 1.6.0 正式规范冻结的 G.4 CEL 表达式；v1alpha5 G.4 仅作历史审计参考，不自动继承，静态结果类型必须为 bool。
 - ContractAST 增加可选 when 节点，并保留原始表达式、SourcePath、行列范围。
 - 不在 SKILL.md Front Matter 增加 when；不创建 constraint.yaml、activation.yaml、Applicability Package 或第二份 Contract；不把 when 放进 predicates.yaml。
 - 不声明 when 的 Skill 不生成 CheckedExpr 或 DescriptorSet 文件；Agent 端按正式 CA-SL 选择规范处理未声明 when 的候选。
@@ -66,7 +66,7 @@ AC-013-01 的 PoC 通过 Development 多 Skill 共享 Lock fixture，复用了 b
 
 ### 3.3 G.4 CEL 表达式剖面
 
-Compiler 必须实现 CA-SL v1alpha5 G.4，不得因 cel-go 支持更多语法而扩大语言范围。
+Compiler 必须实现 CA-SL 1.6.0 正式规范冻结的 G.4，不得因 cel-go 支持更多语法而扩大语言范围。
 
 | 类别 | 允许范围 |
 |---|---|
@@ -189,7 +189,7 @@ skills/<skill-name>/compiled/when.types.pb
 
 ### 5.3 Manifest 最小语义
 
-新 Manifest 保留现有 v1alpha5 的顶层语义字段：apiVersion、languageTarget、validationScope、generator、dependencyClosure、skills、outputFiles；旧 Schema 本身仍冻结，不得直接加字段。新版 skills[] 保留 name、sourceDigest、sourceFiles、compiledFiles、waitLinks。
+CA-SL 1.6.0 新 Manifest 由 Compiler Owner 重新冻结唯一 Schema；允许复用语义仍适用的字段名称，但不得以兼容旧 v1alpha5 Manifest 为目标，也不得直接修改冻结旧 Schema。新版 Schema 必须明确 apiVersion、languageTarget、validationScope、generator、dependencyClosure、skills、outputFiles、Request Schema root/resources、when CheckedExpr/DescriptorSet 和 capabilityBindings 的唯一结构及相互约束。
 
 每个声明 Contract.requestSchema 的 Skill 增加 requestSchema 元数据对象，至少记录：
 
@@ -198,7 +198,7 @@ skills/<skill-name>/compiled/when.types.pb
 3. rootSchemaId：若根 Schema 声明 $id，则记录其精确值；未声明时省略，不得为其虚构 URI 身份，根以 sourceRef + rootPath 标识。
 4. resources[]：闭包中每个已解析资源的精确 schemaId 与 Artifact path，覆盖完整、无循环的 G.4 $ref 闭包；根 Schema 若声明 $id，也纳入资源映射。
 
-requestSchema 对象与 when 是否存在无关；Host 依照 CA-SL v1alpha5 M.3 使用它验证 Event payload。所有根/资源文件同时进入该 Skill 的 compiledFiles[] 和 Manifest outputFiles[]。
+requestSchema 对象与 when 是否存在无关；Host 依照 CA-SL 1.6.0 正式规范的 Event input 校验契约使用它；v1alpha5 M.3 仅作为历史语义参考，除非 1.6.0 Publisher 明确重新冻结相同规则。所有根/资源文件同时进入该 Skill 的 compiledFiles[] 和 Manifest outputFiles[]。
 
 仅为声明 when 的 Skill 增加 when 元数据对象，至少记录 checkedExprPath、descriptorSetPath、sourcePath 和 sourceRange（startLine/startColumn/endLine/endColumn）。当表达式引用 input 时，when 元数据还记录 requestSchemaRef 与 resolvedRequestSchemaPath，且必须与同一 Skill 的 requestSchema.rootSchemaId / sourceRef 一致；只访问 event.type 时可省略这两个引用字段。没有 when 时不输出 when 元数据。
 
@@ -208,7 +208,7 @@ requestSchema 对象与 when 是否存在无关；Host 依照 CA-SL v1alpha5 M.3
 
 ### 6.1 Build
 
-1. 通过现有单一版本入口和正式 CA-SL v1alpha5 解析/语义链。
+1. 通过 CA-SL 1.6.0 唯一新版本入口和正式解析/语义链；旧 v1alpha5 Build 入口由历史 Release 保持不变。
 2. 对声明 requestSchema 的 Skill 生成规范化 G.4 Schema 根和完整资源闭包，作为 Host 运行期输入校验数据；即使没有 when 也必须输出。
 3. 对有 when 的 Skill 执行 §3 的 Schema-aware G.4 检查、Guard 分析和 typed lowering。只有表达式引用 input 时才使用 Request Schema 类型环境；event-only when 不要求 requestSchema。
 4. 生成 CheckedExpr Any 与对应 DescriptorSet。
@@ -282,7 +282,7 @@ Chromium parity 脚本使用真实 Headless Chrome；若默认路径不可用，
 
 ## 9. 当前状态与 SR-013 阶段关系
 
-- CA-SL v1alpha5 规范来源和语言标识已固定。
+- CA-SL 1.6.0 normative source、Schema 和 languageTarget 尚未正式发布/冻结；v1alpha5 规范 SHA 仅用于历史审计。
 - AC-013-01 隔离 PoC 的固定归档、18/18 报告和完整性复核见 SR-013 §3；本轮复跑 NOT_RUN。
 - AC-013-02 正式 Contract.when 编译：NOT_RUN。
 - AC-013-03 新版 Runtime Artifact Schema/API：待 Compiler Owner 对 §5.1 候选版本作明确确认。
@@ -368,3 +368,4 @@ Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId�
 | 2026-11-26 | 0.2.7 | Codex / GPT-6 | 见本行变更 | 将未发布 Runtime Artifact 与 BuildResult 的候选版本段改为纯数字 2，保留 Owner 冻结门禁 | 对齐跨仓实现与独立复验 | Issue #12 |
 | 2026-11-26 | 0.2.8 | GPT-6（ChatGPT） | 新增 1.6.0 目标章节、状态及修订记录 | 移植一对一 Binding / Selector / Action 设计并标为待评审 | 无旧版兼容或产品完成承诺 | Issue #40；SR-029 |
 | 2026-11-26 | 0.2.9 | GPT-6（ChatGPT） | §1、§5～7、修订记录 | 移除新 Compiler 复用 v1alpha5 BuildRequest/DependencyInspection/Verify 的旧假设，唯一目标为 1.6.0 DTO/Artifact，历史包在新版明确拒绝 | 贯彻 Issue #40 全链路无兼容、无双轨/迁移；准确机器标识待 Compiler Owner 冻结 | Issue #40；SR-029；SR-013 |
+| 2026-11-27 | 0.2.10 | GPT-6.2（ChatGPT） | §2～7、§9、修订记录 | 将 when、G.4、Build/Verify、Manifest 和 Request Schema 的规范性目标统一为 CA-SL 1.6.0；旧 v1alpha5 仅作冻结历史与回归基线。 | 防止新 Compiler 沿用旧 v1alpha5 Build/Manifest/DTO 契约，保持与 SR-013、F08、SR-029 一致。 | Issue #40；SR-013；SR-029；F08 |

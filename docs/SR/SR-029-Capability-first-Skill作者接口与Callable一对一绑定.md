@@ -1,7 +1,7 @@
 # SR-029：Capability-first Skill 作者接口与 Callable 一对一绑定
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.3  
+> SR 版本：0.2.4  
 > 状态：待评审 / DESIGN_READY_FOR_REVIEW；非实施 READY；新版规范/产品 NOT_RELEASED
 > 创建日期：2026-11-26  
 > 上游需求：[IR-008](../IR/IR%20总登记册.md#ir-008)；关联需求：[IR-003](../IR/IR%20总登记册.md#ir-003)  
@@ -96,7 +96,7 @@ MAS.RECEIPT_QUERY 继续是受 Capability / Scope 约束的普通 READ Callable�
 
 CA-SL v1alpha5 已正式发布并冻结：其 operation.tool / observation.tool 继续表示 Alias::Callable，不做重解释或自动迁移。
 
-Capability-first 直接使用 CA-SL 1.6.0 下一正式版本目标（尚未发布）。准确 languageTarget 机器标识由 ca-skills / Compiler 正式 Schema 与 Golden 冻结，禁止提前猜测。下列 Contract 是示例候选而非已冻结语法：
+Capability-first 直接使用 CA-SL 1.6.0 下一正式版本目标（尚未发布）。准确 languageTarget 机器标识由 ca-skills / Compiler 正式 Schema 与 Golden 冻结，禁止提前猜测。**可选 `when` 的唯一作者位置仍为 `skills/<skill-id>/assurance/contract.yaml` 的顶层字段**；SKILL.md Front Matter 不声明 when，`predicates.yaml` 只承载执行期 Predicate。1.6.0 的 CEL/G.4 语法、类型与诊断由 ca-skills 正式规范冻结；不得默认为 v1alpha5 自动兼容。下列 Contract 是示例候选而非已冻结语法：
 
 ~~~yaml
 dependencies:
@@ -139,7 +139,7 @@ read-sm-context:
       pduSessionId: context.request.pduSessionId
 ~~~
 
-dependencies 仍固定精确 Package 来源；Procedure 不再写 dependency alias::Callable。Compiler 在显式依赖闭包中唯一解析 Capability ID。未声明 Grant、未解析、重复导出和跨包歧义均 fail-closed。operation.script、when、Predicate、Precondition、Postcondition、Wait 和 Continuation 语义不变。
+dependencies 仍固定精确 Package 来源；Procedure 不再写 dependency alias::Callable。Compiler 在显式依赖闭包中唯一解析 Capability ID。未声明 Grant、未解析、重复导出和跨包歧义均 fail-closed。`when` 仍为 `assurance/contract.yaml` 的可选顶层纯 CEL 选择表达式；其位置固定，1.6.0 表达式剖面由正式语言规范冻结。`predicates.yaml` 仅用于执行期 Predicate；Operation Script、Precondition、Postcondition、Wait 和 Continuation 的 1.6.0 语义由作者规范分别定义。
 
 ## 6. Package / Publisher 契约
 
@@ -267,3 +267,4 @@ Create / Release 继续分别使用原有 Schema 与 Evidence Guarantee；Modify
 | 2026-11-26 | 0.2.1 | GPT-6（ChatGPT） | 版本隔离与修订记录 | 补齐 Studio 拒绝旧项目边界，设计待评审 | 避免历史代码/测试被视为新版有效输入 | Issue #40；SR-029 |
 | 2026-11-26 | 0.2.2 | GPT-6（ChatGPT） | 标题层级/修订记录 | 修正历史修订表列数与独立设计评审状态 | 满足 Markdown 设计评审门禁，避免编号或治理表歧义 | Issue #40；SR-029 |
 | 2026-11-26 | 0.2.3 | GPT-6（ChatGPT） | 文档头与修订记录 | 补齐 formal SR 正式 review_scope 与非目标声明 | 解除 PR #45 当前 Head Review Context formal-doc 校验失败 | Issue #40；PR #45 |
+| 2026-11-27 | 0.2.4 | GPT-6.2（ChatGPT） | §5、§13、修订记录 | 明确可选 when 唯一位于 assurance/contract.yaml 顶层；SKILL.md Front Matter 和 predicates.yaml 不声明 when；1.6.0 CEL/G.4 语义由正式规范冻结。 | 锁定作者字段归属，避免旧版本语义被隐式带入 1.6.0。 | Issue #40；IR-008；SR-013；EC02；F08 |
