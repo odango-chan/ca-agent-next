@@ -1,12 +1,13 @@
 # EC05 — OpenAMSM Owner 与权威状态架构设计
 
 > 文档类型：外部能力域架构设计（实现派生重建）  
-> 文档版本：0.1.2\
-> 状态：依据当前 main 代码、Owner 声明、契约和验收材料重建；源仓没有独立总体架构文档  
+> 文档版本：0.1.3\
+> 状态：依据固定 main、Owner 声明、契约和验收材料重建；源仓没有独立总体架构文档；候选源修复分支尚未运行验收  
 > 功能归属：EC05；关联 F04、F05、F06、F07  
 > 关联需求：IR-004、IR-005；SR-007、SR-010、SR-011、SR-018、SR-025\
-> 修订日期：2026-11-25  
+> 修订日期：2026-11-27  
 > 实现基线：env-openamsm main dc83ccbf5be54dcc7112dd43ba95ea6fa5975550\
+> 候选修复：env-openamsm `fix/sr-018-owner-evidence-exact-reconcile` @ `c83be9c803c1ffd3a04964f6c2d80787c3798190`；测试跟踪 [env-openamsm#28](https://github.com/odango-chan/env-openamsm/issues/28)\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：不重建 Agent Runtime、Provider、Plugin 或 Studio 内部实现；不扩展到生产级 DFX 或全量 3GPP 资格
 
@@ -120,14 +121,16 @@ UE-requested Release 的 NAS message type 是 0xD1，与 AMF/network-initiated R
 
 | 能力 | 当前证据 | 状态 |
 |---|---|---|
-| Owner 发布声明 | contracts/mas/operations.yaml、contracts/mas/v1alpha4/** | IMPLEMENTED |
-| 23 业务 Callable + 2 证据 READ | 当前 operations.yaml 实际枚举 25 条；其中最后两条为 RECEIPT_QUERY / RECONCILE | IMPLEMENTED |
-| Durable Receipt / Commit Proof | docs/mas-owner-contracts-and-receipt.md、patches/openamsm/0023-mas-durable-receipt.patch | IMPLEMENTED；源仓单测/构建有证据 |
-| Exact-original Reconcile | docs/scheme-c-pfcp-reconcile.md、Owner PR #21 的设计与证据记录 | IMPLEMENTED；源仓文档声明真实 ac 栈验收 |
-| Scheme C Modify | docs/scheme-c-owner-qos-delta.md、Owner patches 0006～0010 | IMPLEMENTED；源仓记录真实 PFCP 52/53 和 N1/N2 路径 |
-| UE-requested Release | Owner patches 0011～0017、N1 0xD1 / 0xD4 和 N2 response binding | IMPLEMENTED；源仓记录真实隔离 E2E |
+| Owner 发布声明 | 固定 main `dc83ccbf` 的 `operations.yaml` / v1alpha4 目录；历史 25 contracts（23 业务 + 2 Evidence READ） | 历史基线已存在；新 1.6.0 24/24 发布归 SR-025，不由本架构审计代替 |
+| 23 业务 Callable + 2 证据 READ | 固定 main 的历史 v1alpha4 声明；候选分支 `c83be9c` 对 source/step 做静态修正 | 历史声明存在；候选修正未合并，生成器/Provider parity 未运行 |
+| Durable Receipt / Commit Proof | `docs/mas-owner-contracts-and-receipt.md`、`0023-mas-durable-receipt.patch`；候选分支更新条件 Receipt Schema | 历史实现材料存在；候选终态 Schema 与缺字段路径待验证，测试 NOT_RUN |
+| Exact-original Reconcile | `docs/scheme-c-pfcp-reconcile.md`、历史 Owner PR #21 / Issue #23；候选分支增加原 Receipt 与 PFCP deletion binding 比对 | 历史设计/实现记录保留；固定 main 审计发现包装层缺口，候选分支尚未动态验证 |
+| Scheme C Modify | `docs/scheme-c-owner-qos-delta.md`、Owner patches 0006～0010；候选分支校准 source/step | 历史 PFCP 52/53 与 N1/N2 证据保留；候选 C 回归 NOT_RUN |
+| UE-requested Release | Owner patches 0011～0017、N1 0xD1 / 0xD4 和 N2 response binding | 历史隔离 E2E 证据保留；SR-018 本轮 Release 子项 NOT_COVERED / BLOCKED / NOT_RUN |
 | Next Plugin / Runtime 端到端调用 | EC04 Plugin main 尚无代码，ca-agent-demo PR #246 未合并 | NOT_IMPLEMENTED / NOT_RUN |
 | Production Qualification | 本项目 Demo 非目标 | NOT_CLAIMED |
+
+**当前候选分支与证据边界（2026-11-27）**：固定 main `dc83ccbf5be54dcc7112dd43ba95ea6fa5975550` 的 SR-018 AC-018-01/02 固定源静态审计结论仍为 FAIL。候选分支 `c83be9c803c1ffd3a04964f6c2d80787c3798190` 相对 main Ahead 33 / Behind 0，尚无 PR/未合并；已静态核对 source/step、Evidence 参数绑定、Publisher fail-closed、PFCP DELETE UNKNOWN 条件 Receipt Schema 与 exact-original binding。Manifest 58 个 artifact 的 SHA-256 及 publicationDigest 独立核对一致，但 `publish.py --check`、Python 全套测试、19 Patch 应用、C 回归、原生构建和真实 PFCP UNKNOWN → Receipt Query → Reconcile 均 NOT_RUN。候选实现的缺字段 Receipt、operator/reason 审计留存及 generation 语义仍由 [env-openamsm#28](https://github.com/odango-chan/env-openamsm/issues/28) 关闭；不得把候选静态状态提升为 IMPLEMENTED/VERIFIED。
 
 ## 9. 非目标
 
@@ -147,3 +150,4 @@ UE-requested Release 的 NAS message type 是 0xD1，与 AMF/network-initiated R
 
 | 2026-11-26 | 0.1.1 | GPT-6（ChatGPT） | 1.6.0 新目标与历史边界 | 增加 1.6.0 Owner Capability 24/24 目标与 Reconcile internal-only 边界，保留 v1alpha4 为历史实现基线 | Issue #12/#40；PR #46 |
 | 2026-11-26 | 0.1.2 | GPT-6（ChatGPT） | 文档头、§2.1、修订记录 | 补齐治理要求的全局评审范围与局部非目标；将 SR-025 纳入 1.6.0 Publisher 关联 | 使正式文档通过 review_scope 头部门禁，并显式追踪 Owner 新发布责任 | Issue #12/#40；SR-025；PR #46 |
+| 2026-11-27 | 0.1.3 | GPT-6.2（ChatGPT） | 文档头、§8、修订记录 | 区分固定 main 历史实现、候选源修复分支与未运行验收；把源仓验证责任指向 env-openamsm#28 | 避免用历史 Owner E2E 或候选静态代码误报当前 Reconcile/Receipt 通过 | SR-018；ca-agent-next#104；env-openamsm#28 |
