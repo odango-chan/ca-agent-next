@@ -213,7 +213,7 @@ setup-uv 的固定调用配置：
 - 使用官方 `astral-sh/setup-uv` action；本设计基线采用 action v10.4.0 的不可变 commit `1db35dd8eee11c5894872e0b383ae6c406cf738d`，并显式设置 `version: "0.13.10"`。
 - 使用 `uv python install` 从 `.python-version` 安装项目解释器。
 - 使用 `uv sync --locked --group dev --extra plugins` 安装当前项目及开发依赖。
-- 测试和项目脚本使用 `uv run --locked --group dev --extra plugins ...`。
+- 完成唯一一次 `uv sync --locked` 后，测试和项目脚本使用 `uv run --no-sync --locked --group dev --extra plugins ...`；禁止测试步骤自动同步。
 - Workflow 不得通过 `pip install PyYAML`、`pip install -e .` 或全局 site-packages 临时补依赖。
 - 可使用 setup-uv 自带的缓存；不另写自定义包缓存协议。
 
@@ -222,8 +222,8 @@ setup-uv 的固定调用配置：
 ```bash
 uv python install
 uv sync --locked --group dev --extra plugins
-uv run --locked --group dev --extra plugins python -m unittest discover -s tests -v
-uv run --locked --group dev --extra plugins python -m ca_agent_next --smoke
+uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --output-dir artifacts/unittest-gate
+uv run --no-sync --locked --group dev --extra plugins python -m ca_agent_next --smoke
 ```
 
 ### 3.8 与 SR-001 Workflow 的衔接及双平台触发验收
@@ -402,6 +402,7 @@ capture_env() {
     uv run --no-sync --locked --group dev --extra plugins python - "$worktree" "$EVIDENCE_DIR/$label.json" "$EVIDENCE_DIR/$label.direct_url.json" <<'PY'
 import importlib.metadata as metadata
 import json
+import os
 import pathlib
 import sys
 import urllib.parse
@@ -419,7 +420,7 @@ assert parsed.scheme == "file", url
 source = pathlib.Path(urllib.request.url2pathname(parsed.path)).resolve()
 venv = (root / ".venv").resolve()
 sys_prefix = pathlib.Path(sys.prefix).resolve()
-executable = pathlib.Path(sys.executable).resolve()
+executable = pathlib.Path(os.path.abspath(sys.executable))
 module = pathlib.Path(ca_agent_next.__file__).resolve()
 editable = direct.get("dir_info", {}).get("editable") is True
 assert (venv / "pyvenv.cfg").is_file(), venv
