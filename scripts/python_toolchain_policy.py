@@ -74,14 +74,14 @@ FORBIDDEN_COMMANDS = (
     ),
 )
 BARE_PYTHON_PROJECT_COMMAND = re.compile(
-    r"\bpython(?:\d+(?:\.\d+)?)?\s+"
+    r"\b(?:python(?:\d+(?:\.\d+)?)?|py(?:\.exe)?)\s+"
     r"(?:-m\s+(?:unittest|pytest|compileall|ca_agent_next)\b|"
     r"(?:scripts|tests)/)",
     re.IGNORECASE,
 )
 BARE_TEST_RUNNER = re.compile(r"(?<![\w./-])pytest(?:\s|$)", re.IGNORECASE)
 PROJECT_RUN_MARKERS = re.compile(
-    r"\bpython(?:\d+(?:\.\d+)?)?\s+"
+    r"\b(?:python(?:\d+(?:\.\d+)?)?|py(?:\.exe)?)\s+"
     r"(?:-m\s+(?:unittest|pytest|compileall|ca_agent_next)\b|"
     r"(?:scripts|tests)/)|(?<![\w./-])pytest(?:\s|$)",
     re.IGNORECASE,
@@ -216,9 +216,18 @@ def command_violations(added_lines: Iterable[tuple[str, str]]) -> list[str]:
                         f"BARE_PYTHON_ENTRY: {path}: {line} — "
                         "项目测试/Smoke/脚本必须经 uv run 执行。"
                     )
-            elif not has_no_project and (
-                "--no-sync" not in line or "--locked" not in line
-            ):
+            elif has_no_project:
+                is_policy_gate_test = (
+                    path == ".github/workflows/python-toolchain-policy.yml"
+                    and "-s tests -p test_python_toolchain_policy.py" in line
+                )
+                if not is_policy_gate_test:
+                    violations.append(
+                        f"UV_NO_PROJECT_BYPASS: {path}: {line} — "
+                        "仅 Python Toolchain Policy 自身的标准库测试可使用 --no-project；"
+                        "其他项目命令必须使用项目锁定环境。"
+                    )
+            elif "--no-sync" not in line or "--locked" not in line:
                 violations.append(
                     f"UV_RUN_NOT_LOCKED: {path}: {line} — "
                     "项目命令必须同时使用 uv run --no-sync --locked。"
