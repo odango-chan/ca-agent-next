@@ -1,0 +1,84 @@
+name: Python Toolchain Policy
+
+# PR #112 is the one-time bootstrap: its base is the SR-028 implementation
+# branch, which already contains the uv baseline but not this policy snapshot.
+# All subsequent PRs execute the policy script and read its manifest from Base,
+# so a PR cannot weaken the gate by changing its own policy implementation.
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, edited, ready_for_review]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: python-toolchain-policy-\${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  policy:
+    name: Python Toolchain Policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      BASE_SHA: \${{ github.event.pull_request.base.sha }}
+      HEAD_SHA: \${{ github.event.pull_request.head.sha }}
+      BASE_REF: \${{ github.event.pull_request.base.ref }}
+      PR_NUMBER: \${{ github.event.pull_request.number }}
+    steps:
+      - name: Checkout PR head and full history
+        uses: actions/checkout@v4
+        with:
+          ref: \${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Fetch exact PR base and head commits
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$BASE_SHA"
+          test -n "$HEAD_SHA"
+          git fetch --no-tags origin "$BASE_SHA" "$HEAD_SHA"
+          git cat-file -e "\${BASE_SHA}^{commit}"
+          git cat-file -e "\${HEAD_SHA}^{commit}"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+        with:
+          version: '0.13.10'
+
+      - name: Install policy interpreter
+        run: uv python install 3.14.6
+
+      - name: Load trusted policy snapshot and baseline manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          policy_dir="$RUNNER_TEMP/python-toolchain-policy"
+          mkdir -p "$policy_dir"
+
+          if [ "$PR_NUMBER" = "112" ]; then
+            test "$BASE_REF" = "feature/issue-96-sr-028-uv-toolchain"
+            test "$BASE_SHA" = "83d23e8c04b1c05eb304c2a24a3392f6459ed0f1"
+            cp scripts/python_toolchain_policy.py "$policy_dir/python_toolchain_policy.py"
+            cp .github/python-toolchain-baseline.json "$policy_dir/baseline.json"
+            echo "Policy source: bootstrap PR head"
+          else
+            git show "$BASE_SHA:scripts/python_toolchain_policy.py" > "$policy_dir/python_toolchain_policy.py"
+            git show "$BASE_SHA:.github/python-toolchain-baseline.json" > "$policy_dir/baseline.json"
+            echo "Policy source: trusted PR base"
+          fi
+
+          uv run --no-project --python 3.14.6 python "$policy_dir/python_toolchain_policy.py" \
+            --repo-root "$GITHUB_WORKSPACE" \
+            --base-sha "$BASE_SHA" \
+            --head-sha "$HEAD_SHA" \
+            --base-ref "$BASE_REF" \
+            --pr-number "$PR_NUMBER" \
+            --baseline-file "$policy_dir/baseline.json"
+
+      - name: Test policy positive and negative cases
+        run: |
+          uv run --no-project --python 3.14.6 python -m unittest discover \
+            -s tests -p test_python_toolchain_policy.py -v
