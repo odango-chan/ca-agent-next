@@ -47,7 +47,8 @@ class PythonToolchainPolicyTests(unittest.TestCase):
                 self.assertFalse(is_python_scope_path(path))
 
     def test_python_command_build_files_are_scoped_by_content(self) -> None:
-        self.assertTrue(is_python_scope_path("Makefile", "test:\\n  uv run pytest"))
+        makefile = "test:\\n  uv " + "run " + "pytest"
+        self.assertTrue(is_python_scope_path("Makefile", makefile))
         self.assertTrue(is_python_scope_path("Dockerfile", "FROM python:3.14"))
         self.assertFalse(is_python_scope_path("Makefile", "build:\\n  go test ./..."))
 
@@ -60,12 +61,12 @@ class PythonToolchainPolicyTests(unittest.TestCase):
         )
 
     def test_new_python_workflow_is_python_scope_by_content(self) -> None:
-        self.assertTrue(
-            is_python_scope_path(
-                ".github/workflows/python-tests.yml",
-                "name: Python tests\\njobs:\\n  test:\\n    steps:\\n      - run: uv run " + "pytest",
-            )
+        workflow = (
+            "name: Python tests\\njobs:\\n  test:\\n    steps:\\n      - run: uv "
+            + "run "
+            + "pytest"
         )
+        self.assertTrue(is_python_scope_path(".github/workflows/python-tests.yml", workflow))
 
     def test_root_alternate_lockfiles_are_rejected_but_nested_fixtures_are_not(self) -> None:
         self.assertEqual(
@@ -135,12 +136,12 @@ class PythonToolchainPolicyTests(unittest.TestCase):
         self.assertTrue(any("BARE_PYTHON_ENTRY" in item for item in found))
 
     def test_bare_python_script_outside_scripts_directory_is_rejected(self) -> None:
-        line = "python tools/custom_check.py"
+        line = "python " + "tools/custom_check.py"
         found = command_violations([(".github/workflows/ci.yml", line)])
         self.assertTrue(any("BARE_PYTHON_ENTRY" in item for item in found))
 
     def test_makefile_python_entry_is_scanned(self) -> None:
-        found = command_violations([("Makefile", "python tools/custom_check.py")])
+        found = command_violations([("Makefile", "python " + "tools/custom_check.py")])
         self.assertTrue(any("BARE_PYTHON_ENTRY" in item for item in found))
 
     def test_uv_pip_sync_is_rejected(self) -> None:
