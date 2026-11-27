@@ -1,7 +1,7 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.23\
+> 文档版本：0.3.24\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
 > 修订日期：2026-11-27\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -165,7 +165,7 @@ EC06 历史决策已统一归档于中央仓：[ADR-0001 Source-first Visual](..
 
 ### 9.1 唯一能力入口
 
-Skill Studio 的 Package Explorer 以 Capability 作为唯一 Skill-facing 能力导航入口。Package 依赖仍按 Package 分组；Package 内显示 Capability，不再并列展示 Tools / Operations / Callable 树。Capability 详情可显示描述、kind、Effect、Input/Output Schema、Evidence 和来源 Package；Callable ID 只允许出现在内部 Binding 详情或编译诊断，不作为可选择的作者节点。
+Skill Studio 的 Package Explorer 以 Capability 作为唯一 Skill-facing 业务能力导航入口。Package 依赖仍按 Package 分组；Package 内的业务能力区只显示 Capability，不再并列展示 Tools / Operations / Callable 树。共享资源区单独显示 Package 根目录的 schemas/、scripts/manifest.yaml、scripts/、references/ 和 assets/；这些资源不是 Capability，不出现在 Capability exports 列表。Capability 详情可显示描述、kind、Effect、Input/Output Schema、Evidence 和来源 Package；Callable ID 只允许出现在内部 Binding 详情或编译诊断，不作为可选择的作者节点。
 
 ### 9.2 语言服务
 
@@ -173,7 +173,7 @@ Skill Studio 的 Package Explorer 以 Capability 作为唯一 Skill-facing 能�
 
 ### 9.3 AI Authoring
 
-AI Authoring 的 Change Set 必须遵守中央 [SKILL 作者规范](../../规范/SKILL作者规范.md)的全部适用规则：Skill / Capability 粒度、共享 Package 资源与 Schema 所有权、SourcePath / 显式 arguments、when / Wait、Evidence / UNKNOWN、静态 DAG、四阶段顺序、Node 拆分 / 合并和注释非执行语义。AI Authoring 可以读取当前 Package snapshot 的 schemas/、scripts/manifest.yaml 与 scripts/ 源码作为上下文；读取不等于执行。当前 Procedure Authoring Change Set 只修改 `assurance/procedure.yaml`：允许新增 / 删除 / 修改 `start`、Node、四阶段、已发布 Capability / Predicate / Script ID 的引用、显式 arguments、阶段 routes、Node-entry Wait 和解释性注释；引用只能来自已导入并 pin 的 Package exports / PredicateSet / Script Registry，不得自行创造 Capability / Predicate / Schema / Script 身份。该 Change Set 不修改 `assurance/contract.yaml`、`schemas/`、`predicates.yaml`、`scripts/`、`scripts/manifest.yaml`、Package Manifest 或外部 Package exports；Contract.when 的字段编辑仍走 §3 的独立编辑与校验路径，不混入 Procedure Change Set。若重命名 / 删除的 Node 被 `contract.precondition` 引用，或其他 Procedure 修改必须同步修改 Contract 字段，当前 Change Set 必须返回 OUT_OF_SCOPE；不得只改 `procedure.yaml` 留下悬空的跨文件引用。超出范围的提案必须明确返回 OUT_OF_SCOPE，不得静默扩大变更集。不得生成 Callable ID、backendOperationId 或动态 Provider 选择，不得通过注释补足缺失的 Schema、Predicate、Evidence 或 routes。AI Authoring 不执行脚本；需要运行脚本时只能在正常 Agent Runtime 中由 Host policy 决定是否提供 host.skill-script.execute，不能在 Studio Worker / AI Authoring 中创建第二套 Python 执行器。Apply 前仍须用户确认，随后对同一候选源码和项目锁使用同一 1.6.0 Compiler Build / Verify 路径重新检查；本设计不表示当前 Studio 已实现作者规范感知或 Compiler gate。
+AI Authoring 的 Change Set 必须遵守中央 [SKILL 作者规范](../../规范/SKILL作者规范.md)的全部适用规则：Skill / Capability 粒度、共享 Package 资源与 Schema 所有权、SourcePath / 显式 arguments、when / Wait、Evidence / UNKNOWN、静态 DAG、四阶段顺序、Node 拆分 / 合并和注释非执行语义。AI Authoring 可以读取当前 Package snapshot 的 schemas/、scripts/manifest.yaml 与 scripts/ 源码作为上下文；读取不等于执行。当前 Procedure Authoring Change Set 只修改 `assurance/procedure.yaml`：允许新增 / 删除 / 修改 `start`、Node、四阶段、已发布 Capability / Predicate / Script ID 的引用、显式 arguments、阶段 routes、Node-entry Wait 和解释性注释；引用只能来自已导入并 pin 的 Package exports / PredicateSet / Script Registry，不得自行创造 Capability / Predicate / Schema / Script 身份。该 Change Set 不修改 `assurance/contract.yaml`、`schemas/`、`assurance/predicates.yaml`、`scripts/`、`scripts/manifest.yaml`、Package Manifest 或外部 Package exports；Contract.when 的字段编辑仍走 §3 的独立编辑与校验路径，不混入 Procedure Change Set。若重命名 / 删除的 Node 被 `contract.precondition` 引用，或其他 Procedure 修改必须同步修改 Contract 字段，当前 Change Set 必须返回 OUT_OF_SCOPE；不得只改 `procedure.yaml` 留下悬空的跨文件引用。超出范围的提案必须明确返回 OUT_OF_SCOPE，不得静默扩大变更集。不得生成 Callable ID、backendOperationId 或动态 Provider 选择，不得通过注释补足缺失的 Schema、Predicate、Evidence 或 routes。AI Authoring 不执行脚本；需要运行脚本时只能在正常 Agent Runtime 中由 Host policy 决定是否提供 host.skill-script.execute，不能在 Studio Worker / AI Authoring 中创建第二套 Python 执行器。Apply 前仍须用户确认，随后对同一候选源码和项目锁使用同一 1.6.0 Compiler Build / Verify 路径重新检查；本设计不表示当前 Studio 已实现作者规范感知或 Compiler gate。
 
 ### 9.4 版本与导入
 
@@ -241,4 +241,5 @@ AI Authoring 的 Change Set 必须遵守中央 [SKILL 作者规范](../../规范
 | 2026-11-27 | 0.3.21 | GPT-6.2（ChatGPT） | 文档头、§9.3 | 将 SR-032 纳入 F09 追踪；明确 Procedure Change Set 的允许字段、引用来源、非目标及 OUT_OF_SCOPE 行为，并区分 when 独立编辑路径 | 防止 AI Authoring 以“正式作者字段”为由擅自修改 Contract / Schema / Package 或发明外部身份 | IR-008；Issue #49；SR-032 |
 | 2026-11-27 | 0.3.22 | GPT-6.2（ChatGPT） | §9.3 | 明确当 Procedure 修改需要同步 contract.precondition 时，Procedure-only Change Set 必须 OUT_OF_SCOPE | 防止 Node ID 变更导致跨文件引用悬空或部分应用 | Issue #49；SR-032 |
 | 2026-11-27 | 0.3.23 | GPT-6.2（ChatGPT） | §9.2～9.3 | 增加共享 Schema / Script 的 LSP 与 AI 上下文读取规则；Script 运行只由正常 Runtime Host capability 提供，Studio 不建第二执行器 | 统一 Schema / Script 的作者体验、资源身份和运行边界 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.3.24 | GPT-6.2（ChatGPT） | §9.1、§9.3 | Package Explorer 将共享资源与 Capability 导航分区；修正 Procedure-only Change Set 的 assurance/predicates.yaml 路径 | 保持 Capability-only 导航和共享资源可见性，同时避免 Studio 错写作者路径 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.3.22 | GPT-6.2（ChatGPT） | §9.3 | 明确当 Procedure 修改需要同步 contract.precondition 时，Procedure-only Change Set 必须 OUT_OF_SCOPE | 防止 Node ID 变更导致跨文件引用悬空或部分应用 | Issue #49；SR-032 |
