@@ -284,6 +284,19 @@ required-version = "==0.13.10"
         self.assertNotEqual(dependency_surface(base), dependency_surface(changed))
         self.assertEqual(dependency_surface(base), dependency_surface(base))
 
+    def test_dependency_surface_tracks_uv_resolver_fields(self) -> None:
+        base = """
+[project]
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.uv]
+required-version = "==0.13.10"
+index-strategy = "first-index"
+"""
+        changed = base.replace('index-strategy = "first-index"', 'index-strategy = "unsafe-first-match"')
+        self.assertNotEqual(dependency_surface(base), dependency_surface(changed))
+
     def test_bootstrap_pr_requires_exact_fixed_base(self) -> None:
         manifest = {
             "baseline": {"sha": "a" * 40},
