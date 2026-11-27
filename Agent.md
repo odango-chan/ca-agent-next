@@ -36,7 +36,7 @@ DeepSeek Harness 默认使用 Goal 模式。按[SR 管理规范](docs/规范/SR%
 - Tool 是 Plugin 导出的 Callable Operation，不是独立进程、Manager 或 Registry。
 - 不建立第二 Provider Manager、Tool Registry、Codec Manager、Event Registry 或第二套 IPC。
 - 每个 Skill 必须有 SKILL.md；schemas/、scripts/、references/、assets/ 是 Package 根目录共享资源，Assurance 可选且只含 contract.yaml / procedure.yaml / predicates.yaml。无 Assurance 仍可使用共享资源并仅 LLM-guided；有效发布 Assurance Artifact 支持 Deterministic 和 LLM-guided；无效 Assurance Artifact 导入失败。
-- when 是可选 Assurance Contract 的纯 CEL Skill 选择表达式；predicates.yaml 只用于执行期业务判断。
+- `when` 是有 Assurance Skill 的 SKILL.md Front Matter 可选 CA-Agent 扩展 CEL 选择表达式；无 Assurance Skill 不声明 when；predicates.yaml 只用于执行期业务判断。
 - Skill 源编写与评审必须遵循[中央 SKILL 作者规范](docs/规范/SKILL作者规范.md)；CA-SL 1.6.0 完整语言规范仍是机器语义的唯一权威。作者规范还规定 Package 根目录共享 Schema / Script、Script Registry、Host Resource Read / Script Execution、SourcePath / arguments、when、Evidence / UNKNOWN、原有 Node 四阶段与拆分 / 合并、注释原则及 AI Authoring 约束；Skill 层不定义 Wait / await / polling，异步由 Tool / Provider / SMF Operation 与 Host Runtime 负责；v1alpha5 原文只读留档，不提供兼容或自动迁移。
 - Agent 只消费外部已发布 Skill Bundle；存在 Assurance 时同时消费正式 Runtime Artifact。无 Assurance Bundle 可携带共享资源而不生成 Compiler Artifact；Agent 不调用 Compiler Check/Build/Inspect/Verify，不建立 Skill Admission，不把 Assurance 作者源作为运行时 Artifact。
 - Skill 选择先于模式选择；精确 Continuation 恢复原 Run，不重新选择 Skill。
@@ -177,3 +177,4 @@ review_scope:
 | 2026-11-27 | GPT-6.2（ChatGPT） | §3、修订记录 | 将根目录共享资源、Host Script Execution system Capability 和无 Assurance Bundle 规则纳入全局架构约束 | 防止 Harness 将 schemas/scripts 放回可选 Assurance 或实现任意 Python 执行 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | GPT-6.2（ChatGPT） | §3、修订记录 | 更新 CA-SL 作者边界为无 Wait / await / polling；纳入 Host Resource Read、全部登记 Script 调用和 Predicate LLM 结果不产生 Evidence 的约束 | 使全局 Harness 指令与 CA-SL 1.6.0 v0.2.0、F05、F04 和 SR-032 一致 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | GPT-6.2（ChatGPT） | §3、修订记录 | 删除 Host Script Execution 的逐脚本与 Host 配置双门禁，改为 LLM 与 Assurance 共用 Registry / Script Runner | 保持模型与确定性执行能力一致，同时禁止任意代码、路径和命令 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | GPT-6.2（ChatGPT） | §3、修订记录 | 明确 when 位于有 Assurance Skill 的 SKILL.md Front Matter；无 Assurance Skill 不声明 when；Contract 不再承载选择条件 | 对齐已确认的 SKILL 入口方案，防止 Harness 继续把 when 写入 contract.yaml 或无 Assurance 包 | Issue #49；IR-008；SR-032 |
