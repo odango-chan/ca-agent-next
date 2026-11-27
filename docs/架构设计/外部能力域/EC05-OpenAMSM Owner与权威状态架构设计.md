@@ -1,7 +1,7 @@
 # EC05 — OpenAMSM Owner 与权威状态架构设计
 
 > 文档类型：外部能力域架构设计（实现派生重建）  
-> 文档版本：0.1.5\
+> 文档版本：0.1.6\
 > 状态：依据固定 main、Owner 声明、契约和验收材料重建；源仓没有独立总体架构文档；候选源修复分支尚未运行验收  
 > 功能归属：EC05；关联 F04、F05、F06、F07  
 > 关联需求：IR-004、IR-005；SR-007、SR-010、SR-011、SR-018、SR-025\
@@ -126,11 +126,11 @@ UE-requested Release 的 NAS message type 是 0xD1，与 AMF/network-initiated R
 | Durable Receipt / Commit Proof | `docs/mas-owner-contracts-and-receipt.md`、`0023-mas-durable-receipt.patch`；候选分支更新条件 Receipt Schema | 历史实现材料存在；候选终态 Schema 与缺字段路径待验证，测试 NOT_RUN |
 | Exact-original Reconcile | `docs/scheme-c-pfcp-reconcile.md`、历史 Owner PR #21 / Issue #23；候选分支增加原 Receipt 与 PFCP deletion binding 比对 | 历史设计/实现记录保留；固定 main 审计发现包装层缺口，候选分支尚未动态验证 |
 | Scheme C Modify | `docs/scheme-c-owner-qos-delta.md`、Owner patches 0006～0010；候选分支校准 source/step | 历史 PFCP 52/53 与 N1/N2 证据保留；候选 C 回归 NOT_RUN |
-| UE-requested Release | Owner PR #21 MERGED（main commit `3201202b`，patches 0011～0014）；env-5gc-sim 固定顶层及 normal run-manifest | 顶层记录 normal/negative/timeout/pure-MAS 四 gates PASS；独立一致性 NOT_VERIFIED：normal `checks.smf_pfcp_del=false`，SMF 日志出现 `OES.Start adapt failed`，需核实这两个信号与 PFCP 54/55 的时间窗/门禁关系。历史报告不代表 SR018-G 当前独立 PASS；Network-requested ReleaseSMContext #10、并发 UE、Next E2E、CI/Production 均不覆盖 |
+| UE-requested Release | Owner PR #21 MERGED（main commit `3201202b`，patches 0011～0014）；env-5gc-sim 固定 harness / PFCP / MAS / UPF / SMF 证据 | 历史 Owner / 隔离 `ac` E2E 限定 PASS：`smf_pfcp_del=false` 是非门禁日志字符串检查；PFCP 54/55、MAS UPN DELETE 与 UPF Session=0 均被独立原始证据覆盖；`OES.Start adapt failed` 属 Release 之前的 Establish plan。Network ReleaseSMContext #10、并发 UE、当前 Receipt/Reconcile、Next E2E/Production 均不覆盖 |
 | Next Plugin / Runtime 端到端调用 | EC04 Plugin main 尚无代码，ca-agent-demo PR #246 未合并 | NOT_IMPLEMENTED / NOT_RUN |
 | Production Qualification | 本项目 Demo 非目标 | NOT_CLAIMED |
 
-**UE-requested Release follow-up（2026-11-27，复核修订）**：`ca-5gc-sim` 与 canonical `env-5gc-sim` 同 repo ID 1374330228；Owner PR #21 已合并，隔离 `ac` 的顶层 run-manifest `c-release-20261122-04` 和 negative/timeout checks 均可定位，**历史报告声称 PASS**。但 `normal/run-manifest.json` 中 `checks.smf_pfcp_del=false`，SMF 日志包含 `OES.Start adapt failed`；无法据此断言正常 PFCP DELETE 和门禁证据完全一致。本轮 Release 独立一致性结论 **NOT_VERIFIED**，待 Owner 说明、日志路径与时间窗核实；不覆盖 Network-requested ReleaseSMContext #10、并发 UE、CA Agent/Provider/Skill E2E、CI 或 Production。
+**UE-requested Release follow-up（2026-11-27，固定 harness 语义复核）**：`ca-5gc-sim` 与 `env-5gc-sim` 为同 repo ID；脚本 `harness/run_scheme_c_release.py` blob `35b07522afe3275531b19313f2cb1d0d3eb10412` 第 269 行只执行 SMF 关键词匹配，且不包含于第 285～299 行成功谓词。`normal/pfcp-summary.tsv` 记录 54/55，`normal/mas-trace.ndjson` 记录真实 UPN→PFCP 调用，UPF Session 已归零。SMF 的 OES.Start 错误在 21:41:53.913 对应 Establish plan，早于 Release 事件。此为历史 Owner/隔离 E2E **限定 PASS**，不外推新 Receipt/Reconcile、Network ReleaseSMContext、并发 UE、Next 或 Production。
 
 **当前候选分支与证据边界（2026-11-27）**：固定 main `dc83ccbf5be54dcc7112dd43ba95ea6fa5975550` 的 SR-018 AC-018-01/02 固定源静态审计结论仍为 FAIL。候选分支 `c83be9c803c1ffd3a04964f6c2d80787c3798190` 相对 main Ahead 33 / Behind 0，尚无 PR/未合并；已静态核对 source/step、Evidence 参数绑定、Publisher fail-closed、PFCP DELETE UNKNOWN 条件 Receipt Schema 与 exact-original binding。Manifest 58 个 artifact 的 SHA-256 及 publicationDigest 独立核对一致，但 `publish.py --check`、Python 全套测试、19 Patch 应用、C 回归、原生构建和真实 PFCP UNKNOWN → Receipt Query → Reconcile 均 NOT_RUN。候选实现的缺字段 Receipt、operator/reason 审计留存及 generation 语义仍由 [env-openamsm#28](https://github.com/odango-chan/env-openamsm/issues/28) 关闭；不得把候选静态状态提升为 IMPLEMENTED/VERIFIED。
 
@@ -155,3 +155,4 @@ UE-requested Release 的 NAS message type 是 0xD1，与 AMF/network-initiated R
 | 2026-11-27 | 0.1.3 | GPT-6.2（ChatGPT） | 文档头、§8、修订记录 | 区分固定 main 历史实现、候选源修复分支与未运行验收；把源仓验证责任指向 env-openamsm#28 | 避免用历史 Owner E2E 或候选静态代码误报当前 Reconcile/Receipt 通过 | SR-018；ca-agent-next#104；env-openamsm#28 |
 | 2026-11-27 | 0.1.4 | GPT-6.2（ChatGPT） | §8、修订记录 | 补充核验 Owner PR #21 合并后的 UE-requested Release 正常/负例/超时证据，并明确历史范围限制 | 修正旧仓名 alias 造成的 Release 子项误阻塞，同时不外推为 Next/Network Release/Production PASS | SR-018；env-openamsm#11/#21；env-5gc-sim#79 |
 | 2026-11-27 | 0.1.5 | GPT-6（ChatGPT） | §8、修订记录 | 区分历史 Release manifest 报告 PASS 与正常子检查/SMF 日志待解释，独立判定 NOT_VERIFIED | 不以顶层 PASS 掩盖互相矛盾的证据 | SR-018；Issue #104；PR #114 |
+| 2026-11-27 | 0.1.6 | GPT-6（ChatGPT） | §8、修订记录 | 用固定 harness 成功谓词、PFCP/MAS/UPF/SMF 证据解释旧 false 关键词与 Establish 事件，恢复历史 Owner Release 限定 PASS | 不以非门禁日志检查误判网络删除结果，当前候选及 Next E2E 仍 NOT_RUN | SR-018；Issue #104；PR #114 |
