@@ -1,13 +1,13 @@
 # SR-032：SKILL 作者规范、Node 拆分与注释原则
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.17  
+> SR 版本：0.1.18  
 > 状态：**DRAFT（中央作者规范已形成设计候选，待独立设计评审；实施 NOT_READY）**  
 > 创建日期：2026-11-27  
 > 修订日期：2026-11-27  
 > 上游需求：IR-008（关联 IR-003）  
 > 功能：EC01 / F01 / F02 / F03 / F04 / F05 / F08 / F09（作者规范由 EC01 维护；Host、Importer、Runtime、Compiler、Studio 消费）  
-> 设计依据：[EC01 CA-SL 与 Skill 作者体系架构](../架构设计/外部能力域/EC01-CA-SL与Skill作者体系架构设计.md) v0.2.3；[CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md) v0.2.6；[SKILL 作者规范](../规范/SKILL作者规范.md) v0.2.2  
+> 设计依据：[EC01 CA-SL 与 Skill 作者体系架构](../架构设计/外部能力域/EC01-CA-SL与Skill作者体系架构设计.md) v0.2.3；[CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md) v0.2.7；[SKILL 作者规范](../规范/SKILL作者规范.md) v0.2.4  
 > 目标仓：odango-chan/ca-agent-next（仅中央设计和规范）  
 > 上游来源仓：odango-chan/ca-skills，固定 main 780497a2918ad3e7bdff554ab64b0ba627e867e0  
 > 关联 Issue：[ca-agent-next #49](https://github.com/odango-chan/ca-agent-next/issues/49)、父级迁移 Issue #12、CA-SL 设计 Issue #40  
@@ -95,7 +95,7 @@ F09 的 AI Authoring 必须使用同一作者规范和完整正向示例生成�
 
 | 类型 | 依赖 | 影响 |
 |---|---|---|
-| 设计依赖 | CA-SL 1.6.0 v0.2.6 / SR-029；SKILL 作者规范 v0.2.3 | 原有 Node / routes / arguments / PredicateSet 语法、Capability 绑定、四阶段、共享资源根目录、Script Registry、Script I/O / Evidence / 错误契约、Host Resource Read / Script Execution 和 when 语义必须一致；Skill 层无 Wait / await / polling；本 SR 不冻结 Compiler wire API |
+| 设计依赖 | CA-SL 1.6.0 v0.2.7 / SR-029；SKILL 作者规范 v0.2.4 | 原有 Node / routes / arguments / PredicateSet 语法、Capability 绑定、四阶段、共享资源根目录、Script Registry、Script I/O / Evidence / 错误契约、Host Resource Read / Script Execution 和 when 语义必须一致；Skill 层无 Wait / await / polling；本 SR 不冻结 Compiler wire API |
 | 历史来源 | SR-023 / ca-skills v1alpha5 | 只用于来源核对和历史归档 |
 | 消费者设计 | F01 / F02 / F03 / F04 / F05 / F08 / F09；SR-004 / SR-007 / SR-016 | Host Model Loop、Importer、Plugin Manager、Runtime Action Boundary、Host Resource Read、完整 Script Registry、Compiler / Bundle 和 AI Authoring 必须消费同一共享资源与 Script Execution 契约；现有产品实现状态不自动变化 |
 | 外部发布依赖 | ca-skills 1.6.0 正式 Schema / Golden / Release | 正式发布前，本规范与语言稿均保持设计候选，不声称产品可执行 |
@@ -107,7 +107,7 @@ F09 的 AI Authoring 必须使用同一作者规范和完整正向示例生成�
 |---|---|---|
 | AC-032-01 | 作者指南、作者模型、Skill Granularity、Authoring Syntax、Package Layout、Schema Ownership、创建工作流和实际 Skill 样本均有固定源路径、commit / blob SHA 和迁移裁决 | 作者规范 §12、历史归档文件、恢复清单 |
 | AC-032-02 | Skill package 粒度与 Node 粒度分开定义；Skill / Capability / Agent routing 边界明确 | 作者规范 §2、§6 |
-| AC-032-03 | Node 拆分与合并规则严格符合 1.6.0 原有四阶段顺序、每种阶段最多一个、Operation / Observation Capability 边界和静态 DAG；Outcome-only 路由不得触发机械拆分；异步等待不成为作者 Node；Create / Modify / Release 样本只用于结构性裁决 | 作者规范 §5～§6.6；CA-SL 1.6.0 §6；固定源 Procedure 样本 |
+| AC-032-03 | Node 拆分与合并规则严格符合 1.6.0 原有四阶段顺序、每种阶段最多一个、Operation / Observation Capability 边界和静态 DAG；Outcome-only 路由不得触发机械拆分；异步等待不成为作者 Node；禁止为单一中间判断人为拆分 Predicate-only Node，允许最终 Goal Postcondition-only Node 只有一个 Predicate 且 PASS 直接路由 SUCCEEDED；QoS 完整正向示例须在 normalize-qos Node 的 Precondition 中校验请求、同 Node Operation 做转换并保留 FAIL/UNKNOWN 路由；Create / Modify / Release 样本只用于结构性裁决 | 作者规范 §5～§6.7、§10；CA-SL 1.6.0 §6；固定源 Procedure 样本 |
 | AC-032-04 | 注释规则区分解释性内容与机器执行契约，给出明确正反例；注释示例不伪装成可构建 Procedure；不把旧资料未定义的规则伪称为迁移原文 | 作者规范 §7.5、§12 |
 | AC-032-05 | Package 文件职责、Schema 所有权、Capability-only、显式 arguments、when、Evidence / UNKNOWN 与 1.6.0 设计一致；明确 Skill 层不定义 Wait / await / polling，异步由 Operation / Host Runtime 负责 | 作者规范 §3～§5、§8～§10；CA-SL 1.6.0 §2、§5、§6、§10～§11 |
 | AC-032-06 | F09 明确 AI Authoring 必须遵守同一作者规范，并保留用户确认和 Compiler gate | F09 §9.3 |
@@ -157,3 +157,4 @@ F09 的 AI Authoring 必须使用同一作者规范和完整正向示例生成�
 | 2026-11-27 | 0.1.16 | GPT-6.2（ChatGPT） | §3.3、设计依据、修订记录 | 澄清最终单 Predicate Postcondition-only Node 的合法例外，并与作者规范 v0.2.2 对齐 | 使 Node 粒度裁决不与 CA-SL 阶段文法和最终 Goal 聚合规则冲突 | Issue #49；IR-008；SR-032；PR #52 |
 
 | 2026-11-27 | 0.1.17 | GPT-6.2（ChatGPT） | 文档头、设计依据、修订记录 | 同步 SKILL 作者规范 v0.2.3 的最终单 Predicate 例外和 QoS 示例 Node 合并 | 保持 SR-032 粒度原则、作者正向示例和 CA-SL 阶段自动推进语义一致 | Issue #49；IR-008；PR #52 |
+| 2026-11-27 | 0.1.18 | ChatGPT（GPT-6） | §3.3、AC-032-03、设计依据、依赖版本、修订记录 | 以 CA-SL v0.2.7 / 作者规范 v0.2.4 为当前依据，明确中间 Predicate-only 负例、最终单 Predicate Postcondition-only 正例，以及 QoS 请求验证合并和异常路由不退化的验收项 | 将 Node 粒度争议转为可判定的 SR 验收条件，修复旧版本引用漂移 | Issue #49；IR-008；SR-032；PR #52 |
