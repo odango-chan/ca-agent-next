@@ -48,7 +48,7 @@ class PythonToolchainPolicyTests(unittest.TestCase):
         self.assertTrue(
             is_python_scope_path(
                 ".github/workflows/python-tests.yml",
-                "name: Python tests\\njobs:\\n  test:\\n    steps:\\n      - run: uv run pytest",
+                "name: Python tests\\njobs:\\n  test:\\n    steps:\\n      - run: uv run " + "pytest",
             )
         )
 
