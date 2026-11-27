@@ -1,7 +1,7 @@
 # 通用 Agent Core 与 Host 设计说明书
 
 > 文档类型：功能设计说明书  
-> 文档版本：0.3.9\
+> 文档版本：0.3.10\
 > 状态：Next 目标设计；本仓实现状态需独立验收，不以参考仓 PASS 代替  
 > 功能归属：F01 — 通用 Agent Core 与 Host  
 > 关联 SR：SR-002、SR-020、SR-021、SR-032  
@@ -87,7 +87,7 @@ Model Loop 不承担 Tool dispatch。每一轮模型输入由 Host 组装，至�
 - 已授权 Context / Observation；
 - 当前 Run 位置和剩余 response obligation。
 
-模型输出必须转换为结构化 Action Proposal。Host / Runtime 校验 Skill identity、Capability ID、参数 Schema、Artifact refs、Run state 和 invocation identity；业务 Capability 从已验证 Artifact 的唯一 capabilityBinding 解析内部 Callable，才允许调用 Plugin。若 Action 为 Host Script Execution system Capability `host.skill-script.execute`，Runtime 则校验当前 Skill 的 scripts/manifest.yaml、llmInvocable 标记、`scriptExecution.llmEnabled=true` 和输入 Schema，再由 Host 内建 Tools Extension 调用精确 Script entrypoint。模型不得提交或替换 Callable ID、backendOperationId、URL、Provider selector、脚本路径、代码或命令；未知 Capability、绑定歧义、参数不完整或越权时停止，不自动猜测修复。
+模型输出必须转换为结构化 Action Proposal。Host / Runtime 校验 Skill identity、Capability ID、参数 Schema、Artifact refs、Run state 和 invocation identity；业务 Capability 从已验证 Artifact 的唯一 capabilityBinding 解析内部 Callable，才允许调用 Plugin。若 Action 为 Host Script Execution system Capability `host.skill-script.execute`，Runtime 则校验当前 Skill 的固定 Package snapshot、Script Registry ID 与输入/输出 Schema，再由 Host 内建 Tools Extension 调用精确 Script entrypoint；LLM 与 Assurance 使用同一脚本集合，不设置逐脚本标记或额外 Host 开关。模型不得提交或替换 Callable ID、backendOperationId、URL、Provider selector、脚本路径、代码或命令；未知 Capability、绑定歧义、参数不完整或越权时停止，不自动猜测修复。
 
 Model Client 是可替换适配器；自动化测试必须支持 Fake Model Client。模型 Provider、Gateway URL、模型 ID 和凭据属于部署配置，不进入业务 Skill 契约。
 
@@ -263,7 +263,7 @@ Context 与 Artifact 的详细契约见 F05。Model Loop 不得将模型生成�
 
 ## 8. 配置与启动
 
-Host 启动时加载基础配置、Plugin manifests、Tool Interface Packages 和已发布 Skill Bundles；任何必需依赖加载失败时不得部分启用业务。配置包含 Plugin 安装位置、Model Client/Gateway、Skill Bundle 位置、Artifact staging/store 和日志级别；新增逻辑布尔设置 `scriptExecution.llmEnabled`（默认 false），仅显式启用后才允许 Host 向模型提供 host.skill-script.execute。该设置不替代 Package Registry 的 llmInvocable opt-in，也不授予业务 Capability。凭据通过部署安全配置提供，不接受业务 Event 注入 Provider Key。
+Host 启动时加载基础配置、Plugin manifests、Tool Interface Packages 和已发布 Skill Bundles；任何必需依赖加载失败时不得部分启用业务。配置包含 Plugin 安装位置、Model Client/Gateway、Skill Bundle 位置、Artifact staging/store 和日志级别；不新增 `scriptExecution.llmEnabled` 等 LLM 专用开关；当前 Skill 的 Script Registry 有登记脚本时，Host 即向模型提供 host.skill-script.execute。该系统 Action 只执行当前 Package snapshot 中登记的精确入口，不授予业务 Capability。凭据通过部署安全配置提供，不接受业务 Event 注入 Provider Key。
 
 Demo 以单 Host 进程和本机/内网 Plugin 进程为基线；不要求 HA、分布式调度或在线 Marketplace。
 
@@ -327,3 +327,4 @@ SR-002 的独立模块验收为 AC-002-01～AC-002-08，详见《演示验收基
 | 2026-11-26 | 0.3.7 | GPT-6（ChatGPT） | 当前目标契约 | 将 Model Loop 可见输入和 Action Proposal 从 Callable ID 改为 Capability ID，Callable 仅由 Host 从已验证 Binding 内部解析 | 切换到 1.6.0 Capability-first 单一作者入口 | Issue #12/#40；PR #46 |
 | 2026-11-27 | 0.3.8 | GPT-6.2（ChatGPT） | §5 | 将 Skill Package 根目录共享 Schema / Script 加入模型按需资源视图，并纳入 Host Script Execution system Capability 的 Action 校验 | 使 LLM 可以使用公共 Script，但不暴露宿主路径或任意代码执行 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.3.9 | GPT-6.2（ChatGPT） | §3、§5 | 将 LLM Script Action 的 Host 显式配置门禁固定为 `scriptExecution.llmEnabled`，默认关闭 | 防止仅凭 Script Registry 标记就向模型暴露脚本执行能力 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.3.10 | GPT-6.2（ChatGPT） | §3、§5 | 删除 Script Registry 的逐脚本 LLM 标记与 Host LLM 配置开关；模型和 Assurance 共用 Script Runner | 简化 Demo 执行模型，避免模型调用权限与确定性执行权限分裂 | Issue #49；IR-008；SR-032 |
