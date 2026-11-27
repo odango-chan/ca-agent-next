@@ -1,7 +1,7 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.25\
+> 文档版本：0.3.26\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
 > 修订日期：2026-11-27\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -130,7 +130,7 @@ Compiler v2.1.0 的 `validDevelopmentVersion` 接受 `major.minor.patch` 和合�
 
 ## 6. 新 1.6.0 无 Assurance 与零外部依赖
 
-- **SKILL.md-only**：不调用 Compiler，只有 LLM-guided，不生成 Assurance Artifact，不拥有 Callable Scope；在双栏源编辑器中仍可预览文字、元数据与 references。
+- **无 Assurance Skill Package**：可包含 schemas/、scripts/、references/ 和 assets/；不调用 Compiler，不生成 Assurance Artifact，不拥有业务 Capability Scope，仅支持 LLM-guided；在双栏源编辑器中仍可预览指导文本、元数据与共享资源。
 - **存在 Assurance、没有外部 Capability / Schema 引用**：新 1.6.0 Compiler 必须允许零 Capability roots 与空 Package dependency closure；BuildRequest 仍包含 Skill/语言/Schema/源身份，Compiler 生成不含外部 Tool Effect 的确定性 Artifact。
 - **存在 Assurance、仅引用 Schema-only Package**：例如 Contract.contexts 引用 SR-030 Host Context Schema。此时 Capability roots 与 Callable bindings 仍为空，但 Package dependency closure 必须包含该显式依赖的 Schema export 和完整 $ref 闭包；不得把 Schema-only Package 当作 Capability root，也不得虚构 Tool / Callable。
 - **存在 Assurance 且使用 Capability 但未声明依赖**：Compiler 静态 Link 必须拒绝 `CAPABILITY_UNRESOLVED` / `CAPABILITY_NOT_GRANTED`；绝不能把它当成合法零根。旧 v2.1.0 只能接受非空 roots 的限制**不是 1.6.0 新设计**。
@@ -243,3 +243,4 @@ AI Authoring 的 Change Set 必须遵守中央 [SKILL 作者规范](../../规范
 | 2026-11-27 | 0.3.23 | GPT-6.2（ChatGPT） | §9.2～9.3 | 增加共享 Schema / Script 的 LSP 与 AI 上下文读取规则；Script 运行只由正常 Runtime Host capability 提供，Studio 不建第二执行器 | 统一 Schema / Script 的作者体验、资源身份和运行边界 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.3.24 | GPT-6.2（ChatGPT） | §9.1、§9.3 | Package Explorer 将共享资源与 Capability 导航分区；修正 Procedure-only Change Set 的 assurance/predicates.yaml 路径 | 保持 Capability-only 导航和共享资源可见性，同时避免 Studio 错写作者路径 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.3.25 | GPT-6.2（ChatGPT） | §9.2～§9.3、修订记录 | 增加 Script ID 的 Procedure / Predicate LSP 补全与跳转；明确 Studio 不执行脚本，Host 暴露仍受双门禁控制；清理重复修订行 | 保持作者体验、Host Script Execution 和文档版本历史一致 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.3.26 | GPT-6.2（ChatGPT） | §6 | 将 SKILL.md-only 子路径更正为可携带共享资源的无 Assurance Skill Package | 使 Studio 的资源视图与 Agent 的无 Assurance 导入语义一致 | Issue #49；IR-008；SR-032 |
