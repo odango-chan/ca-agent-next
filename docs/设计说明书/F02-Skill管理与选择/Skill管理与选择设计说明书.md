@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：**设计待评审**（唯一新目标 CA-SL 1.6.0；全链路不兼容任何旧作者语法、Build DTO、Artifact、Bundle；1.6.0 产品未发布）
-> 文档版本：0.4.0
+> 文档版本：0.4.1
 > 功能归属：F02 — Skill 管理与选择  
 > 关联 SR：SR-004、SR-005、SR-006、SR-032    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -41,7 +41,7 @@ skills/<skill-id>/
     └── predicates.yaml
 ~~~
 
-SKILL.md 必须存在，其 YAML Front Matter 按 [Agent Skills Specification](https://agentskills.io/specification) 处理，不属于 CA-SL 1.6.0 Assurance 语法。必需字段为 `name` / `description`；`name` 1～64 字符、匹配包根目录名、只允许小写字母/数字/连字符且不得有首尾/连续连字符；`description` 1～1024 字符且非空。可选字段为 `license`、`compatibility`（1～500 字符）、`metadata`（string→string）和实验性 `allowed-tools`。Next 严格拒绝未知 Front Matter 字段；`allowed-tools` 只作为元数据，不授予 Callable/Capability 权限。assurance/ 可选；schemas/、scripts/、references/、assets/ 是不依赖 Assurance 的 Package 根目录共享资源。Schema 文件以 YAML 1.2 表示 JSON Schema 数据模型；Script Registry scripts/manifest.yaml 声明精确 entrypoint、purpose、input/output Schema。LLM 可通过 host.skill-resource.read 按需读取当前 Skill Package snapshot 的共享资源，并可通过 host.skill-script.execute 调用当前 Skill Registry 中登记的全部脚本（包括 transform / predicate）；LLM 与 Assurance 共用同一 Script Runner，不设置逐脚本标记或额外 Host 开关。新作者源的唯一目标为 **CA-SL 1.6.0 Capability-first**，现仍未正式发布；历史 v1alpha5 作者源码与 Release 保留追溯，不能当作 1.6.0 输入或自动迁移。存在 Assurance 时由外部 Compiler 按已正式发布的版本处理。contract.yaml 位于 assurance/ 内，不是每个 Skill 的必需文件。when 是 contract.yaml 的可选字段；assurance/predicates.yaml 只承载执行期业务判断。
+SKILL.md 必须存在，其 YAML Front Matter 按 [Agent Skills Specification](https://agentskills.io/specification) 处理，不属于 CA-SL 1.6.0 Assurance 语法。必需字段为 `name` / `description`；`name` 1～64 字符、匹配包根目录名、只允许小写字母/数字/连字符且不得有首尾/连续连字符；`description` 1～1024 字符且非空。可选标准字段为 `license`、`compatibility`（1～500 字符）、`metadata`（string→string）和实验性 `allowed-tools`。CA-Agent 扩展字段 `when` 仅在存在 `assurance/` 时可选声明；无 Assurance Skill 不声明 when，若声明则拒绝。Next 严格拒绝其他未知 Front Matter 字段；`allowed-tools` 只作为元数据，不授予 Callable/Capability 权限。assurance/ 可选；schemas/、scripts/、references/、assets/ 是不依赖 Assurance 的 Package 根目录共享资源。Schema 文件以 YAML 1.2 表示 JSON Schema 数据模型；Script Registry scripts/manifest.yaml 声明精确 entrypoint、purpose、input/output Schema。LLM 可通过 host.skill-resource.read 按需读取当前 Skill Package snapshot 的共享资源，并可通过 host.skill-script.execute 调用当前 Skill Registry 中登记的全部脚本（包括 transform / predicate）；LLM 与 Assurance 共用同一 Script Runner，不设置逐脚本标记或额外 Host 开关。新作者源的唯一目标为 **CA-SL 1.6.0 Capability-first**，现仍未正式发布；历史 v1alpha5 作者源码与 Release 保留追溯，不能当作 1.6.0 输入或自动迁移。存在 Assurance 时由外部 Compiler 按已正式发布的版本处理。contract.yaml 位于 assurance/ 内，不是每个 Skill 的必需文件。`when` 是有 Assurance Skill 的 SKILL.md Front Matter 可选 CA-Agent 扩展，不属于 contract.yaml；无 Assurance Skill 不声明 when。assurance/predicates.yaml 只承载执行期业务判断。
 
 ### 2.2 运行时发布包
 
@@ -294,3 +294,4 @@ T2 的 Provider Codec Result 只在选定 Skill Procedure 的 READ 后可用，�
 | 2026-11-27 | 0.3.8 | GPT-6.2（ChatGPT） | §2、§4、§8、§10 | 移除 Script Registry `llmInvocable` 与 Host `scriptExecution.llmEnabled` 双门禁；LLM 和 Assurance 共用同一 Script Runner | 使无 Assurance Skill 的模型默认具备与确定性执行相同的包内脚本调用能力 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.3.9 | GPT-6.2（ChatGPT） | §2～§4、§8～§10 | 将 SKILL Front Matter 语言边界更新为 1.6.0；接入 F05 Host Resource Read；统一 LLM 对全部登记 Script 的调用能力；删除 Node/Wait 作者语义 | 保持 Agent Importer / Resolver 与无 Wait 的 CA-SL 1.6.0、共享 Package 资源模型一致 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.4.0 | GPT-6.2（ChatGPT） | §2～§7、§11、§13 | 将 `when` 作者源位置统一为有 Assurance Skill 的 SKILL.md Front Matter；无 Assurance Skill 不声明 when，继续走 LLM-guided 语义选择 | 对齐用户确认的入口决策，避免无 Assurance 包携带未编译选择条件 | Issue #49；IR-008；SR-032；SR-004/013 |
+| 2026-11-27 | 0.4.1 | GPT-6.2（ChatGPT） | §2、§6～§7 | 将 Front Matter 字段表补齐 CA-Agent 扩展 when，并明确无 Assurance Skill 不声明；删除 F02 对 contract.yaml.when 的旧定义 | 修复入口说明中的残留旧口径，保证 Importer / Resolver 一致 | Issue #49；IR-008；SR-032；SR-004/013 |
