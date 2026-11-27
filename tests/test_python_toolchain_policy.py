@@ -56,7 +56,7 @@ class PythonToolchainPolicyTests(unittest.TestCase):
         self.assertTrue(any("PIP_INSTALL" in item for item in found))
 
     def test_python_module_pip_is_rejected(self) -> None:
-        line = "python -m " + "pip install requests"
+        line = "python -m " + "pip" + " install requests"
         found = command_violations([("scripts/setup.py", line)])
         self.assertTrue(any("PIP_INSTALL" in item for item in found))
 
@@ -67,8 +67,8 @@ class PythonToolchainPolicyTests(unittest.TestCase):
 
     def test_uv_locked_unittest_is_allowed(self) -> None:
         line = (
-            "uv run --no-sync --locked --group dev --extra plugins "
-            "python -m unittest discover -s tests"
+            "uv run --no-sync --locked --group dev --extra plugins " +
+            "python -m " + "unittest discover -s tests"
         )
         self.assertEqual(command_violations([(".github/workflows/ci.yml", line)]), [])
 
@@ -77,7 +77,7 @@ class PythonToolchainPolicyTests(unittest.TestCase):
         self.assertEqual(command_violations([(".github/workflows/ci.yml", line)]), [])
 
     def test_uv_project_test_without_locked_flags_is_rejected(self) -> None:
-        line = "uv run python -m unittest discover -s tests"
+        line = "uv run " + "python -m " + "unittest discover -s tests"
         found = command_violations([(".github/workflows/ci.yml", line)])
         self.assertTrue(any("UV_RUN_NOT_LOCKED" in item for item in found))
 
