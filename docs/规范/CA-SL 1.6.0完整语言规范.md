@@ -1,7 +1,7 @@
 # CA-SL 1.6.0 完整语言规范（中央设计稿）
 
 > 文档类型：CA-SL 作者语言规范（中央规范性设计稿）
-> 文档版本：0.1.8
+> 文档版本：0.1.9
 > 语言版本：CA-SL 1.6.0
 > languageTarget 候选：connectionagent.io/v1.6.0（本设计建议值；发布前由 ca-skills 与 Compiler Owner 在正式 Schema / Golden 中确认）
 > 状态：**DRAFT / REVIEW_REQUESTED**；未发布、未冻结、不得作为已发布产品规范
@@ -58,7 +58,7 @@ skill-root/
 - assurance/procedure.yaml：唯一入口 Procedure DAG、显式输入绑定、Node 阶段、Wait 和路由。
 - assurance/predicates.yaml：可复用 Predicate 定义及其参数 / Evidence 契约；没有 Predicate 时仍须存在合法空 PredicateSet。
 
-没有 assurance/ 的 Skill 仍可携带 schemas/、scripts/、references/ 和 assets/，并仅支持 LLM-guided；若脚本被明确标记为 llmInvocable 且 Host 配置 `scriptExecution.llmEnabled=true`（默认 false），可通过 Host Script Execution Capability 调用。存在 assurance/ 时，contract.yaml、procedure.yaml、predicates.yaml、被引用的共享 Schema / Script、依赖和所有静态语义必须全部有效，才同时具备 Deterministic 与 LLM-guided 两种模式。Assurance 无效时必须拒绝导入，不得静默降级。不得新增 constraint.yaml、activation.yaml、applicability.yaml、第二份 Skill Descriptor 或 Domain Contract Package；predicates.yaml 只描述执行期 Predicate，不参与 Skill 选择。
+没有 assurance/ 的 Skill 仍可携带 schemas/、scripts/、references/ 和 assets/，并仅支持 LLM-guided；LLM 可通过 Host Script Execution Capability 调用 `scripts/manifest.yaml` 登记的脚本；不设置逐脚本可调用标记或额外 Host 开关。存在 assurance/ 时，contract.yaml、procedure.yaml、predicates.yaml、被引用的共享 Schema / Script、依赖和所有静态语义必须全部有效，才同时具备 Deterministic 与 LLM-guided 两种模式。Assurance 无效时必须拒绝导入，不得静默降级。不得新增 constraint.yaml、activation.yaml、applicability.yaml、第二份 Skill Descriptor 或 Domain Contract Package；predicates.yaml 只描述执行期 Predicate，不参与 Skill 选择。
 
 ## 3. 核心术语与所有权
 
@@ -212,7 +212,6 @@ Script 是 Skill Package 的共享资源，不属于 assurance/。源码放在 `
 - `purpose`：只能是 `transform` 或 `predicate`；
 - `inputSchema`：相对 Skill Package 根目录的 `schemas/*.schema.yaml`；
 - `outputSchema`：`transform` 必需，引用相对根目录的 `schemas/*.schema.yaml`；`predicate` 不得声明此字段，其结果固定为 PASS / FAIL / UNKNOWN；
-- `llmInvocable`：必需布尔值；仅 `purpose=transform` 可以为 true，Predicate Script 必须为 false。
 
 Script ID 在同一 Skill Package 内唯一且稳定。Procedure 的 `operation.script` 只引用 `purpose=transform` 的 Script ID；Predicate 的唯一 `evaluator` 只引用 `purpose=predicate` 的 Script ID。所有 Script 输入和输出均为 JSON 值并按对应 Schema 验证。入口函数分别为 `run(input: JSONValue) -> JSONValue` 与 `evaluate(input: JSONValue) -> PASS|FAIL|UNKNOWN`。
 
@@ -226,13 +225,11 @@ scripts:
     purpose: transform
     inputSchema: schemas/normalize-qos-input.schema.yaml
     outputSchema: schemas/normalize-qos-output.schema.yaml
-    llmInvocable: true
   qos-is-valid:
     file: scripts/qos_is_valid.py
     entrypoint: evaluate
     purpose: predicate
     inputSchema: schemas/qos-valid-input.schema.yaml
-    llmInvocable: false
 ~~~
 
 Assurance Procedure 对 transform Script 的引用示例：
@@ -246,9 +243,9 @@ operation:
 
 Predicate evaluator 只写 Registry Script ID，不写路径、模块名或函数名。
 
-LLM 可以通过 Host 的只读 Skill Resource Access 读取 `scripts/` 下的源码和 Registry；读取不等于执行。LLM 只能通过 Host-owned system Capability `host.skill-script.execute` 调用 Registry 中 `llmInvocable=true` 的 transform Script，参数固定为 `scriptId` 与 `input`。Host 只解析当前已绑定 Skill 的固定 Package snapshot，并按条目验证输入 Schema、执行精确 entrypoint、验证输出 Schema；模型不得提交文件路径、模块名、函数名、代码、解释器参数或任意命令。Host 逻辑配置 `scriptExecution.llmEnabled` 默认为 false；只有部署显式设为 true，且当前 Skill 存在符合条件的 Script 时，才向模型暴露此 Action。该开关只控制 LLM Action 暴露，不改变 Assurance Procedure 对已编译 transform Script 的内部调用；Host Script Runner 本身仍受 Package Registry 与运行预算约束。
+LLM 可以通过 Host 的只读 Skill Resource Access 读取 `scripts/` 下的源码和 Registry，并通过 Host-owned system Capability `host.skill-script.execute` 调用当前 Skill Registry 中登记的任意 Script，参数固定为 `scriptId` 与 `input`。LLM 与 Assurance Procedure / Predicate 使用同一 Host Script Runner、同一份脚本字节、Registry 和 I/O Schema；不设置逐脚本可调用标记，也不设置额外 Host 开关。Host 只解析当前 Run 绑定的固定 Package snapshot，按 Registry 校验输入 Schema、执行精确 entrypoint 并验证输出 Schema；模型不得提交文件路径、模块名、函数名、代码、解释器参数或任意命令。Host 仅在当前 Skill 有已登记 Script 时提供该 Action。purpose 仍约束 CA-SL 调用点：operation.script 只能引用 transform，Predicate evaluator 只能引用 predicate；它不是 LLM 权限开关。
 
-Deterministic Procedure 的 `operation.script` 由 Compiler / Runtime 映射到同一 Host Script Runner；Predicate evaluator 由 Runtime 内部纯求值入口调用，不暴露为 LLM Action。两种调用共享同一份脚本字节、Registry 和 Schema，不复制脚本或生成第二套定义。
+Deterministic Procedure 的 `operation.script` 与 Predicate evaluator 均映射到同一 Host Script Runner；LLM 也通过同一 Runner 按 Script ID 调用 Registry 中登记的脚本。purpose 仅约束 Assurance 的静态引用位置，不构成 LLM 可调用性区分。三种调用共享同一份脚本字节、Registry 和 Schema，不复制脚本或生成第二套定义。
 
 所有 Script 必须是确定性、无外部副作用的本地计算：不得访问网络、任意宿主文件系统、子进程、环境秘密、时钟、随机数或动态加载；不得调用 Tool / Capability、Plugin 或 Owner，也不得制造 Receipt、Commit Proof 或 Evidence。需要外部副作用时必须调用正式业务 Capability，不得包进 Script。
 
@@ -386,7 +383,7 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 | 输入 / 场景 | 必需结果 |
 |---|---|
 | 无 Assurance、无共享资源 | 可导入；仅 LLM-guided；不调用 Compiler |
-| 无 Assurance、含 schemas/ 与 scripts/manifest.yaml | 可导入；仅 LLM-guided；Host 校验共享资源；只有 `scriptExecution.llmEnabled=true` 且 Registry 存在 llmInvocable Script 时才提供脚本 Capability；不调用 Compiler |
+| 无 Assurance、含 schemas/ 与 scripts/manifest.yaml | 可导入；仅 LLM-guided；Host 校验共享资源；当前 Skill 的 Script Registry 非空时提供 Host Script Execution Capability；不调用 Compiler |
 | 完整有效 Assurance | 只有正式 1.6.0 Compiler Build / Verify / Bundle 后才可导入 |
 | Assurance 目录缺文件或无效 | 拒绝；不得降级 |
 | Contract 只声明 Capability，唯一映射 Callable | Link 通过 |
@@ -461,3 +458,4 @@ Host Context Schema-only Package 仍只经 `Contract.contexts` 引用，与 Open
 | 2026-11-27 | 0.1.6 | GPT-6.2（ChatGPT） | §2、§3、§5、§6、§8、§14、§16 | 将 schemas/scripts 提升为 Skill Package 根目录共享资源；定义 YAML Schema 源、Script Registry、Host Script Execution Capability 与 Assurance / LLM 共用资源路径 | 修复可选 Assurance 导致 LLM-only Skill 无法使用 Schema / Script 的结构矛盾，禁止模型任意 Python 执行 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.7 | GPT-6.2（ChatGPT） | §7～§8 | 明确业务 Operation Capability 与 `operation.script` 的互斥语法分支，避免把 Package-local Script 误列为业务 Capability | 保持 Capability-only 授权模型，同时让 Procedure 明确引用共享 Script Registry | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.8 | GPT-6.2（ChatGPT） | §2、§7 | 统一无 Assurance Package 的术语，避免误读为只能包含 SKILL.md 单文件 | 明确无 Assurance 包仍可携带共享 Schema / Script / references / assets | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.1.9 | GPT-6.2（ChatGPT） | §2、§8、§16 | 删除 `llmInvocable` 与 `scriptExecution.llmEnabled` 双重门禁；LLM、Procedure 和 Predicate 统一调用当前 Package Registry 中的脚本 | Demo 不区分脚本调用者权限；保留固定 Package snapshot、精确入口、I/O Schema 和无副作用边界 | Issue #49；IR-008；SR-032 |
