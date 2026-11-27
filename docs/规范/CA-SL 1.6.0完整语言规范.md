@@ -1,7 +1,7 @@
 # CA-SL 1.6.0 完整语言规范（中央设计稿）
 
 > 文档类型：CA-SL 作者语言规范（中央规范性设计稿）
-> 文档版本：0.2.6
+> 文档版本：0.2.7
 > 语言版本：CA-SL 1.6.0
 > languageTarget 候选：connectionagent.io/v1.6.0（本设计建议值；发布前由 ca-skills 与 Compiler Owner 在正式 Schema / Golden 中确认）
 > 状态：**DRAFT / REVIEW_REQUESTED**；CA-SL 1.6.0 唯一正式语言设计，Assurance 可选；有 Assurance Skill 时 `assurance/contract.yaml` 可声明顶层 `when`；`SKILL.md` Front Matter 不声明 when；无 Assurance Skill 不声明 when；未发布、未冻结。
@@ -141,25 +141,15 @@ Contract 的 precondition 是至多一个全局阶段引用；该引用必须指
 
 ### 5.3 Procedure.inputs 与 arguments
 
-Procedure.inputs 是本 Procedure 唯一的命名输入映射，值必须是精确的 context SourcePath：
+Procedure.inputs 是本 Procedure 唯一的命名输入映射，值必须是精确的 context SourcePath。下例**仅展示输入映射片段**，不是可独立构建的完整 Procedure：
 
 ~~~yaml
-start: validate-request
 inputs:
   supi: context.subject.supi
   psi: context.request.pduSessionId
-nodes:
-  validate-request:
-    precondition:
-      predicates:
-        - predicate: request.valid
-          arguments:
-            - inputs.supi
-            - inputs.psi
-      routes:
-        FAIL: SAFE_STOPPED
-        UNKNOWN: UNRESOLVED
 ~~~
+
+完整 Procedure 仍必须满足 §6 的真实 start / nodes / 阶段路由、合法业务 Node 边界和最终 Postcondition PASS → SUCCEEDED 规则。不得把仅有中间 Precondition 的 `validate-request` 伪完整示例当作合法的独立 Goal Procedure。
 
 - Procedure.inputs 只负责把 context.* 显式绑定为 Procedure 局部输入名；不得隐式复制整个 Context。
 - 每个 Operation / Observation / Predicate 调用点都必须显式写 arguments；参数名、数量、顺序和类型必须匹配目标 Schema / Predicate 签名。
@@ -605,3 +595,4 @@ Host Context Schema-only Package 仍只经 `Contract.contexts` 引用，与 Open
 | 2026-11-27 | 0.2.5 | GPT-6.2（ChatGPT） | §4、§5.1、§12.1、§13、§19、修订记录 | 为 3GPP 可选 requestType 增加 has 守卫；定义 Skill-owned 纯 $ref OAS3 根引用别名，明确 G.4 闭合对象与外部 OAS3 dialect 的边界、默认 additionalProperties 语义、Resolver 方向和 Golden 正负例 | 避免可选字段 CEL 访问与原版 OAS3 直接引用被 G.4 根闭合规则迫使投影/复制字段；保持上游原件不变 | Issue #49；IR-008/009；SR-013/031；F08；PR #52 |
 
 | 2026-11-27 | 0.2.6 | GPT-6.2（ChatGPT） | §5.1、修订记录 | 将“开放对象拒绝”限定为本地 G.4 对象根 / SourcePath 对象节点；明确 OAS3 根引用别名及外部闭包按 OAS 3.0 默认语义处理 | 消除一般性 G.4 闭合规则与 OAS3 未声明 additionalProperties 默认允许额外属性之间的规范冲突 | Issue #49；IR-009；SR-013；PR #52 |
+| 2026-11-27 | 0.2.7 | ChatGPT（GPT-6） | §5.3、文档头、修订记录 | 移除具有 start / nodes 但仅含中间 Precondition 的误导性伪完整 Procedure 示例，改为明确标注的 Procedure.inputs 片段，重申完整 Procedure 必须满足 §6 Node / routes / Goal Postcondition 规则 | 避免语言规范以非合规中间 Predicate-only Node 示例违反自身作者粒度原则 | Issue #49；IR-008；SR-032；PR #52 |
