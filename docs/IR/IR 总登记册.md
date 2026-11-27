@@ -1,9 +1,9 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录  
-> 文档版本：0.1.28\
+> 文档版本：0.1.29\
 > 修订日期：2026-11-27\
-> 状态：8 项 IR；IR-008 登记 CA-SL 1.6.0 Capability-first 严格一对一与完全无旧版兼容，SR-029 设计待评审；IR-006 下 SR-030 Host Context Schema-only Publisher 设计待评审；SR-028 仍 DRAFT。\
+> 状态：8 项 IR；IR-008 登记 CA-SL 1.6.0 Capability-first 严格一对一与完全无旧版兼容，SR-029 设计待评审；IR-006 下 SR-030 Host Context Schema-only Publisher 设计待评审；IR-007 下 SR-028 已 READY，实施 Issue #96 已建立，产品 AC-028-01～10 全部 NOT_RUN。\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级需求管理平台
 
@@ -94,8 +94,8 @@ Compiler 实施沿用 [SR-013](../SR/SR-013-Compiler已检查when与发布产物
 Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择、虚拟环境隔离和 CI 执行入口，避免各 Workflow 临时安装未声明依赖，也避免多个 Git worktree 共享 editable 安装造成环境污染。
 
 - 协作 Issue：[Next #35](https://github.com/odango-chan/ca-agent-next/issues/35)（中央设计与治理刷新；不是代码实施 Issue）。
-- 实施分解：[SR-028](../SR/SR-028-Python工程工具链与uv环境管理.md)（DRAFT；实施 Issue 尚未创建）。
-- 架构与设计：[G02 Python 工程工具链与环境管理设计说明书](../设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md) v0.2.1。
+- 实施分解：[SR-028](../SR/SR-028-Python工程工具链与uv环境管理.md)（READY；独立实施 Issue [#96](https://github.com/odango-chan/ca-agent-next/issues/96)；AC-028-01～10 产品执行 NOT_RUN）。
+- 架构与设计：[G02 Python 工程工具链与环境管理设计说明书](../设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md) v0.2.8；第七轮独立评审 [PR #46 Review #6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6084094037) 对固定 Head `93f1389e7c5968cd30e8a74137207094864ecca0` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2` 给出 APPROVE_FOR_READY（0 P0 / 0 P1 / 2 P2）。
 - 实施范围：首批仅覆盖 `ca-agent-next` 根 Python 项目；其他仓库采用 uv 或迁移依赖管理须各自登记目标仓、基线、Issue 和 SR。
 - 完成依据：SR-028 的全部必需验收在目标仓真实执行并 VERIFIED；设计评审或锁文件生成本身不代表实施完成。
 
@@ -146,3 +146,5 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 
 | 2026-11-26 | 0.1.26 | GPT-6（ChatGPT） | 1.6.0 Host Context Publisher / 依赖边界 | 将 Host Context 1.6.0 Schema-only Publisher 纳入 IR-006/IR-008，区分 SR-024 历史 VERIFIED 与 SR-030 新需求 | 避免旧 Development Package 被误认为新版正式输入 | Issue #12/#40；IR-006/008；SR-030 |
 | 2026-11-26 | 0.1.27 | GPT-6（ChatGPT） | IR-006/IR-008、修订记录 | 同步 SR-030 新版 Host Context 1.6.0 Schema-only Publisher 需求与 SR-024 历史 v1alpha5 Publisher 边界 | 使 IR→SR 追踪明确区分旧版已验证证据和新版待评审需求 | Issue #12/#40；IR-006/008；SR-024、SR-030；PR #46 |
+
+| 2026-11-27 | 0.1.29 | GPT-6.2（ChatGPT） | 文档头、IR-007、修订记录 | 回填第七轮 Review #6084094037 与 G02 v0.2.8；将 SR-028 登记为 READY 并关联实施 Issue #96，保留产品 AC NOT_RUN | 保持 IR→SR→设计 Review→实施 Issue 追踪闭合，区分设计 READY 与产品验收 | Issue #12；Issue #96；PR #46；Review #6084094037；SR-028 v0.2.10 |
