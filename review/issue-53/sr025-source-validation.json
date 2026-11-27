@@ -1,0 +1,33 @@
+{
+  "overall": "PASS",
+  "metrics": {
+    "head": "7bcb2614aa3615d8358df31eecefd0909e894e40",
+    "source_revision": "fc44c3a745c68443fcfb12054c7eadf0ed7cc3f7",
+    "source_files": 59,
+    "manifest_blob": "dff8136f7dc48b83bbc09d08ed0340f2c9a6ae72",
+    "source_revision_diff_files": 0,
+    "artifact_digests_verified": 58,
+    "published_operations": 25,
+    "not_published": 7,
+    "capability_ids": 24,
+    "capability_members": 25,
+    "evidence_descriptors": 25,
+    "schema_files": 54,
+    "public_schema_closure": 53,
+    "excluded_schema_ids": [
+      "urn:openamsm:mas:v1alpha4:deployment-binding"
+    ],
+    "original_payload_files": 55,
+    "original_payload_bytes": 80479,
+    "exports_total": 127,
+    "payload_files_with_generated_capability_catalog": 56,
+    "zip_files_with_package_json": 57
+  },
+  "errors": [],
+  "not_run": [
+    "Publisher generate/verify",
+    "Compiler BuildDevelopment/VerifyDevelopment",
+    "ca-client-tools go test",
+    "Studio 双根消费"
+  ]
+}

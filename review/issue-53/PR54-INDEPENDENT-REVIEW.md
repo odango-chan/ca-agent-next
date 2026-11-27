@@ -126,6 +126,7 @@ SR-003 模块 VERIFIED 有证据，但《实施状态总览》L92、《跨仓依
 - [ca-client-tools Issue #43](https://github.com/odango-chan/ca-client-tools/issues/43) 本轮 API 实测为 OPEN；main 为 `7bcb2614aa3615d8358df31eecefd0909e894e40`。
 - 建议的 `internal/ownerinterfacepkg` 与 `cmd/ca-client-tools-owner-interface-release` 当前 main 均未发现；实施 PR/Commit 为空。
 - 结论：READY 不得写成 IMPLEMENTED；Publisher 设计完成不得写成 Publisher 已实现；AC-025-01～08 保持 NOT_RUN。
+- 独立源码探针 `validate_sr025_source.py` 实测 **PASS**：当前 main 与 source Revision 的 59 文件无差异，58 个 artifact digest 全匹配；25 published / 7 notPublished；24 Capability IDs / 25 members；25 EvidenceDescriptor；54 Schema 中公开闭包 53，唯一排除 `deployment-binding`；55 个原始 payload 为 80,479 bytes，导出总数 127。该结果支持 READY 的设计依据，但不代替 Publisher generate/verify、Compiler Build/Verify、go test 或 Release Acceptance。
 
 ## 5. 架构一致性审查结果
 
@@ -205,6 +206,7 @@ SR-003 模块 VERIFIED 有证据，但《实施状态总览》L92、《跨仓依
 | 版本与修订记录 | **FAIL**：依赖审计 0.2.12→最后 0.2.11；盘点 0.3.17→最后 0.3.18；另有修订碰撞 |
 | Markdown 表格 | **FAIL**：迁移审计 4 行四列表被写成三列；盘点、F08、F09 历史修订表另有多行列数不一致 |
 | SR 统计 | PASS：27；4/1/1/21，无重复漏项 |
+| SR-025 固定源码探针 | **PASS**：59 文件、58 digest、25/7 operations、24/25 Capability、25 Evidence、53 Schema 闭包、127 exports、80,479 bytes；产品 AC 仍 NOT_RUN |
 | 交叉引用语义 | **FAIL**：详见 P1/P2；路径存在不等于版本、SHA、状态正确 |
 | Git tree | PASS：197 blobs / 50 trees / 247 entries / 157 Markdown |
 | `git diff --check` | 31 处行尾空格；P3，不作为唯一阻断理由 |

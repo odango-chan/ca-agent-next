@@ -22,6 +22,7 @@
 
 - 16 文件、504 links、302 本地链接、47 锚点已解析；无缺失本地路径/锚点。
 - 27 项权威 SR：4 VERIFIED / 1 READY / 1 IMPLEMENTED / 21 DRAFT。
+- SR-025 独立源码探针 PASS：59 文件/58 digest、25/7 operations、24/25 Capability、25 Evidence、53 Schema 闭包、127 exports、80,479 bytes；产品 AC 仍 NOT_RUN。
 - Git tree：197 blobs / 157 Markdown / 247 recursive entries（50 directory trees）。
 - 本地 Review Context 回归 80/80 PASS，固定 Base/Head 生成 PASS。
 - 当前 Head 的 Run #192/#193/#194/#195 均 SUCCESS，但不能覆盖上述治理问题。

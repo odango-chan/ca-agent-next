@@ -39,7 +39,7 @@
 
 - 27 项权威 SR 实测：4 VERIFIED / 1 READY / 1 IMPLEMENTED / 21 DRAFT，无重复漏项。
 - SR-003 模块 VERIFIED 有真实 Ubuntu/Windows CI；系统 EX-02/03/04/18 仍 NOT_RUN。
-- SR-025 v0.1.8 READY；ca-client-tools #43 OPEN，Publisher 未实施，AC-025 未执行。
+- SR-025 v0.1.8 READY；ca-client-tools #43 OPEN，Publisher 未实施，AC-025 未执行。独立源码探针验证 59 文件/58 digest、25/7 operations、24/25 Capability、25 Evidence、53 Schema 闭包、127 exports 和 80,479 bytes 均与 READY 设计一致，不代替产品验收。
 - 16 文件 Markdown 解析完成；504 links、302 本地链接、47 锚点，无缺失本地路径/锚点。
 - Git tree 实测：197 blobs / 157 Markdown / 247 recursive entries（50 directory trees）。
 - 本地 SR-001 回归 80/80 PASS，固定 Base/Head 的 Review Context 生成 PASS。
