@@ -26,13 +26,16 @@ ROOT_TOOLCHAIN_FILES = {
     BASELINE_MANIFEST_PATH,
 }
 ROOT_LOCKFILE_NAMES = {
-    "Pipfile",
-    "Pipfile.lock",
+    "pipfile",
+    "pipfile.lock",
     "poetry.lock",
     "conda-lock.yml",
     "conda-lock.yaml",
     "environment.yml",
     "environment.yaml",
+    "pdm.lock",
+    "rye.lock",
+    "pixi.lock",
 }
 EXECUTABLE_SUFFIXES = {
     ".py", ".sh", ".bash", ".ps1", ".psm1", ".yml", ".yaml", ".toml",
@@ -67,7 +70,8 @@ FORBIDDEN_COMMANDS = (
         re.compile(
             r"\b(?:python(?:\d+(?:\.\d+)?)?\s+-m\s+pip|pip(?:3(?:\.\d+)?)?)\s+"
             r"(?:install|sync|compile)\b"
-            r"|\bpip-(?:compile|sync)\b",
+            r"|\bpip-(?:compile|sync)\b"
+            r"|\bpipenv\s+(?:install|sync|lock)\b",
             re.IGNORECASE,
         ),
         "禁止使用 pip 安装入口；请更新 pyproject.toml/uv.lock 并通过 uv 管理依赖同步。",
@@ -76,7 +80,8 @@ FORBIDDEN_COMMANDS = (
         "ALTERNATE_PACKAGE_MANAGER",
         re.compile(
             r"\b(?:poetry\s+(?:install|lock)|conda\s+(?:install|env\s+create)|"
-            r"mamba\s+(?:install|env\s+create))\b",
+            r"mamba\s+(?:install|env\s+create)|pdm\s+(?:install|sync|lock|add)|"
+            r"rye\s+(?:sync|lock|add|install)|pixi\s+(?:install|lock|add))\b",
             re.IGNORECASE,
         ),
         "禁止引入 Poetry/Conda/Mamba 第二套根项目依赖管理入口。",
@@ -130,8 +135,9 @@ def is_root_lockfile(path: str) -> bool:
         return False
     name = candidate.name.lower()
     return (
-        name.startswith("requirements") and name.endswith(".txt")
-    ) or candidate.name in ROOT_LOCKFILE_NAMES
+        name.startswith(("requirements", "constraints"))
+        and Path(name).suffix in {".txt", ".in"}
+    ) or name in ROOT_LOCKFILE_NAMES
 
 
 def is_python_scope_path(path: str, workflow_content: str = "") -> bool:
