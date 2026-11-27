@@ -1,0 +1,454 @@
+{
+  "head": "1f1234065be1f849dad2d17a91eaff986d384df5",
+  "total": 89,
+  "results": {
+    "https://github.com/odango-chan/ai-gateway": 200,
+    "https://github.com/odango-chan/ca-agent": 200,
+    "https://github.com/odango-chan/ca-agent-demo": 200,
+    "https://github.com/odango-chan/ca-agent-demo/issues/252": 200,
+    "https://github.com/odango-chan/ca-agent-demo/pull/219": 200,
+    "https://github.com/odango-chan/ca-agent-demo/pull/253": 200,
+    "https://github.com/odango-chan/ca-agent-demo/tree/25168db031e996bfa4de440c4156ae94f4e19bce": 200,
+    "https://github.com/odango-chan/ca-agent-next/actions/runs/45793590532": 200,
+    "https://github.com/odango-chan/ca-agent-next/actions/runs/45814208662": 200,
+    "https://github.com/odango-chan/ca-agent-next/actions/runs/45815167442": 200,
+    "https://github.com/odango-chan/ca-agent-next/actions/runs/45817800342": 200,
+    "https://github.com/odango-chan/ca-agent-next/actions/runs/45819344112": 200,
+    "https://github.com/odango-chan/ca-agent-next/commit/2c40b636d9ab71bca9ec2f3301513acc4435739e": 200,
+    "https://github.com/odango-chan/ca-agent-next/commit/b2ed5eb84114f9c2556a0cd06ed974887b1b70ad": 200,
+    "https://github.com/odango-chan/ca-agent-next/commit/c1268b4fea4fa181edfac3236cbb103161586013": 200,
+    "https://github.com/odango-chan/ca-agent-next/issues/12": 200,
+    "https://github.com/odango-chan/ca-agent-next/issues/14": 200,
+    "https://github.com/odango-chan/ca-agent-next/issues/19": 200,
+    "https://github.com/odango-chan/ca-agent-next/issues/2": 200,
+    "https://github.com/odango-chan/ca-agent-next/issues/21": 200,
+    "https://github.com/odango-chan/ca-agent-next/issues/22": 200,
+    "https://github.com/odango-chan/ca-agent-next/issues/26": 200,
+    "https://github.com/odango-chan/ca-agent-next/issues/27": 200,
+    "https://github.com/odango-chan/ca-agent-next/issues/28": 200,
+    "https://github.com/odango-chan/ca-agent-next/issues/35": 200,
+    "https://github.com/odango-chan/ca-agent-next/issues/40": 200,
+    "https://github.com/odango-chan/ca-agent-next/issues/5": 200,
+    "https://github.com/odango-chan/ca-agent-next/pull/1": 200,
+    "https://github.com/odango-chan/ca-agent-next/pull/11": 200,
+    "https://github.com/odango-chan/ca-agent-next/pull/13": 200,
+    "https://github.com/odango-chan/ca-agent-next/pull/15": 200,
+    "https://github.com/odango-chan/ca-agent-next/pull/16": 200,
+    "https://github.com/odango-chan/ca-agent-next/pull/18": 200,
+    "https://github.com/odango-chan/ca-agent-next/pull/20": 200,
+    "https://github.com/odango-chan/ca-agent-next/pull/23": 200,
+    "https://github.com/odango-chan/ca-agent-next/pull/32": 200,
+    "https://github.com/odango-chan/ca-agent-next/pull/34": 200,
+    "https://github.com/odango-chan/ca-agent-next/pull/37": 200,
+    "https://github.com/odango-chan/ca-agent-next/pull/54": 200,
+    "https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc": 200,
+    "https://github.com/odango-chan/ca-agent/blob/447d0cce7e42c7c1184b11fb2563792eead68d51/docs/evidence/host-artifact-store-p1-20261118.md": 200,
+    "https://github.com/odango-chan/ca-agent/tree/447d0cce7e42c7c1184b11fb2563792eead68d51": 200,
+    "https://github.com/odango-chan/ca-client-tools": 200,
+    "https://github.com/odango-chan/ca-client-tools/blob/7bcb2614aa3615d8358df31eecefd0909e894e40/docs/architecture.md": 200,
+    "https://github.com/odango-chan/ca-client-tools/blob/7bcb2614aa3615d8358df31eecefd0909e894e40/docs/provider-protocol-v2.md": 200,
+    "https://github.com/odango-chan/ca-client-tools/blob/7bcb2614aa3615d8358df31eecefd0909e894e40/docs/runtime-bindings-v1.md": 200,
+    "https://github.com/odango-chan/ca-client-tools/issues/43": 200,
+    "https://github.com/odango-chan/ca-client-tools/pull/39": 200,
+    "https://github.com/odango-chan/ca-client-tools/releases/tag/v1.2.0": 200,
+    "https://github.com/odango-chan/ca-openamsm-plugin": 200,
+    "https://github.com/odango-chan/ca-openamsm-plugin/blob/eb83c8f2e83dbcdc56b484126b2acf9e8f2a7397/README.md": 200,
+    "https://github.com/odango-chan/ca-openamsm-plugin/blob/main/README.md": 200,
+    "https://github.com/odango-chan/ca-openamsm-plugin/pull/1": 200,
+    "https://github.com/odango-chan/ca-runtime": 200,
+    "https://github.com/odango-chan/ca-runtime/tree/9db2230c172da8742ecfc5049cbfbd1a71b7828f": 200,
+    "https://github.com/odango-chan/ca-skill-compiler": 200,
+    "https://github.com/odango-chan/ca-skill-compiler/blob/255ab85fa5abb4b0bf36656bf64250cafebf45cb/docs/design/compiler-core-v1alpha5.md": 200,
+    "https://github.com/odango-chan/ca-skill-compiler/blob/v2.1.0/contracts/development/v1alpha1/interface-package.schema.json": 200,
+    "https://github.com/odango-chan/ca-skill-compiler/blob/v2.1.0/internal/compiler/development_request.go": 200,
+    "https://github.com/odango-chan/ca-skill-compiler/issues/61": 200,
+    "https://github.com/odango-chan/ca-skill-compiler/tree/main/contracts/v1alpha5": 200,
+    "https://github.com/odango-chan/ca-skill-studio-demo": 200,
+    "https://github.com/odango-chan/ca-skill-studio-demo/blob/79bd2c3f64a90e7f0f169204c866a3218655bab1/docs/architecture/studio-boundaries.md": 200,
+    "https://github.com/odango-chan/ca-skill-studio-demo/blob/79bd2c3f64a90e7f0f169204c866a3218655bab1/docs/design/ai-procedure-authoring.md": 200,
+    "https://github.com/odango-chan/ca-skill-studio-demo/issues/261": 200,
+    "https://github.com/odango-chan/ca-skill-studio-demo/issues/269": 200,
+    "https://github.com/odango-chan/ca-skill-studio-demo/issues/279": 200,
+    "https://github.com/odango-chan/ca-skill-studio-demo/issues/290": 200,
+    "https://github.com/odango-chan/ca-skill-studio-demo/issues/295": 200,
+    "https://github.com/odango-chan/ca-skill-studio-demo/pull/267": 200,
+    "https://github.com/odango-chan/ca-skill-studio-demo/pull/270": 200,
+    "https://github.com/odango-chan/ca-skill-studio-demo/pull/272": 200,
+    "https://github.com/odango-chan/ca-skill-studio-demo/pull/276": 200,
+    "https://github.com/odango-chan/ca-skill-studio-demo/pull/296": 200,
+    "https://github.com/odango-chan/ca-skill-studio-demo/tree/79bd2c3f64a90e7f0f169204c866a3218655bab1": 200,
+    "https://github.com/odango-chan/ca-skills": 200,
+    "https://github.com/odango-chan/ca-skills/blob/18d8184367982ccbc835756136c4a53f9096c3a0/docs/skill-language-spec.v1alpha5.zh-CN.md": 200,
+    "https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs/releases/ca-sl-v1alpha5.md": 200,
+    "https://github.com/odango-chan/ca-skills/blob/main/docs/authoring-model.md": 200,
+    "https://github.com/odango-chan/ca-skills/blob/main/docs/authoring.md": 200,
+    "https://github.com/odango-chan/ca-skills/blob/main/docs/releases/ca-sl-v1alpha5.md": 200,
+    "https://github.com/odango-chan/ca-skills/pull/88": 200,
+    "https://github.com/odango-chan/ca-skills/tree/18d8184367982ccbc835756136c4a53f9096c3a0": 200,
+    "https://github.com/odango-chan/env-5gc-sim": 200,
+    "https://github.com/odango-chan/env-5gc-sim/pull/79": 200,
+    "https://github.com/odango-chan/env-5gc-sim/tree/6ba1dc47049013e19d93222fb308ffead7eb4c0e": 200,
+    "https://github.com/odango-chan/env-openamsm": 200,
+    "https://github.com/odango-chan/env-openamsm/blob/dc83ccbf5be54dcc7112dd43ba95ea6fa5975550/docs/mas-owner-contracts-and-receipt.md": 200,
+    "https://github.com/odango-chan/env-openamsm/blob/dc83ccbf5be54dcc7112dd43ba95ea6fa5975550/docs/scheme-c-pfcp-reconcile.md": 200
+  },
+  "sources": {
+    "https://github.com/odango-chan/ca-agent-next/issues/35": [
+      "docs/IR/IR 总登记册.md",
+      "docs/治理/实施状态总览.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/pull/32": [
+      "docs/IR/IR 总登记册.md",
+      "docs/参考与审计/跨仓设计资产迁移与一致性审计.md",
+      "docs/治理/SR 总索引.md",
+      "docs/治理/实施状态总览.md",
+      "docs/治理/现有文档盘点与收敛计划.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/actions/runs/45793590532": [
+      "docs/IR/IR 总登记册.md",
+      "docs/参考与审计/跨仓设计资产迁移与一致性审计.md",
+      "docs/治理/SR 总索引.md",
+      "docs/治理/功能树与需求追踪基线.md",
+      "docs/治理/实施状态总览.md",
+      "docs/治理/现有文档盘点与收敛计划.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/issues/19": [
+      "docs/IR/IR 总登记册.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/pull/20": [
+      "docs/IR/IR 总登记册.md",
+      "docs/参考与审计/跨仓设计资产迁移与一致性审计.md",
+      "docs/治理/SR 总索引.md",
+      "docs/治理/功能树与需求追踪基线.md",
+      "docs/治理/文档总目录与索引.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/issues/21": [
+      "docs/IR/IR 总登记册.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/issues/12": [
+      "docs/IR/IR 总登记册.md",
+      "docs/治理/实施状态总览.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/issues/22": [
+      "docs/IR/IR 总登记册.md",
+      "docs/参考与审计/跨仓设计资产迁移与一致性审计.md",
+      "docs/治理/SR 总索引.md",
+      "docs/治理/实施状态总览.md",
+      "docs/治理/文档总目录与索引.md",
+      "docs/验收与实施/演示验收基线.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/pull/23": [
+      "docs/IR/IR 总登记册.md",
+      "docs/参考与审计/跨仓设计资产迁移与一致性审计.md",
+      "docs/治理/SR 总索引.md",
+      "docs/治理/功能树与需求追踪基线.md",
+      "docs/治理/实施状态总览.md",
+      "docs/治理/文档总目录与索引.md",
+      "docs/验收与实施/演示验收基线.md"
+    ],
+    "https://github.com/odango-chan/ca-skill-compiler/issues/61": [
+      "docs/IR/IR 总登记册.md",
+      "docs/参考与审计/跨仓依赖与可行性审计.md",
+      "docs/治理/功能树与需求追踪基线.md",
+      "docs/设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md",
+      "docs/设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/issues/14": [
+      "docs/IR/IR 总登记册.md",
+      "docs/设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/pull/16": [
+      "docs/IR/IR 总登记册.md",
+      "docs/参考与审计/跨仓设计资产迁移与一致性审计.md",
+      "docs/治理/实施状态总览.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/issues/2": [
+      "docs/IR/IR 总登记册.md"
+    ],
+    "https://github.com/odango-chan/ca-skills/pull/88": [
+      "docs/IR/IR 总登记册.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-demo/pull/253": [
+      "docs/IR/IR 总登记册.md",
+      "docs/参考与审计/跨仓依赖与可行性审计.md",
+      "docs/治理/SR 总索引.md",
+      "docs/治理/功能树与需求追踪基线.md",
+      "docs/治理/实施状态总览.md"
+    ],
+    "https://github.com/odango-chan/ca-client-tools/issues/43": [
+      "docs/IR/IR 总登记册.md",
+      "docs/SR/SR-016-工作台设计移交与条件编辑.md",
+      "docs/SR/SR-025-MAS Owner Interface Package Publisher.md",
+      "docs/参考与审计/跨仓依赖与可行性审计.md",
+      "docs/参考与审计/跨仓设计资产迁移与一致性审计.md",
+      "docs/架构设计/CA Agent Next 架构设计.md",
+      "docs/架构设计/外部能力域架构总览.md",
+      "docs/治理/SR 总索引.md",
+      "docs/治理/实施状态总览.md",
+      "docs/治理/现有文档盘点与收敛计划.md",
+      "docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md",
+      "docs/验收与实施/演示验收基线.md"
+    ],
+    "https://github.com/odango-chan/ca-client-tools/releases/tag/v1.2.0": [
+      "docs/SR/SR-016-工作台设计移交与条件编辑.md",
+      "docs/参考与审计/跨仓依赖与可行性审计.md",
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-skill-studio-demo/issues/279": [
+      "docs/SR/SR-016-工作台设计移交与条件编辑.md",
+      "docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md"
+    ],
+    "https://github.com/odango-chan/ca-skill-studio-demo/issues/290": [
+      "docs/SR/SR-016-工作台设计移交与条件编辑.md",
+      "docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md"
+    ],
+    "https://github.com/odango-chan/ca-skill-studio-demo/issues/295": [
+      "docs/SR/SR-016-工作台设计移交与条件编辑.md",
+      "docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md"
+    ],
+    "https://github.com/odango-chan/ca-skill-compiler/blob/v2.1.0/internal/compiler/development_request.go": [
+      "docs/SR/SR-025-MAS Owner Interface Package Publisher.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/issues/40": [
+      "docs/SR/SR-025-MAS Owner Interface Package Publisher.md"
+    ],
+    "https://github.com/odango-chan/ca-skill-studio-demo/pull/267": [
+      "docs/参考与审计/跨仓依赖与可行性审计.md",
+      "docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md"
+    ],
+    "https://github.com/odango-chan/ca-skill-studio-demo/pull/270": [
+      "docs/参考与审计/跨仓依赖与可行性审计.md",
+      "docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md"
+    ],
+    "https://github.com/odango-chan/ca-skill-studio-demo/issues/261": [
+      "docs/参考与审计/跨仓依赖与可行性审计.md"
+    ],
+    "https://github.com/odango-chan/ca-skill-studio-demo/issues/269": [
+      "docs/参考与审计/跨仓依赖与可行性审计.md",
+      "docs/治理/功能树与需求追踪基线.md",
+      "docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md"
+    ],
+    "https://github.com/odango-chan/ca-skill-studio-demo/pull/272": [
+      "docs/参考与审计/跨仓依赖与可行性审计.md",
+      "docs/治理/功能树与需求追踪基线.md",
+      "docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md"
+    ],
+    "https://github.com/odango-chan/ca-skill-studio-demo/pull/276": [
+      "docs/参考与审计/跨仓依赖与可行性审计.md",
+      "docs/治理/功能树与需求追踪基线.md",
+      "docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc": [
+      "docs/参考与审计/跨仓设计资产迁移与一致性审计.md",
+      "docs/治理/SR 总索引.md",
+      "docs/治理/实施状态总览.md",
+      "docs/治理/文档总目录与索引.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/pull/11": [
+      "docs/参考与审计/跨仓设计资产迁移与一致性审计.md",
+      "docs/治理/实施状态总览.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/pull/13": [
+      "docs/参考与审计/跨仓设计资产迁移与一致性审计.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/pull/37": [
+      "docs/参考与审计/跨仓设计资产迁移与一致性审计.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/pull/15": [
+      "docs/参考与审计/跨仓设计资产迁移与一致性审计.md",
+      "docs/治理/实施状态总览.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/pull/18": [
+      "docs/参考与审计/跨仓设计资产迁移与一致性审计.md",
+      "docs/治理/实施状态总览.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/commit/2c40b636d9ab71bca9ec2f3301513acc4435739e": [
+      "docs/参考与审计/跨仓设计资产迁移与一致性审计.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/commit/b2ed5eb84114f9c2556a0cd06ed974887b1b70ad": [
+      "docs/参考与审计/跨仓设计资产迁移与一致性审计.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/actions/runs/45815167442": [
+      "docs/参考与审计/跨仓设计资产迁移与一致性审计.md",
+      "docs/治理/SR 总索引.md",
+      "docs/治理/实施状态总览.md",
+      "docs/验收与实施/演示验收基线.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/actions/runs/45817800342": [
+      "docs/参考与审计/跨仓设计资产迁移与一致性审计.md",
+      "docs/治理/SR 总索引.md",
+      "docs/治理/实施状态总览.md",
+      "docs/验收与实施/演示验收基线.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/actions/runs/45819344112": [
+      "docs/参考与审计/跨仓设计资产迁移与一致性审计.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/issues/26": [
+      "docs/参考与审计/跨仓设计资产迁移与一致性审计.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/pull/54": [
+      "docs/参考与审计/跨仓设计资产迁移与一致性审计.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/actions/runs/45814208662": [
+      "docs/参考与审计/跨仓设计资产迁移与一致性审计.md",
+      "docs/治理/SR 总索引.md",
+      "docs/治理/功能树与需求追踪基线.md",
+      "docs/治理/实施状态总览.md",
+      "docs/治理/文档总目录与索引.md",
+      "docs/验收与实施/演示验收基线.md"
+    ],
+    "https://github.com/odango-chan/ca-skills": [
+      "docs/架构设计/外部能力域架构总览.md",
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-skill-compiler": [
+      "docs/架构设计/外部能力域架构总览.md",
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-client-tools": [
+      "docs/架构设计/外部能力域架构总览.md",
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-openamsm-plugin": [
+      "docs/架构设计/外部能力域架构总览.md",
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/env-openamsm": [
+      "docs/架构设计/外部能力域架构总览.md",
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-skill-studio-demo": [
+      "docs/架构设计/外部能力域架构总览.md",
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/env-5gc-sim": [
+      "docs/架构设计/外部能力域架构总览.md",
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-demo": [
+      "docs/架构设计/外部能力域架构总览.md",
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-runtime": [
+      "docs/架构设计/外部能力域架构总览.md",
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-agent": [
+      "docs/架构设计/外部能力域架构总览.md",
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ai-gateway": [
+      "docs/架构设计/外部能力域架构总览.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-demo/issues/252": [
+      "docs/治理/SR 总索引.md",
+      "docs/治理/实施状态总览.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/issues/28": [
+      "docs/治理/SR 总索引.md",
+      "docs/治理/实施状态总览.md"
+    ],
+    "https://github.com/odango-chan/ca-skills/blob/main/docs/authoring.md": [
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-skills/blob/main/docs/authoring-model.md": [
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-skill-compiler/tree/main/contracts/v1alpha5": [
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-client-tools/blob/7bcb2614aa3615d8358df31eecefd0909e894e40/docs/architecture.md": [
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-client-tools/blob/7bcb2614aa3615d8358df31eecefd0909e894e40/docs/provider-protocol-v2.md": [
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-client-tools/blob/7bcb2614aa3615d8358df31eecefd0909e894e40/docs/runtime-bindings-v1.md": [
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-openamsm-plugin/blob/main/README.md": [
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-openamsm-plugin/pull/1": [
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/env-openamsm/blob/dc83ccbf5be54dcc7112dd43ba95ea6fa5975550/docs/mas-owner-contracts-and-receipt.md": [
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/env-openamsm/blob/dc83ccbf5be54dcc7112dd43ba95ea6fa5975550/docs/scheme-c-pfcp-reconcile.md": [
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/env-5gc-sim/pull/79": [
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs/releases/ca-sl-v1alpha5.md": [
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-skills/blob/18d8184367982ccbc835756136c4a53f9096c3a0/docs/skill-language-spec.v1alpha5.zh-CN.md": [
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-skill-compiler/blob/255ab85fa5abb4b0bf36656bf64250cafebf45cb/docs/design/compiler-core-v1alpha5.md": [
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-client-tools/pull/39": [
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-openamsm-plugin/blob/eb83c8f2e83dbcdc56b484126b2acf9e8f2a7397/README.md": [
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-skill-studio-demo/tree/79bd2c3f64a90e7f0f169204c866a3218655bab1": [
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/env-5gc-sim/tree/6ba1dc47049013e19d93222fb308ffead7eb4c0e": [
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-demo/tree/25168db031e996bfa4de440c4156ae94f4e19bce": [
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-demo/pull/219": [
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-runtime/tree/9db2230c172da8742ecfc5049cbfbd1a71b7828f": [
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-agent/tree/447d0cce7e42c7c1184b11fb2563792eead68d51": [
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-agent/blob/447d0cce7e42c7c1184b11fb2563792eead68d51/docs/evidence/host-artifact-store-p1-20261118.md": [
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/issues/5": [
+      "docs/治理/功能树与需求追踪基线.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/issues/27": [
+      "docs/治理/实施状态总览.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/pull/34": [
+      "docs/治理/实施状态总览.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/pull/1": [
+      "docs/治理/实施状态总览.md"
+    ],
+    "https://github.com/odango-chan/ca-skills/blob/main/docs/releases/ca-sl-v1alpha5.md": [
+      "docs/设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md"
+    ],
+    "https://github.com/odango-chan/ca-skills/tree/18d8184367982ccbc835756136c4a53f9096c3a0": [
+      "docs/设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md"
+    ],
+    "https://github.com/odango-chan/ca-skill-studio-demo/blob/79bd2c3f64a90e7f0f169204c866a3218655bab1/docs/architecture/studio-boundaries.md": [
+      "docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md"
+    ],
+    "https://github.com/odango-chan/ca-skill-studio-demo/blob/79bd2c3f64a90e7f0f169204c866a3218655bab1/docs/design/ai-procedure-authoring.md": [
+      "docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md"
+    ],
+    "https://github.com/odango-chan/ca-skill-compiler/blob/v2.1.0/contracts/development/v1alpha1/interface-package.schema.json": [
+      "docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md"
+    ],
+    "https://github.com/odango-chan/ca-skill-studio-demo/pull/296": [
+      "docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md"
+    ],
+    "https://github.com/odango-chan/ca-agent-next/commit/c1268b4fea4fa181edfac3236cbb103161586013": [
+      "docs/验收与实施/演示验收基线.md"
+    ]
+  }
+}
