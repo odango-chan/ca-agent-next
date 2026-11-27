@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：**设计待评审**（唯一新目标 CA-SL 1.6.0；全链路不兼容任何旧作者语法、Build DTO、Artifact、Bundle；1.6.0 产品未发布）
-> 文档版本：0.3.4
+> 文档版本：0.3.5
 > 功能归属：F02 — Skill 管理与选择  
 > 关联 SR：SR-004、SR-005、SR-006    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -29,13 +29,19 @@ Agent 只消费已发布 Skill 包，不承担 CA-SL 源码编译、Artifact 发
 ~~~text
 skills/<skill-id>/
 ├── SKILL.md
-└── assurance/                 # 可选
+├── schemas/                    # 可选，共享 YAML Schema 资源
+├── scripts/                    # 可选，共享 Script 源码
+│   ├── manifest.yaml           # 存在可执行 Script 时必需
+│   └── *.py
+├── references/                 # 可选
+├── assets/                     # 可选
+└── assurance/                  # 可选
     ├── contract.yaml
     ├── procedure.yaml
     └── predicates.yaml
 ~~~
 
-SKILL.md 必须存在，其 YAML Front Matter 按 [Agent Skills Specification](https://agentskills.io/specification) 处理，不属于 CA-SL v1alpha5 语法。必需字段为 `name` / `description`；`name` 1～64 字符、匹配包根目录名、只允许小写字母/数字/连字符且不得有首尾/连续连字符；`description` 1～1024 字符且非空。可选字段为 `license`、`compatibility`（1～500 字符）、`metadata`（string→string）和实验性 `allowed-tools`。Next 严格拒绝未知 Front Matter 字段；`allowed-tools` 只作为元数据，不授予 Callable/Capability 权限。assurance/ 可选；新作者源的唯一目标为 **CA-SL 1.6.0 Capability-first**，现仍未正式发布；历史 v1alpha5 作者源码与 Release 保留追溯，不能当作 1.6.0 输入或自动迁移。存在 Assurance 时由外部 Compiler 按已正式发布的版本处理。contract.yaml 位于 assurance/ 内，不是每个 Skill 的必需文件。when 是 contract.yaml 的可选字段；predicates.yaml 只承载执行期业务判断。
+SKILL.md 必须存在，其 YAML Front Matter 按 [Agent Skills Specification](https://agentskills.io/specification) 处理，不属于 CA-SL v1alpha5 语法。必需字段为 `name` / `description`；`name` 1～64 字符、匹配包根目录名、只允许小写字母/数字/连字符且不得有首尾/连续连字符；`description` 1～1024 字符且非空。可选字段为 `license`、`compatibility`（1～500 字符）、`metadata`（string→string）和实验性 `allowed-tools`。Next 严格拒绝未知 Front Matter 字段；`allowed-tools` 只作为元数据，不授予 Callable/Capability 权限。assurance/ 可选；schemas/、scripts/、references/、assets/ 是不依赖 Assurance 的 Package 根目录共享资源。Schema 文件以 YAML 1.2 表示 JSON Schema 数据模型；Script Registry scripts/manifest.yaml 声明精确 entrypoint、purpose、input/output Schema 与 llmInvocable。LLM 可读取共享资源；仅 llmInvocable=true 的 transform Script 可在 Host 策略启用时通过 host.skill-script.execute 调用。新作者源的唯一目标为 **CA-SL 1.6.0 Capability-first**，现仍未正式发布；历史 v1alpha5 作者源码与 Release 保留追溯，不能当作 1.6.0 输入或自动迁移。存在 Assurance 时由外部 Compiler 按已正式发布的版本处理。contract.yaml 位于 assurance/ 内，不是每个 Skill 的必需文件。when 是 contract.yaml 的可选字段；predicates.yaml 只承载执行期业务判断。
 
 ### 2.2 运行时发布包
 
@@ -44,16 +50,20 @@ Next Agent 消费外部发布的运行包：
 ~~~text
 published-skills/<skill-id>/
 ├── SKILL.md
-└── <Compiler-generated runtime Artifact files>
+├── schemas/                    # 若有，共享 Schema 原始资源
+├── scripts/                    # 若有，Script 源码与 manifest.yaml
+├── references/                 # 若有
+├── assets/                     # 若有
+└── <Compiler-generated runtime Artifact files>  # 仅 Assurance Skill 存在
 ~~~
 
-发布包的精确 Artifact 文件清单、Manifest 和类型数据以 Compiler 正式发布契约为准；Bundle 中 SKILL.md 与 Compiler Artifact 的关联方式以 ca-skills Bundle 契约为准。Agent 不推断或重新构建 Artifact 内部语义，不把作者源中的 assurance/ 文件当作可直接执行的运行时 Artifact。当前 F08/SR-013 仍有未冻结的 Runtime Artifact API，SR-027 尚未交付正式 Bundle；在两者发布前，不得实现或声称 Assurance Bundle 可导入。
+Bundle 始终保留共享资源原始文件。无 Assurance 的 Skill 不生成 Compiler Runtime Artifact，但可以携带并使用 schemas/、scripts/、references/ 和 assets/。发布包的精确 Artifact 文件清单、Manifest、Script 引用闭包和类型数据以 Compiler 正式发布契约为准；Bundle 中 SKILL.md、共享资源与 Compiler Artifact 的关联方式以 ca-skills Bundle 契约为准。Agent 不推断或重新构建 Artifact 内部语义，不把作者源中的 assurance/ 文件当作可直接执行的运行时 Artifact。当前 F08/SR-013 仍有未冻结的 Runtime Artifact API，SR-027 尚未交付正式 Bundle；在两者发布前，不得实现或声称 Assurance Bundle 可导入。
 
 ### 2.3 Agent 支持的输入契约
 
 | 输入 | 版本/语义 | Agent 处理 |
 |---|---|---|
-| 只有 SKILL.md、无 Assurance | Agent Skills Specification；没有 Assurance 作者源和 Runtime Artifact；CA-SL v1alpha5 只定义 assurance/ | 可导入；仅 LLM-guided |
+| 无 Assurance（可含 schemas/、scripts/、references/、assets/） | Agent Skills Specification；没有 Assurance 作者源和 Runtime Artifact | 可导入；仅 LLM-guided；可按 Host 策略调用 Registry 显式开放的 Script |
 | 当前冻结 Compiler Artifact | `connectionagent.io/compiler-artifact/v1alpha5`；不含新版 Request Schema 根/闭包和 when CheckedExpr/DescriptorSet | 不作为本设计的当前 Assurance Runtime Bundle；SR-004 拒绝该 API，不推断缺失语义 |
 | Development Artifact | `connectionagent.io/compiler-development-artifact/v1alpha1`；`executionStatus=NOT_ADMITTED` | 必须拒绝，不得运行 |
 | CA-SL 1.6.0 Runtime Artifact（未发布） | ca-skills 1.6.0 + SR-029 Capability Binding + Compiler #61 / SR-013 新 API 联合交付；准确 `languageTarget` 机器标识尚待发布 | **唯一新增 Assurance 支持目标**；只按正式 Release 的 apiVersion/Manifest/Binding 消费 |
@@ -69,7 +79,7 @@ published-skills/<skill-id>/
 | SKILL.md + 已发布 Assurance Artifact | 基本结构/必需文件/格式/类型数据检查，解析 Tool/Capability 及 contexts Schema 闭包，返回 candidate，由 Catalog 原子激活 | 不调用 |
 | 无效或不完整的发布包 | 显式导入失败，不得降级为 SKILL.md-only | 不调用 |
 
-Agent 不接收尚未发布的 Assurance 作者源作为可执行 Skill。LLM 创建或修改 Assurance 源码后，必须经外部发布流程编译并发布新的运行包，才能进入 Agent Catalog。LLM 创建或修改 SKILL.md-only 包则可按普通 Skill 导入流程更新。
+Agent 不接收尚未发布的 Assurance 作者源作为可执行 Skill。LLM 创建或修改 Assurance 源码后，必须经外部发布流程编译并发布新的运行包，才能进入 Agent Catalog。LLM 创建或修改没有 Assurance 的 Package（含共享资源）则可按普通导入流程更新；Host Script Execution 只调用 Registry 中显式登记的包内入口。
 
 ## 4. 发布 Artifact 消费边界
 
@@ -78,7 +88,8 @@ Agent 只执行以下消费端检查：
 - SKILL.md 存在且可读取。
 - Artifact 的 apiVersion 必须属于 SR-004 明确支持的 Compiler 正式 Runtime Artifact API；当前目标是 Compiler/SR-029 联合发布的 **CA-SL 1.6.0** Runtime Artifact（精确机器标识仍待发布）。历史冻结 Artifact v1alpha5、Development Artifact v1alpha1、未知 API 均拒绝，不做兼容映射。
 - 必需 Artifact 文件存在且路径位于包根目录内。
-- Manifest 引用的文件、Schema/type data 和本地依赖可解析。
+- Manifest 引用的文件、Schema/type data 和本地依赖可解析；scripts/manifest.yaml 中每个 file、entrypoint、inputSchema / outputSchema 都必须在当前 Package snapshot 内精确解析，拒绝路径穿越、缺文件、未知 Script ID、错误 purpose 或无效 Schema。
+- LLM Script Action 只允许 host.skill-script.execute；Runtime 必须校验当前 Run / Skill / Package snapshot、Registry llmInvocable 标记和 Host policy，并按该 Script 的 inputSchema / outputSchema 验证。模型不得提供路径、模块、函数、代码或命令。
 - 新版 **CA-SL 1.6.0** Artifact 必须包含 Compiler 静态解析的唯一 Capability→Callable Binding，携带精确依赖包身份、kind、Effect、Schema、operation/observation exports 并供 Runtime 生成闭合 Callable allowlist；具体 Manifest 字段与路径由 SR-029 + Compiler #61 / SR-013 正式契约冻结。Callable 依赖可来自 Provider Interface 或业务 Owner Contract；contexts 的 Schema-only 依赖按 §2.3 保存，仅贡献 Schema。Provider Interface 快照按 `provider.yaml.interfacePackagePath` / `interfaceSnapshotDigest` 固定；Owner publication 由 Runtime Bindings sidecar identity 固定。旧 v1alpha5 MAS alias/Callable 作者格式属于冻结历史，不得拿来作为 1.6.0 运行时数据。
 - when 的 CheckedExpr 和类型描述数据可被指定 Python CEL Runtime 反序列化。
 - Artifact 文件、路径或依赖不满足要求时给出明确错误并拒绝导入。所有旧 CA-SL / 旧 Build DTO / 旧 Manifest / 旧 Runtime Artifact / v1alpha6 候选包均明确拒绝；不进行版本协商、兼容映射、旧 Scope 重解释、自动迁移、回退或混合 Catalog。
@@ -149,9 +160,9 @@ CheckedExpr、google.protobuf.Any、FileDescriptorSet、DescriptorPool、字段�
 
 | Skill 状态 | 可用模式 |
 |---|---|
-| 无 Assurance Artifact | LLM-guided only |
-| 有效发布 Assurance Artifact | Deterministic 或 LLM-guided |
-| Artifact 缺失、格式错误或依赖不完整 | 导入失败 |
+| 无 Assurance Artifact（可含共享资源） | LLM-guided only；如 Registry 声明 llmInvocable Script 且 Host policy 启用，可用 host.skill-script.execute |
+| 有效发布 Assurance Artifact（可含共享资源） | Deterministic 或 LLM-guided；两种模式共用同一份 Schema / Script |
+| Assurance Artifact、Script Registry 或资源引用缺失 / 格式错误 / 依赖不完整 | 导入失败，不得降级 |
 
 不增加 supportedModes 字段。执行模式从发布包是否含有效 Assurance Artifact 派生。SKILL.md-only Skill 不得启动确定性 Procedure。
 
@@ -160,7 +171,7 @@ CheckedExpr、google.protobuf.Any、FileDescriptorSet、DescriptorPool、字段�
 - SKILL.md Front Matter 以 [Agent Skills Specification](https://agentskills.io/specification) 为格式权威（本次核对日期 2026-11-26）；CA-SL v1alpha5 不定义该 Front Matter。
 - ca-skills PR #88 已合并；当前 CA-SL v1alpha5 正式来源固定为 SHA `18d8184367982ccbc835756136c4a53f9096c3a0`，release record 位于 ca-skills main `780497a2918ad3e7bdff554ab64b0ba627e867e0`。该记录证明语言规范发布，不代表 Skill Bundle 已发布。
 - ca-skill-compiler Issue #61 仍 OPEN：Compiler v2.1.0 保留冻结 Artifact v1alpha5 和 Development v1alpha1；新版 Runtime Artifact API、Request Schema 根/闭包与 CheckedExpr/DescriptorSet 尚未发布。**SR-029 的 1.6.0 Capability Binding 还需联合纳入新 Release**；单独完成历史 v1alpha5 when 不构成 1.6.0 产品门槛。详见本说明书 §11。
-- ca-agent-next：只负责已发布包的消费、Catalog、选择和 Runtime，不调用 Compiler。**新 Agent 的 Assurance Catalog 只接受 CA-SL 1.6.0 Bundle；不存在旧版导入适配层，也不允许在同一运行时加载历史 v1alpha5 Skill。**新运行包必须是 **CA-SL 1.6.0** 的正式 Compiler Artifact（准确 `languageTarget` 待冻结）；Manifest 应提供唯一 Capability→Callable Binding、精确依赖身份和可生成闭合 Callable Scope 的必要元数据；Provider Interface Package 与 Owner Contract Package 必须分别解析。新版 Manifest 的字段名、结构和引用路径尚未由 Compiler Owner 冻结，不能沿用旧字段猜测实现。Provider Interface bytes 必须匹配 provider.yaml 的 `interfaceSnapshotDigest`；Owner Contract 的实际部署版本由 Provider Runtime Bindings sidecar 的 stableId、version、publicationDigest、manifestDigest 固定，Agent 必须校验已安装 Owner publication 与 sidecar 一致。不得将 Owner ToolCatalog 当成 Provider Interface Package。冻结 Artifact API v1alpha5 不作为本 SR 的 Assurance Runtime 输入。
+- ca-agent-next：只负责已发布包的消费、Catalog、选择和 Runtime，不调用 Compiler。Host Resource Access 让 LLM 按需读取当前 Skill 的 schemas/、scripts/、references/ 和 assets/；Host Script Execution Capability 仅调用 Registry 的 allowlisted transform Script，不改变业务 Capability grants，也不允许模型任意 Python 执行。**新 Agent 的 Assurance Catalog 只接受 CA-SL 1.6.0 Bundle；不存在旧版导入适配层，也不允许在同一运行时加载历史 v1alpha5 Skill。**新运行包必须是 **CA-SL 1.6.0** 的正式 Compiler Artifact（准确 `languageTarget` 待冻结）；Manifest 应提供唯一 Capability→Callable Binding、精确依赖身份和可生成闭合 Callable Scope 的必要元数据；Provider Interface Package 与 Owner Contract Package 必须分别解析。新版 Manifest 的字段名、结构和引用路径尚未由 Compiler Owner 冻结，不能沿用旧字段猜测实现。Provider Interface bytes 必须匹配 provider.yaml 的 `interfaceSnapshotDigest`；Owner Contract 的实际部署版本由 Provider Runtime Bindings sidecar 的 stableId、version、publicationDigest、manifestDigest 固定，Agent 必须校验已安装 Owner publication 与 sidecar 一致。不得将 Owner ToolCatalog 当成 Provider Interface Package。冻结 Artifact API v1alpha5 不作为本 SR 的 Assurance Runtime 输入。
 - Development v1alpha1 Artifact 虽然携带 packageId/version/snapshotDigest 的 Dependency Lock，但 executionStatus 固定 `NOT_ADMITTED`，不是当前 Agent 的运行时输入；不能把该 profile 的 Lock 能力套用到冻结 Artifact API v1alpha5 或新版 Runtime Artifact。新版 API 是否包含 per-Skill digest pin 及其字段，必须由 Compiler #61 正式契约决定。
 - ca-skills Bundle 组装和发布由 SR-027 负责；当前 SR-027 DRAFT，ca-skills 尚无与新 Runtime Artifact API 匹配的正式 Bundle。编译器二进制 Release、作者源或本地临时 Build 输出都不能替代 Bundle 正式发布证据。
 - **Next Issue #40 已将目标定为 CA-SL 1.6.0（不使用 v1alpha6）**。新作者语法只引用 Capability，编译器产生一对一 Callable Binding；Next 的新运行时从 Binding 验证唯一 Callable Scope，不接受历史 v1alpha5 Artifact，也不直接读取未编译 Capability 原文。
@@ -171,7 +182,7 @@ Agent 不调用 Compiler Inspect/Verify，也不实现 Skill Admission。Compile
 
 ## 10. 验收要求
 
-- SKILL.md-only 包不调用 Compiler；Importer 按 Agent Skills Specification 校验 Front Matter，返回无 Assurance candidate，Catalog 激活后仅 LLM-guided；`allowed-tools` 不构成授权。
+- 无 Assurance 包不调用 Compiler；Importer 按 Agent Skills Specification 校验 Front Matter，并检查共享资源 / Script Registry；Catalog 激活后仅 LLM-guided。Host 仅在 llmInvocable 与 Host policy 同时允许时提供 host.skill-script.execute；`allowed-tools` 不构成业务 Capability 授权，也不授予任意脚本执行权限。
 - Assurance Bundle 仅接受 Compiler 正式发布的新版 Runtime Artifact API 与 ca-skills 正式 Bundle；不接受冻结 Artifact v1alpha5、Development v1alpha1 或未知 API。
 - Assurance 作者源存在但没有受支持 Runtime Artifact 时明确失败，不得降级为 SKILL.md-only。
 - Importer 只返回候选；Catalog generation、原子激活、失败回滚和 Invocation pinning 由 SR-005 验收。
@@ -277,3 +288,4 @@ T2 的 Provider Codec Result 只在选定 Skill Procedure 的 READ 后可用，�
 | 2026-11-27 | 0.3.2 | ChatGPT / GPT-6 | 3GPP Schema/Codec 分阶段消费 | 对齐 SR-031 公共类型、T1 Request 与 T2 Codec Result，新增分期拒绝/验收范围 | 修复标准输入来源与实现门禁的跨仓断点 | IR-009；Issue #47；SR-031/026 |
 | 2026-11-27 | 0.3.3 | ChatGPT / GPT-6 | 3GPP 原版发布裁决 | 版本随 OpenAMSM、原版 YAML 完全不改；将只读 Source Bundle 与可选 Adapter / Codec Output 分离 | 防止标准原件被类型适配误改 | Issue #47；SR-031/026 |
 | 2026-11-27 | 0.3.4 | ChatGPT / GPT-6.2 | §13 | 改为原版 OAS3 组件直接引用与 T1/T2 阶段约束；移除 Adapter 前置 | 对齐原始标准直接引用与 Compiler dialect-aware 解析 | IR-009；Issue #47；SR-031/013/026 |
+| 2026-11-27 | 0.3.5 | GPT-6.2（ChatGPT） | §2～5、§8～10 | 将 schemas/scripts 作为根目录共享资源，允许无 Assurance Skill 使用资源；增加 Host Script Execution Capability 的导入与运行边界 | 使 LLM-guided 与 Deterministic 共用资源，同时不授予任意 Python 执行 | Issue #49；IR-008；SR-032 |
