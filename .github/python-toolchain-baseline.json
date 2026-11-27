@@ -30,6 +30,7 @@
   "required_policy_files": [
     "scripts/python_toolchain_policy.py",
     ".github/python-toolchain-baseline.json",
-    ".github/workflows/python-toolchain-policy.yml"
+    ".github/workflows/python-toolchain-policy.yml",
+    ".github/workflows/python-toolchain-policy-trusted.yml"
   ]
 }
