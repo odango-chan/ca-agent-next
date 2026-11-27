@@ -57,7 +57,7 @@ Host 按 Run 和当前 Action 组装 Context，不建设全局可变 Context Reg
 5. Context 只读投影可以按需重建；不要求引入独立 Context DB 或全局快照服务。
 6. 原始二进制只通过 Artifact ref / 独立交接通道使用，不转换成模型可见文本。
 7. Skill Package 的 schemas/、scripts/、references/ 和 assets/ 是独立的只读 Package Resource，不进入 ArtifactStore；Host 按当前 Run 固定的 Package snapshot 提供精确相对路径读取，不暴露宿主文件系统路径。
-8. LLM 可以按需读取 schemas/ 与 scripts/ 源码；读取 Script 不等于执行。Script 执行必须通过 F04 定义的 host.skill-script.execute，并由 Runtime 校验 Script Registry、当前 Skill scope、Host policy 和输入/输出 Schema。
+8. LLM 可以按需读取 schemas/ 与 scripts/ 源码；读取 Script 不等于执行。Script 执行必须通过 F04 定义的 host.skill-script.execute，并由 Runtime 校验 Script Registry、当前 Skill scope、`scriptExecution.llmEnabled=true` 和输入/输出 Schema。
 
 ## 3. Fact、Observation 与 Evidence
 
