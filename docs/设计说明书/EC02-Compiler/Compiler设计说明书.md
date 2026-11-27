@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.2.10\
+> 文档版本：0.2.11\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 修订日期：2026-11-27
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -29,7 +29,7 @@ Native CLI 与 Go/WASM Worker 必须继续调用同一个 Go Compiler Core。现
 | internal/compiler/inherited_semantics.go | 既有 CA-SL 语义主链 | Contract.when 进入同一 Skill 语义链，不建立平行解析器 |
 | internal/compiler/cel_check.go | 现有 Predicate CEL 检查 | 复用 cel-go 与 G.4 白名单思想；不能把当前 Predicate 检查误认为已实现 Contract.when |
 | internal/compiler/schema_registry.go | Schema Registry、引用和闭包相关能力 | 复用解析能力并建立逐 Skill Request Schema 类型环境 |
-| internal/compiler/v1alpha5_artifact.go、v1alpha5_artifact_verify.go、contracts/v1alpha5/artifact-manifest.schema.json | 冻结 v1alpha5 Artifact 只输出 procedure.json / ingress-links.json；sourceFiles 只记录源路径，不携带本地 Request Schema 字节 | 新 2 必须发布已验证 Request Schema 根与完整 G.4 引用闭包，供 Host 运行期按 M.3 验证 Event input；不得修改冻结 v1alpha5 |
+| internal/compiler/v1alpha5_artifact.go、v1alpha5_artifact_verify.go、contracts/v1alpha5/artifact-manifest.schema.json | 冻结 v1alpha5 Artifact 只输出 procedure.json / ingress-links.json；sourceFiles 只记录源路径，不携带本地 Request Schema 字节 | 新 2 必须发布已验证 Request Schema 根与完整 G.4 引用闭包，供 Host 按 CA-SL 1.6.0 正式输入契约验证 Event input；具体 M.3 等价规则由 1.6.0 Publisher 冻结，不得直接沿用冻结 v1alpha5 |
 | internal/compiler/development_link.go、development_multi_skill_test.go | Development Link / 多 Skill Lock 测试 | 仅作为 Schema 作用域和多 Skill fixture 的参考；不是正式发布 Artifact 路径 |
 
 AC-013-01 的 PoC 通过 Development 多 Skill 共享 Lock fixture，复用了 buildSchemaRegistry、resolveReferenceFrom 和 resolveSchemaRoot 等真实 Schema 解析能力。这证明的是可复用的 Schema 解析与跨语言序列化路径，不代表产品 Build 应调用 validateDevelopmentRequest、buildDevelopmentLinkScope 或 newDevelopmentSemantics。
@@ -369,3 +369,4 @@ Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId�
 | 2026-11-26 | 0.2.8 | GPT-6（ChatGPT） | 新增 1.6.0 目标章节、状态及修订记录 | 移植一对一 Binding / Selector / Action 设计并标为待评审 | 无旧版兼容或产品完成承诺 | Issue #40；SR-029 |
 | 2026-11-26 | 0.2.9 | GPT-6（ChatGPT） | §1、§5～7、修订记录 | 移除新 Compiler 复用 v1alpha5 BuildRequest/DependencyInspection/Verify 的旧假设，唯一目标为 1.6.0 DTO/Artifact，历史包在新版明确拒绝 | 贯彻 Issue #40 全链路无兼容、无双轨/迁移；准确机器标识待 Compiler Owner 冻结 | Issue #40；SR-029；SR-013 |
 | 2026-11-27 | 0.2.10 | GPT-6.2（ChatGPT） | §2～7、§9、修订记录 | 将 when、G.4、Build/Verify、Manifest 和 Request Schema 的规范性目标统一为 CA-SL 1.6.0；旧 v1alpha5 仅作冻结历史与回归基线。 | 防止新 Compiler 沿用旧 v1alpha5 Build/Manifest/DTO 契约，保持与 SR-013、F08、SR-029 一致。 | Issue #40；SR-013；SR-029；F08 |
+| 2026-11-27 | 0.2.11 | GPT-6.2（ChatGPT） | §2、§5.3、修订记录 | 同步 Compiler 1.6.0-only 新契约的 M.3 / Request Schema Owner Gate 与跨文档当前版本引用；旧 v1alpha5 仅保留历史冻结语义。 | 避免将历史 v1alpha5 规范或 DTO 隐式复用为 CA-SL 1.6.0 的规范性输入。 | Issue #40；SR-004/013/027/029；EC02；F08；PR #45 |

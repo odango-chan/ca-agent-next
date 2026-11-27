@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引\
-> 文档版本：0.3.41
+> 文档版本：0.3.42
 > 状态：28 项 SR：4 VERIFIED（SR-001/002/003/024）、1 READY（SR-025）、1 IMPLEMENTED（SR-015）、22 DRAFT（其中 SR-029 设计待评审）；SR-003 模块 AC PASS，系统 EX NOT_RUN
 > 修订日期：2026-11-27
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)\
@@ -78,7 +78,7 @@
 - 治理自动化：SR-001 VERIFIED；[PR #32](https://github.com/odango-chan/ca-agent-next/pull/32) MERGED（`7a0fac41e573021207ab8201bbc718718c451e50`）；AC-REV-01～10 PASS、80 tests OK、Run [45793590532](https://github.com/odango-chan/ca-agent-next/actions/runs/45793590532) success；SR-028 仍为 DRAFT。
 - Phase A：SR-002（VERIFIED；PR #23 已集成；AC-002-01～08 PASS；EX-01 仍 NOT_RUN）。
 - Phase B：SR-003 v0.3.11 VERIFIED（模块 AC-003-01～04）；Issue [#28](https://github.com/odango-chan/ca-agent-next/issues/28) CLOSED，PR #34/#41/#42 MERGED 到恢复分支；双平台 [CI #45815167442](https://github.com/odango-chan/ca-agent-next/actions/runs/45815167442) / [CI #45817800342](https://github.com/odango-chan/ca-agent-next/actions/runs/45817800342) SUCCESS；Ubuntu/Python 3.12 与 Windows/Python 3.14 各 Plugin 87、Host 52、Review Context 80 tests PASS；系统 EX-02/03/04/18 NOT_RUN。
-- Phase C：SR-004 DRAFT / NOT READY；[设计 Issue #43](https://github.com/odango-chan/ca-agent-next/issues/43) OPEN，SR-004 v0.2.9 已定义 AC-004-01～06。SKILL.md-only 子路径可独立设计；新 Assurance 路径面向 **CA-SL 1.6.0**（Issue #40 / SR-029；NOT_RELEASED），还需 Compiler #61 / SR-013 唯一 Capability Binding Artifact 与 ca-skills SR-027 正式 Bundle 契约/正例。冻结 Artifact v1alpha5 与 Development v1alpha1 均不作为当前正例；未达到 READY，不创建实施 Issue、不提供 Harness 提示词。
+- Phase C：SR-004 DRAFT / NOT READY；[设计 Issue #43](https://github.com/odango-chan/ca-agent-next/issues/43) OPEN，SR-004 v0.2.10 已定义 AC-004-01～06。SKILL.md-only 子路径可独立设计；新 Assurance 路径面向 **CA-SL 1.6.0**（Issue #40 / SR-029；NOT_RELEASED），还需 Compiler #61 / SR-013 唯一 Capability Binding Artifact 与 ca-skills SR-027 正式 Bundle 契约/正例。冻结 Artifact v1alpha5 与 Development v1alpha1 均不作为当前正例；未达到 READY，不创建实施 Issue、不提供 Harness 提示词。
 - Phase D：SR-005、SR-006。
 - Phase E：SR-007。
 - Phase F：SR-008。
@@ -160,3 +160,4 @@
 | 2026-11-27 | 0.3.37 | Codex | 整合 | Phase B 已验收证据与 Phase C 导入前置条件 | 对齐 #54 恢复基线与 #44 导入设计 | Issue #40、#43；PR #44 |
 | 2026-11-27 | 0.3.40 | GPT-6.2（ChatGPT） | SR 清单、Phase C、修订记录 | 整合 Capability-first 设计及 SR-029/IR-008 追踪，实施和产品发布仍 NOT_RUN | 整合 #45 的 1.6.0-only 设计增量并保留恢复分支当前状态，避免回滚 #44 与后续修订。 | Issue #12/#40/#43；PR #44/#45 |
 | 2026-11-27 | 0.3.41 | GPT-6.2（ChatGPT） | SR 清单、Phase C、修订记录 | 同步 1.6.0-only Compiler/Authoring 设计修订后的当前版本引用，保留 28 SR / 8 IR 状态与未发布门槛。 | 保证跨文档依赖指向同一组最新设计版本，避免评审与 Harness 使用过期契约。 | Issue #12/#40/#43；SR-004/013/027/029；PR #45 |
+| 2026-11-27 | 0.3.42 | GPT-6.2（ChatGPT） | SR 清单、Phase C、修订记录 | 同步 Compiler 1.6.0-only 新契约的 M.3 / Request Schema Owner Gate 与跨文档当前版本引用；旧 v1alpha5 仅保留历史冻结语义。 | 避免将历史 v1alpha5 规范或 DTO 隐式复用为 CA-SL 1.6.0 的规范性输入。 | Issue #40；SR-004/013/027/029；EC02；F08；PR #45 |
