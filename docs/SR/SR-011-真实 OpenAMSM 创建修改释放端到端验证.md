@@ -1,13 +1,13 @@
 # SR-011：真实 OpenAMSM 创建修改释放端到端验证
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.3.0  
-> 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**，未获得实施 READY，产品验收 NOT_RUN；PR #46 首轮 CHANGES_REQUESTED，修订待复评  
+> SR 版本：0.3.1\
+> 状态：DRAFT（实施主状态）。PR #46 第二轮独立评审（1bf748db）：CHANGES_REQUESTED（listener 与 key-reuse 隔离已修订，待复评）。产品验收依各 AC 单列。
 > 创建日期：2026-11-25  
-> 修订日期：2026-11-27  
+> 修订日期：2026-11-27\
 > 所属阶段：Phase H  
 > 上游需求：[IR-005](../IR/IR%20总登记册.md#ir-005)  
-> 设计依据：[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.3.0 §5～10；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.5 §2～12；[演示验收基线](../验收与实施/演示验收基线.md) v0.3.23 §2～10  
+> 设计依据：[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.3.0 §5～10；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.5 §2～12；[演示验收基线](../验收与实施/演示验收基线.md) v0.3.24 §2～10\
 > Acceptance：EX-20、OM-09、OM-11、OM-12（见[演示验收基线](../验收与实施/演示验收基线.md)）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：见第 3 节
@@ -65,11 +65,11 @@
 
 | 阶段和工作目录 | 命令和通过条件 |
 |---|---|
-| 资产，Next | 由联测配置给出已物化的五个路径。执行 `for p in "${CREATE_BUNDLE:?}" "${MODIFY_BUNDLE:?}" "${RELEASE_BUNDLE:?}" "${PROVIDER_PACKAGE:?}" "${OWNER_PACKAGE:?}"; do test -e "$p" || exit 1; done`。再按正式 Manifest 逐一核对 release identity、Schema-only 闭包、Compiler Verify 记录与部署快照；任一不符则停止。|
+| 资产，Next | 由联测配置给出已物化的五个路径。执行 `for p in "${CREATE_BUNDLE:?}" "${MODIFY_BUNDLE:?}" "${RELEASE_BUNDLE:?}" "${PROVIDER_PACKAGE:?}" "${OWNER_PACKAGE:?}"; do test -e "$p" \|\| exit 1; done`。再按正式 Manifest 逐一核对 release identity、Schema-only 闭包、Compiler Verify 记录与部署快照；任一不符则停止。|
 | NF，env-openamsm | 依次运行 `./bin/env-openamsm doctor`、`./bin/env-openamsm verify-upstream`、`./bin/env-openamsm build`、`./bin/env-openamsm configure --profile local`、`sudo ./bin/env-openamsm start --profile local`。配置时由隔离环境提供 ENV_OPENAMSM_QUERY_TOKEN。|
 | NF 就绪 | `./bin/env-openamsm status` 后运行 `./bin/env-openamsm smoke`；记录 SCP/SMF/UPF、Owner build identity 与本轮 UE/PSI 的无会话前态。局部 smoke 成功只满足环境预检。|
 | Peer，env-5gc-sim | `go build -o mock-amf ./cmd/mock-amf`；`./mock-amf run --config "${MOCK_AMF_CONFIG:?}" --scenario "${LIFECYCLE_SCENARIO:?}" --json`。配置必须走 SCP 指向本轮 Next 入口，使用同一 UE/PSI，保存回调、PFCP 和 Owner 证据。|
-| 清理/隔离 | 对运行中的测试 peer 使用 `curl --fail --http2-prior-knowledge -H 'Content-Type: application/json' -d '{}' "${PEER_URL:?}/mock-amf/v1/reset"`，记录代际变化；进程已退出时使用新监听地址/空状态启动下一轮。回收本轮 Host 和 peer，运行 `sudo ./bin/env-openamsm stop`。NF 停止或 peer reset 均不能充当 Owner 释放证据。|
+| 清理/隔离 | 停止接收新请求，先排空旧 listener 的在途回调并轮换 listener（记录旧/新地址及排空完成），再对隔离测试 peer 使用 `curl --fail --http2-prior-knowledge -H 'Content-Type: application/json' -d '{"reuseKeys":true}' "${PEER_URL:?}/mock-amf/v1/reset"`，断言 generation 前进；使用旧 generation/context 的回调得到 STALE_SM_CONTEXT 且零 mutation，再以同一 SUPI/PSI 创建新会话。无法证明排空时使用全新进程、listener 和空状态；进程已退出时使用新监听地址/空状态启动下一轮。回收本轮 Host 和 peer，运行 `sudo ./bin/env-openamsm stop`。NF 停止或 peer reset 均不能充当 Owner 释放证据。|
 
 真实 Next 部署配置、同一批 1.6.0 资产及指向它们的 lifecycle scenario 尚缺；AC-011-01～06 保持 BLOCKED。禁止用旧快照重放或单元测试替代。
 
@@ -116,6 +116,7 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-26 | 0.2.1 | GPT-6.2（ChatGPT） | 文档头部 | 将 Acceptance 设计依据更新至 v0.3.9 | 与 SR-002 集成后当前演示验收基线保持一致 | PR #25；Issue #26 |
 | 2026-11-26 | 0.2.2 | GPT-6（ChatGPT） | 文档头、§0、设计依据 | 登记独立设计待评审批次、专项审查重点与缺失输入，保留 SR DRAFT/产品 NOT_RUN | 按 1.6.0-only / Capability-first 设计集中审查；避免提前授予实施门禁 | Issue #12；SR-029；PR #45 |
 | 2026-11-26 | 0.2.3 | GPT-6（ChatGPT） | §4～§5 | 按治理 §6.1 拆分设计/实施/模块/系统依赖；补齐 AC-011-xx 正反验收 | 解除全局 VERIFIED 门槛与缺模块 AC 问题，避免 Harness 猜测/EX 倒灌 | Issue #12/#40；PR #46；SR 管理规范 §6.1 |
+| 2026-11-27 | 0.3.1 | Codex / GPT-6 | §5.1 | 隔离复用 SUPI/PSI 前排空并轮换 listener，验证过期回调 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
 
 | 2026-11-26 | 0.2.4 | GPT-6（ChatGPT） | 文档头、设计依据 | 同步本次 1.6.0 实质整改后的权威 Feature/Compiler 文档版本 | 保证 SR 新旧规范引用与固定审核 Head 一致 | Issue #12/#40；PR #46 |
 | 2026-11-27 | 0.3.0 | Codex / GPT-6 | §5.1、AC-011-04/05 | 登记隔离环境入口与逐路确认收据 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |

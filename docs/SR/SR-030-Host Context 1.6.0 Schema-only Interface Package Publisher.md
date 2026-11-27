@@ -1,8 +1,8 @@
 # SR-030：Host Context 1.6.0 Schema-only Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.3
-> 状态：DRAFT（实施主状态）；首轮限范围 APPROVE_FOR_READY，范围见评审记录；产品验收按各 AC 单列  
+> SR 版本：0.1.4
+> 状态：DRAFT（实施主状态）。PR #46 第二轮独立评审（1bf748db）：APPROVE_FOR_READY（Schema-only 设计与 AC-030-01 固定源审计）。产品验收依各 AC 单列。
 > 创建日期：2026-11-26
 > 修订日期：2026-11-27
 > 上游需求：[IR-006](../IR/IR%20总登记册.md#ir-006)；关联需求：[IR-008](../IR/IR%20总登记册.md#ir-008)、[IR-003](../IR/IR%20总登记册.md#ir-003)
@@ -99,3 +99,4 @@ Publisher 必须从固定 Revision 读取原始 Schema 字节并核对 Git blob�
 | 2026-11-26 | 0.1.1 | GPT-6（ChatGPT） | §1、§3、AC-030-03、依赖与修订记录 | 明确 Host Context Schema-only Package 只能由 Contract.contexts 引用；requestSchema 始终是 Skill 自有 Schema 根 | 避免将 Host Context Package 错误当成 Skill Request Schema，保持 CA-SL 1.6.0 §4 的作者语义一致 | Issue #12/#40；CA-SL 1.6.0；SR-013 AC-013-06；SR-029；PR #46 |
 | 2026-11-26 | 0.1.2 | Codex / GPT-6 | §6，修订记录 | 区分机器 Schema 发布、真实 Publisher 候选、Compiler 联验和二进制发行 | 消除相互等待 | Issue #12/#40，PR #46，SR-013/030 |
 | 2026-11-27 | 0.1.3 | Codex / GPT-6 | 评审入口 | 回填独立评审批准评议的具体范围 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
+| 2026-11-27 | 0.1.4 | Codex / GPT-6 | 评审状态 | 登记第二轮限定范围及外部依赖 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |

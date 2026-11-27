@@ -1,10 +1,10 @@
 # SR-029：Capability-first Skill 作者接口与 Callable 一对一绑定
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.5  
-> 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**；不授予实施 READY，产品验收原状态不变；PR #46 首轮 CHANGES_REQUESTED，修订待复评  
+> SR 版本：0.2.6\
+> 状态：DRAFT（实施主状态）。PR #46 第二轮独立评审（1bf748db）：CHANGES_REQUESTED（旧版拒绝、3/3 与导航一致性已修订，待复评）。产品验收依各 AC 单列。
 > 创建日期：2026-11-26  
-> 修订日期：2026-11-27  
+> 修订日期：2026-11-27\
 > 上游需求：[IR-008](../IR/IR%20总登记册.md#ir-008)；关联需求：[IR-003](../IR/IR%20总登记册.md#ir-003)  
 > 功能：F02、F03.05、F04、F06、F08、F09、EC02  
 > 设计 Issue：[ca-agent-next #40](https://github.com/odango-chan/ca-agent-next/issues/40)  
@@ -244,7 +244,7 @@ Create / Release 继续分别使用原有 Schema 与 Evidence Guarantee；Modify
 | AC-029-08 | Runtime Action、Callable allowlist、Reconcile 内部入口明确 | 设计已记录，待独立评审 |
 | AC-029-09 | Skill Studio Capability-only Explorer / LSP / AI Authoring 明确 | 设计已记录，待独立评审 |
 | AC-029-10 | MAS Create / Modify / Release 的 1.6.0 Capability 映射与业务语义保持边界明确 | 设计已记录，待独立评审 |
-| AC-029-11 | F02/F03.05/F04/F06/F08/F09/EC02、IR/SR、版本规范/功能树/目录与 SR-004 一致；逐包与合并快照分别核对 3/3，实际发布前仅验设计 | 待静态检查与独立评审 |
+| AC-029-11 | F02/F03/F03.05/F04/F06/F08/F09/EC02、IR/SR、版本规范/功能树/目录与 SR-004 一致；核查 EC02《工具链设计》、三层旧包拒绝与当前导航。查询子集 2/2，含 Codec 的总闭包 3/3；逐包检查唯一性，跨包重复也须拒绝，缺 Codec 不得计全量通过。实际发布前仅验设计 | 待静态检查与独立评审 |
 | AC-029-12 | 未修改下游仓；未把设计目标误报为实现或 E2E PASS | 待独立评审 |
 
 ## 14. 依赖与状态边界
@@ -272,3 +272,4 @@ Create / Release 继续分别使用原有 Schema 与 Evidence Guarantee；Modify
 | 2026-11-26 | 0.2.3 | GPT-6（ChatGPT） | 文档头与修订记录 | 补齐 formal SR 正式 review_scope 与非目标声明 | 解除 PR #45 当前 Head Review Context formal-doc 校验失败 | Issue #40；PR #45 |
 | 2026-11-26 | 0.2.4 | GPT-6（ChatGPT） | 文档头、§0、设计依据 | 提交设计待评审、明确新旧契约/验收隔离并保留 DRAFT 主状态 | 统一中央评审批次，防止旧版发布证据冒充新版资格 | Issue #12；PR #45；SR-029 |
 | 2026-11-27 | 0.2.5 | Codex / GPT-6 | §3.2、§6、AC-029-05/11 | 区分查询子集与 Provider 全量 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
+| 2026-11-27 | 0.2.6 | Codex / GPT-6 | AC-029-11 | 覆盖 F03 主设计、EC02 工具链与跨包版本导航 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |

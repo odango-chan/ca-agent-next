@@ -1,13 +1,13 @@
 # EC05 — OpenAMSM Owner 与权威状态架构设计
 
 > 文档类型：外部能力域架构设计（实现派生重建）  
-> 文档版本：0.1.2  
+> 文档版本：0.1.2\
 > 状态：依据当前 main 代码、Owner 声明、契约和验收材料重建；源仓没有独立总体架构文档  
 > 功能归属：EC05；关联 F04、F05、F06、F07  
-> 关联需求：IR-004、IR-005；SR-007、SR-010、SR-011、SR-018、SR-025  
+> 关联需求：IR-004、IR-005；SR-007、SR-010、SR-011、SR-018、SR-025\
 > 修订日期：2026-11-25  
-> 实现基线：env-openamsm main dc83ccbf5be54dcc7112dd43ba95ea6fa5975550  
-> 全局评审范围：继承根目录 Agent.md 的 review_scope  
+> 实现基线：env-openamsm main dc83ccbf5be54dcc7112dd43ba95ea6fa5975550\
+> 全局评审范围：继承根目录 Agent.md 的 review_scope\
 > 本文局部非目标：不重建 Agent Runtime、Provider、Plugin 或 Studio 内部实现；不扩展到生产级 DFX 或全量 3GPP 资格
 
 ## 1. 架构定位与权威归属

@@ -2,12 +2,12 @@
 
 > 文档类型：机制设计说明书  
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
-> 文档版本：0.3.6
+> 文档版本：0.3.7
 > 功能归属：F03 — Plugin 平台  
 > 关联 SR：SR-003、SR-010    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
 > 本文局部非目标：以本文范围与非目标章节为准；无额外扩展  
-> 修订日期：2026-11-26  
+> 修订日期：2026-11-27\
 > 适用范围：Python Plugin Manager、独立进程 Plugin、Package、IPC 与 Extension 分发  
 > 对应规范：[插件包与进程通信协议规范](../../规范/插件包与进程通信协议规范.md)
 
@@ -94,7 +94,7 @@ messageId、correlationId、eventId、invocationId、deliveryId、responseObliga
 
 ca-client-tools v1.2.0 当前发布的是独立 Provider 包，进程协议为 ca-client-tools.provider/v2（长生命周期 NDJSON）。Next 由唯一 Plugin Manager 内部的 ProviderV2 Tools Extension Driver 消费现有 provider.yaml 和 runtime-bindings.yaml，并把 Provider v2 的 initialize/catalog/invoke/cancel 适配为统一 Tools Extension 调用。Driver 只负责进程与协议适配，不得演变为永久 Provider Manager、第二套 Tool Registry 或第二条授权路径。Native Plugin 仍使用本仓统一 Plugin IPC v1alpha1。
 
-Plugin Manager 只转发 Runtime 已检查的内部 Callable。**新 1.6.0 Provider 接口为 2 个公开 Capability/2 个 Callable，Owner 为 24/24（不含 internal-only Reconcile）**。历史 Provider v1.2.0 11 READ 与 Owner v1alpha4 Callable/alias 仅用于源审计，不能作为新 Skill-facing Package 或 Runtime Binding。Provider Runtime Bindings 只提供 backendOperationId、HostInvocation/privateArguments 来源和 Provider observation 定位。三类跨组件契约不得合并成一份 Next 自维护 Catalog；Provider Backend Binding Catalog v2 只在 Provider 进程内部使用，Host 通过显式 catalog 请求核对映射，不解析或复制它。
+Plugin Manager 只转发 Runtime 已检查的内部 Callable。**1.6.0 Provider 的查询子集为 2/2，加上 SR-026 的一个 Codec READ 后全量为 3/3。单包内验证双向唯一，合并部署包后再验证 3/3 且无冲突，Owner 为 24/24（不含 internal-only Reconcile）**。历史 Provider v1.2.0 11 READ 与 Owner v1alpha4 Callable/alias 仅用于源审计，不能作为新 Skill-facing Package 或 Runtime Binding。Provider Runtime Bindings 只提供 backendOperationId、HostInvocation/privateArguments 来源和 Provider observation 定位。三类跨组件契约不得合并成一份 Next 自维护 Catalog；Provider Backend Binding Catalog v2 只在 Provider 进程内部使用，Host 通过显式 catalog 请求核对映射，不解析或复制它。
 
 Tool Plugin 返回的传输成功不等于 Owner 业务 COMMITTED。Runtime 必须按 Owner Contract 验证 Receipt 与 Commit Proof；UNKNOWN 保持 UNKNOWN，并按原 Invocation 执行 exact-original Reconcile。
 
@@ -152,7 +152,7 @@ Capability 是 Skill-facing Package API；Callable 是 Compiler / Runtime / Prov
 
 ### 12.1 1.6.0 模块验收与历史隔离
 
-唯一正向路径：Skill 提出 Capability，Compiler Artifact 保有唯一 Callable Binding，经 Runtime Scope/kind/Effect/Schema 检查后再由 Plugin Manager Tools Extension 分发。无绑定、重复、阶段不符、错误 Schema、Reconcile 由普通 Skill 提出均在 IPC 前拒绝。历史 11 READ/24:25/Development 1.0.0 仅为历史来源，不证明新 2/2、24/24 Package 已发布；Plugin IPC 宿主协议本身可继续使用现行冻结规范，不因语言版本更名而修改 IPC wire。
+唯一正向路径：Skill 提出 Capability，Compiler Artifact 保有唯一 Callable Binding，经 Runtime Scope/kind/Effect/Schema 检查后再由 Plugin Manager Tools Extension 分发。无绑定、重复、阶段不符、错误 Schema、Reconcile 由普通 Skill 提出均在 IPC 前拒绝。历史 11 READ/24:25/Development 1.0.0 仅为历史来源，不证明查询子集 2/2、含 Codec 的 Provider 全量 3/3 和 Owner 24/24 Package 已发布；Plugin IPC 宿主协议本身可继续使用现行冻结规范，不因语言版本更名而修改 IPC wire。
 
 ## 修订记录
 
@@ -169,3 +169,4 @@ Capability 是 Skill-facing Package API；Callable 是 Compiler / Runtime / Prov
 | 2026-11-26 | 0.3.4 | GPT-6（ChatGPT） | 新增 1.6.0 目标章节、状态及修订记录 | 移植一对一 Binding / Selector / Action 设计并标为待评审 | 无旧版兼容或产品完成承诺 | Issue #40；SR-029 |
 | 2026-11-26 | 0.3.5 | GPT-6（ChatGPT） | 历史修订表及修订记录 | 补齐历史缺失列为未记录，保留既有内容，不改历史业务断言 | 保证待审设计的表结构有效 | Issue #40；SR-029 |
 | 2026-11-26 | 0.3.6 | GPT-6（ChatGPT） | 规范性设计与验收门槛 | 修复一对多公开 Operation 误述，明确一个 Capability 仅一公开 Callable | 修复新旧语言/能力运行时冲突 | Issue #12/#40；SR-013/025/029；PR #46 |
+| 2026-11-27 | 0.3.7 | Codex / GPT-6 | §7、12.1 | 区分查询子集和含 Codec 的 Provider 全量 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |

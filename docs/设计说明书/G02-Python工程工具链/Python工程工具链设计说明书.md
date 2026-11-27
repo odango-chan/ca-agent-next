@@ -1,9 +1,9 @@
 # G02：Python 工程工具链与环境管理设计说明书
 
 > 文档类型：工程治理功能设计说明书  
-> 文档版本：0.2.0  
-> 状态：DRAFT（实施主状态）；**设计待评审 / REVIEW_REQUESTED**；SR-028 实施 NOT_READY  
-> 修订日期：2026-11-27  
+> 文档版本：0.2.1\
+> 状态：DRAFT（实施主状态）；**设计待评审 / REVIEW_REQUESTED**；SR-028 实施 NOT_READY\
+> 修订日期：2026-11-27\
 > 功能节点：G02 Python 工程工具链与环境管理  
 > 关联需求：[IR-007](../../IR/IR%20总登记册.md#ir-007)、[SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md)  
 > 追踪 Issue：[ca-agent-next #35](https://github.com/odango-chan/ca-agent-next/issues/35)  
@@ -161,7 +161,7 @@ uv run --locked --group dev --extra plugins python -m ca_agent_next --smoke
 
 [PR #32](https://github.com/odango-chan/ca-agent-next/pull/32) 已合入恢复分支（`7a0fac41e573021207ab8201bbc718718c451e50`）。目标树已有 `.github/workflows/review-context.yml`、`scripts/review_context.py`、`tests/test_review_context.py` 和 SR-003 Plugin 回归工作流。SR-028 在独立实施 PR 迁移安装入口。AC-028-07 核验完整测试与 Smoke；AC-028-08 在同一受测提交的真实 PR Run 核对生成器、Summary 和三份规定文件。
 
-保留 `.github/workflows/sr003-plugin-ci.yml` 的 Linux/Python 3.12 和 Windows/Python 3.14 矩阵、Go Echo 构建及证据步骤。该工作流迁移安装和测试入口时，为每个任务的 uv sync/run 显式传入 `--python` 和矩阵解释器，保留 `--locked --group dev --extra plugins`；根环境和 Review Context 使用项目的 3.14.6。完整回归的 pull_request paths 至少覆盖 pyproject.toml、uv.lock、.python-version、src/**、tests/**、examples/echo/**、scripts/review_context.py 和 .github/workflows/sr003-plugin-ci.yml 自身。逐类单文件变更均应触发两项矩阵任务。只改 `.python-version` 或 `uv.lock` 时也须能在 pull_request 上找到两项 Job。迁移前的成功日志只证明原环境。
+保留 `.github/workflows/sr003-plugin-ci.yml` 的 Linux/Python 3.12 和 Windows/Python 3.14 矩阵、Go Echo 构建及证据步骤。该工作流迁移安装和测试入口时，为每个任务的 uv sync/run 显式传入 `--python` 和矩阵解释器，保留 `--locked --group dev --extra plugins`；根环境和 Review Context 使用项目的 3.14.6。完整回归的 pull_request paths 至少覆盖 pyproject.toml、uv.lock、.python-version、src/**、tests/**、examples/echo/**、scripts/review_context.py、docs/SR/SR-003-*、.github/workflows/review-context.yml 及 .github/workflows/sr003-plugin-ci.yml 自身。逐类单文件变更均应触发两项矩阵任务。只改 Review Context workflow、`.python-version` 或 `uv.lock` 时也须能在 pull_request 上找到两项 Job。迁移前的成功日志只证明原环境。
 
 ## 4. 本地与 CI 流程
 
@@ -231,3 +231,4 @@ I1 与 I3 可在 SR-028 实施 Issue 内按依赖顺序执行；I2 只在 SR-001
 | 2026-11-26 | 0.1.3 | GPT-6（ChatGPT） | 文档头、设计评审、修订记录 | 新增设计待评审入口、评审覆盖与实施门禁隔离 | 纳入统一 23 SR 设计评审批次，避免把历史 CI 当成 uv 迁移 PASS | Issue #12/#35；SR-028 |
 | 2026-11-26 | 0.1.4 | Codex / GPT-6 | §2、§3.5～3.8、§6 | 对齐实际工作流、plugins extra、首次锁定与干净安装命令 | 使完整测试在新 worktree 能发现并加载 Plugin 回归，保留双平台覆盖 | Issue #12/#35，PR #46，SR-028 |
 | 2026-11-27 | 0.2.0 | Codex / GPT-6 | §3.8 | 固定完整回归触发范围 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
+| 2026-11-27 | 0.2.1 | Codex / GPT-6 | §3.8 | 补全双平台路径触发范围 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |

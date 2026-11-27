@@ -1,9 +1,9 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.45
+> 文档版本：0.3.46
 > 状态：29 项 SR：4 VERIFIED、1 IMPLEMENTED、24 DRAFT（24 项设计均已提交待评审），SR-003 模块 AC PASS，系统 EX NOT_RUN
-> 修订日期：2026-11-27  
+> 修订日期：2026-11-27\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：以本文范围与非目标章节为准；无额外扩展  
@@ -56,7 +56,7 @@
 
 ### 2.1 本批 DRAFT 的设计待评审清单（与实施主状态正交）
 
-PR #46 固定提交 `fd80c74da313241cb37d4211ce209cb77d0a8e26` 独立评审：24 项中 6 项仅在下表范围建议进入 READY 评议，18 项要求修订。修订提交不构成二次独立批准；产品测试 NOT_RUN。SR-026 等 Provider Owner 签认，SR-027 等正式作者/Compiler 输入。
+首轮评审（fd80c74）为 6 项限定可评议、18 项需修订。第二轮独立设计评审固定在 `1bf748db86c553dfcbf140477928fd68d811e67e`，结论 PARTIALLY_APPROVED。下表登记该轮的 12 项限定 APPROVE_FOR_READY、10 项 CHANGES_REQUESTED 与 2 项 BLOCKED_EXTERNAL_INPUT。该轮已关闭 D2、D4、D6～D8、D11、D12 的指定设计范围。D1、D3、D5、D9、D10、D13、D15 对应的中央文字已修订，待第三轮独立核查。D14 等待 Provider Owner 发布。24 项实施主状态均为 DRAFT。
 
 | 复评项 | 权威位置与核查内容 |
 |---|---|
@@ -72,30 +72,30 @@ PR #46 固定提交 `fd80c74da313241cb37d4211ce209cb77d0a8e26` 独立评审：24
 
 | SR | 本轮评审焦点 | 设计评审 | 实施主状态 |
 |---|---|---|---|
-| SR-004 | Skill Importer candidate 与旧 Artifact 拒绝 | CHANGES_REQUESTED（修订后复评） | DRAFT |
-| SR-005 | Catalog 代际、CheckedExpr 与原子激活 | CHANGES_REQUESTED（修订后复评） | DRAFT |
-| SR-006 | Skill Resolver 与 Continuation 选择 | CHANGES_REQUESTED（修订后复评） | DRAFT |
-| SR-007 | 统一 Runtime Scope、Owner Outcome | CHANGES_REQUESTED（修订后复评） | DRAFT |
-| SR-008 | 1.6.0 Echo 双 Skill 示例 | CHANGES_REQUESTED（修订后复评） | DRAFT |
-| SR-009 | OpenAMSM SBI Plugin 与二进制 | CHANGES_REQUESTED（修订后复评） | DRAFT |
-| SR-010 | Provider/Codec 与 Artifact Channel | CHANGES_REQUESTED（修订后复评） | DRAFT |
-| SR-011 | 真实 OpenAMSM Create/Modify/Release | CHANGES_REQUESTED（修订后复评） | DRAFT |
-| SR-012 | Compiler 中央设计归档 | CHANGES_REQUESTED（修订后复评） | DRAFT |
-| SR-013 | Compiler when、Request Schema、新 Artifact / Build API、Schema-only Package / zero Capability roots（AC-013-06） | APPROVE_FOR_READY（设计评议；AC-013-01 归档复核） | DRAFT |
-| SR-016 | Skill Studio 与 1.6.0 集成；零 Capability roots / Schema-only closure 消费 | CHANGES_REQUESTED（修订后复评） | DRAFT |
-| SR-017 | OpenAMSM Event/Delivery Plugin 设计移交 | CHANGES_REQUESTED（修订后复评） | DRAFT |
+| SR-004 | Skill Importer candidate 与旧 Artifact 拒绝 | CHANGES_REQUESTED（Echo 包根已修订，待复评） | DRAFT |
+| SR-005 | Catalog 代际、CheckedExpr 与原子激活 | APPROVE_FOR_READY（Catalog 原子激活与热路径，实施依赖 SR-004） | DRAFT |
+| SR-006 | Skill Resolver 与 Continuation 选择 | CHANGES_REQUESTED（直接文本候选与事件重放已修订，待复评） | DRAFT |
+| SR-007 | 统一 Runtime Scope、Owner Outcome | CHANGES_REQUESTED（双模式 Owner Proof 与 Outcome已修订，待复评） | DRAFT |
+| SR-008 | 1.6.0 Echo 双 Skill 示例 | CHANGES_REQUESTED（三场景、干净进程与 READ已修订，待复评） | DRAFT |
+| SR-009 | OpenAMSM SBI Plugin 与二进制 | APPROVE_FOR_READY（AC-009-01～06 模块设计） | DRAFT |
+| SR-010 | Provider/Codec 与 Artifact Channel | CHANGES_REQUESTED（1.6.0 Resolver、公共契约与旧包零 IPC已修订，待复评） | DRAFT |
+| SR-011 | 真实 OpenAMSM Create/Modify/Release | CHANGES_REQUESTED（listener 与 key-reuse 隔离已修订，待复评） | DRAFT |
+| SR-012 | Compiler 中央设计归档 | CHANGES_REQUESTED（EC02 工具链权威输入已修订，待复评） | DRAFT |
+| SR-013 | Compiler when、Request Schema、新 Artifact / Build API、Schema-only Package / zero Capability roots（AC-013-06） | APPROVE_FOR_READY（原限定的 Compiler 设计及 AC-013-01 归档复核） | DRAFT |
+| SR-016 | Skill Studio 与 1.6.0 集成；零 Capability roots / Schema-only closure 消费 | CHANGES_REQUESTED（Compiler 联验与 Release 顺序已修订，待复评） | DRAFT |
+| SR-017 | OpenAMSM Event/Delivery Plugin 设计移交 | APPROVE_FOR_READY（业务插件静态移交） | DRAFT |
 | SR-018 | MAS Owner 权威契约移交 | APPROVE_FOR_READY（历史 Owner，AC-018-01/02/04） | DRAFT |
-| SR-019 | Mock AMF 与仿真对端 | CHANGES_REQUESTED（修订后复评） | DRAFT |
-| SR-020 | Python Generic Host 参考审计 | CHANGES_REQUESTED（修订后复评） | DRAFT |
+| SR-019 | Mock AMF 与仿真对端 | APPROVE_FOR_READY（仿真对端静态移交，AC-019-01～04） | DRAFT |
+| SR-020 | Python Generic Host 参考审计 | APPROVE_FOR_READY（Python Host 参考审计） | DRAFT |
 | SR-021 | Go Native Host 目标参考 | APPROVE_FOR_READY（Go Host 参考，AC-021-01～04） | DRAFT |
 | SR-022 | ca-runtime 语义迁移对照 | APPROVE_FOR_READY（Runtime 语义对照，AC-022-01～04） | DRAFT |
 | SR-023 | 历史 CA-SL 规范只读移交 | APPROVE_FOR_READY（历史作者规范移交，AC-023-01～04） | DRAFT |
-| SR-025 | MAS Owner 新 Interface Package 发布 | CHANGES_REQUESTED（修订后复评） | DRAFT |
-| SR-026 | Codec 对外 Capability 发布 | CHANGES_REQUESTED（修订后复评） | DRAFT |
-| SR-027 | 1.6.0 技能 Bundle 发布 | CHANGES_REQUESTED（修订后复评） | DRAFT |
-| SR-028 | uv Python 工程工具链 | CHANGES_REQUESTED（修订后复评） | DRAFT |
-| SR-029 | 1.6.0 Capability-first 一对一绑定 | CHANGES_REQUESTED（修订后复评） | DRAFT |
-| SR-030 | Host Context 1.6.0 Schema-only Publisher；0 Capability / 0 Callable，精确 Schema export；与 SR-013 AC-013-06 联合验收 | APPROVE_FOR_READY（Schema-only 设计及 AC-030-01 固定源审计） | DRAFT |
+| SR-025 | MAS Owner 新 Interface Package 发布 | APPROVE_FOR_READY（中央 MAS Owner Publisher 设计） | DRAFT |
+| SR-026 | Codec 对外 Capability 发布 | BLOCKED_EXTERNAL_INPUT（Provider Owner 公开 Codec 契约） | DRAFT |
+| SR-027 | 1.6.0 技能 Bundle 发布 | BLOCKED_EXTERNAL_INPUT（五根作者提交、Echo Interface 与 Compiler Release/argv） | DRAFT |
+| SR-028 | uv Python 工程工具链 | CHANGES_REQUESTED（双平台路径触发已修订，待复评） | DRAFT |
+| SR-029 | 1.6.0 Capability-first 一对一绑定 | CHANGES_REQUESTED（旧版拒绝、3/3 与导航一致性已修订，待复评） | DRAFT |
+| SR-030 | Host Context 1.6.0 Schema-only Publisher；0 Capability / 0 Callable，精确 Schema export；与 SR-013 AC-013-06 联合验收 | APPROVE_FOR_READY（Schema-only 设计与 AC-030-01 固定源审计） | DRAFT |
 
 上述专项评审按单版本 1.6.0 和 Capability↔Callable 一对一原则校核；历史 v1alpha5、Compiler v2.1.0、Owner v1alpha4 和 Provider v1.2.0 只可作迁移/审计来源。旧来源中的身份、Build DTO、Artifact、Bundle 或测试不得自动证明新版发布/可实施。SR-029 新契约尚未发布，Compiler #61、Publisher、Skill Bundle 等真实前置仍保持各自 BLOCKED/NOT_RUN；SR-028 的 uv 工具链设计可独立于这些外部发布审查。
 
@@ -106,7 +106,7 @@ PR #46 固定提交 `fd80c74da313241cb37d4211ce209cb77d0a8e26` 独立评审：24
 | 顺序 | SR | 主要功能 | 目标仓 / 参考仓 | 依赖和产出 |
 |---|---|---|---|---|
 | 1 | SR-023 | CA-SL v1alpha5、作者源与发布基线恢复 | ca-skills | 先固定语言、Skill 作者源与版本边界；Compiler #61 仍是外部 OPEN 依赖 |
-| 2 | SR-015 | Tool Interface / Provider / Codec 设计恢复 | ca-client-tools → Next F03.05 | IMPLEMENTED；SR-015 合并时 F03.05 v0.4.3（现行设计 v0.4.1）；SR-015 v0.3.8；PR #37 MERGED，产品代码未实现 |
+| 2 | SR-015 | Tool Interface / Provider / Codec 设计恢复 | ca-client-tools → Next F03.05 | IMPLEMENTED；SR-015 合并时 F03.05 v0.3.9（现行 v0.4.4）；SR-015 v0.3.8；PR #37 MERGED，产品代码未实现 |
 | 3 | SR-025 | MAS Owner 1.6.0 Capability-first Interface Package Publisher | ca-client-tools → Next F03.05 / F09 | 新 Owner 24/24 Capability↔Callable 发布；历史 24/25、Development v1alpha1 和 1.0.0 仅审计；具体新机器 Schema/版本待 Owner/Compiler 冻结 |
 | 4 | SR-030 | Host Context 1.6.0 Schema-only Interface Package Publisher | ca-agent-demo → Next F09 | DRAFT；固定原始 Schema 来源；0 Capability / 0 Callable；新 Package Schema、languageTarget 和 SemVer 待冻结，AC-030-01～07 NOT_RUN；SR-024 VERIFIED 仅作为旧 v1alpha5 Development Publisher 历史证据 |
 | 5 | SR-018 | OpenAMSM Owner 权威状态恢复 | env-openamsm | 固定 Callable、Receipt、Commit Proof、Reconcile 和 Modify/Release 边界 |
@@ -124,7 +124,7 @@ PR #46 固定提交 `fd80c74da313241cb37d4211ce209cb77d0a8e26` 独立评审：24
 - 治理自动化：SR-001 VERIFIED；[PR #32](https://github.com/odango-chan/ca-agent-next/pull/32) MERGED（`7a0fac41e573021207ab8201bbc718718c451e50`）；AC-REV-01～10 PASS、80 tests OK、Run [45793590532](https://github.com/odango-chan/ca-agent-next/actions/runs/45793590532) success；SR-028 仍为 DRAFT。
 - Phase A：SR-002（VERIFIED；PR #23 已集成；AC-002-01～08 PASS；EX-01 仍 NOT_RUN）。
 - Phase B：**SR-003 VERIFIED（模块）**；[实施 PR #34](https://github.com/odango-chan/ca-agent-next/pull/34) 与 [治理回填 PR #41](https://github.com/odango-chan/ca-agent-next/pull/41) 均 MERGED。最终实施 Head `e8bcb1b` 与 Merge `32c7c1be` tree 一致；治理回填 Head `f3f59b54` 与 Merge `a899409` tree 一致。[CI #45815167442](https://github.com/odango-chan/ca-agent-next/actions/runs/45815167442)、[CI #45817800342](https://github.com/odango-chan/ca-agent-next/actions/runs/45817800342) 均 SUCCESS：Linux Python 3.12 + Windows Python 3.14 每平台 Plugin 87 / Host 52 / Review Context 80 tests PASS，Go Echo build、compileall 与证据采集 PASS；AC-003-01～04 均 PASS。系统 EX-02/03/04/18 仍 NOT_RUN；Provider v2 wire DTO 属 SR-010，不影响 SR-003 模块结论。
-- Phase C：SR-004 DRAFT / NOT READY；[设计 Issue #43](https://github.com/odango-chan/ca-agent-next/issues/43) OPEN，SR-004 v0.2.11 已定义 AC-004-01～06。SKILL.md-only 子路径可独立设计；新 Assurance 路径面向 **CA-SL 1.6.0**（Issue #40 / SR-029；NOT_RELEASED），还需 Compiler #61 / SR-013 唯一 Capability Binding Artifact 与 ca-skills SR-027 正式 Bundle 契约/正例。冻结 Artifact v1alpha5 与 Development v1alpha1 均不作为当前正例；未达到 READY，不创建实施 Issue、不提供 Harness 提示词。
+- Phase C：SR-004 DRAFT / NOT READY；[设计 Issue #43](https://github.com/odango-chan/ca-agent-next/issues/43) OPEN，SR-004 v0.2.12 已定义 AC-004-01～06。SKILL.md-only 子路径可独立设计；新 Assurance 路径面向 **CA-SL 1.6.0**（Issue #40 / SR-029；NOT_RELEASED），还需 Compiler #61 / SR-013 唯一 Capability Binding Artifact 与 ca-skills SR-027 正式 Bundle 契约/正例。冻结 Artifact v1alpha5 与 Development v1alpha1 均不作为当前正例；未达到 READY，不创建实施 Issue、不提供 Harness 提示词。
 - Phase D：SR-005、SR-006。
 - Phase E：SR-007。
 - Phase F：SR-008。
@@ -210,3 +210,4 @@ PR #46 固定提交 `fd80c74da313241cb37d4211ce209cb77d0a8e26` 独立评审：24
 | 2026-11-26 | 0.3.43 | GPT-6（ChatGPT） | §2.1、SR-013/SR-016/SR-030 评审焦点、修订记录 | 将 Schema-only Package / zero Capability roots 的新 AC-013-06 纳入 SR-013 评审焦点，并明确 SR-016 消费与 SR-030 Publisher 的联合验收关系 | 让 24 项 DRAFT 的评审矩阵与 F08/EC02/SR-013/F09/SR-016 的最新闭环一致 | Issue #12/#40；SR-013、SR-016、SR-030；PR #46 |
 | 2026-11-26 | 0.3.44 | Codex / GPT-6 | 当前设计入口与修订记录 | 对齐本轮 Importer、Compiler 或 Publisher 的阶段门槛与引用版本 | 供评审者按同一提交核对生产和消费证据 | Issue #12/#40/#43，PR #46 |
 | 2026-11-27 | 0.3.45 | Codex / GPT-6 | 24 项设计评审表 | 逐 SR 回填固定提交的独立结论与复评范围 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
+| 2026-11-27 | 0.3.46 | Codex / GPT-6 | §2.1、3.1 | 逐项登记第二轮独立评审范围与修订门槛 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |

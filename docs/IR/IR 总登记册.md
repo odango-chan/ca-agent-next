@@ -1,9 +1,9 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录  
-> 文档版本：0.1.27  
-> 修订日期：2026-11-26  
-> 状态：8 项 IR；IR-008 登记 CA-SL 1.6.0 Capability-first 严格一对一与完全无旧版兼容，SR-029 设计待评审；IR-006 下 SR-030 Host Context Schema-only Publisher 设计待评审；SR-028 仍 DRAFT。  
+> 文档版本：0.1.28\
+> 修订日期：2026-11-27\
+> 状态：8 项 IR；IR-008 登记 CA-SL 1.6.0 Capability-first 严格一对一与完全无旧版兼容，SR-029 设计待评审；IR-006 下 SR-030 Host Context Schema-only Publisher 设计待评审；SR-028 仍 DRAFT。\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级需求管理平台
 
@@ -30,7 +30,7 @@ IR 编号稳定。GitHub Issue 用于讨论、分派和跟踪，一个 IR 可关
 - 实施协作 Issue：[SR-002 实施 Issue #22](https://github.com/odango-chan/ca-agent-next/issues/22)（实施 PR #23 已 MERGED；证据回填 PR #25 负责关闭该 Issue）；[PR #23](https://github.com/odango-chan/ca-agent-next/pull/23) merge commit `49964464e19d13d219ea0b3513d2223fe81d2435`。SR-002 已 VERIFIED，AC-002-01～08 PASS；Issue #19 仅用于设计修订，Issue #21 仅用于治理修订。
 - 实施分解：[SR-002](../SR/SR-002-Python%20核心与宿主基础骨架.md)、[SR-003](../SR/SR-003-统一插件管理器与扩展通信.md)。
 - 架构、设计和规范：[CA Agent Next 架构设计](../架构设计/CA%20Agent%20Next%20架构设计.md)、[通用Agent核心与Host设计说明书](../设计说明书/F01-通用Agent核心与Host/通用Agent核心与Host设计说明书.md)、[Plugin平台设计说明书](../设计说明书/F03-Plugin平台/Plugin平台设计说明书.md)、[插件包与进程通信协议规范](../规范/插件包与进程通信协议规范.md)。
-- 完成依据：SR-002 已 VERIFIED，AC-002-01～08 PASS；SR-003 设计 READY，实施 IN_PROGRESS（PR #34 OPEN），AC-003-01～04 在受测 SHA `504ec1b0a35fc761eba621149a94c83d1012626f` 本地 PASS，但尚未合入恢复分支；GitHub CI 与 EX-02/03/04/18 仍 NOT_RUN。因此 IR-002 尚未整体完成。
+- 完成依据：SR-002、SR-003 均已 VERIFIED（模块）。PR #34/#41 已合并，AC-003-01～04 通过，Ubuntu Python 3.12 与 Windows Python 3.14 CI 均 SUCCESS；系统 EX-02/03/04/18 仍 NOT_RUN。详见[实施状态总览](../治理/实施状态总览.md)。
 
 ## IR-003
 
@@ -95,7 +95,7 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 
 - 协作 Issue：[Next #35](https://github.com/odango-chan/ca-agent-next/issues/35)（中央设计与治理刷新；不是代码实施 Issue）。
 - 实施分解：[SR-028](../SR/SR-028-Python工程工具链与uv环境管理.md)（DRAFT；实施 Issue 尚未创建）。
-- 架构与设计：[G02 Python 工程工具链与环境管理设计说明书](../设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md) v0.1.2。
+- 架构与设计：[G02 Python 工程工具链与环境管理设计说明书](../设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md) v0.2.1。
 - 实施范围：首批仅覆盖 `ca-agent-next` 根 Python 项目；其他仓库采用 uv 或迁移依赖管理须各自登记目标仓、基线、Issue 和 SR。
 - 完成依据：SR-028 的全部必需验收在目标仓真实执行并 VERIFIED；设计评审或锁文件生成本身不代表实施完成。
 
@@ -142,6 +142,7 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 | 2026-11-26 | 0.1.23 | GPT-6.2（ChatGPT） | IR-003 | 登记 SR-004 独立设计 readiness Issue #43 | 使 Skill 导入与 Compiler/Bundle 依赖有单独的设计审查入口 | Issue #43；SR-004；SR-013；SR-027 |
 | 2026-11-26 | 0.1.24 | GPT-6.2（ChatGPT） | IR-003、修订记录 | 登记 Issue #40 的 CA-SL 1.6.0 单版本无兼容/迁移裁决，要求 SR-004 只消费新 Bundle | 避免 IR-003 上游仍允许旧 Assurance 运行输入 | Issue #40/#43；SR-004；SR-029 |
 | 2026-11-26 | 0.1.25 | GPT-6（ChatGPT） | IR-008、文档状态、修订记录 | 新增 CA-SL 1.6.0 Capability-first / Callable 一对一需求，并登记 SR-029 设计待评审与全链路无兼容门槛 | 防止下游把历史 v1alpha5 当作新系统可执行输入 | Issue #40；SR-029；SR-004 |
+| 2026-11-27 | 0.1.28 | Codex / GPT-6 | IR-002/007 | 更新模块验证状态及 G02 入口 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
 
 | 2026-11-26 | 0.1.26 | GPT-6（ChatGPT） | 1.6.0 Host Context Publisher / 依赖边界 | 将 Host Context 1.6.0 Schema-only Publisher 纳入 IR-006/IR-008，区分 SR-024 历史 VERIFIED 与 SR-030 新需求 | 避免旧 Development Package 被误认为新版正式输入 | Issue #12/#40；IR-006/008；SR-030 |
 | 2026-11-26 | 0.1.27 | GPT-6（ChatGPT） | IR-006/IR-008、修订记录 | 同步 SR-030 新版 Host Context 1.6.0 Schema-only Publisher 需求与 SR-024 历史 v1alpha5 Publisher 边界 | 使 IR→SR 追踪明确区分旧版已验证证据和新版待评审需求 | Issue #12/#40；IR-006/008；SR-024、SR-030；PR #46 |

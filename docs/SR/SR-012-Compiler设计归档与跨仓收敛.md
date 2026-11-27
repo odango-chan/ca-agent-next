@@ -1,10 +1,10 @@
 # SR-012 Compiler 设计归档与跨仓收敛
 
-> 文档版本：0.1.6  
-> 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**；实施/产品验收未升级；PR #46 首轮 CHANGES_REQUESTED，修订待复评  
+> 文档版本：0.1.7\
+> 状态：DRAFT（实施主状态）。PR #46 第二轮独立评审（1bf748db）：CHANGES_REQUESTED（EC02 工具链权威输入已修订，待复评）。产品验收依各 AC 单列。
 > 上游 IR：IR-006  
 > 创建日期：2026-11-25  
-> 修订日期：2026-11-27  
+> 修订日期：2026-11-27\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产准入、Owner 信任运营、5GC/MAS 认证及发布。
 
@@ -58,7 +58,7 @@ Issue [Next #2](https://github.com/odango-chan/ca-agent-next/issues/2)；依赖�
 |---|---|---|
 | AC-012-01 | 固定 Compiler 源 SHA、Next EC02 入口、IR/SR/Issue 双向链接 | 引用全部可达；旧 Runtime API/Golden 不被覆写 |
 | AC-012-02 | 源仓活动 docs 与 Next EC02 对照；重复项/无法映射项分别归类 | 仅已批准重复正文变链接；无法映射保留原文；Git diff 文件范围明确 |
-| AC-012-03 | 记录每项 v1alpha5/Development v1alpha1 为历史、1.6.0 新目标与 Compiler #61 的产品 Release 状态 | 历史发行与新 API/Language 绝不混为当前实现 PASS |
+| AC-012-03 | 记录每项 v1alpha5/Development v1alpha1 为历史、1.6.0 新目标与 Compiler #61 的产品 Release 状态 | 核对 EC02《工具链设计》§3.2.1 与主设计 §11，旧版仅进入历史清单；现行 Loader、Resolver、Runtime 遇旧 Artifact 均拒绝且 IPC=0。源仓入口收敛另按 AC-012-02 取证 |
 
 **执行及证据**：设计 AC 以固定中央设计 HEAD、源仓 SHA、准确文件/符号/静态 diff 与逐项对照表取证；若此轮未实际读/跑某源代码或测试，则记录 `NOT_RUN` 而不是 PASS。跨仓源仓代码修改必须有独立实施 Issue/PR、授权并在相应产品 SR 留痕。已有的 SRxxx-A/B/... 原验收保留作细项追踪，不能据此把模块产品或 Next E2E 状态提升为 VERIFIED。
 
@@ -70,6 +70,7 @@ Issue [Next #2](https://github.com/odango-chan/ca-agent-next/issues/2)；依赖�
 | 2026-11-25 | 0.1.1 | Codex / GPT-6 | 正文 | 明确唯一实施仓与文档移交流程 | 消除执行歧义并同步中央设计 | Issue #12 SR-012 |
 | 2026-11-25 | 0.1.2 | Codex / GPT-6 | 正文 | 同步所引权威设计版本 | 消除执行歧义并同步中央设计 | Issue #12 SR-012 |
 | 2026-11-26 | 0.1.3 | GPT-6（ChatGPT） | 文档头、§0、设计依据 | 登记统一 1.6.0 专项设计评审、阻塞与证据边界；不改变产品实施主状态 | 设计集中评审、避免历史来源冒充新发布 | Issue #12；SR-029；PR #45 |
+| 2026-11-27 | 0.1.7 | Codex / GPT-6 | AC-012-03 | 将权威入口的版本一致性列为归档核查项 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
 
 | 2026-11-26 | 0.1.4 | GPT-6（ChatGPT） | 设计移交与模块验收 | 新增独立 AC / 来源 SHA / 与实现产品、系统 E2E 证据隔离 | 使设计移交在无需臆造产品发布的情况下可逐项审查 | Issue #12；SR-029；PR #46 |
 

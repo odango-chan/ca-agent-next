@@ -1,14 +1,14 @@
 # SR-025：MAS Owner 1.6.0 Capability-first Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.11
-> 状态：DRAFT（SR 实施主状态）；**设计待评审 / REVIEW_REQUESTED**；不授予实施 READY，产品验收原状态不变；PR #46 首轮 CHANGES_REQUESTED，修订待复评  
+> SR 版本：0.1.12
+> 状态：DRAFT（实施主状态）。PR #46 第二轮独立评审（1bf748db）：APPROVE_FOR_READY（中央 MAS Owner Publisher 设计）。产品验收依各 AC 单列。
 > 创建日期：2026-11-25
-> 修订日期：2026-11-27  
+> 修订日期：2026-11-27\
 > 所属阶段：外部 Publisher 实施移交
 > 上游需求：[IR-006](../IR/IR%20总登记册.md#ir-006)
 > 功能：F03.05 / EC03（消费方关联 F09.07）
-> 设计依据：[F03.05 Tool Interface / Provider 设计](../设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) v0.4.3；[F09 新版 1.6.0 设计 §5～§9](../设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md) v0.3.15；[SR-015](SR-015-工具契约设计移交.md)；[EC02 新 1.6.0 Compiler 设计](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.13 与 [SR-013](SR-013-Compiler已检查when与发布产物.md)；历史 Compiler v2.1.0 Development BuildRequest 仅供审计
+> 设计依据：[F03.05 Tool Interface / Provider 设计](../设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) v0.4.4；[F09 新版 1.6.0 设计 §5～§9](../设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md) v0.3.16；[SR-015](SR-015-工具契约设计移交.md)；[EC02 新 1.6.0 Compiler 设计](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.13 与 [SR-013](SR-013-Compiler已检查when与发布产物.md)；历史 Compiler v2.1.0 Development BuildRequest 仅供审计
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：Provider v2 重构、Host Runtime Binding 重构、生产级 Trust/Admission/签名或额外包完整性体系；历史 v1alpha4/v1alpha5 Development Bundle 仅供源审计
 
@@ -96,6 +96,7 @@ Owner `v1alpha4` source 的 `tool-catalog.yaml` 含 25 published contracts、旧
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
 |---|---|---|---|---|---|
 | 2026-11-25 | 0.1.0 | GPT-6.2（ChatGPT） | §1～6 | 新增 ca-client-tools MAS Owner Development Interface Package Publisher 独立实施 SR；固定 Owner source、25/24/25/53 exports、127 exports、56 payload files、Compiler Build/Verify gate 和 Release 集成；记录 SemVer 映射待用户确认。 | IR-006 · F03.05 · F09 · SR-015 · SR-016 · SR-024 · Issue #12 |
+| 2026-11-27 | 0.1.12 | Codex / GPT-6 | 评审状态 | 登记第二轮限定范围及外部依赖 | Issue #12，PR #46 |
 
 | 2026-11-25 | 0.1.1 | GPT-6.2（ChatGPT） | §2～7 | 补齐 AC-025-01～08，明确 package.version SemVer 决策门槛、导出闭包、负向测试和既有 Release 流程 ；让 ca-client-tools Publisher 达到可评审、可执行的 SR 粒度；不在决策确认前生成实施提示词 | Issue #12；F03.05；F09；SR-015、SR-016、SR-024 |
 | 2026-11-25 | 0.1.2 | Codex / GPT-6 | 正文 | §2、4～6 固定 MAS 包身份，解除 Publisher 对下游 Studio 的循环前置 | Issue #12 SR-025 |

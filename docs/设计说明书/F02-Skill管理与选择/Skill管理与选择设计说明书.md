@@ -2,12 +2,12 @@
 
 > 文档类型：机制设计说明书  
 > 状态：**设计待评审**（唯一新目标 CA-SL 1.6.0；全链路不兼容任何旧作者语法、Build DTO、Artifact、Bundle；1.6.0 产品未发布）
-> 文档版本：0.3.0
+> 文档版本：0.3.1
 > 功能归属：F02 — Skill 管理与选择  
 > 关联 SR：SR-004、SR-005、SR-006    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
 > 本文局部非目标：以本文范围与非目标章节为准；无额外扩展  
-> 修订日期：2026-11-27  
+> 修订日期：2026-11-27\
 > 适用范围：Skill 包导入、SkillCatalog、Resolver、已发布 CA-SL Runtime Artifact 与 Python CEL Runtime
 
 关联需求项见 [IR-003](../../IR/IR%20总登记册.md#ir-003)。
@@ -105,7 +105,7 @@ Agent 不实现文件监视器、自动下载、分布式缓存或通用 Plugin 
 
 ## 6. Skill 选择语义
 
-1. 校验并去重 Event。
+1. 先按 IPC 规范校验 Event 的逻辑身份和规范化内容（含 payload、业务元数据与 Artifact 原始字节）。同身份同内容幂等复用；同身份异内容冲突且零新增 Run/dispatch；不同逻辑身份独立处理。
 2. 精确 continuation 优先，恢复原 Run，不重新选择 Skill。
 3. 对新 Event 固定当前 Catalog generation。
 4. 对新 Event，按各已发布 Assurance Skill 声明的 `requestSchema` 验证规范化 payload。失败时记录关联 Skill 和失败原因的输入校验诊断，在两个候选集合之外处理该 Skill，跳过 CEL。通过或无需 Schema 校验的 Skill 若声明 `when`，使用 Artifact 中已检查的 CEL 程序求值。
@@ -116,7 +116,7 @@ Agent 不实现文件监视器、自动下载、分布式缓存或通用 Plugin 
 9. 无候选时澄清或拒绝；不得无 Skill 绑定地回退到 Generic Agent。
 10. 精确绑定 Skill 后，才选择 Deterministic 或 LLM-guided 模式。
 
-直接文本没有 typed input 时，排除所有声明 requestSchema 的候选，跳过其 CEL 与模型消歧。只在无 when 且无必需输入 Schema 的合格集合内选择；空集进入澄清。禁止从文本猜造 typed input。
+直接文本只对无 when 且无必需 Schema 的候选做语义选择。即使某个 when 仅引用 event.type 且该 Skill 无 requestSchema，也须在 CEL 求值前排除。禁止补造 event.type 或 typed input。空集进入澄清，CEL 与 Tool dispatch 均为零。
 
 Continuation 仅用协议身份和 correlation 查原 Run。Skill、Artifact、generation、Node/Wait 位置均取自原 Run；消息夹带冲突身份、错 correlation 或已结束 Run 则拒绝，合法重复按原结果幂等应答，迟到消息隔离。以上路径均零重选、零 CEL 重算，拒绝或重放时新增 mutation 为零。
 
@@ -254,6 +254,7 @@ Next 在 Skill 导入时反序列化已检查程序和类型环境，建立运�
 | 2026-11-25 | 0.2.9 | GPT-6.2（ChatGPT） | §7 | 修复 CA-SL v1alpha5 when 发布/运行时依赖的失效锚点，指向当前语言基线 §3 | 不改变 M.3/SA-012 语义；使候选资格引用可导航 | IR-003；Issue #12 |
 | 2026-11-25 | 0.2.10 | Codex / GPT-6 | 正文 | §6、追踪 对齐语言发布与 Compiler/Bundle 职责 | 消除执行歧义并同步中央设计 | Issue #12 |
 | 2026-11-26 | 0.2.11 | GPT-6.2（ChatGPT） | §4、§9 | 明确冻结 v1alpha5 Artifact 不序列化 Skill Capability ID；Compiler Build-time 校验作者源 Capability，Runtime Scope 只从 operation/observation exports 建立 | 对齐 F03.05 与 Compiler v2.1.0 frozen artifact schema，避免实现者读取不存在字段 | IR-006 · SR-015 · Issue #12 |
+| 2026-11-27 | 0.3.1 | Codex / GPT-6 | §6 | 对齐 Event 身份冲突和直接文本选择规则 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
 
 | 2026-11-26 | 0.2.12 | GPT-6.2（ChatGPT） | §1～5、§9～12、修订记录 | 区分 Importer candidate 与 SR-005 Catalog 激活；明确冻结 Artifact v1alpha5、Development v1alpha1、新 Runtime Artifact API 的消费矩阵；同步 CA-SL v1alpha5 固定 SHA、Compiler #61 / SR-013、SR-027 Bundle 和 Issue #40 v1alpha6 边界 | 防止把旧冻结 Artifact/Development Artifact 当作当前可运行 Bundle，避免在 Manifest/Bundle 契约未冻结时让 SR-004 或 Harness 猜测实现 | Issue #43；SR-004；SR-013；SR-027；Issue #40 |
 | 2026-11-26 | 0.2.13 | GPT-6.2（ChatGPT） | §9、修订记录 | 明确 F03.05 的 v1alpha5 依赖/Callable 语义是语言与构建语义，不代表冻结 Artifact API v1alpha5 可导入；新版 Runtime Artifact 的字段映射必须由 Compiler #61 正式冻结 | 避免把旧 Artifact 的 dependencyClosure 字段猜测为新 Runtime Artifact API 的字段 | Issue #43；SR-004；SR-013 |
