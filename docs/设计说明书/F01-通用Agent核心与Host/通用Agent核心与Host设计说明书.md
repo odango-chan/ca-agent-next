@@ -87,7 +87,7 @@ Model Loop 不承担 Tool dispatch。每一轮模型输入由 Host 组装，至�
 - 已授权 Context / Observation；
 - 当前 Run 位置和剩余 response obligation。
 
-模型输出必须转换为结构化 Action Proposal。Host / Runtime 校验 Skill identity、Capability ID、参数 Schema、Artifact refs、Run state 和 invocation identity；业务 Capability 从已验证 Artifact 的唯一 capabilityBinding 解析内部 Callable，才允许调用 Plugin。若 Action 为 Host Script Execution system Capability `host.skill-script.execute`，Runtime 则校验当前 Skill 的 scripts/manifest.yaml、llmInvocable 标记、Host policy 和输入 Schema，再由 Host 内建 Tools Extension 调用精确 Script entrypoint。模型不得提交或替换 Callable ID、backendOperationId、URL、Provider selector、脚本路径、代码或命令；未知 Capability、绑定歧义、参数不完整或越权时停止，不自动猜测修复。
+模型输出必须转换为结构化 Action Proposal。Host / Runtime 校验 Skill identity、Capability ID、参数 Schema、Artifact refs、Run state 和 invocation identity；业务 Capability 从已验证 Artifact 的唯一 capabilityBinding 解析内部 Callable，才允许调用 Plugin。若 Action 为 Host Script Execution system Capability `host.skill-script.execute`，Runtime 则校验当前 Skill 的 scripts/manifest.yaml、llmInvocable 标记、`scriptExecution.llmEnabled=true` 和输入 Schema，再由 Host 内建 Tools Extension 调用精确 Script entrypoint。模型不得提交或替换 Callable ID、backendOperationId、URL、Provider selector、脚本路径、代码或命令；未知 Capability、绑定歧义、参数不完整或越权时停止，不自动猜测修复。
 
 Model Client 是可替换适配器；自动化测试必须支持 Fake Model Client。模型 Provider、Gateway URL、模型 ID 和凭据属于部署配置，不进入业务 Skill 契约。
 
