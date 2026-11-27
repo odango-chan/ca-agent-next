@@ -74,15 +74,19 @@ class PythonToolchainPolicyTests(unittest.TestCase):
                 {
                     "requirements.txt",
                     "requirements-dev.txt",
+                    "requirements-dev.in",
+                    "constraints.txt",
                     "poetry.lock",
                     "Pipfile.lock",
+                    "pdm.lock",
+                    "rye.lock",
                     "conda-lock.yaml",
                     "environment.yaml",
                     "tests/fixtures/requirements.txt",
                     "uv.lock",
                 }
             ),
-            ["Pipfile.lock", "conda-lock.yaml", "environment.yaml", "poetry.lock", "requirements-dev.txt", "requirements.txt"],
+            ["Pipfile.lock", "conda-lock.yaml", "constraints.txt", "environment.yaml", "pdm.lock", "poetry.lock", "requirements-dev.in", "requirements-dev.txt", "requirements.txt", "rye.lock"],
         )
 
     def test_pip_install_is_rejected(self) -> None:
