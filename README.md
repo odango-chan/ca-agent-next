@@ -21,7 +21,9 @@ CA Agent Next 是下一代通用 Agent 的独立实现仓。目标是用尽可�
 
 ## 当前开发与复验入口（SR-028 迁移后）
 
-自 SR-028 起，本仓根 Python 工程统一使用 uv `0.13.10` 解析、锁定和运行依赖；`uv.lock` 是唯一锁文件，`.python-version` 精确为 `3.14.6`（`requires-python >=3.11` 仍只是包元数据下限，不代表 3.11～3.13 版本矩阵已通过）。历史 pip 命令只保留在各 SR 与验收记录的原始受测环境中（见 SR-002、SR-003、演示验收基线），不作为当前入口。 该工具链是整个 Next 根 Python 工程的共享基线，不限于 SR-028；所有触及根 Python 源码、测试、脚本、依赖或 Python CI 的实施分支都必须从[当前共享基线](docs/规范/Python工程工具链与实施基线规范.md)派生，禁止回退 pip。PR #99 尚未合入期间，当前过渡基线由[治理 PR #112](https://github.com/odango-chan/ca-agent-next/pull/112)的堆叠分支提供；每次实施前必须重新核对 Issue #111 中的远端分支与完整 SHA。
+自 SR-028 起，本仓根 Python 工程统一使用 uv `0.13.10` 解析、锁定和运行依赖；`uv.lock` 是唯一锁文件，`.python-version` 精确为 `3.14.6`（`requires-python >=3.11` 仍只是包元数据下限，不代表 3.11～3.13 版本矩阵已通过）。历史 pip 命令只保留在各 SR 与验收记录的原始受测环境中（见 SR-002、SR-003、演示验收基线），不作为当前入口。
+
+该工具链是整个 Next 根 Python 工程的共享基线，不限于 SR-028；所有触及根 Python 源码、测试、脚本、依赖或 Python CI 的实施分支都必须从[当前共享基线](docs/规范/Python工程工具链与实施基线规范.md)派生，禁止回退 pip。PR #99 尚未合入期间，当前过渡基线由[治理 PR #112](https://github.com/odango-chan/ca-agent-next/pull/112)的堆叠分支提供；每次实施前必须重新核对 Issue #111 中的远端分支与完整 SHA。
 
 ```bash
 # 前置：Go 1.24+（满足 examples/echo/plugin/go.mod 的 go 1.24 directive）
