@@ -1,7 +1,7 @@
 # SKILL 作者规范（CA-SL 1.6.0）
 
 > 文档类型：Skill 作者规范（Next 中央规范性设计稿）  
-> 文档版本：0.1.6  
+> 文档版本：0.1.7  
 > 状态：**DRAFT / REVIEW_REQUESTED**（作者规则待独立评审；CA-SL 1.6.0 尚未由 ca-skills 正式发布）  
 > 语言目标：CA-SL 1.6.0 only；不兼容任何历史作者语法  
 > 功能归属：EC01 — Skill 作者规范与业务 Skill；消费端关联 F02 / F09  
@@ -74,7 +74,7 @@ skill-root/
 | assurance/predicates.yaml | Predicate 参数签名、Evidence 要求和 evaluator；没有 Predicate 时仍保留合法空 PredicateSet | Skill 选择条件、隐藏副作用 |
 | schemas/ | Skill Package 自有 Schema；YAML 1.2 文件表示 JSON Schema 数据模型，LLM 可读、Host 可校验、Assurance 可引用 | 复制 Owner / Provider / Host 的外部 Schema |
 | scripts/ | Skill Package 自有 Python Script 源码；LLM 可读、Assurance 可引用 | HTTP、SBI、文件、数据库或 Provider 副作用 |
-| scripts/manifest.yaml | Script ID、精确入口、用途、输入/输出 Schema 与 llmInvocable 标记；是资源索引，不是 Skill Descriptor 或 Capability Grant | 任意路径、动态模块、模型提交代码或命令 |
+| scripts/manifest.yaml | Script ID、精确入口、用途、输入/输出 Schema；是资源索引，不是 Skill Descriptor 或 Capability Grant | 任意路径、动态模块、模型提交代码或命令 |
 | references/、assets/ | 按需加载的共享参考资料和静态资源 | 隐式 Runtime 输入或执行权限 |
 | assurance/ | 可选的确定性契约；只包含 contract.yaml、procedure.yaml、predicates.yaml | 共享 Schema / Script 文件的第二份副本 |
 
@@ -82,7 +82,7 @@ skill-root/
 
 `schemas/` 与 `scripts/` 是公共资源层，不随 Assurance 是否存在而移动。Schema 文件以 YAML 1.2 表示 JSON Schema 数据模型，扩展名使用 `.schema.yaml`；Contract、Script Registry 和脚本输入/输出 Schema 的路径均相对 Skill Package 根目录。
 
-`Script Registry` 每个条目必须声明 Script ID、包内文件、顶层 entrypoint、purpose（transform / predicate）、inputSchema、适用时的 outputSchema 和必需布尔值 llmInvocable。Procedure Script 只引用 transform；Predicate evaluator 只引用 predicate。所有脚本是纯本地计算；LLM 可读取脚本源码，但只能通过 Host-owned `host.skill-script.execute` Capability 调用显式标记 `llmInvocable=true` 的 transform；同时 Host 配置 `scriptExecution.llmEnabled=true`（默认 false）。Host 仅解析当前 Skill 的固定 Package snapshot 和 Registry ID，不接受模型提供代码、路径、模块名、函数名或命令。
+`Script Registry` 每个条目必须声明 Script ID、包内文件、顶层 entrypoint、purpose（transform / predicate）、inputSchema 和适用时的 outputSchema。Procedure Script 只引用 transform；Predicate evaluator 只引用 predicate。所有脚本是纯本地计算；LLM、Procedure 和 Predicate 均通过同一 Host Script Runner 调用当前 Skill Registry 中登记的脚本，不设置逐脚本 LLM 标记或额外 Host 开关。Host 仅解析当前 Skill 的固定 Package snapshot 和 Registry ID，不接受模型提供代码、路径、模块名、函数名或命令。
 
 没有 Assurance 的 Skill 仍可拥有和使用这些公共资源，不需要 Compiler；Host Importer 负责共享资源与 Script Registry 的基本结构检查。存在 Assurance 时 Compiler 还必须验证其引用闭包。旧版 ca-skills 的其他目录（例如 cases/）不因此自动迁入新版；历史源结构只作追溯，不提供兼容。Skill Studio 的工作区目录（例如 lib / output）也不是 Skill Package 的作者文件。
 
@@ -317,7 +317,7 @@ SKILL.md 正文与 YAML 注释遵循项目语言约定，并在同一 Skill Pack
 
 ## 11. 与 AI Authoring 的关系
 
-Skill Studio 的文本编辑、AI Authoring 和代码评审必须使用同一份作者规范。AI 可以读取 schemas/ 与 scripts/ 作为上下文，并可在 Host 配置 `scriptExecution.llmEnabled=true` 时调用已登记的 llmInvocable Script；但不得：
+Skill Studio 的文本编辑、AI Authoring 和代码评审必须使用同一份作者规范。AI 可以读取 schemas/ 与 scripts/ 作为上下文，并可通过正常 Agent Runtime 调用当前 Skill Registry 中登记的脚本；不得在 Studio Worker / AI Authoring 中创建第二套 Python 执行器，也不得：
 
 - 把 Callable / backendOperationId 写入 Skill；
 - 通过注释补足缺失的 Schema、arguments、Predicate 或 routes；
@@ -368,3 +368,4 @@ Apply 前仍须由用户确认，并对同一候选源码与依赖锁执行正�
 | 2026-11-27 | 0.1.4 | GPT-6.2（ChatGPT） | §4～§7、§10、§12 | 对齐 Operation / Observation kind 与 Effect，明确 routes 的阶段归属、Wait timeout、分支拆分边界；加入 Create / Modify / Release 样本结构性裁决和注释正反例 | 消除 Node 过度拆分歧义，补齐 AC 所需的真实样本解释和注释反例 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.5 | GPT-6.2（ChatGPT） | §3～§5、§10～§11 | 将 schemas/scripts 定为根目录共享资源，补充 Script Registry、Host Script Execution Capability、YAML Schema 源和 LLM-only Package 规则 | 确保 LLM 与 Assurance 使用同一资源，禁止模型任意 Python 执行 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.6 | GPT-6.2（ChatGPT） | §3、§11 | 明确 LLM Script Action 同时受 Registry `llmInvocable` 与 Host `scriptExecution.llmEnabled`（默认 false）约束 | 防止仅靠 Skill 包内标记就意外暴露 Host 脚本执行能力 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.1.7 | GPT-6.2（ChatGPT） | §3、§11 | 删除逐脚本 `llmInvocable` 和 Host `scriptExecution.llmEnabled`；LLM 与 Assurance 共用 Script Runner | 让 Demo 的模型调用能力与确定性执行能力一致，避免重复授权配置 | Issue #49；IR-008；SR-032 |
