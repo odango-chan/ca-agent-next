@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
-> 文档版本：0.3.11
+> 文档版本：0.3.12
 > 功能归属：F04 — Runtime 执行  
 > 关联 SR：SR-007、SR-032    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -34,7 +34,7 @@ Host 不直接调用 Tool Plugin。LLM 不得绕过 Runtime，也不得自行扩
 
 ## 3. 统一 Action Boundary（CA-SL 1.6.0 唯一目标）
 
-Deterministic Procedure 与 LLM-guided **统一提交概念 Action Request**：`runId`、`catalogGeneration`、`skillId`、`stage`、`capabilityId`、`arguments`、当前 `artifactRefs` 与 `correlation`。这些是设计级字段含义；最终 wire/DTO 精确名称由 Runtime/Compiler 正式 Schema 冻结。模型只能提出当前 Skill 已授权的业务 Capability，或 当前 Skill Registry 非空时提供的 `host.skill-script.execute` system Capability；绝不能指定 Callable ID、Provider、Owner alias、backendOperationId、脚本路径、Python 代码或 URL。
+Deterministic Procedure 与 LLM-guided **统一提交概念 Action Request**：`runId`、`catalogGeneration`、`skillId`、`stage`、`capabilityId`、`arguments`、当前 `artifactRefs` 与 `correlation`。这些是设计级字段含义；最终 wire/DTO 精确名称由 Runtime/Compiler 正式 Schema 冻结。模型只能提出当前 Skill 已授权的业务 Capability，或调用 Host 在当前 Skill Registry 非空时提供的 `host.skill-script.execute` system Capability；绝不能指定 Callable ID、Provider、Owner alias、backendOperationId、脚本路径、Python 代码或 URL。
 
 Runtime 分发前必须按固定顺序：
 
@@ -173,3 +173,4 @@ MAS.RECONCILE 不是 Skill-facing Capability.普通 Skill / LLM Action 必须在
 | 2026-11-27 | 0.3.9 | GPT-6.2（ChatGPT） | §1～4、§8、§10 | 增加 Host Script Execution system Capability，统一 LLM / Procedure Script Runner、Package snapshot 与 Registry 校验 | 使无 Assurance Skill 可使用共享脚本，同时禁止任意 Python 执行和业务副作用绕过 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.3.10 | GPT-6.2（ChatGPT） | §3、§4、§8 | 将 Host Script Execution 的 Host 配置门禁明确为 `scriptExecution.llmEnabled`，默认 false，并与 Registry `llmInvocable` 同时校验 | 消除 Action Boundary 对 Host policy 的抽象依赖，固定可执行条件 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.3.11 | GPT-6.2（ChatGPT） | §3、§4、§8 | 删除 `llmInvocable` 与 `scriptExecution.llmEnabled`，LLM Action 可调用当前 Skill Registry 的全部登记脚本 | 统一 LLM / Procedure / Predicate 的脚本执行入口与可用脚本集合 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.3.12 | GPT-6.2（ChatGPT） | §3 | 澄清 Host Script system Action 的可用性表述，明确由 Host 在当前 Skill Registry 非空时提供 | 避免将 Action 暴露条件误读为 LLM 自行决定或额外授权开关 | Issue #49；IR-008；SR-032 |
