@@ -127,3 +127,16 @@ Python 汇总：`total=18 failed=0`。
 2. 已创建 Issue #17 与 Draft PR #18（`docs: add AC-013-01 isolated PoC evidence`），等待独立评审；未合并、未发布。
 3. 在 Compiler 产品分支实现 `ContractAST.when` 与同一 guard/降级管线（需 SR-013 READY 与目标仓写入授权）。
 4. 扩展 Schema Registry 闭包、嵌套/数组、完整布尔组合与多 Skill 同时命中，作为 AC-013-02 输入。
+
+## 10. 后续归档完整性审计补充（2026-11-27）
+
+本节为后续审计附注，不改写上文 2026-11-25 的原始执行记录。
+
+- 固定归档基线：Next PR #18 Head `c3e5bb78ff49306329bcbc2387da6108280903bc`。
+- 原始证据表记录 `GOWORK=off go vet ./internal/compiler` 退出码为 0，但固定归档 tree 中**不存在 `vet.log`**。因此该历史退出码仅保留为原执行者记录，当前无法通过归档日志独立复核；不得用 `go-test.log` 或其他日志替代。
+- 本轮未重新执行 `go vet`，也未生成或补造 `vet.log`。状态明确为：`NOT_ARCHIVED / NOT_INDEPENDENTLY_VERIFIABLE`。
+- `py-results.json` 的归档实际大小为 2333 bytes，SHA-256 为 `f6abbc68db58590de3d4d261f02412ea2bcdb3f38765723c02d2cf5b9b62930f`；`audit.json` inventory 已同步为该归档文件的实际值。
+- `SHA256SUMS` 已改为相对于本目录根的路径；清单覆盖 58 个归档文件（不含清单自身）。
+- 历史 Go/Python 18/18、6 类静态拒绝及原有测试记录均保留。本附注不将其扩大为 Compiler 产品验收，也不改变 AC-013-02～06 的状态。
+
+后续若重新执行 `go vet`，必须在固定 Compiler SHA 与补丁上真实运行，保存命令、环境、退出码和原始输出，再另行提交真实日志；不得将新运行结果伪装成 2026-11-25 的历史日志。
