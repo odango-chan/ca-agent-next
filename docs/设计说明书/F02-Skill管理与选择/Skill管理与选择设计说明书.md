@@ -4,13 +4,13 @@
 > 状态：**设计待评审**（唯一新目标 CA-SL 1.6.0；全链路不兼容任何旧作者语法、Build DTO、Artifact、Bundle；1.6.0 产品未发布）
 > 文档版本：0.3.5
 > 功能归属：F02 — Skill 管理与选择  
-> 关联 SR：SR-004、SR-005、SR-006    
+> 关联 SR：SR-004、SR-005、SR-006、SR-032    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
 > 本文局部非目标：以本文范围与非目标章节为准；无额外扩展  
 > 修订日期：2026-11-27\
 > 适用范围：Skill 包导入、SkillCatalog、Resolver、已发布 CA-SL Runtime Artifact 与 Python CEL Runtime
 
-关联需求项见 [IR-003](../../IR/IR%20总登记册.md#ir-003)。
+关联需求项见 [IR-003](../../IR/IR%20总登记册.md#ir-003)、[IR-008](../../IR/IR%20总登记册.md#ir-008)。共享资源与 Host Script Execution 的设计增量由 Issue #49 / SR-032 追踪。
 
 ## 1. 设计目标
 
