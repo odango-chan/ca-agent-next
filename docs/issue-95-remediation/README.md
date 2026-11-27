@@ -20,7 +20,7 @@
 |---|---|---|---|
 | SR-013 / AC-013-01 | **FAIL**（历史 PoC 18/18 保留；归档完整性未闭合） | 修正 `audit.json` 的 py-results 登记；将 SHA256SUMS 改为归档相对路径；vet.log 只能补真实日志，否则明确标记未归档/不可复核；干净 checkout 复验 | [#102](https://github.com/odango-chan/ca-agent-next/issues/102) |
 | SR-017 / AC-017-02 | **FAIL**（候选设计/契约缺项） | 补 payload.request、operationId、Update 可选 n2.request、三类 N2 continuation、同请求双路、冲突/未知/Content-ID/n2SmInfoExt1 负例；清除 ack 暴露 Host Run/responseObligation/artifactRef 的旧句 | [#103](https://github.com/odango-chan/ca-agent-next/issues/103) |
-| SR-018 / AC-018-01/02 | **FAIL（固定 main @ dc83ccbf）**；候选分支仅静态修正 | 候选分支 `fix/sr-018-owner-evidence-exact-reconcile` @ `c83be9c` 已静态核对 source/step、Evidence、条件 Receipt Schema 和 exact-original binding；58/58 Manifest artifact SHA 核对通过，但 `publish.py --check`、Python、19 Patch、C/native 和真实 PFCP UNKNOWN E2E 未运行、未合并。源仓执行与必要修正由 env-openamsm#28 承接；AC 不提前提升。**Release 子项另有历史 Owner/隔离 E2E PASS（限定）**，证据由 PR #21 + env-5gc-sim run-manifest 固定；不代表 Next/Network Release/Production。 | [Next #104](https://github.com/odango-chan/ca-agent-next/issues/104)；[env-openamsm#11](https://github.com/odango-chan/env-openamsm/issues/11)；[env-openamsm#28](https://github.com/odango-chan/env-openamsm/issues/28)；[env-5gc-sim#79](https://github.com/odango-chan/env-5gc-sim/pull/79) |
+| SR-018 / AC-018-01/02 | **FAIL（固定 main @ dc83ccbf）**；候选分支仅静态修正 | 候选分支 `fix/sr-018-owner-evidence-exact-reconcile` @ `c83be9c` 已静态核对 source/step、Evidence、条件 Receipt Schema 和 exact-original binding；58/58 Manifest artifact SHA 核对通过，但 `publish.py --check`、Python、19 Patch、C/native 和真实 PFCP UNKNOWN E2E 未运行、未合并。源仓执行与必要修正由 env-openamsm#28 承接；AC 不提前提升。**Release 子项仅历史顶层报告 PASS、当前独立一致性 NOT_VERIFIED**，证据由 PR #21 + env-5gc-sim run-manifest 固定；不代表 Next/Network Release/Production。 | [Next #104](https://github.com/odango-chan/ca-agent-next/issues/104)；[env-openamsm#11](https://github.com/odango-chan/env-openamsm/issues/11)；[env-openamsm#28](https://github.com/odango-chan/env-openamsm/issues/28)；[env-5gc-sim#79](https://github.com/odango-chan/env-5gc-sim/pull/79) |
 | SR-019 / AC-019-02 | **FAIL**（联合 fixture 缺项） | 补同请求 N1+N2 双路、X-CA-Request-Id 重试、旧 generation 迟到 0xD4、冲突 discriminator/n2SmInfoExt1 和 Owner outcome 联合证据；Mock 不拥有 Host Run/Owner 状态 | [#105](https://github.com/odango-chan/ca-agent-next/issues/105) |
 | SR-016 / AC-016-01 | **NOT_RUN**（固定 SR 正文缺独立定义） | 澄清 MIG-016-01 与 AC-016-01 的关系；补 AC 输入/步骤/验收，或明确二者独立并修正旧评审回填 | [#106](https://github.com/odango-chan/ca-agent-next/issues/106) |
 | SR-016 / AC-016-02～08/10 | **BLOCKED / NOT_RUN** | 等正式 1.6.0 Package、Compiler、Provider/Owner 输入和同一发布批次六宿主证据；#272 合并不等于新版产品 PASS | [#106](https://github.com/odango-chan/ca-agent-next/issues/106) |
@@ -46,7 +46,7 @@
 - SR-013 AC-013-02/04：NOT_RUN；AC-013-03/05/06：BLOCKED。
 - SR-016 AC-016-01：定义缺失，不能判 PASS；六宿主全部 NOT_RUN。
 - SR-017 AC-017-02：FAIL；运行验收 NOT_RUN。
-- SR-018 AC-018-01/02：固定 main 审计 FAIL；候选分支 c83be9c 未合并、运行 NOT_RUN；AC-018-03 BLOCKED；AC-018-04 仅静态 PASS；Release 子项历史 Owner / 隔离 `ac` E2E PASS（限定），Network ReleaseSMContext #10、Next E2E 和 Production 不声明。
+- SR-018 AC-018-01/02：固定 main 审计 FAIL；候选分支 c83be9c 未合并、运行 NOT_RUN；AC-018-03 BLOCKED；AC-018-04 仅静态 PASS；Release 历史顶层报告 PASS、当前独立一致性 NOT_VERIFIED，Network ReleaseSMContext #10、Next E2E 和 Production 不声明。
 - SR-019 AC-019-02：FAIL；AC-019-03 NOT_RUN。
 - SR-030 AC-030-02/03/05：BLOCKED；AC-030-04 NOT_RUN；静态 PASS 只限 AC-030-01/06/07。
 
