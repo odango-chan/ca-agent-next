@@ -194,12 +194,12 @@ Goal 在开始前建立 GitHub 检查点，执行期间每完成一个独立工�
 
 ### 9.3 合并门禁
 
-目标分支应同时将以下两个 Check 配置为 Required：
+普通 PR 的目标分支应同时将以下两个 Check 配置为 Required：
 
 - `Python Toolchain Policy / Python Toolchain Policy`：可信 Base 策略检查；
 - `Python Toolchain Policy Bootstrap / Python Lock Consistency`：PR Head 的锁文件一致性检查。
 
-PR #112 的一次性检查为 `Python Toolchain Policy Bootstrap / Bootstrap Policy Check`，只用于固定 Bootstrap，不作为后续普通 PR 的 Required Check。
+PR #112 是一次性 Bootstrap：其 Base 尚未包含可信 Base Workflow，因此合并 PR #112 前，接收分支应将 `Python Toolchain Policy Bootstrap / Bootstrap Policy Check` 与 `Python Toolchain Policy Bootstrap / Python Lock Consistency` 配置为 Required。PR #112 合并后，后续普通 PR 使用上面两项常规 Required Checks；`Bootstrap Policy Check` 在普通 PR 中跳过，不应继续作为必需项。
 
 **Workflow 通过不等于已启用合并阻断。** 仓库管理员必须在实际接收 PR 的目标分支 Branch protection / Ruleset 中配置 Required Checks；未配置前，CI 只能提供自动失败状态，不能保证 GitHub 拒绝合并。不得把“Workflow 已存在”误报成“分支保护已配置”。
 
