@@ -1,8 +1,8 @@
 # G02：Python 工程工具链与环境管理设计说明书
 
 > 文档类型：工程治理功能设计说明书  
-> 文档版本：0.2.4\
-> 状态：Review #6082874849 对固定 Head `37d22e9862d22bdc07edb48ffd84b976663a48f4` 给出 CHANGES_REQUESTED；本轮按 Issue #12 整改中；SR-028 仍 DRAFT、实施 NOT_READY、AC-028-01～10 产品验收 NOT_RUN\
+> 文档版本：0.2.5\
+> 状态：Review #6083225844 对固定 Head `42a7fe2ce7826b7cda74110e843f39401571299c` 给出 CHANGES_REQUESTED（0 P0 / 4 P1 / 3 P2）；本轮按 Issue #12 整改中；SR-028 仍 DRAFT、AC-028-01～10 产品验收 NOT_RUN、READY=0\
 > 修订日期：2026-11-27\
 > 功能节点：G02 Python 工程工具链与环境管理  
 > 关联需求：[IR-007](../../IR/IR%20总登记册.md#ir-007)、[SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md)  
@@ -12,7 +12,7 @@
 
 ## 0. 设计评审入口（2026-11-26）
 
-本设计与 [SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md) 由 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12) 统一追踪；原设计 Issue #35 已 CLOSED。最新独立复评为 [PR #46 Review #6082874849](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6082874849)，固定 Head `37d22e9862d22bdc07edb48ffd84b976663a48f4` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`，结论 CHANGES_REQUESTED（0 P0 / 7 P1 / 2 P2）。本轮只修订设计与验收定义，不授权产品实施。
+本设计与 [SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md) 由 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12) 统一追踪；原设计 Issue #35 已 CLOSED。最新独立复评为 [PR #46 Review #6083225844](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083225844)，固定 Head `42a7fe2ce7826b7cda74110e843f39401571299c` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`，结论 CHANGES_REQUESTED（0 P0 / 4 P1 / 3 P2）。四项 P1 均阻断 READY；本轮仅修订设计与验收定义，不授权产品实施。
 
 **设计待评审与实施 READY 分离：**PR #32 的评审上下文 CI 已完成，不构成 uv 迁移验收；SR-028 保持 DRAFT。评审未通过不得生成实施提示词，不开展跨仓批量迁移或不必要的生产供应链 DFX。
 
@@ -102,63 +102,102 @@ required-version = "==0.13.10"
 
 ### 3.6 统一命令入口
 
-从仓库根目录执行。实施者首次添加依赖组后用 `uv lock` 生成锁文件，与 pyproject.toml 一起提交。下列命令面向已有锁文件的干净 checkout 和 CI。
+从仓库根目录执行。实施者首次添加依赖组后用 `uv lock` 生成锁文件，与 `pyproject.toml` 一起提交。下列命令面向已有锁文件的干净 checkout 和 CI。
 
 ```bash
 uv python install
 uv sync --locked --group dev --extra plugins
+uv lock --check
 ```
 
-测试和 Smoke：
+测试和 Smoke 使用项目环境；完成 sync 后统一禁止命令隐式同步：
 
 ```bash
-uv run --locked --group dev --extra plugins python -m unittest discover -s tests -v
-uv run --locked --group dev --extra plugins python -m ca_agent_next --smoke
-uv run --locked --group dev --extra plugins python scripts/review_context.py --help
-uv lock --check
+uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --output-dir artifacts/unittest-gate
+uv run --no-sync --locked --group dev --extra plugins python -m ca_agent_next --smoke
+uv run --no-sync --locked --group dev --extra plugins python scripts/review_context.py --help
 ```
 
 #### 本地 Go Echo 前置（AC-028-06）
 
-`tests/test_plugin.py` 的 `setUpModule()` 会调用 `ensure_echo_binary()`；完整 discovery 会执行 Plugin 测试。`examples/echo/plugin/go.mod` 的 Go directive 为 `1.24`，不是 Go patch 版本 pin。干净 checkout 中 `bin/` 被忽略且可能没有二进制；不得依赖另一 checkout 的旧二进制。运行完整 unittest 前必须确认 Go 命令可用、记录完整 `go version`，设置并验证 `GOWORK=off`，删除当前平台旧二进制后从该模块源码构建。
+`tests/test_plugin.py` 的 `setUpModule()` 会调用 `ensure_echo_binary()`；完整测试会执行 Plugin 测试。`examples/echo/plugin/go.mod` 的 Go directive 为 `1.24`，不是 Go patch 版本 pin。干净 checkout 中 `bin/` 被忽略且可能没有二进制；不得依赖另一 checkout 的旧二进制。运行测试门禁前必须确认 Go 命令可用、记录完整 `go version`，设置并验证 `GOWORK=off`，删除当前平台旧二进制后从该模块源码构建。
 
-Linux/macOS/Git Bash（工作目录为仓库根目录）：
+Linux/macOS/Git Bash（从仓库根目录执行；子 shell 保证构建后仍处于仓库根目录）：
 
 ```bash
 set -euo pipefail
-cd examples/echo/plugin
-export GOWORK=off
-go version
-test "$(go env GOWORK)" = "off"
-mkdir -p bin
-rm -f bin/echo-plugin
-go build -trimpath -o bin/echo-plugin .
+ROOT="$(pwd -P)"
+(
+  cd "$ROOT/examples/echo/plugin"
+  export GOWORK=off
+  go version
+  test "$(go env GOWORK)" = "off"
+  GOOS="$(go env GOOS)"
+  mkdir -p bin
+  rm -f bin/echo-plugin bin/echo-plugin.exe
+  if [ "$GOOS" = "windows" ]; then
+    BINARY=bin/echo-plugin.exe
+  else
+    BINARY=bin/echo-plugin
+  fi
+  go build -trimpath -o "$BINARY" .
+)
+test "$(pwd -P)" = "$ROOT"
 ```
 
-Windows PowerShell（工作目录为仓库根目录）：
+Windows PowerShell（从仓库根目录执行；`finally` 保证恢复 Location）：
 
 ```powershell
-Push-Location examples/echo/plugin
 $ErrorActionPreference = 'Stop'
-$env:GOWORK = 'off'
-go version
-if ($LASTEXITCODE -ne 0) { throw 'Go toolchain is unavailable' }
-$gowork = (go env GOWORK)
-if ($LASTEXITCODE -ne 0 -or $gowork -ne 'off') { throw 'GOWORK must be off' }
-New-Item -ItemType Directory -Force bin | Out-Null
-Remove-Item bin/echo-plugin.exe -ErrorAction SilentlyContinue
-go build -trimpath -o bin/echo-plugin.exe .
-if ($LASTEXITCODE -ne 0) { throw 'Go Echo build failed' }
-Pop-Location
+Push-Location examples/echo/plugin
+try {
+    $env:GOWORK = 'off'
+    go version
+    if ($LASTEXITCODE -ne 0) { throw 'Go toolchain is unavailable' }
+    $gowork = (go env GOWORK)
+    if ($LASTEXITCODE -ne 0 -or $gowork -ne 'off') { throw 'GOWORK must be off' }
+    $goos = (go env GOOS)
+    if ($LASTEXITCODE -ne 0) { throw 'go env GOOS failed' }
+    New-Item -ItemType Directory -Force bin | Out-Null
+    Remove-Item bin/echo-plugin -ErrorAction SilentlyContinue
+    Remove-Item bin/echo-plugin.exe -ErrorAction SilentlyContinue
+    if ($goos -eq 'windows') {
+        go build -trimpath -o bin/echo-plugin.exe .
+    } else {
+        go build -trimpath -o bin/echo-plugin .
+    }
+    if ($LASTEXITCODE -ne 0) { throw 'Go Echo build failed' }
+} finally {
+    Pop-Location
+}
 ```
 
-Go 版本必须满足 `go.mod` 的 `go 1.24` directive；不在本 SR 另行固定 Go patch。Plugin 测试会在 Go 可用时再次从源码构建；AC-028-06 仍要求显式前置构建成功，不能利用测试 helper 在 Go 缺失时回退到忽略目录中的陈旧二进制。
+Go 版本必须满足 `go.mod` 的 `go 1.24` directive；不在本 SR 另行固定 Go patch。二进制名称必须由目标 `GOOS` 决定，与 `tests/plugin_test_support.py::echo_binary_name()` 的 Windows `.exe` 规则一致。Plugin 测试 helper 会在 Go 可用时再次从源码构建；AC-028-06 仍要求显式前置构建成功，不能利用测试 helper 在 Go 缺失时回退到忽略目录中的陈旧二进制。
 
-#### unittest 统计
+#### 统一 unittest 门禁脚本（新增 `scripts/unittest_gate.py`）
 
-分别执行 Host（`test_host.py`）、Plugin（`test_plugin.py`）、Review Context（`test_review_context.py`）三个套件和完整 `unittest discover -s tests`。每次记录 `discovered`、`passed`、`failures`、`errors`、`skipped`、退出码；`discovered` 取 `Ran N tests`，`passed = discovered - failures - errors - skipped`。每个必需套件和完整总计都必须 `discovered > 0`、failures/errors/skipped 均为 0 且退出码为 0；0 tests、必需用例 skipped 或任何失败均不得 PASS。完整总计必须独立执行，不得用子套件计数相加替代。Host Smoke 另行记录 stdout/stderr/退出码。
+CI 和本地验收不得直接依赖 `unittest` 的零退出码判断 PASS，因为标准 unittest 对 skipped 用例仍可能返回 0。实施时必须新增仅依赖 Python 标准库的 `scripts/unittest_gate.py`，按 Host、Plugin、Review Context、完整总计四个范围执行测试；即使某一范围失败，也继续执行其余范围并写出全部报告，最后统一返回非零。
 
-目标分支已包含 SR-001 生成器。用同一环境检查 CLI；真实 PR 的 Summary 与三文件 Artifact 另由 AC-028-08 检查。历史 pip 命令和原受测 SHA 是历史证据，不由本节新命令覆盖。
+接口：
+
+```bash
+uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --output-dir artifacts/unittest-gate
+uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --suite host --output-dir "$EVIDENCE_DIR/a-host-gate"
+```
+
+`--suite` 可重复，取值为 `host`、`plugin`、`review-context`、`total`；不传时运行全部四项。每项的 discovery 范围分别是 `tests/test_host.py`、`tests/test_plugin.py`、`tests/test_review_context.py` 和 `tests/test*.py`。脚本必须通过 `unittest.TestLoader.discover(start_dir=tests, top_level_dir=tests, pattern=...)` 加载，不依赖 `tests/__init__.py`。
+
+脚本的规范性算法与报告字段：
+
+1. 每个范围使用独立 `TestLoader` 和 `TextTestRunner`，记录 `suite.countTestCases()` 为 `discovered`，`result.testsRun` 为 `tests_run`，并记录 `failures`、`errors`、`skipped`、`expected_failures`、`unexpected_successes`、`loader_errors`。
+2. `passed = tests_run - failures - errors - skipped - expected_failures - unexpected_successes`；不得用 `discovered - failures` 推算通过数。
+3. 单范围 PASS 当且仅当 `discovered > 0`、`tests_run == discovered`、`failures == errors == skipped == expected_failures == unexpected_successes == loader_errors == 0`。任何 0 tests、skip、失败、错误、expected failure、unexpected success 或加载错误均失败。
+4. 每项分别写入 `<suite>.json` 与 `<suite>.log`；总计写入 `summary.json`，包含各范围字段和整体 `exit_code`。日志保留完整 unittest 输出/traceback。脚本即使某项失败也继续执行其他范围，全部报告落盘后才返回 `1`；脚本自身发生报告/运行错误返回非零。
+5. `--suite host` 仅执行 Host 范围，供 worktree A→B→A 单独验证；仍执行相同的 `discovered>0`、`skipped=0` 等断言。
+
+实现不得引入第三方测试框架或新的运行时依赖。该脚本由 SR-028 实施阶段创建；本设计中的接口、字段、退出条件和 CI 调用为规范性要求。
+
+Host Smoke 另行记录 stdout/stderr/退出码；必须退出 0、stderr 为空，成功 stdout 符合演示验收基线。
 
 ### 3.7 GitHub Actions
 
