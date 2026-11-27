@@ -1,13 +1,13 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.20\
+> 文档版本：0.3.21\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
 > 修订日期：2026-11-27\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级准入、额外 package-level digest、签名和 Trust Registry；历史 Compiler v2.1.0 的 `files[].sha256` 要求仅归旧版审计，不转为新版 Schema 要求
 
-关联 IR-006、SR-015、SR-016、SR-020（参考宿主架构审计）、SR-024（旧 Development Host Publisher，仅历史）、SR-025（MAS Owner 1.6.0 Publisher）、SR-030（Host Context 1.6.0 Schema-only Publisher）；新 1.6.0 Compiler 接口以 [EC02 Compiler 设计说明书](../EC02-Compiler/Compiler设计说明书.md) v0.2.13 和 [SR-013](../../SR/SR-013-Compiler已检查when与发布产物.md) v0.2.21 为准；历史 EC02 Development Build 设计只保留源审计，不作为当前 Compiler DTO/Worker/Bundle 发布入口。基线为 [docs/architecture/studio-boundaries.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/architecture/studio-boundaries.md)、[docs/design/ai-procedure-authoring.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/design/ai-procedure-authoring.md)。
+关联 IR-006、IR-008、SR-015、SR-016、SR-020（参考宿主架构审计）、SR-024（旧 Development Host Publisher，仅历史）、SR-025（MAS Owner 1.6.0 Publisher）、SR-030（Host Context 1.6.0 Schema-only Publisher）、SR-032（中央 SKILL 作者规范）；新 1.6.0 Compiler 接口以 [EC02 Compiler 设计说明书](../EC02-Compiler/Compiler设计说明书.md) v0.2.13 和 [SR-013](../../SR/SR-013-Compiler已检查when与发布产物.md) v0.2.21 为准；历史 EC02 Development Build 设计只保留源审计，不作为当前 Compiler DTO/Worker/Bundle 发布入口。基线为 [docs/architecture/studio-boundaries.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/architecture/studio-boundaries.md)、[docs/design/ai-procedure-authoring.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/design/ai-procedure-authoring.md)。
 
 ## 1. 编辑与语言服务
 
@@ -173,7 +173,7 @@ Skill Studio 的 Package Explorer 以 Capability 作为唯一 Skill-facing 能�
 
 ### 9.3 AI Authoring
 
-AI Authoring 的 Change Set 必须遵守中央 [SKILL 作者规范](../../规范/SKILL作者规范.md)，尤其是 Skill / Capability / Node 粒度、四阶段顺序、Node 拆分 / 合并、显式 arguments 和注释不得承载执行语义。Change Set 只能新增或修改 Capability ID、Procedure arguments、正式作者字段及解释性注释；不得生成 Callable ID、backendOperationId 或动态 Provider 选择，不得通过注释补足缺失的 Schema、Predicate、Evidence 或 routes。Apply 前仍须用户确认，随后对同一候选源码和项目锁使用同一 1.6.0 Compiler Build / Verify 路径重新检查；本设计不表示当前 Studio 已实现作者规范感知或 Compiler gate。
+AI Authoring 的 Change Set 必须遵守中央 [SKILL 作者规范](../../规范/SKILL作者规范.md)的全部适用规则：Skill / Capability 粒度、Package 与 Schema 所有权、SourcePath / 显式 arguments、when / Wait、Evidence / UNKNOWN、静态 DAG、四阶段顺序、Node 拆分 / 合并和注释非执行语义。当前 Procedure Authoring Change Set 只修改 `procedure.yaml`：允许新增 / 删除 / 修改 `start`、Node、四阶段、已发布 Capability / Predicate 的引用、显式 arguments、阶段 routes、Node-entry Wait 和解释性注释；引用只能来自已导入并 pin 的 Package exports / PredicateSet，不得自行创造 Capability / Predicate / Schema 身份。该 Change Set 不修改 `contract.yaml`、`schemas/`、`predicates.yaml`、`scripts/`、Package Manifest 或外部 Package exports；Contract.when 的字段编辑仍走 §3 的独立编辑与校验路径，不混入 Procedure Change Set。超出范围的提案必须明确返回 OUT_OF_SCOPE，不得静默扩大变更集。不得生成 Callable ID、backendOperationId 或动态 Provider 选择，不得通过注释补足缺失的 Schema、Predicate、Evidence 或 routes。Apply 前仍须用户确认，随后对同一候选源码和项目锁使用同一 1.6.0 Compiler Build / Verify 路径重新检查；本设计不表示当前 Studio 已实现作者规范感知或 Compiler gate。
 
 ### 9.4 版本与导入
 
@@ -238,3 +238,4 @@ AI Authoring 的 Change Set 必须遵守中央 [SKILL 作者规范](../../规范
 | 2026-11-27 | 0.3.18 | ChatGPT / GPT-6 | 3GPP 原版发布裁决 | 版本随 OpenAMSM、原版 YAML 完全不改；将只读 Source Bundle 与可选 Adapter / Codec Output 分离 | 防止标准原件被类型适配误改 | Issue #47；SR-031/026 |
 | 2026-11-27 | 0.3.19 | ChatGPT / GPT-6.2 | §10 | 将 Studio 从 Adapter Schema Explorer 改为原版 OAS3 只读展示 / 精确组件导航；Project Lock 固定 Source Bundle | 遵循原版标准直接引用且不允许编辑 | IR-009；Issue #47；SR-031/013/026 |
 | 2026-11-27 | 0.3.20 | GPT-6.2（ChatGPT） | §9.3、修订记录 | AI Authoring 明确消费统一 SKILL 作者规范，加入 Node 粒度与注释非执行语义约束 | 防止 AI 生成的 Procedure 违背中央作者规则或用注释代替机器契约 | IR-008；Issue #49；SR-032 |
+| 2026-11-27 | 0.3.21 | GPT-6.2（ChatGPT） | 文档头、§9.3 | 将 SR-032 纳入 F09 追踪；明确 Procedure Change Set 的允许字段、引用来源、非目标及 OUT_OF_SCOPE 行为，并区分 when 独立编辑路径 | 防止 AI Authoring 以“正式作者字段”为由擅自修改 Contract / Schema / Package 或发明外部身份 | IR-008；Issue #49；SR-032 |
