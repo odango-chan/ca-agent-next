@@ -5,8 +5,9 @@ name: Review Context
 # SR-028：Python 安装/测试/生成器入口统一迁移到 uv 0.13.10 + uv.lock；
 # 诊断 Artifact 与正式三文件 Artifact 分离，失败时只保留诊断证据。
 # 本 Workflow 不调用任何大模型、外部 Harness 或自动 Review 服务。
-# SR-028 独立堆叠路径验证标记 v2：验证 sr003-plugin-ci.yml 的 pull_request.paths
-# 对 `.github/workflows/review-context.yml` 的触发规则（synchronize 事件）；本 PR 仅修改本文件，不合并。
+# SR-028 独立堆叠路径验证标记 v3-negative：受控负例，仅在临时 PR 中把生成器
+# `--base` 注入全零 SHA（generator_base_sha=0000...，failure_injection=invalid-base）；
+# head 版 Agent.md 的 review_scope 保持不变。本 PR 仅修改本文件，不合并。
 
 on:
   pull_request:
@@ -29,8 +30,8 @@ jobs:
       BASE_SHA: ${{ github.event.pull_request.base.sha }}
       HEAD_SHA: ${{ github.event.pull_request.head.sha }}
       PR_NUMBER: ${{ github.event.pull_request.number }}
-      GENERATOR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-      FAILURE_INJECTION: none
+      GENERATOR_BASE_SHA: '0000000000000000000000000000000000000000'
+      FAILURE_INJECTION: invalid-base
     steps:
       - name: Checkout PR head commit
         uses: actions/checkout@v4
