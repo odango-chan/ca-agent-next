@@ -1,13 +1,13 @@
 # SR-032：SKILL 作者规范、Node 拆分与注释原则
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.2  
+> SR 版本：0.1.3  
 > 状态：**DRAFT（中央作者规范已形成设计候选，待独立设计评审；实施 NOT_READY）**  
 > 创建日期：2026-11-27  
 > 修订日期：2026-11-27  
 > 上游需求：IR-008（关联 IR-003）  
 > 功能：EC01 / F02 / F09（作者规范由 EC01 维护，F09 AI Authoring 消费）  
-> 设计依据：[EC01 CA-SL 与 Skill 作者体系架构](../架构设计/外部能力域/EC01-CA-SL与Skill作者体系架构设计.md) v0.1.4；[CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md) v0.1.5；[SKILL 作者规范](../规范/SKILL作者规范.md) v0.1.2  
+> 设计依据：[EC01 CA-SL 与 Skill 作者体系架构](../架构设计/外部能力域/EC01-CA-SL与Skill作者体系架构设计.md) v0.1.4；[CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md) v0.1.5；[SKILL 作者规范](../规范/SKILL作者规范.md) v0.1.3  
 > 目标仓：odango-chan/ca-agent-next（仅中央设计和规范）  
 > 上游来源仓：odango-chan/ca-skills，固定 main 780497a2918ad3e7bdff554ab64b0ba627e867e0  
 > 关联 Issue：[ca-agent-next #49](https://github.com/odango-chan/ca-agent-next/issues/49)、父级迁移 Issue #12、CA-SL 设计 Issue #40  
@@ -124,3 +124,4 @@ F09 的 AI Authoring 必须使用同一作者规范生成和检查 Change Set；
 | 2026-11-27 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 建立 SKILL 作者规范迁移范围、Node / 注释规则和独立 AC | 将已有 ca-skills 作者经验纳入 Next 单一设计权威，避免旧语法直接复用或注释替代机器契约 | IR-008；Issue #49；SR-023/029 |
 | 2026-11-27 | 0.1.1 | GPT-6.2（ChatGPT） | §3.3～3.4、§6 | 补充 SourcePath 与 Procedure.inputs 的准确边界，并增加 AC-032-08；同步作者规范修订版 | 防止作者规范擅自扩展 CA-SL 1.6.0 未冻结的参数结构 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.2 | GPT-6.2（ChatGPT） | §3、§6 | 增加 Assurance 有效性、LLM-guided 边界、Node-entry Wait 约束及 AC-032-09 | 让作者规范覆盖完整包生命周期与 Wait 作者边界，避免静默降级和伪造 Wait Node | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.1.3 | GPT-6.2（ChatGPT） | §3.3、§6 | 将参数结构明确交由 CA-SL 1.6.0 正式 Schema / Golden 冻结，避免作者规范引入未定义语法 | 保持语言规范与作者风格规范职责分离 | Issue #49；IR-008；SR-032 |
