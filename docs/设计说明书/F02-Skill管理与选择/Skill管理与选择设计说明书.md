@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书\
 > 状态：**设计待评审**（唯一新目标 CA-SL 1.6.0；全链路不兼容任何旧作者语法、Build DTO、Artifact、Bundle；1.6.0 产品未发布）
-> 文档版本：0.2.20
+> 文档版本：0.2.21
 > 修订日期：2026-11-27
 > 功能归属：F02 — Skill 管理与选择\
 > 关联 SR：SR-004、SR-005、SR-006\
@@ -118,13 +118,13 @@ Agent 不实现文件监视器、自动下载、分布式缓存或通用 Plugin 
 
 无规范化 Event 的直接用户任务在本候选设计中只走未声明 when 的语义候选路径。历史 CA-SL v1alpha5 M.3／SA-012（规范提交 `18d8184367982ccbc835756136c4a53f9096c3a0`）仅作为历史设计来源和审计材料；它不是 CA-SL 1.6.0 的 Event 资格、Request Schema 或 `when` 规范性依据。1.6.0 对应规则必须由 Publisher 重新冻结。
 
-when 只能读取规范化 Event 的 event.type 和 Contract.requestSchema 声明的 input 字段，不得访问 Tool、Observation、Runtime Context、时钟或可变 Host 状态。读取 input 成员必须由作者源 Contract 声明 requestSchema，并由外部 Compiler 在发布前静态检查。
+when 仅能读取 **CA-SL 1.6.0 Publisher 正式冻结的 Event metadata 字段集合中，表达式实际引用的字段**，以及 Contract.requestSchema 声明并在当前 T1 已到场的 input 字段；不得把 `event.type` 硬编码成唯一 Event metadata 字段，更不能**无条件注入** event.type 类型环境。读取 input 成员必须由作者源 Contract 声明 requestSchema 并由外部 Compiler 在发布前做 Schema-aware 类型检查；event-only when 不得仅为类型推导而强制要求 requestSchema。Contract 若实际声明 requestSchema，无论 when 是否读取 input，都必须按正式规范独立检查并发布。Event metadata 字段列表、Schema、缺失/null 及可选字段语义均由 1.6.0 Publisher 冻结；在冻结前这些 Runtime 规则仍是候选设计 / BLOCKED。when 在 T1 绝不可读取 T2 才有的 Codec Result、Owner Observation、时钟或 Host 可变状态。
 
 ## 7. when 程序的发布与运行时接口
 
 作者源中的 when 位于 assurance/contract.yaml，由 ca-skill-compiler 在发布前完成解析、类型检查及正式 CA-SL / Compiler 契约要求的静态校验，并将已检查程序及其类型环境放入发布运行时 Artifact。
 
-Next 只在导入阶段反序列化发布 Artifact 中的程序与类型数据，并保存在对应 Catalog generation 中；不解析 CEL 源字符串、不重复静态检查、不调用 Compiler。每个新 Event 使用当前 event.type 和 input 独立求值。
+Next 只在导入阶段反序列化发布 Artifact 中的程序与类型数据，并保存在对应 Catalog generation 中；不解析 CEL 源字符串、不重复静态检查、不调用 Compiler。每个新 Event 只使用已到场且正式发布的 Event metadata typed projection 与合格 input 独立求值；不向运行时自动注入 event.type 或 T2 Codec 字段。
 
 CheckedExpr、google.protobuf.Any、FileDescriptorSet、DescriptorPool、字段缺失与 null 语义、G.4 optional/nullable 守卫，以及 Go/Python 互操作的具体设计，统一见[Skill 管理与选择设计说明书 §11](#11-compiler-发布物与-python-cel-运行时互操作)。本说明书只定义导入和选择消费端行为，不重复维护 CEL 二进制格式。
 
@@ -255,3 +255,4 @@ Next 在 Skill 导入时反序列化已检查程序和类型环境，建立运�
 | 2026-11-27 | 0.2.18 | GPT-6.2（ChatGPT） | 文档头、修订记录 | 整合 1.6.0-only 设计与当前权威基线；产品实现、发行与 E2E 仍 NOT_RUN | 合并 #45 的 1.6.0-only 设计增量并保留恢复分支当前状态，避免回滚 #44 与后续修订。 | Issue #12/#40/#43；PR #44/#45 |
 | 2026-11-27 | 0.2.19 | GPT-6.2（ChatGPT） | §6、§9、§10、修订记录 | 将 Event/Request Schema/when 规则明确限定为 CA-SL 1.6.0 候选；v1alpha5 M.3/SA-012 与 SHA 仅作历史来源；增加 Publisher 未冻结时的 BLOCKED 门槛和版本负例 | 防止把已发布的旧语言选择语义错误提升为 1.6.0 当前规范，并阻止 Harness 在正式 Publisher 输入缺失时自行推断 | Issue #40；SR-006；SR-013；SR-029；PR #45 |
 | 2026-11-27 | 0.2.20 | GPT-6.2（ChatGPT） | §1/§2/§9/§10/§11 | 将 1.6.0 新 Compiler API / Runtime Artifact 依赖统一改为 Issue #62；#61 保留 v1alpha5 历史范围。 | 避免 F02 消费边界继续绑定错误的 v1alpha5 Compiler Issue。 | Issue #40/#62；PR #45 |
+| 2026-11-28 | 0.2.21 | GPT-6（ChatGPT） | §6～7 | 将 when Event 类型环境由固定 event.type 改为 Publisher 冻结且实际引用的 metadata 字段；明确 event-only、requestSchema 独立校验及 T2 Codec 禁止进入选择期 | 关闭第六轮 P2-03，消除与 SR-013/EC02/F08 的类型闭包冲突 | Issue #40；PR #45；SR-013/029 |
