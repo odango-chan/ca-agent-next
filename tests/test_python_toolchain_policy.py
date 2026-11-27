@@ -52,6 +52,12 @@ class PythonToolchainPolicyTests(unittest.TestCase):
         self.assertTrue(is_python_scope_path("Dockerfile", "FROM python:3.14"))
         self.assertFalse(is_python_scope_path("Makefile", "build:\\n  go test ./..."))
 
+    def test_shell_launchers_are_scoped_by_python_command_content(self) -> None:
+        launcher = "uv " + "run " + "python -m unittest"
+        self.assertTrue(is_python_scope_path("scripts/test.sh", launcher))
+        self.assertTrue(is_python_scope_path(".github/scripts/test.ps1", "python -m unittest"))
+        self.assertFalse(is_python_scope_path("scripts/build.sh", "go test ./..."))
+
     def test_go_only_workflow_is_not_python_scope(self) -> None:
         self.assertFalse(
             is_python_scope_path(
