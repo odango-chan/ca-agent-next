@@ -1,13 +1,13 @@
 # SR-032：SKILL 作者规范、Node 拆分与注释原则
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.14  
+> SR 版本：0.1.15  
 > 状态：**DRAFT（中央作者规范已形成设计候选，待独立设计评审；实施 NOT_READY）**  
 > 创建日期：2026-11-27  
 > 修订日期：2026-11-27  
 > 上游需求：IR-008（关联 IR-003）  
 > 功能：EC01 / F01 / F02 / F03 / F04 / F05 / F08 / F09（作者规范由 EC01 维护；Host、Importer、Runtime、Compiler、Studio 消费）  
-> 设计依据：[EC01 CA-SL 与 Skill 作者体系架构](../架构设计/外部能力域/EC01-CA-SL与Skill作者体系架构设计.md) v0.2.2；[CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md) v0.2.5；[SKILL 作者规范](../规范/SKILL作者规范.md) v0.2.1  
+> 设计依据：[EC01 CA-SL 与 Skill 作者体系架构](../架构设计/外部能力域/EC01-CA-SL与Skill作者体系架构设计.md) v0.2.3；[CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md) v0.2.6；[SKILL 作者规范](../规范/SKILL作者规范.md) v0.2.1  
 > 目标仓：odango-chan/ca-agent-next（仅中央设计和规范）  
 > 上游来源仓：odango-chan/ca-skills，固定 main 780497a2918ad3e7bdff554ab64b0ba627e867e0  
 > 关联 Issue：[ca-agent-next #49](https://github.com/odango-chan/ca-agent-next/issues/49)、父级迁移 Issue #12、CA-SL 设计 Issue #40  
@@ -95,7 +95,7 @@ F09 的 AI Authoring 必须使用同一作者规范和完整正向示例生成�
 
 | 类型 | 依赖 | 影响 |
 |---|---|---|
-| 设计依赖 | CA-SL 1.6.0 v0.2.5 / SR-029；SKILL 作者规范 v0.2.1 | 原有 Node / routes / arguments / PredicateSet 语法、Capability 绑定、四阶段、共享资源根目录、Script Registry、Script I/O / Evidence / 错误契约、Host Resource Read / Script Execution 和 when 语义必须一致；Skill 层无 Wait / await / polling；本 SR 不冻结 Compiler wire API |
+| 设计依赖 | CA-SL 1.6.0 v0.2.6 / SR-029；SKILL 作者规范 v0.2.1 | 原有 Node / routes / arguments / PredicateSet 语法、Capability 绑定、四阶段、共享资源根目录、Script Registry、Script I/O / Evidence / 错误契约、Host Resource Read / Script Execution 和 when 语义必须一致；Skill 层无 Wait / await / polling；本 SR 不冻结 Compiler wire API |
 | 历史来源 | SR-023 / ca-skills v1alpha5 | 只用于来源核对和历史归档 |
 | 消费者设计 | F01 / F02 / F03 / F04 / F05 / F08 / F09；SR-004 / SR-007 / SR-016 | Host Model Loop、Importer、Plugin Manager、Runtime Action Boundary、Host Resource Read、完整 Script Registry、Compiler / Bundle 和 AI Authoring 必须消费同一共享资源与 Script Execution 契约；现有产品实现状态不自动变化 |
 | 外部发布依赖 | ca-skills 1.6.0 正式 Schema / Golden / Release | 正式发布前，本规范与语言稿均保持设计候选，不声称产品可执行 |
@@ -151,3 +151,5 @@ F09 的 AI Authoring 必须使用同一作者规范和完整正向示例生成�
 | 2026-11-27 | 0.1.13 | GPT-6.2（ChatGPT） | 文档头、AC-032-15、设计依据、修订记录 | 将 when 作者入口恢复为 assurance/contract.yaml 顶层唯一字段；Front Matter 不声明 when；更新 CA-SL / EC01 / 作者规范版本引用 | 统一作者规范、Compiler、Importer 与 Studio 的字段所有权，避免双入口兼容 | Issue #49；IR-008；F02/F08/F09；SR-004/013/016 |
 
 | 2026-11-27 | 0.1.14 | GPT-6.2（ChatGPT） | 文档头、修订记录 | 同步 CA-SL 1.6.0 v0.2.5 与 SKILL 作者规范 v0.2.1；确认可选 3GPP requestType 的 has 守卫与 OAS3 根引用别名边界进入作者规范 | 保证 SR-032 的设计依据与当前唯一作者入口、原版 OpenAPI dialect 规则一致 | Issue #49；IR-008/009；PR #52 |
+
+| 2026-11-27 | 0.1.15 | GPT-6.2（ChatGPT） | 文档头、设计依据、修订记录 | 同步 EC01 v0.2.3 与 CA-SL v0.2.6；纳入 3GPP optional requestType has 守卫和 OAS3 开放对象语义边界 | 保持作者规范与语言 / 架构权威文档一致，避免遗留无守卫示例和 dialect 冲突 | Issue #49；IR-008/009；PR #52 |
