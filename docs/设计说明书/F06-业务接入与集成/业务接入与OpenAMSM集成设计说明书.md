@@ -1,7 +1,7 @@
 # 业务接入与 OpenAMSM 集成设计说明书
 
 > 文档类型：业务集成设计说明书  
-> 文档版本：0.3.4\
+> 文档版本：0.3.5\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
 > 功能归属：F06 — 业务接入与集成；EC04、EC05、EC07  
 > 关联 IR：IR-004、IR-005、IR-006  
@@ -198,7 +198,7 @@ EC07 Mock AMF SBI Test Peer 负责发送协议准确的 Create/Update/UE-request
 | 对象 | 当前证据 | 状态 |
 |---|---|---|
 | env-openamsm MAS Owner v1alpha4 | 固定 main `dc83ccbf`；23 业务 Callable + 2 证据 READ；Receipt/Proof/Reconcile；候选分支 `c83be9c` 的静态修复由 SR-018 / env-openamsm#28 跟踪 | 历史 Owner 实现证据保留；候选修复未合并，Publisher/Python/C/native/E2E NOT_RUN |
-| Scheme C Modify / UE-requested Release | Owner 历史补丁和 PFCP 52/53、54/55、N1/N2 记录；Owner PR #21 合并，env-5gc-sim 顶层清单 `c-release-20261122-04` | 历史 Owner 实现/隔离演示记录存在，顶层 Release gates 自报 PASS；当前正常子检查 `smf_pfcp_del=false` 与 SMF 日志 `OES.Start adapt failed` 尚未解释，SR018-G 独立一致性 NOT_VERIFIED；Receipt/Reconcile 候选运行 NOT_RUN；Network ReleaseSMContext #10、Next E2E/Production 均不声明 PASS |
+| Scheme C Modify / UE-requested Release | 历史 Owner PR #21、PFCP 52/53 + 54/55、N1/N2 记录，env-5gc-sim `c-release-20261122-04` | 历史 Owner/隔离 UE-requested Release E2E 限定 PASS：`smf_pfcp_del=false` 仅非门禁 SMF 关键词匹配；真实 PFCP 删除和 UPF Session=0 有抓包/指标；OES.Start 错误为 Release 前的 Establish。当前 Receipt/Reconcile 候选测试 NOT_RUN；Network ReleaseSMContext/Next E2E/Production 不通过本证据 |
 | env-5gc-sim Mock AMF | main 6ba1dc4；完整设计、实现记录和 E2E 场景 | IMPLEMENTED（测试对端范围；按证据限定） |
 | ca-client-tools Provider v1.2.0 | main 7bcb261；Provider package/typed callables | IMPLEMENTED；Next adapter 未验收 |
 | ca-client-tools Codec Phase B | PR #39 OPEN（非 Draft）；Phase B FINAL_PASS / PHASE_C_READY，尚未合并 | NOT_MERGED |
@@ -207,9 +207,9 @@ EC07 Mock AMF SBI Test Peer 负责发送协议准确的 Create/Update/UE-request
 | ca-agent-demo Provider runtime cutover | PR #246 OPEN；#248/#249 OPEN；#251 OPEN/Draft（Contract.when 设计提案，未进入 main） | NOT_MERGED |
 | Next OpenAMSM Skill-first E2E | 依赖 F02/F03/F04/F05/EC04/EC05 | NOT_RUN |
 
-**UE-requested Release 证据补充（2026-11-27，复核修订）**：旧 `ca-5gc-sim` 重定向到 canonical `env-5gc-sim`（同 repo ID）。Owner PR #21 已合并；顶层 run-manifest `c-release-20261122-04` 报告 Release gates PASS，negative/timeout checks 可读。但 normal manifest `checks.smf_pfcp_del=false`，SMF log 出现 `OES.Start adapt failed`，其门禁语义与 PFCP 54/55 时间窗尚未闭合，当前独立证据结论 **NOT_VERIFIED**；不外推为 Network ReleaseSMContext #10、并发 UE、CA Agent/Provider/Skill E2E、CI、Production PASS。
+**UE-requested Release 证据补充（2026-11-27，harness 复核）**：`ca-5gc-sim` 重定向到 canonical `env-5gc-sim`。固定 `artifacts/acceptance/20261122-scheme-c-ue-release/harness/run_scheme_c_release.py`（blob `35b07522afe3275531b19313f2cb1d0d3eb10412`）第 269 行的 `smf_pfcp_del` 不参加第 285～299 行成功谓词；`normal/pfcp-summary.tsv` 的 PFCP 54/55、MAS Trace 中 UPN.DELETE_UP_SESSION 与 UPF Session=0 可复核；SMF `OES.Start adapt failed` 属更早的 Establish plan。历史 Owner 隔离 Release E2E **限定 PASS**，不外推当前候选、Network ReleaseSMContext、Next E2E、CI、Production。
 
-**SR-018 Owner 状态边界（2026-11-27）**：Issue #95 固定 `env-openamsm main dc83ccbf5be54dcc7112dd43ba95ea6fa5975550` 的 AC-018-01/02 静态审计 FAIL。候选 `fix/sr-018-owner-evidence-exact-reconcile` @ `c83be9c803c1ffd3a04964f6c2d80787c3798190` 只完成静态修正/58 项清单摘要核对，未合并；生成器、Python、19 Patch、C/native 和真实 PFCP UNKNOWN→Receipt Query→Reconcile NOT_RUN。env-openamsm#28 是源仓实施/验收追踪入口，但须先等 SR-018 本版设计独立批准、阶段 READY，当前 BLOCKED/NOT_STARTED。AC-018-03 仍归 SR-025；Release 顶层历史报告 PASS、当前独立证据一致性 NOT_VERIFIED；Next/Network Release/Production 未验收。
+**SR-018 Owner 状态边界（2026-11-27）**：固定 `env-openamsm main dc83ccbf5be54dcc7112dd43ba95ea6fa5975550` 的 AC-018-01/02 静态审计 FAIL；候选 `fix/sr-018-owner-evidence-exact-reconcile` @ `c83be9c803c1ffd3a04964f6c2d80787c3798190` 仅静态核对，未合并，Publisher/Python/19 Patch/C/native/PFCP UNKNOWN→Receipt Query→Reconcile 均 NOT_RUN。env-openamsm#28 等待 SR-018 当前设计独立批准及阶段 READY，执行 BLOCKED/NOT_STARTED。AC-018-03 归 SR-025；历史 Owner 隔离 UE Release E2E 限定 PASS，不代表当前候选、Next/Network Release/Production。
 
 ## 11. 验收门槛
 
@@ -356,3 +356,4 @@ Create → Modify → Release 的顺序、Owner authoritative state、Receipt / 
 | 2026-11-27 | 0.3.2 | GPT-6.2（ChatGPT） | §10、修订记录 | 区分 OpenAMSM Owner 历史实现证据、候选修复分支和未运行验收；登记 env-openamsm#28 | 防止把旧 Owner E2E/静态候选代码外推为当前 Reconcile 或 Next 集成通过 | SR-018；ca-agent-next#104；env-openamsm#28 |
 | 2026-11-27 | 0.3.3 | GPT-6.2（ChatGPT） | §10、修订记录 | 补入已合并 Owner PR #21 与 env-5gc-sim 固定 UE-requested Release E2E 证据；明确范围限制 | 修正仓名 alias 误判，区分历史 Owner Release PASS 与当前 Receipt/Reconcile 候选及 Next/Production 未验收 | SR-018；env-openamsm#11/#21；env-5gc-sim#79 |
 | 2026-11-27 | 0.3.4 | GPT-6（ChatGPT） | §10、修订记录 | 统一 SR-018 与 EC05 的 Release 历史报告/独立 NOT_VERIFIED、源仓执行门槛；删除相矛盾旧结论 | 消除同章 PASS 和 NOT_COVERED 并存，明确当前不准实施 | SR-018；Issue #104；PR #114 |
+| 2026-11-27 | 0.3.5 | GPT-6（ChatGPT） | §10、修订记录 | 对齐 harness 非门禁日志字段与独立 PFCP 54/55、MAS Trace、UPF 指标和 SMF Establish 时序，恢复历史 Release 限定 PASS | 澄清误判，不变更当前候选/Next 的运行状态 | SR-018；Issue #104；PR #114 |
