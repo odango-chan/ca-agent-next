@@ -4,7 +4,8 @@
 > SR 版本：0.2.5\
 > 状态：整项 DRAFT；阶段 READY（本仓 Host Channel）。AC-010-01～05（Next Host Channel）。  
 > 下一步：仅实现 Next Python Host ArtifactStore/Channel 与 no-decode 路径。06a 等真实 Importer/Catalog/Runtime 三层入口，09 等固定共享 fixtures 和联测；06b/07/08 等正式包。  
-> 阶段依据：[独立评审 #74](https://github.com/odango-chan/ca-agent-next/issues/74#issuecomment-7210244694)，评审 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。
+> 阶段依据：[独立评审 #74](https://github.com/odango-chan/ca-agent-next/issues/74#issuecomment-7210244694)，评审 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
+> 工作项：[阶段工作项 #94](https://github.com/odango-chan/ca-agent-next/issues/94)。
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-27\
 > 所属阶段：Phase G  
@@ -82,7 +83,7 @@
 | 项目 | 当前值 |
 |---|---|
 | 实施仓库 | ca-agent-next |
-| GitHub Issue | 未创建 |
+| GitHub Issue | [阶段工作项 #94](https://github.com/odango-chan/ca-agent-next/issues/94)（限定范围） |
 | 实施 PR | 未创建 |
 | Commit | 无 |
 | 实施状态 | NOT_STARTED |
@@ -119,4 +120,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-27 | 0.2.2 | GPT-6（ChatGPT） | 第三轮设计自评/历史修订表 | Host Artifact Channel AC-010-01～05/09 与 Codec 公开能力 AC-010-06b/07/08 分阶段，旧包三层零 IPC 负例可独立验；将第二轮结论保留为历史、登记第三轮独立复评候选并按版本整理记录 | 设计范围可供外部评审而不提前授权代码实施或夸大 AC 状态 | Issue #12；PR #46；SR-010 |
 | 2026-11-27 | 0.2.3 | GPT-6（ChatGPT） | 修订记录 | 将历史记录统一为七列并保留原始文字及原始关联，修正非规范行的分隔符 | 确保修订表可由文档校验器完整解析；不影响设计语义及 READY 主状态 | Issue #12；PR #46；SR-010 |
 | 2026-11-27 | 0.2.4 | GPT-6（ChatGPT） | 文档头、AC-010-06、历史修订账本、修订记录 | 补齐 F03.05/F05/公共契约固定版本与章节；要求直接注入旧 Catalog/Run/Binding 分层验证；将历史 undefined 关联改为可审计说明 | 处理独立模型 Review #6082541121 的 R3-SR010-01/02/03，避免占位符和同一 Importer 错误冒充多层 fail-closed | Issue #12；PR #46；Review #6082541121 |
-| 2026-11-27 | 0.2.5 | Codex / GPT-6 | 文档头 | 登记阶段 READY（本仓 Host Channel）及 AC 范围 | 按单项独立评审推进 | Issue #12、#74；PR #46 |
+| 2026-11-27 | 0.2.5 | Codex / GPT-6 | 文档头 | 登记阶段 READY（本仓 Host Channel）及 AC 范围与工作项 #94 | 按单项独立评审推进 | Issue #12、#74；PR #46 |

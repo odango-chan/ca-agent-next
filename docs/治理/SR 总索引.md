@@ -124,6 +124,8 @@
 
 工作依据为 PR #46 `8c4cb284627ef34d25e18051814897d274dcd346`。21 份 SR 的正文 blob 与各自独立评审快照一致。公共术语的一对一修订符合原批准范围；SR-007 的收据矩阵相关运行项留在后续阶段。完整 SR 主状态与单项 AC 的阶段 READY 分列。下表登记 4 项本仓代码子阶段、11 项中央只读子阶段和 6 项交接或等待项。各产品 AC 仍须提供运行证据。
 
+执行入口为[Skill 链路 #93](https://github.com/odango-chan/ca-agent-next/issues/93)、[Host Channel #94](https://github.com/odango-chan/ca-agent-next/issues/94)、[只读取证 #95](https://github.com/odango-chan/ca-agent-next/issues/95)。完整目标、逐项测试命令和即时推送要求均在各自 Issue 正文。
+
 | SR | 阶段 | AC 范围 | 实施依赖、交付与排除 | 独立评审 |
 |---|---|---|---|---|
 | [SR-004](../SR/SR-004-已发布技能包导入.md) | 阶段 READY（本仓 Skill 链路） | AC-004-01/02/05/06A | SKILL.md-only 导入与旧作者源/旧包拒绝。03/04/06B 等 Compiler 与正式 Bundle。 | [#68](https://github.com/odango-chan/ca-agent-next/issues/68#issuecomment-7209411777) |
