@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
-> 文档版本：0.3.15
+> 文档版本：0.3.16
 > 功能归属：F04 — Runtime 执行  
 > 关联 SR：SR-007、SR-032    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -44,6 +44,8 @@ Runtime 分发前必须按固定顺序：
 4. 验证 Provider Interface 或 Owner Contract Package 的固定来源身份、Version/Publication/Manifest identity、准确 Callable exports 与 Schema；Provider 安装的 Interface snapshot/Runtime Bindings sidecar 必须与 Artifact 绑定的身份一致。缺失、版本不符、歧义、Scope 不匹配不得派发。
 5. 在 Host-owned ArtifactStore 内校验本次 Invocation 的 Artifact Reference 及 Schema、Effect、deadline/budget 和 continuation 约束；**所有拒绝发生在 Plugin IPC 之前**，其 dispatch/Owner mutation 计数必须为 0。
 6. 只有检查通过后，唯一 Plugin Manager 的 Tools Extension 执行内部 Callable 派发；Host Script Execution 则交给同一 Plugin Manager 下的 Host 内建 Tools Extension / Script Runner，不派发到外部 Provider。Provider 私有 backendOperationId 可由已冻结的封闭输入 discriminator 确定，不暴露给 Skill/模型，也不扩大 Scope；Owner Receipt/Commit Proof 决定状态，UNKNOWN 不能升级成 COMMITTED，Reconcile 仅 Coordinator 可按原 Invocation 私有调用。
+
+**Action Budget 计数规则：**Host-owned per-Run `Runtime Action Budget` 是部署侧总动作上限，覆盖所有经 Runtime Action Boundary 放行的 Action：业务 Capability Action（Operation / Observation）、`host.skill-resource.read` 与 `host.skill-script.execute`。每次派发各消耗一个单位；同一次业务 Capability Action 同时消耗一个 Runtime Action Budget 单位和一个 `Contract.limits.maxActions` 单位。Host Resource Read / Script Execution 只消耗 Runtime Action Budget，不消耗 `limits.maxActions`；后者只统计业务 Capability Actions。`operation.script`、Predicate evaluator Script 和 LLM 直接 Script 调用各按一次 Script Execution 计数。Host / Deployment 可收紧总预算，Skill 不得放宽。内部纯阶段推进不额外计数。
 
 **历史审计边界：**旧 v1alpha5 Artifact 曾只导出 Callable allowlist、不序列化作者 Capability ID，旧 `mas::CALLABLE` 不等于新规范。此事实仅用来解释旧版本无法作为 1.6.0 Runtime 输入；不得据此删除/跳过新 Artifact `capabilityBindings`，不再以旧 dependencyClosure 的字段布局定义当前 Runtime DTO。
 
@@ -185,3 +187,5 @@ MAS.RECONCILE 不是 Skill-facing Capability.普通 Skill / LLM Action 必须在
 | 2026-11-27 | 0.3.14 | GPT-6.2（ChatGPT） | §10.3、修订记录 | 明确 Transform Script 通过 Registry outputSchema 校验，Predicate Script 使用固定 PredicateEvaluationResult / evidenceUsed 契约，不声明 outputSchema | 对齐 CA-SL §8.2～§8.4，避免 Host Runner 对两类 Script 使用错误的输出校验方式 | Issue #49；IR-008；SR-007/032；PR #52 |
 
 | 2026-11-27 | 0.3.15 | GPT-6.2（ChatGPT） | §10.3、修订记录 | 明确 Script Execution 各调用计入 Host per-Run Runtime Action Budget，并与只统计业务 Capability Actions 的 Contract.limits.maxActions 分离 | 避免 LLM / Procedure 重复调用 Script 绕过 Host 预算，且与 F05 Resource Read 预算口径一致 | Issue #49；IR-008；SR-007/032；PR #52 |
+
+| 2026-11-27 | 0.3.16 | GPT-6.2（ChatGPT） | §3、§10.3、修订记录 | 定义 Host per-Run Runtime Action Budget 对业务 Capability、Resource Read 与 Script Execution 的计数边界，并与 Contract.limits.maxActions 分离 | 防止 Host 系统动作绕过统一预算，同时避免将纯 Script / Resource Read 错计为业务 Capability Actions | Issue #49；IR-008；SR-007/032；PR #52 |
