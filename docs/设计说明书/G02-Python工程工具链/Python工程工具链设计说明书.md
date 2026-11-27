@@ -372,27 +372,27 @@ Review Context gate 使用 `uv run --no-sync --locked --group dev --extra plugin
     summary_file="$RUNNER_TEMP/review-context-summary.md"
     rm -rf "$work_dir"
     mkdir -p "$work_dir"
-    if uv run --no-sync --locked --group dev --extra plugins python scripts/review_context.py \\
-      --base "$BASE_SHA" \\
-      --head "$HEAD_SHA" \\
-      --out "$work_dir" \\
-      --summary "$summary_file" \\
-      --event-path "$GITHUB_EVENT_PATH" \\
-      > "$diagnostics_dir/generator.stdout.log" \\
+    if uv run --no-sync --locked --group dev --extra plugins python scripts/review_context.py \
+      --base "$BASE_SHA" \
+      --head "$HEAD_SHA" \
+      --out "$work_dir" \
+      --summary "$summary_file" \
+      --event-path "$GITHUB_EVENT_PATH" \
+      > "$diagnostics_dir/generator.stdout.log" \
       2> "$diagnostics_dir/generator.stderr.log"; then
       generator_rc=0
     else
       generator_rc=$?
     fi
-    printf '%s\\n' "$generator_rc" > "$diagnostics_dir/generator.exit-code"
+    printf '%s\n' "$generator_rc" > "$diagnostics_dir/generator.exit-code"
     : > "$diagnostics_dir/generator-output-manifest.txt"
     for name in 'review-scope.json' '评审上下文.md' '统一评审提示词.md'; do
       file="$work_dir/$name"
       if [ -f "$file" ]; then
         bytes="$(wc -c < "$file" | tr -d '[:space:]')"
-        printf '%s\\tPRESENT\\t%s\\n' "$name" "$bytes" >> "$diagnostics_dir/generator-output-manifest.txt"
+        printf '%s\tPRESENT\t%s\n' "$name" "$bytes" >> "$diagnostics_dir/generator-output-manifest.txt"
       else
-        printf '%s\\tMISSING\\t0\\n' "$name" >> "$diagnostics_dir/generator-output-manifest.txt"
+        printf '%s\tMISSING\t0\n' "$name" >> "$diagnostics_dir/generator-output-manifest.txt"
       fi
     done
     exit "$generator_rc"
