@@ -149,6 +149,7 @@ def is_python_scope_path(path: str, workflow_content: str = "") -> bool:
             "review-context.yml",
             "sr003-plugin-ci.yml",
             "python-toolchain-policy.yml",
+            "python-toolchain-policy-trusted.yml",
         }:
             return True
         lowered = workflow_content.lower()
