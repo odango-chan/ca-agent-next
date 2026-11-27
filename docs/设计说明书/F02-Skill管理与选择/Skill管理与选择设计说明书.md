@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：**设计待评审**（唯一新目标 CA-SL 1.6.0；全链路不兼容任何旧作者语法、Build DTO、Artifact、Bundle；1.6.0 产品未发布）
-> 文档版本：0.4.1
+> 文档版本：0.4.2
 > 功能归属：F02 — Skill 管理与选择  
 > 关联 SR：SR-004、SR-005、SR-006、SR-032    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -41,7 +41,7 @@ skills/<skill-id>/
     └── predicates.yaml
 ~~~
 
-SKILL.md 必须存在，其 YAML Front Matter 按 [Agent Skills Specification](https://agentskills.io/specification) 处理，不属于 CA-SL 1.6.0 Assurance 语法。必需字段为 `name` / `description`；`name` 1～64 字符、匹配包根目录名、只允许小写字母/数字/连字符且不得有首尾/连续连字符；`description` 1～1024 字符且非空。可选标准字段为 `license`、`compatibility`（1～500 字符）、`metadata`（string→string）和实验性 `allowed-tools`。CA-Agent 扩展字段 `when` 仅在存在 `assurance/` 时可选声明；无 Assurance Skill 不声明 when，若声明则拒绝。Next 严格拒绝其他未知 Front Matter 字段；`allowed-tools` 只作为元数据，不授予 Callable/Capability 权限。assurance/ 可选；schemas/、scripts/、references/、assets/ 是不依赖 Assurance 的 Package 根目录共享资源。Schema 文件以 YAML 1.2 表示 JSON Schema 数据模型；Script Registry scripts/manifest.yaml 声明精确 entrypoint、purpose、input/output Schema。LLM 可通过 host.skill-resource.read 按需读取当前 Skill Package snapshot 的共享资源，并可通过 host.skill-script.execute 调用当前 Skill Registry 中登记的全部脚本（包括 transform / predicate）；LLM 与 Assurance 共用同一 Script Runner，不设置逐脚本标记或额外 Host 开关。新作者源的唯一目标为 **CA-SL 1.6.0 Capability-first**，现仍未正式发布；历史 v1alpha5 作者源码与 Release 保留追溯，不能当作 1.6.0 输入或自动迁移。存在 Assurance 时由外部 Compiler 按已正式发布的版本处理。contract.yaml 位于 assurance/ 内，不是每个 Skill 的必需文件。`when` 是有 Assurance Skill 的 SKILL.md Front Matter 可选 CA-Agent 扩展，不属于 contract.yaml；无 Assurance Skill 不声明 when。assurance/predicates.yaml 只承载执行期业务判断。
+SKILL.md 必须存在，其 YAML Front Matter 按 [Agent Skills Specification](https://agentskills.io/specification) 处理，不属于 CA-SL 1.6.0 Assurance 语法。必需字段为 `name` / `description`；`name` 1～64 字符、匹配包根目录名、只允许小写字母/数字/连字符且不得有首尾/连续连字符；`description` 1～1024 字符且非空。可选标准字段为 `license`、`compatibility`（1～500 字符）、`metadata`（string→string）和实验性 `allowed-tools`。CA-Agent 不扩展 SKILL.md Front Matter `when`；该字段出现时按未知字段拒绝。`when` 仅作为 `assurance/contract.yaml` 的可选顶层字段；无 Assurance Skill 没有 Contract，不声明 when。Next 严格拒绝其他未知 Front Matter 字段；`allowed-tools` 只作为元数据，不授予 Callable/Capability 权限。assurance/ 可选；schemas/、scripts/、references/、assets/ 是不依赖 Assurance 的 Package 根目录共享资源。Schema 文件以 YAML 1.2 表示 JSON Schema 数据模型；Script Registry scripts/manifest.yaml 声明精确 entrypoint、purpose、input/output Schema。LLM 可通过 host.skill-resource.read 按需读取当前 Skill Package snapshot 的共享资源，并可通过 host.skill-script.execute 调用当前 Skill Registry 中登记的全部脚本（包括 transform / predicate）；LLM 与 Assurance 共用同一 Script Runner，不设置逐脚本标记或额外 Host 开关。新作者源的唯一目标为 **CA-SL 1.6.0 Capability-first**，现仍未正式发布；历史 v1alpha5 作者源码与 Release 保留追溯，不能当作 1.6.0 输入或自动迁移。存在 Assurance 时由外部 Compiler 按已正式发布的版本处理。contract.yaml 位于 assurance/ 内，不是每个 Skill 的必需文件。`when` 是有 Assurance Skill 的 `assurance/contract.yaml` 可选顶层字段；SKILL.md Front Matter 不声明 when，出现时拒绝。无 Assurance Skill 没有 Contract，不声明 when。`assurance/predicates.yaml` 只承载执行期业务判断。
 
 ### 2.2 运行时发布包
 
@@ -133,7 +133,7 @@ Continuation 仅用协议身份和 correlation 查原 Run。Skill、Artifact、g
 
 **以上是 Next 面向 CA-SL 1.6.0 的目标 Resolver 规则**，设计依据是 SR-029 + 本 F02（新 ca-skills 正式语言发布后以正式规范核对）；历史 v1alpha5 M.3/SA-012 仅为语义追溯，不再构成新 Resolver 的规范输入或测试正例。
 
-when 只能读取规范化 Event 的 event.type 和 `assurance/contract.yaml` 中 Contract.requestSchema 声明的 input 字段，不得访问 Tool、Observation、Runtime Context、时钟或可变 Host 状态。`when` 仅允许出现在存在 Assurance 的 Skill 的 SKILL.md Front Matter；无 Assurance Skill 不声明 when。读取 input 成员必须由作者源 Contract 声明 requestSchema，并由外部 Compiler 在发布前静态检查。
+`when` 只能读取规范化 Event 的 event.type 和同一 `assurance/contract.yaml` 中 requestSchema 声明的 input 字段，不得访问 Tool、Observation、Runtime Context、时钟或可变 Host 状态。`when` 仅允许作为存在 Assurance 的 Skill 的 Contract 顶层字段；SKILL.md Front Matter 不声明 when，出现时拒绝。无 Assurance Skill 没有 Contract，不声明 when。读取 input 成员必须由作者源 Contract 声明 requestSchema，并由外部 Compiler 在发布前静态检查。
 
 ### 6.1 决定性选择表与边界
 
@@ -150,7 +150,7 @@ when 只能读取规范化 Event 的 event.type 和 `assurance/contract.yaml` �
 
 ## 7. when 程序的发布与运行时接口
 
-作者源中的 when 位于有 Assurance Skill 的 SKILL.md YAML Front Matter（CA-Agent 扩展字段），由 ca-skill-compiler 在发布前完成解析、类型检查和 CA-SL G.4 静态校验，并将已检查程序及其类型环境放入发布运行时 Artifact。无 Assurance Skill 不声明 when，也不调用 Compiler。
+作者源中的 `when` 唯一位于有 Assurance Skill 的 `assurance/contract.yaml` 顶层，由 ca-skill-compiler 在发布前从 Contract 读取并完成解析、类型检查和 CA-SL G.4 静态校验，再将已检查程序及其类型环境放入发布运行时 Artifact。SKILL.md Front Matter 不声明 when；无 Assurance Skill 没有 Contract，不声明 when，也不调用 Compiler。
 
 Next 只在导入阶段反序列化发布 Artifact 中的程序与类型数据，并保存在对应 Catalog generation 中；不解析 CEL 源字符串、不重复静态检查、不调用 Compiler。每个新 Event 使用当前 event.type 和 input 独立求值。
 
@@ -295,3 +295,5 @@ T2 的 Provider Codec Result 只在选定 Skill Procedure 的 READ 后可用，�
 | 2026-11-27 | 0.3.9 | GPT-6.2（ChatGPT） | §2～§4、§8～§10 | 将 SKILL Front Matter 语言边界更新为 1.6.0；接入 F05 Host Resource Read；统一 LLM 对全部登记 Script 的调用能力；删除 Node/Wait 作者语义 | 保持 Agent Importer / Resolver 与无 Wait 的 CA-SL 1.6.0、共享 Package 资源模型一致 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.4.0 | GPT-6.2（ChatGPT） | §2～§7、§11、§13 | 将 `when` 作者源位置统一为有 Assurance Skill 的 SKILL.md Front Matter；无 Assurance Skill 不声明 when，继续走 LLM-guided 语义选择 | 对齐用户确认的入口决策，避免无 Assurance 包携带未编译选择条件 | Issue #49；IR-008；SR-032；SR-004/013 |
 | 2026-11-27 | 0.4.1 | GPT-6.2（ChatGPT） | §2、§6～§7 | 将 Front Matter 字段表补齐 CA-Agent 扩展 when，并明确无 Assurance Skill 不声明；删除 F02 对 contract.yaml.when 的旧定义 | 修复入口说明中的残留旧口径，保证 Importer / Resolver 一致 | Issue #49；IR-008；SR-032；SR-004/013 |
+
+| 2026-11-27 | 0.4.2 | GPT-6.2（ChatGPT） | §2、§6～§7、修订记录 | 将 `when` 作者源恢复为 assurance/contract.yaml 顶层唯一入口；Front Matter 不声明 when；无 Assurance Skill 无 Contract | 修正与 CA-SL / EC02 Compiler 权威契约冲突的 Front Matter 入口 | Issue #49；IR-008；SR-032；F08/SR-004/013 |
