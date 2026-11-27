@@ -342,40 +342,147 @@ PR #32 原有 pip/单 Ubuntu Run 只证明迁移前 SR-001 基线有效，不得
 
 ### 4.1 新 worktree 与 A→B→A 隔离验收
 
-AC-028-05 必须用两个临时 detached worktree 执行 A→B→A，不得只分别在两个目录跑一次 happy path：
+AC-028-05 必须在干净 checkout 中用两个临时 detached worktree 执行 A→B→A。整个块从第一条命令启用 `set -euo pipefail`；`trap` 只清理 worktree，不删除证据，并必须保留原始退出码。任何创建、sync、断言、Host 测试、比较或清理失败均使整段非零退出。
 
 ```bash
-ROOT="$(pwd)"
-git worktree add --detach ../.sr028-a HEAD
-git worktree add --detach ../.sr028-b HEAD
+set -euo pipefail
+ROOT="$(pwd -P)"
+test -f "$ROOT/pyproject.toml"
+if [ -n "${SR028_EVIDENCE_DIR:-}" ]; then
+  EVIDENCE_DIR="$SR028_EVIDENCE_DIR"
+  test ! -e "$EVIDENCE_DIR"
+  mkdir -p "$EVIDENCE_DIR"
+else
+  EVIDENCE_DIR="$(mktemp -d "${TMPDIR:-/tmp}/sr028-ab-a-evidence.XXXXXX")"
+fi
+EVIDENCE_DIR="$(cd "$EVIDENCE_DIR" && pwd -P)"
+case "$EVIDENCE_DIR/" in "$ROOT/"*) echo 'Evidence directory must be outside the repository' >&2; exit 2 ;; esac
+WORKTREE_PARENT="$(mktemp -d "${TMPDIR:-/tmp}/sr028-ab-a-worktrees.XXXXXX")"
+A_PATH="$WORKTREE_PARENT/a"
+B_PATH="$WORKTREE_PARENT/b"
+A_ADDED=0
+B_ADDED=0
+cleanup() {
+  local original_rc=$?
+  local cleanup_rc=0
+  local cmd_rc=0
+  trap - EXIT
+  set +e
+  if [ "$B_ADDED" -eq 1 ]; then
+    git -C "$ROOT" worktree remove --force "$B_PATH"
+    cmd_rc=$?
+    if [ "$cmd_rc" -ne 0 ] && [ "$cleanup_rc" -eq 0 ]; then cleanup_rc=$cmd_rc; fi
+  fi
+  if [ "$A_ADDED" -eq 1 ]; then
+    git -C "$ROOT" worktree remove --force "$A_PATH"
+    cmd_rc=$?
+    if [ "$cmd_rc" -ne 0 ] && [ "$cleanup_rc" -eq 0 ]; then cleanup_rc=$cmd_rc; fi
+  fi
+  rmdir "$WORKTREE_PARENT"
+  cmd_rc=$?
+  if [ "$cmd_rc" -ne 0 ] && [ "$cleanup_rc" -eq 0 ]; then cleanup_rc=$cmd_rc; fi
+  printf 'SR028_EVIDENCE_DIR=%s\n' "$EVIDENCE_DIR"
+  if [ "$original_rc" -ne 0 ]; then exit "$original_rc"; fi
+  if [ "$cleanup_rc" -ne 0 ]; then exit "$cleanup_rc"; fi
+}
+trap cleanup EXIT
+git worktree add --detach "$A_PATH" HEAD
+A_ADDED=1
+git worktree add --detach "$B_PATH" HEAD
+B_ADDED=1
 
-cd ../.sr028-a
+capture_env() {
+  local label="$1"
+  local worktree="$2"
+  (
+    cd "$worktree"
+    uv run --no-sync --locked --group dev --extra plugins python - "$worktree" "$EVIDENCE_DIR/$label.json" "$EVIDENCE_DIR/$label.direct_url.json" <<'PY'
+import importlib.metadata as metadata
+import json
+import pathlib
+import sys
+import urllib.parse
+import urllib.request
+import ca_agent_next
+root = pathlib.Path(sys.argv[1]).resolve()
+report_path = pathlib.Path(sys.argv[2])
+direct_url_path = pathlib.Path(sys.argv[3])
+raw = metadata.distribution("ca-agent-next").read_text("direct_url.json")
+assert raw is not None, "direct_url.json is missing"
+direct = json.loads(raw)
+url = direct["url"]
+parsed = urllib.parse.urlparse(url)
+assert parsed.scheme == "file", url
+source = pathlib.Path(urllib.request.url2pathname(parsed.path)).resolve()
+venv = (root / ".venv").resolve()
+sys_prefix = pathlib.Path(sys.prefix).resolve()
+executable = pathlib.Path(sys.executable).resolve()
+module = pathlib.Path(ca_agent_next.__file__).resolve()
+editable = direct.get("dir_info", {}).get("editable") is True
+assert (venv / "pyvenv.cfg").is_file(), venv
+assert sys_prefix == venv, (sys_prefix, venv)
+assert executable.is_relative_to(venv), (executable, venv)
+assert module.is_relative_to(root / "src"), (module, root / "src")
+assert editable, direct
+assert source == root, (source, root)
+report = {"root":str(root),"venv":str(venv),"sys_prefix":str(sys_prefix),"executable":str(executable),"module":str(module),"direct_url":url,"direct_url_source":str(source),"editable":editable}
+report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+direct_url_path.write_text(raw + "\n", encoding="utf-8")
+PY
+    git -C "$worktree" check-ignore -v .venv/pyvenv.cfg > "$EVIDENCE_DIR/$label.git-check-ignore.txt"
+    test -s "$EVIDENCE_DIR/$label.git-check-ignore.txt"
+  )
+}
+
+run_host() {
+  local label="$1"
+  local worktree="$2"
+  (
+    cd "$worktree"
+    if uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --suite host --output-dir "$EVIDENCE_DIR/$label-host-gate" > "$EVIDENCE_DIR/$label-host-gate.stdout.log" 2>&1; then rc=0; else rc=$?; fi
+    printf '%s\n' "$rc" > "$EVIDENCE_DIR/$label-host-gate.exit-code"
+    cat "$EVIDENCE_DIR/$label-host-gate.stdout.log"
+    test "$rc" -eq 0
+  )
+}
+
+cd "$A_PATH"
 unset UV_PROJECT_ENVIRONMENT
 uv python install
 uv sync --locked --group dev --extra plugins
-uv run --locked --group dev --extra plugins python -c 'import importlib.metadata as m, json, pathlib, sys, urllib.parse, urllib.request, ca_agent_next; root=pathlib.Path.cwd().resolve(); venv=(root/".venv").resolve(); d=json.loads(m.distribution("ca-agent-next").read_text("direct_url.json")); source=pathlib.Path(urllib.request.url2pathname(urllib.parse.urlparse(d["url"]).path)).resolve(); module=pathlib.Path(ca_agent_next.__file__).resolve(); assert pathlib.Path(sys.prefix).resolve()==venv and (venv/"pyvenv.cfg").is_file(); assert module.is_relative_to(root/"src") and d["dir_info"]["editable"] is True and source==root; print(json.dumps({"root":str(root),"venv":str(venv),"module":str(module),"source":str(source)}))' > /tmp/sr028-a-paths.json
-uv run --locked --group dev --extra plugins python -m unittest discover -s tests -p test_host.py -v
+capture_env a-before "$A_PATH"
+run_host a-before "$A_PATH"
 
-cd ../.sr028-b
+cd "$B_PATH"
 unset UV_PROJECT_ENVIRONMENT
 uv python install
 uv sync --locked --group dev --extra plugins
-uv run --locked --group dev --extra plugins python -c 'import importlib.metadata as m, json, pathlib, sys, urllib.parse, urllib.request, ca_agent_next; root=pathlib.Path.cwd().resolve(); venv=(root/".venv").resolve(); d=json.loads(m.distribution("ca-agent-next").read_text("direct_url.json")); source=pathlib.Path(urllib.request.url2pathname(urllib.parse.urlparse(d["url"]).path)).resolve(); module=pathlib.Path(ca_agent_next.__file__).resolve(); assert pathlib.Path(sys.prefix).resolve()==venv and (venv/"pyvenv.cfg").is_file(); assert module.is_relative_to(root/"src") and d["dir_info"]["editable"] is True and source==root; print(json.dumps({"root":str(root),"venv":str(venv),"module":str(module),"source":str(source)}))' > /tmp/sr028-b-paths.json
-uv run --locked --group dev --extra plugins python -m unittest discover -s tests -p test_host.py -v
+capture_env b "$B_PATH"
+run_host b "$B_PATH"
 
-cd ../.sr028-a
+cd "$A_PATH"
 unset UV_PROJECT_ENVIRONMENT
-uv run --locked --group dev --extra plugins python -c 'import importlib.metadata as m, json, pathlib, sys, urllib.parse, urllib.request, ca_agent_next; root=pathlib.Path.cwd().resolve(); venv=(root/".venv").resolve(); d=json.loads(m.distribution("ca-agent-next").read_text("direct_url.json")); source=pathlib.Path(urllib.request.url2pathname(urllib.parse.urlparse(d["url"]).path)).resolve(); module=pathlib.Path(ca_agent_next.__file__).resolve(); assert pathlib.Path(sys.prefix).resolve()==venv and (venv/"pyvenv.cfg").is_file(); assert module.is_relative_to(root/"src") and d["dir_info"]["editable"] is True and source==root; print(json.dumps({"root":str(root),"venv":str(venv),"module":str(module),"source":str(source)}))' > /tmp/sr028-a-return-paths.json
-uv run --locked --group dev --extra plugins python -m unittest discover -s tests -p test_host.py -v
-python -c 'import json; from pathlib import Path; a=json.loads(Path("/tmp/sr028-a-paths.json").read_text()); b=json.loads(Path("/tmp/sr028-b-paths.json").read_text()); a2=json.loads(Path("/tmp/sr028-a-return-paths.json").read_text()); assert all(a[k]!=b[k] for k in ("root","venv","module","source")); assert a2==a; print("A/B/A isolation PASS")'
-
-cd "$ROOT"
-git worktree remove --force ../.sr028-a
-git worktree remove --force ../.sr028-b
-rm -f /tmp/sr028-a-paths.json /tmp/sr028-b-paths.json /tmp/sr028-a-return-paths.json
+# 关键：返回 A 后只允许 --no-sync；不得执行 uv sync 或普通 uv run。
+capture_env a-return "$A_PATH"
+run_host a-return "$A_PATH"
+uv run --no-sync --locked --group dev --extra plugins python - "$EVIDENCE_DIR" <<'PY'
+import json, pathlib, sys
+evidence = pathlib.Path(sys.argv[1])
+a = json.loads((evidence / "a-before.json").read_text(encoding="utf-8"))
+b = json.loads((evidence / "b.json").read_text(encoding="utf-8"))
+a2 = json.loads((evidence / "a-return.json").read_text(encoding="utf-8"))
+for key in ("root", "venv", "sys_prefix", "executable", "module", "direct_url", "direct_url_source"): assert a[key] != b[key], (key, a[key], b[key])
+assert a2 == a, (a, a2)
+assert (evidence / "a-before.direct_url.json").read_bytes() == (evidence / "a-return.direct_url.json").read_bytes()
+assert (evidence / "a-before.git-check-ignore.txt").read_text() == (evidence / "a-return.git-check-ignore.txt").read_text()
+print("A/B/A isolation PASS; A return used --no-sync")
+PY
+printf 'A→B→A evidence retained at: %s\n' "$EVIDENCE_DIR"
 ```
 
-保存 A/B 各自 root、`.venv`、`sys.prefix`、`ca_agent_next.__file__` 和 `direct_url.json` 的 file URL。必须观察到 A 与 B 的路径不同；B sync 后再次进入 A，不重新 sync，A 的路径仍指向 A 且 Host 测试通过。Windows 在 Git Bash 或 WSL 中执行此 Bash 验收；不将 PowerShell 变量语法混入该命令块。
+Windows 本地执行此 Bash 块时使用 Git Bash 或 WSL；不得在 PowerShell 中粘贴 Bash 块。A→B→A 的 Python 检查、Host 测试和比较全部通过 `uv run --no-sync --locked ...` 运行；返回 A 后绝不执行 `uv sync`、`uv python install` 或普通 `uv run`。`--no-sync` 是本验收的关键条件，防止 uv 自动修复 editable metadata 污染。
+
+证据目录必须保留，不得由 trap 或后续 cleanup 删除。A-before、B、A-return 三份 JSON 必须包含 root、venv、sys_prefix、executable、module、原始 `direct_url` URL、解析后的 direct_url_source、editable；并分别保留原始 `direct_url.json`、`git check-ignore -v` 输出、Host gate JSON/log/exit code。将该目录作为验收附件归档，报告中记录绝对路径、受测 SHA 和附件位置。
 
 ### 4.2 依赖更新与锁漂移负例
 
@@ -384,51 +491,100 @@ rm -f /tmp/sr028-a-paths.json /tmp/sr028-b-paths.json /tmp/sr028-a-return-paths.
 1. 修改 `pyproject.toml` 中明确归属的运行时依赖或 dependency group。
 2. 执行 `uv lock` 更新 `uv.lock`。
 3. 审阅直接/传递依赖变化和 Python marker。
-4. 执行 `uv lock --check`、`uv sync --locked --group dev --extra plugins`、三个独立 unittest 套件、完整 unittest 和 Smoke。
-5. 在同一 Commit 提交 pyproject.toml 与 uv.lock；CI 只执行 locked 安装，不重新解析。
+4. 执行 `uv lock --check`、`uv sync --locked --group dev --extra plugins`、统一 unittest gate 和 Smoke。
+5. 在同一 Commit 提交 `pyproject.toml` 与 `uv.lock`；CI 只执行 locked 安装，不重新解析。
 
-AC-028-04 的失败路径必须在干净临时 worktree 执行，使用 Bash（Windows 使用 Git Bash/WSL），步骤固定如下：
+AC-028-04 的失败路径必须在干净临时 worktree 执行。整个 Bash 块从第一条命令启用 `set -euo pipefail`，`trap` 清理 worktree 并保留原始退出码；初始 sync/lock-check 两条正例必须明确成功。只允许在两条预期失败命令的 `if` 条件中捕获退出码。
 
 ```bash
-ROOT="$(pwd)"
-git worktree add --detach ../.sr028-lock-drift HEAD
-cd ../.sr028-lock-drift
+set -euo pipefail
+ROOT="$(pwd -P)"
+EVIDENCE_DIR="$(mktemp -d "${TMPDIR:-/tmp}/sr028-lock-evidence.XXXXXX")"
+WORKTREE_PARENT="$(mktemp -d "${TMPDIR:-/tmp}/sr028-lock-worktree.XXXXXX")"
+LOCK_PATH="$WORKTREE_PARENT/lock-drift"
+LOCK_ADDED=0
+cleanup() {
+  local original_rc=$?
+  local cleanup_rc=0
+  local cmd_rc=0
+  trap - EXIT
+  set +e
+  if [ "$LOCK_ADDED" -eq 1 ]; then
+    git -C "$ROOT" worktree remove --force "$LOCK_PATH"
+    cmd_rc=$?
+    if [ "$cmd_rc" -ne 0 ] && [ "$cleanup_rc" -eq 0 ]; then cleanup_rc=$cmd_rc; fi
+  fi
+  rmdir "$WORKTREE_PARENT"
+  cmd_rc=$?
+  if [ "$cmd_rc" -ne 0 ] && [ "$cleanup_rc" -eq 0 ]; then cleanup_rc=$cmd_rc; fi
+  printf 'SR028_LOCK_EVIDENCE_DIR=%s\n' "$EVIDENCE_DIR"
+  if [ "$original_rc" -ne 0 ]; then exit "$original_rc"; fi
+  if [ "$cleanup_rc" -ne 0 ]; then exit "$cleanup_rc"; fi
+}
+trap cleanup EXIT
+git worktree add --detach "$LOCK_PATH" HEAD
+LOCK_ADDED=1
+cd "$LOCK_PATH"
 unset UV_PROJECT_ENVIRONMENT
 uv python install
-uv sync --locked --group dev --extra plugins
-uv lock --check
-python -c 'from pathlib import Path; p=Path("pyproject.toml"); s=p.read_text(); old="PyYAML>=6.0,<7"; assert s.count(old)==1; p.write_text(s.replace(old,"PyYAML>=6.0,<8",1))'
-set +e
-uv lock --check > /tmp/sr028-lock-check.log 2>&1
-lock_check_rc=$?
-set -e
+if uv sync --locked --group dev --extra plugins > "$EVIDENCE_DIR/positive-sync.log" 2>&1; then
+  printf '0\n' > "$EVIDENCE_DIR/positive-sync.exit-code"
+else
+  rc=$?
+  printf '%s\n' "$rc" > "$EVIDENCE_DIR/positive-sync.exit-code"
+  cat "$EVIDENCE_DIR/positive-sync.log"
+  exit "$rc"
+fi
+if uv lock --check > "$EVIDENCE_DIR/positive-lock-check.log" 2>&1; then
+  printf '0\n' > "$EVIDENCE_DIR/positive-lock-check.exit-code"
+else
+  rc=$?
+  printf '%s\n' "$rc" > "$EVIDENCE_DIR/positive-lock-check.exit-code"
+  cat "$EVIDENCE_DIR/positive-lock-check.log"
+  exit "$rc"
+fi
+uv run --no-sync --locked --group dev --extra plugins python -c 'from pathlib import Path; p=Path("pyproject.toml"); s=p.read_text(encoding="utf-8"); old="PyYAML>=6.0,<7"; assert s.count(old)==1, "expected exactly one PyYAML constraint"; p.write_text(s.replace(old,"PyYAML>=6.0,<8",1), encoding="utf-8")'
+git diff -- pyproject.toml > "$EVIDENCE_DIR/pyproject-drift.diff"
+if uv lock --check > "$EVIDENCE_DIR/negative-lock-check.log" 2>&1; then
+  echo 'FAIL: uv lock --check unexpectedly accepted a stale lockfile' >&2
+  exit 1
+else
+  lock_check_rc=$?
+fi
+printf '%s\n' "$lock_check_rc" > "$EVIDENCE_DIR/negative-lock-check.exit-code"
 test "$lock_check_rc" -ne 0
-cat /tmp/sr028-lock-check.log
-git diff --exit-code -- uv.lock
-set +e
-uv sync --locked --group dev --extra plugins > /tmp/sr028-sync-locked.log 2>&1
-sync_locked_rc=$?
-set -e
+grep -Eiq 'lockfile.*needs to be updated' "$EVIDENCE_DIR/negative-lock-check.log"
+git diff --exit-code HEAD -- uv.lock
+test -z "$(git status --porcelain -- uv.lock)"
+if uv sync --locked --group dev --extra plugins > "$EVIDENCE_DIR/negative-sync-locked.log" 2>&1; then
+  echo 'FAIL: uv sync --locked unexpectedly accepted a stale lockfile' >&2
+  exit 1
+else
+  sync_locked_rc=$?
+fi
+printf '%s\n' "$sync_locked_rc" > "$EVIDENCE_DIR/negative-sync-locked.exit-code"
 test "$sync_locked_rc" -ne 0
-cat /tmp/sr028-sync-locked.log
-git diff --exit-code -- uv.lock
-git restore -- pyproject.toml
-git diff --exit-code -- pyproject.toml uv.lock
-cd "$ROOT"
-git worktree remove --force ../.sr028-lock-drift
+grep -Eiq 'lockfile.*needs to be updated' "$EVIDENCE_DIR/negative-sync-locked.log"
+git diff --exit-code HEAD -- uv.lock
+test -z "$(git status --porcelain -- uv.lock)"
+git restore --source=HEAD --worktree -- pyproject.toml
+git diff --exit-code HEAD -- pyproject.toml uv.lock
+test -z "$(git status --porcelain -- pyproject.toml uv.lock)"
+printf 'Lock-drift evidence retained at: %s\n' "$EVIDENCE_DIR"
 ```
 
-两条失败命令的输出必须明确说明锁文件与项目声明不一致/需要更新；保存完整 stdout/stderr 与各自非零退出码。每条失败命令后 `git diff --exit-code -- uv.lock` 必须成功，恢复后 pyproject.toml 与 uv.lock 均无差异。禁止用损坏 TOML/锁文件代替依赖声明漂移负例；不得运行 `uv lock` 修复该临时负例。
+正例失败会立即终止，不会进入负例；负例只有在退出码非零且 stdout/stderr 匹配 `lockfile ... needs to be updated` 诊断后才算预期失败。每次负例后都证明 `uv.lock` 的 tracked diff 和 status 均为空。恢复后 `pyproject.toml` 与 `uv.lock` 均必须干净。任何正例、诊断、锁文件不变断言、恢复或 cleanup 失败均使整个块非零退出；cleanup 不删除证据目录，也不能覆盖原始失败码。证据目录需归档并记录绝对路径、受测 SHA、正/负例日志与退出码。
 
 ### 4.3 CI
 
 1. Checkout 当前 PR HEAD，并记录 base/head SHA。
 2. 通过固定 setup-uv action 安装 uv 0.13.10。
 3. 按项目 `.python-version` 安装根环境 CPython 3.14.6；SR-003 矩阵另外显式安装 Ubuntu 3.12 或 Windows 3.14.6。
-4. 通过 `setup-go@v5` 和 `go-version-file: examples/echo/plugin/go.mod` 安装满足 Go 1.24 directive 的 Go；记录 `go version`，设置 `GOWORK=off` 并构建 Go Echo。
-5. 使用 `uv sync --python "$PY" --locked --group dev --extra plugins`，之后用同一个 `$PY` 执行 Host、Plugin、Review Context、完整 unittest 和 Smoke。
-6. 每个矩阵 Job 保存各测试范围的 discovered/passed/failures/errors/skipped/exit code；所有必需测试发现数大于 0、skipped/failures/errors 为 0，退出码为 0。
-7. 任一锁文件漂移、依赖缺失、测试失败、必需用例 skipped、0 tests 或环境创建失败均使 Job 失败；不得降级为 pip 临时安装。
+4. 通过 `setup-go@v5` 和 `go-version-file: examples/echo/plugin/go.mod` 安装满足 Go 1.24 directive 的 Go；记录 `go version`，设置 `GOWORK=off` 并构建 Go Echo。Go 构建步骤统一使用 Bash；Windows Runner 的 `go env GOOS` 必须选择 `.exe` 输出名。
+5. 使用 `uv sync --python "$PY" --locked --group dev --extra plugins` 完成唯一一次环境同步；其后的测试、compileall、Smoke 和证据脚本统一使用 `uv run --python "$PY" --no-sync --locked --group dev --extra plugins ...`，不得在测试阶段隐式修复环境。
+6. 使用 `scripts/unittest_gate.py` 一次运行 Host、Plugin、Review Context、完整总计四个范围。脚本必须逐范围保存 JSON/log，自动断言 discovered>0、tests_run=discovered、failures/errors/skipped/expected_failures/unexpected_successes/loader_errors 均为 0，并在任一范围失败时最终非零退出。
+7. `actions/upload-artifact@v4` 必须在 `if: always()` 下上传 gate JSON/log、Smoke 与 Go Echo 证据；Artifact 不存在或文件缺失不得被记为验收 PASS。
+8. 任一锁文件漂移、依赖缺失、测试失败、必需用例 skipped、0 tests、脚本错误或环境创建失败均使 Job 失败；不得降级为 pip 临时安装。
 
 ## 5. 兼容性与责任边界
 
@@ -450,11 +606,11 @@ git worktree remove --force ../.sr028-lock-drift
 | I3 | 环境隔离与锁漂移验收 | I1 | 执行两个 worktree 的 A→B→A 和临时声明漂移 fail-closed 负例 |
 | I4 | 当前文档入口刷新 | I1～I3 | 更新 README、Agent、SR-002/SR-003 当前复验命令和演示验收基线；历史 pip 证据只读保留 |
 
-I1 与 I3 可在 SR-028 实施 Issue 内按依赖顺序执行；I2 只在 SR-001 Workflow 已进入目标分支后执行；I4 在命令与 Workflow 迁移验收完成后执行。任何阶段依赖未满足时只暂停对应阶段/AC，不把无关设计评审阻塞。
+I1 与 I3 可在 SR-028 实施 Issue 内按依赖顺序执行；I2 只在 SR-001 Workflow 已进入目标分支后执行，并包含 `scripts/unittest_gate.py`、双平台自动门禁和 Artifact；I4 在命令与 Workflow 迁移验收完成后执行。任何阶段依赖未满足时只暂停对应阶段/AC，不把无关设计评审阻塞。
 
 ## 7. 验收映射
 
-具体验收 ID、命令和证据要求以 [SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md) v0.2.6 为准：AC-028-01～03 元数据/版本/依赖分组；AC-028-04 锁漂移 fail-closed；AC-028-05 双 worktree A→B→A；AC-028-06 本地 Go、测试计数与 Smoke；AC-028-07 双平台 CI 与独立堆叠 paths 验证 PR；AC-028-08 Review Context 真实 PR Artifact；AC-028-09 范围边界；AC-028-10 当前文档入口刷新。
+具体验收 ID、命令和证据要求以 [SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md) v0.2.7 为准：AC-028-01～03 元数据/版本/依赖分组；AC-028-04 锁漂移 fail-closed；AC-028-05 双 worktree A→B→A；AC-028-06 本地 Go、测试计数与 Smoke；AC-028-07 双平台 CI 与独立堆叠 paths 验证 PR；AC-028-08 Review Context 真实 PR Artifact；AC-028-09 范围边界；AC-028-10 当前文档入口刷新。
 
 设计文档、示例 YAML、历史 pip Run 或迁移前 Artifact 均不构成 uv 实施 PASS。每项产品 AC 只有在固定受测 SHA 上真实运行并留存命令、环境、结果和证据后才可更新状态。
 
@@ -479,3 +635,4 @@ I1 与 I3 可在 SR-028 实施 Issue 内按依赖顺序执行；I2 只在 SR-001
 | 2026-11-27 | 0.2.2 | GPT-6（ChatGPT） | §3.8、文档头、修订记录 | 增加 uv 双平台矩阵 Python 显式选择的可执行 YAML 示例和 PowerShell 分支说明 | 避免 Harness 在 Windows 把 Bash 变量误用或因 .python-version 让 Ubuntu 3.12 误用 3.14.6；仍需真实 CI 独验 | Issue #12/#35；PR #46；SR-028 |
 | 2026-11-27 | 0.2.3 | GPT-6（ChatGPT） | §3.8、修订记录 | 澄清 Go Echo 由 Go 工具链构建，Python compileall/证据脚本才使用矩阵 Python | 消除示例描述中将 Go build 错写成通过 Python 运行的歧义 | Issue #12/#35；PR #46；SR-028 |
 | 2026-11-27 | 0.2.4 | GPT-6.2（ChatGPT） | §0、§3.5～3.8、§4.1～4.3、§6～§7 | 按 Review #6082874849 补齐 Go 1.24 前置与 GOWORK=off、锁漂移负例、双 worktree A→B→A、测试统计、Windows 3.14.6、独立堆叠验证 PR 和文档验收映射；修正 `.venv/` 既有规则表述 | 关闭 SR-028 的实施歧义，同时保持所有产品 AC NOT_RUN 和 SR DRAFT | Issue #12；PR #46；Review #6082874849；SR-028 v0.2.6 |
+| 2026-11-27 | 0.2.5 | GPT-6.2（ChatGPT） | §0、§3.6～3.8、§4.1～4.3、§6～§7 | 按 Review #6083225844 修复 Bash fail-open：锁漂移与 A→B→A 从块首 fail-fast 并使用保码 cleanup trap；A 返回阶段全部改用 `uv run --no-sync`；新增标准库 unittest gate 并在双平台 Workflow 自动断言 skipped=0/非空测试且上传报告；Python 检查使用显式 uv 项目环境；补齐 A/B/A sys.prefix、原始 direct_url、ignore 证据持久化；Go 构建子 shell 恢复 CWD，按 GOOS 生成 Windows `.exe`，澄清 Workflow shell 边界 | 消除 R028-10～16 的 fail-open、自动同步、CI skipped 假 PASS、隐式解释器及跨平台/证据歧义；保持产品 AC NOT_RUN 与 SR DRAFT | Issue #12；PR #46；Review #6083225844；SR-028 v0.2.7 |
