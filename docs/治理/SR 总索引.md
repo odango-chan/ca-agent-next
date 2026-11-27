@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.62
+> 文档版本：0.3.63
 > 状态：29 项 SR：4 VERIFIED、1 IMPLEMENTED、24 DRAFT；PR #46 Review #6083872622 对 SR-028 的第六轮独立复评为 CHANGES_REQUESTED（固定 Head 2d20a128，0 P0 / 1 P1 / 2 P2）；R028-21～23 已按 Issue #12 完成文档整改并推送，等待新 Head 第七轮独立复评，SR-028 仍 DRAFT、AC-028-01～10 产品执行 NOT_RUN、READY=0。
 > 修订日期：2026-11-27\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -146,8 +146,8 @@
 | [SR-013](../SR/SR-013-Compiler已检查when与发布产物.md) | 阶段 READY（中央只读核验） | AC-013-01 归档完整性 | [归档报告](../issue-95-fixed-source-handoff/SR-013.md)：58/58 哈希相符但三处归档缺陷未闭合，本轮 FAIL、复跑 NOT_RUN；02～06 原状态不变。 | [#77](https://github.com/odango-chan/ca-agent-next/issues/77#issuecomment-7209276846)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95) |
 | [SR-016](../SR/SR-016-工作台设计移交与条件编辑.md) | 阶段 READY（中央只读核验） | MIG-016-01、AC-016-09 设计对照 | 核对 Studio 迁移来源和状态模型；02～08/10 依赖正式包与 Compiler；六宿主实测另行登记。 | [#78](https://github.com/odango-chan/ca-agent-next/issues/78#issuecomment-7210318006) |
 | [SR-017](../SR/SR-017-业务插件设计移交.md) | 阶段 READY（中央只读核验） | AC-017-01～04 静态移交 | [报告](../issue-95-fixed-source-handoff/SR-017.md)：01/03/04 限定 PASS，02 FAIL；缺 F06 关键 fixtures/Schema 且旧 ack 冲突，实现归 SR-009。 | [#79](https://github.com/odango-chan/ca-agent-next/issues/79#issuecomment-7210393284)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95) |
-| [SR-018](../SR/SR-018-业务所有者设计移交.md) | 阶段 READY（中央只读核验） | AC-018-01、02（除 Release 子项）、04 | 核对 Receipt/Proof/QoS/Reconcile 固定源；Release 子项需补原始证据，03 等 Owner 24/24 正式包。 | [#80](https://github.com/odango-chan/ca-agent-next/issues/80#issuecomment-7210419119) |
-| [SR-019](../SR/SR-019-仿真对端设计移交.md) | 阶段 READY（中央只读核验） | AC-019-01/02/04 静态移交 | 核对 Mock peer 源文件、场景与 fixture；03 运行测试另记。 | [#81](https://github.com/odango-chan/ca-agent-next/issues/81#issuecomment-7210443123) |
+| [SR-018](../SR/SR-018-业务所有者设计移交.md) | 阶段 READY（中央只读核验） | AC-018-01、02（除 Release 子项）、04 | [报告](../issue-95-fixed-source-handoff/SR-018.md)：01/02 FAIL，04 静态 PASS；声明路径、Evidence 与 Reconcile 缺陷待 Owner 修复，Release 另记。 | [#80](https://github.com/odango-chan/ca-agent-next/issues/80#issuecomment-7210419119)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95) |
+| [SR-019](../SR/SR-019-仿真对端设计移交.md) | 阶段 READY（中央只读核验） | AC-019-01/02/04 静态移交 | [报告](../issue-95-fixed-source-handoff/SR-019.md)：01/04 静态 PASS，02 FAIL，03 NOT_RUN；联合 fixture 缺项另记。 | [#81](https://github.com/odango-chan/ca-agent-next/issues/81#issuecomment-7210443123)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95) |
 | [SR-020](../SR/SR-020-参考宿主设计移交.md) | 阶段 READY（中央只读核验） | AC-020-01/02/04 静态审计 | [报告](../issue-95-fixed-source-handoff/SR-020.md)：01/02/04 限定 PASS，03 NOT_RUN；6/6 原文与 Publisher 边界已核对。 | [#82](https://github.com/odango-chan/ca-agent-next/issues/82#issuecomment-7210465672)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95) |
 | [SR-021](../SR/SR-021-原生宿主设计移交.md) | 阶段 READY（中央只读核验） | AC-021-01/02/04 静态审计 | [报告](../issue-95-fixed-source-handoff/SR-021.md)：01/02/04 限定 PASS，03 NOT_RUN；Task/Artifact 2/2 原文与晋级边界已核对。 | [#83](https://github.com/odango-chan/ca-agent-next/issues/83#issuecomment-7210492778)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95) |
 | [SR-022](../SR/SR-022-执行内核设计移交.md) | 阶段 READY（中央只读核验） | AC-022-01/02/04 静态对照 | [报告](../issue-95-fixed-source-handoff/SR-022.md)：01/02/04 限定 PASS，03 NOT_RUN；10/10 原文与 SR-007 映射已核对。 | [#84](https://github.com/odango-chan/ca-agent-next/issues/84#issuecomment-7210514058)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95) |
@@ -285,3 +285,4 @@
 | 2026-11-27 | 0.3.60 | kimi-k3.1-pro | §2.4、修订记录 | 回填 SR-013 归档 FAIL 及三处缺陷，保留历史结果与其他 AC 原状态 | 不将文件集合匹配扩大为完整归档 PASS 或产品复跑 | Issue #95；SR-013 |
 | 2026-11-27 | 0.3.61 | kimi-k3.1-pro | §2.4、修订记录 | 回填 SR-020～022 限定静态 PASS、原文证据和各自 03 NOT_RUN | 固定 Host/Runtime 移交证据且不改变产品状态 | Issue #95；SR-020～022 |
 | 2026-11-27 | 0.3.62 | kimi-k3.1-pro | §2.4、修订记录 | 回填 SR-017 静态 PASS/FAIL 分层及 F06 缺项 | 不把 Draft 候选或静态权责映射冒充 Plugin 实施/验收 | Issue #95；SR-017 |
+| 2026-11-27 | 0.3.63 | kimi-k3.1-pro | §2.4、修订记录 | 回填 SR-018/019 静态 FAIL/PASS 分层及联合证据缺项 | 不用历史 Owner/peer 实现或场景替代当前静态正确性和运行验收 | Issue #95；SR-018/019 |

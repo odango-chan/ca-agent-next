@@ -19,8 +19,8 @@
 | SR-013 | [Compiler when / Artifact 归档](SR-013.md) | AC-013-01：FAIL（归档一致性）；历史结果与本轮复跑分开 |
 | SR-016 | Skill Studio 历史实现（进行中） | MIG-016-01、AC-016-09 设计对照 |
 | SR-017 | [业务 Plugin](SR-017.md) | AC-017-01/03/04 静态 PASS；02 FAIL（设计缺项）；运行 NOT_RUN |
-| SR-018 | Owner（进行中） | AC-018-01、02（除 Release）、04 |
-| SR-019 | Mock AMF（进行中） | AC-019-01/02/04 |
+| SR-018 | [Owner](SR-018.md) | AC-018-01/02 FAIL；04 静态 PASS；Release 与运行 NOT_RUN/BLOCKED |
+| SR-019 | [Mock AMF](SR-019.md) | AC-019-01/04 静态 PASS；02 FAIL；03 NOT_RUN |
 | SR-020 | [Python Host](SR-020.md) | AC-020-01/02/04 静态 PASS；03 NOT_RUN |
 | SR-021 | [Go Native Host](SR-021.md) | AC-021-01/02/04 静态 PASS；03 NOT_RUN |
 | SR-022 | [Runtime 执行内核](SR-022.md) | AC-022-01/02/04 静态 PASS；03 NOT_RUN |
