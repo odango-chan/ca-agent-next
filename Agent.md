@@ -38,8 +38,8 @@ DeepSeek Harness 默认使用 Goal 模式。按[SR 管理规范](docs/规范/SR%
 - Tool 是 Plugin 导出的 Callable Operation，不是独立进程、Manager 或 Registry。
 - 不建立第二 Provider Manager、Tool Registry、Codec Manager、Event Registry 或第二套 IPC。
 - 每个 Skill 必须有 SKILL.md；schemas/、scripts/、references/、assets/ 是 Package 根目录共享资源，Assurance 可选且只含 contract.yaml / procedure.yaml / predicates.yaml。无 Assurance 仍可使用共享资源并仅 LLM-guided；有效发布 Assurance Artifact 支持 Deterministic 和 LLM-guided；无效 Assurance Artifact 导入失败。
-- `when` 是有 Assurance Skill 的 SKILL.md Front Matter 可选 CA-Agent 扩展 CEL 选择表达式；无 Assurance Skill 不声明 when；predicates.yaml 只用于执行期业务判断。
-- Skill 源编写与评审必须遵循[中央 SKILL 作者规范](docs/规范/SKILL作者规范.md)；CA-SL 1.6.0 完整语言规范仍是机器语义的唯一权威。作者规范还规定 Package 根目录共享 Schema / Script、Script Registry、Host Resource Read / Script Execution、SourcePath / arguments、when、Evidence / UNKNOWN、原有 Node 四阶段与拆分 / 合并、注释原则及 AI Authoring 约束；Skill 层不定义 Wait / await / polling，异步由 Tool / Provider / SMF Operation 与 Host Runtime 负责；v1alpha5 原文只读留档，不提供兼容或自动迁移。
+- `when` 是有 Assurance Skill 的 `assurance/contract.yaml` 可选顶层 CEL 选择表达式；Compiler 从 Contract 读取、校验并编译；SKILL.md Front Matter 不声明 when，出现时按未知字段拒绝；无 Assurance Skill 没有 Contract、不声明 when；predicates.yaml 只用于执行期业务判断。
+- Skill 源编写与评审必须遵循[中央 SKILL 作者规范](docs/规范/SKILL作者规范.md)；CA-SL 1.6.0 完整语言规范仍是机器语义的唯一权威。作者规范还规定 Package 根目录共享 Schema / Script、Script Registry、Host Resource Read / Script Execution、SourcePath / arguments、Contract.when、Evidence / UNKNOWN、原有 Node 四阶段与拆分 / 合并、注释原则及 AI Authoring 约束；Skill 层不定义 Wait / await / polling，异步由 Tool / Provider / SMF Operation 与 Host Runtime 负责；v1alpha5 原文只读留档，不提供兼容或自动迁移。
 - Agent 只消费外部已发布 Skill Bundle；存在 Assurance 时同时消费正式 Runtime Artifact。无 Assurance Bundle 可携带共享资源而不生成 Compiler Artifact；Agent 不调用 Compiler Check/Build/Inspect/Verify，不建立 Skill Admission，不把 Assurance 作者源作为运行时 Artifact。
 - Skill 选择先于模式选择；精确 Continuation 恢复原 Run，不重新选择 Skill。
 - SkillCatalog 由 Core/Host 拥有；更新原子切换 generation；在途 Invocation 固定 generation。
@@ -182,3 +182,4 @@ review_scope:
 | 2026-11-27 | GPT-6.2（ChatGPT） | §3、修订记录 | 删除 Host Script Execution 的逐脚本与 Host 配置双门禁，改为 LLM 与 Assurance 共用 Registry / Script Runner | 保持模型与确定性执行能力一致，同时禁止任意代码、路径和命令 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | GPT-6.2（ChatGPT） | §3、修订记录 | 明确 when 位于有 Assurance Skill 的 SKILL.md Front Matter；无 Assurance Skill 不声明 when；Contract 不再承载选择条件 | 对齐已确认的 SKILL 入口方案，防止 Harness 继续把 when 写入 contract.yaml 或无 Assurance 包 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | GPT-6.2（ChatGPT） | §1、§3、§7 | 合并 PR #48 长任务检查点 / Goal 恢复规则与 PR #52 中央 SKILL 作者规范、共享资源、统一 Script Runner 和 Front Matter.when 边界 | 使仓库入口同时反映当前长任务治理与 1.6.0 作者规则，避免遗漏评审快照或将 when 写入 Contract | Issue #92/#49；IR-008/009；SR-031/032 |
+| 2026-11-27 | GPT-6.2（ChatGPT） | §3、修订记录 | 恢复 when 唯一归属为 assurance/contract.yaml 顶层；SKILL.md Front Matter 不声明 when；Compiler 从 Contract 读取、校验并编译 | 撤销误引入的 Front Matter 入口，确保 Harness 遵循 CA-SL / EC02 权威契约 | Issue #49；IR-008；SR-013/032 |
