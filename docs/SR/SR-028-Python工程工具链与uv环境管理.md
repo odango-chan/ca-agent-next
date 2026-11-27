@@ -55,7 +55,7 @@
 
 ### 4.1 设计依赖
 
-- G02 v0.2.6 与 SR-002 v0.2.10 的 Python distribution/build metadata 是稳定输入；SR-003 v0.3.11 的 Go Echo 构建和 Plugin 测试是本地完整测试的直接前置。
+- G02 v0.2.7 与 SR-002 v0.2.10 的 Python distribution/build metadata 是稳定输入；SR-003 v0.3.11 的 Go Echo 构建和 Plugin 测试是本地完整测试的直接前置。
 - 设计评审不依赖 SR-001 的代码合并；可以独立评审 uv 与 worktree 方案。
 
 ### 4.2 实施依赖
@@ -119,7 +119,7 @@ Host Smoke 必须退出 0，成功 stdout 符合演示验收基线，stderr 为�
 
 ## 7. 当前状态与停止条件
 
-SR-028 当前仍为 DRAFT。最新第五轮独立复评 Review #6083641266 对固定 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2` 给出 CHANGES_REQUESTED（0 P0 / 1 P1 / 3 P2）。本轮按 Issue #12 仅整改 G02/SR-028 与治理文档；AC-028-01～10 的产品执行全部 NOT_RUN；不得创建实施 Issue、修改 `pyproject.toml`、生成 `uv.lock`、添加 `.python-version`、修改 Workflow 或向 DeepSeek Harness 发出产品实施提示词。整改后必须对新 Head 独立复评。
+SR-028 当前仍为 DRAFT。最新第六轮独立复评 Review #6083872622 对固定 Head `2d20a128a1574103d709d82f6c426580ecb47f48` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2` 给出 CHANGES_REQUESTED（0 P0 / 1 P1 / 2 P2）。本轮按 Issue #12 仅整改 G02/SR-028 与治理文档；AC-028-01～10 的产品执行全部 NOT_RUN；不得创建实施 Issue、修改 `pyproject.toml`、生成 `uv.lock`、添加 `.python-version`、修改 Workflow 或向 DeepSeek Harness 发出产品实施提示词。第六轮整改已推送，必须对新 Head 进行第七轮独立复评。
 
 若评审发现 G02 与 SR-002 的 setuptools/运行时依赖约束冲突，先修订设计，不允许实施者自行选择替代后端或把开发依赖升级为运行时依赖。
 
