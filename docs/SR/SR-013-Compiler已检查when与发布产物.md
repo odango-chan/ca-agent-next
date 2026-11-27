@@ -272,7 +272,7 @@ ca-skills 的 Skill Bundle 组装与发布由 SR-027 负责；Next 导入与运�
 ### 8.1 冻结语义
 
 - 正式 CA-SL 1.6.0 Interface Package Schema 必须允许合法的 Schema-only Package：至少一个显式 Schema export，Capability exports = 0，Callable exports = 0；不得要求 ToolCatalog、Evidence 或 Runtime Binding，也不得生成合成 Tool / Callable。
-- Schema-only Package 只有在 Skill 的 Contract.contexts 显式指向该 Package 的 Schema export 时，才进入该 Skill 的显式依赖闭包；未声明依赖、未导出 Schema ID 或未闭合的 $ref 必须 fail-closed。
+- **Host Context** Schema-only Package 只有在 Skill 的 Contract.contexts 显式引用其 Schema export 时，才进入闭包；新增 **3GPP Common** Schema-only Package 允许由 Skill 自有 requestSchema 中的精确公共类型 $ref（与显式依赖 alias）引用进入闭包，根仍属于 Skill。两类均必须拒绝未声明依赖、未导出 Schema ID 或未闭合的 $ref，且不生成 Capability/Callable Scope。
 - Compiler 必须区分 **Capability roots** 与 **Schema dependency closure**。零 Capability roots 是合法情况；Schema-only Package 可形成非空 Schema dependency closure，但不得产生 Capability grant、Callable binding、Tool allowlist 或外部 Tool Effect。
 - 只有当 Skill 没有任何外部 Capability 引用、也没有任何外部 Schema 引用时，整个 Package dependency closure 才为空。不得把空 Capability roots 与空 Package dependency closure 混为一谈。
 - 精确 Manifest / BuildRequest / DependencyInspection 字段由 Compiler Owner 在正式 1.6.0 Schema / Golden 中冻结；本 AC 只冻结上述语义，不预先发明 wire field 名称。
