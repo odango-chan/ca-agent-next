@@ -1,7 +1,7 @@
 # SKILL 作者规范（CA-SL 1.6.0）
 
 > 文档类型：Skill 作者规范（Next 中央规范性设计稿）  
-> 文档版本：0.2.1  
+> 文档版本：0.2.2  
 > 状态：**DRAFT / REVIEW_REQUESTED**（作者规则待独立评审；CA-SL 1.6.0 尚未由 ca-skills 正式发布）  
 > 语言目标：CA-SL 1.6.0 only；不兼容任何历史作者语法  
 > 功能归属：EC01 — Skill 作者规范与业务 Skill；消费端关联 F02 / F09  
@@ -194,7 +194,7 @@ Node 不是 HTTP 请求、函数调用、文件、协议报文或 Provider backe
 - **最终验证 Node：**当最终 Goal 需要独立聚合多个前序结果时，可以使用只含 Postcondition 的 Node；其聚合 PASS 必须直接路由 SUCCEEDED。
 - **纯 Observation Node：**当一个 READ 是独立业务步骤或其证据要单独消费时，可以使用只含 Observation 的 Node。
 - **纯 Script Node：**只有当本地纯转换具有明确的数据处理边界且无法用简单 arguments 表达时才使用；不得借 Script 隐藏副作用。
-- **不得创建：**start-only Node、wait-only Node、reconcile-only Node、HTTP-only Node、Provider handler Node、单 Predicate Node 或仅为增加图节点数量而存在的空 Node。此处的 wait-only Node 仅作为明确禁止项，不表示 CA-SL 存在 Wait 语法。
+- **不得创建：**start-only Node、wait-only Node、reconcile-only Node、HTTP-only Node、Provider handler Node，或仅为承载一个中间 Predicate 判断而从同一业务动作中拆出的 Predicate-only Node；不得仅为增加图节点数量创建空 Node。**例外：**最终 Goal 验证 Node 可以只含 Postcondition，即使其 `predicates` 列表只有一个 Predicate；该阶段聚合 PASS 必须直接路由 `SUCCEEDED`。此例外不允许把普通中间 Predicate 拆成 Node。此处的 wait-only Node 仅作为明确禁止项，不表示 CA-SL 存在 Wait 语法。
 
 ### 6.5 Node 命名
 
@@ -631,3 +631,5 @@ Apply 前仍须由用户确认，并对同一候选源码与依赖锁执行正�
 | 2026-11-27 | 0.2.0 | GPT-6.2（ChatGPT） | §3～§4、§6.7、§9～§10、修订记录 | 将 `when` 恢复为 assurance/contract.yaml 顶层唯一入口；SKILL.md Front Matter 不声明 when；拆分 MAS 自定义 QoS 示例与 3GPP 原版 OpenAPI Create 示例，并将 requestType 修正为字符串枚举 | 撤销误引入的 Front Matter 方案；避免把自定义字段误当作 3GPP SBI Schema | Issue #49；IR-008/009；SR-013/031/032；F02/F08/F09 |
 
 | 2026-11-27 | 0.2.1 | GPT-6.2（ChatGPT） | §4.3、§10、修订记录 | 修正 3GPP Request Schema 根为纯 $ref OAS3 引用别名或本地闭合 G.4 根两种明确形式；说明 requestType 可选并必须用 has 守卫；补充 Front Matter.when 在有/无 Assurance 两种包中均拒绝的作者验收 | 消除 G.4 闭合约束与原版 OAS3 直引冲突，防止 CEL 对可选字段不安全读取和双入口回归 | Issue #49；IR-008/009；SR-013/032；PR #52 |
+
+| 2026-11-27 | 0.2.2 | GPT-6.2（ChatGPT） | §6.4、修订记录 | 明确禁止人为拆出的中间 Predicate-only Node，但允许最终 Goal Postcondition-only Node 仅含一个 Predicate | 消除“单 Predicate Node 禁止”与“最终 Postcondition-only Node 允许”之间的作者歧义 | Issue #49；IR-008；SR-032；PR #52 |
