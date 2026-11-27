@@ -1,12 +1,12 @@
 # SR 总索引
 
-> 文档类型：软件需求索引
-> 文档版本：0.3.33
+> 文档类型：软件需求索引\
+> 文档版本：0.3.34
 > 状态：4 VERIFIED（SR-001/SR-002/SR-003/SR-024）；1 READY（SR-025）；1 IMPLEMENTED（SR-015）；21 DRAFT；SR-003 仅模块 AC-003-01～04 VERIFIED；系统 EX NOT_RUN
-> 修订日期：2026-11-27
-> 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)
+> 修订日期：2026-11-27\
+> 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
-> 本文局部非目标：以本文范围与非目标章节为准；无额外扩展
+> 本文局部非目标：以本文范围与非目标章节为准；无额外扩展\
 
 跨仓任务从 Next 发起。先在本仓登记覆盖目标仓和修改范围的 SR，达到 READY 后再切换到目标仓实施，目标仓结果回填本仓 SR。既有外部 Issue 可作为关联入口。详见《SR 管理规范》§8.1。
 
@@ -142,7 +142,10 @@
 | 2026-11-26 | 0.3.27 | GPT-6.2（ChatGPT） | §1～§4 | 回填 ca-agent-demo PR #253 合并、Issue #252 关闭及 AC-024-01～07 PASS；SR-024 转 VERIFIED；同步 SR-003 的设计 READY / 实施 IN_PROGRESS 与本地模块 AC 证据 | 消除 SR-024 已完成仍显示 READY 的过期状态，并区分 SR-003 设计门禁、实施进度与未运行的 CI/系统 EX | Issue #12；ca-agent-demo #252/#253；SR-024 v0.1.12；SR-003；PR #34 |
 | 2026-11-26 | 0.3.28 | GPT-6（ChatGPT） | 文档头、§3.2、修订记录 | 保留 SR-024 VERIFIED 与 SR-003 设计 READY / 实施 IN_PROGRESS；回填 PR #34 Merge 候选 Base SHA | 与最新恢复分支一致，不能将历史 AC 结果升级为候选 Head PASS | Issue #28；PR #34 |
 | 2026-11-26 | 0.3.29 | GPT-6（ChatGPT） | 文档头、§3、修订记录 | 以新 Head 的 CI success 替换等待验证状态 | 不将模块测试等同系统验收 | Issue #28；PR #34；[CI #45814208662](https://github.com/odango-chan/ca-agent-next/actions/runs/45814208662) |
-| 2026-11-26 | 0.3.30 | GPT-6.2（ChatGPT） | 文档头、§2～§4 | SR-025 v0.1.7 设计 READY 并创建 ca-client-tools #43；更新 27 项 SR 统计为 3 VERIFIED / 2 READY / 1 IMPLEMENTED / 21 DRAFT；回填 PR #34 MERGED 到恢复分支 | 完成 SR READY → 目标仓 Issue 的交接，并纠正 PR #34、SR-025 和总统计的过期状态 | Issue #12、#28；IR-006；SR-003、SR-025；ca-client-tools #43；PR #34 |
-| 2026-11-26 | 0.3.31 | GPT-6.2（ChatGPT） | §1、§3 | 将 SR-025 版本同步为 v0.1.7；补齐 PR #34 MERGED 到恢复分支与 SR-025 READY/#43 OPEN 的索引摘要 | 保持 SR 清单、顶部摘要和目标仓 Issue 入口一致 | Issue #12、#28；IR-006；SR-003、SR-025；PR #34；ca-client-tools #43 |
+| 2026-11-26 | 0.3.30-restore | GPT-6（ChatGPT） | §1～4 | SR-003 IMPLEMENTED，主状态统计更新为 3/2/22 | 满足实现合并后的 SR 状态回填 | Issue #28；PR #34；Merge `32c7c1be` |
+| 2026-11-26 | 0.3.30-refresh | GPT-6.2（ChatGPT） | 文档头、§2～§4 | SR-025 v0.1.7 设计 READY 并创建 ca-client-tools #43；更新 27 项 SR 统计为 3 VERIFIED / 2 READY / 1 IMPLEMENTED / 21 DRAFT；回填 PR #34 MERGED 到恢复分支 | 完成 SR READY → 目标仓 Issue 的交接，并纠正 PR #34、SR-025 和总统计的过期状态 | Issue #12、#28；IR-006；SR-003、SR-025；ca-client-tools #43；PR #34 |
+| 2026-11-26 | 0.3.31-restore | GPT-6（ChatGPT） | 文档头、§1～4、修订记录 | SR-003 模块 VERIFIED，27 项统计 4 VERIFIED / 1 IMPLEMENTED / 22 DRAFT；附双平台 CI、merge tree 证据 | 与权威 SR-003/Acceptance 最新状态一致，EX 保持 NOT_RUN | Issue #28；PR #34/#41；CI #45815167442/#45817800342 |
+| 2026-11-26 | 0.3.31-refresh | GPT-6.2（ChatGPT） | §1、§3 | 将 SR-025 版本同步为 v0.1.7；补齐 PR #34 MERGED 到恢复分支与 SR-025 READY/#43 OPEN 的索引摘要 | 保持 SR 清单、顶部摘要和目标仓 Issue 入口一致 | Issue #12、#28；IR-006；SR-003、SR-025；PR #34；ca-client-tools #43 |
 | 2026-11-27 | 0.3.32 | GPT-6.2（ChatGPT） | 文档头、§1～§4 | 将 SR-003 从旧分支快照 READY/IN_PROGRESS 纠正为当前模块 VERIFIED；SR-025 保持 READY，统计更新为 4 VERIFIED / 1 READY / 1 IMPLEMENTED / 21 DRAFT | 保留恢复分支 PR #41/#42 后续模块验收证据，避免状态分叉导致 SR 索引倒退 | Issue #53；Issue #12；SR-003、SR-025；PR #34/#41/#42；ca-client-tools #43 |
 | 2026-11-27 | 0.3.33 | GPT-6.2（ChatGPT） | §4、修订记录 | 明确 PR #13 CLOSED/superseded，回填 restore HEAD `34e99e0`、PR #34/#41/#42 合并链与 PR #54 仅进入 restore 的边界 | 修复 PR #13 OPEN/CLOSED 冲突，并确保 SR 状态索引不把恢复分支合并误报为 main 集成 | Issue #53；Issue #12；PR #13/#34/#41/#42/#54 |
+| 2026-11-27 | 0.3.34 | GPT-6.2（ChatGPT） | §4、修订记录 | 保留 0.3.30/0.3.31 restore 与 refresh 两侧的原始修订记录并增加来源后缀 | 避免同号历史记录互相覆盖；不改变 27 项权威 SR 状态及 4/1/1/21 统计 | Issue #53；PR #54；SR-003、SR-025 |

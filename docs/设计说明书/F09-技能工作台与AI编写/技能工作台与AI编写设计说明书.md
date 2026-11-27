@@ -1,11 +1,11 @@
 # 技能工作台与AI编写设计说明书
 
-> 文档类型：设计说明书
-> 文档版本：0.3.12
-> 状态：目标设计基线待评审；当前实现快照 2026-11-27：#272 MERGED、#276 OPEN/DRAFT/DIRTY、#269 OPEN；SR-024 VERIFIED、SR-025 READY
-> 修订日期：2026-11-27
-> 全局评审范围：继承根目录 Agent.md 的 review_scope
-> 本文局部非目标：生产级准入、额外 package-level digest、签名和 Trust Registry；仅保留 Compiler v2.1.0 Interface Package schema 明确要求的 `files[].sha256`
+> 文档类型：设计说明书\
+> 文档版本：0.3.13\
+> 状态：目标设计基线待评审；当前实现快照 2026-11-27：#272 MERGED、#276 OPEN/DRAFT/DIRTY、#269 OPEN；SR-024 VERIFIED、SR-025 READY\
+> 修订日期：2026-11-27\
+> 全局评审范围：继承根目录 Agent.md 的 review_scope\
+> 本文局部非目标：生产级准入、额外 package-level digest、签名和 Trust Registry；仅保留 Compiler v2.1.0 Interface Package schema 明确要求的 `files[].sha256`\
 
 关联 IR-006、SR-015、SR-016、SR-020（参考宿主架构审计）、SR-024（Host Context Publisher）、SR-025（MAS Owner Publisher）；Compiler 接口以 [EC02 Development Build 设计](../EC02-Compiler/Development%20Build设计.md) 为准。基线为 [docs/architecture/studio-boundaries.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/79bd2c3f64a90e7f0f169204c866a3218655bab1/docs/architecture/studio-boundaries.md)、[docs/design/ai-procedure-authoring.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/79bd2c3f64a90e7f0f169204c866a3218655bab1/docs/design/ai-procedure-authoring.md)。
 
@@ -56,7 +56,7 @@ Skill Studio 的依赖导入负责**获取、验证和固定原始包快照**，
 | `mas` | `urn:openamsm:mas:tool-contracts` | `tool-catalog`（ca-client-tools v1.2.0 Owner source） | SR-025 READY；Publisher 尚未实施，当前 lock 仍为 `tool-catalog` |
 | `ca-context` | `urn:connectionagent:ca:host-context` | `schema-bundle`（Host Development fixture） | SR-024 VERIFIED；Publisher 已合并，ZIP 尚未导入 Studio lock；当前仍为 `schema-bundle` |
 
-项目另预加载 `ca-client`，其 Package ID 为 `urn:wtlab:ca-client-tools:openamsm-sbi-interface`，来自已发布 `ca-client-tools_interface_1.1.0.zip`。它导出十一项 public READ Tools / 两个 Capabilities，用于只读 SBI Query IntelliSense；它**不是** `mas` Owner contract，也不是 `ca-context`，当前 Contract 未声明它为根。Studio/Compiler 不得推断替换。
+项目另预加载 `ca-client`，其 Package ID 为 `urn:wtlab:ca-client-tools:openamsm-sbi-interface`，来自已发布 `ca-client-tools_interface_1.2.0.zip`。它导出十一项 public READ Tools / 两个 Capabilities，用于只读 SBI Query IntelliSense；它**不是** `mas` Owner contract，也不是 `ca-context`，当前 Contract 未声明它为根。Studio/Compiler 不得推断替换。
 
 要让当前 MAS Example 使用 Compiler v2.1.0 Development Build，Owner 与 Host 必须分别发布正式 `connectionagent.io/interface-package/v1alpha1` 包。MAS Owner Publisher 由 [SR-025](../../SR/SR-025-MAS%20Owner%20Interface%20Package%20Publisher.md) 负责；Host Context Publisher 由 [SR-024](../../SR/SR-024-Host%20Context%20Interface%20Package%20Publisher.md) 负责；Studio 只导入发布物，不代替 Publisher 组包。
 
@@ -152,7 +152,7 @@ Package Explorer、LSP、Problems 与 AI Workbench 必须区分源码诊断、�
 | Host Context Interface Package Publisher | VERIFIED / NOT_IMPORTED | SR-024；ca-agent-demo PR #253 MERGED，AC-024-01～07 PASS；ZIP 仍未导入 Studio lock |
 | Default Host Context Example provenance | IMPLEMENTED（仅默认 Example 专用路径） | `files.json` 显式声明 `sourceStatus=DEVELOPMENT_FIXTURE`；`prepareExampleHostContextDependency` 校验来源身份并将完整 `source` 写入 `skillc.lock/v0.1`；源码固定在 Studio main `79bd2c3f64a90e7f0f169204c866a3218655bab1` |
 | Ordinary ZIP sourceStatus provenance policy / reload | NOT_IMPLEMENTED / NOT_VERIFIED | 普通 ZIP `acquireInterfaceZip` 只保存 upload/contentDigest/packageId/version/publisher，不全局生成 `sourceStatus`；正式 ZIP 导入后的 provenance/reload 仍由 SR-016 / Studio #261/#269 验收 |
-| Real released ca-client-tools v1.2.0 as Compiler root | NOT_RUN | 需显式 `ca-client` synthetic Contract 正例；此 Provider 包不替代 MAS Owner Package |
+| Real released `ca-client-tools_interface_1.2.0.zip` as Compiler root (SHA-256 `e8ddb7095c187507da1d0008c6941e468aba7363c2f9a73f2794398ddded5196`) | NOT_RUN | 需显式 `ca-client` synthetic Contract 正例；此 Provider 包不替代 MAS Owner Package |
 | No-root UI state | NOT_IMPLEMENTED | 不调用 Compiler、无 Artifact、无 `NOT_ADMITTED` |
 
 #272 已合并，只证明 request builder 切片进入 main；其 merge SHA 为 `a8633553615d786e360a62c2b0042a27ae92d9d3`，当前 main 为 `79bd2c3f64a90e7f0f169204c866a3218655bab1`。#276 仍 OPEN / DRAFT，base `3b3c4ac9d4b3a2f2e2380793d028d92f24c62c27` 未对齐当前 main、GitHub 报告 DIRTY；历史 HEAD 检查不构成当前 exact-head 验收。PR #296 已 MERGED（merge `73523df2f7538ad51d37f1eaca2a40ab07c1e9a1`），但跟踪 Example replacement 的 Issue #295 仍 OPEN；必须以当前 main 重新执行相关验收。
@@ -189,3 +189,4 @@ EC06 历史决策已统一归档于中央仓：[ADR-0001 Source-first Visual](..
 |  2026-11-27  |  0.3.10  |  GPT-6.2（ChatGPT）  |  文档头、§4.5、§7  |  将 Studio 当前 main 更新为 `79bd2c3`；确认 #272 MERGED、#276 OPEN/DRAFT/DIRTY、#269/#279/#290/#295 OPEN，以及 SR-024 VERIFIED / SR-025 READY ；原因： 使用本轮实际查询的 Studio main，继续区分 Publisher 完成、Studio lock 消费、Worker/Verify 和产品验收  |  Issue #53；IR-006；SR-016、SR-024、SR-025；Studio #261/#269/#272/#276/#279/#290/#295；ca-client-tools #43  |
 | 2026-11-27 | 0.3.11 | GPT-6.2（ChatGPT） | 文档头、§4.5、§7、修订记录 | 分开记录 #272 merge SHA 与当前 main；确认默认 Host Context Example provenance 已实现并持久化，普通 ZIP provenance/reload 与双根 Build/Verify 仍未完成；记录 #296 merge 与 #295 Issue 状态；规范化修订表 | 避免把默认 fixture 专用实现误报为未实现或扩大为普通 ZIP/产品验收；修复 Studio PR/main 身份混淆与静态表格列数错误 | Issue #53；IR-006；SR-016、SR-024、SR-025；Studio #261/#267/#269/#270/#272/#276/#279/#290/#295/#296 |
 | 2026-11-27 | 0.3.12 | GPT-6.2（ChatGPT） | §7、修订记录 | 将当前产品审计补充日期更新至 2026-11-27，保持 #295 Issue OPEN 与 #296 已合并修复的边界 | 防止将历史回归现象误报为当前 main 仍未修复，同时不把 PR merge 扩大为完整 Product Acceptance | Issue #53；Studio #279/#290/#295/#296 |
+| 2026-11-27 | 0.3.13 | GPT-6.2（ChatGPT） | §4.4～§4.6、修订记录 | 将 `ca-client` IntelliSense-only Interface Package 与 AC-016-06 统一至已发布 `ca-client-tools_interface_1.2.0.zip`，固定 Release asset SHA-256；保留 MAS Owner source 与 Owner Publisher 的独立边界 | 消除 F09 与 SR-016 的版本冲突，区分 Provider v1.2.0 已发布的公共 READ Interface Package 和尚未实施的 MAS Owner Publisher | Issue #53；SR-016 v0.3.20；ca-client-tools Release v1.2.0；SR-025 |
