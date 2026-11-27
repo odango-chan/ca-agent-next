@@ -1,10 +1,10 @@
 # CA-SL 1.6.0 完整语言规范（中央设计稿）
 
 > 文档类型：CA-SL 作者语言规范（中央规范性设计稿）
-> 文档版本：0.2.3
+> 文档版本：0.2.4
 > 语言版本：CA-SL 1.6.0
 > languageTarget 候选：connectionagent.io/v1.6.0（本设计建议值；发布前由 ca-skills 与 Compiler Owner 在正式 Schema / Golden 中确认）
-> 状态：**DRAFT / REVIEW_REQUESTED**；CA-SL 1.6.0 唯一正式语言设计，Assurance 可选；有 Assurance Skill 时 `SKILL.md` Front Matter.when 为 CA-Agent 扩展；无 Assurance Skill 不声明 when；未发布、未冻结。
+> 状态：**DRAFT / REVIEW_REQUESTED**；CA-SL 1.6.0 唯一正式语言设计，Assurance 可选；有 Assurance Skill 时 `assurance/contract.yaml` 可声明顶层 `when`；`SKILL.md` Front Matter 不声明 when；无 Assurance Skill 不声明 when；未发布、未冻结。
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 修订日期：2026-11-26
 > 规范所有者：ca-agent-next（中央设计）；正式作者 Schema / Golden / Release 由 ca-skills 发布
@@ -19,7 +19,7 @@
 
 本文中的 MUST / MUST NOT / REQUIRED / SHOULD / SHOULD NOT / MAY 按 RFC 2119 / RFC 8174 理解。未特别说明时，“拒绝”指 Compiler Check / Link 阶段 fail-closed，且不得产生可发布 Runtime Artifact。
 
-CA-SL 1.6.0 定义 Skill 可选 Assurance 的作者语言。SKILL.md Front Matter 以 Agent Skills Specification 为基础；CA-Agent 增加可选扩展字段 `when`，但仅当 Skill 同时存在 `assurance/` 时允许声明。`when` 是包级 Skill 选择元数据，不属于 `assurance/contract.yaml` 的 Contract 字段或 CA-SL Contract YAML 文法；Compiler 从 SKILL.md Front Matter 读取并编译它。没有 Assurance 的 Skill 不声明 `when`。语言负责表达确定性执行契约，不负责 Agent 推理、Plugin 生命周期、Provider 私有实现、Owner 业务状态或 Compiler 的部署。
+CA-SL 1.6.0 定义 Skill 可选 Assurance 的作者语言。SKILL.md Front Matter 按 Agent Skills Specification 处理，CA-Agent 不在其中增加 `when` 扩展。`when` 是 `assurance/contract.yaml` 的可选顶层 Contract 字段，表达包级 Skill 选择条件；Compiler 从唯一 Contract 读取、类型检查并编译它。没有 Assurance 的 Skill 没有 `contract.yaml`，因此不声明 `when`；若 SKILL.md Front Matter 出现 `when`，必须按未知字段拒绝，不得静默忽略或兼容。语言负责表达确定性执行契约，不负责 Agent 推理、Plugin 生命周期、Provider 私有实现、Owner 业务状态或 Compiler 的部署。
 
 1. 新作者语言和新产品链唯一目标为 CA-SL **1.6.0**。
 2. 新 Parser、Check、Link、Build、Verify、Runtime Artifact、Bundle、Agent Importer / Runtime、Skill Studio / LSP 只支持 1.6.0。
@@ -49,23 +49,23 @@ skill-root/
     predicates.yaml
 ~~~
 
-- SKILL.md：Agent-facing 身份、用途和指导；可在存在 Assurance 时声明 CA-Agent 扩展 `when`；不声明业务 Capability Grant 或 Procedure。
+- SKILL.md：Agent-facing 身份、用途和指导；Front Matter 只遵循 Agent Skills Specification，不声明 `when`、业务 Capability Grant 或 Procedure。
 - schemas/：Skill Package 自有 Schema 资源；LLM 可读取，Host 可用于结构化输入/输出校验，Assurance 可引用。文件使用 YAML 1.2 表示 JSON Schema 数据模型，扩展名为 `.schema.yaml`；JSON Schema 语义仍遵循 §12 的 G.4 Profile。
 - scripts/：Skill Package 自有 Python Script 源码；LLM 可读取，Assurance 可引用；所有登记脚本均通过统一 Host Script Runner 执行。
 - scripts/manifest.yaml：Script ID、精确入口、用途、输入/输出 Schema；它是资源索引，不是第二份 Skill Descriptor，也不授予业务 Capability。
 - references/、assets/：按需读取的共享参考资料和静态资源，不是隐式 Runtime 输入。
-- assurance/contract.yaml：Request Schema、Context、依赖、业务 Capability Grants、全局前置引用和动作预算；不包含 Skill 选择字段 `when`。
+- assurance/contract.yaml：唯一 Contract；包含可选顶层 `when`、Request Schema、Context、依赖、业务 Capability Grants、全局前置引用和动作预算。
 - assurance/procedure.yaml：唯一入口 Procedure DAG、显式输入绑定、Node 四阶段和阶段路由。
 - assurance/predicates.yaml：可复用 Predicate 定义及其参数 / Evidence 契约；没有 Predicate 时仍须存在合法空 PredicateSet。
 
-没有 assurance/ 的 Skill 仍可携带 schemas/、scripts/、references/ 和 assets/，并仅支持 LLM-guided；不得声明 `when`，由 Agent 基于 SKILL.md 语义进行候选选择。若无 Assurance 包声明 `when`，Importer 必须拒绝，不得静默忽略或把它当作无条件 Skill。LLM 可通过 Host Script Execution Capability 调用 `scripts/manifest.yaml` 登记的脚本；不设置逐脚本可调用标记或额外 Host 开关。存在 assurance/ 时，contract.yaml、procedure.yaml、predicates.yaml、被引用的共享 Schema / Script、依赖和所有静态语义必须全部有效，才同时具备 Deterministic 与 LLM-guided 两种模式。Assurance 无效时必须拒绝导入，不得静默降级。不得新增 constraint.yaml、activation.yaml、applicability.yaml、第二份 Skill Descriptor 或 Domain Contract Package；predicates.yaml 只描述执行期 Predicate，不参与 Skill 选择。
+没有 assurance/ 的 Skill 仍可携带 schemas/、scripts/、references/ 和 assets/，并仅支持 LLM-guided；由于没有 `contract.yaml`，不声明 `when`，由 Agent 基于 SKILL.md 语义进行候选选择。SKILL.md Front Matter 若出现 `when`，Importer 必须按未知字段拒绝，不得静默忽略或兼容旧入口。LLM 可通过 Host Script Execution Capability 调用 `scripts/manifest.yaml` 登记的脚本；不设置逐脚本可调用标记或额外 Host 开关。存在 assurance/ 时，contract.yaml、procedure.yaml、predicates.yaml、被引用的共享 Schema / Script、依赖和所有静态语义必须全部有效，才同时具备 Deterministic 与 LLM-guided 两种模式。Assurance 无效时必须拒绝导入，不得静默降级。不得新增 constraint.yaml、activation.yaml、applicability.yaml、第二份 Skill Descriptor 或 Domain Contract Package；predicates.yaml 只描述执行期 Predicate，不参与 Skill 选择。
 
 ## 3. 核心术语与所有权
 
 | 术语 | 1.6.0 定义 | 权威来源 |
 |---|---|---|
 | Skill | SKILL.md 与可选 Assurance 构成的可导入单元 | Skill Package |
-| Contract | Assurance 的公共输入、Context、依赖和 Capability Grant 作者契约；不承载 Skill 选择条件 | contract.yaml |
+| Contract | Assurance 的公共输入、Skill 选择条件、Context、依赖和 Capability Grant 作者契约 | contract.yaml |
 | Procedure | 静态确定性执行图 | procedure.yaml |
 | PredicateSet | 可复用的纯判断定义 | assurance/predicates.yaml |
 | Shared Resource | LLM、Host 和可选 Assurance 共用的 Schema / Script / references / assets；资源身份相对 Skill Package 根目录 | Skill Package root |
@@ -91,6 +91,7 @@ contract.yaml 是唯一 Contract。它不需要 apiVersion / kind 包装；语�
 
 | 字段 | 必需 | 语义与约束 |
 |---|---:|---|
+| when | 否 | 可选的纯 CEL 布尔 Skill 选择表达式；只读取 event.type 与 requestSchema 类型化的 input；Compiler 静态检查并编译 |
 | precondition | 否 | 单一全局门禁引用，精确为 NodeId.precondition；不是 Predicate 列表 |
 | requestSchema | 否 | Skill 公共请求 Schema 根的相对路径；有请求输入时声明 |
 | contexts | 否 | 一个映射，集中声明所有 Host Context 名称到精确 Schema 引用；不再建立平级 subject / facts / ingress 顶层字段 |
@@ -101,6 +102,7 @@ contract.yaml 是唯一 Contract。它不需要 apiVersion / kind 包装；语�
 示例：
 
 ~~~yaml
+when: 'event.type == "nsmf.create-sm-context" && input.requestType == "INITIAL_REQUEST"'
 precondition: validate-request.precondition
 requestSchema: schemas/create-request.schema.yaml
 dependencies:
@@ -126,7 +128,7 @@ Contract 的 precondition 是至多一个全局阶段引用；该引用必须指
 - requestSchema 指向 Skill Package 根目录下的 Skill 自有 Schema 资源，定义规范化 Event payload 的业务输入契约。源文件采用 YAML 1.2 序列化的 JSON Schema 数据模型（`.schema.yaml`）；Compiler 解析为 JSON 数据模型后按 G.4 JSON Schema Profile 校验。Schema 引用路径始终相对 Skill Package 根目录，不相对 assurance/。
 - Host 先验证 Plugin Event Schema，再独立验证 Skill Request Schema；两者不是同一 Schema，也不得把完整 3GPP multipart Schema 复制到 Skill。
 - requestSchema 根必须是闭合对象，明确 additionalProperties=false；完整 $ref 闭包必须可解析。
-- 对存在 Assurance 的 Skill，Front Matter `when` 是否存在与 Contract `requestSchema` 是否存在相互独立。只使用 event.type 的 when 不要求 requestSchema；when 访问 input 成员时必须在 `assurance/contract.yaml` 声明 requestSchema。无 Assurance Skill 不得声明 when。
+- 对存在 Assurance 的 Skill，Contract 顶层 `when` 与 Contract `requestSchema` 是否存在相互独立。只使用 event.type 的 `when` 不要求 requestSchema；`when` 访问 input 成员时必须在 `assurance/contract.yaml` 声明 requestSchema。无 Assurance Skill 没有 Contract，不声明 when；SKILL.md Front Matter `when` 是非法未知字段。
 - 只要 Contract 声明 requestSchema，即使 when 不存在或只读取 event.type，Compiler 仍必须验证并把 Request Schema 根和完整资源闭包发布到新 Runtime Artifact。
 - 未知 Schema 关键字、循环引用、开放对象、未解析引用或不支持方言均拒绝；不得静默忽略关键字或猜测类型。
 
@@ -187,7 +189,8 @@ Node 可以省略不适用阶段，但必须至少声明一个业务阶段。阶
 结构记法：`map(key: Type, ...)` 表示 YAML 映射；`list<Type>` 表示 YAML 序列；字段后的 `?` 表示可省略；`NonEmptyList<T>` 表示非空序列。
 
 ~~~ebnf
-Contract              = map(precondition?: NodeId ".precondition",
+Contract              = map(when?: CELExpression,
+                            precondition?: NodeId ".precondition",
                             requestSchema?: PackageSchemaPath,
                             contexts?: map<ContextName, QualifiedSchemaId>,
                             dependencies?: map<Alias, StablePackageId>,
@@ -380,9 +383,9 @@ scripts:
 
 所有 Script 必须是确定性、无外部副作用的本地计算：不得访问网络、任意宿主文件系统、子进程、环境秘密、时钟、随机数或动态加载；不得调用 Tool / Capability、Plugin 或 Owner，也不得制造 Receipt、Commit Proof 或 Evidence。需要外部副作用时必须调用正式业务 Capability。Host Script Execution 是受限的包内入口调用，不是模型提供代码的 Python REPL，也不构成生产级恶意代码隔离或 Admission。
 
-## 9. SKILL.md Front Matter.when 与 Skill 选择
+## 9. Contract.when 与 Skill 选择
 
-`when` 是 CA-Agent 扩展的可选 CEL 字段，位于 `SKILL.md` YAML Front Matter；仅当 Skill 存在有效 `assurance/` 时允许声明。它不是 `contract.yaml` 字段，也不属于 Procedure、PredicateSet、Precondition 或 Postcondition。无 Assurance Skill 不声明 `when`，其候选资格由 LLM-guided 语义选择决定。表达式必须是纯表达式，静态结果类型必须为 bool。
+`when` 是 `assurance/contract.yaml` 的可选顶层 CEL 字段，仅当 Skill 存在有效 `assurance/` 时允许声明。它不属于 SKILL.md Front Matter、Procedure、PredicateSet、Precondition 或 Postcondition。无 Assurance Skill 没有 Contract，不声明 `when`；SKILL.md Front Matter 出现 `when` 必须拒绝。表达式必须是纯表达式，静态结果类型必须为 bool。
 
 允许的变量只有：
 - event.type：Host 验证后的规范化 Event 类型字符串；
@@ -463,6 +466,8 @@ CA-SL 1.6.0 增加受限的跨 dialect 引用入口，不是把 OpenAPI 3.0 并�
 9. dependency alias、URI / pointer wire 编码、Source Bundle identity 与 Lock 字段由 ca-skills / Compiler Owner 在正式 CA-SL 1.6.0 Schema / Golden 冻结；本设计不预造机器字段名。
 
 此规则只解决原版 OpenAPI 组件的精确类型引用；不允许把完整 SBI multipart 复制进 Skill，不让 when 调用 Codec，也不改变 Host Context 只能通过 `Contract.contexts` 引用的约束。
+
+**PostSmContexts 的真实输入字段核对（固定 OpenAMSM 来源）：** Plugin 从 TS 29.502 `PostSmContexts.requestBody` 的 `multipart/related` 中提取 `jsonData`；该 JSON 对象引用 `#/components/schemas/SmContextCreateData`，因此规范化给 CEL 的 `input` 根对象就是 `SmContextCreateData`，`requestType` 的路径为 `input.requestType`。原版 `SmContextCreateData.requestType` 引用同文件 `#/components/schemas/RequestType`；`RequestType` 是字符串类型，枚举包含 `INITIAL_REQUEST`、`EXISTING_PDU_SESSION`、`INITIAL_EMERGENCY_REQUEST`、`EXISTING_EMERGENCY_PDU_SESSION`，并保留 OAS3 的未来字符串扩展分支。因此示例必须比较字符串 `"INITIAL_REQUEST"`，不得比较整数。固定来源为 OpenAMSM commit `dc83ccbf5be54dcc7112dd43ba95ea6fa5975550`、文件 `upstream/openamsm/lib/sbi/support/r19-20260402-openapitools-7.20.0/standard/TS29502_Nsmf_PDUSession.yaml`、Git blob `3572be0315a782691ce8b5546b7bc1d5b22fcd64`。Skill 的 `requestSchema` 根仍由 Skill 自己声明，并在显式 pin 的 Source Bundle 中直接引用精确 OAS3 Component；不复制或投影原件。
 
 ## 13. 静态检查与稳定诊断
 
@@ -548,7 +553,7 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 | §46～91 技术解释 / 历史裁决 | 作为设计依据审查；有规范效力的内容必须在本文件对应条款中重新表述，不直接引用旧条款作为 1.6.0 规范 |
 | 附录 A～K 决策、诊断、符合性、Schema / Evidence / CEL | 逐项审查；本文件 §12～13 重新冻结当前 Schema / CEL / 诊断；未纳入的历史诊断不自动成为 1.6.0 要求 |
 | 附录 L Node-entry Event Wait | **不纳入 CA-SL 1.6.0 Skill 作者语法**；不定义 Wait Node、wait 字段、wait.output、await 或 polling。异步协议完成由 Tool / Provider / SMF Operation 与 Host Runtime 负责；不得从历史附录恢复作者级 Wait 语法 |
-| 附录 M Optional Assurance / when | 采用 Optional Assurance 与 SKILL.md Front Matter.when 选择模型；按本文件 §2、§4、§9、§16 重新定义 1.6.0 |
+| 附录 M Optional Assurance / when | 采用 Optional Assurance 与 `assurance/contract.yaml` 顶层 `when` 选择模型；按本文件 §2、§4、§9、§16 重新定义 1.6.0 |
 
 任何历史条款未明确映射到本文件、F02、F03.05、F04、F05、F06、F08、F09 或 EC02 的规范性要求，必须在独立评审中作为遗漏处理；不得由实现者自行沿用旧语义。
 
@@ -590,3 +595,4 @@ Host Context Schema-only Package 仍只经 `Contract.contexts` 引用，与 Open
 | 2026-11-27 | 0.2.1 | GPT-6.2（ChatGPT） | §6.1、§8.3、§17 | 修正文法记法，明确 Predicate Script inputSchema 包含 Host Evidence projection，并将 v1alpha5 Node-entry Wait 附录明确裁决为不纳入 1.6.0 | 防止历史 Wait 语义回流，补齐 Predicate 输入 Schema 与原有语法迁移依据 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.2.2 | GPT-6.2（ChatGPT） | §1～§5、§9、EBNF、修订记录 | 将 `when` 定义为有 Assurance Skill 的 SKILL.md Front Matter 扩展字段，从 Contract YAML 中移除；明确无 Assurance Skill 不声明 when | 对齐已确认的 SKILL 入口方案，保证无 Assurance 包不依赖未编译的 CEL | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.2.3 | GPT-6.2（ChatGPT） | §1～§5、§9、§12、§19、修订记录 | 合并 CA-Agent Assurance-only SKILL.md Front Matter.when / 无 Assurance 禁用 when 规则与原版 3GPP OpenAPI 3.0 外部 Schema dialect、直接引用和闭包验证 | 保持选择期字段不进入 Contract YAML，同时确保 Compiler 可消费未投影的原版 OpenAPI schema | Issue #47/#49；IR-008/009；SR-013/031/032 |
+| 2026-11-27 | 0.2.4 | GPT-6.2（ChatGPT） | §1～§5、§6.1、§9、§12.1、§17、修订记录 | 恢复 `assurance/contract.yaml` 顶层 `when` 为唯一作者入口；SKILL.md Front Matter 不声明 when；补入 PostSmContexts / SmContextCreateData / RequestType 的固定原版 OpenAPI 字段与字符串枚举证据 | 撤销误引入的 Front Matter 入口，确保 Compiler、作者规范和 3GPP 原版契约一致 | Issue #49；IR-008/009；SR-013/031/032；F02/F08/F09 |
