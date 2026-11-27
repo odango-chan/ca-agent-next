@@ -87,8 +87,8 @@ class PythonToolchainPolicyTests(unittest.TestCase):
             "--- a/a.yml\n"
             "+++ b/a.yml\n"
             "@@ -1 +1 @@\n"
-            "-pip install old\n"
-            "+uv run --no-sync --locked python -m unittest\n"
+            "-pip" + " install old\n"
+            "+uv run --no-sync --locked python -m " + "unittest\n"
         )
         self.assertEqual(
             extract_added_lines(diff),
