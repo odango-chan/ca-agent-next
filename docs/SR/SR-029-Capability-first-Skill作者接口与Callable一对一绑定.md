@@ -1,8 +1,8 @@
 # SR-029：Capability-first Skill 作者接口与 Callable 一对一绑定
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.6\
-> 状态：DRAFT（实施主状态）。PR #46 第二轮独立评审（1bf748db）：CHANGES_REQUESTED（旧版拒绝、3/3 与导航一致性已修订，待复评）。产品验收依各 AC 单列。
+> SR 版本：0.2.7\
+> 状态：DRAFT（实施主状态）；第二轮独立评审 CHANGES_REQUESTED（历史结论）；第三轮自评 **DESIGN_READY_FOR_INDEPENDENT_REVIEW**（仅设计评审候选，非独立批准或实施 READY）；产品 AC NOT_RUN/BLOCKED。
 > 创建日期：2026-11-26  
 > 修订日期：2026-11-27\
 > 上游需求：[IR-008](../IR/IR%20总登记册.md#ir-008)；关联需求：[IR-003](../IR/IR%20总登记册.md#ir-003)  
@@ -263,6 +263,7 @@ Create / Release 继续分别使用原有 Schema 与 Evidence Guarantee；Modify
 
 ## 修订记录
 
+
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
 |---|---|---|---|---|---|---|
 | 2026-11-26 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 建立 Capability-first Skill 作者接口、一对一 Callable、Package cardinality 审计及 Compiler / Runtime / Studio 闭环 | 消除 Skill 源码与 Provider / Owner 内部 Callable ID 的耦合，并明确 v1alpha5 冻结与 1.6.0 候选边界 | IR-008、IR-003、Issue #40 |
@@ -273,3 +274,4 @@ Create / Release 继续分别使用原有 Schema 与 Evidence Guarantee；Modify
 | 2026-11-26 | 0.2.4 | GPT-6（ChatGPT） | 文档头、§0、设计依据 | 提交设计待评审、明确新旧契约/验收隔离并保留 DRAFT 主状态 | 统一中央评审批次，防止旧版发布证据冒充新版资格 | Issue #12；PR #45；SR-029 |
 | 2026-11-27 | 0.2.5 | Codex / GPT-6 | §3.2、§6、AC-029-05/11 | 区分查询子集与 Provider 全量 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
 | 2026-11-27 | 0.2.6 | Codex / GPT-6 | AC-029-11 | 覆盖 F03 主设计、EC02 工具链与跨包版本导航 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
+| 2026-11-27 | 0.2.7 | GPT-6（ChatGPT） | 第三轮设计自评/历史修订表 | CA-SL 1.6.0-only、Owner 24/24、Provider 查询 2/2 与含 Codec 3/3、旧包拒绝及跨包双射已明确；生产者机器契约另行冻结；将第二轮结论保留为历史、登记第三轮独立复评候选并按版本整理记录 | 设计范围可供外部评审而不提前授权代码实施或夸大 AC 状态 | Issue #12；PR #46；SR-029 |

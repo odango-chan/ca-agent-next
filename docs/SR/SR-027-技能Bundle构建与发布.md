@@ -1,8 +1,8 @@
 # SR-027：技能Bundle构建与发布
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.1\
-> 状态：DRAFT（实施主状态）。PR #46 第二轮独立评审（1bf748db）：BLOCKED_EXTERNAL_INPUT（五根作者提交、Echo Interface 与 Compiler Release/argv）。产品验收依各 AC 单列。
+> SR 版本：0.2.2\
+> 状态：DRAFT（实施主状态）；第二轮及本次自评均 BLOCKED_EXTERNAL_INPUT（1.6.0 五根作者提交、Echo Interface、Compiler Release/argv 未交付）；当前只可审查五根构建矩阵与发布原子性，非实施 READY。
 > 创建日期：2026-11-26  
 > 修订日期：2026-11-27\
 > 上游需求：IR-006  
@@ -71,21 +71,33 @@ CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验�
 
 **阶段结论：** 本 SR 仍为 DRAFT。下一发布链只面向 **CA-SL 1.6.0**；先等 ca-skills / SR-029 规范及精确机器标识、Compiler #61 / SR-013 对 1.6.0 语言及 Capability Binding 冻结新 Runtime API，再组装 Bundle；不得猜测 Manifest，不得把本地旧 v1alpha5 编译目录或临时拼装包当作 AC-027-02/03 正例。SR-004 的 SKILL.md-only 路径可独立验证，但不提升 SR-027 或 Assurance Bundle 的状态。
 
+### 5.1 五包发布的生产者交接表（尚未交付）
+
+| 生产者 | 唯一正式输入 | 可解除的阶段门槛 |
+|---|---|---|
+| ca-skills 语言与 Skill 作者 | 1.6.0 作者 Schema / Golden / languageTarget；包含 echo-guide、echo-assured 与三份 MAS 新作者源的**同一固定提交** | AC-027-01 真实作者正例 |
+| Echo Interface Package Owner | 正式 Echo READ Capability/唯一 Callable/Schema、Package ID/SemVer/导出与源 SHA | echo-assured 的唯一 Binding 正例 |
+| Compiler / SR-013 Owner | 正式 1.6.0 Compiler tag、可执行文件、完整 Check/Build/Verify argv、Runtime Artifact Schema/Manifest、Package Schema 与 Golden | AC-027-01/02 真实 Build/Verify、缺件和失败原子性 |
+| ca-skills 发布者 | 五包来源清单、各包准确 Artifact 相对文件列表、发布资产及授权、下载 URL 与 Verify 证据 | 先 AC-027-01/02 后授权上传；AC-027-03 是发布后的消费者联验 |
+
+缺任何正式输入，禁止把候选目录、旧 v1alpha5 脚本、mock Compiler 或历史 1.0.0 包算作新版本发布。设计矩阵可以独立审查，但 SR-027 完整 READY 仍受外部生产者交付阻塞；不得传递性阻塞 SR-004 的独立 SKILL.md-only 子范围。
+
 ## 6. 修订记录
 
 
-| 日期 | 版本 | 修订者/模型 | 章节 | 内容 | 关联 |
-|---|---|---|---|---|---|
-| 2026-11-26 | 0.1.0 | Codex / GPT-6 | 见本行变更 | 首次登记两端交付、独立复验与就绪条件 | Issue #12 |
-| 2026-11-26 | 0.1.1 | Codex / GPT-6 | 见本行变更 | 补齐正式文档的评审范围与非目标；列明依赖设计版本；同步设计依据到本次复审的修订版本 | Issue #12 |
-| 2026-11-26 | 0.1.2 | GPT-6.2（ChatGPT） | 文档头、§4～6、修订记录 | 记录 CA-SL v1alpha5 固定源、Compiler v2.1.0 冻结 Artifact、Issue #61 未完成及 ca-skills 当前无正式 Bundle；防止将规范/Compiler Release/本地 Build 误报为 Published Skill Bundle，并为 SR-004 明确外部依赖 | Issue #43；SR-004；SR-013；SR-027 |
-| 2026-11-26 | 0.1.3 | GPT-6.2（ChatGPT） | 文档头、设计依据、修订记录 | 将 F08 设计依据更新至 v0.3.8，保持 SR-027 与发布端权威设计版本一致 | Issue #43；SR-004；SR-013；SR-027 |
-| 2026-11-26 | 0.1.4 | GPT-6.2（ChatGPT） | 文档头、§1、§5、修订记录 | 将后续 Skill Bundle 生产目标更新为 CA-SL 1.6.0，增加 SR-029 Capability Binding 与 Compiler #61 联合 Release 门槛；避免继续发布 v1alpha6 候选或旧 v1alpha5 作者源作为最新运行包 | Issue #40/#43；SR-029；SR-013；SR-027 |
-| 2026-11-26 | 0.1.5 | GPT-6.2（ChatGPT） | §2～3、修订记录 | 将旧 v1alpha5 构建脚本与测试从新版验收入口移除，仅保留历史审计；1.6.0 Bundle 必须原生编译/验证；严格无兼容、无旧构建管线的 1.6.0 单版本发布 | Issue #40/#43；SR-029；SR-027 |
-| 2026-11-26 | 0.1.6 | GPT-6（ChatGPT） | 文档头、设计依据/修订记录 | 对齐最新 1.6.0-only 待评审设计与发布门槛 | Issue #40/#43；SR-029 |
-| 2026-11-26 | 0.1.7 | GPT-6（ChatGPT） | 文档头、§0、设计依据 | 提交设计待评审、明确新旧契约/验收隔离并保留 DRAFT 主状态 | Issue #12；PR #45；SR-029 |
-| 2026-11-27 | 0.2.1 | Codex / GPT-6 | 评审状态 | 登记第二轮限定范围及外部依赖 | Issue #12，PR #46 |
 
-| 2026-11-26 | 0.1.8 | GPT-6（ChatGPT） | 设计依据与新版本路径 | 刷新 1.6.0 正式目标设计引用：v0.3.12→v0.3.13 | Issue #12/#40；PR #46 |
-| 2026-11-26 | 0.1.9 | Codex / GPT-6 | §3～5 | 将构建、授权发布、正式资产消费按顺序取证，消除发布与消费互等并纠正历史语言依赖状态 | Issue #12/#43，PR #46，SR-004/008/013/027 |
-| 2026-11-27 | 0.2.0 | Codex / GPT-6 | §2～5、AC-027-01/02 | 登记同批五个作者根、测试与发行输入缺口 | Issue #12，PR #46 |
+| 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
+|---|---|---|---|---|---|---|
+| 2026-11-26 | 0.1.0 | Codex / GPT-6 | 见本行变更 | 首次登记两端交付、独立复验与就绪条件 | 未单独记录（历史原因未提供）  Issue #12 |
+| 2026-11-26 | 0.1.1 | Codex / GPT-6 | 见本行变更 | 补齐正式文档的评审范围与非目标；列明依赖设计版本；同步设计依据到本次复审的修订版本 | 未单独记录（历史原因未提供）  Issue #12 |
+| 2026-11-26 | 0.1.2 | GPT-6.2（ChatGPT） | 文档头、§4～6、修订记录 | 记录 CA-SL v1alpha5 固定源、Compiler v2.1.0 冻结 Artifact、Issue #61 未完成及 ca-skills 当前无正式 Bundle；防止将规范/Compiler Release/本地 Build 误报为 Published Skill Bundle，并为 SR-004 明确外部依赖 | 未单独记录（历史原因未提供）  Issue #43；SR-004；SR-013；SR-027 |
+| 2026-11-26 | 0.1.3 | GPT-6.2（ChatGPT） | 文档头、设计依据、修订记录 | 将 F08 设计依据更新至 v0.3.8，保持 SR-027 与发布端权威设计版本一致 | 未单独记录（历史原因未提供）  Issue #43；SR-004；SR-013；SR-027 |
+| 2026-11-26 | 0.1.4 | GPT-6.2（ChatGPT） | 文档头、§1、§5、修订记录 | 将后续 Skill Bundle 生产目标更新为 CA-SL 1.6.0，增加 SR-029 Capability Binding 与 Compiler #61 联合 Release 门槛；避免继续发布 v1alpha6 候选或旧 v1alpha5 作者源作为最新运行包 | 未单独记录（历史原因未提供）  Issue #40/#43；SR-029；SR-013；SR-027 |
+| 2026-11-26 | 0.1.5 | GPT-6.2（ChatGPT） | §2～3、修订记录 | 将旧 v1alpha5 构建脚本与测试从新版验收入口移除，仅保留历史审计；1.6.0 Bundle 必须原生编译/验证；严格无兼容、无旧构建管线的 1.6.0 单版本发布 | 未单独记录（历史原因未提供）  Issue #40/#43；SR-029；SR-027 |
+| 2026-11-26 | 0.1.6 | GPT-6（ChatGPT） | 文档头、设计依据/修订记录 | 对齐最新 1.6.0-only 待评审设计与发布门槛 | 未单独记录（历史原因未提供）  Issue #40/#43；SR-029 |
+| 2026-11-26 | 0.1.7 | GPT-6（ChatGPT） | 文档头、§0、设计依据 | 提交设计待评审、明确新旧契约/验收隔离并保留 DRAFT 主状态 | 未单独记录（历史原因未提供）  Issue #12；PR #45；SR-029 |
+| 2026-11-26 | 0.1.8 | GPT-6（ChatGPT） | 设计依据与新版本路径 | 刷新 1.6.0 正式目标设计引用：v0.3.12→v0.3.13 | 未单独记录（历史原因未提供）  Issue #12/#40；PR #46 |
+| 2026-11-26 | 0.1.9 | Codex / GPT-6 | §3～5 | 将构建、授权发布、正式资产消费按顺序取证，消除发布与消费互等并纠正历史语言依赖状态 | 未单独记录（历史原因未提供）  Issue #12/#43，PR #46，SR-004/008/013/027 |
+| 2026-11-27 | 0.2.0 | Codex / GPT-6 | §2～5、AC-027-01/02 | 登记同批五个作者根、测试与发行输入缺口 | 未单独记录（历史原因未提供）  Issue #12，PR #46 |
+| 2026-11-27 | 0.2.1 | Codex / GPT-6 | 评审状态 | 登记第二轮限定范围及外部依赖 | 未单独记录（历史原因未提供）  Issue #12，PR #46 |
+| 2026-11-27 | 0.2.2 | GPT-6（ChatGPT） | §5.1、修订表 | 明确五根作者提交、Echo Interface、Compiler Release/argv 与发行授权的生产者边界，整理历史六列修订记录 | 允许审查固定设计而不臆造缺失发布物或将下游联验误作上传门槛 | Issue #12；PR #46；SR-027 |

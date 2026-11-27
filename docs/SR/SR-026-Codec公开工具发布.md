@@ -1,8 +1,8 @@
 # SR-026：Codec公开工具发布
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.5\
-> 状态：DRAFT（实施主状态）。PR #46 第二轮独立评审（1bf748db）：BLOCKED_EXTERNAL_INPUT（Provider Owner 公开 Codec 契约）。产品验收依各 AC 单列。
+> SR 版本：0.1.6\
+> 状态：DRAFT（实施主状态）；第二轮及本次自评均 BLOCKED_EXTERNAL_INPUT（缺 Provider Owner 正式 Codec Capability/Callable、Schema 与发布身份）；库向量范围仅可独立审查，非实施 READY。
 > 创建日期：2026-11-26  
 > 修订日期：2026-11-27\
 > 上游需求：IR-006  
@@ -48,14 +48,25 @@
 
 固定 PR #39 `protocol/codec/codec_test.go::TestDecodeNASOpenAMSMVectors` 中的 `release-request`，原始四个 octet 为 `2e 05 01 d1`，Decoder 的消息类型应为 `PDUSessRelReq`，PSI=5、PTI=1。加入截断到三个 octet、同头但最后 octet 为 0xd4 的反例，后者是有效 Release Complete、超出首批指定的消息类型。以 `go test ./protocol/codec -run TestDecodeNASOpenAMSMVectors -count=1 -v` 单独核对原始库向量，再由公开 Provider 调用重跑。本节只定义第一批公开子集。
 
+### 4.1 公开 Codec Package 生产者交接表（尚未交付）
+
+| 生产者 | 必须固定且可复核的内容 | 缺失时受阻的门槛 |
+|---|---|---|
+| ca-client-tools / Provider Owner | 正式源 SHA、Package ID / SemVer、1.6.0 languageTarget、公开 Capability ID 与唯一 Callable ID、READ kind/Effect、真实 handler 路径和符号 | AC-026-02/03 及 Consumer SR-010 正向运行 |
+| ca-client-tools / Provider Owner | 输入/输出 Schema、Artifact slot/方向/mediaType、Release Request 专属 JSON 结果 profile、错误码及截断/错误类型负例 | 正式 Codec Tool 的准确参数与结果验收 |
+| ca-client-tools / Provider Owner | 同一发行包 initialize/catalog/invoke 证据、零远端 SBI 请求、与原 Provider 查询 2/2 合成 3/3 的一对一对账 | 不得将 PR #39 库向量或私有 backend 名称冒充公开 Tool |
+
+这些字段由生产者在其签认 Issue/PR 和正式发布记录中提交。本 SR 现有 `2e 05 01 d1` 向量、`0xd4` 非目标负例可先供静态评议；任何字段尚缺时，禁止由 Harness 推断别名、Schema、版本或“兼容”路径，SR-026 整体仍 BLOCKED_EXTERNAL_INPUT。
+
 ## 修订记录
 
-| 日期 | 版本 | 修订者/模型 | 章节 | 内容 | 关联 |
-|---|---|---|---|---|---|
-| 2026-11-26 | 0.1.0 | Codex / GPT-6 | 见本行变更 | 首次登记两端交付、独立复验与就绪条件 | Issue #12 |
-| 2026-11-26 | 0.1.1 | Codex / GPT-6 | 见本行变更 | 固定实际 Codec 向量及验收结果；补齐正式文档的评审范围与非目标；绑定中央设计章节；列明依赖设计版本 | Issue #12 |
-| 2026-11-26 | 0.1.2 | GPT-6（ChatGPT） | 文档头、§0、设计依据 | 提交设计待评审、明确新旧契约/验收隔离并保留 DRAFT 主状态 | Issue #12；PR #45；SR-029 |
-| 2026-11-27 | 0.1.5 | Codex / GPT-6 | 评审状态 | 登记第二轮限定范围及外部依赖 | Issue #12，PR #46 |
 
-| 2026-11-26 | 0.1.3 | GPT-6（ChatGPT） | 设计依据与新版本路径 | 刷新 1.6.0 正式目标设计引用：v0.4.0→v0.4.1 | Issue #12/#40；PR #46 |
-| 2026-11-27 | 0.1.4 | Codex / GPT-6 | §2、§4 | 标出 Provider Owner 缺件及候选库可复核边界 | Issue #12，PR #46 |
+| 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
+|---|---|---|---|---|---|---|
+| 2026-11-26 | 0.1.0 | Codex / GPT-6 | 见本行变更 | 首次登记两端交付、独立复验与就绪条件 | 未单独记录（历史原因未提供）  Issue #12 |
+| 2026-11-26 | 0.1.1 | Codex / GPT-6 | 见本行变更 | 固定实际 Codec 向量及验收结果；补齐正式文档的评审范围与非目标；绑定中央设计章节；列明依赖设计版本 | 未单独记录（历史原因未提供）  Issue #12 |
+| 2026-11-26 | 0.1.2 | GPT-6（ChatGPT） | 文档头、§0、设计依据 | 提交设计待评审、明确新旧契约/验收隔离并保留 DRAFT 主状态 | 未单独记录（历史原因未提供）  Issue #12；PR #45；SR-029 |
+| 2026-11-26 | 0.1.3 | GPT-6（ChatGPT） | 设计依据与新版本路径 | 刷新 1.6.0 正式目标设计引用：v0.4.0→v0.4.1 | 未单独记录（历史原因未提供）  Issue #12/#40；PR #46 |
+| 2026-11-27 | 0.1.4 | Codex / GPT-6 | §2、§4 | 标出 Provider Owner 缺件及候选库可复核边界 | 未单独记录（历史原因未提供）  Issue #12，PR #46 |
+| 2026-11-27 | 0.1.5 | Codex / GPT-6 | 评审状态 | 登记第二轮限定范围及外部依赖 | 未单独记录（历史原因未提供）  Issue #12，PR #46 |
+| 2026-11-27 | 0.1.6 | GPT-6（ChatGPT） | §4.1、修订表 | 固定 Codec 公开契约缺件及唯一生产者，保留现有库向量独立可审查范围，整理历史六列修订记录 | 将外部输入阻塞与静态候选审查隔离，杜绝猜测公开机器 ID | Issue #12；PR #46；SR-026 |

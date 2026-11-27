@@ -1,7 +1,7 @@
 # SR-012 Compiler 设计归档与跨仓收敛
 
-> 文档版本：0.1.7\
-> 状态：DRAFT（实施主状态）。PR #46 第二轮独立评审（1bf748db）：CHANGES_REQUESTED（EC02 工具链权威输入已修订，待复评）。产品验收依各 AC 单列。
+> 文档版本：0.1.8\
+> 状态：DRAFT（实施主状态）；第二轮独立评审 CHANGES_REQUESTED（历史结论）；第三轮自评 **DESIGN_READY_FOR_INDEPENDENT_REVIEW**（仅设计评审候选，非独立批准或实施 READY）；产品 AC NOT_RUN/BLOCKED。
 > 上游 IR：IR-006  
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-27\
@@ -38,7 +38,7 @@
 | `compiler-evolution-roadmap-vnext.zh-CN.md` | 链接 → EC02 Compiler 设计说明书的演进边界，保留历史路线记录 |
 | `fixtures/registration-development-request.json` | 保留机器输入 fixture |
 
-从 Compiler 仓根执行 `git ls-tree -r --name-only 255ab85fa5abb4b0bf36656bf64250cafebf45cb -- docs/design`，输出必须逐行匹配上表 12 个文件。再执行 `git ls-tree -r --name-only 255ab85fa5abb4b0bf36656bf64250cafebf45cb -- docs`，预期共 218 个文件，其余 206 个（含两份 docs 导航）按上述导航例外或原样保留。活动分支相对此清单新增的活动设计须先映射。执行 `git diff --name-status 255ab85fa5abb4b0bf36656bf64250cafebf45cb HEAD -- docs/design` 核对源漂移，实施 diff 另用 `git diff --name-status <实施基线SHA> HEAD`。逐个新增的 Next 默认分支链接运行 `curl --fail --location --silent --output /dev/null "$URL"` 并检查目标页章节；未映射、越界修改、断链或错误锚点均停止。
+从 Compiler 仓根执行 `git ls-tree -r --name-only 255ab85fa5abb4b0bf36656bf64250cafebf45cb -- docs/design`，输出必须逐行匹配上表 12 个文件。再执行 `git ls-tree -r --name-only 255ab85fa5abb4b0bf36656bf64250cafebf45cb -- docs`，预期共 218 个文件，其余 206 个（含两份 docs 导航）按上述导航例外或原样保留。活动分支相对此清单新增的活动设计须先映射。执行 `git diff --name-status 255ab85fa5abb4b0bf36656bf64250cafebf45cb HEAD -- docs/design` 核对源漂移，实施 diff 另用 `git diff --name-status <实施基线SHA> HEAD`。逐个新增的 Next 默认分支链接运行 `curl --fail --location --silent --output /dev/null "$URL"` 并检查目标页章节；未映射、越界修改、断链或错误锚点均停止。**本 SR 可在 PR #46 固定候选 Head 独立评审；在 #44→#45→#46 集成到目标默认分支且相关中央链接真实可达前，不得替换 Compiler 源仓的活动设计正文。**
 
 依赖分类：**设计依赖**为 Next EC02（目前 1.6.0 候选可评审）；**实施依赖**为中央文档进入 main 且源仓活动文档链接已可达；**模块 AC** 由静态迁移证据独立取证；**系统 Compiler 1.6.0 Release** 由 SR-013 独立负责，不作为本设计评审的先决。跨仓改动仍须独立实施 Issue、固定设计 SHA 和授权。
 
@@ -64,15 +64,15 @@ Issue [Next #2](https://github.com/odango-chan/ca-agent-next/issues/2)；依赖�
 
 ## 修订记录
 
+
 | 日期 | 版本 | 修订者 | 章节 | 修改内容 | 原因 | 关联 |
 |---|---|---|---|---|---|---|
 | 2026-11-25 | 0.1.0 | Codex | 全文 | 建立 EC02 设计基线 | 集中维护及验证交接 | IR-006、SR-012、#2 |
 | 2026-11-25 | 0.1.1 | Codex / GPT-6 | 正文 | 明确唯一实施仓与文档移交流程 | 消除执行歧义并同步中央设计 | Issue #12 SR-012 |
 | 2026-11-25 | 0.1.2 | Codex / GPT-6 | 正文 | 同步所引权威设计版本 | 消除执行歧义并同步中央设计 | Issue #12 SR-012 |
 | 2026-11-26 | 0.1.3 | GPT-6（ChatGPT） | 文档头、§0、设计依据 | 登记统一 1.6.0 专项设计评审、阻塞与证据边界；不改变产品实施主状态 | 设计集中评审、避免历史来源冒充新发布 | Issue #12；SR-029；PR #45 |
-| 2026-11-27 | 0.1.7 | Codex / GPT-6 | AC-012-03 | 将权威入口的版本一致性列为归档核查项 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
-
 | 2026-11-26 | 0.1.4 | GPT-6（ChatGPT） | 设计移交与模块验收 | 新增独立 AC / 来源 SHA / 与实现产品、系统 E2E 证据隔离 | 使设计移交在无需臆造产品发布的情况下可逐项审查 | Issue #12；SR-029；PR #46 |
-
 | 2026-11-26 | 0.1.5 | GPT-6（ChatGPT） | 最新权威设计依据 | 同步最新版 1.6.0 Feature/EC02，Studio 不再引用历史 §4.5 | 避免 Harness 误把旧 Development Publisher 当成新目标 | Issue #12/#40；PR #46 |
 | 2026-11-27 | 0.1.6 | Codex / GPT-6 | AC-012-02 | 固定逐文件清单、版本与文档差异检查 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
+| 2026-11-27 | 0.1.7 | Codex / GPT-6 | AC-012-03 | 将权威入口的版本一致性列为归档核查项 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
+| 2026-11-27 | 0.1.8 | GPT-6（ChatGPT） | 第三轮设计自评/历史修订表 | Compiler 固定源 docs/design 12 条、docs 218 文件已独立从 Git tree 对账；仅在 Next 中央链接进目标默认分支后替换源仓活动设计；将第二轮结论保留为历史、登记第三轮独立复评候选并按版本整理记录 | 设计范围可供外部评审而不提前授权代码实施或夸大 AC 状态 | Issue #12；PR #46；SR-012 |
