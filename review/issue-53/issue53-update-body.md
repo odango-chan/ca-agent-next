@@ -2,10 +2,10 @@
 
 已完成对固定 Base `34e99e0cc54cc82b6b40040286fc84673432ef76`、Head `7452f60ccbc68e1468b52018f59bdc2347cc32d5` 的独立技术与治理评审。
 
-- **完整报告**：[PR54-INDEPENDENT-REVIEW.md](https://github.com/odango-chan/ca-agent-next/blob/83c5ca2f9250ac80af54818f1dc0252c3e0be260/review/issue-53/PR54-INDEPENDENT-REVIEW.md)
+- **完整报告**：[PR54-INDEPENDENT-REVIEW.md](https://github.com/odango-chan/ca-agent-next/blob/e9aea7309c7a28a7b77d1b650867a1f2a6b17d1b/review/issue-53/PR54-INDEPENDENT-REVIEW.md)
 - **PR #54 GitHub Review**：[Review #6083215845](https://github.com/odango-chan/ca-agent-next/pull/54#pullrequestreview-6083215845)（COMMENT；当前身份与 PR 作者相同，未提交伪造 APPROVE）
 - **独立评审分支**：[`review/issue-53-independent-20261127`](https://github.com/odango-chan/ca-agent-next/tree/review/issue-53-independent-20261127)
-- **验证脚本 / 机器结果**：[validate_pr54.py](https://github.com/odango-chan/ca-agent-next/blob/83c5ca2f9250ac80af54818f1dc0252c3e0be260/review/issue-53/validate_pr54.py) / [validation-results.json](https://github.com/odango-chan/ca-agent-next/blob/83c5ca2f9250ac80af54818f1dc0252c3e0be260/review/issue-53/validation-results.json)
+- **验证脚本 / 机器结果**：[validate_pr54.py](https://github.com/odango-chan/ca-agent-next/blob/e9aea7309c7a28a7b77d1b650867a1f2a6b17d1b/review/issue-53/validate_pr54.py) / [validation-results.json](https://github.com/odango-chan/ca-agent-next/blob/e9aea7309c7a28a7b77d1b650867a1f2a6b17d1b/review/issue-53/validation-results.json)
 
 ### 阻断理由
 

@@ -6,8 +6,8 @@
 
 固定基线：Base `34e99e0cc54cc82b6b40040286fc84673432ef76`，Head `7452f60ccbc68e1468b52018f59bdc2347cc32d5`，Refresh `f63bbce2709284c97d8cd150343d491a3f2958db`。完整证据、16 文件逐项结论、SR 状态表、F02/F08/F09 外部核验和文件级修复清单见：
 
-**[完整独立评审报告](https://github.com/odango-chan/ca-agent-next/blob/83c5ca2f9250ac80af54818f1dc0252c3e0be260/review/issue-53/PR54-INDEPENDENT-REVIEW.md)**  
-[可复现验证脚本](https://github.com/odango-chan/ca-agent-next/blob/83c5ca2f9250ac80af54818f1dc0252c3e0be260/review/issue-53/validate_pr54.py) · [机器结果](https://github.com/odango-chan/ca-agent-next/blob/83c5ca2f9250ac80af54818f1dc0252c3e0be260/review/issue-53/validation-results.json)
+**[完整独立评审报告](https://github.com/odango-chan/ca-agent-next/blob/e9aea7309c7a28a7b77d1b650867a1f2a6b17d1b/review/issue-53/PR54-INDEPENDENT-REVIEW.md)**  
+[可复现验证脚本](https://github.com/odango-chan/ca-agent-next/blob/e9aea7309c7a28a7b77d1b650867a1f2a6b17d1b/review/issue-53/validate_pr54.py) · [机器结果](https://github.com/odango-chan/ca-agent-next/blob/e9aea7309c7a28a7b77d1b650867a1f2a6b17d1b/review/issue-53/validation-results.json)
 
 ### 阻断问题
 
