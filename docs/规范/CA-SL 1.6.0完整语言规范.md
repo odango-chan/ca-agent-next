@@ -58,7 +58,7 @@ skill-root/
 - assurance/procedure.yaml：唯一入口 Procedure DAG、显式输入绑定、Node 阶段、Wait 和路由。
 - assurance/predicates.yaml：可复用 Predicate 定义及其参数 / Evidence 契约；没有 Predicate 时仍须存在合法空 PredicateSet。
 
-没有 assurance/ 的 Skill 仍可携带 schemas/、scripts/、references/ 和 assets/，并仅支持 LLM-guided；若脚本被明确标记为 llmInvocable 且 Host 策略启用，可通过 Host Script Execution Capability 调用。存在 assurance/ 时，contract.yaml、procedure.yaml、predicates.yaml、被引用的共享 Schema / Script、依赖和所有静态语义必须全部有效，才同时具备 Deterministic 与 LLM-guided 两种模式。Assurance 无效时必须拒绝导入，不得静默降级。不得新增 constraint.yaml、activation.yaml、applicability.yaml、第二份 Skill Descriptor 或 Domain Contract Package；predicates.yaml 只描述执行期 Predicate，不参与 Skill 选择。
+没有 assurance/ 的 Skill 仍可携带 schemas/、scripts/、references/ 和 assets/，并仅支持 LLM-guided；若脚本被明确标记为 llmInvocable 且 Host 配置 `scriptExecution.llmEnabled=true`（默认 false），可通过 Host Script Execution Capability 调用。存在 assurance/ 时，contract.yaml、procedure.yaml、predicates.yaml、被引用的共享 Schema / Script、依赖和所有静态语义必须全部有效，才同时具备 Deterministic 与 LLM-guided 两种模式。Assurance 无效时必须拒绝导入，不得静默降级。不得新增 constraint.yaml、activation.yaml、applicability.yaml、第二份 Skill Descriptor 或 Domain Contract Package；predicates.yaml 只描述执行期 Predicate，不参与 Skill 选择。
 
 ## 3. 核心术语与所有权
 
@@ -386,7 +386,7 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 | 输入 / 场景 | 必需结果 |
 |---|---|
 | 无 Assurance、无共享资源 | 可导入；仅 LLM-guided；不调用 Compiler |
-| 无 Assurance、含 schemas/ 与 scripts/manifest.yaml | 可导入；仅 LLM-guided；Host 校验共享资源并可按 Host 策略提供脚本 Capability；不调用 Compiler |
+| 无 Assurance、含 schemas/ 与 scripts/manifest.yaml | 可导入；仅 LLM-guided；Host 校验共享资源；只有 `scriptExecution.llmEnabled=true` 且 Registry 存在 llmInvocable Script 时才提供脚本 Capability；不调用 Compiler |
 | 完整有效 Assurance | 只有正式 1.6.0 Compiler Build / Verify / Bundle 后才可导入 |
 | Assurance 目录缺文件或无效 | 拒绝；不得降级 |
 | Contract 只声明 Capability，唯一映射 Callable | Link 通过 |
