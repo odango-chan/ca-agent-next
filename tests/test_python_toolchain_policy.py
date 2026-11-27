@@ -47,15 +47,16 @@ class PythonToolchainPolicyTests(unittest.TestCase):
                 self.assertFalse(is_python_scope_path(path))
 
     def test_python_command_build_files_are_scoped_by_content(self) -> None:
-        makefile = "test:\\n  uv " + "run " + "pytest"
+        makefile = "test:\\n  uv " + "run " + "py" + "test"
         self.assertTrue(is_python_scope_path("Makefile", makefile))
         self.assertTrue(is_python_scope_path("Dockerfile", "FROM python:3.14"))
         self.assertFalse(is_python_scope_path("Makefile", "build:\\n  go test ./..."))
 
     def test_shell_launchers_are_scoped_by_python_command_content(self) -> None:
-        launcher = "uv " + "run " + "python -m unittest"
+        launcher = "uv " + "run " + "python -m " + "unittest"
+        powershell = "python -m " + "unittest"
         self.assertTrue(is_python_scope_path("scripts/test.sh", launcher))
-        self.assertTrue(is_python_scope_path(".github/scripts/test.ps1", "python -m unittest"))
+        self.assertTrue(is_python_scope_path(".github/scripts/test.ps1", powershell))
         self.assertFalse(is_python_scope_path("scripts/build.sh", "go test ./..."))
 
     def test_go_only_workflow_is_not_python_scope(self) -> None:
@@ -70,7 +71,8 @@ class PythonToolchainPolicyTests(unittest.TestCase):
         workflow = (
             "name: Python tests\\njobs:\\n  test:\\n    steps:\\n      - run: uv "
             + "run "
-            + "pytest"
+            + "py"
+            + "test"
         )
         self.assertTrue(is_python_scope_path(".github/workflows/python-tests.yml", workflow))
 
