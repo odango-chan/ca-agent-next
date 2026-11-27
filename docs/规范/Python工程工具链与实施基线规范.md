@@ -184,12 +184,12 @@ Goal 在开始前建立 GitHub 检查点，执行期间每完成一个独立工�
 
 1. PR Base 必须使用基线清单允许的共享分支；PR #112 仅允许固定 Bootstrap Base。
 2. PR Base 必须是共享 uv 基线 SHA 的后代，并包含 `pyproject.toml`、`uv.lock`、`.python-version`、统一 unittest gate、策略文件和固定 setup-uv action 的 Python Workflows；PR Head 也必须保留这些文件、固定解释器/uv 版本和根 `.venv/` 忽略规则。
-3. 根目录新增 `requirements*.txt`、`Pipfile*`、`poetry.lock`、Conda/Mamba 环境或锁文件时失败；嵌套测试 fixture 不按根依赖入口处理。
-4. 新增/修改的可执行命令行不得使用 pip/pip-tools（包括 `uv pip install/sync`）、Poetry/Conda/Mamba，不得裸运行 Python unittest/pytest/compileall/Agent Smoke 或根脚本；项目命令必须使用 `uv run --no-sync --locked`；`uv sync` 必须带 `--locked`。
+3. 根目录新增 `requirements*.txt`、`requirements*.in`、`constraints*.txt/.in`、`Pipfile*`、`poetry.lock`、`pdm.lock`、`rye.lock`、`pixi.lock`、Conda/Mamba 环境或锁文件时失败；嵌套测试 fixture 不按根依赖入口处理。
+4. 新增/修改的可执行命令行不得使用 pip/pip-tools/Pipenv（包括 `uv pip install/sync`）、Poetry/Conda/Mamba/PDM/Rye/Pixi，不得裸运行 Python unittest/pytest/compileall/Agent Smoke 或根脚本；项目命令必须使用 `uv run --no-sync --locked`；依赖同步命令必须带 `--locked`。
 5. `uv run --no-project` 只允许可信门禁中的固定标准库检查器和专用自测命令；禁止通过命令拼接扩大例外，不得将该例外用于应用测试。
 6. 所有新增/修改的 Python Workflow 必须使用清单固定 SHA 的 setup-uv Action，并显式固定 uv 版本。
 7. 禁止设置共享 `UV_PROJECT_ENVIRONMENT`，禁止 `uv run/sync --system` 或 `--active` 绕过 worktree 本地 `.venv/`。
-8. `pyproject.toml` 中依赖、Python 版本、dependency-groups 或 uv 解析配置变化时，同一 PR 必须更新 `uv.lock`；Head 工作流执行 `uv lock --check` 验证锁文件与项目配置同步。
+8. `pyproject.toml` 中依赖、动态依赖声明、Python 版本、dependency-groups 或 uv 解析配置变化时，同一 PR 必须更新 `uv.lock`；Head 工作流执行 `uv lock --check` 验证锁文件与项目配置同步。
 9. 策略测试覆盖允许/拒绝命令、锁文件范围、路径范围、Bootstrap Base、可信 Workflow 和策略文件变更。
 
 ### 9.3 合并门禁
