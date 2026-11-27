@@ -1,7 +1,7 @@
 # CA-SL 1.6.0 完整语言规范（中央设计稿）
 
 > 文档类型：CA-SL 作者语言规范（中央规范性设计稿）
-> 文档版本：0.2.7
+> 文档版本：0.2.8
 > 语言版本：CA-SL 1.6.0
 > languageTarget 候选：connectionagent.io/v1.6.0（本设计建议值；发布前由 ca-skills 与 Compiler Owner 在正式 Schema / Golden 中确认）
 > 状态：**DRAFT / REVIEW_REQUESTED**；CA-SL 1.6.0 唯一正式语言设计，Assurance 可选；有 Assurance Skill 时 `assurance/contract.yaml` 可声明顶层 `when`；`SKILL.md` Front Matter 不声明 when；无 Assurance Skill 不声明 when；未发布、未冻结。
@@ -218,7 +218,11 @@ PredicateSet          = map(predicates: map<PredicateId, Predicate>) ;
 Predicate             = map(parameters: NonEmptyList<ParameterDeclaration>,
                             evidence?: EvidenceRequirements,
                             evaluator: CELEvaluator | PredicateScriptEvaluator) ;
-ParameterDeclaration  = map(ParameterName: PrimitiveType | QualifiedSchemaId) ;
+ParameterDeclaration  = map(ParameterName: PrimitiveType | SchemaReference) ;
+SchemaReference       = PackageSchemaPath | QualifiedSchemaId ;
+PackageSchemaPath     = "schemas/" PackageSchemaPathStem ".schema.yaml" ;
+PackageSchemaPathStem = PathSegment | PathSegment "/" PackageSchemaPathStem ;
+QualifiedSchemaId     = Alias "::" SchemaId ;
 CELEvaluator          = map(type: "cel", expression: CELExpression) ;
 PredicateScriptEvaluator = map(type: "script", script: ScriptId) ;
 
@@ -227,6 +231,14 @@ RouteTarget           = NodeId | TerminalStatus ;
 TerminalStatus        = "SUCCEEDED" | "FAILED" | "UNRESOLVED" | "SAFE_STOPPED" ;
 Expression            = SourcePath | ScalarLiteral ;
 ~~~
+
+#### 6.1.1 Schema 引用类型与解析
+
+- `PackageSchemaPath` 是 Skill Package 根目录相对路径，必须以 `schemas/` 开头、以 `.schema.yaml` 结尾，使用区分大小写的 POSIX `/` 分隔符；不得是绝对路径、URI、空路径段、`.` / `..` 路径段、反斜杠或经过 URL 编码的路径。Compiler 只在当前固定 Package snapshot 的 `schemas/` 子树内解析，不跟随越界路径，不下载远端。
+- `PackageSchemaPathStem` 由一个或多个 `PathSegment` 组成；`PathSegment` 是非空路径段，不得为 `.` 或 `..`，不得包含 `/`、反斜杠、NUL 或控制字符。路径必须精确对应 Package 中存在的文件，大小写敏感。
+- `QualifiedSchemaId` 由已在同一 `contract.yaml` 的 `dependencies` 中声明的 `Alias` 与依赖 Package 正式导出的 `SchemaId` 组成；两者均按原值精确匹配，不允许 latest、隐式别名、任意 URL 下载或根据文件名猜测 Schema 身份。
+- `requestSchema` 只接受 `PackageSchemaPath`；`contexts` 只接受 `QualifiedSchemaId`；Predicate 参数的 Schema 类型可使用 `PackageSchemaPath` 或 `QualifiedSchemaId`。因此 `schemas/qos-request.schema.yaml` 是合法的本地 Predicate 参数类型引用，不是 `QualifiedSchemaId`。
+- `PackageSchemaPath` 指向的本地文件按其实际根形式确定 dialect：本地 G.4 Schema 按 G.4 校验；若文件仅含一个 `$ref` 并指向显式 pin 的 OpenAPI Source Bundle `components/schemas`，则它是 OAS3 根引用别名，目标与可达外部闭包按 OAS 3.0 Schema Object 语义校验。外部 OAS3 原件不得投影为 G.4。`QualifiedSchemaId` 则按被依赖 Package 正式发布的 Schema dialect 校验。
 
 ### 6.2 arguments 与输入对象的精确形状
 
@@ -298,7 +310,7 @@ predicates:
 
 规则：
 
-- `parameters` 是非空有序列表；每个成员必须是单键映射，键为参数名，值为 Primitive Type 或精确 Schema 引用。同一 Predicate 内参数名唯一。
+- `parameters` 是非空有序列表；每个成员必须是单键映射，键为参数名，值为 Primitive Type 或 `SchemaReference`。本地 Schema 使用精确的 Package 根相对 `PackageSchemaPath`（例如 `schemas/qos-request.schema.yaml`）；外部已发布 Schema 使用 `Alias::SchemaId` 形式的 `QualifiedSchemaId`，Alias 必须出现在 Contract.dependencies 且 SchemaId 必须由该依赖正式导出。同一 Predicate 内参数名唯一。
 - `evidence.requires` 只能引用已声明参数；Evidence 保证必须来自正式 Owner / Package 契约，不能由作者注释或 Script 创建。
 - `evaluator` 恰好一个：`type: cel` 搭配 `expression`，或 `type: script` 搭配 Registry Script ID。
 - Precondition / Postcondition 的每个 Predicate Call 必须提供完整有序 arguments，数量和类型与参数签名完全一致。
@@ -596,3 +608,4 @@ Host Context Schema-only Package 仍只经 `Contract.contexts` 引用，与 Open
 
 | 2026-11-27 | 0.2.6 | GPT-6.2（ChatGPT） | §5.1、修订记录 | 将“开放对象拒绝”限定为本地 G.4 对象根 / SourcePath 对象节点；明确 OAS3 根引用别名及外部闭包按 OAS 3.0 默认语义处理 | 消除一般性 G.4 闭合规则与 OAS3 未声明 additionalProperties 默认允许额外属性之间的规范冲突 | Issue #49；IR-009；SR-013；PR #52 |
 | 2026-11-27 | 0.2.7 | ChatGPT（GPT-6） | §5.3、文档头、修订记录 | 移除具有 start / nodes 但仅含中间 Precondition 的误导性伪完整 Procedure 示例，改为明确标注的 Procedure.inputs 片段，重申完整 Procedure 必须满足 §6 Node / routes / Goal Postcondition 规则 | 避免语言规范以非合规中间 Predicate-only Node 示例违反自身作者粒度原则 | Issue #49；IR-008；SR-032；PR #52 |
+| 2026-11-27 | 0.2.8 | ChatGPT（GPT-6.2） | §6.1、§8.1、修订记录 | 补齐 PackageSchemaPath / QualifiedSchemaId / SchemaReference 的规范文法与确定性解析规则；明确本地路径仅限 Package 根 schemas/，外部 Schema 必须经已声明依赖精确导出 | 修复 Predicate 参数正向示例使用本地路径但 EBNF 仅允许 QualifiedSchemaId 的冲突，不改变 1.6.0 既定 YAML 结构 | Issue #49；IR-008；SR-032；PR #52 |
