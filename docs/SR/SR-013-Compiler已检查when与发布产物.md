@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.24\
+> 文档版本：0.2.25\
 > 状态：DRAFT（实施主状态）。PR #46 第二轮独立评审（1bf748db）：APPROVE_FOR_READY（原限定的 Compiler 设计及 AC-013-01 归档复核）。产品验收依各 AC 单列。
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-27\
@@ -388,13 +388,13 @@ SR-013 只有 AC-013-01～06 均达到各自通过条件，Compiler Release 有�
 
 | 子例 | 固定输入 | 必须结果 |
 |---|---|---|
-| 07a Source Bundle pin | OpenAMSM commit、TS 29.502 / TS 29.571 blob、标准版本、Bundle manifest | Lock 唯一不可变；dynamic latest / 混源 / 缺文件拒绝 |
-| 07b operation / schema ref | TS 29.502 `PostSmContexts` → `multipart/related` → `jsonData` → `#/components/schemas/SmContextCreateData`；跨文件 CommonData refs | 原生 OAS3 解析；所有可达 refs 同一 snapshot；原件 byte 不变 |
-| 07c dialect boundary | Skill G.4 root 内精确引用 OAS3 `components/schemas` | 本地按 G.4，外部按 OAS3 Schema Object；`nullable` / `oneOf` / `anyOf` / `allOf` / `format` 语义保留，不投影 |
-| 07d type inference | CEL 读取 OAS3 Schema Component 字段，含 union / optional / nullable / 不同分支类型 | 只暴露所有分支类型确定字段；歧义字段静态拒绝 |
+| 07a Source Bundle pin | OpenAMSM commit `dc83ccbf5be54dcc7112dd43ba95ea6fa5975550`；TS 29.502 / 29.571 / 29.510 NFManagement / 29.518 Namf 四个 Git blob、各自标准版本、选定 surface | Lock 唯一不可变；仅锁 Git blob / byte length 与原始 bytes；dynamic latest / 混源 / 缺文件拒绝，不新增 per-file digest / package hash |
+| 07b operation / schema ref | `PostSmContexts.requestBody` → `multipart/related` → `jsonData` → `#/components/schemas/SmContextCreateData`；102 个可达 Schema Component、四文件闭包 | 原生 OAS3 解析；仅解析选定 surface 的可达 refs；未选定 operation refs 不 eager resolve；选定闭包所有 refs 同一 snapshot，原件 byte 不变 |
+| 07c dialect boundary | Skill G.4 root 内精确引用 OAS3 `components/schemas`；真实闭包含 `anyOf` / `oneOf` / `allOf` / `nullable` / `format` / `pattern` / `additionalProperties` | 本地按 G.4，外部按 OAS3 Schema Object；组合语义、pattern、schema-valued additionalProperties 等保留，不投影 |
+| 07d type inference | CEL 读取 OAS3 Schema Component 字段，含 union / intersection / optional / nullable / 不同分支类型 | `anyOf` / `oneOf` 只无条件暴露所有分支均存在且同类型的字段；`allOf` 按交集组合；Null 与 Missing 分离；歧义字段静态拒绝 |
 | 07e stage availability | T1 when / Request；T2 已选 Procedure Codec READ Output / SourcePath | when 不读 T2 Result、不调用 Codec；T2 Result 只能由后继 Node 显式引用 |
-| 07f failure isolation | 缺 dependency、错误 alias/path/pointer、path traversal、nested ref 缺失、unsupported OAS keyword、跨 source SHA、dynamic latest | `SCHEMA_INVALID` / 稳定诊断，Build 无部分 Artifact；不回退 Adapter / projection |
-| 07g Bundle / Verify | 固定 Source Bundle + Skill Request + Provider Output Schema + Host Context / Owner dependencies | 离线 Build / Verify；Lock 保存闭包；无 Codec Skill 不强制依赖 Source Bundle / Codec |
+| 07f failure isolation | 缺 dependency、错误 alias/path/pointer、非法 pointer escape、规范化后逃出 Source Root、选定闭包 nested ref 缺失、unsupported OAS keyword、跨 source commit、dynamic latest | `SCHEMA_INVALID` / 稳定诊断，Build 无部分 Artifact；选定闭包外 refs 不阻塞当前消费；允许规范化后仍在 Source Root 内的 `../`；逃出 Source Root 拒绝；不回退 Adapter / projection |
+| 07g Bundle / Verify | 固定 Source Bundle + Skill Request + Provider Output Schema + Host Context / Owner dependencies | 离线 Build / Verify；Lock 保存选定闭包；无 Codec Skill 不强制依赖 Source Bundle / Codec |
 
 OpenAPI operation / multipart ingress 验证由 SR-010 负责；Compiler 负责 Request Schema 跨 dialect 引用和类型检查。NAS / NGAP Output Schema 由 SR-026 Provider 发布，不能用 SBI binary slot 代替。一个 Codec Capability 是否可用单一封闭 Output Schema + 固定 enum selector 表达多 Profile，必须以 Provider Golden 证明；否则另提设计，不能静默增加 Callable 或放宽 1:1。
 
@@ -441,3 +441,4 @@ OpenAPI operation / multipart ingress 验证由 SR-010 负责；Compiler 负责 
 | 2026-11-27 | 0.2.22 | ChatGPT / GPT-6 | 3GPP Schema 与阶段输入补充 | 明确公共 Schema-only 导出、选择期 Request 与执行期 Codec Result 的 Link / 业务字段来源 | 关闭 Create 选择前依赖 NAS 解码的循环、固定跨包类型门禁 | IR-009；Issue #47；SR-031/026/013 |
 | 2026-11-27 | 0.2.23 | ChatGPT / GPT-6 | 本轮 IR-009 设计修正 | 固定 OpenAMSM 版本 + 原版 YAML 逐字节代发布；显式区分可选 Adapter 与 Provider Codec 输出 | 落实原版 YAML 不得改动、消除误把原版当 G.4 的风险 | Issue #47；SR-031/026/013 |
 | 2026-11-27 | 0.2.24 | ChatGPT / GPT-6.2 | AC-013-07 | 改为原版 OAS3 组件直接引用；新增跨 dialect Resolver、闭包、语义保真、CEL 类型推导和 T1/T2 负例 | 撤销强制 Adapter 假设，避免复制或改写标准 | IR-009；Issue #47；SR-031/010/026/027 |
+| 2026-11-27 | 0.2.25 | ChatGPT / GPT-6.2 | AC-013-07 | 固定 PostSmContexts requestBody 四文件 / 102 Component 选定闭包、lazy resolution、真实 OAS3 keyword 与 allOf/union 类型规则；移除额外 Source Bundle digest 要求 | 使跨 dialect Resolver 的验收与真实 OpenAMSM Schema 结构一致 | IR-009；Issue #47；SR-031/010/027；EC01/EC02 |

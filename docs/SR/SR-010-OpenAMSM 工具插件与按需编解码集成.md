@@ -1,7 +1,7 @@
 # SR-010：OpenAMSM 工具插件与按需编解码集成
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.6\
+> SR 版本：0.2.7\
 > 状态：DRAFT（实施主状态）；第二轮独立评审 CHANGES_REQUESTED（历史结论）；第三轮自评 **DESIGN_READY_FOR_INDEPENDENT_REVIEW**（仅设计评审候选，非独立批准或实施 READY）；产品 AC NOT_RUN/BLOCKED。
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-27\
@@ -98,12 +98,13 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 ## 8. OpenAMSM 原版 OpenAPI 3.0 Ingress 与 Codec READ 消费（IR-009）
 
 - SR-031 发布 OpenAMSM 实际支持的原版 OpenAPI 3.0 Source Bundle；逐字节保留 YAML、路径和相对 `$ref`。它是标准源快照，不是 Interface Package，不导出 Capability / Callable，也不需要 Adapter。
-- **T0 Ingress**：Plugin 按 pin 后的 TS 29.502 OAS 3.0 operation 解析 method/path/operationId、requestBody、`multipart/related`、JSON part、binary N1/N2 slots、media type 和 Content-ID。`PostSmContexts` 的 `jsonData` 引用 `SmContextCreateData`；N1 / N2 binary bytes 原样写入 Host ArtifactStore。所有可达 refs 必须在 Source Bundle snapshot 内闭合。
+- **T0 Ingress**：Plugin 按 pin 后的 TS 29.502 OAS 3.0 operation 解析 method/path/operationId，并将当前选定 surface 固定为 `requestBody`；`PostSmContexts` 的 `multipart/related` `jsonData` 引用 `SmContextCreateData`。只 lazy resolve 该选定 surface 的可达 refs，不全文件 eager resolve 其他 operation；当前闭包为 TS 29.502 / 29.571 / 29.510 NFManagement / 29.518 Namf Communication 四份原版 YAML。N1 / N2 binary bytes 通过验证后原样写入 Host ArtifactStore。
 - Plugin 只负责协议入口验证、最小业务 discriminator 和原始 Artifact staging；不完整解码 NAS / NGAP，不在 Host 中维护第二套 SBI Schema。OpenAPI 3.0 Schema Object 按原生语义解释，禁止改写 YAML。
+- **Content-ID 关联**：依据 CommonData `RefToBinaryData.contentId`，`jsonData.n1SmMsg.contentId` 必须匹配 `binaryDataN1SmMessage` 的 `Content-ID`；`jsonData.n2SmInfo.contentId` 匹配 `binaryDataN2SmInformation`；`jsonData.n2SmInfoExt1.contentId` 匹配 `binaryDataN2SmInformationExt1`。每个引用必须且只能命中对应 slot；parts 的 Content-ID 必须唯一；缺失引用 / part、重复 ID、错槽、错 media type、孤立 part 均拒绝。Content-ID 值按 MIME 解析结果精确比较，不做自行大小写转换或去括号归一化。任何失败发生在 Artifact 发布与 Owner mutation 之前。
 - **T1** 只按已收到的 SBI / 归一化 Event 字段选择 Skill；`when` 不调用 Codec。Skill-owned Request 根仍为 G.4，可经显式 pin 的 Source Bundle dependency 直接引用精确 OAS 3.0 `components/schemas`；Compiler 负责 dialect-aware Resolver（SR-013），Plugin 不做 Schema 投影。
 - **T2** 由已选 Skill Procedure 调用 ca-client-tools SR-026 正式 Codec READ；Provider Output Schema 必须匹配 OpenAMSM NAS / NGAP 支持版本和已资格化 Profile。原始 N1/N2 bytes 保留，Codec Result 不是 Owner Receipt / Commit Proof。
 - T4 的 0xD4 / N2 completion 只恢复原 Run，不创建新候选；核对 generation、PSI / PTI 和 N2 message type。
-- 原 AC-010-01～05/09 Host Channel 可独立验收；AC-010-07 的 0xD1 仅证明首批候选库向量，不代表公开 Provider。新增 **AC-010-10** 验证 OAS 3.0 operation / multipart / Content-ID、原始 byte staging、精确 Source Bundle pin、T1/T2 SourcePath、SBI/N1 冲突、越权 artifactRef 与错误 generation。缺正式 Source Bundle / Compiler Resolver / Provider 时对应子项 BLOCKED / NOT_RUN，零 Owner mutation。
+- 原 AC-010-01～05/09 Host Channel 可独立验收；AC-010-07 的 0xD1 仅证明首批候选库向量，不代表公开 Provider。新增 **AC-010-10** 验证 OAS 3.0 operation / 选定 requestBody / multipart / Content-ID 与原始 byte staging。正例必须覆盖三组字段到 part 的精确映射：`n1SmMsg`→N1、`n2SmInfo`→N2、`n2SmInfoExt1`→N2 Ext1；负例覆盖缺少引用、引用无 part、part 无引用、重复 Content-ID、跨 slot 引用、Content-Type 不符、重复 part、malformed multipart、未选定 refs 不触发全局 eager resolve。另验证精确 Source Bundle pin、T1/T2 SourcePath、SBI/N1 冲突、越权 artifactRef 与错误 generation。失败不得发布 Artifact 或触发 Owner mutation。缺正式 Source Bundle / Compiler Resolver / Provider 时对应子项 BLOCKED / NOT_RUN。
 - 无 Codec 依赖的 Skill 不得被强制解码；不能发明 Provider Machine ID / Output Schema、动态 latest 或旧版迁移。权威说明见 [EC01.3GPP 设计](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。
 
 ## 修订记录
@@ -130,3 +131,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-27 | 0.2.4 | ChatGPT / GPT-6 | 3GPP Schema/Codec 分阶段消费 | 对齐 SR-031 公共类型、T1 Request 与 T2 Codec Result，新增分期拒绝/验收范围 | 修复标准输入来源与实现门禁的跨仓断点 | IR-009；Issue #47；SR-031/026 |
 | 2026-11-27 | 0.2.5 | ChatGPT / GPT-6 | IR-009 OpenAMSM YAML 原件发布边界 | 版本随 OpenAMSM、原版不改动；Adapter 与 Provider Result 独立发版，保留阶段 AC | 避免把标准 YAML 代发布等同解码产品资格 | Issue #47；SR-031/026/010/027 |
 | 2026-11-27 | 0.2.6 | ChatGPT / GPT-6.2 | §8 | 以原生 OAS3 operation / multipart 消费替代 Adapter 前置；补充 Compiler 精确组件引用、T0/T1/T2/T4 和 AC-010-10 | 使 Plugin、Compiler、Codec 各自承担正确协议层责任 | IR-009；Issue #47；SR-031/013/026/027 |
+| 2026-11-27 | 0.2.7 | ChatGPT / GPT-6.2 | §8、AC-010-10 | 固定 requestBody 选定面与 lazy refs；补齐 RefToBinaryData.contentId 到 N1/N2/N2 Ext1 part 的精确映射和负例 | 防止只检查 Header 存在却把错误二进制交给 Codec | IR-009；Issue #47；SR-031/026；EC01/F06 |
