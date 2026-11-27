@@ -1,7 +1,7 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录  
-> 文档版本：0.1.29\
+> 文档版本：0.1.30\
 > 修订日期：2026-11-27\
 > 状态：9 项 IR（含 IR-009 3GPP 公共 Schema）；IR-008 登记 CA-SL 1.6.0 Capability-first 严格一对一与完全无旧版兼容，SR-029 设计待评审；IR-006 下 SR-030 Host Context Schema-only Publisher 设计待评审；SR-028 仍 DRAFT。\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -113,14 +113,15 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 
 ## IR-009
 
-**3GPP 公共 Schema / Codec 输出与 Skill 分阶段输入契约**
+**OpenAMSM 支持的 3GPP 原版 YAML 原样代发布与 Skill 分阶段 Codec 消费**
 
-CA-SL 1.6.0 Skill 在选择期只接收已经由 Plugin Event Schema 验证的标准化 SBI 字段；只有被选中的 Procedure 可以按 Capability 调用 Codec READ 获取 N1/N2 解码字段。必须发布可引用的 3GPP 公共 Schema-only Package，避免每份 Skill 自行复制字段定义或要求 Host/Plugin 代做完整解码。
+标准版本只取 OpenAMSM **实际支持/构建使用**的 3GPP OpenAPI YAML 版本及完整相对引用闭包。ca-skills 只是**原样代发布者**，不能修改 YAML 的任何字节、字段、格式、注释、换行或 $ref；不能自主升级标准版本或把不同 OpenAMSM 来源混拼。只有确实需要 CA-SL 1.6.0 Compiler 类型时，才在原始 YAML 外**另行受审发布 Adapter Schema-only 包**。原件本身并不自动符合 G.4。Codec NAS/NGAP Output Schema 仍由 ca-client-tools Provider 发布，须匹配 OpenAMSM 采用的版本。
 
-- 协作设计 Issue：[Next #47](https://github.com/odango-chan/ca-agent-next/issues/47)；不授权外仓代码实施。
-- 设计入口：[3GPP 公共 Schema 发布与 Skill 分阶段消费](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)、F02、F03.05、F06、F08、F09、CA-SL 1.6.0 / EC02。
-- SR 分解：[SR-031 公共 3GPP Schema-only Publisher](../SR/SR-031-3GPP公共Schema-only-Publisher.md)（目标 ca-skills）、[SR-026 Codec Tool 发布](../SR/SR-026-Codec公开工具发布.md)（目标 ca-client-tools；首批 0xD1 与 Create/Modify 后续 profile 分开）、[SR-010 Next Codec 消费](../SR/SR-010-OpenAMSM%20工具插件与按需编解码集成.md)、[SR-013 Compiler Link](../SR/SR-013-Compiler已检查when与发布产物.md)、[SR-027 Bundle](../SR/SR-027-技能Bundle构建与发布.md)。
-- 产品退出：3GPP 来源版本/Schema export/快照身份、合法 1.6.0 Schema-only 包、Codec 结果类型以及 T1/T2 字段来源均有固定正负向 Golden，独立复评通过；未取得正式机器契约/包发布，实施 READY 及 E2E 均未获得。旧语言不兼容。
+- 协作设计 Issue：[Next #47](https://github.com/odango-chan/ca-agent-next/issues/47)；仅中央设计，不授权外仓实施。
+- 权威设计：[3GPP 原版代发布与 Skill 分阶段消费](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)；关联 F02/F03.05/F06/F08/F09/EC02 与 CA-SL 1.6.0。
+- 分解：[SR-031](../SR/SR-031-3GPP公共Schema-only-Publisher.md)（ca-skills：Phase A 原版 Source Bundle，Phase B 可选独立 Adapter）、[SR-026](../SR/SR-026-Codec公开工具发布.md)（ca-client-tools Provider 真实 Decoder/Output Schema）、[SR-010](../SR/SR-010-OpenAMSM%20工具插件与按需编解码集成.md)（Next 运行时消费）、[SR-013](../SR/SR-013-Compiler已检查when与发布产物.md)（Adapter 的 Link/拒绝）、[SR-027](../SR/SR-027-技能Bundle构建与发布.md)（依赖快照）。
+- Skill 选择 T1 只能校验 EC04 已提供的 SBI/最小分类字段；NAS-only PDU Session Type/SSC mode 在已选 Skill 的 Procedure 经 Codec READ T2 才获得；0xD4/N2 completion 只续跑原 Run，Codec Result 不能当 Owner Commit Proof。
+- 验收：Source Lock 必须取真实 OpenAMSM commit、文件闭包、相对路径、版本判据；每个发布 YAML 逐字节与源匹配（单字节负例失败）。正式 Adapter/Codec/Compiler/1.6.0 Bundle 缺失时相应产品 AC 保持 BLOCKED/NOT_RUN，不将原版代发布算作全系统 READY/VERIFIED。
 
 ## 修订记录
 
@@ -158,3 +159,4 @@ CA-SL 1.6.0 Skill 在选择期只接收已经由 Plugin Event Schema 验证的�
 | 2026-11-26 | 0.1.26 | GPT-6（ChatGPT） | 1.6.0 Host Context Publisher / 依赖边界 | 将 Host Context 1.6.0 Schema-only Publisher 纳入 IR-006/IR-008，区分 SR-024 历史 VERIFIED 与 SR-030 新需求 | 避免旧 Development Package 被误认为新版正式输入 | Issue #12/#40；IR-006/008；SR-030 |
 | 2026-11-26 | 0.1.27 | GPT-6（ChatGPT） | IR-006/IR-008、修订记录 | 同步 SR-030 新版 Host Context 1.6.0 Schema-only Publisher 需求与 SR-024 历史 v1alpha5 Publisher 边界 | 使 IR→SR 追踪明确区分旧版已验证证据和新版待评审需求 | Issue #12/#40；IR-006/008；SR-024、SR-030；PR #46 |
 | 2026-11-27 | 0.1.29 | ChatGPT / GPT-6 | IR-009 | 登记公共 3GPP Schema-only、选择期与执行期 Codec 输入来源并分解 SR-031 等跨仓任务 | 关闭 Create 选择前解码的架构与追踪断点 | Issue #47；SR-031/026/010/013/027 |
+| 2026-11-27 | 0.1.30 | ChatGPT / GPT-6 | IR-009 | 冻结 OpenAMSM 版本作为唯一来源与 YAML 字节原样代发布；将可选 G.4 Adapter 和 Codec Output 分离 | 明确仅代为发布、不改 3GPP YAML 的最新要求 | Issue #47；SR-031 |
