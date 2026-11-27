@@ -1,19 +1,19 @@
 # SR-032：SKILL 作者规范、Node 拆分与注释原则
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.3  
+> SR 版本：0.1.4  
 > 状态：**DRAFT（中央作者规范已形成设计候选，待独立设计评审；实施 NOT_READY）**  
 > 创建日期：2026-11-27  
 > 修订日期：2026-11-27  
 > 上游需求：IR-008（关联 IR-003）  
 > 功能：EC01 / F02 / F09（作者规范由 EC01 维护，F09 AI Authoring 消费）  
-> 设计依据：[EC01 CA-SL 与 Skill 作者体系架构](../架构设计/外部能力域/EC01-CA-SL与Skill作者体系架构设计.md) v0.1.4；[CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md) v0.1.5；[SKILL 作者规范](../规范/SKILL作者规范.md) v0.1.3  
+> 设计依据：[EC01 CA-SL 与 Skill 作者体系架构](../架构设计/外部能力域/EC01-CA-SL与Skill作者体系架构设计.md) v0.1.4；[CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md) v0.1.5；[SKILL 作者规范](../规范/SKILL作者规范.md) v0.1.4  
 > 目标仓：odango-chan/ca-agent-next（仅中央设计和规范）  
 > 上游来源仓：odango-chan/ca-skills，固定 main 780497a2918ad3e7bdff554ab64b0ba627e867e0  
 > 关联 Issue：[ca-agent-next #49](https://github.com/odango-chan/ca-agent-next/issues/49)、父级迁移 Issue #12、CA-SL 设计 Issue #40  
 > 固定设计基线：4873608f5ca854a6bb47cf1a83cb9214da4ae202
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
-> 本文局部非目标：只读历史源文归档；不作为 CA-SL 1.6.0 规范或产品验收证据，不改写原文及源相对链接。
+> 本文局部非目标：不定义或修改 CA-SL 1.6.0 语法 / Schema / Compiler API；不授权 ca-skills、Compiler、Studio、Runtime 或其他兄弟仓实施；不声称语言 Release、产品验收或 E2E PASS。
 
 ## 1. 目标
 
@@ -63,9 +63,9 @@ ca-skills 固定源提交：780497a2918ad3e7bdff554ab64b0ba627e867e0。
 
 一个业务 Node 表达一个主要业务动作，最多一个 Operation（公开 Capability 或纯本地 Script），可带一个直接相关的 READ Observation 和本动作的前后置 Predicate。
 
-必须拆分：两个不同 Operation Capability、独立业务提交边界、独立证据确认边界、真实业务分支或恢复路径。
+必须拆分：两个不同 Operation Capability、独立业务提交边界、具有独立生命周期 / 权威来源 / Correlation 且需要独立消费的证据确认边界，或需要执行独立业务动作的恢复路径。
 
-应保持合并：同一 Capability 内部的 Provider / HTTP / SBI / NAS / N2 / PFCP 子步骤；同一阶段的多个 Predicate；可用 routes 表达的 Outcome 分支；简单参数映射。
+应保持合并：同一 Capability 内部的 Provider / HTTP / SBI / NAS / N2 / PFCP 子步骤；同一阶段的多个 Predicate；仅需通过 routes 跳转的 Outcome 分支；同一动作的直接 Observation / Postcondition 确认；简单参数映射。
 
 允许最终 Postcondition-only Node、独立 Observation-only Node 和有明确边界的纯 Script Node；禁止 start-only、wait-only、reconcile-only、HTTP-only、Provider handler-only、单 Predicate Node。
 
@@ -102,9 +102,9 @@ F09 的 AI Authoring 必须使用同一作者规范生成和检查 Change Set；
 |---|---|---|
 | AC-032-01 | 作者指南、作者模型、Skill Granularity、Authoring Syntax、Package Layout、Schema Ownership、创建工作流和实际 Skill 样本均有固定源路径、commit / blob SHA 和迁移裁决 | 作者规范 §12、历史归档文件、恢复清单 |
 | AC-032-02 | Skill package 粒度与 Node 粒度分开定义；Skill / Capability / Agent routing 边界明确 | 作者规范 §2、§6 |
-| AC-032-03 | Node 拆分与合并规则严格符合 1.6.0 四阶段顺序、每种阶段最多一个、Operation / Observation Capability 边界和静态 DAG | 作者规范 §5～§6；CA-SL 1.6.0 对照 |
-| AC-032-04 | 注释规则区分解释性内容与机器执行契约，给出正反例，且不把旧资料未定义的规则伪称为迁移原文 | 作者规范 §7、§12 |
-| AC-032-05 | Package 文件职责、Schema 所有权、Capability-only、显式 arguments、when、Wait、Evidence / UNKNOWN 与 1.6.0 设计一致 | 作者规范 §3～§5、§8～§9 |
+| AC-032-03 | Node 拆分与合并规则严格符合 1.6.0 四阶段顺序、每种阶段最多一个、Operation / Observation Capability 边界和静态 DAG；Outcome-only 路由不得触发机械拆分；Create / Modify / Release 样本只用于结构性裁决 | 作者规范 §5～§6.6；CA-SL 1.6.0 §6～§10；固定源 Procedure 样本 |
+| AC-032-04 | 注释规则区分解释性内容与机器执行契约，给出明确正反例；注释示例不伪装成可构建 Procedure；不把旧资料未定义的规则伪称为迁移原文 | 作者规范 §7.5、§12 |
+| AC-032-05 | Package 文件职责、Schema 所有权、Capability-only、显式 arguments、when、Wait（含正固定 timeout 与阶段边界）、Evidence / UNKNOWN 与 1.6.0 设计一致 | 作者规范 §3～§5、§8～§9；CA-SL 1.6.0 §2、§5、§8～§11 |
 | AC-032-06 | F09 明确 AI Authoring 必须遵守同一作者规范，并保留用户确认和 Compiler gate | F09 §9.3 |
 | AC-032-07 | IR、功能树、SR 索引、实施状态、文档目录、迁移审计和修订记录完整互链；不误报 1.6.0 Release / 实施 / E2E 状态 | 本 SR、各治理索引、PR 静态检查 |
 | AC-032-08 | Procedure.inputs 只绑定精确 context SourcePath；调用 arguments 只使用受支持 SourcePath / 标量字面量；Node / Wait 输出引用精确到 NodeId.Stage.output / NodeId.wait.output；作者规范不得发明正式语言 Schema 未冻结的参数结构 | 作者规范 §4.2；CA-SL 1.6.0 §5.3 |
@@ -127,3 +127,4 @@ F09 的 AI Authoring 必须使用同一作者规范生成和检查 Change Set；
 | 2026-11-27 | 0.1.1 | GPT-6.2（ChatGPT） | §3.3～3.4、§6 | 补充 SourcePath 与 Procedure.inputs 的准确边界，并增加 AC-032-08；同步作者规范修订版 | 防止作者规范擅自扩展 CA-SL 1.6.0 未冻结的参数结构 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.2 | GPT-6.2（ChatGPT） | §3、§6 | 增加 Assurance 有效性、LLM-guided 边界、Node-entry Wait 约束及 AC-032-09 | 让作者规范覆盖完整包生命周期与 Wait 作者边界，避免静默降级和伪造 Wait Node | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.3 | GPT-6.2（ChatGPT） | §3.3、§6 | 将参数结构明确交由 CA-SL 1.6.0 正式 Schema / Golden 冻结，避免作者规范引入未定义语法 | 保持语言规范与作者风格规范职责分离 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.1.4 | GPT-6.2（ChatGPT） | 文档头、§3.3、§6 | 修正 SR 局部非目标；细化独立证据与分支拆分条件，补齐真实样本对照和注释正反例验收 | 防止 SR 自身非目标误指向归档文件，并让验收条件对应可核验内容 | Issue #49；IR-008；SR-032 |
