@@ -7,7 +7,7 @@
 > 修订日期：2026-11-27  
 > 上游需求：IR-008（关联 IR-003）  
 > 功能：EC01 / F01 / F02 / F03 / F04 / F05 / F08 / F09（作者规范由 EC01 维护；Host、Importer、Runtime、Compiler、Studio 消费）  
-> 设计依据：[EC01 CA-SL 与 Skill 作者体系架构](../架构设计/外部能力域/EC01-CA-SL与Skill作者体系架构设计.md) v0.2.2；[CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md) v0.2.4；[SKILL 作者规范](../规范/SKILL作者规范.md) v0.2.0  
+> 设计依据：[EC01 CA-SL 与 Skill 作者体系架构](../架构设计/外部能力域/EC01-CA-SL与Skill作者体系架构设计.md) v0.2.2；[CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md) v0.2.5；[SKILL 作者规范](../规范/SKILL作者规范.md) v0.2.1  
 > 目标仓：odango-chan/ca-agent-next（仅中央设计和规范）  
 > 上游来源仓：odango-chan/ca-skills，固定 main 780497a2918ad3e7bdff554ab64b0ba627e867e0  
 > 关联 Issue：[ca-agent-next #49](https://github.com/odango-chan/ca-agent-next/issues/49)、父级迁移 Issue #12、CA-SL 设计 Issue #40  
@@ -149,3 +149,5 @@ F09 的 AI Authoring 必须使用同一作者规范和完整正向示例生成�
 | 2026-11-27 | 0.1.12 | GPT-6.2（ChatGPT） | §3～§6、AC-032-15、设计依据 | 增加 `when` 的 Front Matter 位置、Assurance-only 适用范围、Request Schema 类型来源与 Compiler/Importer 一致性门禁 | 落实用户确认的入口方案，防止无 Assurance Skill 声明未经编译的 when；历史错误入口判断，已由 0.1.13 撤销，不构成兼容方案| Issue #49；IR-008；F02/F08/F09；SR-004/013 |
 
 | 2026-11-27 | 0.1.13 | GPT-6.2（ChatGPT） | 文档头、AC-032-15、设计依据、修订记录 | 将 when 作者入口恢复为 assurance/contract.yaml 顶层唯一字段；Front Matter 不声明 when；更新 CA-SL / EC01 / 作者规范版本引用 | 统一作者规范、Compiler、Importer 与 Studio 的字段所有权，避免双入口兼容 | Issue #49；IR-008；F02/F08/F09；SR-004/013/016 |
+
+| 2026-11-27 | 0.1.14 | GPT-6.2（ChatGPT） | 文档头、修订记录 | 同步 CA-SL 1.6.0 v0.2.5 与 SKILL 作者规范 v0.2.1；确认可选 3GPP requestType 的 has 守卫与 OAS3 根引用别名边界进入作者规范 | 保证 SR-032 的设计依据与当前唯一作者入口、原版 OpenAPI dialect 规则一致 | Issue #49；IR-008/009；PR #52 |
