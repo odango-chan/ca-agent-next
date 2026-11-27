@@ -405,6 +405,7 @@ SR-013 只有 AC-013-01～06 均达到各自通过条件，Compiler Release 有�
 | 07f failure isolation | 缺 dependency、错误 alias/path/pointer、非法 pointer escape、规范化后逃出 Source Root、选定闭包 nested ref 缺失、unsupported OAS keyword、跨 source commit、dynamic latest、OAS3 alias 文件包含兄弟 Schema 关键字、OAS3 闭包反向引用 G.4 本地文件 | `SCHEMA_INVALID` / 稳定诊断，Build 无部分 Artifact；选定闭包外 refs 不阻塞当前消费；允许规范化后仍在 Source Root 内的 `../`；逃出 Source Root 拒绝；不回退 Adapter / projection |
 | 07g Bundle / Verify | 固定 Source Bundle + Skill Request + Provider Output Schema + Host Context / Owner dependencies | 离线 Build / Verify；Lock 保存选定闭包；无 Codec Skill 不强制依赖 Source Bundle / Codec |
 | 07h 3GPP optional-field CEL Golden | 原版 `SmContextCreateData.requestType` optional string enum；同一 Schema / DescriptorSet | `has(input.requestType) && input.requestType == "INITIAL_REQUEST"` 通过；无 `has` 守卫的直接读取为 `CEL_INVALID`；整数比较为类型错误 |
+| 07i OAS3 omitted additionalProperties | pin 后原版 OAS3 Schema Object 未声明 `additionalProperties` | 按 OAS 3.0 默认语义允许额外属性；Resolver / Validator 不得补写 `false` 或按 G.4 闭合规则拒绝 |
 
 OpenAPI operation / multipart ingress 验证由 SR-010 负责；Compiler 负责 Request Schema 跨 dialect 引用和类型检查。NAS / NGAP Output Schema 由 SR-026 Provider 发布，不能用 SBI binary slot 代替。一个 Codec Capability 是否可用单一封闭 Output Schema + 固定 enum selector 表达多 Profile，必须以 Provider Golden 证明；否则另提设计，不能静默增加 Callable 或放宽 1:1。
 
