@@ -1,11 +1,11 @@
 # SR-030：Host Context 1.6.0 Schema-only Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.7
+> SR 版本：0.1.8
 > 状态：整项 DRAFT；阶段 READY（中央只读核验）。AC-030-01 固定源，06/07 设计约束。  
 > 下一步：核对 Subject Schema 原始字节与来源、Provenance 归属和 Demo 排除项。02～05、Publisher 实现与发布等待正式 Schema/languageTarget。  
 > 阶段依据：[独立评审 #91](https://github.com/odango-chan/ca-agent-next/issues/91#issuecomment-7209340753)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
-> 工作项：[阶段工作项 #95](https://github.com/odango-chan/ca-agent-next/issues/95)。[已核验的固定源证据](https://github.com/odango-chan/ca-agent-next/issues/95#issuecomment-7210746570)。
+> 工作项：[阶段工作项 #95](https://github.com/odango-chan/ca-agent-next/issues/95)。[本轮固定源静态核验报告](../issue-95-fixed-source-handoff/SR-030.md)；历史首批证据见 [Issue #95 评论](https://github.com/odango-chan/ca-agent-next/issues/95#issuecomment-7210746570)。
 > 创建日期：2026-11-26
 > 修订日期：2026-11-27
 > 上游需求：[IR-006](../IR/IR%20总登记册.md#ir-006)；关联需求：[IR-008](../IR/IR%20总登记册.md#ir-008)、[IR-003](../IR/IR%20总登记册.md#ir-003)
@@ -95,6 +95,16 @@ Publisher 必须从固定 Revision 读取原始 Schema 字节并核对 Git blob�
 
 在上述机器契约未发布前，SR-030 可进行设计评审，但实现状态 BLOCKED / NOT_STARTED，所有产品 AC NOT_RUN。不得向 DeepSeek Harness 提供猜测 Package 字段的实施提示词。
 
+## 7. 本轮固定源静态核验（Issue #95）
+
+[完整报告](../issue-95-fixed-source-handoff/SR-030.md)独立通过 contents API 和 Git blob API 读取 `57e277ff9094dad93543df46910a12a1dbbaf560` 的 `subject.schema.json`。两次均为 274 字节，`SequenceEqual=True`，SHA-256 均为 `1147f48e2a45405c07d32b8a09f79f151c292cd3711b1fd97c2fd1a3e5485675`，`$id=urn:connectionagent:ca:context:subject:v1`，blob 为 `4faee66642b8bc5eb2e45c131be4688b982037d8`。
+
+- AC-030-01：PASS（固定源与原始字节）。
+- AC-030-02/03/05：BLOCKED，等待正式机器契约和实际候选；AC-030-04：NOT_RUN，未生成 ZIP。
+- AC-030-06/07：PASS（设计约束静态对照）；Publisher 证据与 Studio Lock provenance 分层，未引入额外包级 hash、签名、Trust Registry、Admission 或运行期 Context。
+
+整项 DRAFT；未生成 Publisher、未调用 Compiler Link、未执行 Studio reload 或产品验收。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
@@ -107,3 +117,4 @@ Publisher 必须从固定 Revision 读取原始 Schema 字节并核对 Git blob�
 | 2026-11-27 | 0.1.5 | GPT-6（ChatGPT） | 文档头、§1、§6、修订记录 | 补齐 F09/F08/EC02/CA-SL 1.6.0/SR-013 的固定版本与章节；修复修订账本排序 | 处理独立模型 Review #6082541121 的 R3-SR030-01 与 R3-LEDGER-01，避免 Schema-only Publisher 的核心设计依据不可定位 | Issue #12；PR #46；Review #6082541121 |
 | 2026-11-27 | 0.1.6 | GPT-6（ChatGPT） | 文档头、§1、§6、修订记录 | 将第二轮不可访问的评审登记替换为正式 Review #6082541121 的限定结论；标记 SR-030 P2 依据修订位于后续 Head | 避免将固定旧 Head 的设计认可外推到新 Head 或 Publisher 实施 | Issue #12；PR #46；Review #6082541121 |
 | 2026-11-27 | 0.1.7 | Codex / GPT-6 | 文档头 | 登记阶段 READY（中央只读核验）及 AC 范围与工作项 #95 | 按单项独立评审推进 | Issue #12、#91；PR #46 |
+| 2026-11-27 | 0.1.8 | kimi-k3.1-pro | §7、文档头 | 独立复验 Subject Schema 274 字节/blob/SHA-256/$id，核对 Provenance 与 Demo 排除；01/06/07 静态 PASS，02～05 原状态不变 | 证明固定输入而不冒充 Publisher 或 Compiler 产品验收 | Issue #95；SR-030 |

@@ -17,7 +17,7 @@
 |---|---|---|
 | SR-012 | [Compiler 原始设计资产](SR-012.md) | AC-012-01 Next→源仓静态部分、03 |
 | SR-013 | [Compiler when / Artifact 归档](SR-013.md) | AC-013-01：FAIL（归档一致性）；历史结果与本轮复跑分开 |
-| SR-016 | Skill Studio 历史实现（进行中） | MIG-016-01、AC-016-09 设计对照 |
+| SR-016 | [Skill Studio 历史实现](SR-016.md) | MIG-016-01、AC-016-09 静态 PASS；六宿主及其余产品 AC NOT_RUN/BLOCKED |
 | SR-017 | [业务 Plugin](SR-017.md) | AC-017-01/03/04 静态 PASS；02 FAIL（设计缺项）；运行 NOT_RUN |
 | SR-018 | [Owner](SR-018.md) | AC-018-01/02 FAIL；04 静态 PASS；Release 与运行 NOT_RUN/BLOCKED |
 | SR-019 | [Mock AMF](SR-019.md) | AC-019-01/04 静态 PASS；02 FAIL；03 NOT_RUN |
@@ -25,7 +25,7 @@
 | SR-021 | [Go Native Host](SR-021.md) | AC-021-01/02/04 静态 PASS；03 NOT_RUN |
 | SR-022 | [Runtime 执行内核](SR-022.md) | AC-022-01/02/04 静态 PASS；03 NOT_RUN |
 | SR-023 | Skill 作者源与语言规范（进行中） | AC-023-01～03 |
-| SR-030 | Host Context Schema-only Publisher（进行中） | AC-030-01、06/07 设计约束 |
+| SR-030 | [Host Context Schema-only Publisher](SR-030.md) | AC-030-01、06/07 静态 PASS；02～05 BLOCKED/NOT_RUN |
 
 ## 3. 修订记录
 
