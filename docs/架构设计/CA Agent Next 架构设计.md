@@ -1,13 +1,13 @@
 # CA Agent Next 架构设计
 
-> 文档类型：总体架构设计  
-> 状态：目标架构基线；SR-002 Python Host/Model Loop 最小切片 VERIFIED；SR-003 v0.3.11 VERIFIED（模块 AC-003-01～04）；PR #34/#41/#42 已合入恢复分支，双平台 CI SUCCESS；系统 EX-02/03/04/18 未完成；完整 Runtime 尚未验收    
+> 文档类型：总体架构设计
+> 状态：目标架构基线；SR-002 Python Host/Model Loop 最小切片 VERIFIED；SR-003 v0.3.11 VERIFIED（模块 AC-003-01～04）；PR #34/#41/#42 已合入恢复分支，双平台 CI SUCCESS；系统 EX-02/03/04/18 未完成；完整 Runtime 尚未验收
 > 文档版本：0.4.7
-> 修订日期：2026-11-27  
-> 适用范围：ca-agent-next 通用 Agent Core、Host、Runtime、Skill 与 Plugin 公共机制  
-> 权威边界：本文是本仓唯一总体架构文档；字段级契约见规范，机制细节见设计说明书  
+> 修订日期：2026-11-27
+> 适用范围：ca-agent-next 通用 Agent Core、Host、Runtime、Skill 与 Plugin 公共机制
+> 权威边界：本文是本仓唯一总体架构文档；字段级契约见规范，机制细节见设计说明书
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
-> 本文局部非目标：以本文范围与非目标章节为准；无额外扩展  
+> 本文局部非目标：以本文范围与非目标章节为准；无额外扩展
 
 关联需求项见 [IR-002](../IR/IR%20总登记册.md#ir-002)、[IR-003](../IR/IR%20总登记册.md#ir-003)、[IR-004](../IR/IR%20总登记册.md#ir-004)、[IR-005](../IR/IR%20总登记册.md#ir-005)。
 
