@@ -1,7 +1,7 @@
 # CA-SL 1.6.0 完整语言规范（中央设计稿）
 
 > 文档类型：CA-SL 作者语言规范（中央规范性设计稿）
-> 文档版本：0.1.2
+> 文档版本：0.1.3
 > 语言版本：CA-SL 1.6.0
 > languageTarget 候选：connectionagent.io/v1.6.0（本设计建议值；发布前由 ca-skills 与 Compiler Owner 在正式 Schema / Golden 中确认）
 > 状态：**DRAFT / REVIEW_REQUESTED**；未发布、未冻结、不得作为已发布产品规范
@@ -375,6 +375,18 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 - SR-027 负责新 Bundle；SR-004～006 负责导入、Catalog、Resolver；F04 负责 Runtime Action Boundary；F09 / SR-016 负责 Studio。
 - 未正式发布前，所有产品实现和运行验收保持 NOT_RELEASED / NOT_RUN；本设计通过不代表实施 READY。
 
+## 19. 3GPP 公共 Schema 的阶段化输入语义（IR-009）
+
+**Skill 的 `requestSchema` 根始终属于 Skill 自有 Schema**，这不排斥其属性 `$ref` 引用显式声明的、可信的公共 3GPP Schema-only Interface Package 中的精确导出类型。Host Context Schema-only Package **只能**经 `Contract.contexts` 引用，不能与 3GPP Common Schema 互换；二者均可有 0 Capability / 0 Callable，均不授予 Tool Scope。
+
+- `requestSchema` 仅约束**选择前** Event Plugin 已验证且实际存在的结构化字段；即使按 3GPP 命名，也不得要求只有在 Codec Tool 解码 N1/N2 后才存在的 NAS/NGAP 字段。
+- `when` 只读取选择前 `event.type` / `input`，不得调用 Codec、访问 Tool result 或 Context；Procedure 在选定 Skill 后才能通过已授予的 Codec READ Capability 获取**执行期**类型化结果。结果必须符合 Provider 正式 Output Schema，并与依赖中的 3GPP Common Schema 使用相同固定标准源及导出版本。
+- 共享 Schema 的引用必须是 **独立的完整 $id**（无 fragment）、显式依赖别名与精确发布快照；旧版、不同标准版本、重复 schemaId、缺 export 或未闭合依赖拒绝。单独只有公共 Schema 引用的包合法，Capability roots 仍可为零。
+- Compiler 将 Skill-owned Request 根及其公共类型闭包、Procedure 引用的 Codec/Owner Output Schema 闭包和 SourcePath 类型检查一并固定到 1.6.0 Artifact；不允许模型或 Host 自动补造未提供的值，不能把 Provider Codec READ 结果当作 Owner Receipt / Commit Proof。
+- 若标准 OpenAPI 使用本规范 §12 不允许的关键字（如 `#/components`、`oneOf`、`format`），公共 Producer 必须提供受支持且来源可审计的字段类型投影；不得在 Compiler 中放宽 Profile 或忽略未知断言。
+
+见 [3GPP 公共 Schema 发布与 Skill 分阶段消费](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)及 SR-031。此处冻结的是**中央设计目标**，具体正式 machine schema / languageTarget、Publisher Release 与 Golden 尚未发布；本语言规范仍为 DRAFT。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
@@ -382,3 +394,4 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 | 2026-11-26 | 0.1.0 | GPT-6（ChatGPT） | 全文 | 建立 CA-SL 1.6.0 完整作者语言规范中央设计稿，定义 Capability-only、contexts、when、Request Schema、Procedure、PredicateSet、Wait、Evidence、Outcome、无兼容及 v1alpha5 全文逐项处置 | 版本基线与 SR-029 局部语法草案不足以替代完整语言规范，防止 Harness 从历史文件自行推断 | Issue #12/#40；IR-008；SR-029、SR-013、SR-027 |
 | 2026-11-26 | 0.1.1 | GPT-6（ChatGPT） | §4、§16、修订记录 | 明确 requestSchema 指向 Skill 自有 Schema，Host Context Schema-only Package 仅通过 Contract.contexts 引用 | 避免将 Host Context Package 当作 Request Schema 根，统一 Contract.requestSchema 与 contexts 的不同所有权 | Issue #12/#40；SR-029、SR-030；PR #46 |
 | 2026-11-26 | 0.1.2 | GPT-6（ChatGPT） | 文档头、修订记录 | 补齐根 Agent.md review_scope 标准声明，保持完整规范进入独立评审时的统一治理范围 | 避免正式 CA-SL 规范稿因缺少全局评审范围而无法生成 Review Context | Issue #12/#40；PR #46 |
+| 2026-11-27 | 0.1.3 | ChatGPT / GPT-6 | 3GPP Schema 与阶段输入补充 | 明确公共 Schema-only 导出、选择期 Request 与执行期 Codec Result 的 Link / 业务字段来源 | 关闭 Create 选择前依赖 NAS 解码的循环、固定跨包类型门禁 | IR-009；Issue #47；SR-031/026/013 |
