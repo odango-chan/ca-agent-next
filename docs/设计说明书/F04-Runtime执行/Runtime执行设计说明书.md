@@ -4,13 +4,13 @@
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 文档版本：0.3.9
 > 功能归属：F04 — Runtime 执行  
-> 关联 SR：SR-007    
+> 关联 SR：SR-007、SR-032    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
 > 本文局部非目标：以本文范围与非目标章节为准；无额外扩展  
 > 修订日期：2026-11-26\
 > 适用范围：Python Runtime、Run、Callable Scope 检查、Outcome/Evidence、Wait/Resume/Reconcile
 
-关联需求项见 [IR-003](../../IR/IR%20总登记册.md#ir-003)、[IR-004](../../IR/IR%20总登记册.md#ir-004)。
+关联需求项见 [IR-003](../../IR/IR%20总登记册.md#ir-003)、[IR-004](../../IR/IR%20总登记册.md#ir-004)、[IR-008](../../IR/IR%20总登记册.md#ir-008)。Host Script Execution 的 Runtime Action 边界由 Issue #49 / SR-032 追踪。
 
 ## 1. 设计目标
 
