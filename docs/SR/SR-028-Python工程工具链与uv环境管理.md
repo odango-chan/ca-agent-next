@@ -1,22 +1,22 @@
 # SR-028：Python 工程工具链与 uv 环境管理
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.5\
+> SR 版本：0.2.6\
 > 修订日期：2026-11-27\
-> 状态：DRAFT（实施主状态）；独立模型 Review #6082541121（固定 Head 3d5f17b7；Base 3c7c4838）：APPROVE_FOR_READY（仅 G02 设计；uv 与双平台迁移 AC 未运行）；当前后续 Head 待独立复评，READY=0。
+> 状态：DRAFT（实施主状态）；独立模型 Review #6082874849（固定 Head `37d22e9862d22bdc07edb48ffd84b976663a48f4` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`）：CHANGES_REQUESTED（0 P0 / 7 P1 / 2 P2）；本轮仅授权设计整改，产品 AC-028-01～10 全部 NOT_RUN，READY=0。
 > 创建日期：2026-11-26  
 > 所属阶段：G02 工程治理支撑  
 > 上游需求：[IR-007](../IR/IR%20总登记册.md#ir-007)  
-> 设计依据：[G02 Python 工程工具链与环境管理设计说明书](../设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md) v0.2.3 §1～§8；[SR-002](SR-002-Python%20核心与宿主基础骨架.md) v0.2.10 §2.1；[SR 管理规范](../规范/SR%20管理规范.md) v0.7.0\
-> 设计/治理 Issue：[ca-agent-next #35](https://github.com/odango-chan/ca-agent-next/issues/35)（不是实施 Issue）  
+> 设计依据：[G02 Python 工程工具链与环境管理设计说明书](../设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md) v0.2.4 §1～§8；[SR-002](SR-002-Python%20核心与宿主基础骨架.md) v0.2.10 §2.1；[SR 管理规范](../规范/SR%20管理规范.md) v0.8.1 §6.1、§8.3\
+ > 设计/治理 Issue：[ca-agent-next #12](https://github.com/odango-chan/ca-agent-next/issues/12)（当前整改追踪）；原设计 Issue [#35](https://github.com/odango-chan/ca-agent-next/issues/35) 已 CLOSED，仅作历史来源，均不是实施 Issue  
 > 目标仓：`odango-chan/ca-agent-next`  
-> 历史复核输入：PR #46 @ `c3bf36a75199901a06479d52534747224ae6db46`（非当前 Head）；第三轮评审读取 PR #46 完整当前提交，后续实施 Goal 另行固定最终获批设计 SHA。
+> 最新独立复评：PR #46 Review [#6082874849](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6082874849)，固定 Head `37d22e9862d22bdc07edb48ffd84b976663a48f4` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`；平台事件 COMMENTED，模型结论 CHANGES_REQUESTED。整改后必须针对新 Head 再次独立复评。
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：其他仓库迁移、生产级供应链安全、运行时架构改造和完整 Python 版本矩阵资格认证
 
 ## 0. 本轮设计评审入口（2026-11-26）
 
-本 SR 已依据 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12) 与 [Issue #35](https://github.com/odango-chan/ca-agent-next/issues/35) 提交独立设计评审。**SR 主状态仍为 `DRAFT`；`REVIEW_REQUESTED` 不等于实施 READY、独立 APPROVED 或 uv 实测 PASS。**
+本 SR 的当前整改依据为 [PR #46 Review #6082874849](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6082874849)，固定 Head `37d22e9862d22bdc07edb48ffd84b976663a48f4` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`。结论为 `CHANGES_REQUESTED`，共 0 P0 / 7 P1 / 2 P2；问题均可由 Next 自身修订，无外部输入阻塞。**SR 主状态仍为 `DRAFT`；本次授权仅覆盖设计文档整改，不授权代码、配置、Workflow 或产品实施。**
 
 - **评审范围：**核查 uv 版本/锁文件、worktree 虚拟环境隔离、与现有 setuptools 工程共存、CI 与回退/失败路径。
 - **外部依赖/证据状态：**设计可独立评审；SR-028 无实施 Issue，不应把 PR #32 的既有 CI 验收误作 uv 迁移 PASS。
@@ -33,11 +33,11 @@
 1. 在根 `pyproject.toml` 中固定 uv CLI 版本要求，并使用 PEP 735 dependency group 管理开发/测试依赖。
 2. 保留原有项目元数据、`requires-python >=3.11`、`setuptools.build_meta` 构建后端和空运行时依赖集合。
 3. 将 SR-001 所需 PyYAML 放入 `dev` 依赖组，不进入 `[project].dependencies`。
-4. 生成并提交 `uv.lock`；添加纯文本 `.python-version`（内容仅为 `3.14.6`），并向 `.gitignore` 追加独立行 `.venv/`，保留既有规则。
+4. 生成并提交 `uv.lock`；添加纯文本 `.python-version`（内容仅为 `3.14.6`）；核实并保留 `.gitignore` 中现有独立 `.venv/` 忽略规则，仅在确实缺失时追加，禁止重复或删除其他规则。
 5. 统一本地和 CI 的安装、测试、Smoke、脚本执行命令为 `uv sync --locked` / `uv run --locked`。
 6. 在独立 worktree 中验证每个 checkout 使用自己的 `.venv/`，不共享 site-packages 或 editable distribution metadata。
 7. 从含 SR-001/SR-003 的目标分支迁移现有工作流的 Python 安装入口，保留 G02 §3.8 的双平台回归；在真实 PR Workflow 中运行完整单元测试和上下文生成器。
-8. 更新 README/Agent 协作入口和受影响命令文档，记录实际 uv/Python 版本、命令、环境和测试证据。
+8. 更新 `README.md`、`Agent.md`、`docs/SR/SR-002-Python 核心与宿主基础骨架.md`、`docs/SR/SR-003-统一插件管理器与扩展通信.md`、`docs/验收与实施/演示验收基线.md` 及 G02/SR-028 中的当前复验入口，记录实际 uv/Python/Go 版本、命令、环境和证据。只更新当前复验命令；不得改写带历史受测 SHA 的 pip 命令、原始运行记录或 VERIFIED 证据。具体文件与验收归属见 AC-028-10。
 
 不得在 SR-001 PR #32 分支中实施上述迁移。
 
@@ -55,14 +55,14 @@
 
 ### 4.1 设计依赖
 
-- G02 v0.2.0 与 SR-002 v0.2.10 的 Python distribution/build metadata 是稳定输入。
+- G02 v0.2.4 与 SR-002 v0.2.10 的 Python distribution/build metadata 是稳定输入；SR-003 v0.3.11 的 Go Echo 构建和 Plugin 测试是本地完整测试的直接前置。
 - 设计评审不依赖 SR-001 的代码合并；可以独立评审 uv 与 worktree 方案。
 
 ### 4.2 实施依赖
 
 - AC-028-01～AC-028-06：SR-028 达到 READY、独立实施 Issue 建立后即可执行，不依赖 Agent Runtime 产品阶段。
 - AC-028-07（CI 环境与测试入口）和 AC-028-08（SR-001 Workflow/Artifact 迁移）：所需 SR-001 Workflow 与脚本已随 PR #32 合入。独立实施 PR 核对目标分支仍含这些入口及 SR-003 回归工作流后，按 G02 §3.8 迁移与复验。既有成功结果不计为迁移 PASS。
-- SR-028 当前没有实施 Issue。Issue #35 只负责中央设计和治理文档，不授予代码、配置或 Workflow 写入授权。
+- SR-028 当前没有实施 Issue。当前设计整改关联 Issue #12；原 Issue #35 已 CLOSED，仅为原始 G02 设计追踪。两者均不授予代码、配置、pyproject、锁文件或 Workflow 写入授权。
 
 ## 5. Acceptance
 
@@ -71,14 +71,37 @@
 | AC-028-01 | 根 pyproject 保留 `ca-agent-next`、版本 `0.1.0`、`requires-python >=3.11`、setuptools build backend、src package discovery 和空运行时依赖；保留 SR-003 的 plugins extra，仅增加 uv 与开发依赖配置 | pyproject diff；distribution metadata 检查；确认 PyYAML 不在 Requires-Dist runtime metadata |
 | AC-028-02 | `.python-version` 文件内容精确为 `3.14.6`；uv CLI 固定为 0.13.10；setup-uv 使用 v10.4.0 不可变 commit `1db35dd8eee11c5894872e0b383ae6c406cf738d` 并显式设置 version | 文件内容、`uv --version`、`python --version`、Workflow 日志和配置 |
 | AC-028-03 | PyYAML 位于 `[dependency-groups].dev`，不进入 Agent Core 运行时依赖 | pyproject/uv.lock；distribution metadata 测试 |
-| AC-028-04 | `uv.lock` 已提交且与 pyproject 一致；锁文件漂移时 `uv lock --check` / `uv sync --locked` 必须失败，不自动改写锁文件 | clean checkout 的 locked sync 与负例 |
-| AC-028-05 | 每个 worktree 使用独立 `.venv/`；`.venv/` 被 Git 忽略（`git check-ignore .venv/pyvenv.cfg` 成功）；`uv sync` 将当前 checkout 项目安装到该环境；两个并行 worktree 的 editable metadata 和测试互不污染 | 两个 worktree 的 `.venv` 路径、ignore 结果、distribution metadata 和测试输出 |
-| AC-028-06 | 当前基线可用的完整 unittest 与 Host Smoke 使用 `uv run --locked --group dev --extra plugins` 通过，记录 Host、Plugin、Review Context 的发现数及失败/跳过数；生成器、Summary 及三文件 Artifact 由 AC-028-08 在真实 PR 验收 | 命令、CPython 3.14.6、完整测试结果和 Smoke 输出 |
-| AC-028-07 | GitHub Actions 使用 G02 §3.7 固定 setup-uv YAML、uv 0.13.10、`uv python install`；各矩阵令 PY 指向已安装的矩阵解释器（Windows 使用 PowerShell 对应变量）。依次执行 `uv sync --python "$PY" --locked --group dev --extra plugins`、`uv run --python "$PY" --locked --group dev --extra plugins python -m unittest discover -s tests -v`、`uv run --python "$PY" --locked --group dev --extra plugins python -m ca_agent_next --smoke`；G02 §3.8 的每一类变更均触发双平台完整回归，以仅修改 .github/workflows/review-context.yml 的真实 PR 为独立触发用例，核对同一次 synchronize 的 Ubuntu 3.12 和 Windows 3.14 两个非 skipped Job。保留 docs/SR/SR-003-* 与 Go Echo 构建，不执行 pip 临时安装 | Workflow diff、真实 PR Run 和 Job 日志；核对 action commit 与版本输入 |
-| AC-028-08 | SR-001 Workflow 已集成后，将其迁移到 uv；真实 `pull_request` Run 中上下文生成器成功，Artifact 恰含三份预期文件 | SR-001 集成基线 SHA、真实 Run URL、Summary 和下载核对后的 Artifact 文件清单 |
-| AC-028-09 | 不修改其他仓库、不改变运行时依赖和 setuptools backend、不引入额外签名/hash/Trust Registry 机制 | PR 文件清单、pyproject metadata、设计/实施边界审查 |
+| AC-028-04 | 在干净临时 worktree 先验证 `uv lock --check` 与 `uv sync --locked --group dev --extra plugins` 成功；随后只把 `pyproject.toml` 中唯一的 `PyYAML>=6.0,<7` 临时改为 `PyYAML>=6.0,<8`，不运行 `uv lock`。`uv lock --check` 和 `uv sync --locked --group dev --extra plugins` 必须分别非零退出，诊断明确指出 `uv.lock` 需要更新；每次失败后 `git diff --exit-code -- uv.lock` 均成功。恢复 pyproject 后 `git diff --exit-code -- pyproject.toml uv.lock` 成功 | 干净基线 SHA；两条正例命令结果；临时依赖约束 diff；两条负例的完整 stdout/stderr 和非零退出码；每次 `uv.lock` 未变化证明；恢复后的 clean diff |
+| AC-028-05 | 用两个临时 Git worktree 执行 A→B→A：A sync/断言/Host 测试，B sync/断言/Host 测试，再返回 A 不重新 sync 而重复断言和 Host 测试。每次先清除继承的 `UV_PROJECT_ENVIRONMENT`。断言各自 `.venv/pyvenv.cfg` 存在、`sys.prefix` 指向本 worktree `.venv`、`ca_agent_next.__file__` 位于本 worktree `src/`，`direct_url.json` 的 `dir_info.editable=true` 且 file URL 指向本 worktree；A/B 的 venv、module、editable source 路径互不相同，B 安装后 A 仍指回 A | 两个 worktree 的创建/清理命令；A→B→A 全程日志；A/B 的根目录、venv、模块导入和 direct_url.json 路径；两次 A 与一次 B 的 Host 测试结果；`git check-ignore .venv/pyvenv.cfg` |
+| AC-028-06 | 本地完整测试前必须具备 Go 工具链。`examples/echo/plugin/go.mod` 的 Go directive 为 `1.24`；记录满足该 directive 的实际 `go version`，构建前设置并验证 `GOWORK=off`，从 Plugin 模块目录按平台构建 Echo。随后分别执行 Host、Plugin、Review Context 三个 unittest 套件、完整 unittest discovery 和 Host Smoke | Go 版本、`go env GOWORK=off`、Linux/Windows 对应 Go build 命令与二进制路径；每个测试套件和总计的 discovered、passed、failures、errors、skipped、exit code；Smoke stdout/stderr/exit code；完整环境和受测 SHA。统计规则见 §5.1 |
+| AC-028-07 | GitHub Actions 固定 setup-uv/uv 版本。SR-003 矩阵目标为 Ubuntu Python `3.12` 和 Windows Python `3.14.6`；两个 Job 均使用 `shell: bash`、显式 `uv python find`/`--python`，记录并校验实际解释器；Go 使用 `setup-go@v5` 的 `go-version-file: examples/echo/plugin/go.mod`，设置 `GOWORK=off`，保留 Go Echo 构建。paths 必须覆盖 `pyproject.toml`、`uv.lock`、`.python-version`、`.gitignore`、`src/**`、`tests/**`、`examples/echo/**`、`scripts/review_context.py`、`docs/SR/SR-003-*`、`.github/workflows/review-context.yml` 和自身 Workflow。除主实施 PR 外，必须按 §5.2 建立独立堆叠验证 PR，其 base 为已包含迁移的实施 PR 分支，累积 diff 只能包含 `.github/workflows/review-context.yml`；在同一次 `pull_request.synchronize`、同一 Head SHA 下核验 Review Context Job 与 Ubuntu 3.12/Windows 3.14.6 两个非 skipped SR-003 Job | Workflow diff；两个 PR 的 base/head SHA 与文件清单；同一 synchronize 事件的 PR number/head SHA；两个 Workflow Run URL；SR-003 两个 Job 的非 skipped 状态、实际 Python/Go 版本、测试计数和退出码；Review Context Job 日志。示例 YAML 不是 PASS 证据 |
+| AC-028-08 | SR-001 Workflow 已集成后，将 Review Context 安装/测试入口迁移到 uv；真实 `pull_request` Run 中 `test_review_context.py`、生成器、Summary 成功，Artifact 恰含三份预期文件且无额外文件 | SR-001 集成基线 SHA；真实 Run URL；Summary；下载并解包后的 Artifact 文件清单与内容核对；测试统计和退出码 |
+| AC-028-09 | 不修改其他仓库、不改变运行时依赖和 setuptools backend、不引入额外签名/hash/Trust Registry 机制；不得修改 Agent Runtime 行为或公开 API | PR 文件清单、pyproject metadata、设计/实施边界审查 |
+| AC-028-10 | 当前工具链复验入口必须同步到 `README.md`、`Agent.md`、SR-002、SR-003、演示验收基线及 G02/SR-028。README/Agent 提供当前安装、测试、Smoke 和 Go Echo 前置入口；SR-002/SR-003/演示基线保留原始 pip 受测命令、SHA、时间与 PASS 事实，只新增明确标记为 SR-028 迁移后复验的 uv 命令，不覆盖或重写历史证据。不得把当前 uv 复验入口误写成 SR-002/SR-003 原始验收环境 | 上述每份文件的 diff 与逐文件核对清单；当前命令可执行入口；历史 pip 命令及受测 SHA 前后对照；README/Agent 与 SR-028 AC 的双向映射 |
 
 所有 AC 必须逐项记录受测 SHA、环境、命令、预期/实际结果和证据。未执行保持 NOT_RUN；依赖未满足的 AC 记录 BLOCKED，不得推导 PASS。
+
+### 5.1 AC-028-06 测试命令与统计规则
+
+本地从仓库根目录、CPython 3.14.6 和已完成 locked sync 的环境执行；Plugin 套件前必须先按 G02 §3.6 构建 Go Echo。
+
+| 统计范围 | 命令 |
+|---|---|
+| Host | `uv run --locked --group dev --extra plugins python -m unittest discover -s tests -p test_host.py -v` |
+| Plugin | `uv run --locked --group dev --extra plugins python -m unittest discover -s tests -p test_plugin.py -v` |
+| Review Context | `uv run --locked --group dev --extra plugins python -m unittest discover -s tests -p test_review_context.py -v` |
+| 完整总计 | `uv run --locked --group dev --extra plugins python -m unittest discover -s tests -v` |
+| Host Smoke | `uv run --locked --group dev --extra plugins python -m ca_agent_next --smoke` |
+
+每个 unittest 命令都必须独立记录 `discovered`、`passed`、`failures`、`errors`、`skipped` 和退出码。`discovered` 取 unittest 的 `Ran N tests`；`passed = discovered - failures - errors - skipped`。完整总计必须独立运行和记录，不得用三个子套件数量相加冒充。Host、Plugin、Review Context 每个必需套件及完整总计均须 `discovered > 0`、`failures=0`、`errors=0`、`skipped=0`、退出码为 0；任何必需套件或总计为 0 tests、必需测试 skipped、失败/错误或非零退出均为 FAIL。Smoke 必须退出 0，成功 stdout 符合演示验收基线，stderr 为空。
+
+### 5.2 AC-028-07 独立路径触发 PR 时序
+
+1. 主实施 PR 完成 uv、锁文件、解释器、Go 和两个 Workflow 的迁移；其累积 diff 可以包含全部实施文件。先核验主实施 PR 的常规 CI 与 AC-028-06/08。
+2. 在主实施 PR 分支仍可用时，创建一个独立堆叠验证分支，并以主实施 PR 的 head branch 作为验证 PR 的 base。base 已包含 `sr003-plugin-ci.yml` 对 `.github/workflows/review-context.yml` 的 paths 规则。
+3. 验证 PR 相对该 base 的三点差异文件清单必须且只能是 `.github/workflows/review-context.yml`。只在该文件增加一条明确的路径验证注释即可，不修改其他文件；打开 PR 后，再向同一文件推送第二个 commit，以产生可核对的 `pull_request.synchronize` 事件。
+4. 对该次 synchronize，核对 Review Context Workflow 与 SR-003 Workflow 都由同一 PR number、同一 head SHA 触发；Review Context Job 成功，SR-003 Ubuntu 3.12 与 Windows 3.14.6 两个 Job 均实际执行且非 skipped。保存两个 Run URL、事件、head SHA、Job 日志和测试统计。
+5. 不得用主实施 PR 中某个只修改单文件的 commit 代替本验证，因为 `paths` 根据 PR base...head 累积差异判定。验证 PR 不合并；主实施 PR 和验证 PR 的合并均须另行授权。
 
 ## 6. 交付门禁
 
@@ -91,7 +114,7 @@
 
 ## 7. 当前状态与停止条件
 
-SR-028 当前为 DRAFT。G02/SR-028 的设计 PR 尚待独立评审；不得创建实施 Issue、修改 `pyproject.toml`、生成 `uv.lock`、添加 `.python-version`、修改 Workflow 或向 DeepSeek Harness 发出实施提示词。
+SR-028 当前仍为 DRAFT。最新独立复评 Review #6082874849 对固定 Head `37d22e9862d22bdc07edb48ffd84b976663a48f4` 给出 CHANGES_REQUESTED；本轮整改只修改 G02/SR-028 与治理文档。AC-028-01～10 的产品执行全部 NOT_RUN；不得创建实施 Issue、修改 `pyproject.toml`、生成 `uv.lock`、添加 `.python-version`、修改 Workflow 或向 DeepSeek Harness 发出产品实施提示词。
 
 若评审发现 G02 与 SR-002 的 setuptools/运行时依赖约束冲突，先修订设计，不允许实施者自行选择替代后端或把开发依赖升级为运行时依赖。
 
@@ -111,3 +134,4 @@ SR-028 当前为 DRAFT。G02/SR-028 的设计 PR 尚待独立评审；不得创�
 | 2026-11-27 | 0.2.3 | GPT-6（ChatGPT） | 设计依据/修订记录 | 将 AC-028-07 对应的 G02 跨 OS 显式 --python 命令参考统一到 v0.2.2；模块主状态仍 DRAFT | 不让实施方误将 Bash 与 PowerShell 环境变量混用或在 Ubuntu 3.12 误装默认 3.14.6 | Issue #12/#35；PR #46；G02 |
 | 2026-11-27 | 0.2.4 | GPT-6（ChatGPT） | 设计依据、修订记录 | 同步 G02 v0.2.3 关于 Go 工具链与 Python 矩阵执行的准确描述；AC 未执行 | 保持独立设计评审的版本引用一致 | Issue #12/#35；PR #46；G02 |
 | 2026-11-27 | 0.2.5 | GPT-6（ChatGPT） | 文档头、评审状态、修订记录 | 将第三轮独立模型 Review #6082541121 的限定结论替换第三轮自评状态 | 区分工具链设计认可与 uv / 双平台产品验收 | Issue #12；PR #46；Review #6082541121 |
+| 2026-11-27 | 0.2.6 | GPT-6.2（ChatGPT） | §2、§4～§7、AC-028-04～10 | 按 Review #6082874849 补齐锁漂移负例、双 worktree A→B→A、Go 前置与完整测试统计、Windows 3.14.6、独立堆叠 PR 时序和文档验收 AC；修正版本导航及 `.venv/` 规则；保持 DRAFT/NOT_RUN | 关闭 R028-01～09 的设计缺口，不把文档整改误作产品实施或 READY | Issue #12；PR #46；Review #6082874849；G02 v0.2.4 |
