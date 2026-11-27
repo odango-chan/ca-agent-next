@@ -17,7 +17,10 @@ dependency_surface = _policy_module.dependency_surface
 extract_added_lines = _policy_module.extract_added_lines
 forbidden_root_lockfiles = _policy_module.forbidden_root_lockfiles
 is_python_scope_path = _policy_module.is_python_scope_path
+is_policy_gate_no_project = _policy_module.is_policy_gate_no_project
+policy_control_file_violations = _policy_module.policy_control_file_violations
 validate_base_ref = _policy_module.validate_base_ref
+workflow_toolchain_violations = _policy_module.workflow_toolchain_violations
 
 
 class PythonToolchainPolicyTests(unittest.TestCase):
@@ -102,11 +105,14 @@ class PythonToolchainPolicyTests(unittest.TestCase):
         line = (
             "uv run --no-project --python 3.14.6 "
             + "python -m "
-            + "unittest discover -s tests -p test_python_toolchain_policy.py"
+            + "unittest discover -s tests -p test_python_toolchain_policy.py -v"
         )
         self.assertEqual(
             command_violations([(".github/workflows/python-toolchain-policy.yml", line)]),
             [],
+        )
+        self.assertTrue(
+            is_policy_gate_no_project(".github/workflows/python-toolchain-policy.yml", line)
         )
 
     def test_uv_no_project_cannot_run_application_tests(self) -> None:
@@ -123,6 +129,77 @@ class PythonToolchainPolicyTests(unittest.TestCase):
         found = command_violations([(".github/workflows/windows.yml", line)])
         self.assertTrue(any("BARE_PYTHON_ENTRY" in item for item in found))
 
+    def test_bare_python_script_outside_scripts_directory_is_rejected(self) -> None:
+        line = "python tools/custom_check.py"
+        found = command_violations([(".github/workflows/ci.yml", line)])
+        self.assertTrue(any("BARE_PYTHON_ENTRY" in item for item in found))
+
+    def test_makefile_python_entry_is_scanned(self) -> None:
+        found = command_violations([("Makefile", "python tools/custom_check.py")])
+        self.assertTrue(any("BARE_PYTHON_ENTRY" in item for item in found))
+
+    def test_uv_pip_sync_is_rejected(self) -> None:
+        found = command_violations([(".github/workflows/ci.yml", "uv pip sync requirements.txt")])
+        self.assertTrue(any("PIP_INSTALL" in item for item in found))
+
+    def test_uv_sync_requires_locked(self) -> None:
+        found = command_violations([(".github/workflows/ci.yml", "uv sync --group dev")])
+        self.assertTrue(any("UV_SYNC_NOT_LOCKED" in item for item in found))
+        self.assertEqual(
+            command_violations([(".github/workflows/ci.yml", "uv sync --locked --group dev")]),
+            [],
+        )
+
+    def test_no_project_checker_allowlist_rejects_command_chaining(self) -> None:
+        line = (
+            'uv run --no-project --python 3.14.6 python "$policy_dir/'
+            + "python_toolchain_policy.py"
+            + '" \\ && python scripts/application.py'
+        )
+        found = command_violations([(".github/workflows/python-toolchain-policy.yml", line)])
+        self.assertTrue(any("UV_NO_PROJECT_BYPASS" in item for item in found))
+
+    def test_policy_control_files_are_rejected_for_regular_prs(self) -> None:
+        manifest = {"bootstrap": {"pr_number": 112}}
+        found = policy_control_file_violations(
+            {
+                "scripts/python_toolchain_policy.py",
+                ".github/python-toolchain-baseline.json",
+            },
+            113,
+            manifest,
+        )
+        self.assertTrue(any("POLICY_SOURCE_CHANGE" in item for item in found))
+
+    def test_bootstrap_pr_may_add_policy_control_files(self) -> None:
+        manifest = {"bootstrap": {"pr_number": 112}}
+        self.assertEqual(
+            policy_control_file_violations(
+                {"scripts/python_toolchain_policy.py", ".github/python-toolchain-baseline.json"},
+                112,
+                manifest,
+            ),
+            [],
+        )
+
+    def test_python_workflow_requires_pinned_setup_uv(self) -> None:
+        manifest = {
+            "uv_setup_action": "astral-sh/setup-uv@abc123",
+            "uv_version": "0.13.10",
+        }
+        invalid = workflow_toolchain_violations(
+            ".github/workflows/python-tests.yml",
+            "name: Python tests\\n- run: uv run pytest",
+            manifest,
+        )
+        self.assertEqual(len(invalid), 2)
+        valid = workflow_toolchain_violations(
+            ".github/workflows/python-tests.yml",
+            "name: Python tests\\nuses: astral-sh/setup-uv@abc123\\nversion: '0.13.10'\\n- run: uv run pytest",
+            manifest,
+        )
+        self.assertEqual(valid, [])
+
     def test_bare_python_script_is_rejected(self) -> None:
         line = "python " + "scripts/custom_check.py"
         found = command_violations([(".github/workflows/ci.yml", line)])
@@ -133,7 +210,7 @@ class PythonToolchainPolicyTests(unittest.TestCase):
             "uv run --no-project --python 3.14.6 python "
             + '"$policy_dir/'
             + "python_toolchain_policy.py"
-            + '"'
+            + '" \\'
         )
         self.assertEqual(
             command_violations([(".github/workflows/python-toolchain-policy.yml", line)]),
