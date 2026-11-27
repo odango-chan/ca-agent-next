@@ -1,7 +1,7 @@
 # 业务接入与 OpenAMSM 集成设计说明书
 
 > 文档类型：业务集成设计说明书  
-> 文档版本：0.3.4\
+> 文档版本：0.3.5\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
 > 功能归属：F06 — 业务接入与集成；EC04、EC05、EC07  
 > 关联 IR：IR-004、IR-005、IR-006  
@@ -216,7 +216,7 @@ OpenAPI 源位于 env-openamsm `dc83ccbf` 的 `upstream/openamsm/lib/sbi/support
 | 同一 modify 路径 | N2 PDU_RES_SETUP_RSP、PDU_RES_MOD_RSP、PDU_RES_REL_RSP，或 N1 Release Complete 0xD4 | 进入对应既有事务。Release 的 N1/N2 可分次到达；回调自身的 HTTP 响应按本次请求关联 |
 | `/sm-contexts/{smContextRef}/release` / `ReleaseSmContext` | AMF/network-initiated Release | 与 UE 0xD1 分开，未支持的入口显式拒绝 |
 
-JSON 的 `n1SmMsg.contentId`、`n2SmInfo.contentId` 必须各自唯一关联对应 part，N2 同时校验 `n2SmInfoType`。缺失、重复、类型冲突或不完整时不得产生 mutation。Namf 下行传输与 Nsmf 入站响应分别验收。
+JSON 的 `n1SmMsg.contentId`、`n2SmInfo.contentId`、`n2SmInfoExt1.contentId` 必须分别关联 N1、N2、N2 Ext1 命名 part 的 `Content-ID`；同时分别校验 `n2SmInfoType` 与 `n2SmInfoTypeExt1`。引用目标缺失、重复 Content-ID、错槽、媒体类型或类型冲突时不得产生 mutation。未被 JSON 引用的 part 不得交给 Codec；额外 part 的拒绝 / 忽略由 ingress profile 明确规定。Namf 下行传输与 Nsmf 入站响应分别验收。
 
 历史 ca-skills `780497a2` 的三个 MAS 作者源曾把 `pti`、`requestedPduSessionType`、`requestedSscMode` 放进 Create 输入；这些字段不能据此成为新 CA-SL 1.6.0 的 T1 Request 必填。新作者源必须拆分：T1 只声明真实 SBI `jsonData` / 已规范化 Event 中可获得的字段；NAS-only 字段在 T2 由已选 Skill 的正式 Codec READ Result 提供，再通过显式 SourcePath / arguments 使用。Modify / Release 也须逐字段确认 SBI / NAS / NGAP 来源。Release 的 trigger 是作者层枚举，不是 NAS 字节 0xD1。每个 fixture 保存原始 SBI、multipart parts、JSON / N1 / N2 原字节、T1 可用字段、T2 预期 Result、候选集合和 Run。缺少字段来源或 Codec READ 时停止该子场景并保持 BLOCKED；禁止 Host 补默认值或偷偷完整解码。
 
@@ -310,7 +310,7 @@ Create → Modify → Release 的顺序、Owner authoritative state、Receipt / 
 
 **原版来源与直接引用**：ca-skills / SR-031 只原样代发布 OpenAMSM 实际使用的 OpenAPI 3.0 YAML 与可达引用闭包，所有 bytes / 相对 `$ref` 不变。Plugin 按 OAS 3.0 operation / requestBody / multipart 验证；Compiler 在 Skill 显式 pin Source Bundle 后可直接解析原版 `components/schemas`。外部 Schema Object 按 OAS 3.0 dialect 处理，不生成 G.4 Adapter；Skill-owned `requestSchema` 根及本地节点仍遵循 G.4。Host Context 只经 `Contract.contexts` 引用。
 
-1. **T0**：Event Plugin 按 TS 29.502 的选定 `PostSmContexts.requestBody` 验证 SBI JSON、`multipart/related`、`jsonData`、N1/N2 binary parts、Content-Type 与 Content-ID；只 lazy resolve 该选定 surface 的 refs，不全文件 eager resolve 其他 operation。当前 `SmContextCreateData` 的可达闭包为 TS 29.502 / 29.571 / 29.510 NFManagement / 29.518 Namf 四份原版 YAML。依据 CommonData `RefToBinaryData.contentId`，`n1SmMsg.contentId` ↔ N1 part、`n2SmInfo.contentId` ↔ N2 part、`n2SmInfoExt1.contentId` ↔ N2 Ext1 part；必须精确匹配对应 slot，缺失、重复、错槽、错媒体类型或孤立 part 在 Artifact 发布前拒绝。通过验证后保存原始 N1/N2 bytes。T0 只做最小 0xC9 / 0xD1 / 0xD4 分类，不完整解码。
+1. **T0**：Event Plugin 按 TS 29.502 的选定 `PostSmContexts.requestBody` 验证 SBI JSON、`multipart/related`、`jsonData`、N1/N2/N2 Ext1 binary parts、Content-Type 与 Content-ID；只 lazy resolve 该选定 surface 的 refs，不全文件 eager resolve 其他 operation。当前 `SmContextCreateData` 的可达闭包为 TS 29.502 / 29.571 / 29.510 NFManagement / 29.518 Namf 四份原版 YAML。依据 CommonData `RefToBinaryData.contentId`，`n1SmMsg.contentId` ↔ N1 part、`n2SmInfo.contentId` ↔ N2 part、`n2SmInfoExt1.contentId` ↔ N2 Ext1 part；必须精确匹配对应 slot，引用目标缺失、重复 Content-ID、错槽或错媒体类型在 Artifact 发布前拒绝。未被 JSON 引用的 part 不得交给 Codec；额外 part 的拒绝 / 忽略由 ingress profile 明确规定。通过验证后保存原始 N1/N2/N2 Ext1 bytes。T0 只做最小 0xC9 / 0xD1 / 0xD4 分类，不完整解码。
 2. **T1**：Skill Request / `when` 只读取到场 SBI JSON / 已规范化 Event 字段；不调用 Codec。Create 的 PDU Session Type / SSC mode / NAS PTI 等只有从 N1 解码才能获得，不能在 T1 强制要求。
 3. **T2**：选定 Procedure 调正式 Codec READ 后，才能通过 Provider Output Schema 使用 NAS / NGAP Result。SBI 与 N1 的 PSI / 类型冲突在 Owner mutation 前拒绝，不补默认值。
 4. **Modify / Release / Continuation**：0xC9 是最小分类，不代表完整 Modify Decoder；0xD1 首批候选不证明 Create / Modify / N2 已支持；0xD4 / N2 completion 只续跑原 Run，检查 generation / PSI / PTI / N2 message type。
@@ -340,3 +340,4 @@ Create → Modify → Release 的顺序、Owner authoritative state、Receipt / 
 | 2026-11-27 | 0.3.2 | ChatGPT / GPT-6 | 本轮 IR-009 设计修正 | 固定 OpenAMSM 版本 + 原版 YAML 逐字节代发布；显式区分可选 Adapter 与 Provider Codec 输出 | 落实原版 YAML 不得改动、消除误把原版当 G.4 的风险 | Issue #47；SR-031/026/013 |
 | 2026-11-27 | 0.3.3 | ChatGPT / GPT-6.2 | §2、§14 | 以原版 OAS3 operation / multipart 和直接组件引用替代 Adapter；修正历史 Create NAS-only 字段不能在 T1 必填 | 关闭 Create 选择前解码循环并对齐原始标准 | IR-009；Issue #47；SR-010/013/026/031 |
 | 2026-11-27 | 0.3.4 | ChatGPT / GPT-6.2 | §14 | 补齐 PostSmContexts 四文件选定闭包、lazy refs 和 RefToBinaryData Content-ID 到 N1/N2/N2 Ext1 part 的精确关联 | 防止 SBI ingress 错配二进制消息或因无关 operation refs 误失败 | IR-009；Issue #47；SR-010/031；EC01 |
+| 2026-11-27 | 0.3.5 | ChatGPT / GPT-6.2 | §2、§14 | 补齐 N2 Ext1 type 对账；未引用 part 不交 Codec，额外 part 策略归 ingress profile | 避免未引用数据被误解码或对原版 Schema 施加隐含限制 | IR-009；Issue #47；SR-010/031；EC01 |
