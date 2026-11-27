@@ -41,7 +41,7 @@ DeepSeek Harness 默认使用 Goal 模式。按[SR 管理规范](docs/规范/SR%
 - Agent 只消费外部已发布 Skill Bundle；存在 Assurance 时同时消费正式 Runtime Artifact。无 Assurance Bundle 可携带共享资源而不生成 Compiler Artifact；Agent 不调用 Compiler Check/Build/Inspect/Verify，不建立 Skill Admission，不把 Assurance 作者源作为运行时 Artifact。
 - Skill 选择先于模式选择；精确 Continuation 恢复原 Run，不重新选择 Skill。
 - SkillCatalog 由 Core/Host 拥有；更新原子切换 generation；在途 Invocation 固定 generation。
-- Deterministic 与 LLM-guided 共用 Runtime Action Boundary；LLM 不得直接调用 Plugin 或扩大业务 Capability Scope。Host 仅在配置 `scriptExecution.llmEnabled=true`（默认 false），且当前 Skill Registry 将 transform Script 标记为 `llmInvocable=true` 时，才可额外提供 host.skill-script.execute system Capability；不得执行模型提交代码、任意路径或命令。
+- Deterministic 与 LLM-guided 共用 Runtime Action Boundary；LLM 不得直接调用 Plugin 或扩大业务 Capability Scope。当前 Skill 有 `scripts/manifest.yaml` 登记脚本时，Host 即通过 host.skill-script.execute system Capability 向 LLM 提供同一 Script Runner；LLM 与 Assurance 使用相同脚本集合，不设置逐脚本标记或额外 Host 开关。不得执行模型提交代码、任意路径或命令。
 - Owner Receipt / Commit Proof 是 mutation 结果权威；HTTP 200、IPC 成功或 Delivery 成功不能替代；UNKNOWN 不得变成 COMMITTED。
 - SBI 可携带 JSON、multipart 和二进制。Event Plugin 处理协议；Host 管理 ArtifactStore；Codec 按需作为现有 Tool Plugin 的 Operation 调用。
 - Event/Delivery Plugin 本地 staging 与 Host→Tool Artifact Channel 是两条不同路径。ca-host.artifact-store/v1 已冻结；ca-client-tools Provider v1.2.0 已实现消费，ca-agent Go Host main 447d0cc 有 P1 验收证据。Next Python Host 的 ArtifactStore / Channel 尚未实现，因此 Next 的 artifact-bearing Provider binding 仍必须 NOT_CONFIGURED，并在远端 I/O 前拒绝。必须遵循 v1 的随机 opaque artifactRef、Invocation/direction/slot 绑定、loopback HTTP/1.1 通道、大小/生命周期限制、逐 Artifact SHA-256 传输校验和原子发布；该 SHA-256 不是引用身份或内容寻址。不得把 Event stagingPath 传给 Provider，不得将原始 bytes/Base64 放入 NDJSON。
@@ -175,4 +175,4 @@ review_scope:
 | 2026-11-27 | GPT-6.2（ChatGPT） | §3、修订记录 | 将中央 SKILL 作者规范加入仓库协作入口，明确作者规范与 CA-SL 1.6.0 语言规范的权威边界 | 防止作者 / Harness 从历史 v1alpha5 资料或注释推断新版语法 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | GPT-6.2（ChatGPT） | §3、修订记录 | 扩展中央作者规范的协作摘要，覆盖 Package / Schema、数据流、when / Wait、Evidence / UNKNOWN 和 AI Authoring，而不只列 Node / 注释 | 避免 Agent.md 将规范范围缩窄，导致 Harness 漏读适用规则 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | GPT-6.2（ChatGPT） | §3、修订记录 | 将根目录共享资源、Host Script Execution system Capability 和无 Assurance Bundle 规则纳入全局架构约束 | 防止 Harness 将 schemas/scripts 放回可选 Assurance 或实现任意 Python 执行 | Issue #49；IR-008；SR-032 |
-| 2026-11-27 | GPT-6.2（ChatGPT） | §3、修订记录 | 固定 Host Script Execution 双门禁：Host `scriptExecution.llmEnabled` 默认 false，且 Registry `llmInvocable=true` | 避免 Harness 仅凭 Skill 包内标记就开放脚本执行 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | GPT-6.2（ChatGPT） | §3、修订记录 | 删除 Host Script Execution 的逐脚本与 Host 配置双门禁，改为 LLM 与 Assurance 共用 Registry / Script Runner | 保持模型与确定性执行能力一致，同时禁止任意代码、路径和命令 | Issue #49；IR-008；SR-032 |
