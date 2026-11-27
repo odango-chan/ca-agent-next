@@ -1,7 +1,7 @@
 # SR-032：SKILL 作者规范、Node 拆分与注释原则
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.16  
+> SR 版本：0.1.17  
 > 状态：**DRAFT（中央作者规范已形成设计候选，待独立设计评审；实施 NOT_READY）**  
 > 创建日期：2026-11-27  
 > 修订日期：2026-11-27  
@@ -95,7 +95,7 @@ F09 的 AI Authoring 必须使用同一作者规范和完整正向示例生成�
 
 | 类型 | 依赖 | 影响 |
 |---|---|---|
-| 设计依赖 | CA-SL 1.6.0 v0.2.6 / SR-029；SKILL 作者规范 v0.2.2 | 原有 Node / routes / arguments / PredicateSet 语法、Capability 绑定、四阶段、共享资源根目录、Script Registry、Script I/O / Evidence / 错误契约、Host Resource Read / Script Execution 和 when 语义必须一致；Skill 层无 Wait / await / polling；本 SR 不冻结 Compiler wire API |
+| 设计依赖 | CA-SL 1.6.0 v0.2.6 / SR-029；SKILL 作者规范 v0.2.3 | 原有 Node / routes / arguments / PredicateSet 语法、Capability 绑定、四阶段、共享资源根目录、Script Registry、Script I/O / Evidence / 错误契约、Host Resource Read / Script Execution 和 when 语义必须一致；Skill 层无 Wait / await / polling；本 SR 不冻结 Compiler wire API |
 | 历史来源 | SR-023 / ca-skills v1alpha5 | 只用于来源核对和历史归档 |
 | 消费者设计 | F01 / F02 / F03 / F04 / F05 / F08 / F09；SR-004 / SR-007 / SR-016 | Host Model Loop、Importer、Plugin Manager、Runtime Action Boundary、Host Resource Read、完整 Script Registry、Compiler / Bundle 和 AI Authoring 必须消费同一共享资源与 Script Execution 契约；现有产品实现状态不自动变化 |
 | 外部发布依赖 | ca-skills 1.6.0 正式 Schema / Golden / Release | 正式发布前，本规范与语言稿均保持设计候选，不声称产品可执行 |
@@ -155,3 +155,5 @@ F09 的 AI Authoring 必须使用同一作者规范和完整正向示例生成�
 | 2026-11-27 | 0.1.15 | GPT-6.2（ChatGPT） | 文档头、设计依据、修订记录 | 同步 EC01 v0.2.3 与 CA-SL v0.2.6；纳入 3GPP optional requestType has 守卫和 OAS3 开放对象语义边界 | 保持作者规范与语言 / 架构权威文档一致，避免遗留无守卫示例和 dialect 冲突 | Issue #49；IR-008/009；PR #52 |
 
 | 2026-11-27 | 0.1.16 | GPT-6.2（ChatGPT） | §3.3、设计依据、修订记录 | 澄清最终单 Predicate Postcondition-only Node 的合法例外，并与作者规范 v0.2.2 对齐 | 使 Node 粒度裁决不与 CA-SL 阶段文法和最终 Goal 聚合规则冲突 | Issue #49；IR-008；SR-032；PR #52 |
+
+| 2026-11-27 | 0.1.17 | GPT-6.2（ChatGPT） | 文档头、设计依据、修订记录 | 同步 SKILL 作者规范 v0.2.3 的最终单 Predicate 例外和 QoS 示例 Node 合并 | 保持 SR-032 粒度原则、作者正向示例和 CA-SL 阶段自动推进语义一致 | Issue #49；IR-008；PR #52 |
