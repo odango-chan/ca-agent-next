@@ -156,7 +156,8 @@ Compiler v2.1.0 的 Development package version 必须为 exact SemVer。Owner s
 |---|---|---|
 | CA-SL 1.6.0 Skill Author Source | 声明业务目标、Procedure、Capability ID grants / 使用点与业务参数；作者源只表达 Capability ID | 不声明或选择 Callable ID、backendOperationId、URL、Header、凭据或 Owner 结果 |
 | CA-SL 1.6.0 Compiled Skill Artifact | 保存 Compiler 生成的 Procedure、唯一 `capabilityBindings`（Capability ID → 公开 Callable ID）及精确依赖闭包 | 不接受作者或模型覆盖 Callable Binding；不暴露 Provider backendOperationId、URL、Header 或凭据 |
-| Compiler（历史 v1alpha5） | 对 v1alpha5 resolved dependency snapshots / Owner bindings 做 ToolCatalog、Schema、Capability、Evidence 与 Procedure 静态链接并发布冻结 Artifact；Development v1alpha1 另使用 Interface Package/Lock | 仅描述历史实现；不作为 CA-SL 1.6.0 目标模型、实现入口或兼容依据 |\n| Compiler（CA-SL 1.6.0 目标） | 只消费 Publisher 冻结的 1.6.0 作者源与 Owner/Provider Package；静态校验 Capability ↔ 公开 Callable 双向一对一，生成唯一内部 Binding 和新版 Runtime Artifact / Build-Verify 结果 | 不接受旧作者源、旧 DTO/Artifact，不提供兼容/迁移；不启动 Provider、不检查运行时可用性、不授权真实调用 |
+| Compiler（历史 v1alpha5） | 对 v1alpha5 resolved dependency snapshots / Owner bindings 做 ToolCatalog、Schema、Capability、Evidence 与 Procedure 静态链接并发布冻结 Artifact；Development v1alpha1 另使用 Interface Package/Lock | 仅描述历史实现；不作为 CA-SL 1.6.0 目标模型、实现入口或兼容依据 |
+| Compiler（CA-SL 1.6.0 目标） | 只消费 Publisher 冻结的 1.6.0 作者源与 Owner/Provider Package；静态校验 Capability ↔ 公开 Callable 双向一对一，生成唯一内部 Binding 和新版 Runtime Artifact / Build-Verify 结果 | 不接受旧作者源、旧 DTO/Artifact，不提供兼容/迁移；不启动 Provider、不检查运行时可用性、不授权真实调用 |
 | Plugin Manager | Provider 包加载、进程生命周期、握手、IPC correlation、Tools Extension 分发 | Skill 选择、Capability 授权、Owner Commit 判断 |
 | ProviderV2 Tools Extension Driver | 读取 Provider v2 发布映射；启动 Provider；适配 initialize/catalog/invoke/cancel；把私有 backend ID 隐藏在 Host 内部 | 创建第二个 Provider Manager、复制 ToolCatalog、授予 Skill 权限 |
 | Runtime Action Boundary | 检查当前 Run/Skill Scope、Callable、Schema、Effect、Artifact 来源和状态；解释 Owner Receipt / Outcome / UNKNOWN / Reconcile | 直接管理 Provider 进程或重写 Owner 业务规则 |
