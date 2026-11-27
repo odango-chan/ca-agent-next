@@ -1,7 +1,7 @@
 # Tool Interface 与 Provider 集成设计说明书
 
 > 文档类型：功能子模块设计说明书
-> 文档版本：0.4.4
+> 文档版本：0.4.5
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 功能归属：F03.05 — Tool Plugin 集成
 > 交叉功能：F03.01～F03.04、F04.01、F04.05、F05.02、F06
@@ -566,6 +566,14 @@ Runtime Action 以 Capability ID 为 Skill / Procedure 作者侧入口。Runtime
 | 模型指定 Callable/backendOperationId/URL 或自由文本 selector | IPC 前拒绝；Provider 只能用 Schema 闭合路由私有 handler |
 | Skill/LLM 直接调用 internal-only MAS.RECONCILE | `INTERNAL_RECONCILE_ONLY`、IPC=0；Coordinator 仅按原 Mutation Reconcile |
 
+### 12.6 3GPP 公共 Schema 与 Codec READ Output 的 Producer 边界（IR-009）
+
+- `ca-skills / SR-031` 发布**独立** 3GPP Schema-only Package（0 Capability、0 Callable），封装固定 TS 29.502/24.501/38.413 来源的 **受限 1.6.0 JSON Schema 投影**。与 SR-030 Host Context Schema-only 包分别固定依赖身份，不为 Schema-only 产物虚构 Tool。
+- `ca-client-tools / SR-026` 仍唯一拥有 Codec 真实 handler / Interface Package / READ Capability ↔ 唯一 Callable。第一批只发布 0xD1 的固定输出；Create Establishment 与 Modify 0xC9 要另外资格化消息 profile、Provider Output Schema 和真实 fixture，不能拿首批 0xD1 的 AC 代替。增加消息类型不代表额外 Callable：若沿用原 Codec Capability，必须先以新的正式发布版本明确关闭的 Input selector、兼容**新版内部**的 Output Schema 和每 profile 结果必需字段校验；输出 G.4 无 `oneOf`，可采用关闭对象+messageType enum+可选字段，Provider 逐 profile 检查必需字段、Procedure 显式 guard/类型检查。若该策略不能满足符合性，则新候选设计再进入评审，不靠 Handler 私有路由冒充公共 Schema。
+- Host 在 T1 仅验证 Plugin Event 与 Skill Request，T2 经统一 Runtime Action Boundary、当前 Run / Invocation / slot 授权通过 artifact channel 调用 Codec READ；原 bytes 不变。Provider Return 不等于 Owner Receipt/Commit。无 Codec 依赖时 zero Codec dispatch；必须但未发布时只标对应消费子项 BLOCKED。
+- Codec 结果的标准类型版本必须锁到 SR-031 真实发布快照；现有查询 2/2 + 1 个 Codec 1/1 为**当前首批目标 3/3**。Schema-only 依赖不计入基数。Source Map/Schema ID/Package SemVer/handler 暂缺，禁止 Harness 猜测。
+- [权威公共设计](../EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)；产品发布与 E2E 尚未运行。
+
 ## 13. 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
@@ -590,3 +598,4 @@ Runtime Action 以 Capability ID 为 Skill / Procedure 作者侧入口。Runtime
 
 | 2026-11-26 | 0.4.2 | GPT-6（ChatGPT） | 1.6.0 Capability / Codec 目标 | 修正 Skill 仅声明 Capability，补齐 Codec 第三个 1:1 公开能力并区分历史 Provider 2/11 | 修正历史 Callable-only 描述和 Provider 能力基数遗漏 | Issue #12/#40；SR-025/026/030 |
 | 2026-11-27 | 0.4.3 | Codex / GPT-6 | Provider 一对一映射 | 区分查询 2/2 与包含 Codec 的 3/3 | 与 SR-029、F06 的发布范围对齐 | Issue #12，PR #46 |
+| 2026-11-27 | 0.4.5 | ChatGPT / GPT-6 | 3GPP Schema/Codec 分阶段消费 | 对齐 SR-031 公共类型、T1 Request 与 T2 Codec Result，新增分期拒绝/验收范围 | 修复标准输入来源与实现门禁的跨仓断点 | IR-009；Issue #47；SR-031/026 |
