@@ -1,7 +1,7 @@
 # SR-010：OpenAMSM 工具插件与按需编解码集成
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.3\
+> SR 版本：0.2.4\
 > 状态：DRAFT（实施主状态）；第二轮独立评审 CHANGES_REQUESTED（历史结论）；第三轮自评 **DESIGN_READY_FOR_INDEPENDENT_REVIEW**（仅设计评审候选，非独立批准或实施 READY）；产品 AC NOT_RUN/BLOCKED。
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-27\
@@ -95,6 +95,16 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 - 影响分析：初始分解；等待设计基线评审。
 - 本 SR 的范围和验收条件在进入 READY 后冻结。后续发生语义变化时创建新的 SR 并引用本 SR，不覆盖历史要求。
 
+## 8. 3GPP Common Schema 与 Codec READ Result 消费分期（IR-009）
+
+- SR-031/ca-skills 的 3GPP Common Schema-only Package **没有** Capability/Callable；Next 导入/Resolver 按正式 Compiler Artifact 读取 Skill-owned Request 根和精确公共类型闭包；不能把公共标准包路由为 Tool。Host Context Schema-only 的 `Contract.contexts` 通路仍独立。
+- 原始 N1/N2 由 SR-009 Plugin staging → Host ArtifactStore → 受授权的 SR-010 artifact channel → Provider Codec READ，Plugin/Host 都不能完整解码，Codec output JSON 必须通过发行包 Output Schema 并与受信公共类型快照匹配，原 bytes 保留。
+- T1 只按 SBI/最小 discriminator 选择 Skill；T2 选中后才按 Grant 使用 Codec；Create 的 PDU Session Type/SSC mode 等 NAS-only 字段从 T1 Request 必填转移至 Procedure T2 Result，0xD4/N2 completion 只恢复原 Run。
+- 原 AC-010-01～05/09 的 **Host channel 独立验收**保持不受 SR-031 产品发布统一阻塞；AC-010-07 的 0xD1 仅是首批 Codec 子集。新增 `AC-010-10`：Create/Modify 正式 Codec profile 与新 1.6.0 Skill Request/Procedure/Bundle 联验；SBI 与 N1 冲突、Codec 输出 schema mismatch、未授权 ref、非法 0xD4 或缺 Publisher 时 reject/BLOCKED 且零 Owner mutation。此子项未执行、无发布证据，不影响早期可独立 READY 的 channel 子阶段。
+- Consumer 不自行指定 Provider Machine ID/Schema/handler；生产端 SR-026 及 SR-031 提供正式发布记录后按 snapshot pin，禁止动态 latest 或双语言兼容。
+
+[权威 3GPP 公共设计](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)；本 SR 新增设计范围须独立复评，产品 `NOT_RUN/BLOCKED`。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
@@ -116,3 +126,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-27 | 0.2.1 | 未记录（历史资料未提供） | 历史条目未细分 | Codex / GPT-6，设计依据、AC-010-06，加入三层旧包拒绝及公共契约 §10 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
 | 2026-11-27 | 0.2.2 | GPT-6（ChatGPT） | 第三轮设计自评/历史修订表 | Host Artifact Channel AC-010-01～05/09 与 Codec 公开能力 AC-010-06b/07/08 分阶段，旧包三层零 IPC 负例可独立验；将第二轮结论保留为历史、登记第三轮独立复评候选并按版本整理记录 | 设计范围可供外部评审而不提前授权代码实施或夸大 AC 状态 | Issue #12；PR #46；SR-010 |
 | 2026-11-27 | 0.2.3 | GPT-6（ChatGPT） | 修订记录 | 将历史记录统一为七列并保留原始文字及原始关联，修正非规范行的分隔符 | 确保修订表可由文档校验器完整解析；不影响设计语义及 READY 主状态 | Issue #12；PR #46；SR-010 |
+| 2026-11-27 | 0.2.4 | ChatGPT / GPT-6 | 3GPP Schema/Codec 分阶段消费 | 对齐 SR-031 公共类型、T1 Request 与 T2 Codec Result，新增分期拒绝/验收范围 | 修复标准输入来源与实现门禁的跨仓断点 | IR-009；Issue #47；SR-031/026 |
