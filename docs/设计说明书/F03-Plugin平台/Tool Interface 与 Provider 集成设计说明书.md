@@ -1,7 +1,7 @@
 # Tool Interface 与 Provider 集成设计说明书
 
 > 文档类型：功能子模块设计说明书
-> 文档版本：0.4.4
+> 文档版本：0.4.5
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 功能归属：F03.05 — Tool Plugin 集成
 > 交叉功能：F03.01～F03.04、F04.01、F04.05、F05.02、F06
@@ -402,6 +402,14 @@ Next Runtime 必须从已验证 sidecar 中所有 Mutation 的 `commitProof.reco
 - 只能使用发布契约明确标记并有证据支持的消息子集。reencodeVerified 不等于 qualified；不合格消息不得因 round-trip 相等而升级。
 - ca-client-tools PR #39 当前为 OPEN，Phase B facade/worker 证据已记录，Phase C Consumer Migration 未开始。本 SR 不依赖 PR #39 合并，不声明 Next 已消费该 Codec。
 
+### 8.3 1.6.0 Codec Provider 与 Owner N1 Parser 的唯一性审计
+
+现有 ca-client-tools v1.2.0 的 **2 Capability / 11 READ Callable** 只是历史基数；新 Provider 目标为 **3 Capability / 3 唯一 Callable**：两个收敛查询入口加一个 SR-026 Codec READ。Codec 的公开机器 ID、输入/输出 Schema、封闭消息 Profile、slot/mediaType、handler 与发行版本由 ca-client-tools Publisher 冻结，未发布前不可配置为可用。首批 0xD1 Release Request 向量不证明 0xC9 Modify 或 NGAP 资格；这两类业务依赖分开标记 BLOCKED。
+
+`env-openamsm@dc83ccbf5be54dcc7112dd43ba95ea6fa5975550` 的 `SSM.PARSE_N1_MODIFY` 虽声明 Effect=READ，但在 `0007-ssm-n1-modify-parse.patch` 中实际调用 `ogs_nas_5gsm_decode`；`SSM.PARSE_N1_RELEASE` 也已存在历史 Owner ToolCatalog，但其 handler 输入/语义须进一步核验。**READ ≠ 纯业务校验**。新版 Skill 的 NAS/NGAP 解码唯一归已资格化 Provider Codec；Owner 只能消费经 Result Schema 校验的 typed projection 作业务验证，并保留业务状态、mutation、Receipt/Proof/Reconcile。Owner 需选择移除两个旧解码 Capability（条件目标 22/22）或重构为纯业务 READ（保留两项条件目标 24/24），发布者签认前不宣称最终基数。相关冻结门槛见 SR-029 §3/§10.1、F06 §7.1；不得把历史 Parser 自动视作新版 Callable，也不能在 Codec 未发布时做 fallback。
+
+T1 只允许 Event Plugin 为共享 SBI Update 路径最小读取 NAS 消息类型作路由；正式协议 Decode 在绑定 Skill/Run 后的 T2 Provider READ 中执行，Host-owned Artifact channel 以 Invocation/slot 授权；Result Schema 未验证不得传给 Owner，不能构造 T1 when/input。二进制原始 bytes 保留为证据。
+
 ## 9. 失败语义
 
 | 失败情形 | 处理位置 | 结果与约束 |
@@ -573,3 +581,4 @@ Runtime Action 以 Capability ID 为 Skill / Procedure 作者侧入口。Runtime
 | 2026-11-27 | 0.4.2 | GPT-6.2（ChatGPT） | §10、§12、修订记录 | 将复用代码表中的 Capability→Operation 关系和 Operation allowlist 标记为历史机制，目标语义改为 Capability↔Callable 1:1 与 Callable allowlist | 防止旧 Demo 实现关系被误认为 1.6.0 规范要求 | Issue #40；SR-029；PR #45 |
 | 2026-11-27 | 0.4.3 | GPT-6.2（ChatGPT） | §5、修订记录 | 将 CA-SL 1.6.0 Skill Author Source 与 Compiled Skill Artifact 分列：作者源仅声明 Capability ID，Artifact 保存 Compiler 生成的唯一 Capability→Callable Binding | 消除把 Capability / Callable 并列描述为作者依赖的歧义，保持 Callable 仅作为编译产物内部与 Runtime dispatch 身份 | Issue #40；SR-029；PR #45 |
 | 2026-11-27 | 0.4.4 | GPT-6.2（ChatGPT） | F03.05 §5 | 分列历史 v1alpha5 Compiler 职责与 CA-SL 1.6.0 Compiler 目标职责，消除组件表版本混用。 | 明确历史实现与新目标模型边界，避免将旧 resolved dependency snapshots / Owner bindings 误读为 1.6.0 职责。 | Issue #40/#62；PR #45 |
+| 2026-11-28 | 0.4.5 | GPT-6（ChatGPT） | §8.3 | 固定 3/3 Codec Provider 目标、READ 不等于纯业务 Parser 的源证据、Owner 两种条件基数与 T1/T2 限界 | 消除第六轮 P1-01 的 Provider/Owner 责任混合与隐式 fallback | Issue #40/#113；PR #45；SR-026/029；F06 |
