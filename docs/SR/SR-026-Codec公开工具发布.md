@@ -1,7 +1,7 @@
 # SR-026：Codec公开工具发布
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.7\
+> SR 版本：0.1.8\
 > 状态：DRAFT（实施主状态）；第二轮及本次自评均 BLOCKED_EXTERNAL_INPUT（缺 Provider Owner 正式 Codec Capability/Callable、Schema 与发布身份）；库向量范围仅可独立审查，非实施 READY。
 > 创建日期：2026-11-26  
 > 修订日期：2026-11-27\
@@ -58,6 +58,19 @@
 
 这些字段由生产者在其签认 Issue/PR 和正式发布记录中提交。本 SR 现有 `2e 05 01 d1` 向量、`0xd4` 非目标负例可先供静态评议；任何字段尚缺时，禁止由 Harness 推断别名、Schema、版本或“兼容”路径，SR-026 整体仍 BLOCKED_EXTERNAL_INPUT。
 
+## 5. 3GPP Common Schema 对接与 Create/Modify 增量发布子阶段（IR-009）
+
+**保持第一批 SR-026 0xD1 Release Request 的原定范围与 AC-026-01～03 不变。** 但这三个 AC 即使 PASS，也**不**证明 Create Establishment/Modify 0xC9 或 NGAP 的 Codec 能力；因此不能解除 SR-011 Create→Modify→Release 组合 E2E 对字段来源的阻塞。
+
+第二阶段设计目标（仍由 `ca-client-tools` Owner 负责；新业务子范围的实施需独立评审/Issuer 授权）：
+1. 从 [SR-031](SR-031-3GPP公共Schema-only-Publisher.md) 已发布 Schema-only 包固定 TS 24.501 与 29.502 的字段类型、sourceMap、Schema $id/版本；每类消息明确命名、已支持字段、原始 fixture、结果字段、错误/负例，不推断全量 NAS/NGAP。
+2. Create Establishment Request 应提供 N1 实际包含且业务需要的 PDU Session Type / SSC mode / PSI/PTI；Modify 0xC9 的支持字段按真实 Provider Codec fixture 明列。GFBR/MBR 不得由模型补造；Owner/Codec 不能取到的业务字段按依赖 `BLOCKED`。
+3. 如维持一个 Codec READ Capability/Callable 的 1:1 模型，必须用**正式新版**可验证的关闭 Input selector/messageProfile 和 Output Schema 支持扩展；G.4 无 `oneOf`，建议关闭对象 + messageType enum + 可选字段、Producer 对不同 profile 强制检查必需字段，Procedure 显式 guard。**此为待评审方案而非已发布 API**；若原包不支持，应另行提出可冻结设计而不是猜公开机器字段。
+4. Codec 只能经当前 Run/Invocation、slot/mediaType 有效的 artifactRef 取字节，输出 JSON 校验后才交给 Procedure，原始 bytes 与 Owner Receipt/Proof 完全分离；0xD4 Release Complete 不能作为 0xD1 Release Request 的合法 profile。
+5. 正反验收至少覆盖 Create、Modify、0xD1、0xD4 非该 profile、截断消息、未知类型、Schema 版本不匹配、丢/多字段、无 Codec 依赖零调用。每个新 profile 独立固定 source SHA、测试命令/数量、Publisher 资产与新 Bundle/Runtime 消费证据，**不得**以现有 PR #39 库向量替代正式 Tool。
+
+该阶段新增计划性验收 `AC-026-04`（3GPP 公共类型与 Profile Source Lock）、`AC-026-05`（正式 Codec Provider 新 profile 发布和 schema-valid invoke）、`AC-026-06`（新 1.6.0 MAS Skill 的 Create/Modify Procedure READ 消费与失败隔离）。**全为 BLOCKED_EXTERNAL_INPUT / NOT_RUN**，仅在 Owner 交接表固定 Package/Schema ID、SemVer、调用命令和 Golden 并获独立批准后才可给 Harness 实施 Goal。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
@@ -70,3 +83,4 @@
 | 2026-11-27 | 0.1.5 | Codex / GPT-6 | 评审状态 | 登记第二轮限定范围及外部依赖 | 未单独记录（历史原因未提供） | Issue #12，PR #46 |
 | 2026-11-27 | 0.1.6 | GPT-6（ChatGPT） | §4.1、修订表 | 固定 Codec 公开契约缺件及唯一生产者，保留现有库向量独立可审查范围，整理历史六列修订记录 | 将外部输入阻塞与静态候选审查隔离，杜绝猜测公开机器 ID | Issue #12；PR #46；SR-026 |
 | 2026-11-27 | 0.1.7 | GPT-6（ChatGPT） | 修订记录 | 将历史记录统一为七列并保留原始文字及原始关联，修正非规范行的分隔符 | 确保修订表可由文档校验器完整解析；不影响设计语义及 READY 主状态 | Issue #12；PR #46；SR-026 |
+| 2026-11-27 | 0.1.8 | ChatGPT / GPT-6 | 3GPP Schema/Codec 分阶段消费 | 对齐 SR-031 公共类型、T1 Request 与 T2 Codec Result，新增分期拒绝/验收范围 | 修复标准输入来源与实现门禁的跨仓断点 | IR-009；Issue #47；SR-031/026 |
