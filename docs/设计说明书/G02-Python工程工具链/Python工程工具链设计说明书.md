@@ -196,7 +196,7 @@ uv run --locked --group dev --extra plugins python -m ca_agent_next --smoke
 | `ubuntu-latest` | `3.12` | 从 `examples/echo/plugin/go.mod` 读取，满足 `go 1.24` |
 | `windows-latest` | `3.14.6` | 从 `examples/echo/plugin/go.mod` 读取，满足 `go 1.24` |
 
-不得使用浮动的 Windows `3.14`。两个矩阵 Job 均显式安装/查找矩阵解释器，记录 `python --version`；Windows 必须精确断言 `Python 3.14.6`。两个 Job 的 uv sync/run 必须显式传入 `--python "$PY"`。为避免 Bash 与 PowerShell 变量混用，所有使用矩阵变量的 Python/Go 命令统一 `shell: bash`，不保留 PowerShell 变量替代示例。
+不得使用浮动的 Windows `3.14`。两个矩阵 Job 均显式安装/查找矩阵解释器，记录 `python --version`；Windows 必须精确断言 `Python 3.14.6`。两个 Job 的 uv sync/run 必须显式传入 `--python "$PY"`。Linux Job 使用 `shell: bash`，Windows Job 使用 `shell: pwsh`；分别使用 Bash 的 `PY="$(uv python find "$PYTHON_VERSION")"` 和 PowerShell 的 `$PY = (uv python find $env:PYTHON_VERSION)` 原生变量语法。命令示例按对应 shell 单独给出，不得跨 shell 复制变量表达式。
 
 拟实施的矩阵步骤（示例不是运行证据）：
 
@@ -204,6 +204,7 @@ uv run --locked --group dev --extra plugins python -m ca_agent_next --smoke
 env:
   GOWORK: 'off'
   PYTHONUTF8: '1'
+  PYTHON_VERSION: ${{ matrix.python-version }}
 steps:
   - uses: actions/checkout@v4
   - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
@@ -228,14 +229,28 @@ steps:
         rm -f bin/echo-plugin
         go build -trimpath -o bin/echo-plugin .
       fi
-  - name: Install matrix Python
-    shell: bash
-    run: uv python install '${{ matrix.python-version }}'
-  - name: Sync and test with matrix Python
+  - name: Install and test Linux matrix Python
+    if: runner.os == 'Linux'
     shell: bash
     run: |
-      PY="$(uv python find '${{ matrix.python-version }}')"
+      uv python install "$PYTHON_VERSION"
+      PY="$(uv python find "$PYTHON_VERSION")"
       "$PY" --version
+      uv sync --python "$PY" --locked --group dev --extra plugins
+      uv run --python "$PY" --locked --group dev --extra plugins python -m unittest discover -s tests -p test_host.py -v
+      uv run --python "$PY" --locked --group dev --extra plugins python -m unittest discover -s tests -p test_plugin.py -v
+      uv run --python "$PY" --locked --group dev --extra plugins python -m unittest discover -s tests -p test_review_context.py -v
+      uv run --python "$PY" --locked --group dev --extra plugins python -m unittest discover -s tests -v
+      uv run --python "$PY" --locked --group dev --extra plugins python -m ca_agent_next --smoke
+  - name: Install and test Windows matrix Python
+    if: runner.os == 'Windows'
+    shell: pwsh
+    run: |
+      uv python install $env:PYTHON_VERSION
+      $PY = (uv python find $env:PYTHON_VERSION)
+      $version = (& $PY --version)
+      Write-Host $version
+      if ($version -ne 'Python 3.14.6') { throw "Expected Python 3.14.6, got $version" }
       uv sync --python "$PY" --locked --group dev --extra plugins
       uv run --python "$PY" --locked --group dev --extra plugins python -m unittest discover -s tests -p test_host.py -v
       uv run --python "$PY" --locked --group dev --extra plugins python -m unittest discover -s tests -p test_plugin.py -v
