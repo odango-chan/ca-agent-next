@@ -1,14 +1,14 @@
 # CA-SL 1.6.0 完整语言规范（中央设计稿）
 
 > 文档类型：CA-SL 作者语言规范（中央规范性设计稿）
-> 文档版本：0.1.5
+> 文档版本：0.1.6
 > 语言版本：CA-SL 1.6.0
 > languageTarget 候选：connectionagent.io/v1.6.0（本设计建议值；发布前由 ca-skills 与 Compiler Owner 在正式 Schema / Golden 中确认）
 > 状态：**DRAFT / REVIEW_REQUESTED**；未发布、未冻结、不得作为已发布产品规范
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 修订日期：2026-11-26
 > 规范所有者：ca-agent-next（中央设计）；正式作者 Schema / Golden / Release 由 ca-skills 发布
-> 关联：IR-003、IR-008；Issue #40；SR-023、SR-029、SR-013、SR-027
+> 关联：IR-003、IR-008；Issue #40、#49；SR-023、SR-029、SR-013、SR-027、SR-032
 > 本文局部非目标：Compiler API / Artifact 字段级 Schema、Provider / Owner 发布物字段、Agent Runtime 实现、生产 Admission、签名、Trust Registry、生产 Qualification
 
 本文是 CA-SL 1.6.0 的完整中央作者语言设计稿，覆盖源码角色、Contract、Procedure、PredicateSet、Context、Request Schema、Capability、when、Wait、Evidence、Outcome、静态检查和版本边界。它不是 ca-skills 已发布的语言规范，也不授权下游实现。
@@ -32,29 +32,33 @@ CA-SL 1.6.0 定义 Skill 可选 Assurance 的作者语言。它不定义 SKILL.m
 
 ## 2. 语言分层与包形状
 
-每个 Skill Package 必须有 SKILL.md。可选 Assurance 仅由以下角色构成：
+每个 Skill Package 必须有 SKILL.md。共享资源位于 Skill Package 根目录；可选 Assurance 仅放置确定性执行契约：
 
 ~~~text
 skill-root/
   SKILL.md
-  assurance/
+  schemas/                    # 可选，共享 Schema 资源
+  scripts/                    # 可选，共享 Script 资源
+    manifest.yaml             # 存在可执行 Script 时必需
+    *.py
+  references/                 # 可选，共享参考资料
+  assets/                     # 可选，共享静态资源
+  assurance/                  # 可选
     contract.yaml
     procedure.yaml
     predicates.yaml
-    schemas/
-    scripts/
-  references/
 ~~~
 
-- SKILL.md：Agent-facing 身份、用途和指导；不声明 Capability Grant、Procedure、when 或 Tool 权限。
-- contract.yaml：Skill 的选择条件、Request Schema、Context、依赖、Capability Grants、全局前置引用和动作预算。
-- procedure.yaml：唯一入口 Procedure 图、显式输入绑定、Node 阶段、Wait 和路由。
-- predicates.yaml：可复用 Predicate 定义及其参数 / Evidence 契约；没有 Predicate 时仍须存在合法空 PredicateSet。
-- schemas/：Skill 自有 Request Schema 与其他明确声明的本地 Schema。
-- scripts/：可选的纯本地 Procedure / Predicate Script。
-- references/：按需读取的作者参考资料，不是隐式 Runtime 输入。
+- SKILL.md：Agent-facing 身份、用途和指导；不声明业务 Capability Grant、Procedure 或 when。
+- schemas/：Skill Package 自有 Schema 资源；LLM 可读取，Host 可用于结构化输入/输出校验，Assurance 可引用。文件使用 YAML 1.2 表示 JSON Schema 数据模型，扩展名为 `.schema.yaml`；JSON Schema 语义仍遵循 §12 的 G.4 Profile。
+- scripts/：Skill Package 自有 Python Script 源码；LLM 可读取，Assurance 可引用，LLM 调用则必须经过 Host Script Execution Capability。
+- scripts/manifest.yaml：Script ID、精确入口、用途、输入/输出 Schema 和 LLM 可调用标记；它是资源索引，不是第二份 Skill Descriptor，也不授予业务 Capability。
+- references/、assets/：按需读取的共享参考资料和静态资源，不是隐式 Runtime 输入。
+- assurance/contract.yaml：Skill 选择条件、Request Schema、Context、依赖、业务 Capability Grants、全局前置引用和动作预算。
+- assurance/procedure.yaml：唯一入口 Procedure DAG、显式输入绑定、Node 阶段、Wait 和路由。
+- assurance/predicates.yaml：可复用 Predicate 定义及其参数 / Evidence 契约；没有 Predicate 时仍须存在合法空 PredicateSet。
 
-没有 assurance/ 的 Skill 仅支持 LLM-guided。存在 assurance/ 时，contract.yaml、procedure.yaml、predicates.yaml、Schema、依赖和所有静态语义必须全部有效，才同时具备 Deterministic 与 LLM-guided 两种模式。不得新增 constraint.yaml、activation.yaml、applicability.yaml、第二份 Skill Descriptor 或 Domain Contract Package；predicates.yaml 只描述执行期 Predicate，不参与 Skill 选择。
+没有 assurance/ 的 Skill 仍可携带 schemas/、scripts/、references/ 和 assets/，并仅支持 LLM-guided；若脚本被明确标记为 llmInvocable 且 Host 策略启用，可通过 Host Script Execution Capability 调用。存在 assurance/ 时，contract.yaml、procedure.yaml、predicates.yaml、被引用的共享 Schema / Script、依赖和所有静态语义必须全部有效，才同时具备 Deterministic 与 LLM-guided 两种模式。Assurance 无效时必须拒绝导入，不得静默降级。不得新增 constraint.yaml、activation.yaml、applicability.yaml、第二份 Skill Descriptor 或 Domain Contract Package；predicates.yaml 只描述执行期 Predicate，不参与 Skill 选择。
 
 ## 3. 核心术语与所有权
 
@@ -63,7 +67,10 @@ skill-root/
 | Skill | SKILL.md 与可选 Assurance 构成的可导入单元 | Skill Package |
 | Contract | Skill 选择、公共输入、Context、依赖和 Capability Grant 的唯一作者契约 | contract.yaml |
 | Procedure | 静态确定性执行图 | procedure.yaml |
-| PredicateSet | 可复用的纯判断定义 | predicates.yaml |
+| PredicateSet | 可复用的纯判断定义 | assurance/predicates.yaml |
+| Shared Resource | LLM、Host 和可选 Assurance 共用的 Schema / Script / references / assets；资源身份相对 Skill Package 根目录 | Skill Package root |
+| Script Registry | Package-local Script ID、入口、purpose、Schema 与 LLM 可调用声明；不授予业务 Capability | scripts/manifest.yaml |
+| Host Script Execution Capability | Host-owned system Capability；只执行当前 Skill Registry 中显式允许的 Script ID | Host Runtime / built-in Tools Extension |
 | Node | Procedure 图中的执行节点，最多声明四个业务阶段及可选入口 Wait | procedure.yaml |
 | Capability | Skill-facing 的业务能力身份 / 授权项 | Owner Contract Package 或 Provider Interface Package |
 | Callable | Package 内稳定的公开调用身份，含 kind、Effect、Input / Output Schema | ToolCatalog / Provider Package |
@@ -97,7 +104,7 @@ contract.yaml 是唯一 Contract。它不需要 apiVersion / kind 包装；语�
 ~~~yaml
 when: 'event.type == "nsmf.create-sm-context" && input.requestType == 1'
 precondition: validate-request.precondition
-requestSchema: schemas/create-request.schema.json
+requestSchema: schemas/create-request.schema.yaml
 dependencies:
   mas: urn:openamsm:mas:tool-contracts
   host-context: urn:connectionagent:ca:host-context
@@ -118,7 +125,7 @@ Contract 的 precondition 是至多一个全局阶段引用；该引用必须指
 
 ### 5.1 Request Schema
 
-- requestSchema 指向 Skill 自有 JSON Schema 根，定义规范化 Event payload 的业务输入契约。
+- requestSchema 指向 Skill Package 根目录下的 Skill 自有 Schema 资源，定义规范化 Event payload 的业务输入契约。源文件采用 YAML 1.2 序列化的 JSON Schema 数据模型（`.schema.yaml`）；Compiler 解析为 JSON 数据模型后按 G.4 JSON Schema Profile 校验。Schema 引用路径始终相对 Skill Package 根目录，不相对 assurance/。
 - Host 先验证 Plugin Event Schema，再独立验证 Skill Request Schema；两者不是同一 Schema，也不得把完整 3GPP multipart Schema 复制到 Skill。
 - requestSchema 根必须是闭合对象，明确 additionalProperties=false；完整 $ref 闭包必须可解析。
 - requestSchema 是否存在与 when 是否存在相互独立。只使用 event.type 的 when 不要求 requestSchema；when 访问 input 成员时必须声明 requestSchema。
@@ -167,7 +174,7 @@ Procedure 只有一张静态有向无环图（DAG），必须有 start 和 nodes
 一个 Node 可按固定顺序声明以下业务阶段，每个阶段最多一次：
 
 1. precondition：调用有序 Predicate 列表；全部 PASS 才产生聚合 PASS。
-2. operation：调用一个 kind=operation 的 Capability；Effect 由目标 Package 决定，可为 READ 或 MUTATION。
+2. operation：二选一调用一个 kind=operation 的公开 Capability（Effect 由目标 Package 决定，可为 READ 或 MUTATION），或引用一个 purpose=transform 的 Package-local Script ID；两者互斥。Script 不是业务 Capability，不进入 contract.capabilities。
 3. observation：调用一个 kind=observation 且 Effect=READ 的 Capability；不得产生副作用。
 4. postcondition：调用有序 Predicate 列表；全部 PASS 才产生聚合 PASS。
 
@@ -199,11 +206,23 @@ Predicate 结果严格为：
 
 UNKNOWN 不是 FAIL，也不得提升为 PASS。Predicate 不得调用 Tool / Observation、访问网络、文件系统、时钟、随机数或可变全局 Context。
 
-Script 仅允许 Skill 自有的纯本地 Python：
-- Procedure Script 是 Operation 阶段的本地纯数据转换目标，必须声明输入 / 输出 Schema。
-- Predicate Script 是 Predicate evaluator，必须符合严格结果契约。
-- 禁止网络、子进程、宿主文件系统任意读写、环境秘密读取、动态加载和外部副作用。
-- Script 不授予 Capability，不得制造 Owner Receipt、Commit Proof 或 Evidence。
+Script 是 Skill Package 的共享资源，不属于 assurance/。源码放在 `scripts/`，由 `scripts/manifest.yaml` 建立唯一的 package-local Script Registry。Registry 每个条目必须声明：
+- `file`：相对 Skill Package 根目录的精确路径，必须位于 `scripts/`；
+- `entrypoint`：该文件中的一个顶层函数名，不接受动态模块名、属性链或命令；
+- `purpose`：只能是 `transform` 或 `predicate`；
+- `inputSchema`：相对 Skill Package 根目录的 `schemas/*.schema.yaml`；
+- `outputSchema`：`transform` 必需，引用相对根目录的 `schemas/*.schema.yaml`；`predicate` 不得声明此字段，其结果固定为 PASS / FAIL / UNKNOWN；
+- `llmInvocable`：必需布尔值；仅 `purpose=transform` 可以为 true，Predicate Script 必须为 false。
+
+Script ID 在同一 Skill Package 内唯一且稳定。Procedure 的 `operation.script` 只引用 `purpose=transform` 的 Script ID；Predicate evaluator 只引用 `purpose=predicate` 的 Script ID。所有 Script 输入和输出均为 JSON 值并按对应 Schema 验证。入口函数分别为 `run(input: JSONValue) -> JSONValue` 与 `evaluate(input: JSONValue) -> PASS|FAIL|UNKNOWN`。
+
+LLM 可以通过 Host 的只读 Skill Resource Access 读取 `scripts/` 下的源码和 Registry；读取不等于执行。LLM 只能通过 Host-owned system Capability `host.skill-script.execute` 调用 Registry 中 `llmInvocable=true` 的 transform Script，参数固定为 `scriptId` 与 `input`。Host 只解析当前已绑定 Skill 的固定 Package snapshot，并按条目验证输入 Schema、执行精确 entrypoint、验证输出 Schema；模型不得提交文件路径、模块名、函数名、代码、解释器参数或任意命令。Host 未启用该能力或没有符合条件的 Script 时，不向模型暴露此 Action。
+
+Deterministic Procedure 的 `operation.script` 由 Compiler / Runtime 映射到同一 Host Script Runner；Predicate evaluator 由 Runtime 内部纯求值入口调用，不暴露为 LLM Action。两种调用共享同一份脚本字节、Registry 和 Schema，不复制脚本或生成第二套定义。
+
+所有 Script 必须是确定性、无外部副作用的本地计算：不得访问网络、任意宿主文件系统、子进程、环境秘密、时钟、随机数或动态加载；不得调用 Tool / Capability、Plugin 或 Owner，也不得制造 Receipt、Commit Proof 或 Evidence。需要外部副作用时必须调用正式业务 Capability，不得包进 Script。
+
+Host Script Execution 是受限的包内入口调用，不是模型提供代码的 Python REPL，也不构成生产级恶意代码隔离或 Admission。Demo 按受控 Skill Package 来源处理脚本，并实施明确的入口 allowlist、输入/输出 Schema、超时和资源上限；不得声称具备生产级沙箱安全资格。
 
 ## 9. Contract.when 与 Skill 选择
 
@@ -318,7 +337,7 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 - CA-SL 只定义作者源语义；Compiler 定义 Check / Link / Build / Verify 和 Runtime Artifact。
 - Interface Package 可以只导出 Schema；Schema-only Package 的 Capability / Callable exports 数量均为零是合法情况。
 - Capability Package 必须满足一对一；Owner 的 internal-only Reconcile 不属于 Skill-facing exports。
-- 新 Runtime Artifact 必须包含已检查 Capability Binding、Request Schema 根与完整闭包、when CheckedExpr / DescriptorSet（若有）、Procedure 和可执行文件清单；精确字段与 API 由 EC02 / SR-013 的 Compiler 契约冻结。
+- 新 Runtime Artifact 必须包含已检查 Capability Binding、Request Schema 根与完整闭包、when CheckedExpr / DescriptorSet（若有）、Procedure、Script Registry 中被引用的精确 Script entrypoint / Schema 资源闭包及可执行文件清单；Bundle 同时保留供 LLM 读取的共享资源原始文件。精确字段与 API 由 EC02 / SR-013 的 Compiler 契约冻结。无 Assurance 包不生成 Runtime Artifact，但其共享资源仍随 Bundle 发布并由 Host 导入校验。
 - Agent 不内置 Compiler，不调用 Check / Build / Verify；只导入正式发布的 1.6.0 Bundle。
 - Skill Studio 只编辑 1.6.0；Package Explorer 以 Capability 为唯一作者可见能力导航，不显示平级 Tools / Operations / Callable 树。
 - Host Context Package 的源码身份、上传来源和导入快照属于 Studio Project Lock / Import Provenance，不是 Package Manifest 的额外字段；不得增加 sourceStatus、包级 hash、签名或 Trust Registry 来弥补。
@@ -336,7 +355,8 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 
 | 输入 / 场景 | 必需结果 |
 |---|---|
-| SKILL.md-only，无 Assurance | 可导入；仅 LLM-guided；不调用 Compiler |
+| 无 Assurance、无共享资源 | 可导入；仅 LLM-guided；不调用 Compiler |
+| 无 Assurance、含 schemas/ 与 scripts/manifest.yaml | 可导入；仅 LLM-guided；Host 校验共享资源并可按 Host 策略提供脚本 Capability；不调用 Compiler |
 | 完整有效 Assurance | 只有正式 1.6.0 Compiler Build / Verify / Bundle 后才可导入 |
 | Assurance 目录缺文件或无效 | 拒绝；不得降级 |
 | Contract 只声明 Capability，唯一映射 Callable | Link 通过 |
@@ -352,6 +372,7 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 | Wait event 接受 | 进入目标 Node 首个业务阶段；不直接产生 Evidence / Goal 成功 |
 | Wait timeout | 只走 TIMEOUT 路由；不触发 Mutation 重放 |
 | 普通 Skill / LLM 调用 MAS.RECONCILE | IPC=0，INTERNAL_RECONCILE_ONLY |
+| 模型提交任意 Python 代码、路径或未登记 Script ID | Runtime 在 Script Runner 前拒绝；不创建进程、不执行代码 |
 | 旧 v1alpha5 / Development Artifact / Bundle | 新 Compiler / Agent / Studio 明确拒绝 |
 
 ## 17. v1alpha5 完整规范的逐项处置表
@@ -407,3 +428,4 @@ Host Context Schema-only Package 仍只经 `Contract.contexts` 引用，与 Open
 | 2026-11-27 | 0.1.3 | ChatGPT / GPT-6 | 3GPP Schema 与阶段输入补充 | 明确公共 Schema-only 导出、选择期 Request 与执行期 Codec Result 的 Link / 业务字段来源 | 关闭 Create 选择前依赖 NAS 解码的循环、固定跨包类型门禁 | IR-009；Issue #47；SR-031/026/013 |
 | 2026-11-27 | 0.1.4 | ChatGPT / GPT-6 | 本轮 IR-009 设计修正 | 固定 OpenAMSM 版本 + 原版 YAML 逐字节代发布；显式区分可选 Adapter 与 Provider Codec 输出 | 落实原版 YAML 不得改动、消除误把原版当 G.4 的风险 | Issue #47；SR-031/026/013 |
 | 2026-11-27 | 0.1.5 | ChatGPT / GPT-6.2 | §12、§19 | 保留本地 G.4 有限子集，增加 pin 后 OAS3 Schema Component 的 dialect-aware 直接引用；移除强制 Adapter | 遵循原版 OpenAPI 直接引用、不重写标准 | IR-009；Issue #47；SR-013/031 |
+| 2026-11-27 | 0.1.6 | GPT-6.2（ChatGPT） | §2、§3、§5、§6、§8、§14、§16 | 将 schemas/scripts 提升为 Skill Package 根目录共享资源；定义 YAML Schema 源、Script Registry、Host Script Execution Capability 与 Assurance / LLM 共用资源路径 | 修复可选 Assurance 导致 LLM-only Skill 无法使用 Schema / Script 的结构矛盾，禁止模型任意 Python 执行 | Issue #49；IR-008；SR-032 |
