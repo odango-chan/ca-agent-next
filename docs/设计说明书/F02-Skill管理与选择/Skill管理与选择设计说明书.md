@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：**设计待评审**（唯一新目标 CA-SL 1.6.0；全链路不兼容任何旧作者语法、Build DTO、Artifact、Bundle；1.6.0 产品未发布）
-> 文档版本：0.3.9
+> 文档版本：0.4.0
 > 功能归属：F02 — Skill 管理与选择  
 > 关联 SR：SR-004、SR-005、SR-006、SR-032    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -133,7 +133,7 @@ Continuation 仅用协议身份和 correlation 查原 Run。Skill、Artifact、g
 
 **以上是 Next 面向 CA-SL 1.6.0 的目标 Resolver 规则**，设计依据是 SR-029 + 本 F02（新 ca-skills 正式语言发布后以正式规范核对）；历史 v1alpha5 M.3/SA-012 仅为语义追溯，不再构成新 Resolver 的规范输入或测试正例。
 
-when 只能读取规范化 Event 的 event.type 和 Contract.requestSchema 声明的 input 字段，不得访问 Tool、Observation、Runtime Context、时钟或可变 Host 状态。读取 input 成员必须由作者源 Contract 声明 requestSchema，并由外部 Compiler 在发布前静态检查。
+when 只能读取规范化 Event 的 event.type 和 `assurance/contract.yaml` 中 Contract.requestSchema 声明的 input 字段，不得访问 Tool、Observation、Runtime Context、时钟或可变 Host 状态。`when` 仅允许出现在存在 Assurance 的 Skill 的 SKILL.md Front Matter；无 Assurance Skill 不声明 when。读取 input 成员必须由作者源 Contract 声明 requestSchema，并由外部 Compiler 在发布前静态检查。
 
 ### 6.1 决定性选择表与边界
 
@@ -146,11 +146,11 @@ when 只能读取规范化 Event 的 event.type 和 Contract.requestSchema 声�
 | 无有效候选 | 空 | 空 | 澄清或拒绝，禁止 Generic Agent 无 Skill 回退 |
 | continuation 指向现有 Run | 不重新求值 | 不重新求值 | 仅恢复绑定的 Skill + 固定 Catalog generation；缺失或过期则拒绝 |
 
-没有 typed input 的直接文本只能进入无 when 且无需 requestSchema 的集合；模型不能用文本/元数据授予 Callable Scope。所有选择动作记录 eventId、Catalog generation、最终 Skill ID、候选集合与拒绝原因（不持久化业务秘密），重复 Event/Continuation 不应增加 dispatch 次数。外部正式 1.6.0 when/Schema Descriptor 元数据缺失时，不得按“无 when”处理，而应作为无效 Assurance 包导入失败。
+没有 typed input 的直接文本只能进入无 when 且无需 requestSchema 的集合；模型不能用文本/元数据授予 Callable Scope。所有选择动作记录 eventId、Catalog generation、最终 Skill ID、候选集合与拒绝原因（不持久化业务秘密），重复 Event/Continuation 不应增加 dispatch 次数。外部正式 1.6.0 when/Schema Descriptor 元数据缺失时，不得按“无 when”处理，而应作为无效 Assurance 包导入失败；无 Assurance Skill 声明 when 同样是无效 Package，必须由 SR-004 拒绝。
 
 ## 7. when 程序的发布与运行时接口
 
-作者源中的 when 位于 assurance/contract.yaml，由 ca-skill-compiler 在发布前完成解析、类型检查和 CA-SL G.4 静态校验，并将已检查程序及其类型环境放入发布运行时 Artifact。
+作者源中的 when 位于有 Assurance Skill 的 SKILL.md YAML Front Matter（CA-Agent 扩展字段），由 ca-skill-compiler 在发布前完成解析、类型检查和 CA-SL G.4 静态校验，并将已检查程序及其类型环境放入发布运行时 Artifact。无 Assurance Skill 不声明 when，也不调用 Compiler。
 
 Next 只在导入阶段反序列化发布 Artifact 中的程序与类型数据，并保存在对应 Catalog generation 中；不解析 CEL 源字符串、不重复静态检查、不调用 Compiler。每个新 Event 使用当前 event.type 和 input 独立求值。
 
@@ -293,3 +293,4 @@ T2 的 Provider Codec Result 只在选定 Skill Procedure 的 READ 后可用，�
 | 2026-11-27 | 0.3.7 | GPT-6.2（ChatGPT） | §2、§3、§5、§8、§10 | 将 SKILL.md-only 误称统一为无 Assurance Package，明确无 Assurance 包仍可含共享资源并参与语义选择 | 避免选择、导入和模式派生误把共享资源包排除在 LLM-guided 之外 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.3.8 | GPT-6.2（ChatGPT） | §2、§4、§8、§10 | 移除 Script Registry `llmInvocable` 与 Host `scriptExecution.llmEnabled` 双门禁；LLM 和 Assurance 共用同一 Script Runner | 使无 Assurance Skill 的模型默认具备与确定性执行相同的包内脚本调用能力 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.3.9 | GPT-6.2（ChatGPT） | §2～§4、§8～§10 | 将 SKILL Front Matter 语言边界更新为 1.6.0；接入 F05 Host Resource Read；统一 LLM 对全部登记 Script 的调用能力；删除 Node/Wait 作者语义 | 保持 Agent Importer / Resolver 与无 Wait 的 CA-SL 1.6.0、共享 Package 资源模型一致 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.4.0 | GPT-6.2（ChatGPT） | §2～§7、§11、§13 | 将 `when` 作者源位置统一为有 Assurance Skill 的 SKILL.md Front Matter；无 Assurance Skill 不声明 when，继续走 LLM-guided 语义选择 | 对齐用户确认的入口决策，避免无 Assurance 包携带未编译选择条件 | Issue #49；IR-008；SR-032；SR-004/013 |
