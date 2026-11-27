@@ -36,10 +36,19 @@ isolated-poc/
 
 | 证据 | 来源 | 状态 |
 |---|---|---|
-| `artifacts/`、`cases.json`、`py-results.json`、`EVIDENCE.md`、`go-test.log`、`python.log` | 原始隔离工作区 `.agent-tmp/ac-013-01-poc/` 的归档副本 | VERIFIED |
+| `artifacts/`、`cases.json`、`py-results.json`、`EVIDENCE.md`、`go-test.log`、`python.log` | 原始隔离工作区 `.agent-tmp/ac-013-01-poc/` 的归档副本 | PARTIAL：固定归档缺少 `vet.log`，历史 go vet 退出码不可独立复核 |
 | `repro/` | 在干净的 `255ab85` worktree 中用同一源码重新执行 | VERIFIED |
 | `determinism/` | 同一源码写入两个全新输出目录后逐文件比对 | VERIFIED |
 | `ac013-poc.patch` | 干净副本中以 `git diff` 生成 | VERIFIED |
+
+| `vet.log` | 固定 PR #18 tree 中不存在 | NOT_ARCHIVED / NOT_INDEPENDENTLY_VERIFIABLE |
+
+固定归档完整性补充（2026-11-27）：
+
+- 归档包含 58 个文件（不含 `SHA256SUMS`）；清单路径现为相对于本目录根的路径，可在本目录执行 `sha256sum -c SHA256SUMS`。
+- `audit.json` 中 `py-results.json` inventory 已更正为归档实际值：2333 bytes / SHA-256 `f6abbc68db58590de3d4d261f02412ea2bcdb3f38765723c02d2cf5b9b62930f`。
+- 原始 `EVIDENCE.md` 记载 go vet 退出码 0，但没有对应的 `vet.log` 文件；该历史结果不可独立复核。本轮未重跑，也未伪造日志。详见 `EVIDENCE.md` 第 10 节。
+- 上述归档问题不否定历史 Go/Python 18/18 结果，但在独立复核前，AC-013-01 的归档完整性保持 FAIL；不代表 Compiler 产品验收。
 
 原始工作区路径仅在复现说明中作为来源记录，不要求复核者访问。
 
