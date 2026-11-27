@@ -116,5 +116,4 @@ jobs:
       - name: Test policy positive and negative cases
         if: steps.scope.outputs.python_scope == 'true'
         run: |
-          uv run --no-project --python 3.14.6 python -m unittest discover \
-            -s tests -p test_python_toolchain_policy.py -v
+          uv run --no-project --python 3.14.6 python -m unittest discover -s tests -p test_python_toolchain_policy.py -v
