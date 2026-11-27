@@ -1,7 +1,7 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.19\
+> 文档版本：0.3.20\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
 > 修订日期：2026-11-27\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -173,7 +173,7 @@ Skill Studio 的 Package Explorer 以 Capability 作为唯一 Skill-facing 能�
 
 ### 9.3 AI Authoring
 
-AI Authoring 的 Change Set 只能新增或修改 Capability ID、Procedure arguments 和其他 CA-SL 作者字段；不得生成 Callable ID、backendOperationId 或动态 Provider 选择。Apply 后使用同一语言服务和 Compiler BuildRequest / Verify 路径重新检查。
+AI Authoring 的 Change Set 必须遵守中央 [SKILL 作者规范](../../规范/SKILL作者规范.md)，尤其是 Skill / Capability / Node 粒度、四阶段顺序、Node 拆分 / 合并、显式 arguments 和注释不得承载执行语义。Change Set 只能新增或修改 Capability ID、Procedure arguments、正式作者字段及解释性注释；不得生成 Callable ID、backendOperationId 或动态 Provider 选择，不得通过注释补足缺失的 Schema、Predicate、Evidence 或 routes。Apply 前仍须用户确认，随后对同一候选源码和项目锁使用同一 1.6.0 Compiler Build / Verify 路径重新检查；本设计不表示当前 Studio 已实现作者规范感知或 Compiler gate。
 
 ### 9.4 版本与导入
 
@@ -237,3 +237,4 @@ AI Authoring 的 Change Set 只能新增或修改 Capability ID、Procedure argu
 | 2026-11-27 | 0.3.17 | ChatGPT / GPT-6 | 3GPP Schema/Codec 分阶段消费 | 对齐 SR-031 公共类型、T1 Request 与 T2 Codec Result，新增分期拒绝/验收范围 | 修复标准输入来源与实现门禁的跨仓断点 | IR-009；Issue #47；SR-031/026 |
 | 2026-11-27 | 0.3.18 | ChatGPT / GPT-6 | 3GPP 原版发布裁决 | 版本随 OpenAMSM、原版 YAML 完全不改；将只读 Source Bundle 与可选 Adapter / Codec Output 分离 | 防止标准原件被类型适配误改 | Issue #47；SR-031/026 |
 | 2026-11-27 | 0.3.19 | ChatGPT / GPT-6.2 | §10 | 将 Studio 从 Adapter Schema Explorer 改为原版 OAS3 只读展示 / 精确组件导航；Project Lock 固定 Source Bundle | 遵循原版标准直接引用且不允许编辑 | IR-009；Issue #47；SR-031/013/026 |
+| 2026-11-27 | 0.3.20 | GPT-6.2（ChatGPT） | §9.3、修订记录 | AI Authoring 明确消费统一 SKILL 作者规范，加入 Node 粒度与注释非执行语义约束 | 防止 AI 生成的 Procedure 违背中央作者规则或用注释代替机器契约 | IR-008；Issue #49；SR-032 |
