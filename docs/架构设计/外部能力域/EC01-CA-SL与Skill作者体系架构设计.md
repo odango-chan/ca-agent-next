@@ -1,7 +1,7 @@
 # EC01 — CA-SL 与 Skill 作者体系架构设计
 
 > 文档类型：外部能力域架构设计（Next 中央权威设计）  
-> 文档版本：0.1.7\
+> 文档版本：0.1.8\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 唯一新目标；作者规范/Compiler/Bundle 未发布）  
 > 功能归属：EC01；关联 F01、F02、F03、F04、F05、F06、F08、F09  
 > 关联需求：IR-003、IR-006、IR-008；SR-004～SR-006、SR-011、SR-023、SR-032  
@@ -64,7 +64,7 @@ SKILL.md 是每个 Skill 的基础身份和描述入口，至少提供稳定名�
 2. 有无 Assurance 都使用同一份 Package 根目录共享资源；Schema 和 Script 不复制到 assurance/。
 3. 存在 Assurance 时，Contract、Procedure、PredicateSet 和其引用必须整体有效；任何验证失败均拒绝导入，不得降级成无 Assurance Skill。
 4. Assurance 有效时，Skill 可供 Deterministic 与 LLM-guided 两种模式使用。
-5. LLM 可读取共享 Schema / Script；只有 Script Registry 明确标记 llmInvocable=true、且 Host 配置 `scriptExecution.llmEnabled=true`（默认 false）时，才可通过 Host-owned host.skill-script.execute Capability 调用 transform Script。
+5. LLM 可读取共享 Schema / Script；当前 Skill Registry 中登记的脚本均可通过 Host-owned host.skill-script.execute Capability 调用，LLM 与 Assurance 共用同一 Script Runner，不设置逐脚本标记或额外 Host 开关。
 6. 不允许 Agent 自行编译作者源；Agent 只导入发布好的 Skill Bundle。
 7. **唯一新语言目标 CA-SL 1.6.0**；languageTarget 建议值为 connectionagent.io/v1.6.0，须由 ca-skills / Compiler 在正式 Schema / Golden 中共同确认；完全不支持 v1alpha5 旧语法、旧 Build DTO/Artifact/Bundle、双轨、转换、迁移或 fallback。
 
@@ -78,7 +78,7 @@ SKILL.md 是每个 Skill 的基础身份和描述入口，至少提供稳定名�
 | PredicateSet | 执行期事实判断与 Assurance | Skill 选择条件 |
 | Shared Schema | Skill Package 根目录共享 Schema；YAML 1.2 表示 JSON Schema 数据模型，供 LLM / Host / Assurance 共用 | 复制 Owner / Provider / Host 外部 Schema，或把 Schema 归入可选 Assurance |
 | Shared Script | Skill Package 根目录 Python 源码；通过 Script Registry 声明精确入口、purpose 和 Schema | 以 Script 绕过业务 Capability、访问外部系统或产生副作用 |
-| Host Script Execution Capability | Host-owned system Capability host.skill-script.execute；仅执行当前 Skill Registry 中 llmInvocable=true 的 transform Script | 模型提交代码/路径/命令；扩大业务 Capability Scope；调用其他 Skill 的脚本 |
+| Host Script Execution Capability | Host-owned system Capability host.skill-script.execute；执行当前 Skill Registry 中登记的脚本，与 Assurance 共用同一 Script Runner | 模型提交代码/路径/命令；扩大业务 Capability Scope；调用其他 Skill 的脚本 |
 
 Node 仍包含 Precondition、Operation、Observation、Postcondition 阶段；新 1.6.0 的 Operation / Observation 仅引用 Capability ID，Observation 要求 `kind=observation` 且 `Effect=READ`；具体 1.6.0 Schema 由 ca-skills 正式发布并通过 SR-029 审核。历史 v1alpha5 的节点语义只读留档，不被新版解释器兼容。
 
@@ -169,3 +169,4 @@ CA-SL v1alpha5 的 when 已进入已合并的 ca-skills #88/#89 发布刷新；�
 | 2026-11-27 | 0.1.5 | GPT-6.2（ChatGPT） | 文档头、§1～3、§7 | 将 EC01 包形状与 CA-SL 1.6.0 对齐，将 schemas/scripts 归入 assurance；删除旧 Tool binding 作者概念并明确 Capability / Script 边界；补齐 IR-008 / SR-032 范围 | 修复架构入口与中央语言规范、作者规范的目录和术语冲突 | IR-008；Issue #49；SR-032 |
 | 2026-11-27 | 0.1.6 | GPT-6.2（ChatGPT） | §2～3、§10 | 将 schemas/scripts/reference/assets 定为根目录共享资源；补充 Script Registry 与 Host Script Execution Capability，明确 LLM-only 与 Assurance 共用同一资源 | 修正可选 Assurance 造成的资源可见性与执行能力矛盾 | IR-008；Issue #49；SR-032 |
 | 2026-11-27 | 0.1.7 | GPT-6.2（ChatGPT） | 文档头、§2 | 扩展 EC01 功能追踪至 F01/F03/F04/F05，并将 Host Script Execution 的 LLM 暴露门禁固定为显式 Host 配置 | 确保 Model Context、Plugin Extension、Runtime、Resource Access 均纳入统一架构边界 | IR-008；Issue #49；SR-032 |
+| 2026-11-27 | 0.1.8 | GPT-6.2（ChatGPT） | §2～§3 | 删除逐脚本 `llmInvocable` 和 Host `scriptExecution.llmEnabled`；所有已登记 Package Script 对 LLM 与 Assurance 使用同一执行入口 | 避免 Demo 引入不必要的调用者授权分层 | IR-008；Issue #49；SR-032 |
