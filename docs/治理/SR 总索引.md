@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.46
+> 文档版本：0.3.47
 > 状态：29 项 SR：4 VERIFIED、1 IMPLEMENTED、24 DRAFT（24 项设计均已提交待评审），SR-003 模块 AC PASS，系统 EX NOT_RUN
 > 修订日期：2026-11-27\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -77,7 +77,7 @@
 | SR-006 | Skill Resolver 与 Continuation 选择 | CHANGES_REQUESTED（直接文本候选与事件重放已修订，待复评） | DRAFT |
 | SR-007 | 统一 Runtime Scope、Owner Outcome | CHANGES_REQUESTED（双模式 Owner Proof 与 Outcome已修订，待复评） | DRAFT |
 | SR-008 | 1.6.0 Echo 双 Skill 示例 | CHANGES_REQUESTED（三场景、干净进程与 READ已修订，待复评） | DRAFT |
-| SR-009 | OpenAMSM SBI Plugin 与二进制 | APPROVE_FOR_READY（AC-009-01～06 模块设计） | DRAFT |
+| SR-009 | OpenAMSM SBI Plugin 与二进制 | APPROVE_FOR_READY（第二轮 AC-009-01～06 原限定模块设计；本次扩展 AC-009-04 合法回调子例，**增量独立复评待完成**） | DRAFT |
 | SR-010 | Provider/Codec 与 Artifact Channel | CHANGES_REQUESTED（1.6.0 Resolver、公共契约与旧包零 IPC已修订，待复评） | DRAFT |
 | SR-011 | 真实 OpenAMSM Create/Modify/Release | CHANGES_REQUESTED（listener 与 key-reuse 隔离已修订，待复评） | DRAFT |
 | SR-012 | Compiler 中央设计归档 | CHANGES_REQUESTED（EC02 工具链权威输入已修订，待复评） | DRAFT |
@@ -128,7 +128,7 @@
 - Phase D：SR-005、SR-006。
 - Phase E：SR-007。
 - Phase F：SR-008。
-- Phase G：SR-009、SR-010。
+- Phase G：SR-009 独立 Plugin 模块可按自身 READY/Issue/授权先行，不等待 Echo；SR-010 逐子阶段核对实施依赖；两者的系统 OM 组合仍待 Echo 与 Host/Owner 对端。
 - Phase H：SR-011。
 - Capability-first 新版本设计：[SR-029](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) / [Issue #40](https://github.com/odango-chan/ca-agent-next/issues/40)：**CA-SL 1.6.0-only / 完全无旧版兼容 / 设计待独立评审**。F02/F03.05/F04/F06/F08/F09/EC02 已加入待评审章节；Compiler/Publisher/Runtime/Studio/Bundle 新契约尚未发布，不启动代码实施。
 - Compiler 外部发布依赖：SR-012、SR-013；SR-013 的 [PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)已核对 58 个文件与 SHA256SUMS；归档报告为 Go/Python 18/18，当前审计复跑 NOT_RUN，不代表 Compiler 产品发布或完整 SR VERIFIED。
@@ -211,3 +211,4 @@
 | 2026-11-26 | 0.3.44 | Codex / GPT-6 | 当前设计入口与修订记录 | 对齐本轮 Importer、Compiler 或 Publisher 的阶段门槛与引用版本 | 供评审者按同一提交核对生产和消费证据 | Issue #12/#40/#43，PR #46 |
 | 2026-11-27 | 0.3.45 | Codex / GPT-6 | 24 项设计评审表 | 逐 SR 回填固定提交的独立结论与复评范围 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
 | 2026-11-27 | 0.3.46 | Codex / GPT-6 | §2.1、3.1 | 逐项登记第二轮独立评审范围与修订门槛 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
+| 2026-11-27 | 0.3.47 | GPT-6（ChatGPT） | §2.1、§3.2、修订记录 | 记录 SR-009 AC-009-04 completion 增量复评与模块/系统实施顺序 | 不把第二轮认可范围擅自扩展或把 Echo E2E 误作插件模块启动条件 | Issue #12；PR #46；SR-009 |

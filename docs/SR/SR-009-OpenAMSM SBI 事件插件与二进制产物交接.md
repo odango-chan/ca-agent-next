@@ -1,13 +1,13 @@
 # SR-009：OpenAMSM SBI 事件插件与二进制产物交接
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.5\
+> SR 版本：0.2.6\
 > 状态：DRAFT（实施主状态）。PR #46 第二轮独立评审（1bf748db）：APPROVE_FOR_READY（AC-009-01～06 模块设计）。产品验收依各 AC 单列。
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-27\
 > 所属阶段：Phase G  
 > 上游需求：[IR-005](../IR/IR%20总登记册.md#ir-005)  
-> 设计依据：[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.5 §1～13、16；[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.3.0 §2～5；[插件包与进程通信协议规范](../规范/插件包与进程通信协议规范.md) v0.2.5 §6～8\
+> 设计依据：[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.5 §1～13、16；[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.3.0 §2～5；[插件包与进程通信协议规范](../规范/插件包与进程通信协议规范.md) v0.2.6 §6～8\
 > Acceptance：OM-01～OM-03、OM-05～OM-08、OM-14、OM-15（见[演示验收基线](../验收与实施/演示验收基线.md)）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：见第 3 节
@@ -30,7 +30,7 @@
 - SBI HTTP/2 ingress、JSON/multipart/related 解析和 Content-ID 关联。
 - Plugin 仅通过 Host 提供的 inbound/outbound staging directory 写入/读取原始 N1/N2 文件描述符；不拥有 ArtifactStore，不生成 artifactRef。Host 导入/导出由 Next SR-010 承载。
 - 将规范化 Event 发布给 Host，并执行 SBI Delivery 编码。
-- 对共享 UpdateSMContext 仅提取最小 NAS discriminator，区分 Modify 与 UE-requested Release；Host Resolver 仍负责选择 Skill。
+- 对共享 UpdateSMContext 仅提取最小 NAS discriminator，区分新 Modify、UE-requested Release 与既有事务的 N1/N2 completion；Host Resolver/Continuation 负责选择或恢复 Skill，Plugin 不识别原 Run。
 - 保留 externalRequestId、responseObligation、Run/continuation 关联。
 
 ## 3. 非目标
@@ -57,13 +57,30 @@
 | AC-009-01 | Plugin 启动，经 stdin/stdout IPC 版本握手与 capabilities discovery | Plugin Package/IPC v1alpha1 协议通过；非法版本与超帧明确拒绝 |
 | AC-009-02 | Create/Update JSON 与 multipart/related Content-ID、原始 N1/N2 bytes | 归一化 Event 包含正确 correlation/slot/mediaType/byteLength，原字节逐位相同 |
 | AC-009-03 | Staging 仅可提交相对路径、声明 slot；绝对路径、路径穿越、artifactRef 反例 | 非法描述拒绝；Plugin 不直接创建 Host artifactRef/ArtifactStore |
-| AC-009-04 | 合法 0xC9 Modify、0xD1 UE Release、截断或未知 NAS discriminator | 各合法类型准确分类，非法/歧义 fail-closed；不在插件内调用业务 Owner |
+| AC-009-04 | `/modify` 的新请求 N1 `0xC9`/`0xD1`、既有事务回调 N1 `0xD4` 或 N2 Setup/Modify/Release Response；截断、未知 discriminator、错配 `n2SmInfoType` | 新操作与 continuation 准确区分；合法回调生成关联事件而非新业务 mutation；异常 fail-closed，Plugin 不恢复 Run、不调用 Owner |
 | AC-009-05 | responseObligation 对应可用 Delivery 与错 externalRequestId、过期/越权输出 | 仅本次授权 response 交付；串单/过期拒绝，不发出错误 2xx |
 | AC-009-06 | 重复请求与多并发回放，不同 correlation 的 raw fixtures | 原始 bytes/correlation 不混淆；本模块只证明 Plugin ingress/delivery，不宣称 Next 去重/Run 或 OM E2E |
 
 AC-009-01～06 仅依赖测试 Host、协议 fixture 和计数 peer。真实 Owner/Provider、Echo E2E 与隔离 NF 只影响系统组合验收。
 
-### 5.1 实现落点、运行和取证
+### 5.1 AC-009-04 参数化分类用例与职责边界
+
+本节是 AC-009-04 的**模块测试子例**，不是新增系统 OM 或 Run/Owner 实现范围。使用 F06 §4、§6～§7、§EC04 两端实现矩阵固定的 Nsmf 路径、multipart part 与消息类型；下表“分类”描述语义，不凭空创建新的 wire `eventType` 枚举或 Runtime DTO。实际传给 Host 的事件字段沿用插件 IPC v1alpha1 与 F06 已声明契约；如具体映射仍缺，先在固定 fixture 中明确映射并评审，禁止由 Harness 猜测公共机器标识。
+
+| 输入（各含规范化 JSON/Content-ID 与原始字节 fixture） | Plugin 应证明的分类 | 本模块不得做的事 |
+|---|---|---|
+| `POST /sm-contexts/{smContextRef}/modify` + N1 5GSM `0xC9` | 新 UE Modify ingress | 不选择 Modify Skill、不创建 Run |
+| 相同路径 + N1 5GSM `0xD1` | 新 UE-requested Release ingress（非 network-initiated ReleaseSMContext） | 不调用 Release Owner |
+| 相同路径 + N1 Release Complete `0xD4` | 既有 Release 的 N1 confirmation/continuation ingress | 不把 `0xD4` 当作新的 Release 请求 |
+| 相同路径 + N2 `PDU_RES_SETUP_RSP` | 既有 Create 事务的 N2 completion ingress | 不重新触发 Create |
+| 相同路径 + N2 `PDU_RES_MOD_RSP` | 既有 Modify 事务的 N2 completion ingress | 不重新触发 Modify |
+| 相同路径 + N2 `PDU_RES_REL_RSP` | 既有 Release 事务的 N2 completion ingress | 不重新触发 Release |
+| N1/N2 回调分别到达、交错到达；同 peer 多事务并发 | 每次入站独立保留 operation、smContextRef、稳定 externalRequestId（若协议提供）、responseChannelId、Content-ID/slot 和原字节；不会串单 | 不用 HTTP 回调推定 Owner COMMITTED，不让 Event Plugin 持有/发送 runId |
+| 缺失或重复 Content-ID、part 错配、`n2SmInfoType` 与 N2 part 不符、截断/未知 5GSM、互相冲突的消息种类 | 拒绝错误输入，不发布新的可执行业务事件 | 不通过默补字段或业务解码修复输入 |
+
+测试 Host 仅验证 Plugin 的事件投影、隔离和 IPC，不用伪造 Run 身份替代 Host Continuation 证明。**原 Run/generation/releaseTxn 的匹配、回调独立响应义务以及零重复 mutation** 属 F02/F04/F05、SR-010/011 的组合验收，不由 SR-009 单模块声称 PASS。合法回调不因尚无可恢复 Run 就被 Plugin 错误归类；Host 负责后续接纳、拒绝或关联。
+
+### 5.2 实现落点、运行和取证
 
 - 目标实现：`cmd/openamsm-plugin（ca-openamsm-plugin）`；测试入口：`go test ./... -count=1 && go build ./cmd/openamsm-plugin`。若实现前目标仓文件/命令尚未存在，由具体实施 PR 在模块范围内创建并登记，**不得以不存在的脚本退出 0 或 0 discovered tests 作为 PASS**。
 - 使用本 SR 明示的最小正负例与计数型测试 Provider/Mock；真实 Publisher、新 Compiler、Owner 收据、隔离环境等数据只从固定 SHA 的正式发布物读取。模拟输入能验证本地行为，但**不能替代**要求正式外部源的 AC。
@@ -111,7 +128,7 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-26 | 0.2.0 | GPT-6.2（ChatGPT） | 文档头部 | 将 Plugin IPC 设计依据更新至 v0.2.4 | 与当前 12 帧协议和 SR-003 使用同一冻结规范版本 | Issue #26 |
 | 2026-11-26 | 0.2.1 | GPT-6（ChatGPT） | 文档头、§0、设计依据 | 登记独立设计待评审批次、专项审查重点与缺失输入，保留 SR DRAFT/产品 NOT_RUN | 按 1.6.0-only / Capability-first 设计集中审查；避免提前授予实施门禁 | Issue #12；SR-029；PR #45 |
 | 2026-11-26 | 0.2.2 | GPT-6（ChatGPT） | §4～§5 | 按治理 §6.1 拆分设计/实施/模块/系统依赖；补齐 AC-009-xx 正反验收 | 解除全局 VERIFIED 门槛与缺模块 AC 问题，避免 Harness 猜测/EX 倒灌 | Issue #12/#40；PR #46；SR 管理规范 §6.1 |
-| 2026-11-27 | 0.2.5 | Codex / GPT-6 | 评审状态 | 登记第二轮限定范围及外部依赖 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
-
 | 2026-11-26 | 0.2.3 | GPT-6（ChatGPT） | 文档头、设计依据 | 同步本次 1.6.0 实质整改后的权威 Feature/Compiler 文档版本 | 保证 SR 新旧规范引用与固定审核 Head 一致 | Issue #12/#40；PR #46 |
 | 2026-11-27 | 0.2.4 | Codex / GPT-6 | 设计依据、§5 | 标明测试 Host 可覆盖的模块范围 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
+| 2026-11-27 | 0.2.5 | Codex / GPT-6 | 评审状态 | 登记第二轮限定范围及外部依赖 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
+| 2026-11-27 | 0.2.6 | GPT-6（ChatGPT） | §2、§5～5.2、设计依据、修订记录 | 扩展 AC-009-04 到 0xD4 与三种 N2 completion；模块验证和 Host Continuation/Owner 验证分离；按版本整理修订记录 | 关闭合法回调被误拒/误发新 mutation 的设计缺口，保持既定 AC 数量与实施非目标 | Issue #12；PR #46；SR-009；F06 §EC04 |
