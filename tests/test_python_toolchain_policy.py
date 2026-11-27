@@ -46,6 +46,11 @@ class PythonToolchainPolicyTests(unittest.TestCase):
             with self.subTest(path=path):
                 self.assertFalse(is_python_scope_path(path))
 
+    def test_python_command_build_files_are_scoped_by_content(self) -> None:
+        self.assertTrue(is_python_scope_path("Makefile", "test:\\n  uv run pytest"))
+        self.assertTrue(is_python_scope_path("Dockerfile", "FROM python:3.14"))
+        self.assertFalse(is_python_scope_path("Makefile", "build:\\n  go test ./..."))
+
     def test_go_only_workflow_is_not_python_scope(self) -> None:
         self.assertFalse(
             is_python_scope_path(
