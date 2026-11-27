@@ -127,4 +127,5 @@ Publisher 必须从固定 Revision 读取原始 Schema 字节并核对 Git blob�
 | 2026-11-27 | 0.1.6 | GPT-6（ChatGPT） | 文档头、§1、§6、修订记录 | 将第二轮不可访问的评审登记替换为正式 Review #6082541121 的限定结论；标记 SR-030 P2 依据修订位于后续 Head | 避免将固定旧 Head 的设计认可外推到新 Head 或 Publisher 实施 | Issue #12；PR #46；Review #6082541121 |
 | 2026-11-27 | 0.1.7 | Codex / GPT-6 | 文档头 | 登记阶段 READY（中央只读核验）及 AC 范围与工作项 #95 | 按单项独立评审推进 | Issue #12、#91；PR #46 |
 | 2026-11-27 | 0.1.8 | kimi-k3.1-pro | §7、文档头 | 独立复验 Subject Schema 274 字节/blob/SHA-256/$id，核对 Provenance 与 Demo 排除；01/06/07 静态 PASS，02～05 原状态不变 | 证明固定输入而不冒充 Publisher 或 Compiler 产品验收 | Issue #95；SR-030 |
-| 2026-11-27 | 0.1.9 | GPT-6.2（ChatGPT） | §5、§6、修订记录 | 统一 SR-013 版本引用；细化 AC-030-04 ZIP 元数据归一、entry 顺序、双构建逐字节比较与正式 Schema 验证 | 处理既有评审 P2；不推测未发布的 Package Schema 字段 | Issue #95；#106；Review #91 |\n| 2026-11-27 | 0.1.10 | GPT-6.2（ChatGPT） | §6、修订记录 | 将 SR-013 互引从错误的 §5～6 更正为实际定义 Schema-only / 零 Capability roots 的 §8（AC-013-06） | 确保跨 SR 规则引用可定位且与实际章节一致 | Issue #106；Review #91 |
+| 2026-11-27 | 0.1.9 | GPT-6.2（ChatGPT） | §5、§6、修订记录 | 统一 SR-013 版本引用；细化 AC-030-04 ZIP 元数据归一、entry 顺序、双构建逐字节比较与正式 Schema 验证 | 处理既有评审 P2；不推测未发布的 Package Schema 字段 | Issue #95；#106；Review #91 |
+| 2026-11-27 | 0.1.10 | GPT-6.2（ChatGPT） | §6、修订记录 | 将 SR-013 互引从错误的 §5～6 更正为实际定义 Schema-only / 零 Capability roots 的 §8（AC-013-06） | 确保跨 SR 规则引用可定位且与实际章节一致 | Issue #106；Review #91 |
