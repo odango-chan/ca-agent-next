@@ -2,7 +2,7 @@
 
 > 文档类型：总体架构设计\
 > 状态：目标架构基线；SR-002 Python Host/Model Loop 最小切片 VERIFIED；SR-003 v0.3.11 VERIFIED（模块 AC-003-01～04）；PR #34/#41/#42 已合入恢复分支，双平台 CI SUCCESS；系统 EX-02/03/04/18 未完成；CA-SL 1.6.0 Capability-first 架构增量待评审，产品未发布
-> 文档版本：0.4.12
+> 文档版本：0.4.13
 > 修订日期：2026-11-27
 > 适用范围：ca-agent-next 通用 Agent Core、Host、Runtime、Skill 与 Plugin 公共机制\
 > 权威边界：本文是本仓唯一总体架构文档；字段级契约见规范，机制细节见设计说明书\
@@ -236,7 +236,7 @@ sequenceDiagram
 外部依赖状态快照（截至 2026-11-27）：
 
 - ca-skills main `780497a2918ad3e7bdff554ab64b0ba627e867e0`；PR #88/#89 MERGED，PR #87 OPEN；CA-SL v1alpha5 Release Record 固定规范提交 `18d8184367982ccbc835756136c4a53f9096c3a0`。
-- ca-skill-compiler v2.1.0 已发布；Issue #61 OPEN，when 发布型 CheckedExpr/DescriptorSet Runtime Artifact 未完成。
+- ca-skill-compiler v2.1.0 已发布；旧 Issue #61 OPEN（仅 v1alpha5 历史范围）；CA-SL 1.6.0-only Compiler 新契约与 Runtime Artifact 由 [Issue #62](https://github.com/odango-chan/ca-skill-compiler/issues/62) OPEN 跟踪，尚未完成。
 - ca-client-tools main `7bcb2614aa3615d8358df31eecefd0909e894e40`，Provider v1.2.0 RELEASED；PR #38/#39 OPEN；MAS Owner Publisher 由 SR-025 READY / [Issue #43](https://github.com/odango-chan/ca-client-tools/issues/43) 跟踪，尚未实施。
 - env-openamsm PR #26/#27 已合并；MAS Owner v1alpha4 与 Receipt/Proof/Reconcile 已进入主线。
 - env-5gc-sim PR #79 已合并；Mock AMF Modify 测试场景进入主线。
@@ -252,7 +252,7 @@ sequenceDiagram
 - Phase A：SR-002 Python Host + Model Loop 最小切片 VERIFIED，AC-002-01～08 PASS；完整 Runtime、EX-01 和 CPython 全矩阵仍未完成。
 - Phase B：SR-003 v0.3.11 VERIFIED（模块 AC-003-01～04）；PR #34 head `e8bcb1b` / merge `32c7c1b`，PR #41 head `f3f59b5` / merge `a899409`，PR #42 head `c573955` / merge `34e99e0`，均已合入 restore，且每组 Head/Merge tree 完全一致。Ubuntu/Python 3.12 与 Windows/Python 3.14 双平台模块 CI SUCCESS（87 Plugin / 52 Host / 80 Review Context tests）；当前 restore HEAD `34e99e0`。系统 EX-02/03/04/18 与 merge-commit post-merge exact verification 仍 NOT_RUN，Provider v2 wire DTO 与完整 Runtime E2E 由后续 SR 单独验收。
 - Skill Studio：main `79bd2c3`；#267/#270/#272 MERGED（#272 merge `a863355`）；#261/#269/#279/#290/#295 OPEN，#276 OPEN/DRAFT/DIRTY；#296 MERGED（`73523df2f`）。默认 Host Context Example provenance 已实现；普通 ZIP 全局 provenance/reload 与双根正式包消费验收仍未完成。SR-024 VERIFIED，SR-025 READY / ca-client-tools #43 OPEN。
-- CA-SL：v1alpha5 RELEASED，规范提交 `18d8184367982ccbc835756136c4a53f9096c3a0`；Compiler #61 OPEN，when Runtime Artifact/Go-Python 产品互操作未完成。
+- CA-SL：v1alpha5 RELEASED，规范提交 `18d8184367982ccbc835756136c4a53f9096c3a0`；Compiler #61 仅跟踪 v1alpha5 历史范围；1.6.0-only 新 Runtime Artifact / Go-Python 产品互操作由 Compiler #62 OPEN 跟踪，尚未完成。
 - 本架构描述目标与当前差异；外部仓 main/PR 状态不等于 Next 实现或系统 Acceptance。
 
 ### PR #54 评审快照（2026-11-27）
@@ -320,3 +320,4 @@ sequenceDiagram
 | 2026-11-27 | 0.4.10 | GPT-6.2（ChatGPT） | PR #54 验证快照、修订记录 | 将 `99a26c5` 明确为 Run #312 的最近已验证检查点，而非随后版本指针同步提交后的当前 PR Head | 避免架构快照硬编码 PR 自身的过期 Head；当前 PR Head 始终以远端 PR #54 引用为准 | Issue #53；PR #54；Run #312；Artifact `review-context-pr-54-45959283144-1` |
 | 2026-11-27 | 0.4.11 | GPT-6.2（ChatGPT） | 文档头、外部依赖快照、§13～§14、修订记录 | 修正外部依赖快照日期与 restore HEAD 时态；修复元数据块末行反斜杠；将 PR #54 历史评审与第三轮 Run #319/Artifact 当前验证信息移入评审快照小节 | 消除历史时点混杂、元数据字面反斜杠和导航章节错置；让当前验证证据精确绑定最终 Head | Issue #53；PR #54；R3-P3-01/02/05；Run #319；Artifact `review-context-pr-54-45961614681-1` |
 | 2026-11-27 | 0.4.12 | GPT-6.2（ChatGPT） | 文档头、§15、修订记录 | 整合 1.6.0-only Capability-first 设计与最新恢复基线；设计待评审，实施/发布 NOT_RUN | 整合 PR #45 的 CA-SL 1.6.0 Capability-first 设计与恢复分支最新状态，避免回滚已合入的 #44 及后续基线。 | Issue #12/#40/#43；PR #44/#45 |
+| 2026-11-27 | 0.4.13 | GPT-6.2（ChatGPT） | 总体架构外部依赖状态 | 更新 Compiler 跨仓状态，明确 #61 历史范围和 #62 的 1.6.0 新目标追踪。 | 使总体架构的外部依赖快照与新建的 1.6.0 实施 Issue 一致。 | Issue #40/#62；PR #45 |

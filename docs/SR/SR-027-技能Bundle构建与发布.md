@@ -1,18 +1,18 @@
 # SR-027：技能Bundle构建与发布
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.12\
+> SR 版本：0.1.13\
 > 状态：**DRAFT（设计待评审）**；CA-SL 1.6.0-only、完全不兼容旧版；**代码实施/发布 NOT_READY**，模块验收 NOT_RUN
 > 创建日期：2026-11-26  
 > 上游需求：IR-006  
-> 设计依据：F08 v0.3.18 §4、§6；CA-SL 1.6.0 目标（Issue #40 / SR-029）。\
+> 设计依据：F08 v0.3.19 §4、§6；CA-SL 1.6.0 目标（Issue #40 / SR-029）。\
 > 关联 Issue：ca-agent-next#12（设计）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：见 §4；本批限外部构建与发布。
 
 ## 1. 目标与前置
 
-目标仓 ca-skills，功能 F08 / EC01，中央依据为 [F08 发布设计 §4](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md#4-ca-skills-ci-编译与-bundle-组装)。基线 `780497a2918ad3e7bdff554ab64b0ba627e867e0`。SR-023 的历史 v1alpha5 作者规范保留追溯；**新 Bundle 面向 CA-SL 1.6.0**，SR-029 + ca-skills 发布 Capability-first 作者规范，SR-013 / Compiler #61 联合交付 when + 唯一 Capability Binding 的新版 Compiler Release，SR-004 与 SR-008 消费发布物。固定作者 SHA、Compiler 发布 tag 与可执行文件、适用的 Runtime Artifact API。某一 Skill 需要下一版 Artifact 时单列等待。
+目标仓 ca-skills，功能 F08 / EC01，中央依据为 [F08 发布设计 §4](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md#4-ca-skills-ci-编译与-bundle-组装)。基线 `780497a2918ad3e7bdff554ab64b0ba627e867e0`。SR-023 的历史 v1alpha5 作者规范保留追溯；**新 Bundle 面向 CA-SL 1.6.0**，SR-029 + ca-skills 发布 Capability-first 作者规范，SR-013 / Compiler #62 联合交付 when + 唯一 Capability Binding 的新版 Compiler Release（旧 #61 仅为 v1alpha5 历史范围），SR-004 与 SR-008 消费发布物。固定作者 SHA、Compiler 发布 tag 与可执行文件、适用的 Runtime Artifact API。某一 Skill 需要下一版 Artifact 时单列等待。
 
 ## 2. 在源仓交付
 
@@ -38,12 +38,12 @@ CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验�
 |---|---|---|
 | CA-SL v1alpha5 | ca-skills PR #88 MERGED；normative SHA `18d8184367982ccbc835756136c4a53f9096c3a0`；PR #89 将该 SHA 固定在 release record | 语言规范依赖已满足；不是 Skill Bundle |
 | Compiler v2.1.0 | [正式 Release](https://github.com/odango-chan/ca-skill-compiler/releases/tag/v2.1.0)；冻结 Artifact v1alpha5 和 Development Artifact v1alpha1；旧 Artifact 字节/语义不变 | 不能满足 F08 新 Runtime Artifact API 的 Request Schema/when 输出 |
-| Compiler when Artifact | [Compiler Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) OPEN；SR-013 AC-013-02～04 未完成，AC-013-05 BLOCKED | 新 Runtime Artifact API 尚未发布；本 SR 不得选择或猜测候选 API/Manifest 字段 |
+| Compiler when Artifact | [Compiler Issue #62](https://github.com/odango-chan/ca-skill-compiler/issues/62) OPEN（CA-SL 1.6.0-only）；旧 [Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) 仅为 v1alpha5 历史范围；SR-013 AC-013-02～04 未完成，AC-013-05 BLOCKED | 新 Runtime Artifact API 尚未发布；本 SR 不得选择或猜测候选 API/Manifest 字段 |
 | ca-skills 作者源 | main `780497a2918ad3e7bdff554ab64b0ba627e867e0` 含 v1alpha5 MAS 作者源；`scripts/compile_mas_v1alpha5.py` 只对单 Skill 做 Check/Inspect/可选 Build | 现有脚本不是 Bundle assembler，也不证明正式 Bundle 已发布 |
 | ca-skills Release | 当前 Release 列表只有历史 v0.1.0；未发现与 **CA-SL 1.6.0** Runtime Artifact API 匹配的 Published Skill Bundle | 无可供 SR-004 使用的正式 Assurance 正例 |
 | ca-skills 仓库布局 | 当前 main 未发现 `published-skills/` / 新 Runtime Artifact Bundle 发布目录 | Bundle layout / Skill 与 Artifact 关联契约仍须由本 SR 和 F08 明确的生产端 SR 冻结 |
 
-**阶段结论：** 本 SR 仍为 DRAFT。下一发布链只面向 **CA-SL 1.6.0**；先等 ca-skills / SR-029 规范及精确机器标识、Compiler #61 / SR-013 对 1.6.0 语言及 Capability Binding 冻结新 Runtime API，再组装 Bundle；不得猜测 Manifest，不得把本地旧 v1alpha5 编译目录或临时拼装包当作 AC-027-02/03 正例。SR-004 的 SKILL.md-only 路径可独立验证，但不提升 SR-027 或 Assurance Bundle 的状态。
+**阶段结论：** 本 SR 仍为 DRAFT。下一发布链只面向 **CA-SL 1.6.0**；先等 ca-skills / SR-029 规范及精确机器标识、Compiler #62 / SR-013 对 1.6.0 语言及 Capability Binding 冻结新 Runtime API，再组装 Bundle；不得猜测 Manifest，不得把本地旧 v1alpha5 编译目录或临时拼装包当作 AC-027-02/03 正例。SR-004 的 SKILL.md-only 路径可独立验证，但不提升 SR-027 或 Assurance Bundle 的状态。
 
 ## 6. 修订记录
 
@@ -64,3 +64,4 @@ CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验�
 | 2026-11-27 | 0.1.10 | GPT-6.2（ChatGPT） | 设计依据、修订记录 | 与 EC02 v0.2.12、F08 v0.3.16 和 1.6.0-only 候选设计保持一致；未授予产品实施 READY | Issue #40/#43；PR #45；SR-013/SR-029 |
 | 2026-11-27 | 0.1.11 | GPT-6.2（ChatGPT） | 文档头设计依据、修订记录 | 将当前 Bundle 设计依据更新至 F08 v0.3.17 | Issue #40；PR #45；SR-004/013/027；SR-031/PR #48 |
 | 2026-11-27 | 0.1.12 | GPT-6.2（ChatGPT） | 文档头设计依据、修订记录 | 将 Bundle 设计依据更新至 F08 v0.3.18 | Issue #40；PR #45；SR-027 |
+| 2026-11-27 | 0.1.13 | GPT-6.2（ChatGPT） | SR-027 §1/§5 | 将 SR-027 Bundle 生产端依赖改为 Compiler #62，并同步 F08 当前版本。；原因：使 Bundle 发布链与 CA-SL 1.6.0-only Compiler 目标一致，不把旧 Issue 当作新版依据。 | Issue #40/#62；PR #45 |

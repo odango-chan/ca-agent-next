@@ -1,7 +1,7 @@
 # Tool Interface 与 Provider 集成设计说明书
 
 > 文档类型：功能子模块设计说明书
-> 文档版本：0.4.3
+> 文档版本：0.4.4
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 功能归属：F03.05 — Tool Plugin 集成
 > 交叉功能：F03.01～F03.04、F04.01、F04.05、F05.02、F06
@@ -156,7 +156,7 @@ Compiler v2.1.0 的 Development package version 必须为 exact SemVer。Owner s
 |---|---|---|
 | CA-SL 1.6.0 Skill Author Source | 声明业务目标、Procedure、Capability ID grants / 使用点与业务参数；作者源只表达 Capability ID | 不声明或选择 Callable ID、backendOperationId、URL、Header、凭据或 Owner 结果 |
 | CA-SL 1.6.0 Compiled Skill Artifact | 保存 Compiler 生成的 Procedure、唯一 `capabilityBindings`（Capability ID → 公开 Callable ID）及精确依赖闭包 | 不接受作者或模型覆盖 Callable Binding；不暴露 Provider backendOperationId、URL、Header 或凭据 |
-| Compiler | 对 v1alpha5 resolved dependency snapshots / Owner bindings 做 ToolCatalog、Schema、Capability、Evidence 与 Procedure 静态链接并发布 Artifact；Development v1alpha1 另使用 Interface Package/Lock | 启动 Provider、检查运行时可用性、授权真实调用 |
+| Compiler（历史 v1alpha5） | 对 v1alpha5 resolved dependency snapshots / Owner bindings 做 ToolCatalog、Schema、Capability、Evidence 与 Procedure 静态链接并发布冻结 Artifact；Development v1alpha1 另使用 Interface Package/Lock | 仅描述历史实现；不作为 CA-SL 1.6.0 目标模型、实现入口或兼容依据 |\n| Compiler（CA-SL 1.6.0 目标） | 只消费 Publisher 冻结的 1.6.0 作者源与 Owner/Provider Package；静态校验 Capability ↔ 公开 Callable 双向一对一，生成唯一内部 Binding 和新版 Runtime Artifact / Build-Verify 结果 | 不接受旧作者源、旧 DTO/Artifact，不提供兼容/迁移；不启动 Provider、不检查运行时可用性、不授权真实调用 |
 | Plugin Manager | Provider 包加载、进程生命周期、握手、IPC correlation、Tools Extension 分发 | Skill 选择、Capability 授权、Owner Commit 判断 |
 | ProviderV2 Tools Extension Driver | 读取 Provider v2 发布映射；启动 Provider；适配 initialize/catalog/invoke/cancel；把私有 backend ID 隐藏在 Host 内部 | 创建第二个 Provider Manager、复制 ToolCatalog、授予 Skill 权限 |
 | Runtime Action Boundary | 检查当前 Run/Skill Scope、Callable、Schema、Effect、Artifact 来源和状态；解释 Owner Receipt / Outcome / UNKNOWN / Reconcile | 直接管理 Provider 进程或重写 Owner 业务规则 |
@@ -571,3 +571,4 @@ Runtime Action 以 Capability ID 为 Skill / Procedure 作者侧入口。Runtime
 | 2026-11-27 | 0.4.1 | GPT-6.2（ChatGPT） | §1、§12、修订记录 | 明确 1.6.0 Skill 作者源只声明 Capability ID；Callable ID 仅作为编译后的内部 Binding 与运行时 dispatch 身份。 | 消除概述层“Capability / Callable”并列作者声明与 1.6.0 Capability-only 作者接口之间的歧义。 | Issue #40；SR-029；F04；F06 |
 | 2026-11-27 | 0.4.2 | GPT-6.2（ChatGPT） | §10、§12、修订记录 | 将复用代码表中的 Capability→Operation 关系和 Operation allowlist 标记为历史机制，目标语义改为 Capability↔Callable 1:1 与 Callable allowlist | 防止旧 Demo 实现关系被误认为 1.6.0 规范要求 | Issue #40；SR-029；PR #45 |
 | 2026-11-27 | 0.4.3 | GPT-6.2（ChatGPT） | §5、修订记录 | 将 CA-SL 1.6.0 Skill Author Source 与 Compiled Skill Artifact 分列：作者源仅声明 Capability ID，Artifact 保存 Compiler 生成的唯一 Capability→Callable Binding | 消除把 Capability / Callable 并列描述为作者依赖的歧义，保持 Callable 仅作为编译产物内部与 Runtime dispatch 身份 | Issue #40；SR-029；PR #45 |
+| 2026-11-27 | 0.4.4 | GPT-6.2（ChatGPT） | F03.05 §5 | 分列历史 v1alpha5 Compiler 职责与 CA-SL 1.6.0 Compiler 目标职责，消除组件表版本混用。 | 明确历史实现与新目标模型边界，避免将旧 resolved dependency snapshots / Owner bindings 误读为 1.6.0 职责。 | Issue #40/#62；PR #45 |

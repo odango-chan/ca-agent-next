@@ -1,7 +1,7 @@
 # EC01 — CA-SL 与 Skill 作者体系架构设计
 
 > 文档类型：外部能力域架构设计（Next 中央权威设计）  
-> 文档版本：0.1.4\
+> 文档版本：0.1.5\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 唯一新目标；作者规范/Compiler/Bundle 未发布）
 > 功能归属：EC01；关联 F02、F06、F08、F09  
 > 关联需求：IR-003、IR-006；SR-004～SR-006、SR-011、SR-023  
@@ -108,7 +108,7 @@ ca-skill-compiler 是唯一 CA-SL 编译器。EC01 不复制 Parser、Schema Res
 4. 发布记录固定作者源、Compiler Release、Artifact 契约和 Bundle 版本。
 5. Next Host 只导入发布 Bundle，不运行 Compiler。
 
-CA-SL v1alpha5 的 when 已进入已合并的 ca-skills #88/#89 发布刷新；但 Compiler Issue #61 仍 OPEN，目标是生成可供 Python Runtime 加载的 CheckedExpr 与 DescriptorSet 新版发布 Artifact。旧冻结 Artifact v1alpha5 和 Development Artifact v1alpha1 不得原地修改或混用。故“作者规范已发布”不等于“Compiler when 发布物已完成”，也不等于“Next 运行时互操作已通过”。
+CA-SL v1alpha5 的 when 已进入已合并的 ca-skills #88/#89 发布刷新；Compiler Issue #61 仍 OPEN 且只保留 v1alpha5 历史范围。CA-SL 1.6.0-only 的新版 CheckedExpr / DescriptorSet Runtime Artifact 由独立 Compiler Issue [#62](https://github.com/odango-chan/ca-skill-compiler/issues/62) 跟踪。旧冻结 Artifact v1alpha5 和 Development Artifact v1alpha1 不得原地修改或混用。故“作者规范已发布”不等于“Compiler when 发布物已完成”，也不等于“Next 运行时互操作已通过”。
 
 ## 6. 版本、缓存与运行时消费
 
@@ -134,7 +134,7 @@ CA-SL v1alpha5 的 when 已进入已合并的 ca-skills #88/#89 发布刷新；�
 | CA-SL v1alpha5 规范刷新 | ca-skills #88、#89 已合并；发布记录固定规范提交 18d818436 | IMPLEMENTED / RELEASED |
 | 作者模型与指南 | ca-skills main 有 authoring-model.md、authoring.zh-CN.md | IMPLEMENTED |
 | when 作者语义 | 已进入 CA-SL v1alpha5 正式发布记录；main 文档头部仍有 Proposed Refresh 字样，与 Release Record 状态冲突 | RELEASED；源仓文档状态不一致，需后续清理 |
-| Compiler when CheckedExpr / DescriptorSet | ca-skill-compiler Issue #61 OPEN；Compiler v2.1.0 当前没有 Contract.when AST / 运行时选择程序 | NOT_IMPLEMENTED |
+| Compiler when CheckedExpr / DescriptorSet | ca-skill-compiler Issue #62 OPEN（CA-SL 1.6.0-only）；旧 Issue #61 仅为 v1alpha5 历史范围；Compiler v2.1.0 尚无 1.6.0 Contract.when AST / 运行时选择程序 | NOT_IMPLEMENTED |
 | Next Bundle Importer / Catalog generation / when evaluator | 当前设计待完整实施验收 | NOT_VERIFIED |
 | Skill-first OpenAMSM 新 Event 选择 | 需 F02/F06 与 EC04 集成验收 | NOT_RUN |
 
@@ -159,3 +159,4 @@ CA-SL v1alpha5 的 when 已进入已合并的 ca-skills #88/#89 发布刷新；�
 | 2026-11-27 | 0.1.2 | Codex | 文档头 | 补录全局评审范围及 §9 局部非目标，满足治理规范 §11.7 | Issue #43；PR #44 |
 | 2026-11-27 | 0.1.3 | GPT-6.2（ChatGPT） | §2～3、§10、修订记录 | 整合 #45 的 1.6.0-only 设计增量并保留恢复分支当前状态，避免回滚 #44 与后续修订。 | Issue #12/#40/#43；PR #44/#45 |
 | 2026-11-27 | 0.1.4 | GPT-6.2（ChatGPT） | §4、修订记录 | 为可选 requestType 增加 has() 守卫；将 Event metadata、has() 与短路规则明确为 Publisher 冻结前候选，避免可选字段误排除且不提前冻结 1.6.0 Event/CEL 契约 | Issue #40/#49；SR-013/029；PR #45/#52 |
+| 2026-11-27 | 0.1.5 | GPT-6.2（ChatGPT） | EC01 §5/§8 | 区分 v1alpha5 Issue #61 历史范围与 1.6.0-only Issue #62 的 Compiler when / Runtime Artifact 追踪。；原因：避免把历史 Compiler Issue 当作 1.6.0 目标实现。 | Issue #40/#62；PR #45 |

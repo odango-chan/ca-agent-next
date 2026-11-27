@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引\
-> 文档版本：0.3.45
+> 文档版本：0.3.46
 > 状态：28 项 SR：4 VERIFIED（SR-001/002/003/024）、1 READY（SR-025）、1 IMPLEMENTED（SR-015）、22 DRAFT（其中 SR-029 设计待评审）；SR-003 模块 AC PASS，系统 EX NOT_RUN
 > 修订日期：2026-11-27
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)\
@@ -59,7 +59,7 @@
 
 | 顺序 | SR | 主要功能 | 目标仓 / 参考仓 | 依赖和产出 |
 |---|---|---|---|---|
-| 1 | SR-023 | CA-SL v1alpha5、作者源与发布基线恢复 | ca-skills | 先固定语言、Skill 作者源与版本边界；Compiler #61 仍是外部 OPEN 依赖 |
+| 1 | SR-023 | CA-SL v1alpha5、作者源与发布基线恢复 | ca-skills | 先固定语言、Skill 作者源与版本边界；Compiler #61 保留 v1alpha5 历史范围，不作为 1.6.0 依赖 |
 | 2 | SR-015 | Tool Interface / Provider / Codec 设计恢复 | ca-client-tools → Next F03.05 | IMPLEMENTED；F03.05 v0.3.9、SR-015 v0.3.8；PR #37 MERGED，产品代码未实现 |
 | 3 | SR-025 | MAS Owner Development Interface Package Publisher | ca-client-tools → Next F03.05 / F09 | READY；实施 Issue [#43](https://github.com/odango-chan/ca-client-tools/issues/43) OPEN；将 Owner v1alpha4 source 包装为 Compiler v2.1.0 Development Interface Package；package.version 固定为 `1.0.0` |
 | 4 | SR-024 | Host Context Interface Package Publisher | ca-agent-demo → Next F09 | VERIFIED；[Issue #252](https://github.com/odango-chan/ca-agent-demo/issues/252) 已关闭；[PR #253](https://github.com/odango-chan/ca-agent-demo/pull/253) 已合并，merge `25168db031e996bfa4de440c4156ae94f4e19bce`；AC-024-01～07 均 PASS。Review COMMENTED、4 个 PR checks SKIPPED 如实保留；不占用 SR-020 的参考宿主审计 ID |
@@ -78,7 +78,7 @@
 - 治理自动化：SR-001 VERIFIED；[PR #32](https://github.com/odango-chan/ca-agent-next/pull/32) MERGED（`7a0fac41e573021207ab8201bbc718718c451e50`）；AC-REV-01～10 PASS、80 tests OK、Run [45793590532](https://github.com/odango-chan/ca-agent-next/actions/runs/45793590532) success；SR-028 仍为 DRAFT。
 - Phase A：SR-002（VERIFIED；PR #23 已集成；AC-002-01～08 PASS；EX-01 仍 NOT_RUN）。
 - Phase B：SR-003 v0.3.11 VERIFIED（模块 AC-003-01～04）；Issue [#28](https://github.com/odango-chan/ca-agent-next/issues/28) CLOSED，PR #34/#41/#42 MERGED 到恢复分支；双平台 [CI #45815167442](https://github.com/odango-chan/ca-agent-next/actions/runs/45815167442) / [CI #45817800342](https://github.com/odango-chan/ca-agent-next/actions/runs/45817800342) SUCCESS；Ubuntu/Python 3.12 与 Windows/Python 3.14 各 Plugin 87、Host 52、Review Context 80 tests PASS；系统 EX-02/03/04/18 NOT_RUN。
-- Phase C：SR-004 DRAFT / NOT READY；[设计 Issue #43](https://github.com/odango-chan/ca-agent-next/issues/43) OPEN，SR-004 v0.2.13 已定义 AC-004-01～06。SKILL.md-only 子路径可独立设计；新 Assurance 路径面向 **CA-SL 1.6.0**（Issue #40 / SR-029；NOT_RELEASED），还需 Compiler #61 / SR-013 唯一 Capability Binding Artifact 与 ca-skills SR-027 正式 Bundle 契约/正例。冻结 Artifact v1alpha5 与 Development v1alpha1 均不作为当前正例；未达到 READY，不创建实施 Issue、不提供 Harness 提示词。
+- Phase C：SR-004 DRAFT / NOT READY；[设计 Issue #43](https://github.com/odango-chan/ca-agent-next/issues/43) OPEN，SR-004 v0.2.14 已定义 AC-004-01～06。SKILL.md-only 子路径可独立设计；新 Assurance 路径面向 **CA-SL 1.6.0**（Issue #40 / SR-029；NOT_RELEASED），还需 [Compiler #62](https://github.com/odango-chan/ca-skill-compiler/issues/62) / SR-013 唯一 Capability Binding Artifact 与 ca-skills SR-027 正式 Bundle 契约/正例；Compiler #61 仅保留 v1alpha5 历史范围。冻结 Artifact v1alpha5 与 Development v1alpha1 均不作为当前正例；未达到 READY，不提供实施提示词。
 - Phase D：SR-005、SR-006。
 - Phase E：SR-007。
 - Phase F：SR-008。
@@ -164,3 +164,4 @@
 | 2026-11-27 | 0.3.43 | GPT-6.2（ChatGPT） | 当前版本/依赖指针、修订记录 | 对齐 EC02 v0.2.12、F08 v0.3.16、F09 v0.3.16 和审计 v0.4.53；不改变历史证据与 SR 状态 | 避免评审与 Harness 误引用旧版；保持 1.6.0 NOT_RELEASED 与 DRAFT 边界。 | Issue #40/#43；PR #45；SR-004/013/027/029 |
 | 2026-11-27 | 0.3.44 | GPT-6.2（ChatGPT） | §4 当前基线说明、修订记录 | 纠正正文当前 SR 总计 27/21 与顶部当前 28/22 不一致；保留历史评审统计 | 修复审阅时点与当前权威状态混写，不改变任何 SR 状态 | Issue #40/#12；PR #45；SR-029 |
 | 2026-11-27 | 0.3.45 | GPT-6.2（ChatGPT） | Phase C、修订记录 | 将 SR-004 当前版本指针更新至 v0.2.13 | 保持 SR 索引与当前需求记录一致 | Issue #40/#43；PR #45；SR-004 |
+| 2026-11-27 | 0.3.46 | GPT-6.2（ChatGPT） | SR 总索引 §3.2 | 将 SR-004 Assurance 路径的 Compiler 实施依赖统一指向 #62，并保留 SR-023 的 v1alpha5 历史记录。 | 让阶段索引反映实际的新实施追踪且不改变 SR-004 DRAFT 状态。 | Issue #40/#62；PR #45 |

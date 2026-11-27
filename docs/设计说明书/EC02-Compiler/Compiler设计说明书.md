@@ -1,12 +1,12 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.2.15\
+> 文档版本：0.2.16\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 修订日期：2026-11-27
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产准入、Owner 信任运营、签名、Trust Registry、生产资格及真实 5GC/MAS 认证。
 
-关联 [IR-003](../../IR/IR%20总登记册.md#ir-003)、[IR-006](../../IR/IR%20总登记册.md#ir-006)、[SR-012](../../SR/SR-012-Compiler设计归档与跨仓收敛.md)、[SR-013](../../SR/SR-013-Compiler已检查when与发布产物.md)、[Next Issue #14](https://github.com/odango-chan/ca-agent-next/issues/14) 和 [Compiler Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)。
+关联 [IR-003](../../IR/IR%20总登记册.md#ir-003)、[IR-006](../../IR/IR%20总登记册.md#ir-006)、[SR-012](../../SR/SR-012-Compiler设计归档与跨仓收敛.md)、[SR-013](../../SR/SR-013-Compiler已检查when与发布产物.md)、[Next Issue #14](https://github.com/odango-chan/ca-agent-next/issues/14) 和 [Compiler Issue #62](https://github.com/odango-chan/ca-skill-compiler/issues/62)（CA-SL 1.6.0-only）；旧 [Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) 仅保留 v1alpha5 历史范围。
 
 ## 1. 权威与版本边界
 
@@ -280,7 +280,7 @@ Chromium parity 脚本使用真实 Headless Chrome；若默认路径不可用，
 ## 8. 发布边界与外部消费
 
 - Compiler 的职责止于 Check、Build、Verify、Artifact Schema、Compiler Release 和可复现证据。
-- ca-skills CI 负责选取并固定稳定 Compiler Release、编译 Assurance Skill、验证结果，并按 ca-skills Bundle 契约组装 SKILL.md 与发布 Artifact。该工作由 F08 与 SR-027 追踪，不归入 Compiler #61 的代码实现。
+- ca-skills CI 负责选取并固定稳定 Compiler Release、编译 Assurance Skill、验证结果，并按 ca-skills Bundle 契约组装 SKILL.md 与发布 Artifact。该工作由 F08 与 SR-027 追踪，不归入 Compiler #62 的代码实现。
 - Next Agent 只消费正式发布 Bundle；导入、Catalog、CEL 反序列化和每 Event 求值由 F02 / SR-004/005/006 验收。Next 不内置 Compiler、不调用 Compiler 命令、不实现 Skill Admission。
 - Compiler Release、ca-skills Bundle Release、Next Runtime E2E 是三个独立证据层。一个通过不能替代另一个。
 
@@ -378,3 +378,4 @@ Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId�
 | 2026-11-27 | 0.2.13 | GPT-6.2（ChatGPT） | §3.4、§5.2～§5.3、§6.1、§7、修订记录 | 明确 Skill-owned G.4 Request Schema root 与原版 OpenAPI 3.0 resources 的 dialect-aware $ref 边界；原件 source bytes/$ref 不变，不要求 Adapter；具体 resolver/Manifest 细节留给 SR-031/PR #48 冻结 | 避免 G.4 profile 误约束原版 OAS3 components，并防止在 PR #48 未合并时提前声称实现细节已冻结 | Issue #40；SR-013；SR-031；PR #45/#48 |
 | 2026-11-27 | 0.2.14 | GPT-6.2（ChatGPT） | §6.2 Verify、测试矩阵、修订记录 | 修正 Verify 对混合 G.4/OAS3 引用资源的 dialect-aware 验收，保留 OAS3 原生约束与 source bytes | 避免 Verify 将 G.4 根规则错误应用到原版 OpenAPI 3.0 resources | Issue #40；PR #45；SR-004/013/027；SR-031/PR #48 |
 | 2026-11-27 | 0.2.15 | GPT-6.2（ChatGPT） | §3.2～§3.5、§4.1、§5.2、修订记录 | 将 Event metadata/event.type 与 CEL has/短路剖面标记为 Publisher 冻结前候选；DescriptorSet 只收录实际引用的已冻结字段 | 避免将 event.type 单字段假设和候选 CEL 宏误报为已发布规范 | Issue #40/#49；SR-013/029；PR #45/#52 |
+| 2026-11-27 | 0.2.16 | GPT-6.2（ChatGPT） | EC02 设计入口与发布责任 | 将 EC02 当前 Compiler 实施入口改为 #62，保持 #61 的历史版本范围不变。 | 区分 Compiler 新目标与历史发布资产的责任边界。 | Issue #40/#62；PR #45 |
