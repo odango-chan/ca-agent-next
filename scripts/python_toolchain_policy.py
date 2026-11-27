@@ -307,6 +307,22 @@ def validate_base_contents(
         if content is None:
             raise PolicyError(f"共享基线缺少必需文件：{path}")
 
+    root_entries = run_git(
+        repo_root, "ls-tree", "--name-only", base_sha
+    ).stdout.splitlines()
+    existing_alternates = sorted(
+        name for name in root_entries if is_root_lockfile(name)
+    )
+    if existing_alternates:
+        raise PolicyError(
+            "PR Base 已包含禁止的根级替代依赖/锁文件："
+            + ", ".join(existing_alternates)
+        )
+
+    gitignore = git_blob(repo_root, base_sha, ".gitignore") or ""
+    if ".venv/" not in gitignore.splitlines():
+        raise PolicyError("PR Base 的 .gitignore 未忽略根本地虚拟环境 .venv/。")
+
     python_version = git_blob(repo_root, base_sha, ".python-version")
     if python_version is None or python_version.strip() != manifest.get("python_version"):
         raise PolicyError(
