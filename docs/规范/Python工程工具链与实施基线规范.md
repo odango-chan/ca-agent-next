@@ -31,7 +31,7 @@ Next 根 Python 工程的权威配置为：
 | 项目虚拟环境 | 每个 checkout/worktree 独立的根目录 `.venv/` |
 | 开发/测试依赖 | PEP 735 `[dependency-groups].dev` |
 | Plugin 额外依赖 | 既有 `[project.optional-dependencies].plugins` |
-| CI uv 安装 | 固定的 `astral-sh/setup-uv` action commit，并显式指定 `0.13.10` |
+| CI uv 安装 | `astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d`，并显式指定 `0.13.10` |
 
 不得以 SR 编号、实施批次、分支或 worktree 为理由建立第二套 Python 项目依赖入口。根项目不得新增 `requirements.txt`、pip-tools constraints、Poetry/Conda 锁文件或另一份依赖锁。不得在根项目 CI、本地验收或 Harness 提示词中使用 `pip install`、`python -m pip install` 或裸 `python` 作为项目依赖安装/测试入口。
 
@@ -80,7 +80,7 @@ Next 根 Python 工程的权威配置为：
 
 1. 读取本规范、Issue #111、目标 SR 和对应设计基线。
 2. 获取当前共享基线分支的最新远端 Head，并记录完整 SHA。
-3. 确认该 Head 包含根 `pyproject.toml`、`uv.lock`、`.python-version`、`scripts/unittest_gate.py` 和当前 Python CI Workflow。
+3. 确认该 Head 包含根 `pyproject.toml`、`uv.lock`、`.python-version`、`.gitignore`、`scripts/unittest_gate.py` 和当前 Python CI Workflow。
 4. 从该 Head 创建实施分支；记录 `git rev-parse HEAD`、分支名和远端分支引用。
 5. 用 `git merge-base --is-ancestor <shared-baseline-sha> HEAD` 确认共享基线确实是当前分支祖先；并检查 `git diff --stat <shared-baseline-sha>...HEAD`，确认没有意外带入其他 SR 的实施差异。
 6. PR Base 指向当前共享基线分支或明确记录的后继集成分支；不得将 Python 实施 PR 直接指向缺少 uv 的设计分支或旧 main。
