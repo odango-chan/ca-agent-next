@@ -1,13 +1,13 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.32\
+> 文档版本：0.3.33\
 > 状态：**设计待评审**（CA-SL 1.6.0；有 Assurance Skill 才允许 assurance/contract.yaml 顶层 when；SKILL.md Front Matter 不声明 when；无 Assurance Skill 不声明 when；AI Authoring / Schema Explorer 实施与发布 NOT_RUN）
 > 修订日期：2026-11-27\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级准入、额外 package-level digest、签名和 Trust Registry；历史 Compiler v2.1.0 的 `files[].sha256` 要求仅归旧版审计，不转为新版 Schema 要求
 
-关联 IR-006、IR-008、SR-015、SR-016、SR-020（参考宿主架构审计）、SR-024（旧 Development Host Publisher，仅历史）、SR-025（MAS Owner 1.6.0 Publisher）、SR-030（Host Context 1.6.0 Schema-only Publisher）、SR-032（中央 SKILL 作者规范）；新 1.6.0 Compiler 接口以 [EC02 Compiler 设计说明书](../EC02-Compiler/Compiler设计说明书.md) v0.2.13 和 [SR-013](../../SR/SR-013-Compiler已检查when与发布产物.md) v0.2.30 为准；历史 EC02 Development Build 设计只保留源审计，不作为当前 Compiler DTO/Worker/Bundle 发布入口。基线为 [docs/architecture/studio-boundaries.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/architecture/studio-boundaries.md)、[docs/design/ai-procedure-authoring.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/design/ai-procedure-authoring.md)。
+关联 IR-006、IR-008、SR-015、SR-016、SR-020（参考宿主架构审计）、SR-024（旧 Development Host Publisher，仅历史）、SR-025（MAS Owner 1.6.0 Publisher）、SR-030（Host Context 1.6.0 Schema-only Publisher）、SR-032（中央 SKILL 作者规范）；新 1.6.0 Compiler 接口以 [EC02 Compiler 设计说明书](../EC02-Compiler/Compiler设计说明书.md) v0.2.19 和 [SR-013](../../SR/SR-013-Compiler已检查when与发布产物.md) v0.2.31 为准；历史 EC02 Development Build 设计只保留源审计，不作为当前 Compiler DTO/Worker/Bundle 发布入口。基线为 [docs/architecture/studio-boundaries.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/architecture/studio-boundaries.md)、[docs/design/ai-procedure-authoring.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/design/ai-procedure-authoring.md)。
 
 ## 1. 编辑与语言服务
 
@@ -19,7 +19,7 @@ Theia 的 Package Explorer 以作者源码为工作区入口。可视化视图�
 
 ## 3. when 编写与验收
 
-正式语言刷新后，`assurance/contract.yaml` 顶层 `when` 字段的提示与诊断对齐中央规范。`when` 是可选 CEL 字段，仅允许在存在 `assurance/` 的 Skill 中声明；SKILL.md Front Matter 不声明 when，出现时按未知字段拒绝；无 Assurance Skill 没有 Contract，不声明 `when`。表达式的 Schema 类型来自同一 Contract 的 requestSchema；CEL 静态检查与错误定位必须对齐 **CA-SL 1.6.0 的唯一正式作者 Schema + 新 Compiler 契约**；历史 v1alpha5 仅用于只读测试差异审计。没有 `when` 的 Assurance Skill 保持无条件语义候选。文本与 AI 编辑均保持可预览，不能把选择条件写入 Predicate。覆盖 Browser Worker、源码往返、已有包、有效与无效表达式、无 Assurance + Front Matter when 负例、Compiler gate 与应用后再打开。
+正式语言刷新后，`assurance/contract.yaml` 顶层 `when` 字段的提示与诊断对齐中央规范。`when` 是可选 CEL 字段，仅允许在存在 `assurance/` 的 Skill 中声明；SKILL.md Front Matter 不声明 when，出现时按未知字段拒绝；无 Assurance Skill 没有 Contract，不声明 `when`。表达式的 Schema 类型来自同一 Contract 的 requestSchema；CEL 静态检查与错误定位必须对齐 **CA-SL 1.6.0 的唯一正式作者 Schema + 新 Compiler 契约**；历史 v1alpha5 仅用于只读测试差异审计。没有 `when` 的 Assurance Skill 保持无条件语义候选。文本与 AI 编辑均保持可预览，不能把选择条件写入 Predicate。覆盖 Browser Worker、源码往返、已有包、有效与无效表达式、**无 Assurance + Front Matter.when** 与 **有效 Assurance + Front Matter.when** 两种负例（均按未知字段拒绝）、可选 input 字段缺少 `has` 守卫的 CEL_INVALID、Compiler gate 与应用后再打开。
 
 ## 4. 历史 Interface Package / Development Build 设计审计（非 1.6.0 规范）
 
@@ -247,3 +247,5 @@ AI Authoring 的 Change Set 必须遵守中央 [SKILL 作者规范](../../规范
 | 2026-11-27 | 0.3.30 | GPT-6.2（ChatGPT） | 文档头、设计依据 | 同步 SR-013 最新版本引用 | 确保 Studio 的 when / Compiler gate 设计引用当前 Front Matter.when 入口；历史错误入口判断，已由 0.3.32 撤销，不构成兼容方案| Issue #49；IR-008；SR-032；SR-013 |
 | 2026-11-27 | 0.3.31 | GPT-6.2（ChatGPT） | §3、§9、Schema Explorer、修订记录 | 合并 Front Matter.when 编辑与无 Assurance Skill 拒绝规则、AI Authoring Change Set 作者规范约束，以及 IR-009 原版 OpenAPI Schema Explorer / Codec 分阶段预览 | 确保 Studio 只编辑当前 1.6.0 作者源，不将选择条件混入 Contract 或 Procedure Change Set；历史错误入口判断，已由 0.3.32 撤销，不构成兼容方案| Issue #47/#49；IR-008/009；SR-013/031/032 |
 | 2026-11-27 | 0.3.32 | GPT-6.2（ChatGPT） | 文档头、§3、§9.3、修订记录 | 将 when 编辑与校验入口恢复为 assurance/contract.yaml 顶层；SKILL.md Front Matter 不声明 when；Procedure-only Change Set 不编辑 Contract | 纠正 Studio 作者入口和独立编辑路径，保持 Procedure Change Set 范围不变 | Issue #49；IR-008；SR-032；F02/F08/SR-013 |
+
+| 2026-11-27 | 0.3.33 | GPT-6.2（ChatGPT） | 文档头、§3、修订记录 | 同步 EC02 / SR-013 当前版本；增加有 Assurance 与无 Assurance 两种 Front Matter.when 均拒绝，以及可选 input 字段缺少 has 守卫的 Studio 诊断验收 | 防止编辑器对两种包采用不同入口容忍度，并确保 CEL 可选字段安全规则进入作者体验 | Issue #49；IR-008/009；SR-016/032；PR #52 |
