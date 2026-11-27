@@ -1,13 +1,13 @@
 # Skill 管理与选择设计说明书
 
 > 文档类型：机制设计说明书  
-> 状态：目标机制设计；Artifact 互操作部分依赖外部 Compiler 发布  
-> 文档版本：0.2.11
+> 状态：CA-SL v1alpha5 已 RELEASED；when Runtime Artifact / Go-Python 产品互操作仍依赖 Compiler #61；Next 消费端尚未验收  
+> 文档版本：0.2.12
 > 功能归属：F02 — Skill 管理与选择  
 > 关联 SR：SR-004、SR-005、SR-006    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
 > 本文局部非目标：以本文范围与非目标章节为准；无额外扩展  
-> 修订日期：2026-11-25  
+> 修订日期：2026-11-26  
 > 适用范围：Skill 包导入、SkillCatalog、Resolver、已发布 CA-SL Runtime Artifact 与 Python CEL Runtime
 
 关联需求项见 [IR-003](../../IR/IR%20总登记册.md#ir-003)。
@@ -124,7 +124,7 @@ CheckedExpr、google.protobuf.Any、FileDescriptorSet、DescriptorPool、字段�
 
 ## 9. 外部依赖与状态边界
 
-- ca-skills PR #88：同标识 CA-SL v1alpha5 的 optional Assurance/when 刷新；实施前重新确认合并与正式规范状态。
+- ca-skills PR #88（同标识 CA-SL v1alpha5 optional Assurance/when 刷新）与 PR #89（Release Record 固定）均已 MERGED；Release Record 固定规范提交 `18d8184367982ccbc835756136c4a53f9096c3a0`。PR #87 仍 OPEN（Contract.when 适用性提案），不改变正式规范基线。
 - ca-skill-compiler Issue #61：新版发布运行时 Artifact 与 CheckedExpr/DescriptorSet 格式；详细互操作方案见[Skill管理与选择设计说明书](Skill管理与选择设计说明书.md) §11。
 - ca-agent-next：只负责已发布包的消费、Catalog、选择和 Runtime，不调用 Compiler。对 CA-SL v1alpha5 冻结 Artifact，Agent 按 dependency closure 中的 stablePackageId / exports 解析 Provider Interface Package 与 Owner Contract Package；Provider Interface bytes 必须匹配 provider.yaml 的 `interfaceSnapshotDigest`；Owner Contract 的实际部署版本由 Provider Runtime Bindings sidecar 的 stableId、version、publicationDigest、manifestDigest 固定，Agent 必须校验已安装 Owner publication 与 sidecar 一致。不得将 Owner ToolCatalog 当成 Provider Interface Package。
 - Development v1alpha1 Artifact 虽然携带 packageId/version/snapshotDigest 的 Dependency Lock，但 executionStatus 固定 `NOT_ADMITTED`，不是当前 Agent 的运行时输入；不能把该 profile 的 Lock 能力套用到冻结 v1alpha5 Artifact。若未来需要 per-Skill digest pin，需由新的 Compiler Artifact API/profile 提供。
@@ -132,6 +132,10 @@ CheckedExpr、google.protobuf.Any、FileDescriptorSet、DescriptorPool、字段�
 - cel-expr-python：作为 Python Runtime 的 CEL 反序列化/求值依赖，版本固定并以跨语言 fixtures 验收。
 
 Agent 不调用 Compiler Inspect/Verify，也不实现 Skill Admission。Compiler 在发布前完成 Build/Verify；Agent 只做消费端基本结构检查和依赖解析。
+
+
+
+**当前发布状态（2026-11-26）：** CA-SL v1alpha5 的正式身份以 [Release Record](https://github.com/odango-chan/ca-skills/blob/main/docs/releases/ca-sl-v1alpha5.md) 固定，规范提交为 `18d8184367982ccbc835756136c4a53f9096c3a0`；#88/#89 已合并，#87 是未合并提案。规范 RELEASED 不等于 Compiler 产品符合性通过：Compiler Issue [#61](https://github.com/odango-chan/ca-skill-compiler/issues/61) 仍 OPEN，发布型 CheckedExpr/DescriptorSet Runtime Artifact 与 Go→Python CEL 互操作尚未完成。F02 的 when Runtime 消费因此仍为 NOT_IMPLEMENTED / NOT_VERIFIED；不得把 Development v1alpha1 的 NOT_ADMITTED Artifact 当作 Agent Runtime 输入。
 
 ## 10. 验收要求
 
@@ -212,3 +216,5 @@ Next 在 Skill 导入时反序列化已检查程序和类型环境，建立运�
 | 2026-11-25 | 0.2.9 | GPT-6.2（ChatGPT） | §7 | 修复 CA-SL v1alpha5 when 发布/运行时依赖的失效锚点，指向当前语言基线 §3 | 不改变 M.3/SA-012 语义；使候选资格引用可导航 | IR-003；Issue #12 |
 | 2026-11-25 | 0.2.10 | Codex / GPT-6 | 正文 | §6、追踪 对齐语言发布与 Compiler/Bundle 职责 | 消除执行歧义并同步中央设计 | Issue #12 |
 | 2026-11-26 | 0.2.11 | GPT-6.2（ChatGPT） | §4、§9 | 明确冻结 v1alpha5 Artifact 不序列化 Skill Capability ID；Compiler Build-time 校验作者源 Capability，Runtime Scope 只从 operation/observation exports 建立 | 对齐 F03.05 与 Compiler v2.1.0 frozen artifact schema，避免实现者读取不存在字段 | IR-006 · SR-015 · Issue #12 |
+| 2026-11-26 | 0.2.12 | GPT-6.2（ChatGPT） | 文档头、§9～§10 | 将 CA-SL v1alpha5 发布状态固定到 Release Record 与规范 SHA；更新 #88/#89 MERGED、#87 OPEN、Compiler #61 OPEN | 区分语言规范 RELEASED 与 when Runtime Artifact / Go-Python 产品互操作未完成，不把规范发布扩大为产品验收 | IR-003、IR-006；SR-005、SR-006、SR-013、SR-023；ca-skills #87/#88/#89；Compiler #61 |
+| 2026-11-27 | 0.2.13 | GPT-6.2（ChatGPT） | 文档头、§9～§10 | 将 CA-SL v1alpha5 RELEASED 身份与 Release Record 固定 SHA 纳入恢复分支；确认 ca-skills #87、Compiler #61 仍 OPEN | 将规范 RELEASED 与 when Runtime Artifact / Go-Python 产品互操作未完成严格分离 | Issue #53；IR-003、IR-006；SR-005、SR-006、SR-013、SR-023；ca-skills #87/#88/#89；Compiler #61 |
