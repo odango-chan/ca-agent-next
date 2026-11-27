@@ -1,8 +1,8 @@
 # G02：Python 工程工具链与环境管理设计说明书
 
 > 文档类型：工程治理功能设计说明书  
-> 文档版本：0.2.6\
-> 状态：Review #6083641266 对固定 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2` 给出 CHANGES_REQUESTED（0 P0 / 1 P1 / 3 P2）；R028-17～20 已按 Issue #12 完成设计整改并推送，等待新 Head 第六轮独立复评；SR-028 仍 DRAFT、AC-028-01～10 产品验收 NOT_RUN、READY=0\
+> 文档版本：0.2.7\
+> 状态：第六轮独立 Review [#6083872622](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083872622) 对固定 Head `2d20a128a1574103d709d82f6c426580ecb47f48` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2` 给出 CHANGES_REQUESTED（0 P0 / 1 P1 / 2 P2）；R028-21～23 已按 Issue #12 完成设计整改并推送，等待新 Head 第七轮独立复评；当前分支修订前 Head 为 `072248ff6a5deac40437ab47c892aaa2064781da`；SR-028 仍 DRAFT、AC-028-01～10 产品验收 NOT_RUN、READY=0\
 > 修订日期：2026-11-27\
 > 功能节点：G02 Python 工程工具链与环境管理  
 > 关联需求：[IR-007](../../IR/IR%20总登记册.md#ir-007)、[SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md)  
@@ -12,7 +12,7 @@
 
 ## 0. 设计评审入口（2026-11-26）
 
-本设计与 [SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md) 由 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12) 统一追踪；原设计 Issue #35 已 CLOSED。最新第五轮独立复评为 [PR #46 Review #6083641266](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083641266)，固定 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`，结论 CHANGES_REQUESTED（0 P0 / 1 P1 / 3 P2）。唯一 P1 为 R028-17 Artifact 契约冲突；本轮仅修订设计与验收定义，不授权产品实施。
+本设计与 [SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md) 由 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12) 统一追踪；原设计 Issue #35 已 CLOSED。最新第六轮独立复评为 [PR #46 Review #6083872622](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083872622)，固定 Head `2d20a128a1574103d709d82f6c426580ecb47f48` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`，结论 CHANGES_REQUESTED（0 P0 / 1 P1 / 2 P2）。R028-21 为唯一 P1，R028-22/23 为 P2；本轮仅修订设计与验收定义，不授权产品实施。
 
 **设计待评审与实施 READY 分离：**PR #32 的评审上下文 CI 已完成，不构成 uv 迁移验收；SR-028 保持 DRAFT。评审未通过不得生成实施提示词，不开展跨仓批量迁移或不必要的生产供应链 DFX。
 
@@ -189,7 +189,7 @@ uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_ga
 
 脚本的规范性算法与报告字段：
 
-1. 每个范围使用独立 `unittest.TestLoader` 和 `unittest.TextTestRunner`。`discovered` 取 `suite.countTestCases()`，`tests_run` 取 `result.testsRun`；`failures`、`errors`、`skipped`、`expected_failures`、`unexpected_successes` 分别取 `TestResult` 对应列表的条目数。`loader_errors` 精确定义为本次独立 `TestLoader` 在 `discover()` 后其 `loader.errors` 列表的条目数（`len(loader.errors)`），每个列表元素计 1，不按多行 traceback 拆分；`loader_error_messages` 原样保存该列表。若 `discover()` 本身抛出异常而未返回 suite，将完整异常记录到 `discovery_exception`，该范围直接失败；此时 `loader_errors` 仍只表示 `len(loader.errors)`，不把异常重复计入该字段。
+1. 每个范围使用独立 `unittest.TestLoader` 和 `unittest.TextTestRunner`。`discovered` 取 `suite.countTestCases()`，`tests_run` 取 `result.testsRun`；`failures`、`errors`、`skipped`、`expected_failures`、`unexpected_successes` 分别取 `TestResult` 对应列表的条目数。`loader_errors` 精确定义为本次独立 `TestLoader` 在 `discover()` 后其 `loader.errors` 列表的条目数（`len(loader.errors)`），每个列表元素计 1，不按多行 traceback 拆分；`loader_error_messages` 原样保存该列表。若 `discover()` 本身抛出异常而未返回 suite，将完整异常文本记录到 `discovery_exception`，该范围直接失败；若 discovery 正常完成，JSON 字段 `discovery_exception` 必须写为 `null`；此时 `loader_errors` 仍只表示 `len(loader.errors)`，不把异常重复计入该字段。
 2. `passed = tests_run - failures - errors - skipped - expected_failures - unexpected_successes`；不得用 `discovered - failures` 推算通过数。
 3. 单范围 `exit_code` 为 `0` 当且仅当 `discovered > 0`、`tests_run == discovered`、`failures == errors == skipped == expected_failures == unexpected_successes == loader_errors == 0` 且 `discovery_exception` 为空；否则为 `1`。`loader_errors` 与 `errors` 是不同阶段的观测字段：加载错误可能同时产生 `_FailedTest` 并出现在 `TestResult.errors`，此时两字段可同时计数，但不得相加或去重；PASS 必须分别满足两者为 0。任何 0 tests、skip、失败、错误、expected failure、unexpected success、加载诊断或 discovery 异常均失败。
 4. 每项分别写入 `<suite>.json` 与 `<suite>.log`；每个 `<suite>.json` 必须包含该范围的 `exit_code`（仅允许 `0` 或 `1`）、所有统计字段、`loader_error_messages` 和 `discovery_exception`。总计写入 `summary.json`，其中每个已选范围保留自己的 `exit_code`，并有独立的整体 `exit_code`。整体 `exit_code` 仅在所有已选范围的 `exit_code` 均为 0 且所有报告成功写入时为 0，否则为 1；进程退出码必须与整体 `exit_code` 一致。日志保留完整 unittest 输出/traceback。脚本即使某项失败也继续执行其他范围，全部报告落盘后才返回；报告/运行错误必须使整体退出码非零。
@@ -328,7 +328,7 @@ steps:
       if-no-files-found: error
 ```
 
-两个矩阵 Job 都必须通过 `scripts/unittest_gate.py` 自动运行 Host、Plugin、Review Context 和完整总计；脚本逐范围断言 `discovered>0`、`tests_run=discovered`、`failures/errors/skipped/expected_failures/unexpected_successes/loader_errors=0`，并在任何范围失败时最终非零退出。每项 JSON、log、summary、Smoke 和 Go Echo 证据由 `if: always()` Artifact 上传步骤保存。只记录绿色 Job 不足以 PASS；必须检查 gate 报告中四个范围的字段和退出码。`GOWORK=off` 必须应用于 Go 构建与 Plugin 测试。
+两个矩阵 Job 都必须通过 `scripts/unittest_gate.py` 自动运行 Host、Plugin、Review Context 和完整总计；脚本逐范围断言 `discovered>0`、`tests_run=discovered`、`failures/errors/skipped/expected_failures/unexpected_successes/loader_errors=0` 且 `discovery_exception=null`，并在任何范围失败时最终非零退出。每项 JSON、log、summary、Smoke 和 Go Echo 证据由 `if: always()` Artifact 上传步骤保存。只记录绿色 Job 不足以 PASS；必须检查 gate 报告中四个范围的字段和退出码。`GOWORK=off` 必须应用于 Go 构建与 Plugin 测试。
 
 #### Review Context Workflow：诊断 Artifact 与正式 Artifact 分离
 
@@ -352,6 +352,8 @@ Review Context gate 使用 `uv run --no-sync --locked --group dev --extra plugin
       printf 'pr_number=%s\n' "$PR_NUMBER"
       printf 'base_sha=%s\n' "$BASE_SHA"
       printf 'head_sha=%s\n' "$HEAD_SHA"
+      printf 'generator_base_sha=%s\n' "$BASE_SHA"
+      printf 'failure_injection=none\n'
       printf 'run_id=%s\n' "$GITHUB_RUN_ID"
       printf 'run_attempt=%s\n' "$GITHUB_RUN_ATTEMPT"
     } > "$diagnostics_dir/run-context.txt"
@@ -463,7 +465,7 @@ Review Context gate 使用 `uv run --no-sync --locked --group dev --extra plugin
     retention-days: 30
 ```
 
-AC-028-08 必须用真实成功 PR Run 下载核对两个 Artifact；另用一个受控负例 PR（保留测试通过，但令 head 版 `Agent.md` 的唯一 `review_scope` 无效，使生成器失败）证明诊断 Artifact 存在且包含 gate/生成器失败证据，而正式三文件 Artifact 不存在。负例 PR 不合并，恢复有效 `review_scope` 后再执行成功路径。
+AC-028-08 必须用真实成功 PR Run 下载核对两个 Artifact；另用一个受控负例 PR 验证“测试门禁通过、生成器失败”的真实 Workflow 路径。**负例 PR 必须保持 head 版 `Agent.md` 与有效 `review_scope` 不变**，不得通过破坏它触发生成器失败（测试模块在导入时从仓库根 `Agent.md` 派生全部 fixture，这样做会先使 gate 失败）。负例只在该临时 PR 的 `.github/workflows/review-context.yml` 中，将生成器命令的 `--base "$BASE_SHA"` 临时替换为 `--base "0000000000000000000000000000000000000000"`；同时将 `run-context.txt` 的 `generator_base_sha` 记录为该全零 SHA、`failure_injection=invalid-base`，但 `base_sha` 仍记录真实 PR base。预期 Review Context gate 全部通过，生成器实际执行并以非零退出，stderr 包含 `base 提交对象不可读取`；诊断 Artifact 必须包含 gate PASS JSON/log/summary、generator stdout/stderr/exit-code 与 manifest（三个正式文件均为 MISSING），正式三文件 Artifact 不存在。无效 `review_scope` 的拒绝能力由现有 `test_validation_failure_writes_no_artifact` 与 `test_subprocess_returns_non_zero_with_location` 在临时 Git 仓库中的单元测试覆盖；这两项必须随 gate 通过。负例 PR 不得合并；取得负例证据后，恢复 `--base "$BASE_SHA"`、`generator_base_sha=$BASE_SHA`、`failure_injection=none`，在恢复后的新 Head 上重新运行成功路径并核验两个 Artifact，最后关闭负例 PR（未合并）。
 
 #### paths 与独立堆叠验证 PR
 
@@ -729,7 +731,7 @@ printf 'Lock-drift evidence retained at: %s\n' "$EVIDENCE_DIR"
 3. 按项目 `.python-version` 安装根环境 CPython 3.14.6；SR-003 矩阵另外显式安装 Ubuntu 3.12 或 Windows 3.14.6。
 4. 通过 `setup-go@v5` 和 `go-version-file: examples/echo/plugin/go.mod` 安装满足 Go 1.24 directive 的 Go；记录 `go version`，设置 `GOWORK=off` 并构建 Go Echo。Go 构建步骤统一使用 Bash；Windows Runner 的 `go env GOOS` 必须选择 `.exe` 输出名。
 5. 使用 `uv sync --python "$PY" --locked --group dev --extra plugins` 完成唯一一次环境同步；其后的测试、compileall、Smoke 和证据脚本统一使用 `uv run --python "$PY" --no-sync --locked --group dev --extra plugins ...`，不得在测试阶段隐式修复环境。
-6. 使用 `scripts/unittest_gate.py` 一次运行 Host、Plugin、Review Context、完整总计四个范围。脚本必须逐范围保存 JSON/log，自动断言 discovered>0、tests_run=discovered、failures/errors/skipped/expected_failures/unexpected_successes/loader_errors 均为 0，并在任一范围失败时最终非零退出。
+6. 使用 `scripts/unittest_gate.py` 一次运行 Host、Plugin、Review Context、完整总计四个范围。脚本必须逐范围保存 JSON/log，自动断言 discovered>0、tests_run=discovered、failures/errors/skipped/expected_failures/unexpected_successes/loader_errors 均为 0，且 `discovery_exception` 为 JSON `null`，并在任一范围失败时最终非零退出。
 7. `actions/upload-artifact@v4` 必须在 `if: always()` 下上传 gate JSON/log、Smoke 与 Go Echo 证据；Artifact 不存在或文件缺失不得被记为验收 PASS。
 8. 任一锁文件漂移、依赖缺失、测试失败、必需用例 skipped、0 tests、脚本错误或环境创建失败均使 Job 失败；不得降级为 pip 临时安装。
 
@@ -757,7 +759,7 @@ I1 与 I3 可在 SR-028 实施 Issue 内按依赖顺序执行；I2 只在 SR-001
 
 ## 7. 验收映射
 
-具体验收 ID、命令和证据要求以 [SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md) v0.2.8 为准：AC-028-01～03 元数据/版本/依赖分组；AC-028-04 锁漂移 fail-closed；AC-028-05 双 worktree A→B→A；AC-028-06 本地 Go、测试计数与 Smoke；AC-028-07 双平台 CI 与独立堆叠 paths 验证 PR；AC-028-08 Review Context 真实 PR Artifact；AC-028-09 范围边界；AC-028-10 当前文档入口刷新。
+具体验收 ID、命令和证据要求以 [SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md) v0.2.9 为准：AC-028-01～03 元数据/版本/依赖分组；AC-028-04 锁漂移 fail-closed；AC-028-05 双 worktree A→B→A；AC-028-06 本地 Go、测试计数与 Smoke；AC-028-07 双平台 CI 与独立堆叠 paths 验证 PR；AC-028-08 Review Context 真实 PR Artifact；AC-028-09 范围边界；AC-028-10 当前文档入口刷新。
 
 设计文档、示例 YAML、历史 pip Run 或迁移前 Artifact 均不构成 uv 实施 PASS。每项产品 AC 只有在固定受测 SHA 上真实运行并留存命令、环境、结果和证据后才可更新状态。
 
@@ -784,3 +786,4 @@ I1 与 I3 可在 SR-028 实施 Issue 内按依赖顺序执行；I2 只在 SR-001
 | 2026-11-27 | 0.2.4 | GPT-6.2（ChatGPT） | §0、§3.5～3.8、§4.1～4.3、§6～§7 | 按 Review #6082874849 补齐 Go 1.24 前置与 GOWORK=off、锁漂移负例、双 worktree A→B→A、测试统计、Windows 3.14.6、独立堆叠验证 PR 和文档验收映射；修正 `.venv/` 既有规则表述 | 关闭 SR-028 的实施歧义，同时保持所有产品 AC NOT_RUN 和 SR DRAFT | Issue #12；PR #46；Review #6082874849；SR-028 v0.2.6 |
 | 2026-11-27 | 0.2.5 | GPT-6.2（ChatGPT） | §0、§3.6～3.8、§4.1～4.3、§6～§7 | 按 Review #6083225844 修复 Bash fail-open：锁漂移与 A→B→A 从块首 fail-fast 并使用保码 cleanup trap；A 返回阶段全部改用 `uv run --no-sync`；新增标准库 unittest gate 并在双平台 Workflow 自动断言 skipped=0/非空测试且上传报告；Python 检查使用显式 uv 项目环境；补齐 A/B/A sys.prefix、原始 direct_url、ignore 证据持久化；Go 构建子 shell 恢复 CWD，按 GOOS 生成 Windows `.exe`，澄清 Workflow shell 边界 | 消除 R028-10～16 的 fail-open、自动同步、CI skipped 假 PASS、隐式解释器及跨平台/证据歧义；保持产品 AC NOT_RUN 与 SR DRAFT | Issue #12；PR #46；Review #6083225844；SR-028 v0.2.7 |
 | 2026-11-27 | 0.2.6 | GPT-6.2（ChatGPT） | 文档头、§0、§3.6、§3.8、SR 引用 | 按第五轮 Review #6083641266 修复 Review Context 诊断 Artifact 与三文件正式 Artifact 的契约冲突；明确 `loader_errors` 来源/计数及 discovery 异常；统一逐范围与整体 `exit_code` | 关闭 R028-17 P1 与 R028-18 P2，确保失败诊断可留存且失败 Run 不产生完成态 Artifact；产品 AC 仍 NOT_RUN | Issue #12；PR #46；Review #6083641266；SR-028 v0.2.8 |
+| 2026-11-27 | 0.2.7 | GPT-6.2（ChatGPT） | 文档头、§0、§3.6、§3.8、§4.3、§7 | 按第六轮 Review #6083872622 修复 AC-028-08 受控负例：保留有效 Agent.md 与测试门禁，通过临时 Workflow PR 将生成器 `--base` 注入全零 SHA 形成可执行失败路径；run-context 记录实际/注入 SHA 与模式；补齐 AC 证据中的负例不合并、恢复后成功重跑；统一 gate 的 `discovery_exception=null` 断言 | 关闭 R028-21 P1 与 R028-22/23 P2；不修改测试代码或产品 Workflow，不将设计整改视为产品实施，SR-028 继续 DRAFT / NOT_RUN | Issue #12；PR #46；Review #6083872622；SR-028 v0.2.9 |
