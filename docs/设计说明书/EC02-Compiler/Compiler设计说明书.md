@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.2.14\
+> 文档版本：0.2.15\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 修订日期：2026-11-27
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -53,20 +53,20 @@ AC-013-01 的 PoC 通过 Development 多 Skill 共享 Lock fixture，复用了 b
 
 | 变量 | 类型 | 来源 |
 |---|---|---|
-| event.type | string | Host 已验证的规范化 Event 类型；这是本规范唯一固定的 Event metadata 字段 |
+| event.type | string | 当前候选：Host 规范化的 Event 类型字段；Event envelope、metadata 字段集/类型和规范化规则由 ca-skills Publisher 在 CA-SL 1.6.0 正式规范中冻结；不是已冻结或唯一字段 |
 | input | 当前 Skill Request Schema 的闭合对象类型 | assurance/contract.yaml 的 requestSchema 及其已解析 Schema 闭包 |
 
 约束：
 
-- when 只能读取 event.type 与当前 Skill requestSchema 中显式声明的 input 字段。
+- when 只能读取 ca-skills Publisher 已在 CA-SL 1.6.0 正式规范中冻结的 Event metadata 字段，以及当前 Skill requestSchema 中显式声明的 input 字段。当前候选只使用 `event.type`；不得将它视为唯一或已冻结的 Event 字段。
 - when 引用 input 成员而没有 requestSchema，静态报 CEL_INVALID。
 - 不允许读取 Runtime Context、Observation、Tool Result、Evidence、环境变量、时钟、文件、网络或可变 Host 状态。
-- Event 的规范化与 Plugin Event Schema 校验由 Host/Plugin 边界负责；Compiler 只按 CA-SL 规范为 event.type 建立固定类型。
+- Event envelope、metadata 字段集/类型与规范化规则由 ca-skills Publisher 在 CA-SL 1.6.0 正式规范中冻结；Host/Plugin 边界负责按该契约校验和规范化。Compiler 只为 Publisher 已冻结且表达式实际引用的 Event metadata 字段建立类型描述；当前 `event.type` 仅为候选。
 - 每个 Skill 使用自己的 Request Schema 根、Reference 闭包和类型环境。共享 Lock 不等于共享所有 Skill 的私有 Schema 根。
 
 ### 3.3 G.4 CEL 表达式剖面
 
-Compiler 必须实现 CA-SL 1.6.0 正式规范冻结的 G.4，不得因 cel-go 支持更多语法而扩大语言范围。
+以下 G.4 / CEL 语法表是 Next 当前候选剖面；只有 ca-skills Publisher 将其纳入并冻结于 CA-SL 1.6.0 正式规范后，Compiler 才能按该剖面实施。冻结前不得将候选函数/宏、存在性与短路规则当作已发布契约。Compiler 不得因 cel-go 支持更多语法而自行扩大最终语言范围。
 
 | 类别 | 允许范围 |
 |---|---|
@@ -89,7 +89,7 @@ CEL int 是有符号 64 位；double 是有限 IEEE-754 binary64。int/double �
 1. 对每个 Skill 读取同一次规范化 YAML 解析产生的 Contract AST。
 2. 若该 Skill 声明 Contract.requestSchema，定位 Skill-owned G.4 Request Schema 根并解析完整 `$ref` 闭包。G.4 规则只校验该根；若引用原版 OpenAPI 3.0 Schema components，必须由 dialect-aware resolver 按 OAS3 语义解析和保留其约束，不得将 OAS3 资源强制套入 G.4、改写原件或静默丢弃 OAS3 关键字。若 when 实际引用 input，则 requestSchema 必须存在；若 when 只引用 event.type，则不要求声明 requestSchema，也不得虚构 input 类型。
 3. 复用 Compiler 现有 Schema Registry 与 Reference Resolver。必要时抽取共享内部函数，但不得把 Development Build 的 Request/Artifact 契约搬进正式发布链。
-4. 每个 when 的 CEL 环境始终包含统一 Host Event 的 event.type 类型；仅当表达式引用 input 时，才把当前 Skill 的 Request Schema 类型闭包加入类型环境和 DescriptorSet。event-only when 不依赖 Request Schema。若 Contract 已声明 requestSchema，即使 when 不引用 input，也仍须发布该 Skill-owned G.4 根及其 dialect-aware 引用资源，供 Host 按 CA-SL 1.6.0 Publisher 正式冻结的 Event/Input 校验契约验证 payload。
+4. 每个 when 的 CEL 环境只包含 Publisher 已冻结且表达式实际引用的 Event metadata 字段类型；当前候选 `event.type` 只有在 Publisher 正式冻结后才可注入。仅当表达式引用 input 时，才把当前 Skill 的 Request Schema 类型闭包加入类型环境和 DescriptorSet。event-only when 不依赖 Request Schema。若 Contract 已声明 requestSchema，即使 when 不引用 input，也仍须发布该 Skill-owned G.4 根及其 dialect-aware 引用资源，供 Host 按 Publisher 正式冻结的 Event/Input 校验契约验证 payload。
 5. 未知字段、缺失 Reference、跨 Skill 私有 Schema 借用、类型不匹配、非 bool 结果及 G.4 禁止语法均在 Compiler 静态阶段拒绝。
 6. 多 Skill 共享 Lock 时，对每个 Skill 单独建立 Root/Scope。共享依赖可以复用相同的权威依赖身份，但不得把 Skill A 的私有字段注册到 Skill B 的 CEL 环境。
 
@@ -147,7 +147,7 @@ Lowering 必须保留作者表达式的左到右短路语义，并将作者层�
 
 - Go Compiler 使用 cel-go 解析和检查源表达式，导出标准 cel.dev/expr.CheckedExpr Protobuf。
 - 用 google.protobuf.Any 包装；互操作验证要求 Any type URL 为 type.googleapis.com/cel.expr.CheckedExpr。不得直接把 cel-go 的旧 google.api.expr.v1alpha1.CheckedExpr type URL 当成 Python 可消费类型。
-- 同一 Skill Artifact 的 when.types.pb 携带 google.protobuf.FileDescriptorSet，包含 event.type；当 when 引用 input 时再包含该 Skill Request Schema 的必要类型闭包。DescriptorSet 只提供 CEL 类型描述，不完整表达 enum、const、minLength、数值范围等 G.4 Schema 断言，不能替代 Host 运行期 Request Schema 验证所需的 Schema 快照。
+- 同一 Skill Artifact 的 when.types.pb 携带 google.protobuf.FileDescriptorSet，只包含该表达式实际引用且已由 Publisher 冻结的 Event metadata 字段类型；当前候选 `event.type` 只有在冻结后且被表达式引用时才包含。当 when 引用 input 时再包含该 Skill Request Schema 的必要类型闭包。DescriptorSet 只提供 CEL 类型描述，不完整表达 enum、const、minLength、数值范围等 G.4 Schema 断言，不能替代 Host 运行期 Request Schema 验证所需的 Schema 快照。
 - Python 固定版本 cel-expr-python 使用 Env.deserialize(bytes) 直接加载同一 Any；DescriptorSet 用于构造对应 DescriptorPool 和 typed activation。
 - Python 不解析 CEL 源字符串、不重新编译、不自行实现 CEL Parser/Type Checker，不使用 DynType 逃逸静态类型。
 - 导入阶段反序列化一次；每个新 Event 仅传入新的 typed activation 求值。此消费端生命周期由 F02 / SR-004/005 负责。
@@ -185,7 +185,7 @@ skills/<skill-name>/compiled/when.types.pb
 ~~~
 
 - 只要 Contract 声明 requestSchema，就必须输出 Skill-owned G.4 Request Schema 根及完整、可解析的 `$ref` 资源闭包；与 when 是否存在、是否读取 input 无关。根文件保留作者源字节；闭包中的原版 OAS3 资源保留原始字节和 OAS3 dialect，由 dialect-aware resolver 解析，不得转换为 G.4。
-- 没有声明 requestSchema 时不输出 Request Schema 文件；event-only when 仍可编译，DescriptorSet 只需包含 event.type。
+- 没有声明 requestSchema 时不输出 Request Schema 文件；只引用 Publisher 已冻结 Event metadata 字段的 event-only when 仍可编译，DescriptorSet 只包含表达式实际引用的 Event metadata 字段类型。当前候选仅为 `event.type`；Publisher 冻结前不得视为可实施正例。
 - 只有声明 when 的 Skill 才输出 when.checked.pb 和 when.types.pb；无 when 时不生成空表达式或占位文件。
 - when.checked.pb 是 Any 序列化字节；when.types.pb 是 CEL 类型所需的 FileDescriptorSet。Request Schema 文件保留完整 G.4 断言，不能用 DescriptorSet 代替。
 - 根 Schema 与所有闭包资源保留精确 $id；Artifact 内部以 Manifest 的资源表完成 ID 到文件路径映射，运行期不得访问远端或作者工作区。
@@ -254,7 +254,7 @@ requestSchema 对象与 when 是否存在无关；Host 依照 CA-SL 1.6.0 Publis
 | 作者格式 | 无 when、合法 when、空值、非字符串、重复 YAML Key、未知旧字段 |
 | G.4 正例 | event.type-only（无 requestSchema）、typed input（有 requestSchema）、字段点访问、括号、布尔逻辑、比较、has、size、数组字段与枚举/const Schema 约束 |
 | G.4 负例 | 未知字段、缺 requestSchema、非 bool、宏/推导式、动态索引、切片、对象构造、动态成员、外部函数、未支持语法 |
-| Presence / Null | Missing、Explicit Null、Value；optional 守卫；nullable 非 null 守卫；嵌套 optional ancestor |
+| Presence / Null | Missing、Explicit Null、Value；optional `has()` 守卫；nullable 非 null 守卫；嵌套 optional ancestor；缺失 requestType 在守卫后得到 false 而非 CEL error；无守卫读取作为负例 |
 | Boolean Flow | AND、OR、NOT、安全/不安全 OR、左到右短路和事实汇合 |
 | Numeric | int64 最小/最大值、finite double、非有限值拒绝、int/double 混用拒绝 |
 | Isolation | 多 Skill 共享 Lock、每 Skill Request Schema 根、跨 Skill 字段借用拒绝 |
@@ -377,3 +377,4 @@ Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId�
 | 2026-11-27 | 0.2.12 | GPT-6.2（ChatGPT） | §3.3、修订记录 | 修复 G.4 布尔运算符 `\|\|` 在 Markdown 表格中被识别为列分隔符，保留原有 1.6.0 语义 | 确保 CA-SL 1.6.0-only 评审输入和当前文档结构无歧义。 | Issue #40/#12；PR #45；SR-013/SR-029 |
 | 2026-11-27 | 0.2.13 | GPT-6.2（ChatGPT） | §3.4、§5.2～§5.3、§6.1、§7、修订记录 | 明确 Skill-owned G.4 Request Schema root 与原版 OpenAPI 3.0 resources 的 dialect-aware $ref 边界；原件 source bytes/$ref 不变，不要求 Adapter；具体 resolver/Manifest 细节留给 SR-031/PR #48 冻结 | 避免 G.4 profile 误约束原版 OAS3 components，并防止在 PR #48 未合并时提前声称实现细节已冻结 | Issue #40；SR-013；SR-031；PR #45/#48 |
 | 2026-11-27 | 0.2.14 | GPT-6.2（ChatGPT） | §6.2 Verify、测试矩阵、修订记录 | 修正 Verify 对混合 G.4/OAS3 引用资源的 dialect-aware 验收，保留 OAS3 原生约束与 source bytes | 避免 Verify 将 G.4 根规则错误应用到原版 OpenAPI 3.0 resources | Issue #40；PR #45；SR-004/013/027；SR-031/PR #48 |
+| 2026-11-27 | 0.2.15 | GPT-6.2（ChatGPT） | §3.2～§3.5、§4.1、§5.2、修订记录 | 将 Event metadata/event.type 与 CEL has/短路剖面标记为 Publisher 冻结前候选；DescriptorSet 只收录实际引用的已冻结字段 | 避免将 event.type 单字段假设和候选 CEL 宏误报为已发布规范 | Issue #40/#49；SR-013/029；PR #45/#52 |

@@ -1,7 +1,7 @@
 # Tool Interface 与 Provider 集成设计说明书
 
 > 文档类型：功能子模块设计说明书
-> 文档版本：0.4.1
+> 文档版本：0.4.2
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 功能归属：F03.05 — Tool Plugin 集成
 > 交叉功能：F03.01～F03.04、F04.01、F04.05、F05.02、F06
@@ -422,8 +422,8 @@ Next Runtime 必须从已验证 sidecar 中所有 Mutation 的 `commitProof.reco
 | Demo 现有代码/测试 | 可复用机制 | Next 处理 |
 |---|---|---|
 | runtime/tool_contract.py：ToolContract、ToolContractRegistry、ToolBoundOperationBackend | 完整输入/输出 Schema 校验、Effect 检查、调用后输出校验、Mutation 不确定性处理 | 复用边界语义；契约数据从发布 Interface/Owner Package 加载 |
-| runtime/capability_contract.py | Capability 与 Operation 关系、独立 Effect 一致性检查 | 复用校验规则；不再手工维护第二份 CapabilityContracts |
-| runtime/capability_scope.py | 按当前 Skill Artifact 解析 invocation-scoped Operation allowlist | 复用精确 Scope 思路；LLM 不得绕过 Runtime |
+| runtime/capability_contract.py | 历史 Demo 中的 Capability / Operation 关系与独立 Effect 一致性检查 | 只复用 Effect 一致性检查；历史 Capability→多 Operation 关系不作为 CA-SL 1.6.0 目标语义，目标基数为 Capability ↔ Callable 双向一对一 |
+| runtime/capability_scope.py | 历史 Demo 中按 Skill Artifact 解析 invocation-scoped Operation allowlist | 目标 Runtime 从唯一 Capability Binding 派生精确 Callable allowlist；作者源和模型 Action 只暴露 Capability ID |
 | integrations/ca_client_tools/provider_v2.py | 长生命周期 Provider 进程、initialize、catalog、invoke、requestId correlation | 复用协议消费行为；纳入唯一 Plugin Manager 的 ProviderV2 Driver |
 | tests/unit/test_unified_resident_action.py | Action Boundary、Effect、Outcome 和失败路径测试 | 迁移测试意图，不复制业务装配 |
 | tests/unit/test_createdsession_tool_registration.py | 注册校验、未知实现和重复映射负例 | 复用负例；注册来源改为已发布 Provider/Owner 包 |
@@ -568,3 +568,4 @@ Runtime Action 以 Capability ID 为 Skill / Procedure 作者侧入口。Runtime
 | 2026-11-26 | 0.3.9 | GPT-6.2（ChatGPT） | 文档头、修订记录 | 回填 SR-015 设计迁移 PR #37 已合并到恢复分支 | 仅更新设计资产集成状态，不将 F03 Provider Runtime 或 Codec Consumer 误报为已实现 | Issue #12；SR-015；PR #37 |
 | 2026-11-26 | 0.4.0 | GPT-6（ChatGPT） | 新增 1.6.0 目标章节、状态及修订记录 | 移植一对一 Binding / Selector / Action 设计并标为待评审 | 无旧版兼容或产品完成承诺 | Issue #40；SR-029 |
 | 2026-11-27 | 0.4.1 | GPT-6.2（ChatGPT） | §1、§12、修订记录 | 明确 1.6.0 Skill 作者源只声明 Capability ID；Callable ID 仅作为编译后的内部 Binding 与运行时 dispatch 身份。 | 消除概述层“Capability / Callable”并列作者声明与 1.6.0 Capability-only 作者接口之间的歧义。 | Issue #40；SR-029；F04；F06 |
+| 2026-11-27 | 0.4.2 | GPT-6.2（ChatGPT） | §10、§12、修订记录 | 将复用代码表中的 Capability→Operation 关系和 Operation allowlist 标记为历史机制，目标语义改为 Capability↔Callable 1:1 与 Callable allowlist | 防止旧 Demo 实现关系被误认为 1.6.0 规范要求 | Issue #40；SR-029；PR #45 |

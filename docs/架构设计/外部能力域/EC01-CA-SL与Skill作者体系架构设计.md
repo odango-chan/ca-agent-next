@@ -1,7 +1,7 @@
 # EC01 — CA-SL 与 Skill 作者体系架构设计
 
 > 文档类型：外部能力域架构设计（Next 中央权威设计）  
-> 文档版本：0.1.3\
+> 文档版本：0.1.4\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 唯一新目标；作者规范/Compiler/Bundle 未发布）
 > 功能归属：EC01；关联 F02、F06、F08、F09  
 > 关联需求：IR-003、IR-006；SR-004～SR-006、SR-011、SR-023  
@@ -79,18 +79,18 @@ Node 仍包含 Precondition、Operation、Observation、Postcondition 阶段；�
 Compiler 只从 `skills/<skill-id>/assurance/contract.yaml` 读取可选顶层 when，按正式契约校验并编译。SKILL.md Front Matter 不声明 when。它只回答“当前 Event/Input 是否适用这个 Skill”，不替代 predicates.yaml，也不执行任何业务操作。
 
 ~~~yaml
-when: 'event.type == "nsmf.create-sm-context" && input.requestType == "INITIAL_REQUEST"'
+when: 'event.type == "nsmf.create-sm-context" && has(input.requestType) && input.requestType == "INITIAL_REQUEST"'
 ~~~
 
-此例仅说明作者源位置和表达式形式。字段路径、类型与枚举值须按所用正式 Request Schema 核对。
+此例仅说明作者源位置和候选表达式形式。OpenAMSM 原版 OpenAPI 中 `SmContextCreateData.requestType` 为可选字段，读取前先以 `has(input.requestType)` 守卫，并依赖 `&&` 左到右短路。`has()` 与短路语义必须由 ca-skills Publisher 纳入并冻结于 CA-SL 1.6.0 CEL Profile；冻结前不得视为已发布契约。
 
 SBI JSON 直接采用 OpenAMSM 对应版本的 3GPP/OpenAMSM 正式 OpenAPI YAML，保留原件及其引用。NAS/NGAP 二进制经 Codec 解码，解码字段遵循 Codec 发布的结果 Schema。`format: binary` 只描述传输形式。选择期只读取当时已存在的输入，Request Schema 解析与 when 的静态类型检查遵循正式 CA-SL / Compiler 契约。
 
 约束：
 
 - when 只在新业务 Event 的 Skill 选择阶段评估。
-- 表达式使用 Event 与该 Skill requestSchema 所定义的输入类型；静态检查必须在发布阶段完成。
-- when 不得引用运行期 Evidence、Owner 状态或未声明字段。
+- 表达式使用 Publisher 已冻结的 Event metadata 与该 Skill requestSchema 所定义的输入类型；静态检查必须在发布阶段完成。当前 `event.type` 仅为候选字段，Event envelope、metadata 字段集/类型和规范化规则须由 Publisher 冻结。
+- when 不得引用运行期 Evidence、Owner 状态或未声明字段。optional input 字段必须先用 `has(input.field)` 守卫；nullable 字段须在存在后再用 `input.field != null` 守卫。`has()` 与 `&&` 左到右短路语义属于 Publisher 冻结门槛。
 - 无 when 的 Skill 仍可通过 Skill 元数据和语义选择进入候选；when 返回 false 的 Skill 不得被选择。
 - CEL 解析/类型/求值错误必须 fail closed，不得把错误或 UNKNOWN 变成 true。
 - Continuation 关联到原 Run/Skill，不重新进行新 Event 的 Skill 选择。
@@ -158,3 +158,4 @@ CA-SL v1alpha5 的 when 已进入已合并的 ca-skills #88/#89 发布刷新；�
 | 2026-11-27 | 0.1.1 | Codex | §1～6 | 校正新旧版本、选择条件示例、Schema 来源与导入职责 | Issue #40、#43；PR #44 |
 | 2026-11-27 | 0.1.2 | Codex | 文档头 | 补录全局评审范围及 §9 局部非目标，满足治理规范 §11.7 | Issue #43；PR #44 |
 | 2026-11-27 | 0.1.3 | GPT-6.2（ChatGPT） | §2～3、§10、修订记录 | 整合 #45 的 1.6.0-only 设计增量并保留恢复分支当前状态，避免回滚 #44 与后续修订。 | Issue #12/#40/#43；PR #44/#45 |
+| 2026-11-27 | 0.1.4 | GPT-6.2（ChatGPT） | §4、修订记录 | 为可选 requestType 增加 has() 守卫；将 Event metadata、has() 与短路规则明确为 Publisher 冻结前候选，避免可选字段误排除且不提前冻结 1.6.0 Event/CEL 契约 | Issue #40/#49；SR-013/029；PR #45/#52 |
