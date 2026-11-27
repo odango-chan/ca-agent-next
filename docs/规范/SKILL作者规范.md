@@ -82,7 +82,7 @@ skill-root/
 
 `schemas/` 与 `scripts/` 是公共资源层，不随 Assurance 是否存在而移动。Schema 文件以 YAML 1.2 表示 JSON Schema 数据模型，扩展名使用 `.schema.yaml`；Contract、Script Registry 和脚本输入/输出 Schema 的路径均相对 Skill Package 根目录。
 
-`Script Registry` 每个条目必须声明 Script ID、包内文件、顶层 entrypoint、purpose（transform / predicate）、inputSchema、适用时的 outputSchema 和必需布尔值 llmInvocable。Procedure Script 只引用 transform；Predicate evaluator 只引用 predicate。所有脚本是纯本地计算；LLM 可读取脚本源码，但只能通过 Host-owned `host.skill-script.execute` Capability 调用显式标记 `llmInvocable=true` 的 transform。Host 仅解析当前 Skill 的固定 Package snapshot 和 Registry ID，不接受模型提供代码、路径、模块名、函数名或命令。
+`Script Registry` 每个条目必须声明 Script ID、包内文件、顶层 entrypoint、purpose（transform / predicate）、inputSchema、适用时的 outputSchema 和必需布尔值 llmInvocable。Procedure Script 只引用 transform；Predicate evaluator 只引用 predicate。所有脚本是纯本地计算；LLM 可读取脚本源码，但只能通过 Host-owned `host.skill-script.execute` Capability 调用显式标记 `llmInvocable=true` 的 transform；同时 Host 配置 `scriptExecution.llmEnabled=true`（默认 false）。Host 仅解析当前 Skill 的固定 Package snapshot 和 Registry ID，不接受模型提供代码、路径、模块名、函数名或命令。
 
 没有 Assurance 的 Skill 仍可拥有和使用这些公共资源，不需要 Compiler；Host Importer 负责共享资源与 Script Registry 的基本结构检查。存在 Assurance 时 Compiler 还必须验证其引用闭包。旧版 ca-skills 的其他目录（例如 cases/）不因此自动迁入新版；历史源结构只作追溯，不提供兼容。Skill Studio 的工作区目录（例如 lib / output）也不是 Skill Package 的作者文件。
 
@@ -317,7 +317,7 @@ SKILL.md 正文与 YAML 注释遵循项目语言约定，并在同一 Skill Pack
 
 ## 11. 与 AI Authoring 的关系
 
-Skill Studio 的文本编辑、AI Authoring 和代码评审必须使用同一份作者规范。AI 可以读取 schemas/ 与 scripts/ 作为上下文，并可在 Host 策略允许时调用已登记的 llmInvocable Script；但不得：
+Skill Studio 的文本编辑、AI Authoring 和代码评审必须使用同一份作者规范。AI 可以读取 schemas/ 与 scripts/ 作为上下文，并可在 Host 配置 `scriptExecution.llmEnabled=true` 时调用已登记的 llmInvocable Script；但不得：
 
 - 把 Callable / backendOperationId 写入 Skill；
 - 通过注释补足缺失的 Schema、arguments、Predicate 或 routes；
