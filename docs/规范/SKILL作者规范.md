@@ -1,7 +1,7 @@
 # SKILL 作者规范（CA-SL 1.6.0）
 
 > 文档类型：Skill 作者规范（Next 中央规范性设计稿）  
-> 文档版本：0.2.0  
+> 文档版本：0.2.1  
 > 状态：**DRAFT / REVIEW_REQUESTED**（作者规则待独立评审；CA-SL 1.6.0 尚未由 ca-skills 正式发布）  
 > 语言目标：CA-SL 1.6.0 only；不兼容任何历史作者语法  
 > 功能归属：EC01 — Skill 作者规范与业务 Skill；消费端关联 F02 / F09  
@@ -140,13 +140,13 @@ skill-root/
 `assurance/contract.yaml`：
 
 ~~~yaml
-when: 'event.type == "nsmf.create-sm-context" && input.requestType == "INITIAL_REQUEST"'
+when: 'event.type == "nsmf.create-sm-context" && has(input.requestType) && input.requestType == "INITIAL_REQUEST"'
 requestSchema: schemas/create-sm-context-request.schema.yaml
 ~~~
 
-`schemas/create-sm-context-request.schema.yaml` 是 Skill-owned G.4 根；在显式 pin 的 OpenAMSM Source Bundle dependency 下，它必须直接引用 `TS29502_Nsmf_PDUSession.yaml#/components/schemas/SmContextCreateData`。引用的 dependency alias / wire 编码由 ca-skills 与 Compiler Owner 在正式 1.6.0 Schema / Golden 中冻结；本设计不猜造该机器字段或 URI 形式，也不复制、重写或投影上游 YAML。
+`schemas/create-sm-context-request.schema.yaml` 是 Skill-owned `requestSchema` 入口文件。对于直接消费整个原版 `SmContextCreateData` 的场景，该文件采用纯引用别名形式：文件内容仅包含一个 `$ref`，精确指向显式 pin 的 OpenAMSM Source Bundle 中 `TS29502_Nsmf_PDUSession.yaml#/components/schemas/SmContextCreateData`；不得再添加 `type`、`properties`、`required`、`additionalProperties` 等 G.4 兄弟关键字。此时目标根按 OAS 3.0 Schema Object 原生语义验证，不套用本地 G.4 根对象闭合规则。若作者声明本地 G.4 对象根，则必须明确 `additionalProperties: false`；本地根可在属性 Schema 中精确引用 pin 后的 OAS3 Component。引用的 dependency alias / wire 编码由 ca-skills 与 Compiler Owner 在正式 1.6.0 Schema / Golden 中冻结；本设计不猜造该机器字段或 URI 形式，也不复制、重写或投影上游 YAML。
 
-原版 `SmContextCreateData.requestType` 引用同文件 `#/components/schemas/RequestType`；`RequestType` 是 string schema，枚举包含 `INITIAL_REQUEST`、`EXISTING_PDU_SESSION`、`INITIAL_EMERGENCY_REQUEST`、`EXISTING_EMERGENCY_PDU_SESSION`，另有 OAS3 未来字符串扩展分支。因此唯一正确的字段路径是 `input.requestType`，比较值是字符串 `"INITIAL_REQUEST"`，不是整数。固定来源：OpenAMSM commit `dc83ccbf5be54dcc7112dd43ba95ea6fa5975550`；原始文件 blob `3572be0315a782691ce8b5546b7bc1d5b22fcd64`。
+原版 `SmContextCreateData.requestType` 引用同文件 `#/components/schemas/RequestType`；`RequestType` 是 string schema，枚举包含 `INITIAL_REQUEST`、`EXISTING_PDU_SESSION`、`INITIAL_EMERGENCY_REQUEST`、`EXISTING_EMERGENCY_PDU_SESSION`，另有 OAS3 未来字符串扩展分支。该属性不在 `SmContextCreateData.required` 列表中，是可选字段。因此唯一正确的字段路径是 `input.requestType`，比较值是字符串 `"INITIAL_REQUEST"`，不是整数；在 CEL 中必须先用 `has(input.requestType)` 守卫，再通过 `&&` 左到右短路读取该值。无守卫读取必须被 Compiler 拒绝。固定来源：OpenAMSM commit `dc83ccbf5be54dcc7112dd43ba95ea6fa5975550`；原始文件 blob `3572be0315a782691ce8b5546b7bc1d5b22fcd64`。
 
 ## 5. Procedure Node 的结构
 
@@ -555,7 +555,7 @@ SKILL.md 正文与 YAML 注释遵循项目语言约定，并在同一 Skill Pack
 - [ ] Skill 具有可复用业务语义，不是单 Tool / 单 Provider call 的包装。
 - [ ] SKILL.md 有符合 Agent Skills Specification 的 Front Matter；name / description 准确描述 Skill，正文简洁且语言一致。
 - [ ] 新 Assurance 只使用 CA-SL 1.6.0；没有旧版字段、Callable 或兼容入口。
-- [ ] 有 Assurance 时，可选 `when` 位于 `assurance/contract.yaml` 顶层；SKILL.md Front Matter 不声明 `when`；无 Assurance Skill 不声明 `when`；引用 `input` 时 `requestSchema` 必须存在。
+- [ ] 有 Assurance 时，可选 `when` 唯一位于 `assurance/contract.yaml` 顶层；SKILL.md Front Matter 不声明 `when`；无 Assurance Skill 不声明 `when`；Importer 对“无 Assurance + Front Matter.when”和“有效 Assurance + Front Matter.when”两种包都按未知字段拒绝；引用 `input` 时 `requestSchema` 必须存在。可选 Request 字段必须有 `has` 守卫。
 - [ ] requestSchema、contexts、dependencies、capabilities 的所有权与身份准确。
 - [ ] Procedure 是单一静态 DAG；每个 Node 的阶段顺序正确，每种阶段不重复；末阶段正常 Outcome 显式路由。
 - [ ] 每个 Operation 阶段最多一个 Capability / 纯 Script；每个 Observation 阶段最多一个 READ Capability。
@@ -629,3 +629,5 @@ Apply 前仍须由用户确认，并对同一候选源码与依赖锁执行正�
 | 2026-11-27 | 0.1.9 | GPT-6.2（ChatGPT） | §2～§4、§6、§9～§10 | 将 `when` 从 `assurance/contract.yaml` 移至 SKILL.md Front Matter，限定仅有 Assurance 的 Skill 可声明；无 Assurance Skill 不声明 when | 对齐既定 Skill 入口决策，避免无 Assurance 包引入未经 Compiler 检查的 CEL 选择条件；历史错误入口判断，已由 0.2.0 撤销，不构成兼容方案| Issue #49；IR-008；SR-032 |
 
 | 2026-11-27 | 0.2.0 | GPT-6.2（ChatGPT） | §3～§4、§6.7、§9～§10、修订记录 | 将 `when` 恢复为 assurance/contract.yaml 顶层唯一入口；SKILL.md Front Matter 不声明 when；拆分 MAS 自定义 QoS 示例与 3GPP 原版 OpenAPI Create 示例，并将 requestType 修正为字符串枚举 | 撤销误引入的 Front Matter 方案；避免把自定义字段误当作 3GPP SBI Schema | Issue #49；IR-008/009；SR-013/031/032；F02/F08/F09 |
+
+| 2026-11-27 | 0.2.1 | GPT-6.2（ChatGPT） | §4.3、§10、修订记录 | 修正 3GPP Request Schema 根为纯 $ref OAS3 引用别名或本地闭合 G.4 根两种明确形式；说明 requestType 可选并必须用 has 守卫；补充 Front Matter.when 在有/无 Assurance 两种包中均拒绝的作者验收 | 消除 G.4 闭合约束与原版 OAS3 直引冲突，防止 CEL 对可选字段不安全读取和双入口回归 | Issue #49；IR-008/009；SR-013/032；PR #52 |
