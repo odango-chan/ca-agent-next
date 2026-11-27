@@ -7,6 +7,7 @@
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > <br />
 > 本文局部非目标：生产级准入、额外 package-level digest、签名和 Trust Registry；仅保留 Compiler v2.1.0 Interface Package schema 明确要求的 `files[].sha256`
+> <br />
 
 关联 IR-006、SR-015、SR-016、SR-020（参考宿主架构审计）、SR-024（Host Context Publisher）、SR-025（MAS Owner Publisher）；Compiler 接口以 [EC02 Development Build 设计](../EC02-Compiler/Development%20Build设计.md) 为准。基线为 [docs/architecture/studio-boundaries.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/79bd2c3f64a90e7f0f169204c866a3218655bab1/docs/architecture/studio-boundaries.md)、[docs/design/ai-procedure-authoring.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/79bd2c3f64a90e7f0f169204c866a3218655bab1/docs/design/ai-procedure-authoring.md)。
 
