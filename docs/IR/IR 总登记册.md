@@ -1,9 +1,9 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录  
-> 文档版本：0.1.28\
+> 文档版本：0.1.29\
 > 修订日期：2026-11-27\
-> 状态：8 项 IR；IR-008 登记 CA-SL 1.6.0 Capability-first 严格一对一与完全无旧版兼容，SR-029 设计待评审；IR-006 下 SR-030 Host Context Schema-only Publisher 设计待评审；SR-028 仍 DRAFT。\
+> 状态：9 项 IR（含 IR-009 3GPP 公共 Schema）；IR-008 登记 CA-SL 1.6.0 Capability-first 严格一对一与完全无旧版兼容，SR-029 设计待评审；IR-006 下 SR-030 Host Context Schema-only Publisher 设计待评审；SR-028 仍 DRAFT。\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级需求管理平台
 
@@ -111,6 +111,17 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 - 外部发行依赖：ca-skills 1.6.0 规范/机器标识；Owner 24/24 Package、Provider 3/3（含 Codec）和 Host Context Schema-only Package；Compiler 新 BuildRequest / BuildResult / Binding / Runtime Artifact；Studio 与 Agent 的 1.6.0 产品回归与 MAS Create→Modify→Release E2E。
 - 验收与状态：SR-029 的完整语言规范与 Capability-first 设计 AC、SR-030 的 Host Context Schema-only Publisher 均需独立审查；代码实施 Issue / 受测 SHA / Golden / 正式 Release / E2E 尚无 1.6.0 证据，不能宣称 READY / VERIFIED。
 
+## IR-009
+
+**3GPP 公共 Schema / Codec 输出与 Skill 分阶段输入契约**
+
+CA-SL 1.6.0 Skill 在选择期只接收已经由 Plugin Event Schema 验证的标准化 SBI 字段；只有被选中的 Procedure 可以按 Capability 调用 Codec READ 获取 N1/N2 解码字段。必须发布可引用的 3GPP 公共 Schema-only Package，避免每份 Skill 自行复制字段定义或要求 Host/Plugin 代做完整解码。
+
+- 协作设计 Issue：[Next #47](https://github.com/odango-chan/ca-agent-next/issues/47)；不授权外仓代码实施。
+- 设计入口：[3GPP 公共 Schema 发布与 Skill 分阶段消费](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)、F02、F03.05、F06、F08、F09、CA-SL 1.6.0 / EC02。
+- SR 分解：[SR-031 公共 3GPP Schema-only Publisher](../SR/SR-031-3GPP公共Schema-only-Publisher.md)（目标 ca-skills）、[SR-026 Codec Tool 发布](../SR/SR-026-Codec公开工具发布.md)（目标 ca-client-tools；首批 0xD1 与 Create/Modify 后续 profile 分开）、[SR-010 Next Codec 消费](../SR/SR-010-OpenAMSM%20工具插件与按需编解码集成.md)、[SR-013 Compiler Link](../SR/SR-013-Compiler已检查when与发布产物.md)、[SR-027 Bundle](../SR/SR-027-技能Bundle构建与发布.md)。
+- 产品退出：3GPP 来源版本/Schema export/快照身份、合法 1.6.0 Schema-only 包、Codec 结果类型以及 T1/T2 字段来源均有固定正负向 Golden，独立复评通过；未取得正式机器契约/包发布，实施 READY 及 E2E 均未获得。旧语言不兼容。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
@@ -146,3 +157,4 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 
 | 2026-11-26 | 0.1.26 | GPT-6（ChatGPT） | 1.6.0 Host Context Publisher / 依赖边界 | 将 Host Context 1.6.0 Schema-only Publisher 纳入 IR-006/IR-008，区分 SR-024 历史 VERIFIED 与 SR-030 新需求 | 避免旧 Development Package 被误认为新版正式输入 | Issue #12/#40；IR-006/008；SR-030 |
 | 2026-11-26 | 0.1.27 | GPT-6（ChatGPT） | IR-006/IR-008、修订记录 | 同步 SR-030 新版 Host Context 1.6.0 Schema-only Publisher 需求与 SR-024 历史 v1alpha5 Publisher 边界 | 使 IR→SR 追踪明确区分旧版已验证证据和新版待评审需求 | Issue #12/#40；IR-006/008；SR-024、SR-030；PR #46 |
+| 2026-11-27 | 0.1.29 | ChatGPT / GPT-6 | IR-009 | 登记公共 3GPP Schema-only、选择期与执行期 Codec 输入来源并分解 SR-031 等跨仓任务 | 关闭 Create 选择前解码的架构与追踪断点 | Issue #47；SR-031/026/010/013/027 |
