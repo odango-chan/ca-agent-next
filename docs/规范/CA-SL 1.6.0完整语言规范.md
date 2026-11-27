@@ -246,7 +246,7 @@ operation:
 
 Predicate evaluator 只写 Registry Script ID，不写路径、模块名或函数名。
 
-LLM 可以通过 Host 的只读 Skill Resource Access 读取 `scripts/` 下的源码和 Registry；读取不等于执行。LLM 只能通过 Host-owned system Capability `host.skill-script.execute` 调用 Registry 中 `llmInvocable=true` 的 transform Script，参数固定为 `scriptId` 与 `input`。Host 只解析当前已绑定 Skill 的固定 Package snapshot，并按条目验证输入 Schema、执行精确 entrypoint、验证输出 Schema；模型不得提交文件路径、模块名、函数名、代码、解释器参数或任意命令。Host 未启用该能力或没有符合条件的 Script 时，不向模型暴露此 Action。
+LLM 可以通过 Host 的只读 Skill Resource Access 读取 `scripts/` 下的源码和 Registry；读取不等于执行。LLM 只能通过 Host-owned system Capability `host.skill-script.execute` 调用 Registry 中 `llmInvocable=true` 的 transform Script，参数固定为 `scriptId` 与 `input`。Host 只解析当前已绑定 Skill 的固定 Package snapshot，并按条目验证输入 Schema、执行精确 entrypoint、验证输出 Schema；模型不得提交文件路径、模块名、函数名、代码、解释器参数或任意命令。Host 逻辑配置 `scriptExecution.llmEnabled` 默认为 false；只有部署显式设为 true，且当前 Skill 存在符合条件的 Script 时，才向模型暴露此 Action。该开关只控制 LLM Action 暴露，不改变 Assurance Procedure 对已编译 transform Script 的内部调用；Host Script Runner 本身仍受 Package Registry 与运行预算约束。
 
 Deterministic Procedure 的 `operation.script` 由 Compiler / Runtime 映射到同一 Host Script Runner；Predicate evaluator 由 Runtime 内部纯求值入口调用，不暴露为 LLM Action。两种调用共享同一份脚本字节、Registry 和 Schema，不复制脚本或生成第二套定义。
 
