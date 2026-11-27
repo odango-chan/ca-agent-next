@@ -12,6 +12,8 @@
 > 上游来源仓：odango-chan/ca-skills，固定 main 780497a2918ad3e7bdff554ab64b0ba627e867e0  
 > 关联 Issue：[ca-agent-next #49](https://github.com/odango-chan/ca-agent-next/issues/49)、父级迁移 Issue #12、CA-SL 设计 Issue #40  
 > 固定设计基线：4873608f5ca854a6bb47cf1a83cb9214da4ae202
+> 全局评审范围：继承根目录 Agent.md 的 review_scope  
+> 本文局部非目标：只读历史源文归档；不作为 CA-SL 1.6.0 规范或产品验收证据，不改写原文及源相对链接。
 
 ## 1. 目标
 
