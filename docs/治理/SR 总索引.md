@@ -1,8 +1,8 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.52
-> 状态：30 项 SR：4 VERIFIED、1 IMPLEMENTED、25 DRAFT（原 24 项 PR #46 评审批次 + SR-031 增量待评审），SR-003 模块 AC PASS，系统 EX NOT_RUN
+> 文档版本：0.3.53
+> 状态：31 项 SR：4 VERIFIED、1 IMPLEMENTED、26 DRAFT（原 24 项 PR #46 评审批次 + SR-031 / SR-032 两项独立增量设计），SR-003 模块 AC PASS，系统 EX NOT_RUN
 > 修订日期：2026-11-27\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
@@ -16,7 +16,7 @@
 - 本索引只汇总 ID、标题、设计依据、状态、依赖和实施入口。
 - 状态变化先更新 SR 文件，再更新本索引和[实施状态总览](实施状态总览.md)。
 - ca-agent-next PR #1 是文档/设计基线 PR，不是任何 SR 的实现 PR。
-- PR #1、#32、#34 已合并；SR-001/SR-002/SR-003/SR-024 VERIFIED，SR-015 IMPLEMENTED，其余 25 项 DRAFT（其中原 24 项属于 PR #46 批次，SR-031 为增量候选；均非实施 READY）。
+- PR #1、#32、#34 已合并；SR-001/SR-002/SR-003/SR-024 VERIFIED，SR-015 IMPLEMENTED，其余 26 项 DRAFT（原 24 项属于 PR #46 批次；SR-031、SR-032 为独立增量候选；均非实施 READY）。
 
 ## 2. SR 清单
 
@@ -52,6 +52,7 @@
 | [SR-029](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) | [IR-008](../IR/IR%20总登记册.md#ir-008)（关联 IR-003） | CA-SL 1.6.0 Capability-first 作者模型与 Callable 双向一对一；完全无旧版兼容 | **DRAFT（设计待评审，非实施 READY）** |
 | [SR-030](../SR/SR-030-Host%20Context%201.6.0%20Schema-only%20Interface%20Package%20Publisher.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Host Context 1.6.0 Schema-only Interface Package Publisher | DRAFT |
 | [SR-031](../SR/SR-031-3GPP公共Schema-only-Publisher.md) | [IR-009](../IR/IR%20总登记册.md#ir-009) | OpenAMSM 3GPP OpenAPI 原版 Source Bundle 原样代发布（ca-skills） | **DRAFT（增量设计待评审、Publisher / Consumer 产品 NOT_RUN）** |
+| [SR-032](../SR/SR-032-SKILL作者规范与Node设计原则.md) | [IR-008](../IR/IR%20总登记册.md#ir-008) | SKILL 作者规范、Skill / Capability / Node 粒度与注释原则（CA-SL 1.6.0-only） | **DRAFT（Issue #49 增量设计待独立评审；仅中央文档，非实施 READY）** |
 
 设计版本与章节、依赖、验收 ID、实施证据以各 SR 为准。逐项阻塞见[就绪审计](../参考与审计/跨仓设计资产迁移与一致性审计.md#8-设计就绪审计)。
 
@@ -97,6 +98,7 @@
 | SR-028 | uv Python 工程工具链 | **第三轮自评：DESIGN_READY_FOR_INDEPENDENT_REVIEW**（第二轮 CHANGES_REQUESTED 为历史；uv 全量回归与仅改 Review Context workflow 的双平台触发，待独立结论） | DRAFT |
 | SR-029 | 1.6.0 Capability-first 一对一绑定 | **第三轮自评：DESIGN_READY_FOR_INDEPENDENT_REVIEW**（第二轮 CHANGES_REQUESTED 为历史；1.6.0 唯一语言、Owner 24/24、Provider 2/2 与全量 3/3，待独立结论） | DRAFT |
 | SR-031 | OpenAMSM 3GPP OpenAPI 原版 Source Bundle 原样代发布 | **新增 IR-009 / Issue #47**：DRAFT / REVIEW_REQUESTED，未进入 PR #46 原 24 项第二轮独立评审；待 OpenAMSM Owner source baseline、ca-skills Publisher、Compiler OAS3 Resolver 与 Plugin Consumer 交接后才可实施 READY | DRAFT |
+| SR-032 | SKILL 作者规范、Node 拆分与注释原则 | **新增 IR-008 / Issue #49**：DRAFT / REVIEW_REQUESTED；仅中央规范与历史作者材料迁移，不修改 ca-skills / Compiler / Studio；CA-SL 1.6.0 正式发布仍是外部依赖 | DRAFT |
 | SR-030 | Host Context 1.6.0 Schema-only Publisher；0 Capability / 0 Callable，精确 Schema export；与 SR-013 AC-013-06 联合验收 | APPROVE_FOR_READY（Schema-only 设计与 AC-030-01 固定源审计） | DRAFT |
 
 上述专项评审按单版本 1.6.0 和 Capability↔Callable 一对一原则校核；历史 v1alpha5、Compiler v2.1.0、Owner v1alpha4 和 Provider v1.2.0 只可作迁移/审计来源。旧来源中的身份、Build DTO、Artifact、Bundle 或测试不得自动证明新版发布/可实施。SR-029 新契约尚未发布，Compiler #61、Publisher、Skill Bundle 等真实前置仍保持各自 BLOCKED/NOT_RUN；SR-028 的 uv 工具链设计可独立于这些外部发布审查。
@@ -107,7 +109,9 @@ PR #46 上述十项第二轮 CHANGES_REQUESTED 已按各自反例复核并登记
 
 12 项第二轮限定 APPROVE_FOR_READY 保持：SR-005/009/013/017/018/019/020/021/022/023/025/030；其中 SR-009 AC-009-04 合法 continuation 子例的增量修改另需独立确认。SR-026/027 仍 BLOCKED_EXTERNAL_INPUT，只可审查部分来源/构建设计，未得到 Publisher 正式输入前不得发实施 Goal。**24 项主状态仍 DRAFT，READY=0，系统 EX/OM、正式 1.6.0 产品 AC NOT_RUN/BLOCKED。** 逐项判据与当前已核实的外部事实见[跨仓一致性审计 §15](../参考与审计/跨仓设计资产迁移与一致性审计.md)。
 
-**IR-009 增量设计（不追溯改变 PR #46 历史评议）：**新增 [SR-031](../SR/SR-031-3GPP公共Schema-only-Publisher.md) 与 [3GPP OpenAPI 原版引用设计](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。其独立设计评审和代码实施门槛均另行判定；AC-013-07、AC-010-10、AC-026-04～06、AC-027-05 为新设计验收要求，尚未获得原 12 项限定评审的背书。当前总数 30：4 VERIFIED / 1 IMPLEMENTED / 25 DRAFT，READY=0。
+**IR-009 增量设计（不追溯改变 PR #46 历史评议）：**新增 [SR-031](../SR/SR-031-3GPP公共Schema-only-Publisher.md) 与 [3GPP OpenAPI 原版引用设计](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。其独立设计评审和代码实施门槛均另行判定；AC-013-07、AC-010-10、AC-026-04～06、AC-027-05 为新设计验收要求，尚未获得原 12 项限定评审的背书。
+
+**IR-008 作者规范增量设计（Issue #49）：**新增 [SR-032](../SR/SR-032-SKILL作者规范与Node设计原则.md) 与 [SKILL 作者规范](../规范/SKILL作者规范.md)，迁移 ca-skills 作者材料并新增 Node 拆分、注释原则；只覆盖中央规范，不修改 ca-skills，不改变 CA-SL 语法。它是独立设计评审候选，不属于 PR #46 原 24 项或 Issue #47 / IR-009 批次。当前总数 31：4 VERIFIED / 1 IMPLEMENTED / 26 DRAFT，READY=0。
 
 ## 3. 设计恢复与实施顺序
 
@@ -230,3 +234,4 @@ PR #46 上述十项第二轮 CHANGES_REQUESTED 已按各自反例复核并登记
 | 2026-11-27 | 0.3.50 | ChatGPT / GPT-6 | §2～4、修订记录 | 新增 IR-009/SR-031，登记原 24 项评审批次之外的 3GPP 公共 Schema 发布与 T1/T2 Codec 消费分期，统计为 30 项 | 保留历史评审结论边界，不把新增类型契约冒充 READY | Issue #47；SR-031；SR-026/010/013/027 |
 | 2026-11-27 | 0.3.51 | ChatGPT / GPT-6 | IR-009 标准代发布原则 | 只随 OpenAMSM 采用版本发布原件，YAML 不做任何修改，独立 Adapter 与 Codec Output 分界 | 落实最新版本/原版无变更裁决并修正导航 | Issue #47；SR-031 |
 | 2026-11-27 | 0.3.52 | ChatGPT / GPT-6.2 | IR-009 / SR-031 | 将 SR-031 从 Schema-only / Adapter Publisher 修正为原版 OAS3 Source Bundle Publisher；同步 Compiler direct refs 与 Plugin native OAS3 consumer | 统一原始标准直接消费路径 | Issue #47；SR-031/010/013/026/027 |
+| 2026-11-27 | 0.3.53 | GPT-6.2（ChatGPT） | SR 清单、IR-008 增量设计、修订记录 | 新增 SR-032 与 SKILL 作者规范，更新至 31 项 SR / 26 项 DRAFT | 将作者规则从历史资料提升为 Next 唯一中央规范入口，且不改变 PR #46 / Issue #47 历史评议 | Issue #49；IR-008；SR-032 |
