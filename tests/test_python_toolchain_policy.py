@@ -81,6 +81,16 @@ class PythonToolchainPolicyTests(unittest.TestCase):
         found = command_violations([(".github/workflows/ci.yml", line)])
         self.assertTrue(any("UV_RUN_NOT_LOCKED" in item for item in found))
 
+    def test_policy_source_is_not_exempt_from_command_scanning(self) -> None:
+        line = "pip" + " install requests"
+        found = command_violations([("scripts/python_toolchain_policy.py", line)])
+        self.assertTrue(any("PIP_INSTALL" in item for item in found))
+
+    def test_shared_uv_environment_override_is_rejected(self) -> None:
+        assignment = "UV_PROJECT_" + "ENVIRONMENT=/tmp/shared-venv"
+        found = command_violations([(".github/workflows/ci.yml", assignment)])
+        self.assertTrue(any("SHARED_UV_ENVIRONMENT" in item for item in found))
+
     def test_extract_added_lines_ignores_removed_lines_and_headers(self) -> None:
         diff = (
             "diff --git a/a.yml b/a.yml\n"
