@@ -1,7 +1,7 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.18\
+> 文档版本：0.3.19\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
 > 修订日期：2026-11-27\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -199,12 +199,13 @@ AI Authoring 的 Change Set 只能新增或修改 Capability ID、Procedure argu
 
 **评审与实施门槛**：上述每项测试的正式 Package Schema、Compiler DTO/CLI/Worker、语言标识由对应发布者冻结后才允许产品 PASS。Studio 旧 Example 替换、旧 1.6.0 不兼容及历史导入结果仅用于审计，不能混入新 AC。SR-016 是该矩阵的实施与验收追踪入口；系统 E2E 不能代替 Studio 模块 AC。
 
-## 10. 原版 3GPP YAML 只读展示与分离的 Adapter 类型（IR-009）
+## 10. 原版 3GPP OpenAPI 只读展示与直接 Schema Component 引用（IR-009）
 
-- 工作台可展示 ca-skills SR-031 **原样代发布的 OpenAMSM 支持版本 YAML**，作为只读标准来源视图，保留原始 bytes、文件名/路径/相对引用，不提供自动格式化、重写、修补或保存对原件的修改；任何 AI Change Set 试图修改原件必须拒绝。
-- 原版 YAML Source Bundle **不是** CA-SL G.4 的已发布 Schema-only 类型；只有另行冻结、独立命名/版本的 Adapter Schema-only Package 才能出现在 Schema Explorer/类型补全，用显式依赖 $id 供 Skill 自有 Request root 引用。Adapter 与原版不可同名/同路径或彼此覆盖，Host Context Package 只经 `Contract.contexts`。
-- Procedure 可引用 ca-client-tools 正式 Codec **READ Capability** 与 Output Schema，但不能展示私有 Handler/Callable；当 T1 `when` 企图读取 T2 才解码的 NAS 字段，Compiler 应给稳定的 SourcePath/可用性诊断，不能偷偷触发解码。
-- 只读 A Source Lock、已发布 B/Provider 版本及 Schema identity 都进入 Project Lock/导入审计；没有 Adapter/Compiler 正式 Golden 时不要生成假 Schema，也不默认最新版标准。现行产品验收 NOT_RUN。
+- 工作台可展示 SR-031 原样代发布的 OpenAMSM OpenAPI 3.0 Source Bundle，作为只读标准来源视图；保留原始 bytes、文件名 / 路径 / 相对 `$ref`，不提供自动格式化、重写、修补或保存原件修改。任何 AI Change Set 试图修改原版 YAML 必须拒绝。
+- Schema Explorer / LSP 可沿已 pin Source Bundle 的精确 `components/schemas` 外部引用显示定义、来源文件、JSON Pointer、OpenAMSM commit 和标准版本；Compiler 才是跨 dialect Schema Link / Build / Verify 权威。不得把原版 OAS3 Schema Object 重写为 G.4 Adapter；本地 Skill-owned Request 根仍遵循 G.4。
+- Studio / Project Lock 必须记录正式 Source Bundle dependency identity 与完整可达文件快照；不解析动态 latest、不从任意 URL 下载，也不让无 3GPP 依赖的项目被强制导入该 Bundle。
+- Procedure 可引用 ca-client-tools 正式 Codec READ Capability 与 Output Schema，但不能展示私有 Handler / Callable；当 T1 `when` 企图读取 T2 才解码的 NAS 字段，Compiler 应给稳定的 SourcePath / 可用性诊断，不能偷偷触发解码。
+- NAS / NGAP Output Schema 是 Provider 独立发布物，不从 SBI `format: binary` 推导。没有正式 Compiler OAS3 Resolver / Provider Golden 时，不生成假 Schema、不宣称产品 PASS；现行产品验收 NOT_RUN。
 
 [统一权威设计](../EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)与 [SR-031](../../SR/SR-031-3GPP公共Schema-only-Publisher.md)。唯一语言 1.6.0，不创建第二管理器。
 
@@ -235,3 +236,4 @@ AI Authoring 的 Change Set 只能新增或修改 Capability ID、Procedure argu
 | 2026-11-26 | 0.3.15 | GPT-6（ChatGPT） | §5～§9、修订记录 | 同步 EC02 v0.2.12 与 SR-013 v0.2.18，保持 Schema-only Package / zero Capability roots 依赖契约一致 | 使 Studio Package Audit / AI Authoring 消费与 Compiler AC-013-06 使用同一 Schema-only 语义 | Issue #12/#40；EC02、SR-013、SR-016、SR-030；PR #46 |
 | 2026-11-27 | 0.3.17 | ChatGPT / GPT-6 | 3GPP Schema/Codec 分阶段消费 | 对齐 SR-031 公共类型、T1 Request 与 T2 Codec Result，新增分期拒绝/验收范围 | 修复标准输入来源与实现门禁的跨仓断点 | IR-009；Issue #47；SR-031/026 |
 | 2026-11-27 | 0.3.18 | ChatGPT / GPT-6 | 3GPP 原版发布裁决 | 版本随 OpenAMSM、原版 YAML 完全不改；将只读 Source Bundle 与可选 Adapter / Codec Output 分离 | 防止标准原件被类型适配误改 | Issue #47；SR-031/026 |
+| 2026-11-27 | 0.3.19 | ChatGPT / GPT-6.2 | §10 | 将 Studio 从 Adapter Schema Explorer 改为原版 OAS3 只读展示 / 精确组件导航；Project Lock 固定 Source Bundle | 遵循原版标准直接引用且不允许编辑 | IR-009；Issue #47；SR-031/013/026 |

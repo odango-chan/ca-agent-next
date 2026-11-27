@@ -1,7 +1,7 @@
 # 业务接入与 OpenAMSM 集成设计说明书
 
 > 文档类型：业务集成设计说明书  
-> 文档版本：0.3.2\
+> 文档版本：0.3.3\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
 > 功能归属：F06 — 业务接入与集成；EC04、EC05、EC07  
 > 关联 IR：IR-004、IR-005、IR-006  
@@ -218,13 +218,13 @@ OpenAPI 源位于 env-openamsm `dc83ccbf` 的 `upstream/openamsm/lib/sbi/support
 
 JSON 的 `n1SmMsg.contentId`、`n2SmInfo.contentId` 必须各自唯一关联对应 part，N2 同时校验 `n2SmInfoType`。缺失、重复、类型冲突或不完整时不得产生 mutation。Namf 下行传输与 Nsmf 入站响应分别验收。
 
-ca-skills `780497a2` 的三个 MAS `examples/skills/*-pdu-session-mas/assurance/contract.yaml` 均未声明 when。Create 输入含 pduSessionId、pti、requestType、dnn、sNssai、servingPlmn、requestedPduSessionType、requestedSscMode；Modify 为 pduSessionId、entryKind；Release 再含 trigger。按源 Schema 的必填、枚举与关闭对象校验，不能向输入追加 NAS 类型。Release 的 trigger 使用作者枚举，不能直接填入 NAS 字节 0xD1。每个 fixture 保存原始请求、parts、预期投影、候选集合和预期 Run。若 ingress 无法仅凭可用字段构造完整合法输入，登记 EC04/作者契约缺口并停止该场景，禁止 Host 补造默认值或偷偷做完整解码。
+历史 ca-skills `780497a2` 的三个 MAS 作者源曾把 `pti`、`requestedPduSessionType`、`requestedSscMode` 放进 Create 输入；这些字段不能据此成为新 CA-SL 1.6.0 的 T1 Request 必填。新作者源必须拆分：T1 只声明真实 SBI `jsonData` / 已规范化 Event 中可获得的字段；NAS-only 字段在 T2 由已选 Skill 的正式 Codec READ Result 提供，再通过显式 SourcePath / arguments 使用。Modify / Release 也须逐字段确认 SBI / NAS / NGAP 来源。Release 的 trigger 是作者层枚举，不是 NAS 字节 0xD1。每个 fixture 保存原始 SBI、multipart parts、JSON / N1 / N2 原字节、T1 可用字段、T2 预期 Result、候选集合和 Run。缺少字段来源或 Codec READ 时停止该子场景并保持 BLOCKED；禁止 Host 补默认值或偷偷完整解码。
 
 重试验收需要一次逻辑请求的稳定 externalRequestId。资源 URI、principal 或 MIME Content-ID 单独均不足以标识一次操作。在 Plugin 与 peer 的隔离 fixture 验证同次同内容重试、同 ID 内容冲突和两次内容相同的合法请求。隔离 Demo 的可控 peer 与 EC04 使用私有测试头 `X-CA-Request-Id`：peer 在新逻辑操作时生成唯一值并在其重试中复用，EC04 以已配置 peer 身份和该值构成 externalRequestId；新 HTTP 尝试各获独立 responseChannelId。比较相同 ID 的 operation、资源、规范化元数据及各 slot 原字节，内容冲突时拒绝；合法重复附着同一执行。该头仅属于 Demo 部署配置，不属于 3GPP。真实对端未提供等价稳定标识时，跨重连去重保持 BLOCKED。
 
 ### Create 入参的已知断点
 
-`ca-agent-demo@57e277ff/src/ca_agent_host/integrations/fivegc/nsmf_http.py::_create_request` 对 `INITIAL_REQUEST` 投影为 1，从 N1 解出 PDU Session Type 与 SSC mode，并拒绝客户端在 SBI JSON 中注入同名字段。它还交叉检查 N1 与 JSON 的 PSI。当前 MAS Create 又在选择前要求这些字段。仅移植最小 discriminator 不能满足该契约。应在 ca-skills 的作者契约和 Procedure 中区分选择输入与绑定后的业务读取，由已声明的 Owner/Codec READ 根据原始 Artifact 获取后者。实施前把每个字段的来源、读取操作、Schema 和消费者写入同一 fixture，以固定作者 revision 验证；若没有已发布的所需 READ，保留该依赖的 BLOCKED。稳定重试与共享 /modify 路径的分类可用独立 fixture 先验收。
+`ca-agent-demo@57e277ff/src/ca_agent_host/integrations/fivegc/nsmf_http.py::_create_request` 的历史实现会从 N1 解出 PDU Session Type 与 SSC mode，并交叉检查 N1 与 SBI JSON 的 PSI；这证明这些值的协议来源在 NAS，而不是 SBI JSON。当前历史 MAS Create 在 Skill 选择前要求这些字段，形成 T1/T2 循环依赖。CA-SL 1.6.0 新作者源必须将这些 NAS-only 值移到 T2 Codec READ 后的 Procedure 输入；T1 仅使用原版 TS 29.502 `jsonData` 中真实存在且经 OpenAPI 3.0 校验的字段。实施前逐字段固定 SBI / NAS 来源、operation、Schema Component / Codec Output、读取阶段和消费者；SBI/N1 冲突必须在 Owner mutation 前失败。没有正式 Codec READ 时保留 BLOCKED。
 
 ## 13. OpenAMSM Capability-first Skill 映射（1.6.0 目标）
 
@@ -306,15 +306,18 @@ Create → Modify → Release 的顺序、Owner authoritative state、Receipt / 
 
 1.6.0 Create/Modify/Release Skill 必须由 ca-skills 作者重新编写、使用唯一新 Compiler Check/Build/Verify 并正式发布 Bundle；历史 v1alpha5 E2E/Owner v1alpha4 只是业务输出参考，不能证明新 Runtime Binding 或新系统资格。SR-009 单独验 Plugin ingress/delivery/staging，SR-010 单独验 Host Artifact Channel、Provider/Codec，SR-011 才在正式新发布物和隔离环境齐备后执行同 UE/PSI 的真实 E2E；OM/EX 不能倒灌模块设计 READY 门槛。
 
-## 14. OpenAMSM 受支持 3GPP YAML 原版与 Create 解码循环的规范性修正（IR-009）
+## 14. OpenAMSM 原版 OpenAPI 3.0 直接消费与 Create 解码阶段修正（IR-009）
 
-**原版来源约束**：ca-skills / SR-031 只代发布 OpenAMSM 实际使用的标准 YAML，内容、相对 `$ref` 和所有字节一律不变；如需 CA-SL G.4 静态类型，另行审批/发布与原版分离的 Adapter Schema-only 包。原件不是 Compiler 可直接 $ref 的 Request 类型；NAS/NGAP Codec Result Schema 仍由 ca-client-tools Provider 负责且版本对齐 OpenAMSM。见 [EC01.3GPP 公共设计](../EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。
+**原版来源与直接引用**：ca-skills / SR-031 只原样代发布 OpenAMSM 实际使用的 OpenAPI 3.0 YAML 与可达引用闭包，所有 bytes / 相对 `$ref` 不变。Plugin 按 OAS 3.0 operation / requestBody / multipart 验证；Compiler 在 Skill 显式 pin Source Bundle 后可直接解析原版 `components/schemas`。外部 Schema Object 按 OAS 3.0 dialect 处理，不生成 G.4 Adapter；Skill-owned `requestSchema` 根及本地节点仍遵循 G.4。Host Context 只经 `Contract.contexts` 引用。
 
-1. **T0/T1**：Event Plugin 依据 OpenAMSM 使用的 TS29.502 SBI OpenAPI 解析 JSON、Content-ID、multipart slot，并保存原始 N1/N2；仅最小 0xC9/0xD1/0xD4 业务类型分类。Skill-owned `requestSchema` 根只约束实际已提供的 SBI 选择输入。只有正式发布的独立 Adapter B 才可作为精确公共类型 $ref；Host Context 则只经 `Contract.contexts` 引用。
-2. **Create**：历史契约 `pti`、`requestedPduSessionType`、`requestedSscMode` 中仅从 N1 才能获取的字段，**不能**成为 T1 必填。新 CA-SL 1.6.0 作者源改为 T2（已选 Skill 的 Codec READ）Result → 显式 SourcePath/arguments。对 `pduSessionId` 等已知 SBI 入口字段以**实际 OpenAMSM fixture**证明来源；若 N1/SBI 值冲突，在 Owner mutation 前失败，绝不补默认值。
-3. **Modify / Release**：0xC9 是 T1 最小分类，不代表 Plugin/Host 完整解码；更深 QoS 字段待正式 Codec/Owner READ。0xD1 Release Request 的首批候选 `2e 05 01 d1` 不证明 Create/Modify 可执行；0xD4/N2 completion 严格只续跑原 Run，检查 generation/PSI/PTI/N2 message type。
-4. **类型职责**：SBI 原版 YAML Source Bundle（A）、可选 G.4 Adapter（B）、Provider 的 NAS/NGAP 解码 Output Schema（C）、Skill 自有 requestSchema（D）是不同工件/Owner。Codec JSON 不代表 Owner Receipt/Commit Proof；原始字节保留，Schema-only 包无 Tool Scope，Provider 查询 2/2 + Codec 1/1 = 3/3。
-5. **真实实施门槛**：SR-009 Plugin、SR-010 Host Artifact Channel 与 SR-031 A 代发布可按直接依赖独立验收；CA-SL Adapter B 的正式包、Create/Modify Codec Profiles、1.6.0 MAS Bundle 和 E2E 未发布、NOT_RUN/BLOCKED。不得仅靠 SRC 原件替代解码结果，也不引入旧版兼容。
+1. **T0**：Event Plugin 按 TS 29.502 operation 验证 SBI JSON、`multipart/related`、`jsonData`、N1/N2 binary parts、Content-Type 与 Content-ID；保存原始 N1/N2 bytes。已核实 `PostSmContexts` 的 `jsonData` 指向 `SmContextCreateData`，其 CommonData 类型来自 TS 29.571。T0 只做最小 0xC9 / 0xD1 / 0xD4 分类，不完整解码。
+2. **T1**：Skill Request / `when` 只读取到场 SBI JSON / 已规范化 Event 字段；不调用 Codec。Create 的 PDU Session Type / SSC mode / NAS PTI 等只有从 N1 解码才能获得，不能在 T1 强制要求。
+3. **T2**：选定 Procedure 调正式 Codec READ 后，才能通过 Provider Output Schema 使用 NAS / NGAP Result。SBI 与 N1 的 PSI / 类型冲突在 Owner mutation 前拒绝，不补默认值。
+4. **Modify / Release / Continuation**：0xC9 是最小分类，不代表完整 Modify Decoder；0xD1 首批候选不证明 Create / Modify / N2 已支持；0xD4 / N2 completion 只续跑原 Run，检查 generation / PSI / PTI / N2 message type。
+5. **类型职责**：SBI 原版 OAS Source Bundle（SR-031）、Compiler OAS3 Resolver（SR-013）、Provider NAS/NGAP Output Schema（SR-026）、Skill-owned Request（CA-SL 1.6.0）与 Host Context（SR-030）是不同工件 / Owner。Codec JSON 不代表 Owner Receipt / Commit Proof；Source Bundle 不产生 Tool Scope。
+6. **门槛**：SR-031 Source Bundle、SR-010 ingress / Artifact Channel、SR-013 Compiler Resolver、SR-026 Provider Profile、SR-027 Bundle 各自独立验收。没有正式 OAS3 Resolver / Provider / 1.6.0 Bundle 时对应产品 AC NOT_RUN / BLOCKED；不引入旧版兼容。
+
+[权威设计](../EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。
 
 ## 修订记录
 
@@ -335,3 +338,4 @@ Create → Modify → Release 的顺序、Owner authoritative state、Receipt / 
 | 2026-11-27 | 0.3.0 | Codex / GPT-6 | §5～7、§13.5 | 明确作者 Capability、两路收据、Schema 与 Provider 基数 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
 | 2026-11-27 | 0.3.1 | ChatGPT / GPT-6 | 3GPP Schema 与阶段输入补充 | 明确公共 Schema-only 导出、选择期 Request 与执行期 Codec Result 的 Link / 业务字段来源 | 关闭 Create 选择前依赖 NAS 解码的循环、固定跨包类型门禁 | IR-009；Issue #47；SR-031/026/013 |
 | 2026-11-27 | 0.3.2 | ChatGPT / GPT-6 | 本轮 IR-009 设计修正 | 固定 OpenAMSM 版本 + 原版 YAML 逐字节代发布；显式区分可选 Adapter 与 Provider Codec 输出 | 落实原版 YAML 不得改动、消除误把原版当 G.4 的风险 | Issue #47；SR-031/026/013 |
+| 2026-11-27 | 0.3.3 | ChatGPT / GPT-6.2 | §2、§14 | 以原版 OAS3 operation / multipart 和直接组件引用替代 Adapter；修正历史 Create NAS-only 字段不能在 T1 必填 | 关闭 Create 选择前解码循环并对齐原始标准 | IR-009；Issue #47；SR-010/013/026/031 |
