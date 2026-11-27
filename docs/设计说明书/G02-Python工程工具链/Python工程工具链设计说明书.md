@@ -1,7 +1,7 @@
 # G02：Python 工程工具链与环境管理设计说明书
 
 > 文档类型：工程治理功能设计说明书  
-> 文档版本：0.2.2\
+> 文档版本：0.2.3\
 > 状态：设计第三轮自评候选 / REVIEW_REQUESTED；SR-028 主状态仍 DRAFT、实施 NOT_READY、uv 产品验收 NOT_RUN\
 > 修订日期：2026-11-27\
 > 功能节点：G02 Python 工程工具链与环境管理  
@@ -163,7 +163,7 @@ uv run --locked --group dev --extra plugins python -m ca_agent_next --smoke
 
 保留 `.github/workflows/sr003-plugin-ci.yml` 的 Linux/Python 3.12 和 Windows/Python 3.14 矩阵、Go Echo 构建及证据步骤。该工作流迁移安装和测试入口时，为每个任务的 uv sync/run 显式传入 `--python` 和矩阵解释器，保留 `--locked --group dev --extra plugins`；根环境和 Review Context 使用项目的 3.14.6。完整回归的 pull_request paths 至少覆盖 pyproject.toml、uv.lock、.python-version、src/**、tests/**、examples/echo/**、scripts/review_context.py、docs/SR/SR-003-*、.github/workflows/review-context.yml 及 .github/workflows/sr003-plugin-ci.yml 自身。逐类单文件变更均应触发两项矩阵任务。只改 Review Context workflow、`.python-version` 或 `uv.lock` 时也须能在 pull_request 上找到两项 Job。
 
-**AC-028-07 跨 OS 无猜测命令参考**：新的 SR-003 regression Job 在 checkout + 固定 setup-uv action 之后，分别在 `ubuntu-latest` 的 `3.12` 和 `windows-latest` 的 `3.14.6` 运行。为了不让默认 .python-version 的 3.14.6 覆盖 Linux 3.12，两个矩阵单元都使用显式 `--python`。以下是**拟实施的 Workflow 步骤示例**，并非已运行 CI；用 `shell: bash` 使 Windows/Linux 使用同一变量语法（保留现有 Go Echo 构建、compileall、证据生成等步骤，均通过已安装的矩阵 Python 运行）：
+**AC-028-07 跨 OS 无猜测命令参考**：新的 SR-003 regression Job 在 checkout + 固定 setup-uv action 之后，分别在 `ubuntu-latest` 的 `3.12` 和 `windows-latest` 的 `3.14.6` 运行。为了不让默认 .python-version 的 3.14.6 覆盖 Linux 3.12，两个矩阵单元都使用显式 `--python`。以下是**拟实施的 Workflow 步骤示例**，并非已运行 CI；用 `shell: bash` 使 Windows/Linux 使用同一变量语法（保留现有 Go Echo 独立 Go 构建；compileall 与 Python 证据生成步骤通过已安装的矩阵 Python 运行）：
 
 ```yaml
 - name: Install matrix Python
@@ -251,3 +251,4 @@ I1 与 I3 可在 SR-028 实施 Issue 内按依赖顺序执行；I2 只在 SR-001
 | 2026-11-27 | 0.2.0 | Codex / GPT-6 | §3.8 | 固定完整回归触发范围 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
 | 2026-11-27 | 0.2.1 | Codex / GPT-6 | §3.8 | 补全双平台路径触发范围 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
 | 2026-11-27 | 0.2.2 | GPT-6（ChatGPT） | §3.8、文档头、修订记录 | 增加 uv 双平台矩阵 Python 显式选择的可执行 YAML 示例和 PowerShell 分支说明 | 避免 Harness 在 Windows 把 Bash 变量误用或因 .python-version 让 Ubuntu 3.12 误用 3.14.6；仍需真实 CI 独验 | Issue #12/#35；PR #46；SR-028 |
+| 2026-11-27 | 0.2.3 | GPT-6（ChatGPT） | §3.8、修订记录 | 澄清 Go Echo 由 Go 工具链构建，Python compileall/证据脚本才使用矩阵 Python | 消除示例描述中将 Go build 错写成通过 Python 运行的歧义 | Issue #12/#35；PR #46；SR-028 |

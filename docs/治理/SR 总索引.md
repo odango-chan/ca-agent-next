@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.48
+> 文档版本：0.3.49
 > 状态：29 项 SR：4 VERIFIED、1 IMPLEMENTED、24 DRAFT（24 项设计均已提交待评审），SR-003 模块 AC PASS，系统 EX NOT_RUN
 > 修订日期：2026-11-27\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -97,15 +97,13 @@
 | SR-029 | 1.6.0 Capability-first 一对一绑定 | **第三轮自评：DESIGN_READY_FOR_INDEPENDENT_REVIEW**（第二轮 CHANGES_REQUESTED 为历史；1.6.0 唯一语言、Owner 24/24、Provider 2/2 与全量 3/3，待独立结论） | DRAFT |
 | SR-030 | Host Context 1.6.0 Schema-only Publisher；0 Capability / 0 Callable，精确 Schema export；与 SR-013 AC-013-06 联合验收 | APPROVE_FOR_READY（Schema-only 设计与 AC-030-01 固定源审计） | DRAFT |
 
-上述专项评审按单版本 1.6.0 和 Capability↔Callable 一对一原则校核；
+上述专项评审按单版本 1.6.0 和 Capability↔Callable 一对一原则校核；历史 v1alpha5、Compiler v2.1.0、Owner v1alpha4 和 Provider v1.2.0 只可作迁移/审计来源。旧来源中的身份、Build DTO、Artifact、Bundle 或测试不得自动证明新版发布/可实施。SR-029 新契约尚未发布，Compiler #61、Publisher、Skill Bundle 等真实前置仍保持各自 BLOCKED/NOT_RUN；SR-028 的 uv 工具链设计可独立于这些外部发布审查。
 
 ### 2.2 第三轮自评登记（不改变主状态）
 
 PR #46 上述十项第二轮 CHANGES_REQUESTED 已按各自反例复核并登记 **DESIGN_READY_FOR_INDEPENDENT_REVIEW（仅作者自评）**：SR-004/006/007/008/010/011/012/016/028/029。第二轮的独立 CHANGES_REQUESTED 结论仍为历史事实，须由第三轮独立评审逐项确认是否关闭；本自评不是正式 APPROVE_FOR_READY。
 
-12 项第二轮限定 APPROVE_FOR_READY 保持：SR-005/009/013/017/018/019/020/021/022/023/025/030；其中 SR-009 AC-009-04 合法 continuation 子例的增量修改另需独立确认。SR-026/027 仍 BLOCKED_EXTERNAL_INPUT，只可审查部分来源/构建设计，未得到 Publisher 正式输入前不得发实施 Goal。**24 项主状态仍 DRAFT，READY=0，系统 EX/OM、正式 1.6.0 产品 AC NOT_RUN/BLOCKED。** 逐项判据与当前已核实的外部事实见[跨仓一致性审计 §15](../参考与审计/跨仓设计资产迁移与一致性审计.md#15-pr-46-第三轮自评候选与ready前置审计2026-11-27)。
-
-历史 v1alpha5、Compiler v2.1.0、Owner v1alpha4 和 Provider v1.2.0 只可作迁移/审计来源。旧来源中的身份、Build DTO、Artifact、Bundle 或测试不得自动证明新版发布/可实施。SR-029 新契约尚未发布，Compiler #61、Publisher、Skill Bundle 等真实前置仍保持各自 BLOCKED/NOT_RUN；SR-028 的 uv 工具链设计可独立于这些外部发布审查。
+12 项第二轮限定 APPROVE_FOR_READY 保持：SR-005/009/013/017/018/019/020/021/022/023/025/030；其中 SR-009 AC-009-04 合法 continuation 子例的增量修改另需独立确认。SR-026/027 仍 BLOCKED_EXTERNAL_INPUT，只可审查部分来源/构建设计，未得到 Publisher 正式输入前不得发实施 Goal。**24 项主状态仍 DRAFT，READY=0，系统 EX/OM、正式 1.6.0 产品 AC NOT_RUN/BLOCKED。** 逐项判据与当前已核实的外部事实见[跨仓一致性审计 §15](../参考与审计/跨仓设计资产迁移与一致性审计.md)。
 
 ## 3. 设计恢复与实施顺序
 
@@ -221,3 +219,4 @@ PR #46 上述十项第二轮 CHANGES_REQUESTED 已按各自反例复核并登记
 | 2026-11-27 | 0.3.46 | Codex / GPT-6 | §2.1、3.1 | 逐项登记第二轮独立评审范围与修订门槛 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
 | 2026-11-27 | 0.3.47 | GPT-6（ChatGPT） | §2.1、§3.2、修订记录 | 记录 SR-009 AC-009-04 completion 增量复评与模块/系统实施顺序 | 不把第二轮认可范围擅自扩展或把 Echo E2E 误作插件模块启动条件 | Issue #12；PR #46；SR-009 |
 | 2026-11-27 | 0.3.48 | GPT-6（ChatGPT） | §2.1～2.2、修订记录 | 十项第二轮需修订的设计登记第三轮自评候选，十二项限定认可保留，SR-026/027 精确列缺件；主状态 24 DRAFT 不变 | 为外部独立评审形成逐项可复核入口，禁止把作者自评误作实施 READY | Issue #12；PR #46；SR-004～030 |
+| 2026-11-27 | 0.3.49 | GPT-6（ChatGPT） | §2.1～2.2、修订记录 | 调整第三轮自评段落与原有规范性来源警示的阅读顺序，改用稳定文件路径 | 避免拆断规范性段落或误导评审者访问未经核实的自动生成锚点 | Issue #12；PR #46 |
