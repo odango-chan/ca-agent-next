@@ -124,7 +124,7 @@ def is_root_lockfile(path: str) -> bool:
     ) or candidate.name in ROOT_LOCKFILE_NAMES
 
 
-def is_python_scope_path(path: str) -> bool:
+def is_python_scope_path(path: str, workflow_content: str = "") -> bool:
     normalized = path.replace("\\", "/")
     if normalized in ROOT_TOOLCHAIN_FILES or is_root_lockfile(normalized):
         return True
@@ -132,10 +132,35 @@ def is_python_scope_path(path: str) -> bool:
         return True
     if normalized.startswith("scripts/") and normalized.endswith(".py"):
         return True
-    if normalized.startswith(".github/workflows/") and normalized.endswith((".yml", ".yaml")):
-        return True
     if normalized.startswith(".github/scripts/") and normalized.endswith(".py"):
         return True
+    if normalized.startswith(".github/workflows/") and normalized.endswith((".yml", ".yaml")):
+        if Path(normalized).name in {
+            "review-context.yml",
+            "sr003-plugin-ci.yml",
+            "python-toolchain-policy.yml",
+        }:
+            return True
+        lowered = workflow_content.lower()
+        return any(token in lowered for token in ("uv ", "python", "pyproject", "unittest", "pytest"))
+    return False
+
+
+def has_python_scope(
+    repo_root: Path,
+    base_sha: str,
+    head_sha: str,
+    changed_paths: Iterable[str],
+) -> bool:
+    for path in changed_paths:
+        if path.startswith(".github/workflows/"):
+            content = (git_blob(repo_root, base_sha, path) or "") + "\n" + (
+                git_blob(repo_root, head_sha, path) or ""
+            )
+            if is_python_scope_path(path, content):
+                return True
+        elif is_python_scope_path(path):
+            return True
     return False
 
 
@@ -337,9 +362,6 @@ def evaluate(
     pr_number: int,
     manifest: dict[str, Any],
 ) -> tuple[bool, list[str], list[str]]:
-    validate_base_ref(manifest, base_ref, base_sha, pr_number)
-    validate_base_contents(repo_root, base_sha, pr_number, manifest)
-
     changed_result = run_git(
         repo_root,
         "diff",
@@ -352,8 +374,11 @@ def evaluate(
         for item in changed_result.stdout.splitlines()
         if item.strip()
     }
-    if not any(is_python_scope_path(path) for path in changed_paths):
+    if not has_python_scope(repo_root, base_sha, head_sha, changed_paths):
         return True, [], sorted(changed_paths)
+
+    validate_base_ref(manifest, base_ref, base_sha, pr_number)
+    validate_base_contents(repo_root, base_sha, pr_number, manifest)
 
     lockfiles = forbidden_root_lockfiles(changed_paths)
     violations = [
@@ -402,7 +427,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"PR #{args.pr_number}: base={args.base_ref}@{args.base_sha}")
     print(f"Head: {args.head_sha}")
     print(f"Changed files: {len(changed_paths)}")
-    if not any(is_python_scope_path(path) for path in changed_paths):
+    if not has_python_scope(args.repo_root.resolve(), args.base_sha, args.head_sha, changed_paths):
         print("PYTHON_TOOLCHAIN_POLICY_SKIP: no Next root Python files/workflows changed.")
         return 0
     if violations:
