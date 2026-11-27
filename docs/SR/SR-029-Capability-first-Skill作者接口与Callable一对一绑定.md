@@ -1,7 +1,7 @@
 # SR-029：Capability-first Skill 作者接口与 Callable 一对一绑定
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.5  
+> SR 版本：0.2.6  
 > 状态：待评审 / DESIGN_READY_FOR_REVIEW；非实施 READY；新版规范/产品 NOT_RELEASED
 > 创建日期：2026-11-26  
 > 上游需求：[IR-008](../IR/IR%20总登记册.md#ir-008)；关联需求：[IR-003](../IR/IR%20总登记册.md#ir-003)  
@@ -56,7 +56,14 @@ Skill-facing Capability 与公开 Callable 严格双向一对一；Operation / O
 
 当前 mas.reconcile.exact_original / MAS.RECONCILE 出现在 CapabilityContracts，但它是 Runtime internal-only Reconcile target。目标 CapabilityContracts 移除此 Skill-facing Capability；MAS.RECONCILE 仍保留在 Owner ToolCatalog 和 Mutation Reconcile binding 中。mas.receipt.query / MAS.RECEIPT_QUERY 仍保留普通 READ Callable / Capability 语义。
 
-因此目标 Owner Skill-facing CapabilityContracts 为 24 个 Capability / 24 个 Callable membership；Owner ToolCatalog 仍为 25 个 contracts（21 MUTATION + 4 READ），不删除 Reconcile 契约。
+上述事件拆分及 internal-only Reconcile 收敛后的**未处理 N1 Parser 条件基数**为 24 Capability / 24 Callable membership；现有 Owner v1alpha4 ToolCatalog 的 25 contracts（21 MUTATION + 4 READ）仅是固定历史审计，不是新 1.6.0 发布承诺。
+
+**Codec/Owner 的待决权威边界（R6-P1-01）：**现有 `mas.ssm.n1.modify.parse → SSM.PARSE_N1_MODIFY` 和 `mas.ssm.n1.release.parse → SSM.PARSE_N1_RELEASE` 都是历史 Skill-facing READ。前者已在固定源 `env-openamsm@dc83ccbf5be54dcc7112dd43ba95ea6fa5975550` 的 `patches/openamsm/0007-ssm-n1-modify-parse.patch` 中直接调用 `ogs_nas_5gsm_decode`，所以**不能当作纯业务校验**。后者可在 CapabilityContracts/ToolCatalog 核实公开身份，仍需 Owner 提供 handler 源码和输入/输出实证，不能仅凭名称推定其解码行为。
+
+1. **唯一协议权威：**正式 1.6.0 Skill 的 T2 NAS/NGAP 协议解码只可通过 ca-client-tools 正式发布、相应消息 Profile 已资格化的 Codec READ Capability；Owner 不得再次对原始 N1/N2 bytes 做协议解码，也不允许在 Codec 缺失时回退旧 Owner Parser。
+2. **Owner 冻结决策 A：**若这两个 Parser 只做协议解码，则从新 Skill-facing Owner CapabilityContracts 移出两个 Parser，其他变更不变时 Owner **目标 22 Capability / 22 membership**；其历史 callable 是否保留为内部兼容代码不属于 1.6.0 Runtime 可调用面，须在 Owner Issue 决定。
+3. **Owner 冻结决策 B：**若仍需要 Owner 业务校验/会话授权，则由 Owner 发布者把它们改造或替换为**只接受已验证 Codec Result 的纯业务 READ**，禁止接收原始 NAS bytes 或调用 NAS decoder；只有 Owner 正式冻结新的 ID、Schema、Evidence/业务语义后，才能决定是否保留两个 Skill-facing Capability。若保留两项且仍满足一对一，条件目标为 **24/24**；若合并或移除则重新计算。不得把旧 Parser 的输入/输出 Schema 原样视作新合同。
+4. 以上是两个互斥的设计分支，**未获得 Owner 冻结裁决之前，不宣称任何一种最终基数已经发布，也不自动删除历史契约**。Owner ToolCatalog/CapabilityContracts/Receipt/Reconcile 修改须由 env-openamsm 后续实施 Issue 单独追踪，Next 仅冻结设计边界。
 
 ### 3.2 Provider Interface v1.2.0
 
@@ -65,7 +72,9 @@ Skill-facing Capability 与公开 Callable 严格双向一对一；Operation / O
 - openamsm.smf.mas.context.read：8 个 Callable，共用 mas-context-query-input 和 mas-context-result Schema。
 - openamsm.nf.metrics.read：3 个 Callable，共用 metrics-page-query 和 metrics-page Schema。
 
-目标各收敛为一个公开 Callable，Capability ID 分别保持 openamsm.smf.mas.context.read 和 openamsm.nf.metrics.read。SMF Context Read 的 Input 增加封闭 contextKind 枚举 sc / pa / upn / ssm / iam / ups / ca / saa；NF Metrics Read 的 Input 增加封闭 resourceKind 枚举 amf.ue-info / amf.gnb-info / smf.pdu-info。现有 8+3 个 backendOperationId 作为 Provider 私有实现路由保留，不再作为 11 个 Skill-facing Callable。
+目标把既有两个查询 Capability 各收敛为一个公开 Callable，Capability ID 分别保持 `openamsm.smf.mas.context.read` 和 `openamsm.nf.metrics.read`。SMF Context Read 的 Input 增加封闭 contextKind 枚举 sc / pa / upn / ssm / iam / ups / ca / saa；NF Metrics Read 的 Input 增加封闭 resourceKind 枚举 amf.ue-info / amf.gnb-info / smf.pdu-info。原 8+3 个 backendOperationId 只作为 Provider 私有路由保留。
+
+**新 1.6.0 Provider 目标为 3 个公开 Capability / 3 个唯一 Callable（3/3，不是 2/2）：**两个上述查询入口，加上 SR-026 设计的一个独立 NAS Codec READ Capability/唯一 Callable。Codec 的机器 ID、Schema、slot、mediaType、result Profile、handler 与纯数字 SemVer **均须由 ca-client-tools Publisher 正式冻结**，本文不得虚构；3/3 是设计目标而非现有 v1.2.0 发布事实。首个候选已核实向量是 0xD1 Release Request；Modify 0xC9、其他 NAS 和 NGAP 都不能因“同为 Codec”自动获得资格。若后续不同消息无法在**一个封闭选择器与封闭输出 Schema** 中表达，应在下一设计版本拆分新的 1:1 Capability/Callable，并同步重算基数，禁止动态任意 profile。
 
 ## 4. 规范性设计决策
 
@@ -147,16 +156,15 @@ Owner CapabilityContracts 与 Provider Interface Package capabilities.json 是 S
 
 Owner 1.6.0 目标：
 
-- 24 Skill-facing Capability / 24 Callable membership。
-- 事件 Capability 拆分为 establishment-event.record 与 release-event-marker.write。
-- 从 Skill-facing CapabilityContracts 移除 mas.reconcile.exact_original。
-- Owner ToolCatalog 保留原 25 contracts 和 Reconcile 专用契约。
+- 事件 Capability 拆分为 establishment-event.record 与 release-event-marker.write；mas.reconcile.exact_original 不属于 Skill-facing，MAS.RECONCILE 继续为 Runtime internal-only。
+- **N1 Parser 必须先由 Owner 签认二选一：**移出两个旧 Parser 后目标为 **22/22**；或把需要的入口重新定义为只消费已校验 Codec Result 的业务 READ，在保留两项的条件下目标为 **24/24**（其他选择应重算）。未签认前不宣称目标基数冻结，历史 ToolCatalog 的 25 contracts 仅为审计证据。
+- Owner 仍权威拥有业务状态、策略校验、mutation、Receipt/Proof/Reconcile 和最终提交决策；不得在 1.6.0 Skill 路径内对原始 NAS/NGAP 重新协议解码。
 
 Provider Interface 目标：
 
-- 2 Capability / 2 公开 Callable。
-- 11 个原 backendOperationId 保留为 Provider 私有路由。
-- SMF / NF 查询通过封闭 selector 字段进入同一个公开 Callable，不公开 11 个独立 Callable。
+- **目标 3 Capability / 3 公开 Callable：**SMF Context Read、NF Metrics Read，以及独立 Codec READ（SR-026）。前两者的 8+3 个旧 backendOperationId 只保留为内部路由。
+- Codec Capability / 唯一 Callable 的实际 ID、Schema、消息 Profile、slot/mediaType、handler、版本及正反向向量由 ca-client-tools 发布者冻结；正式发布前标记 BLOCKED / NOT_RELEASED。任何 0xC9 Modify 或 NGAP 消费均须有各自资格化 Profile 和机器校验结果 Schema，不可由首批 0xD1 反推。
+- 同一公开 Callable 仅允许按**封闭选择器和封闭 Input/Output Schema** 路由多个内部 handler；超出正式声明的 Profile 必须拒绝，不能使用 Owner Parser fallback。
 
 Package 版本由各 Publisher 在后续目标仓 SR 中固定；本 SR 不擅自发明 Owner / Provider 版本号，也不修改任何下游 Package。
 
@@ -204,6 +212,14 @@ Runtime 以 Capability ID 为 Skill / Procedure 作者侧 Action 入口，从当
 
 Create / Release 继续分别使用原有 Schema 与 Evidence Guarantee；Modify 的 QoS Delta、Receipt、UNKNOWN 和 N1/N2 流程不变。Provider Observation 使用两个通用 READ Capability 和封闭 selector。此表是作者源映射，不是当前 ca-skills 已更新证据。
 
+### 10.1 Codec → Owner 的唯一 T2 数据流
+
+`T0` 校验原版 3GPP OAS 3.0 SBI ingress、multipart、Content-ID 与 N1/N2 slot；`T1` 的 F02 选择只读取 Publisher 已冻结的 Event metadata 和当前已到场的 SBI/requestSchema 字段，绝不调用 Codec，不能要求未来解码得到的 PSI/PTI/QoS 等字段。`T2` 在 Skill/Run 已绑定之后读取 Host-owned opaque artifactRef，由**已发布 Provider Codec READ Capability** 调用唯一 Callable/Provider 私有 handler，对已授权消息 Profile 解码；输出必须先经过发布的 Decoder Result Schema 验证，再写入后继 Procedure Node 的 typed context/arguments。Owner 业务 READ（若存在）只能消费这个结构化 Codec Result，不能重新读原始 NAS 做解码；Owner mutation 在业务校验通过后才可调用。`T3` 按 Owner Receipt/Proof/Reconcile 判定提交，`T4` 仅续跑原 Run 的 0xD4/N2 completion。
+
+依赖门槛：没有正式 Codec Package/Result Schema 时，0xD1 的产品路径 BLOCKED；0xC9 Modify 和需要 NGAP 解码的消费面还须各自通过 Profile 资格审查。绝不将 PR #39 库向量、历史 Owner Parser 或 Event Plugin 最小消息类型 discriminator 冒充正式 T2 解码能力。Event Plugin 的最小 discriminator 只为 T1 路由，不产生业务解码结果。
+
+Owner 待决事项在 Next [Issue #40](https://github.com/odango-chan/ca-agent-next/issues/40) / [Issue #113](https://github.com/odango-chan/ca-agent-next/issues/113) 跟踪。实际 ca-client-tools 与 env-openamsm 的生产端实施 Issue 必须在对应 SR 通过独立设计评审达到 READY 后再建立，各自只承载代码、Schema、Golden、Release 和签认，不另立权威设计副本。
+
 ## 11. 实施分解与跨仓责任
 
 本 SR 只完成中央设计。后续代码实施必须先按目标仓拆分独立实施 SR / Issue，至少覆盖：
@@ -232,15 +248,15 @@ Create / Release 继续分别使用原有 Schema 与 Evidence Guarantee；Modify
 | AC | 验收内容 | 结果 |
 |---|---|---|
 | AC-029-01 | Owner CapabilityContracts 当前 24/25 基数与唯一多成员关系有固定来源审计 | 来源审计已记录，待独立评审 |
-| AC-029-02 | Provider Interface 当前 2/11 基数、8+3 查询分组与共享 Schema 有固定来源审计 | 来源审计已记录，待独立评审 |
+| AC-029-02 | Provider 历史 2/11 基数与 8+3 查询分组有固定来源；1.6.0 目标 **3/3（含 Codec）**，机器合同/发布仍 BLOCKED | 设计已记录；Codec Publisher 未冻结 |
 | AC-029-03 | Capability ↔ Callable 双向一对一、Operation/Observation kind、Effect、Schema 规则明确 | 设计已记录，待独立评审 |
 | AC-029-04 | Owner 事件 Capability 拆分、Reconcile internal-only、Receipt Query 保留规则明确 | 设计已记录，待独立评审 |
-| AC-029-05 | Provider 两个通用 READ Callable 与封闭 selector / 私有 backend 路由明确 | 设计已记录，待独立评审 |
+| AC-029-05 | Provider 两个通用 READ + Codec READ 的 **3/3** 设计；封闭选择器/Schema、私有 backend 路由与正式发布门槛明确 | 设计待独立评审；产品 BLOCKED |
 | AC-029-06 | 1.6.0 正式命名、完全无兼容/自动迁移、准确机器标识与作者 Schema 发布责任清晰 | 待独立设计评审 |
 | AC-029-07 | Compiler Link、诊断、Artifact v2 capabilityBindings 与 Build/Verify 边界明确 | 设计已记录，待独立评审 |
 | AC-029-08 | Runtime Action、Callable allowlist、Reconcile 内部入口明确 | 设计已记录，待独立评审 |
 | AC-029-09 | Skill Studio Capability-only Explorer / LSP / AI Authoring 明确 | 设计已记录，待独立评审 |
-| AC-029-10 | MAS Create / Modify / Release 的 1.6.0 Capability 映射与业务语义保持边界明确 | 设计已记录，待独立评审 |
+| AC-029-10 | MAS Create / Modify / Release 的 T1/T2 分层、Codec 唯一协议解码与 Owner Parser 待决 22/22 或 24/24 条件目标明确；0xC9/NGAP 需独立资格化 | 设计待独立评审；Owner/Codec 产品 BLOCKED |
 | AC-029-11 | F02/F03.05/F04/F06/F08/F09/EC02、IR/SR、版本规范/功能树/目录与 SR-004 一致；静态门禁 | 待静态检查与独立评审 |
 | AC-029-12 | 未修改下游仓；未把设计目标误报为实现或 E2E PASS | 待独立评审 |
 
@@ -269,3 +285,4 @@ Create / Release 继续分别使用原有 Schema 与 Evidence Guarantee；Modify
 | 2026-11-26 | 0.2.3 | GPT-6（ChatGPT） | 文档头与修订记录 | 补齐 formal SR 正式 review_scope 与非目标声明 | 解除 PR #45 当前 Head Review Context formal-doc 校验失败 | Issue #40；PR #45 |
 | 2026-11-27 | 0.2.4 | GPT-6.2（ChatGPT） | §5、§13、修订记录 | 明确可选 when 唯一位于 assurance/contract.yaml 顶层；SKILL.md Front Matter 和 predicates.yaml 不声明 when；1.6.0 CEL/G.4 语义由正式规范冻结。 | 锁定作者字段归属，避免旧版本语义被隐式带入 1.6.0。 | Issue #40；IR-008；SR-013；EC02；F08 |
 | 2026-11-27 | 0.2.5 | GPT-6.2（ChatGPT） | 文档头、§15 评审历史、修订记录 | 历史 PR #44 原 Head、#45 Draft 观察值改为明确历史时点，当前 #45 非 Draft 且未独立 APPROVE | 不让已合并/重定向后的 PR 被旧历史文字误判为当前状态 | Issue #40；PR #44/#45；SR-029 |
+| 2026-11-28 | 0.2.6 | GPT-6（ChatGPT） | §3、§6、§10.1、§11、§13 | 补入 Provider Codec 目标 3/3、T1/T2 唯一解码链，固定 Owner 两 Parser 证据与二选一 22/22/24/24 条件基数 | 处理第六轮 R6-P1-01，避免凭名称删除 Owner 接口或让旧 NAS Parser 充当 Codec fallback | Issue #40/#113；PR #45；SR-026；F06 |
