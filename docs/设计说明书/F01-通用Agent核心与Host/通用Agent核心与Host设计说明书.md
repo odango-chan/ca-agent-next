@@ -4,11 +4,11 @@
 > 文档版本：0.3.8\
 > 状态：Next 目标设计；本仓实现状态需独立验收，不以参考仓 PASS 代替  
 > 功能归属：F01 — 通用 Agent Core 与 Host  
-> 关联 SR：SR-002、SR-020、SR-021  
+> 关联 SR：SR-002、SR-020、SR-021、SR-032  
 > 修订日期：2026-11-26  
 > 适用范围：Python Host、Agent Core、Model Loop、Event/Run 协调、Runtime/Plugin 边界
 
-关联 IR-002、IR-006。参考架构原文见 §12。
+关联 IR-002、IR-006、IR-008。共享资源与 Host Script Execution 的设计增量由 Issue #49 / SR-032 追踪。参考架构原文见 §12。
 > 全局评审范围：继承根目录 Agent.md 的 review_scope。  
 > 本文局部非目标：业务专用协议、Owner 状态机与生产级部署。
 
