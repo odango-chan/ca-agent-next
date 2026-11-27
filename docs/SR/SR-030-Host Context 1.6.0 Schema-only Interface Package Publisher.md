@@ -1,15 +1,15 @@
 # SR-030：Host Context 1.6.0 Schema-only Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.5
-> 状态：DRAFT（实施主状态）。PR #46 第二轮独立评审（1bf748db）：APPROVE_FOR_READY（Schema-only 设计与 AC-030-01 固定源审计）。产品验收依各 AC 单列。
+> SR 版本：0.1.6
+> 状态：DRAFT（实施主状态）；独立模型 Review #6082541121（固定 Head 3d5f17b7）：APPROVE_FOR_READY（仅 Schema-only 设计及 AC-030-01 固定源审计）；R3-SR030-01 已修订于当前后续 Head，Publisher 仍未实现/发布，READY=0。
 > 创建日期：2026-11-26
 > 修订日期：2026-11-27
 > 上游需求：[IR-006](../IR/IR%20总登记册.md#ir-006)；关联需求：[IR-008](../IR/IR%20总登记册.md#ir-008)、[IR-003](../IR/IR%20总登记册.md#ir-003)
 > 功能：F09.06 — Host Context Interface Package Publisher
 > 目标仓：odango-chan/ca-agent-demo
 > 中央设计：F09、F08、EC02 Compiler、CA-SL 1.6.0 完整语言规范、SR-013、SR-016、SR-029
-> 设计依据：[F09 技能工作台与 AI 编写](../设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md) v0.3.16 §5～9；[F08 技能编译与发布](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.16；[EC02 Compiler](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.13 §10～11；[CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md) v0.1.2 §5.2、§14～16；[SR-013](SR-013-Compiler已检查when与发布产物.md) v0.2.22 §5～6
+> 设计依据：[F09 技能工作台与 AI 编写](../设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md) v0.3.16 §5～9；[F08 技能编译与发布](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.16；[EC02 Compiler](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.13 §10～11；[CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md) v0.1.2 §5.2、§14～16；[SR-013](SR-013-Compiler已检查when与发布产物.md) v0.2.23 §5～6
 > 设计 Issue：[ca-agent-next #40](https://github.com/odango-chan/ca-agent-next/issues/40)
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：Host Trust / Admission、运行期 Context 实例、Capability / Callable、生产级资格、签名、额外摘要、Trust Registry、Agent 内置 Compiler
@@ -102,3 +102,4 @@ Publisher 必须从固定 Revision 读取原始 Schema 字节并核对 Git blob�
 | 2026-11-27 | 0.1.3 | Codex / GPT-6 | 评审入口 | 回填独立评审批准评议的具体范围 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
 | 2026-11-27 | 0.1.4 | Codex / GPT-6 | 评审状态 | 登记第二轮限定范围及外部依赖 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
 | 2026-11-27 | 0.1.5 | GPT-6（ChatGPT） | 文档头、§1、§6、修订记录 | 补齐 F09/F08/EC02/CA-SL 1.6.0/SR-013 的固定版本与章节；修复修订账本排序 | 处理独立模型 Review #6082541121 的 R3-SR030-01 与 R3-LEDGER-01，避免 Schema-only Publisher 的核心设计依据不可定位 | Issue #12；PR #46；Review #6082541121 |
+| 2026-11-27 | 0.1.6 | GPT-6（ChatGPT） | 文档头、§1、§6、修订记录 | 将第二轮不可访问的评审登记替换为正式 Review #6082541121 的限定结论；标记 SR-030 P2 依据修订位于后续 Head | 避免将固定旧 Head 的设计认可外推到新 Head 或 Publisher 实施 | Issue #12；PR #46；Review #6082541121 |

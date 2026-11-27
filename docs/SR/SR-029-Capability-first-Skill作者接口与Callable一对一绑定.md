@@ -1,8 +1,8 @@
 # SR-029：Capability-first Skill 作者接口与 Callable 一对一绑定
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.7\
-> 状态：DRAFT（实施主状态）；第二轮独立评审 CHANGES_REQUESTED（历史结论）；第三轮自评 **DESIGN_READY_FOR_INDEPENDENT_REVIEW**（仅设计评审候选，非独立批准或实施 READY）；产品 AC NOT_RUN/BLOCKED。
+> SR 版本：0.2.8\
+> 状态：DRAFT（实施主状态）；独立模型 Review #6082541121（固定 Head 3d5f17b7；Base 3c7c4838）：APPROVE_FOR_READY（仅中央 1.6.0 Capability-first 设计；生产者机器契约未发布）；当前后续 Head 待独立复评，READY=0。
 > 创建日期：2026-11-26  
 > 修订日期：2026-11-27\
 > 上游需求：[IR-008](../IR/IR%20总登记册.md#ir-008)；关联需求：[IR-003](../IR/IR%20总登记册.md#ir-003)  
@@ -275,3 +275,4 @@ Create / Release 继续分别使用原有 Schema 与 Evidence Guarantee；Modify
 | 2026-11-27 | 0.2.5 | Codex / GPT-6 | §3.2、§6、AC-029-05/11 | 区分查询子集与 Provider 全量 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
 | 2026-11-27 | 0.2.6 | Codex / GPT-6 | AC-029-11 | 覆盖 F03 主设计、EC02 工具链与跨包版本导航 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
 | 2026-11-27 | 0.2.7 | GPT-6（ChatGPT） | 第三轮设计自评/历史修订表 | CA-SL 1.6.0-only、Owner 24/24、Provider 查询 2/2 与含 Codec 3/3、旧包拒绝及跨包双射已明确；生产者机器契约另行冻结；将第二轮结论保留为历史、登记第三轮独立复评候选并按版本整理记录 | 设计范围可供外部评审而不提前授权代码实施或夸大 AC 状态 | Issue #12；PR #46；SR-029 |
+| 2026-11-27 | 0.2.8 | GPT-6（ChatGPT） | 文档头、评审状态、修订记录 | 将第三轮独立模型 Review #6082541121 的限定结论替换第三轮自评状态 | 区分中央语言/作者模型设计认可与生产者正式机器契约发布 | Issue #12；PR #46；Review #6082541121 |

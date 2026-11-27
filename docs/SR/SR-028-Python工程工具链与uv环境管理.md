@@ -1,9 +1,9 @@
 # SR-028：Python 工程工具链与 uv 环境管理
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.4\
+> SR 版本：0.2.5\
 > 修订日期：2026-11-27\
-> 状态：DRAFT（实施主状态）；第二轮独立评审 CHANGES_REQUESTED（历史结论）；第三轮自评 **DESIGN_READY_FOR_INDEPENDENT_REVIEW**（仅设计评审候选，非独立批准或实施 READY）；产品 AC NOT_RUN/BLOCKED。
+> 状态：DRAFT（实施主状态）；独立模型 Review #6082541121（固定 Head 3d5f17b7；Base 3c7c4838）：APPROVE_FOR_READY（仅 G02 设计；uv 与双平台迁移 AC 未运行）；当前后续 Head 待独立复评，READY=0。
 > 创建日期：2026-11-26  
 > 所属阶段：G02 工程治理支撑  
 > 上游需求：[IR-007](../IR/IR%20总登记册.md#ir-007)  
@@ -110,3 +110,4 @@ SR-028 当前为 DRAFT。G02/SR-028 的设计 PR 尚待独立评审；不得创�
 | 2026-11-27 | 0.2.2 | GPT-6（ChatGPT） | 第三轮设计自评/历史修订表 | uv 锁、worktree、完整 Plugin/Host/Review Context 和仅改 Workflow 的双平台触发验收已明确；真实 CI 尚未运行；将第二轮结论保留为历史、登记第三轮独立复评候选并按版本整理记录 | 设计范围可供外部评审而不提前授权代码实施或夸大 AC 状态 | Issue #12；PR #46；SR-028 |
 | 2026-11-27 | 0.2.3 | GPT-6（ChatGPT） | 设计依据/修订记录 | 将 AC-028-07 对应的 G02 跨 OS 显式 --python 命令参考统一到 v0.2.2；模块主状态仍 DRAFT | 不让实施方误将 Bash 与 PowerShell 环境变量混用或在 Ubuntu 3.12 误装默认 3.14.6 | Issue #12/#35；PR #46；G02 |
 | 2026-11-27 | 0.2.4 | GPT-6（ChatGPT） | 设计依据、修订记录 | 同步 G02 v0.2.3 关于 Go 工具链与 Python 矩阵执行的准确描述；AC 未执行 | 保持独立设计评审的版本引用一致 | Issue #12/#35；PR #46；G02 |
+| 2026-11-27 | 0.2.5 | GPT-6（ChatGPT） | 文档头、评审状态、修订记录 | 将第三轮独立模型 Review #6082541121 的限定结论替换第三轮自评状态 | 区分工具链设计认可与 uv / 双平台产品验收 | Issue #12；PR #46；Review #6082541121 |

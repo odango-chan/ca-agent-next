@@ -1,7 +1,7 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.22\
-> 状态：DRAFT（实施主状态）；独立模型 Review #6082541121（固定 Head 3d5f17b7）：APPROVE_FOR_READY（仅原限定 Compiler 设计及 AC-013-01 归档复核）；本轮 P2 R3-SR013-01/02 已修订，AC-013-02/04 NOT_RUN、AC-013-03/05/06 BLOCKED，READY=0。
+> 文档版本：0.2.23\
+> 状态：DRAFT（实施主状态）；独立模型 Review #6082541121（固定 Head 3d5f17b7）：APPROVE_FOR_READY（仅原限定 Compiler 设计及 AC-013-01 归档复核）；P2 R3-SR013-01/02 已修订于当前后续 Head，AC-013-02/04 NOT_RUN、AC-013-03/05/06 BLOCKED，READY=0。
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-27\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -13,7 +13,7 @@
 
 ## 0. 本轮设计评审入口（2026-11-26）
 
-**独立评审记录**（PR #46，固定 `fd80c74`）：APPROVE_FOR_READY 仅限设计评议；AC-013-01 归档复核。实施主状态 DRAFT，其他产品 AC 依各自输入门槛判定。
+**第三轮独立模型评审记录**：[GitHub Review #6082541121](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6082541121)，固定 Head `3d5f17b7f921788d5d38378edb2a14165ea0e03e` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`；`APPROVE_FOR_READY` 仅限原 Compiler 设计与 AC-013-01 归档复核，不代表后续 Head 已复评或产品 AC PASS。
 
 本 SR 纳入 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12) 的中央设计评审批次。**SR 实施主状态依旧为 `DRAFT`；设计 `REVIEW_REQUESTED` 不等于独立 APPROVED、实施 READY 或产品 PASS。** 单版本决定见 [SR-029](SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) / [PR #45](https://github.com/odango-chan/ca-agent-next/pull/45)。
 
@@ -422,3 +422,4 @@ SR-013 只有 AC-013-01～06 均达到各自通过条件，Compiler Release 有�
 | 2026-11-27 | 0.2.20 | Codex / GPT-6 | 评审入口 | 回填独立评审批准评议的具体范围 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
 | 2026-11-27 | 0.2.21 | Codex / GPT-6 | 评审状态 | 登记第二轮限定范围及外部依赖 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
 | 2026-11-27 | 0.2.22 | GPT-6（ChatGPT） | §2、§6.1～6.4、修订记录 | 明确 CheckedExpr/DescriptorSet/Any 的确定性 protobuf 序列化与逐 `.pb` 字节验收；统一 AC-013-02/04 NOT_RUN、AC-013-03/05/06 BLOCKED；按版本恢复连续修订账本 | 处理独立模型 Review #6082541121 的 R3-SR013-01/02 与 R3-LEDGER-01，避免 protobuf 默认 Marshal 导致 Build 非确定及状态表冲突 | Issue #12；PR #46；Review #6082541121 |
+| 2026-11-27 | 0.2.23 | GPT-6（ChatGPT） | §0、文档头、修订记录 | 将历史 fd80c74 评审登记替换为正式 Review #6082541121 的固定 Head/Base；明确 P2 修订发生在后续 Head，必须重新独立复评 | 防止把不可访问或不同 Head 的评审记录混为一谈 | Issue #12；PR #46；Review #6082541121 |

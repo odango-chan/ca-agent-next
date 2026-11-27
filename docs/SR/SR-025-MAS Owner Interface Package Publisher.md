@@ -1,8 +1,8 @@
 # SR-025：MAS Owner 1.6.0 Capability-first Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.13
-> 状态：DRAFT（实施主状态）。PR #46 第二轮独立评审（1bf748db）：APPROVE_FOR_READY（中央 MAS Owner Publisher 设计）。产品验收依各 AC 单列。
+> SR 版本：0.1.14
+> 状态：DRAFT（实施主状态）；独立模型 Review #6082541121（固定 Head 3d5f17b7；Base 3c7c4838）：APPROVE_FOR_READY（仅中央 MAS Owner Publisher 设计；正式发布仍阻塞）；当前后续 Head 待独立复评，READY=0。
 > 创建日期：2026-11-25
 > 修订日期：2026-11-27\
 > 所属阶段：外部 Publisher 实施移交
@@ -109,3 +109,4 @@ Owner `v1alpha4` source 的 `tool-catalog.yaml` 含 25 published contracts、旧
 | 2026-11-27 | 0.1.11 | Codex / GPT-6 | 文档头 | 统一中央权威文档的相对路径与版本 | Issue #12，PR #46 |
 | 2026-11-27 | 0.1.12 | Codex / GPT-6 | 评审状态 | 登记第二轮限定范围及外部依赖 | Issue #12，PR #46 |
 | 2026-11-27 | 0.1.13 | GPT-6（ChatGPT） | 修订记录 | 修复修订记录表空行与版本顺序，完整保留历史条目 | 处理 R3-LEDGER-01，确保历史修订可连续审计 | Issue #12；PR #46；Review #6082541121 |
+| 2026-11-27 | 0.1.14 | GPT-6（ChatGPT） | 文档头、评审状态、修订记录 | 将第三轮独立模型 Review #6082541121 的限定结论替换不可访问的第二轮评审登记 | 中央 Publisher 设计认可不代表 Owner 新机器契约、Package 或 Release 已发布 | Issue #12；PR #46；Review #6082541121 |
