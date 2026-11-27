@@ -51,6 +51,7 @@ UV_DEPENDENCY_KEYS = {
     "override-dependencies",
     "conflicts",
     "dev-dependencies",
+    "required-version",
 }
 FORBIDDEN_COMMANDS = (
     (
@@ -336,6 +337,10 @@ def validate_dependency_lock(
     head_sha: str,
     changed_paths: set[str],
 ) -> list[str]:
+    if ".python-version" in changed_paths and "uv.lock" not in changed_paths:
+        return [
+            "DEPENDENCY_LOCK: .python-version 解释器基线发生变化，但同一 PR 未更新 uv.lock。"
+        ]
     if "pyproject.toml" not in changed_paths:
         return []
     base_text = git_blob(repo_root, base_sha, "pyproject.toml")
