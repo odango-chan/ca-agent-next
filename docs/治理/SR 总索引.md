@@ -1,9 +1,9 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.31
-> 状态：4 VERIFIED（SR-001/SR-002/SR-003/SR-024）；1 READY（SR-025）；1 IMPLEMENTED（SR-015）；21 DRAFT；SR-003 实施 IN_PROGRESS（PR #34 MERGED 到恢复分支，merge commit `32c7c1b`）；系统 EX NOT_RUN  
-> 修订日期：2026-11-26  
+> 文档版本：0.3.32
+> 状态：4 VERIFIED（SR-001/SR-002/SR-003/SR-024）；1 READY（SR-025）；1 IMPLEMENTED（SR-015）；21 DRAFT；SR-003 仅模块 AC-003-01～04 VERIFIED；系统 EX NOT_RUN  
+> 修订日期：2026-11-27  
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：以本文范围与非目标章节为准；无额外扩展  
@@ -16,7 +16,7 @@
 - 本索引只汇总 ID、标题、设计依据、状态、依赖和实施入口。
 - 状态变化先更新 SR 文件，再更新本索引和[实施状态总览](实施状态总览.md)。
 - ca-agent-next PR #1 是文档/设计基线 PR，不是任何 SR 的实现 PR。
-- PR #1、PR #32 已合并；SR-001/SR-002/SR-024 VERIFIED；SR-003 VERIFIED（模块 AC-003-01～04）（PR #34 已 MERGED 到恢复分支，merge `32c7c1b`，post-merge exact verification NOT_RUN）；SR-015 设计移交 IMPLEMENTED；SR-025 设计 READY / ca-client-tools #43 OPEN。
+- PR #1、PR #32 已合并；SR-001/SR-002/SR-003/SR-024 VERIFIED；SR-003 模块 AC-003-01～04 PASS，PR #34/#41/#42 MERGED 到恢复分支，双平台 CI SUCCESS；SR-015 设计移交 IMPLEMENTED；SR-025 设计 READY / ca-client-tools #43 OPEN。系统 EX-02/03/04/18 NOT_RUN。
 
 ## 2. SR 清单
 
@@ -76,7 +76,7 @@
 
 - 治理自动化：SR-001 VERIFIED；[PR #32](https://github.com/odango-chan/ca-agent-next/pull/32) MERGED（`7a0fac41e573021207ab8201bbc718718c451e50`）；AC-REV-01～10 PASS、80 tests OK、Run [45793590532](https://github.com/odango-chan/ca-agent-next/actions/runs/45793590532) success；SR-028 仍为 DRAFT。
 - Phase A：SR-002（VERIFIED；PR #23 已集成；AC-002-01～08 PASS；EX-01 仍 NOT_RUN）。
-- Phase B：SR-003 设计 READY、实施 IN_PROGRESS；Issue [#28](https://github.com/odango-chan/ca-agent-next/issues/28) OPEN，PR [#34](https://github.com/odango-chan/ca-agent-next/pull/34) MERGED 到恢复分支（merge commit `32c7c1b`）；双平台 [CI #45815167442](https://github.com/odango-chan/ca-agent-next/actions/runs/45815167442) / [CI #45817800342](https://github.com/odango-chan/ca-agent-next/actions/runs/45817800342) SUCCESS；Ubuntu/Python 3.12 与 Windows/Python 3.14 各 Plugin 87、Host 52、Review Context 80 tests PASS；merge commit post-merge exact verification 与系统 EX-02/03/04/18 NOT_RUN。
+- Phase B：SR-003 v0.3.11 VERIFIED（模块 AC-003-01～04）；Issue [#28](https://github.com/odango-chan/ca-agent-next/issues/28) CLOSED，PR #34/#41/#42 MERGED 到恢复分支；双平台 [CI #45815167442](https://github.com/odango-chan/ca-agent-next/actions/runs/45815167442) / [CI #45817800342](https://github.com/odango-chan/ca-agent-next/actions/runs/45817800342) SUCCESS；Ubuntu/Python 3.12 与 Windows/Python 3.14 各 Plugin 87、Host 52、Review Context 80 tests PASS；系统 EX-02/03/04/18 NOT_RUN。
 - Phase C：SR-004。
 - Phase D：SR-005、SR-006。
 - Phase E：SR-007。
