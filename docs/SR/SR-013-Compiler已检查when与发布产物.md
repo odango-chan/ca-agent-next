@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.37\
+> 文档版本：0.2.38\
 > 状态：整项 DRAFT；阶段 READY（中央只读核验，仅 AC-013-01 归档完整性）；AC-013-02/04 NOT_RUN，AC-013-03/05/06 依正式 Compiler Owner 契约，AC-013-07 BLOCKED / NOT_RUN（待正式 OAS3 dependency wire contract、Resolver / Validator 和 Golden）；Compiler 仅从有 Assurance Skill 的 assurance/contract.yaml 读取可选顶层 when；SKILL.md Front Matter 不声明 when；无 Assurance Skill 没有 Contract、不声明 when、不调用 Compiler。
 > 下一步：核对 PR #18 归档、58 项校验清单及原始报告。复跑单列；02/04 NOT_RUN，03/05/06 等 Compiler Owner 与正式契约；07 等待正式 OAS3 dependency wire contract、Resolver / Validator 和 Golden。  
 > 阶段依据：[独立评审 #77](https://github.com/odango-chan/ca-agent-next/issues/77#issuecomment-7209276846)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
@@ -10,7 +10,7 @@
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：Next 消费端实现、生产准入、Owner Trust 治理、自动发布及真实 5GC/MAS 资格。
 
-上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。功能归属：EC02 Compiler、F08 技能编译与发布；消费端关联 F02。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.19、[F08 技能编译与发布设计说明书](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.31、[F02 Skill 管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md) v0.4.3、[CA-SL 1.6.0 中央语言设计](../规范/CA-SL%201.6.0完整语言规范.md) v0.2.7、[SKILL 作者规范](../规范/SKILL作者规范.md) v0.2.4。
+上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。功能归属：EC02 Compiler、F08 技能编译与发布；消费端关联 F02。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.20、[F08 技能编译与发布设计说明书](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.32、[F02 Skill 管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md) v0.4.3、[CA-SL 1.6.0 中央语言设计](../规范/CA-SL%201.6.0完整语言规范.md) v0.2.8、[SKILL 作者规范](../规范/SKILL作者规范.md) v0.2.4。
 
 目标仓：odango-chan/ca-skill-compiler。实施 Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)。文档刷新 Issue：[Next #14](https://github.com/odango-chan/ca-agent-next/issues/14)。目标代码基线：Compiler v2.1.0，commit 255ab85fa5abb4b0bf36656bf64250cafebf45cb。历史来源：[ca-skills #88](https://github.com/odango-chan/ca-skills/pull/88) 已合并，正式发布身份见 [ca-skills release record](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs/releases/ca-sl-v1alpha5.md)。
 
@@ -180,17 +180,18 @@ PoC 中复用 Development Schema/Lock fixture 只证明共享 Schema 解析机�
 manifest.json
 skills/<skill-name>/compiled/procedure.json
 skills/<skill-name>/compiled/ingress-links.json
-skills/<skill-name>/compiled/request-schema/root.json
-skills/<skill-name>/compiled/request-schema/resources/<resource>.json
+skills/<skill-name>/compiled/request-schema/descriptor.json
+skills/<skill-name>/compiled/request-schema/g4/root.json
+skills/<skill-name>/compiled/request-schema/g4/resources/<resource>.json
 skills/<skill-name>/compiled/when.checked.pb
 skills/<skill-name>/compiled/when.types.pb
 ~~~
 
-request-schema 根与完整 G.4 $ref 资源闭包只要 Contract 声明 requestSchema 就必须存在，与 when 是否存在无关；when.*.pb 仅在 Skill 声明 when 时存在。最终文件名和 Manifest 字段以 Compiler Owner 批准后的版本化 Schema 为准；不得保留多个兼容别名。
+Contract 声明 requestSchema 时必须存在 dialect-aware 闭包描述，与 when 是否存在无关；本地 G.4 根及完整本地闭包规范化为 Artifact 文件；纯 `$ref` OAS3 根别名不生成 G.4 副本，而是通过 Manifest 精确引用 pin 后的 Source Bundle 根与可达闭包。when.*.pb 仅在 Skill 声明 when 时存在。最终文件名和 Manifest wire 字段以 Compiler Owner 批准后的版本化 Schema 为准；不得保留多个兼容别名。
 
 ### 5.3 Manifest 必需语义
 
-新 Manifest **只由 1.6.0 的唯一正式 Schema 定义**；可复用有用字段的含义，但不得把 v1alpha5 Manifest 或旧 BuildResult 当成兼容输入。每个声明 requestSchema 的 Skill 必须有 requestSchema 对象，记录 sourceRef、rootPath、可选 rootSchemaId（仅根 Schema 声明 $id 时记录）和完整 resources[]（schemaId/path）；该对象与 when 是否存在无关，供 Host 按正式 **CA-SL 1.6.0** Request Schema/when 契约验证 Event payload。根与资源文件同时进入 compiledFiles[] 和 Manifest outputFiles[]。
+新 Manifest **只由 1.6.0 的唯一正式 Schema 定义**；可复用有用字段的含义，但不得把 v1alpha5 Manifest 或旧 BuildResult 当成兼容输入。每个声明 requestSchema 的 Skill 必须有 requestSchema 对象，记录 sourceRef、root dialect 和完整 resources[]。本地 G.4 根记录 Artifact rootPath、可选 rootSchemaId（仅该根声明 `$id` 时记录）及本地闭包的 schemaId/artifactPath；外部 OAS3 根记录 Source Bundle dependency identity、source commit / Git blob pin、原始 source file、JSON Pointer 和每项资源的 OAS3 dialect，不虚构 `$id` 或 G.4 Artifact path。该对象与 when 是否存在无关，供 Host 按正式 **CA-SL 1.6.0** Request Schema/when 契约验证 Event payload。只有生成的本地 G.4 文件进入 compiledFiles[] / Manifest outputFiles[]；原版 OAS3 YAML 属于锁定 Source Bundle dependency，在 Published Bundle 中保留一次，不列为 Compiler 输出文件，运行期离线解析。
 
 每个有 when 的 Skill 增加 when 对象，记录 checkedExprPath、descriptorSetPath、sourcePath 和 sourceRange（startLine/startColumn/endLine/endColumn）；仅当表达式引用 input 时，额外记录 requestSchemaRef 与 resolvedRequestSchemaPath，并与同一 Skill 的 requestSchema 元数据一致。when.checked.pb 与 when.types.pb 同时进入 compiledFiles[] 和 Manifest outputFiles[]。Manifest `outputFiles[]` 只列文件路径 / 角色等非摘要元数据；不定义 `sha256` / `sourceDigest` / `dependencyDigest` / `packageDigest`。Build / Verify 只检查路径、存在性、Schema、依赖闭包和语义结果，不计算或比较 SHA-256 / checksum / digest。Any type URL 固定为 type.googleapis.com/cel.expr.CheckedExpr；payload 为标准 cel.dev/expr.CheckedExpr。DescriptorSet 是标准 google.protobuf.FileDescriptorSet，只承担 CEL 类型描述，不替代 G.4 Schema 验证数据。
 
@@ -198,7 +199,7 @@ request-schema 根与完整 G.4 $ref 资源闭包只要 Contract 声明 requestS
 
 - 新 Artifact API 与 BuildResult API、JSON Schema、Go DTO/Assembler/Verifier 和文件布局经 Compiler Owner 确认；建议 Schema 路径为 contracts/2/artifact-manifest.schema.json 与 contracts/2/build-result.schema.json。**BuildRequest 必须一并升级为唯一 1.6.0-only DTO**，包括语言标识、Capability Link 所需的准确依赖快照/Owner 身份；不能保留 v1alpha5 BuildRequest，不做旧/新 BuildResult 双版本 dispatch。
 - 覆盖 requestSchema / when 的所有组合：无二者、仅 requestSchema、仅 event.type when、requestSchema + event.type when、requestSchema + input when；input when 无 requestSchema 必须 CEL_INVALID。
-- 声明 requestSchema 的 Skill 无论是否声明 when，Manifest 都包含已验证 Schema 根与完整闭包；未声明 requestSchema 时不输出 Schema 文件。
+- 声明 requestSchema 的 Skill 无论是否声明 when，Manifest 都包含已验证的 dialect-aware Schema 根与完整闭包：本地 G.4 以规范化 Artifact 文件表示；外部 OAS3 以精确 pin 的 Source Bundle 引用表示，原版 bytes 不复制、不投影、不改写；未声明 requestSchema 时不输出 Schema 描述或文件。
 - CheckedExpr / DescriptorSet 文件路径、Schema identity、SourcePath 和源码位置闭合。
 - 多 Skill 文件与 Descriptor 归属无冲突。
 - 新 API 与旧冻结 Artifact v1alpha5、Development v1alpha1 完全隔离。
@@ -209,7 +210,7 @@ request-schema 根与完整 G.4 $ref 资源闭包只要 Contract 声明 requestS
 ### 6.1 Build
 
 - 仅按正式 CA-SL **1.6.0** 进行单一 Parser/AST/静态检查，按 SR-029 校验公开 Capability↔Callable 双向一对一，Procedure 只携带 Capability ID；不得解析旧 v1alpha5。
-- 对声明 requestSchema 的 Skill 生成规范化 G.4 Schema 根与完整引用闭包，供 Host 运行期校验。
+- 对声明 requestSchema 的 Skill 生成 dialect-aware 闭包描述：本地 G.4 根及完整本地闭包规范化写入 Artifact；外部 OAS3 根及完整可达闭包只记录精确 Source Bundle dependency、source file / JSON Pointer 和 OAS3 dialect。Host 运行期只从 Published Bundle 内的锁定快照校验，不访问远端。
 - 对有 when 的 Skill 生成 CheckedExpr Any 与 DescriptorSet；仅当 when 引用 input 时，DescriptorSet 才纳入该 Request Schema 类型闭包。
 - 按新版 Manifest 装配确定性 Artifact。
 - 无错误时返回完整 Artifact；任何错误都返回空 OutputFiles，不返回部分产物。
@@ -406,8 +407,9 @@ SR-013 只有 AC-013-01～06 均达到各自通过条件，Compiler Release 有�
 | 07g Bundle / Verify | 固定 Source Bundle + Skill Request + Provider Output Schema + Host Context / Owner dependencies | 离线 Build / Verify；Lock 保存选定闭包；无 Codec Skill 不强制依赖 Source Bundle / Codec |
 | 07h 3GPP optional-field CEL Golden | 原版 `SmContextCreateData.requestType` optional string enum；同一 Schema / DescriptorSet | `has(input.requestType) && input.requestType == "INITIAL_REQUEST"` 通过；无 `has` 守卫的直接读取为 `CEL_INVALID`；整数比较为类型错误 |
 | 07i OAS3 omitted additionalProperties | pin 后原版 OAS3 Schema Object 未声明 `additionalProperties` | 按 OAS 3.0 默认语义允许额外属性；Resolver / Validator 不得补写 `false` 或按 G.4 闭合规则拒绝 |
+| 07j Artifact dialect closure | 同一 Request Schema 分别使用本地 G.4 根和纯 `$ref` OAS3 根别名；OAS3 闭包跨 TS 29.502 / 29.571 等 Source Bundle 文件 | G.4 根与本地闭包规范化为 Artifact 文件；OAS3 根 / 每项可达资源在 Manifest 中记录精确 Source Bundle dependency pin、source file、JSON Pointer 和 OAS3 dialect；原版 YAML bytes 在 Bundle 中保留一次，不复制、不投影、不列入 compiledFiles/outputFiles；Host 离线读取同一锁定快照 |
 
-OpenAPI operation / multipart ingress 验证由 SR-010 负责；Compiler 负责 Request Schema 跨 dialect 引用和类型检查。NAS / NGAP Output Schema 由 SR-026 Provider 发布，不能用 SBI binary slot 代替。一个 Codec Capability 是否可用单一封闭 Output Schema + 固定 enum selector 表达多 Profile，必须以 Provider Golden 证明；否则另提设计，不能静默增加 Callable 或放宽 1:1。
+OpenAPI operation / multipart ingress 验证由 SR-010 负责；Compiler 负责 Request Schema 跨 dialect 引用和类型检查。Artifact / Manifest 必须区分“编译生成的本地 G.4 文件”与“外部 OAS3 Source Bundle 引用”：后者的每项资源以 Source Bundle dependency identity + 原始文件路径 + JSON Pointer + OAS3 dialect 标识，原始 YAML bytes 只在 Source Bundle 中出现一次，且不得计入 Compiler outputFiles。Build / Verify 与 Host 均只使用锁定 Bundle snapshot，离线完成解析。NAS / NGAP Output Schema 由 SR-026 Provider 发布，不能用 SBI binary slot 代替。一个 Codec Capability 是否可用单一封闭 Output Schema + 固定 enum selector 表达多 Profile，必须以 Provider Golden 证明；否则另提设计，不能静默增加 Callable 或放宽 1:1。
 
 **产品门槛**：正式 Source Bundle dependency kind、URI / JSON Pointer wire 表示、Resolver / Validator 版本、Build DTO / Lock 字段和 Golden 未冻结前，`AC-013-07=BLOCKED/NOT_RUN`。SR-031 byte-compare 可独立验收，不得升级 Compiler AC。
 
@@ -469,3 +471,4 @@ OpenAPI operation / multipart ingress 验证由 SR-010 负责；Compiler 负责 
 
 | 2026-11-27 | 0.2.36 | GPT-6.2（ChatGPT） | 文档头、设计依据、修订记录 | 同步 SKILL 作者规范 v0.2.3 的完整正向 Procedure Node 结构 | 保持 Compiler / 作者规范示例与 Node 阶段文法一致 | Issue #49；IR-008；SR-032；PR #52 |
 | 2026-11-27 | 0.2.37 | ChatGPT（GPT-6） | 设计依据、修订记录 | 同步 CA-SL v0.2.7 与作者规范 v0.2.4 的 Node 示例与 Predicate 规则修正；不改变 Compiler Owner 的 AC-013-07 BLOCKED / NOT_RUN 状态 | 保持 Compiler 设计依赖和作者规范当前候选一致 | Issue #49；IR-008/009；SR-013/032；PR #52 |
+| 2026-11-27 | 0.2.38 | ChatGPT（GPT-6.2） | 文档头、§5.2～§5.4、§6、§13 | 将 Request Schema Manifest / Artifact 闭包改为 dialect-aware：本地 G.4 生成文件，外部 OAS3 保留 Source Bundle pin / source file / JSON Pointer 引用；新增 07j 验收 | 使 AC-013-07 从语言层 dialect 规则闭合到 Artifact、Bundle 和 Host 的文件所有权，同时保持 wire contract / Resolver / Golden 未发布时 BLOCKED / NOT_RUN | Issue #47/#49；IR-008/009；SR-031；PR #52 |
