@@ -3,7 +3,7 @@
 > 文档类型：总体架构设计  
 > 状态：**CA-SL 1.6.0 Capability-first 架构增量待评审**；已通过的 SR-002/003 模块历史验收独立保留，1.6.0 新 Runtime/Compiler/Bundle/Studio 尚未发布    
 > 文档版本：0.4.9
-> 修订日期：2026-11-26  
+> 修订日期：2026-11-27  
 > 适用范围：ca-agent-next 通用 Agent Core、Host、Runtime、Skill 与 Plugin 公共机制  
 > 权威边界：本文是本仓唯一总体架构文档；字段级契约见规范，机制细节见设计说明书  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
