@@ -189,7 +189,7 @@ Node 可以省略不适用阶段，但必须至少声明一个业务阶段。阶
 - Callable ID 只存在于 Package、Compiler、Runtime、Provider 内部 Binding / Trace / 诊断，不得进入 Skill 作者源或模型 Action 参数。
 - Compiler 必须在显式依赖闭包中唯一解析 Capability，检查 Grant、Owner / Package identity、Capability→Callable cardinality、Callable→Capability cardinality、kind、Effect、Input / Output Schema。
 - Provider 可以在一个公开 Callable 内部使用多个 backendOperationId / handler，但路由条件必须来自 Callable Input Schema 的封闭 enum / tagged union；不得由 LLM 选择或使用自由字符串 / URL / 动态 Catalog。
-- Operation 阶段只接受 kind=operation；Effect 由 ToolCatalog 决定。
+- 业务 Capability Operation 只接受 kind=operation；Effect 由 ToolCatalog 决定。Package-local Script 是 `operation.script` 的独立分支，不是 Capability；与 `operation.capability` 互斥。
 - Observation 阶段只接受 kind=observation 且 Effect=READ。
 - Capability 可被多个 Skill 或 Node 重复引用；一对一约束是 Package 导出关系，不限制引用次数。
 - Owner / Provider 的 Capability 与 Callable 不能跨 Package 拼接；所有身份和 Schema 必须来自同一精确发布快照。
@@ -214,7 +214,37 @@ Script 是 Skill Package 的共享资源，不属于 assurance/。源码放在 `
 - `outputSchema`：`transform` 必需，引用相对根目录的 `schemas/*.schema.yaml`；`predicate` 不得声明此字段，其结果固定为 PASS / FAIL / UNKNOWN；
 - `llmInvocable`：必需布尔值；仅 `purpose=transform` 可以为 true，Predicate Script 必须为 false。
 
-Script ID 在同一 Skill Package 内唯一且稳定。Procedure 的 `operation.script` 只引用 `purpose=transform` 的 Script ID；Predicate evaluator 只引用 `purpose=predicate` 的 Script ID。所有 Script 输入和输出均为 JSON 值并按对应 Schema 验证。入口函数分别为 `run(input: JSONValue) -> JSONValue` 与 `evaluate(input: JSONValue) -> PASS|FAIL|UNKNOWN`。
+Script ID 在同一 Skill Package 内唯一且稳定。Procedure 的 `operation.script` 只引用 `purpose=transform` 的 Script ID；Predicate 的唯一 `evaluator` 只引用 `purpose=predicate` 的 Script ID。所有 Script 输入和输出均为 JSON 值并按对应 Schema 验证。入口函数分别为 `run(input: JSONValue) -> JSONValue` 与 `evaluate(input: JSONValue) -> PASS|FAIL|UNKNOWN`。
+
+Script Registry 示例：
+
+~~~yaml
+scripts:
+  normalize-qos:
+    file: scripts/normalize_qos.py
+    entrypoint: run
+    purpose: transform
+    inputSchema: schemas/normalize-qos-input.schema.yaml
+    outputSchema: schemas/normalize-qos-output.schema.yaml
+    llmInvocable: true
+  qos-is-valid:
+    file: scripts/qos_is_valid.py
+    entrypoint: evaluate
+    purpose: predicate
+    inputSchema: schemas/qos-valid-input.schema.yaml
+    llmInvocable: false
+~~~
+
+Assurance Procedure 对 transform Script 的引用示例：
+
+~~~yaml
+operation:
+  script: normalize-qos
+  arguments:
+    - inputs.qos
+~~~
+
+Predicate evaluator 只写 Registry Script ID，不写路径、模块名或函数名。
 
 LLM 可以通过 Host 的只读 Skill Resource Access 读取 `scripts/` 下的源码和 Registry；读取不等于执行。LLM 只能通过 Host-owned system Capability `host.skill-script.execute` 调用 Registry 中 `llmInvocable=true` 的 transform Script，参数固定为 `scriptId` 与 `input`。Host 只解析当前已绑定 Skill 的固定 Package snapshot，并按条目验证输入 Schema、执行精确 entrypoint、验证输出 Schema；模型不得提交文件路径、模块名、函数名、代码、解释器参数或任意命令。Host 未启用该能力或没有符合条件的 Script 时，不向模型暴露此 Action。
 
