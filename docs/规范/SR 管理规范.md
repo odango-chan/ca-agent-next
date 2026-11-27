@@ -1,7 +1,7 @@
 # SR 管理规范
 
 > 文档类型：软件需求分解与实施追踪规范  
-> 文档版本：0.8.0  
+> 文档版本：0.8.1  
 > 状态：阶段依赖、AC/EX 门禁及 GitHub 正式评审留存规则；本轮由 Issue #12 / PR #46 追踪  
 > 修订日期：2026-11-26  
 > 适用范围：ca-agent-next 架构、设计说明书、Demo 实施与验收  
@@ -177,7 +177,11 @@ READY 可以针对获批阶段。该阶段须独立具备实施条件和目标�
 1. **固定评审对象。** 评审开始时记录仓库、PR/Issue 编号、PR Head 的完整 40 位 Commit SHA、Base 分支与完整 Base SHA、评审范围、评审轮次和开始时间。报告必须绑定该 Head；短 SHA 只能用于显示，不能作为唯一基线标识。评审期间 PR Head 改变时，旧结论只对旧 SHA 有效，必须对新 Head 重新核查受影响范围。
 2. **提交正式 GitHub 记录。** 对 PR 评审，使用 GitHub Pull Request Review 提交 `APPROVE`、`REQUEST_CHANGES` 或 `COMMENT`，并在 Review body 中写完整结论；若报告过长，可将完整报告放在独立归档 PR/分支或 GitHub 可访问的不可变文件中，Review body 必须包含摘要、完整报告链接及其归档 SHA。无 PR 的评审写入对应 GitHub Issue 评论。必须给出实际 GitHub Review/Comment URL 或 ID。
 3. **逐项可审计。** 报告至少包含评审者身份/模型、时间、完整被评审 SHA、Base SHA、范围、总体结论，以及每个 SR/阶段/AC 的结论、获批范围、未通过/未运行 AC、P0/P1/P2 发现、证据位置、直接依赖、责任仓/Owner、解除条件和是否允许进入 READY。不能用总评替代逐 SR 结论；`NOT_RUN`、`NOT_VERIFIED`、`BLOCKED_EXTERNAL_INPUT` 不得写成 PASS。
-4. **正确选择 Review 状态。** `APPROVE` 仅用于当前 PR 变更范围整体满足评审目标；它不自动把 PR 中每个 SR 设为 READY。存在需要修改的 P0/P1 设计问题时用 `REQUEST_CHANGES` 并列出可复现证据。仅部分范围获批、外部输入阻塞、结论为混合状态或无法批准整个 PR 时用 `COMMENT`，逐项写明结果；COMMENT 不等于 APPROVE。评审者不得以 PR 作者身份自我批准，也不得伪造其他账号的批准。
+**独立性判定以评审模型和评审上下文为准，不以 GitHub 登录账号是否与 PR 作者相同为准。** 本项目允许用户保证由不同模型承担作者与独立评审；报告必须记录实际评审模型/版本、评审任务和固定 SHA。相同 GitHub 账号不构成否定独立性的理由，也不得仅因账号相同把模型评审降格为作者自评。
+
+模型评审结论与 GitHub Review event 是两个独立字段。模型认为整个 PR 可批准时，应尝试提交 `APPROVE`；若 GitHub 因 PR 作者账号规则拒绝该事件，则以 `COMMENT` 提交完整评审报告，并在报告中明确记录模型结论（例如 `APPROVE_FOR_READY` 或 PR 级批准建议）及平台实际接受的 event=`COMMENT`。该记录仍是独立模型评审，不得称为作者自评；但不得声称 GitHub 已产生 `APPROVED` 状态。若平台接受 `APPROVE`，按实际返回记录。严禁伪造其他账号或虚报 Review 状态。
+
+4. **正确记录模型结论与 GitHub Review event。** 模型级评审结论和 GitHub event 分开记录。模型认为当前 PR 变更范围整体满足评审目标时，尝试 `APPROVE`；存在需修订的 P0/P1 时使用 `REQUEST_CHANGES`；仅部分范围获批、外部输入阻塞或结论混合时使用 `COMMENT`。若 GitHub 因 PR 作者账号规则拒绝 `APPROVE`，必须以 `COMMENT` 提交完整报告，并同时记录模型级结论与平台 event；该记录仍是独立模型评审，不得称为作者自评，也不得声称平台已产生 `APPROVED`。同一 GitHub 账号不构成模型评审不独立的理由；严禁伪造其他账号或虚报 Review 状态。
 5. **行内问题定位。** 能定位到变更文件和行的发现，必须使用 GitHub Review inline comment 指向实际 diff 行；Review body 保留发现汇总和逐 SR 矩阵。不要用无法定位的泛泛评论代替具体问题。
 6. **评审报告与被评审基线分离。** 不得为了保存评审报告而向正在被评审的 Head/分支追加提交，否则会改变评审对象。优先将完整报告写入 GitHub Review body；确需归档文件时，使用独立报告分支/PR，文件必须引用原评审 SHA，归档 PR 不得改变原评审分支。评审完成后若需更新 SR 状态、索引或回填报告链接，另建后续治理提交/PR，明确引用已提交的 Review URL 和原评审 SHA。
 7. **权限或服务失败。** 如果无法提交 GitHub Review，至少尝试在对应 PR/Issue 留下完整评论并说明无法提交 Review 的原因。若两种方式都失败，明确标记 `REVIEW_NOT_RECORDED`，保留本地报告但不得声称评审完成；在 GitHub 留存成功前不得推进 SR 状态或实施门禁。
@@ -217,3 +221,4 @@ SR 总索引列出所有 SR 的 ID、标题、设计基线、状态、依赖和�
 | 2026-11-26 | 0.6.4 | GPT-6.2（ChatGPT） | §6、§8、§9、修订记录 | 新增设计/实施/模块验收/系统集成四类依赖及阶段门禁；分离设计 Issue 与实施 Issue；明确模块 AC 与系统 EX 的阻塞边界，并强制实施 Commit/Push 远端 SHA 核对。 | 防止后续 SR 因无关下游依赖或系统级 EX 被错误阻塞，避免设计任务被误作实施授权。 | Issue #21；Issue #19；PR #20 |
 | 2026-11-26 | 0.7.0 | GPT-6.2（ChatGPT） | 文档头部、修订记录 | 按 §3.1 将新增依赖分类与阶段门禁规则提升为次版本 0.7.0；不改变规则语义。 | 使版本号符合新增治理行为应提升次版本的规则。 | Issue #21；PR #20；文档编写与治理规范 v0.6.0 |
 | 2026-11-27 | 0.8.0 | GPT-6（ChatGPT） | §8.3、§9、修订记录 | 新增正式独立评审的 GitHub 持久化、完整 SHA 绑定、Review 状态选择、行内评论、报告与基线分离、失败回退及复评闭环规则 | 避免评审结论只存在于 Agent 对话而被误用于 READY/实施授权，建立可审计的 GitHub 评审证据 | Issue #12；PR #46 |
+| 2026-11-27 | 0.8.1 | GPT-6（ChatGPT） | §8.3、修订记录 | 将评审独立性判据改为评审模型/上下文独立；允许同一 GitHub 账号由不同模型承担独立评审；分离模型结论与 GitHub Review event，并规定平台拒绝 APPROVE 时以 COMMENT 留存而不降格独立性 | 用户保证作者模型与独立评审模型不同，避免将 GitHub 账号身份误作模型独立性判据，同时尊重 GitHub 实际事件限制 | Issue #12；PR #46 |
