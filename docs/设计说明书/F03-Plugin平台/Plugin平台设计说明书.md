@@ -141,7 +141,7 @@ F03.05 的详细设计见 [Tool Interface 与 Provider 集成设计说明书](To
 
 Capability 是 Skill-facing Package API；Callable 是 Compiler / Runtime / Provider 使用的调用身份。Plugin Manager 仍是唯一 Manager，Provider 仍是 Tools Extension，不新增 Capability Manager、Tool Registry 或第二条授权路径。
 
-Host Script Execution 是 Host-owned system Capability（逻辑 ID：`host.skill-script.execute`），由 Host 内建 Tools Extension 提供一个内部 Callable；它不是 Owner / Provider 业务 Capability，不进入 Skill `contract.capabilities`，也不生成外部 Capability Binding。Runtime 仅在当前 Skill 的 `scripts/manifest.yaml` 声明至少一个 `llmInvocable=true` transform Script 且 Host policy 启用时，才向模型提供该系统 Action。该 Action 仍经统一 Runtime Action Boundary 和现有 Plugin Manager 分发；不新增 Manager、Registry 或 IPC。
+Host Script Execution 是 Host-owned system Capability（逻辑 ID：`host.skill-script.execute`），由 Host 内建 Tools Extension 提供一个内部 Callable；它不是 Owner / Provider 业务 Capability，不进入 Skill `contract.capabilities`，也不生成外部 Capability Binding。Runtime 仅在当前 Skill 的 `scripts/manifest.yaml` 声明至少一个 `llmInvocable=true` transform Script，且 Host 配置 `scriptExecution.llmEnabled=true` 时，才向模型提供该系统 Action；该配置默认 false。该 Action 仍经统一 Runtime Action Boundary 和现有 Plugin Manager 分发；不新增 Manager、Registry 或 IPC。
 
 - Owner Contract Package 的 CapabilityContracts 与 Provider Interface Package 的 capabilities.json 发布 Capability→Callable membership；Skill-facing 每个 Capability 必须恰好一个 Callable，每个 Callable 也只归属一个 Capability。
 - Plugin Manager 负责 Provider Package 加载、生命周期、握手和 Tools Extension 分发，不授予 Skill Capability，也不把安装状态解释为 Grant。
