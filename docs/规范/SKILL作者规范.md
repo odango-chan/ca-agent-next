@@ -1,7 +1,7 @@
 # SKILL 作者规范（CA-SL 1.6.0）
 
 > 文档类型：Skill 作者规范（Next 中央规范性设计稿）  
-> 文档版本：0.1.0  
+> 文档版本：0.1.1  
 > 状态：**DRAFT / REVIEW_REQUESTED**（作者规则待独立评审；CA-SL 1.6.0 尚未由 ca-skills 正式发布）  
 > 语言目标：CA-SL 1.6.0 only；不兼容任何历史作者语法  
 > 功能归属：EC01 — Skill 作者规范与业务 Skill；消费端关联 F02 / F09  
@@ -78,7 +78,7 @@ skill-root/
 ### 3.1 SKILL.md
 
 - 必须有 Agent Skills Specification 规定的 Front Matter；name 与包根目录一致，description 清楚描述 Skill 能做什么以及何时适用。
-- 正文使用英文，保持简洁、可直接供 Agent 阅读；先写业务目标和适用范围，再写输入、完成条件、失败 / 不确定语义和限制。
+- 正文使用清晰、简洁的 Markdown，先写业务目标和适用范围，再写输入、完成条件、失败 / 不确定语义和限制。语言遵循项目与目标使用者的约定，并在同一 Skill Package 内保持一致；CA-SL 1.6.0 不规定 SKILL.md 正文语言。
 - 不重复 Procedure 的逐节点执行细节。较长的 3GPP 条款映射、字段来源和历史决策放入 references。
 - allowed-tools 即使存在也只是元数据，不授予 Capability、Callable 或 Runtime 权限。
 - 不在 SKILL.md Front Matter 增加 when。选择条件只在 assurance/contract.yaml 的顶层 when。
@@ -105,7 +105,7 @@ skill-root/
 ### 4.1 Schema 所有权
 
 - Skill 只拥有自己的 Request Schema 和真正由 Skill 定义的数据。
-- Host 拥有 Context Schema 与 admission / Evidence projection。
+- Host 拥有 Context Schema；Evidence 的发布保证由 Owner / Package 定义，Host / Runtime 按契约验证并投影到 Predicate 输入。
 - Owner / Provider Package 拥有 Operation、Observation 的 Input / Output Schema、Effect 和 Evidence 保证。
 - 不把外部 Owner / Provider / Host Schema 复制到 Skill 包内；通过精确依赖和 Schema 引用使用。
 - Owner Schema ID 内含的不可变版本标记必须原样保留。
@@ -114,11 +114,11 @@ skill-root/
 
 ### 4.2 显式数据流
 
-- Procedure.inputs 只能从声明的 context / request 字段建立；所有阶段调用参数必须显式写在 arguments 中。
-- 不允许隐式上一 Node 输出、环境变量、ambient Context 转发或字段名猜测。
-- Operation / Observation arguments 是命名映射，并按对应 Owner / Provider Schema 校验。
-- Predicate arguments 是有序列表，顺序必须与 Predicate.parameters 一致。
-- 输出引用必须明确写出来源 Node 和阶段；不要在注释里描述一个实际未绑定的数据路径。
+- Procedure.inputs 是唯一的命名输入映射；每个值必须是精确的 `context.*` SourcePath。Request 字段如需进入 Procedure，必须经 Host 声明并提供的 Context 路径（例如 `context.request.pduSessionId`），不得直接把 `request.*` 当作根。
+- 每个 Operation / Observation / Predicate 调用点都必须显式写 `arguments`；参数名称、数量、顺序和类型必须匹配目标 Schema / Predicate 签名。Procedure Script 也必须显式绑定其输入。
+- `arguments` 的值只允许 CA-SL 1.6.0 支持的 SourcePath 或标量字面量；禁止动态表达式、隐式转发、自动 null、参数猜测或重排。SourcePath 根只允许 `context`、`inputs` 和已声明 Node Producer；其他根拒绝。
+- Node 输出必须通过精确的 `NodeId.Stage.output` SourcePath 显式传递；Wait 规范化输入使用 `NodeId.wait.output`。所有引用必须由正式语言 Schema / Compiler 检查，不得依靠字段名推断。
+- Operation / Observation / Procedure Script 的 arguments 具体结构以 CA-SL 1.6.0 正式 Schema / Golden 为准；Predicate arguments 按 Predicate.parameters 的有序签名提供。本文不另行发明参数结构。
 
 ## 5. Procedure Node 的结构
 
@@ -205,10 +205,10 @@ ca-skills 的已核对作者指南、作者模型、Granularity、Syntax、Packa
 - 必填 / 可选、类型、默认值、单位、范围、枚举、Schema 约束；
 - 调用哪个 Capability、传入哪些 arguments、结果从哪里读取；
 - Predicate 判定条件、Evidence 要求、Outcome 和 routes；
-- READ / MUTATION Effect、幂等性、重试、Reconcile、超时或权限边界；
+- READ / MUTATION Effect、幂等性、重试、Reconcile、超时或权限边界；这些属于 Capability Package、Owner / Provider Contract、Host / Runtime 契约的相应所有权层，不由 Skill 注释定义；
 - 成功、失败、UNKNOWN、终态和业务完成证明。
 
-这些必须由正式 Contract、Schema、Capability、Predicate、arguments、Wait 或 routes 表达。若注释与机器契约冲突，以机器契约为准，并必须修复过期注释；不能让作者或 Runtime 通过注释猜测行为。
+Skill-facing 执行语义必须由正式 Contract、Schema、Capability 引用、Predicate、arguments、Wait 或 routes 表达；Effect、Receipt、幂等性、重试、Reconcile 和权限边界则由对应 Owner / Provider / Host / Runtime 契约定义。若注释与机器契约冲突，以相应权威契约为准，并必须修复过期注释；不能让作者或 Runtime 通过注释猜测行为。
 
 ### 7.4 注释禁止事项
 
@@ -221,6 +221,8 @@ ca-skills 的已核对作者指南、作者模型、Granularity、Syntax、Packa
 
 ### 7.5 注释示例
 
+以下为 Procedure 片段，后续 `verify-context` Node 的定义省略；Mutation 的正常结果只路由到后续验证，不直接证明 Invocation 成功。
+
 ~~~yaml
 nodes:
   # One public mutation boundary. The Owner owns the internal SBI/NAS/PFCP steps.
@@ -229,11 +231,13 @@ nodes:
       capability: mas.sc.context.create
       arguments:
         psi: inputs.psi
+      routes:
+        SUCCEEDED: verify-context
 ~~~
 
 上例中的注释解释为什么不把 Owner 内部步骤拆成 Skill Node；真正的调用目标和参数仍由 capability / arguments 表达。若删除注释，执行语义不应改变。
 
-SKILL.md 正文使用英文；同一 Skill Package 内的 YAML 注释使用与作者源一致的英文，避免同一文件混用语言。Next 的规范、设计和迁移文档使用中文。
+SKILL.md 正文与 YAML 注释遵循项目语言约定，并在同一 Skill Package 内保持一致；注释应简洁、可读，不因语言选择改变 CA-SL 语义。Next 的规范、设计和迁移文档使用中文。
 
 ## 8. 命名与表达约定
 
@@ -242,12 +246,12 @@ SKILL.md 正文使用英文；同一 Skill Package 内的 YAML 注释使用与�
 | Skill name | 遵循 Agent Skills Specification：小写 ASCII、数字与连字符；目录名一致 |
 | SKILL.md description | 描述能力和适用时机，不堆叠实现细节 |
 | Contract 字段 | 严格使用 CA-SL 1.6.0 正式字段；不得发明别名 |
-| Node ID | kebab-case，业务动词 + 对象 |
+| Node ID | 推荐 kebab-case、业务动词 + 对象；这是作者风格约定，不扩展 CA-SL 1.6.0 标识符语法，最终合法性以正式 Schema / Compiler 检查为准 |
 | Capability ID | 原样使用 Owner / Provider 发布的公开 ID，不缩写、不拼接 Callable |
 | Predicate ID | 稳定、表达业务事实；参数顺序由 Predicate.parameters 固定 |
 | Schema 属性 | 严格匹配被引用 Schema；不在作者侧重命名外部字段 |
-| 文件名 | kebab-case；目录层级按 CA-SL 1.6.0 包形状 |
-| 注释 | 与作者源一致，说明 why / 来源 / 非显然约束，不替代字段语义 |
+| 文件名 | 推荐 kebab-case；目录层级严格按 CA-SL 1.6.0 包形状 |
+| 注释 | 遵循项目语言约定并保持包内一致；说明 why / 来源 / 非显然约束，不替代字段语义 |
 
 不得在 Skill 作者源中出现 Operation ID、Callable ID、backendOperationId、ProviderBinding 或部署 endpoint 作为 Skill-facing 选择目标。
 
@@ -268,7 +272,7 @@ SKILL.md 正文使用英文；同一 Skill Package 内的 YAML 注释使用与�
 ## 10. 作者自检清单
 
 - [ ] Skill 具有可复用业务语义，不是单 Tool / 单 Provider call 的包装。
-- [ ] SKILL.md 使用英文，name / description 符合 Agent Skills Specification。
+- [ ] SKILL.md 有符合 Agent Skills Specification 的 Front Matter；name / description 准确描述 Skill，正文简洁且语言一致。
 - [ ] 新 Assurance 只使用 CA-SL 1.6.0；没有旧版字段、Callable 或兼容入口。
 - [ ] Contract.when 位于 contract.yaml；只读取 event.type 和 requestSchema input。
 - [ ] requestSchema、contexts、dependencies、capabilities 的所有权与身份准确。
@@ -328,3 +332,4 @@ Apply 前仍须由用户确认，并对同一候选源码与依赖锁执行正�
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
 |---|---|---|---|---|---|
 | 2026-11-27 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 从 ca-skills 作者指南、作者模型、Granularity、Package Layout、Schema Ownership、创建工作流和真实 Skill 样本中提炼仍有效原则；按 CA-SL 1.6.0 重建作者包、Node 粒度与注释规则 | Issue #49；IR-008；SR-032；SR-023/029 |
+| 2026-11-27 | 0.1.1 | GPT-6.2（ChatGPT） | §3.1、§4.1～4.2、§7～8、§10 | 修正 Procedure.inputs 仅允许 context SourcePath 的边界，补充 SourcePath 根与 Node Producer 引用；移除无依据的英文强制要求；区分 Skill 作者语义与 Owner / Runtime 契约所有权；修复示例的正常路由 | 避免作者指南超出 CA-SL 1.6.0 语言稿或引入无依据的语言约束 | Issue #49；IR-008；SR-032 |
