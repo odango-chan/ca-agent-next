@@ -189,13 +189,13 @@ class PythonToolchainPolicyTests(unittest.TestCase):
         }
         invalid = workflow_toolchain_violations(
             ".github/workflows/python-tests.yml",
-            "name: Python tests\\n- run: uv run pytest",
+            "name: Python tests\n- run: uv run pytest",
             manifest,
         )
         self.assertEqual(len(invalid), 2)
         valid = workflow_toolchain_violations(
             ".github/workflows/python-tests.yml",
-            "name: Python tests\\nuses: astral-sh/setup-uv@abc123\\nversion: '0.13.10'\\n- run: uv run pytest",
+            "name: Python tests\nuses: astral-sh/setup-uv@abc123\nversion: '0.13.10'\n- run: uv run pytest",
             manifest,
         )
         self.assertEqual(valid, [])
