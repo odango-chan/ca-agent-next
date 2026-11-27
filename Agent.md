@@ -23,7 +23,7 @@ DeepSeek Harness 默认使用 Goal 模式。按[SR 管理规范](docs/规范/SR%
 ## 2. 仓库与语言边界
 
 - Agent Core、Host、Agent Model Loop、Skill Importer、Skill Resolver 和 Runtime 使用 Python。
-- Python 工程工具链设计入口见 [G02 Python 工程工具链与环境管理](docs/设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md)。SR-028 已按 PR #46 固定设计快照 READY，并在实施 Issue [#96](https://github.com/odango-chan/ca-agent-next/issues/96) 中实施：根项目使用 uv 0.13.10 + `uv.lock`，`.python-version` 为 CPython 3.14.6，开发依赖进入 `[dependency-groups].dev`，Agent Core 运行时依赖保持为空。当前安装、测试、Smoke、Go Echo 前置与 Review Context 入口见 README「当前开发与复验入口」与 SR-028 §8。
+- Python 工程工具链设计入口见 [G02 Python 工程工具链与环境管理](docs/设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md)。SR-028 已按 PR #46 固定设计快照 READY，并在实施 Issue [#96](https://github.com/odango-chan/ca-agent-next/issues/96) 中完成 AC-028-01～10 验收：根项目使用 uv 0.13.10 + `uv.lock`，`.python-version` 为 CPython 3.14.6，开发依赖进入 `[dependency-groups].dev`，Agent Core 运行时依赖保持为空。**该工具链是整个 Next 根 Python 工程的共享基线，不限于 SR-028；所有触及根 Python 源码、测试、脚本、依赖或 Python CI 的实施分支必须继承当前共享基线。** 具体分支继承和迁移规则见[Python 工程工具链与实施基线规范](docs/规范/Python工程工具链与实施基线规范.md)。当前安装、测试、Smoke、Go Echo 前置与 Review Context 入口见 README「当前开发与复验入口」与 SR-028 §8。
 - 独立 Plugin 可以使用 Go；Go Plugin 不代表 Go Host。
 - ca-agent-demo 是既有 Python 实现和测试证据来源，只能逐文件选择性复用，不得整体复制。
 - ca-skills、ca-skill-compiler、ca-client-tools、ca-openamsm-plugin、env-openamsm、env-5gc-sim、ca-skill-studio-demo 等保有独立实现和发布职责；ca-runtime 与 ca-agent 是参考/目标仓，不是 Next 运行时依赖。
@@ -46,6 +46,10 @@ uv run --no-sync --locked --group dev --extra plugins python scripts/review_cont
 ```
 
 Go Echo Plugin 前置：在 `examples/echo/plugin/` 下设置 `GOWORK=off` 后 `go build -trimpath -o bin/echo-plugin .`，Windows 目标为 `bin/echo-plugin.exe`。测试门禁 `scripts/unittest_gate.py` 对 Host、Plugin、Review Context 和完整总计分别要求 discovered>0、tests_run=discovered、skipped=0 且无失败/错误，任一范围失败整体非零。CI 矩阵与 Artifact 契约见 SR-028 AC-028-06～08；历史 pip 入口保留在 SR-002/SR-003/演示验收基线的原始受测记录中。
+
+### 2.2 Python 实施分支共享基线
+
+凡修改 Next 根 Python 源码、测试、脚本、依赖或 Python CI 的分支，必须先读取[Python 工程工具链与实施基线规范](docs/规范/Python工程工具链与实施基线规范.md)，从 Issue #111 记录的当前共享基线分支及完整 SHA 派生；PR Base 必须是该共享基线或其后继。PR #99 尚未合并期间，不得从缺少 uv 的 main 或仅含设计的 PR #46 分支直接开展 Python 实施。无法证明分支包含共享基线时，停止并报告 `PYTHON_TOOLCHAIN_BASELINE_MISSING`，禁止回退 pip。历史 pip 受测命令只读保留，不是当前执行入口。
 
 ## 3. 不可违反的架构约束
 
@@ -177,6 +181,7 @@ review_scope:
 
 | 日期 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
 |---|---|---|---|---|---|
+| 2026-11-27 | GPT-6.2（ChatGPT） | §2、§2.1、§2.2、修订记录 | 将 SR-028 已验收 uv 工具链确立为 Next 根 Python 工程共享基线；要求 Python 实施分支继承共享基线并禁止 pip 回退 | 防止 SR-028 未合入 main 时其他 SR 继续采用独立 pip 入口 | Issue #111；Issue #96；PR #99；SR-028 |
 | 2026-11-27 | — | DeepSeek Harness（Goal 执行） | §2、§2.1、修订记录 | 回填 SR-028 实施后的当前 uv 安装、测试门禁、Smoke、Go Echo 前置和 Review Context 入口；说明 SR-028 已 READY 并在 Issue #96 实施 | 使协作入口与当前工具链一致，同时保留各 SR 历史 pip 受测记录 | Issue #96；PR #99；SR-028；G02 |
 | 2026-11-27 | GPT-6（ChatGPT） | §1 | 强制长时间运行 Goal 启动前建立并核验 GitHub 检查点；规定执行中增量更新、原 Goal 恢复/续跑，以及评审快照固定规则入口 | 防止 Goal 中断丢失进度、重复执行和因 PR 普通提交导致评审误暂停 | Issue #92；Issue #12；PR #46 |
 | 2026-11-25 | 历史修订者/模型未记录 | 原第 1～11 节及 review_scope | 既有协作约束和机器可读评审范围；逐章历史记录未建立 | 原始修订者未记录，本轮不臆造 | PR #1 |
