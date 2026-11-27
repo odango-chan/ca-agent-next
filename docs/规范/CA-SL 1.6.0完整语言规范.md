@@ -1,7 +1,7 @@
 # CA-SL 1.6.0 完整语言规范（中央设计稿）
 
 > 文档类型：CA-SL 作者语言规范（中央规范性设计稿）
-> 文档版本：0.1.6
+> 文档版本：0.1.7
 > 语言版本：CA-SL 1.6.0
 > languageTarget 候选：connectionagent.io/v1.6.0（本设计建议值；发布前由 ca-skills 与 Compiler Owner 在正式 Schema / Golden 中确认）
 > 状态：**DRAFT / REVIEW_REQUESTED**；未发布、未冻结、不得作为已发布产品规范
@@ -184,7 +184,7 @@ Node 可以省略不适用阶段，但必须至少声明一个业务阶段。阶
 
 ## 7. Capability、Callable 与 Plugin 契约
 
-- Contract.capabilities 只声明 Capability ID；Procedure 的 operation / observation 阶段只写 capability。
+- Contract.capabilities 只声明业务 Capability ID；Procedure 的业务 `operation.capability` / `observation.capability` 只写 Capability ID。Package-local `operation.script` 是独立的 Script Registry 引用分支，不是 Capability，与 `operation.capability` 互斥。
 - 每个 Skill-facing Capability 恰有一个公开 Callable；每个公开 Callable 恰属于一个 Skill-facing Capability。双向基数均为 1。
 - Callable ID 只存在于 Package、Compiler、Runtime、Provider 内部 Binding / Trace / 诊断，不得进入 Skill 作者源或模型 Action 参数。
 - Compiler 必须在显式依赖闭包中唯一解析 Capability，检查 Grant、Owner / Package identity、Capability→Callable cardinality、Callable→Capability cardinality、kind、Effect、Input / Output Schema。
@@ -459,3 +459,4 @@ Host Context Schema-only Package 仍只经 `Contract.contexts` 引用，与 Open
 | 2026-11-27 | 0.1.4 | ChatGPT / GPT-6 | 本轮 IR-009 设计修正 | 固定 OpenAMSM 版本 + 原版 YAML 逐字节代发布；显式区分可选 Adapter 与 Provider Codec 输出 | 落实原版 YAML 不得改动、消除误把原版当 G.4 的风险 | Issue #47；SR-031/026/013 |
 | 2026-11-27 | 0.1.5 | ChatGPT / GPT-6.2 | §12、§19 | 保留本地 G.4 有限子集，增加 pin 后 OAS3 Schema Component 的 dialect-aware 直接引用；移除强制 Adapter | 遵循原版 OpenAPI 直接引用、不重写标准 | IR-009；Issue #47；SR-013/031 |
 | 2026-11-27 | 0.1.6 | GPT-6.2（ChatGPT） | §2、§3、§5、§6、§8、§14、§16 | 将 schemas/scripts 提升为 Skill Package 根目录共享资源；定义 YAML Schema 源、Script Registry、Host Script Execution Capability 与 Assurance / LLM 共用资源路径 | 修复可选 Assurance 导致 LLM-only Skill 无法使用 Schema / Script 的结构矛盾，禁止模型任意 Python 执行 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.1.7 | GPT-6.2（ChatGPT） | §7～§8 | 明确业务 Operation Capability 与 `operation.script` 的互斥语法分支，避免把 Package-local Script 误列为业务 Capability | 保持 Capability-only 授权模型，同时让 Procedure 明确引用共享 Script Registry | Issue #49；IR-008；SR-032 |
