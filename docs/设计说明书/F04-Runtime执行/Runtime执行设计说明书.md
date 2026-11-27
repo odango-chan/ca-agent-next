@@ -27,7 +27,7 @@ Runtime 是唯一执行路径的控制点，负责将已绑定 Skill 的执行�
 | Runtime | Run 状态、Callable Scope 检查、Action Boundary、Outcome/Evidence、异步 Operation Continuation / Reconcile |
 | Plugin Manager | 将 Runtime 放行的 Tool 调用分发到对应 Plugin / Host 内建 Tools Extension |
 | Tool Plugin | 执行 Operation，返回契约定义的结果 |
-| Host Script Runner | 通过 Host Script Execution system Capability 执行当前 Skill Registry 中精确登记的 Script entrypoint；校验输入/输出 Schema 和资源预算 |
+| Host Script Runner | 通过 Host Script Execution system Capability 执行当前 Skill Registry 中精确登记的 Script entrypoint；校验 inputSchema、transform outputSchema 或 predicate 固定 PredicateEvaluationResult / evidenceUsed 契约及资源预算 |
 | Owner | 权威业务状态和最终提交结果 |
 
 Host 不直接调用 Tool Plugin。LLM 不得绕过 Runtime，也不得自行扩大 Skill 声明的 Callable Scope、制造 Evidence 或声明 Owner mutation 已提交。
