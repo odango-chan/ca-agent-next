@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
-> 文档版本：0.3.8
+> 文档版本：0.3.9
 > 功能归属：F03 — Plugin 平台  
 > 关联 SR：SR-003、SR-010、SR-032    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -175,3 +175,4 @@ Host Script Execution 是 Host-owned system Capability（逻辑 ID：`host.skill
 | 2026-11-26 | 0.3.6 | GPT-6（ChatGPT） | 规范性设计与验收门槛 | 修复一对多公开 Operation 误述，明确一个 Capability 仅一公开 Callable | 修复新旧语言/能力运行时冲突 | Issue #12/#40；SR-013/025/029；PR #46 |
 | 2026-11-27 | 0.3.7 | Codex / GPT-6 | §7、12.1 | 区分查询子集和含 Codec 的 Provider 全量 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
 | 2026-11-27 | 0.3.8 | GPT-6.2（ChatGPT） | §3、§12、§12.1 | 增加 Host-owned Script Execution system Capability 与内建 Tools Extension；复用唯一 Plugin Manager / Runtime Action Boundary | 使 LLM 能调用包内共享 Script，同时不增加第二套 Manager 或业务授权 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.3.9 | GPT-6.2（ChatGPT） | §3、§12 | 明确 Host Script Execution 的 LLM Action 还必须受 `scriptExecution.llmEnabled` 配置控制，默认 false | 使 Host 配置与 Runtime / CA-SL 暴露条件完全一致 | Issue #49；IR-008；SR-032 |
