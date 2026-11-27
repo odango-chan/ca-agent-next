@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.52
+> 文档版本：0.3.53
 > 状态：30 项 SR：4 VERIFIED、1 IMPLEMENTED、25 DRAFT（原 24 项 PR #46 评审批次 + SR-031 增量待评审），SR-003 模块 AC PASS，系统 EX NOT_RUN
 > 修订日期：2026-11-27\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -51,7 +51,7 @@
 | [SR-028](../SR/SR-028-Python工程工具链与uv环境管理.md) | [IR-007](../IR/IR%20总登记册.md#ir-007) | Python 工程工具链与 uv 环境管理 | DRAFT |
 | [SR-029](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) | [IR-008](../IR/IR%20总登记册.md#ir-008)（关联 IR-003） | CA-SL 1.6.0 Capability-first 作者模型与 Callable 双向一对一；完全无旧版兼容 | **DRAFT（设计待评审，非实施 READY）** |
 | [SR-030](../SR/SR-030-Host%20Context%201.6.0%20Schema-only%20Interface%20Package%20Publisher.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Host Context 1.6.0 Schema-only Interface Package Publisher | DRAFT |
-| [SR-031](../SR/SR-031-3GPP公共Schema-only-Publisher.md) | [IR-009](../IR/IR%20总登记册.md#ir-009) | OpenAMSM 3GPP OpenAPI 原版 Source Bundle 原样代发布（ca-skills） | **DRAFT（增量设计待评审、Publisher / Consumer 产品 NOT_RUN）** |
+| [SR-031](../SR/SR-031-3GPP公共Schema-only-Publisher.md) | [IR-009](../IR/IR%20总登记册.md#ir-009) | OpenAMSM 3GPP OpenAPI 原版 Source Bundle 原样代发布（当前 PostSmContexts requestBody 选定闭包 4 文件 / 102 Schema Component） | **DRAFT（增量设计待评审、Publisher / Consumer 产品 NOT_RUN）** |
 
 设计版本与章节、依赖、验收 ID、实施证据以各 SR 为准。逐项阻塞见[就绪审计](../参考与审计/跨仓设计资产迁移与一致性审计.md#8-设计就绪审计)。
 
@@ -96,7 +96,7 @@
 | SR-027 | 1.6.0 技能 Bundle 发布 | **BLOCKED_EXTERNAL_INPUT**（五根同批作者源、Echo Interface、Compiler 正式 Release/argv，见 SR-027 §5.1） | DRAFT |
 | SR-028 | uv Python 工程工具链 | **第三轮自评：DESIGN_READY_FOR_INDEPENDENT_REVIEW**（第二轮 CHANGES_REQUESTED 为历史；uv 全量回归与仅改 Review Context workflow 的双平台触发，待独立结论） | DRAFT |
 | SR-029 | 1.6.0 Capability-first 一对一绑定 | **第三轮自评：DESIGN_READY_FOR_INDEPENDENT_REVIEW**（第二轮 CHANGES_REQUESTED 为历史；1.6.0 唯一语言、Owner 24/24、Provider 2/2 与全量 3/3，待独立结论） | DRAFT |
-| SR-031 | OpenAMSM 3GPP OpenAPI 原版 Source Bundle 原样代发布 | **新增 IR-009 / Issue #47**：DRAFT / REVIEW_REQUESTED，未进入 PR #46 原 24 项第二轮独立评审；待 OpenAMSM Owner source baseline、ca-skills Publisher、Compiler OAS3 Resolver 与 Plugin Consumer 交接后才可实施 READY | DRAFT |
+| SR-031 | OpenAMSM 3GPP OpenAPI 原版 Source Bundle 原样代发布 | **新增 IR-009 / Issue #47**：DRAFT / REVIEW_REQUESTED；`PostSmContexts.requestBody → jsonData → SmContextCreateData` 已静态核实为四份原版 YAML / 102 个可达 Schema Component；选定根 lazy resolve，不 eager resolve 未选定 operation；Content-ID 与 N1/N2/N2 Ext1 slot mapping 已写入设计。OpenAMSM Owner source baseline、ca-skills Publisher / Source Lock、Compiler Resolver / Golden 与 Plugin Consumer 仍未产品验收，故实施 BLOCKED_EXTERNAL_INPUT | DRAFT |
 | SR-030 | Host Context 1.6.0 Schema-only Publisher；0 Capability / 0 Callable，精确 Schema export；与 SR-013 AC-013-06 联合验收 | APPROVE_FOR_READY（Schema-only 设计与 AC-030-01 固定源审计） | DRAFT |
 
 上述专项评审按单版本 1.6.0 和 Capability↔Callable 一对一原则校核；历史 v1alpha5、Compiler v2.1.0、Owner v1alpha4 和 Provider v1.2.0 只可作迁移/审计来源。旧来源中的身份、Build DTO、Artifact、Bundle 或测试不得自动证明新版发布/可实施。SR-029 新契约尚未发布，Compiler #61、Publisher、Skill Bundle 等真实前置仍保持各自 BLOCKED/NOT_RUN；SR-028 的 uv 工具链设计可独立于这些外部发布审查。
@@ -107,7 +107,7 @@ PR #46 上述十项第二轮 CHANGES_REQUESTED 已按各自反例复核并登记
 
 12 项第二轮限定 APPROVE_FOR_READY 保持：SR-005/009/013/017/018/019/020/021/022/023/025/030；其中 SR-009 AC-009-04 合法 continuation 子例的增量修改另需独立确认。SR-026/027 仍 BLOCKED_EXTERNAL_INPUT，只可审查部分来源/构建设计，未得到 Publisher 正式输入前不得发实施 Goal。**24 项主状态仍 DRAFT，READY=0，系统 EX/OM、正式 1.6.0 产品 AC NOT_RUN/BLOCKED。** 逐项判据与当前已核实的外部事实见[跨仓一致性审计 §15](../参考与审计/跨仓设计资产迁移与一致性审计.md)。
 
-**IR-009 增量设计（不追溯改变 PR #46 历史评议）：**新增 [SR-031](../SR/SR-031-3GPP公共Schema-only-Publisher.md) 与 [3GPP OpenAPI 原版引用设计](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。其独立设计评审和代码实施门槛均另行判定；AC-013-07、AC-010-10、AC-026-04～06、AC-027-05 为新设计验收要求，尚未获得原 12 项限定评审的背书。当前总数 30：4 VERIFIED / 1 IMPLEMENTED / 25 DRAFT，READY=0。
+**IR-009 增量设计（不追溯改变 PR #46 历史评议）：**新增 [SR-031](../SR/SR-031-3GPP公共Schema-only-Publisher.md) 与 [3GPP OpenAPI 原版引用设计](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。其独立设计评审和代码实施门槛均另行判定；AC-013-07、AC-010-10、AC-026-04～06、AC-027-05 为新设计验收要求，尚未获得原 12 项限定评审的背书。当前总数 30：4 VERIFIED / 1 IMPLEMENTED / 25 DRAFT，READY=0。当前 `PostSmContexts` 选定闭包为四份原版 YAML / 102 个 Schema Component；未选定 operation refs 不全局 eager resolve，Content-ID 必须精确关联 N1/N2/N2 Ext1 part。
 
 ## 3. 设计恢复与实施顺序
 
@@ -150,7 +150,7 @@ PR #46 上述十项第二轮 CHANGES_REQUESTED 已按各自反例复核并登记
 
 本轮 #46 以 1.6.0-only 的规范性内容实际替换旧 Compiler/Studio/Publisher 实施要求：EC02、SR-013 统一新 Parser/BuildRequest/Binding；F09/SR-016、SR-025 重写新版本验收；F02/F03/F03.05/F04/F06/F08 修正新旧规范冲突；SR-005～011 分开四类依赖、定义模块 AC；SR-012 和 SR-017～023 明确设计移交的独立静态 AC。设计评审与实际发布、实施和系统 E2E 分离，**当前 24 项实施 SR 仍为 DRAFT**；新 1.6.0 机器 Schema、正式 Owner/Compiler/Bundle 发布物尚未交付，产品验收 NOT_RUN。
 
-**IR-009 / SR-031 范围裁决（2026-11-27）**：[EC01.3GPP](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md) 只代发布 OpenAMSM 实际支持的原版 OpenAPI 3.0 YAML，逐字节不改；Plugin 原生消费 operation / multipart，Compiler 对 pin 后的 `components/schemas` 直接引用并保留 OAS3 dialect，不强制 Adapter。NAS/NGAP Codec Output Schema 由 ca-client-tools Provider 独立发布。此裁决不改变 PR #46 原 24 项评审结论或已拆分模块 AC；SR-031 Source Lock / byte compare 可独立评议，Compiler / Plugin / Codec / Bundle 未发布仍 BLOCKED。
+**IR-009 / SR-031 范围裁决（2026-11-27）**：[EC01.3GPP](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md) 只代发布 OpenAMSM 实际支持的原版 OpenAPI 3.0 YAML，逐字节不改；当前 `PostSmContexts.requestBody → jsonData → SmContextCreateData` 的可达闭包为四份原版 YAML / 102 个 Schema Component，只 lazy resolve 选定根；相对 `$ref` 按 RFC 3986 / JSON Pointer 按 RFC 6901 解析，允许规范化后仍在 Source Root 内的 `../`。Plugin 原生消费 operation / multipart，并将 `n1SmMsg` / `n2SmInfo` / `n2SmInfoExt1.contentId` 精确匹配 N1 / N2 / N2 Ext1 part；Compiler 对 pin 后的 `components/schemas` 直接引用并保留 OAS3 dialect，不强制 Adapter。NAS/NGAP Codec Output Schema 由 ca-client-tools Provider 独立发布。此裁决不改变 PR #46 原 24 项评审结论或已拆分模块 AC；SR-031 Source Lock / byte compare 可独立评议，Compiler / Plugin / Codec / Bundle 未发布仍 BLOCKED。
 
 ## 4. 当前基线说明
 - SR-002 设计 PR [#20](https://github.com/odango-chan/ca-agent-next/pull/20) 已 MERGED（`281ccb957b9222e72175e210d1afed177aa8a14f`）；实施 PR [#23](https://github.com/odango-chan/ca-agent-next/pull/23) 已 MERGED（`49964464e19d13d219ea0b3513d2223fe81d2435`）；设计 Issue #19 与治理 Issue #21 已关闭。SR-002 为 VERIFIED，AC-002-01～08 PASS；EX-01、CPython 3.11/3.12/3.13 矩阵及 DeepSeek Harness 仍 NOT_RUN。实施 Issue [#22](https://github.com/odango-chan/ca-agent-next/issues/22) 由本次证据回填 PR #25 合并关闭。
@@ -230,3 +230,4 @@ PR #46 上述十项第二轮 CHANGES_REQUESTED 已按各自反例复核并登记
 | 2026-11-27 | 0.3.50 | ChatGPT / GPT-6 | §2～4、修订记录 | 新增 IR-009/SR-031，登记原 24 项评审批次之外的 3GPP 公共 Schema 发布与 T1/T2 Codec 消费分期，统计为 30 项 | 保留历史评审结论边界，不把新增类型契约冒充 READY | Issue #47；SR-031；SR-026/010/013/027 |
 | 2026-11-27 | 0.3.51 | ChatGPT / GPT-6 | IR-009 标准代发布原则 | 只随 OpenAMSM 采用版本发布原件，YAML 不做任何修改，独立 Adapter 与 Codec Output 分界 | 落实最新版本/原版无变更裁决并修正导航 | Issue #47；SR-031 |
 | 2026-11-27 | 0.3.52 | ChatGPT / GPT-6.2 | IR-009 / SR-031 | 将 SR-031 从 Schema-only / Adapter Publisher 修正为原版 OAS3 Source Bundle Publisher；同步 Compiler direct refs 与 Plugin native OAS3 consumer | 统一原始标准直接消费路径 | Issue #47；SR-031/010/013/026/027 |
+| 2026-11-27 | 0.3.53 | ChatGPT / GPT-6.2 | SR-031 / IR-009 | 固定 PostSmContexts requestBody 四文件 / 102 Component 选定闭包、lazy refs、Content-ID slot mapping 与 Source Root 相对引用边界；同步实施阻塞 | 让 SR 索引、独立评审范围与权威设计一致 | Issue #47；SR-031/010/013/026/027；EC01/EC02 |

@@ -1,7 +1,7 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.19\
+> 文档版本：0.3.20\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
 > 修订日期：2026-11-27\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -201,9 +201,9 @@ AI Authoring 的 Change Set 只能新增或修改 Capability ID、Procedure argu
 
 ## 10. 原版 3GPP OpenAPI 只读展示与直接 Schema Component 引用（IR-009）
 
-- 工作台可展示 SR-031 原样代发布的 OpenAMSM OpenAPI 3.0 Source Bundle，作为只读标准来源视图；保留原始 bytes、文件名 / 路径 / 相对 `$ref`，不提供自动格式化、重写、修补或保存原件修改。任何 AI Change Set 试图修改原版 YAML 必须拒绝。
-- Schema Explorer / LSP 可沿已 pin Source Bundle 的精确 `components/schemas` 外部引用显示定义、来源文件、JSON Pointer、OpenAMSM commit 和标准版本；Compiler 才是跨 dialect Schema Link / Build / Verify 权威。不得把原版 OAS3 Schema Object 重写为 G.4 Adapter；本地 Skill-owned Request 根仍遵循 G.4。
-- Studio / Project Lock 必须记录正式 Source Bundle dependency identity 与完整可达文件快照；不解析动态 latest、不从任意 URL 下载，也不让无 3GPP 依赖的项目被强制导入该 Bundle。
+- 工作台可展示 SR-031 原样代发布的 OpenAMSM OpenAPI 3.0 Source Bundle，作为只读标准来源视图；保留原始 bytes、文件名 / 路径 / 相对 `$ref`，不提供自动格式化、重写、修补或保存原件修改。当前 `PostSmContexts.requestBody → jsonData → SmContextCreateData` 选定闭包为四份原版 YAML / 102 个 Schema Component；不要求展示或导入全部 472 份 YAML。任何 AI Change Set 试图修改原版 YAML 必须拒绝。
+- Schema Explorer / LSP 可沿已 pin Source Bundle 的精确 `components/schemas` 外部引用显示定义、来源文件、JSON Pointer、OpenAMSM commit 和标准版本；仅解析选定闭包可达 refs，不全局 eager resolve 未选定 operation。可展示 `RefToBinaryData.contentId` 与 N1/N2/N2 Ext1 multipart slot 的映射。Compiler 才是跨 dialect Schema Link / Build / Verify 权威。不得把原版 OAS3 Schema Object 重写为 G.4 Adapter；本地 Skill-owned Request 根仍遵循 G.4。
+- Studio / Project Lock 必须记录正式 Source Bundle dependency identity、选定 operation / requestBody surface 和完整可达文件快照；不解析动态 latest、不从任意 URL 下载，也不让无 3GPP 依赖的项目被强制导入该 Bundle。
 - Procedure 可引用 ca-client-tools 正式 Codec READ Capability 与 Output Schema，但不能展示私有 Handler / Callable；当 T1 `when` 企图读取 T2 才解码的 NAS 字段，Compiler 应给稳定的 SourcePath / 可用性诊断，不能偷偷触发解码。
 - NAS / NGAP Output Schema 是 Provider 独立发布物，不从 SBI `format: binary` 推导。没有正式 Compiler OAS3 Resolver / Provider Golden 时，不生成假 Schema、不宣称产品 PASS；现行产品验收 NOT_RUN。
 
@@ -237,3 +237,4 @@ AI Authoring 的 Change Set 只能新增或修改 Capability ID、Procedure argu
 | 2026-11-27 | 0.3.17 | ChatGPT / GPT-6 | 3GPP Schema/Codec 分阶段消费 | 对齐 SR-031 公共类型、T1 Request 与 T2 Codec Result，新增分期拒绝/验收范围 | 修复标准输入来源与实现门禁的跨仓断点 | IR-009；Issue #47；SR-031/026 |
 | 2026-11-27 | 0.3.18 | ChatGPT / GPT-6 | 3GPP 原版发布裁决 | 版本随 OpenAMSM、原版 YAML 完全不改；将只读 Source Bundle 与可选 Adapter / Codec Output 分离 | 防止标准原件被类型适配误改 | Issue #47；SR-031/026 |
 | 2026-11-27 | 0.3.19 | ChatGPT / GPT-6.2 | §10 | 将 Studio 从 Adapter Schema Explorer 改为原版 OAS3 只读展示 / 精确组件导航；Project Lock 固定 Source Bundle | 遵循原版标准直接引用且不允许编辑 | IR-009；Issue #47；SR-031/013/026 |
+| 2026-11-27 | 0.3.20 | ChatGPT / GPT-6.2 | §10 | 固定 PostSmContexts 四文件 / 102 Component 选定闭包、lazy Schema Explorer 与 Content-ID slot mapping；Project Lock 记录选定 requestBody surface | 防止 Studio 对未选定 refs 全局解析或展示错误二进制关联 | IR-009；Issue #47；SR-031/010/013/026；EC01 |

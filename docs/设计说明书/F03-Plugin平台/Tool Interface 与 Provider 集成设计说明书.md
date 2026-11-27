@@ -1,7 +1,7 @@
 # Tool Interface 与 Provider 集成设计说明书
 
 > 文档类型：功能子模块设计说明书
-> 文档版本：0.4.7
+> 文档版本：0.4.8
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 功能归属：F03.05 — Tool Plugin 集成
 > 交叉功能：F03.01～F03.04、F04.01、F04.05、F05.02、F06
@@ -568,8 +568,8 @@ Runtime Action 以 Capability ID 为 Skill / Procedure 作者侧入口。Runtime
 
 ### 12.6 OpenAMSM 原版 OpenAPI 3.0 直接消费与 Codec READ Output 隔离（IR-009）
 
-- **标准来源**：ca-skills SR-031 原样代发布 OpenAMSM 实际支持的 OpenAPI 3.0 YAML Source Bundle；原始 bytes、相对路径和 `$ref` 不改。它不是 Interface Package，不导出 Capability / Callable。
-- **原生消费**：Plugin / SR-010 按 OAS 3.0 operation、requestBody、multipart、JSON / binary parts、media type、Content-ID 验证 SBI ingress；Compiler / SR-013 对显式 pin 的 Source Bundle 中 `components/schemas` 直接引用，使用 dialect-aware Resolver。CA-SL 本地 G.4 不因外部 OAS3 引用而放宽；外部 OAS3 Schema Object 不做 Adapter / projection。
+- **标准来源**：ca-skills SR-031 原样代发布 OpenAMSM 实际支持的 OpenAPI 3.0 YAML Source Bundle；原始 bytes、相对路径和 `$ref` 不改。当前 `PostSmContexts.requestBody → multipart/related → jsonData → SmContextCreateData` 的可达闭包为四份原版 YAML / 102 个 Schema Component；只锁定选定根可达的跨文件 refs，不要求全目录 472 份 YAML。Source Bundle 不是 Interface Package，不导出 Capability / Callable。
+- **原生消费**：Plugin / SR-010 按 OAS 3.0 解析选定 operation / requestBody / multipart / JSON / binary parts / media type / Content-ID；仅 lazy resolve 选定 surface 的 refs，不 eager resolve 未选定 operation。CommonData `RefToBinaryData.contentId` 必须精确关联 `n1SmMsg`→N1、`n2SmInfo`→N2、`n2SmInfoExt1`→N2 Ext1 的对应 part；Content-ID 重复、缺失、错槽、媒体类型不符或孤立 part 均拒绝。Compiler / SR-013 对显式 pin 的 Source Bundle 中 `components/schemas` 直接引用，使用 dialect-aware Resolver。相对 `$ref` 按 RFC 3986、fragment 按 RFC 6901 解析；允许规范化后仍在 Source Root 内的 `../`，拒绝逃出 Source Root。CA-SL 本地 G.4 不因外部 OAS3 引用而放宽；外部 OAS3 Schema Object 不做 Adapter / projection。
 - **真正解码输出**：ca-client-tools / SR-026 拥有 Codec Tool Interface READ Capability ↔ 唯一 Callable 与正式 Output Schema；按与 OpenAMSM 支持基线一致的 NAS/NGAP Profile、授权 artifactRef/slot 返回结构化字段。不能从 SBI TS29.502 `format: binary` 推断 NAS/NGAP Result Schema。首批仅 0xD1，Create / Modify / N2 需单独资格化；一个 Capability 覆盖多 Profile 时必须用 Golden 证明固定 selector 与单一 Output Schema 完整封闭且保持 1:1。
 - **运行时**：T1 仅 Plugin Event / Skill-owned Request；T2 由已选 Procedure 经统一 Action Boundary / 唯一 Plugin Manager 使用 Codec READ，原 bytes 保留；Codec Result 不等于 Owner Receipt / Commit Proof。无 Codec 需求时 zero Codec IPC；需要但无发布时对应 AC BLOCKED。
 - **基数**：Provider 查询 2/2 + 首批 Codec READ 1/1 = 3/3；Source Bundle 不计 Capability。实际 Package / Schema IDs、SemVer、handler、Golden 和正式 OpenAMSM source lock 未正式确认，产品 NOT_RELEASED / NOT_RUN。
@@ -603,3 +603,4 @@ Runtime Action 以 Capability ID 为 Skill / Procedure 作者侧入口。Runtime
 | 2026-11-27 | 0.4.5 | ChatGPT / GPT-6 | 3GPP Schema/Codec 分阶段消费 | 对齐 SR-031 公共类型、T1 Request 与 T2 Codec Result，新增分期拒绝/验收范围 | 修复标准输入来源与实现门禁的跨仓断点 | IR-009；Issue #47；SR-031/026 |
 | 2026-11-27 | 0.4.6 | ChatGPT / GPT-6 | 3GPP 原版发布裁决 | 版本随 OpenAMSM、原版 YAML 完全不改；将只读 Source Bundle 与可选 Adapter / Codec Output 分离 | 防止标准原件被类型适配误改 | Issue #47；SR-031/026 |
 | 2026-11-27 | 0.4.7 | ChatGPT / GPT-6.2 | §12.6 | 删除可选 Adapter 路径，定义 OAS3 ingress / Compiler 组件引用与 Provider Codec Output 的边界 | 保持 1:1 Capability / Callable 并直接消费原始标准 | IR-009；Issue #47；SR-010/013/026/031 |
+| 2026-11-27 | 0.4.8 | ChatGPT / GPT-6.2 | §12.6 | 补入 PostSmContexts 四文件 / 102 Component 选定闭包、lazy refs 与 Content-ID 到 N1/N2/N2 Ext1 part 的映射 | 对齐 Plugin/Provider 与 EC01/SR-010 的真实 SBI ingress 契约 | IR-009；Issue #47；SR-031/010/026；EC01 |
