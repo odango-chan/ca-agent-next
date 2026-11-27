@@ -1,13 +1,13 @@
 # CA Agent Next 架构设计
 
-> 文档类型：总体架构设计  
-> 状态：目标架构基线；PR #1 已合并；架构所定义的 Next Host/Runtime/Plugin Manager 尚未实现、尚未验收    
-> 文档版本：0.4.3
-> 修订日期：2026-11-26  
-> 适用范围：ca-agent-next 通用 Agent Core、Host、Runtime、Skill 与 Plugin 公共机制  
-> 权威边界：本文是本仓唯一总体架构文档；字段级契约见规范，机制细节见设计说明书  
-> 全局评审范围：继承根目录 Agent.md 的 review_scope；本文局部非目标见 §2.2
-> 本文局部非目标：以本文范围与非目标章节为准；无额外扩展  
+> 文档类型：总体架构设计\
+> 状态：目标架构基线；SR-002 Python Host/Model Loop 最小切片 VERIFIED；SR-003 v0.3.11 VERIFIED（模块 AC-003-01～04）；PR #34/#41/#42 已合入恢复分支，双平台 CI SUCCESS；系统 EX-02/03/04/18 未完成；完整 Runtime 尚未验收\
+> 文档版本：0.4.11
+> 修订日期：2026-11-27\
+> 适用范围：ca-agent-next 通用 Agent Core、Host、Runtime、Skill 与 Plugin 公共机制\
+> 权威边界：本文是本仓唯一总体架构文档；字段级契约见规范，机制细节见设计说明书\
+> 全局评审范围：继承根目录 Agent.md 的 review_scope
+> 本文局部非目标：以本文范围与非目标章节为准；无额外扩展
 
 关联需求项见 [IR-002](../IR/IR%20总登记册.md#ir-002)、[IR-003](../IR/IR%20总登记册.md#ir-003)、[IR-004](../IR/IR%20总登记册.md#ir-004)、[IR-005](../IR/IR%20总登记册.md#ir-005)。
 
@@ -224,8 +224,8 @@ sequenceDiagram
 
 | 阶段 | 目标 | 当前状态 |
 |---|---|---|
-| A | Python Core / Host / Runtime 基础骨架 | NOT_STARTED |
-| B | 唯一 Plugin Manager、Package/IPC | NOT_STARTED |
+| A | Python Core / Host / Runtime 基础骨架 | PARTIAL（SR-002 VERIFIED；完整 Runtime 与 EX-01 未完成） |
+| B | 唯一 Plugin Manager、Package/IPC | VERIFIED（模块 AC-003-01～04 PASS；系统 EX-02/03/04/18 NOT_RUN） |
 | C | 已发布 Skill Artifact 消费与 SkillCatalog | NOT_STARTED |
 | D | Skill Resolver 与执行模式派生 | NOT_STARTED |
 | E | 统一 Runtime Action Boundary | NOT_STARTED |
@@ -233,19 +233,33 @@ sequenceDiagram
 | G | OpenAMSM Plugin 与 Skill/Tool 集成 | Echo 通过后开始 |
 | H | 真实 OpenAMSM Create → Modify → Release E2E | NOT_RUN |
 
-外部依赖状态（2026-11-25）：
+外部依赖状态快照（截至 2026-11-27）：
 
-- ca-skills PR #83～#86、#88、#89 均已合并；CA-SL v1alpha5 Release Record 固定规范提交 18d818436。源规范头部仍有 candidate 字样，以 Release Record 为发布状态依据。
+- ca-skills main `780497a2918ad3e7bdff554ab64b0ba627e867e0`；PR #88/#89 MERGED，PR #87 OPEN；CA-SL v1alpha5 Release Record 固定规范提交 `18d8184367982ccbc835756136c4a53f9096c3a0`。
 - ca-skill-compiler v2.1.0 已发布；Issue #61 OPEN，when 发布型 CheckedExpr/DescriptorSet Runtime Artifact 未完成。
-- ca-client-tools v1.2.0 已发布；PR #39 OPEN，Phase B Worker/Facade 有证据，Phase C Consumer Migration NOT_STARTED。
+- ca-client-tools main `7bcb2614aa3615d8358df31eecefd0909e894e40`，Provider v1.2.0 RELEASED；PR #38/#39 OPEN；MAS Owner Publisher 由 SR-025 READY / [Issue #43](https://github.com/odango-chan/ca-client-tools/issues/43) 跟踪，尚未实施。
 - env-openamsm PR #26/#27 已合并；MAS Owner v1alpha4 与 Receipt/Proof/Reconcile 已进入主线。
 - env-5gc-sim PR #79 已合并；Mock AMF Modify 测试场景进入主线。
 - ca-openamsm-plugin main 只有 README；PR #1 OPEN/Draft。
-- ca-agent-demo PR #219 MERGED；Development H1/H2/H3 证据可参考，但未完整证明 durable Owner Receipt / exact-original Reconcile。PR #246/#248/#249 OPEN，不计入 main。
-- ca-skill-studio-demo PR #258 MERGED；Pages 最新部署 SHA 未重新核验。
-- ca-agent-next PR #1 已合并；PR #13 是 F03.05 设计文档 PR（OPEN），不是实现 PR。
+- ca-agent-demo main `25168db031e996bfa4de440c4156ae94f4e19bce`；PR #219/#253 MERGED；SR-024 VERIFIED、AC-024-01～07 PASS；Review COMMENTED、4 个 PR checks SKIPPED；Development 不等于 Production Qualification。
+- ca-skill-studio-demo main `79bd2c3f64a90e7f0f169204c866a3218655bab1`；#267/#270/#272 MERGED（#272 merge `a8633553615d786e360a62c2b0042a27ae92d9d3`）；Issue #261/#269/#279/#290/#295 OPEN；#276 OPEN/DRAFT/DIRTY；#296 MERGED（`73523df2f7538ad51d37f1eaca2a40ab07c1e9a1`）；Pages 最新部署 SHA 未重新核验。
+- ca-agent-next main `b2ed5eb84114f9c2556a0cd06ed974887b1b70ad` 未修改；PR #34 的 merge commit 为 `32c7c1be5e93bddc83349234476b2ffa09e1ca23`，PR #41 的 merge commit 为 `a899409ea7bf2ffde20ea2d62a9b4a310fb5638c`，PR #42 的 merge commit 为 `34e99e0cc54cc82b6b40040286fc84673432ef76`，该快照时 restore HEAD 为 `34e99e0`；PR #13 CLOSED/superseded。`32c7c1b` 是 PR #34 merge 和 restore↔refresh 分叉点，不是当前 restore HEAD。系统 EX 和 merge-commit post-merge exact verification 仍 NOT_RUN。
 
 外部 Compiler/语言规范发布是 Agent 的外部依赖，不意味着 Next 需要集成 Compiler 命令。外部仓 PASS 不计入 Next PASS；实施前必须刷新准确 SHA、发布物、PR 和测试范围。
+
+## 当前实现状态快照（2026-11-27）
+
+- Phase A：SR-002 Python Host + Model Loop 最小切片 VERIFIED，AC-002-01～08 PASS；完整 Runtime、EX-01 和 CPython 全矩阵仍未完成。
+- Phase B：SR-003 v0.3.11 VERIFIED（模块 AC-003-01～04）；PR #34 head `e8bcb1b` / merge `32c7c1b`，PR #41 head `f3f59b5` / merge `a899409`，PR #42 head `c573955` / merge `34e99e0`，均已合入 restore，且每组 Head/Merge tree 完全一致。Ubuntu/Python 3.12 与 Windows/Python 3.14 双平台模块 CI SUCCESS（87 Plugin / 52 Host / 80 Review Context tests）；当前 restore HEAD `34e99e0`。系统 EX-02/03/04/18 与 merge-commit post-merge exact verification 仍 NOT_RUN，Provider v2 wire DTO 与完整 Runtime E2E 由后续 SR 单独验收。
+- Skill Studio：main `79bd2c3`；#267/#270/#272 MERGED（#272 merge `a863355`）；#261/#269/#279/#290/#295 OPEN，#276 OPEN/DRAFT/DIRTY；#296 MERGED（`73523df2f`）。默认 Host Context Example provenance 已实现；普通 ZIP 全局 provenance/reload 与双根正式包消费验收仍未完成。SR-024 VERIFIED，SR-025 READY / ca-client-tools #43 OPEN。
+- CA-SL：v1alpha5 RELEASED，规范提交 `18d8184367982ccbc835756136c4a53f9096c3a0`；Compiler #61 OPEN，when Runtime Artifact/Go-Python 产品互操作未完成。
+- 本架构描述目标与当前差异；外部仓 main/PR 状态不等于 Next 实现或系统 Acceptance。
+
+### PR #54 评审快照（2026-11-27）
+
+- 第二轮历史复评输入：Base `34e99e0cc54cc82b6b40040286fc84673432ef76`，Head `50a1c1496525c961b2ca6b1f9daaf2fb26ab3657`，`git merge-base(Base, Head)` 为 `34e99e0`；refresh 原分支为 `f63bbce2709284c97d8cd150343d491a3f2958db`，与 restore 的分叉点为 `32c7c1b`。该 Head 仅是第二轮历史评审输入。
+- 第三轮当前复审与验证：Base `34e99e0cc54cc82b6b40040286fc84673432ef76`，Head `1f1234065be1f849dad2d17a91eaff986d384df5`；PR OPEN / Draft / MERGEABLE / CLEAN，16 files，未合并。GitHub Actions Run #319 (`45961614681`) SUCCESS，SR-001 回归 80/80、review_scope 机器校验 PASS；Artifact `review-context-pr-54-45961614681-1` 精确绑定该 Head。第三轮独立复审结论 `APPROVE_WITH_NON_BLOCKING_FOLLOWUPS`，仅保留 5 项 P3 非阻断 follow-ups。`git merge-base(Base, Head)` 为 `34e99e0`。
+- GitHub Branch API 显示 main/restore/refresh `protected=false`，不应称为已启用分支保护；本任务仍禁止直接修改这些分支。
 
 ## 14. 详细设计与规范入口
 
@@ -266,6 +280,7 @@ sequenceDiagram
 - [公共契约与所有权规范](../规范/公共契约与所有权规范.md)
 - [演示验收基线](../验收与实施/演示验收基线.md)
 
+
 ## 修订记录
 
 | 日期 | 文档版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
@@ -280,3 +295,11 @@ sequenceDiagram
 | 2026-11-25 | 0.4.1 | GPT-6.2（ChatGPT） | §10、外部依赖快照 | 纠正 Host Artifact Store Channel 生命周期；同步 Provider v1.2.0、Go Host P1 外部参考与 Next Python Host 未实现状态；区分 Mock AMF Codec C1 | 统一总体架构、F05、Plugin IPC 和验收基线中的协议状态 | Issue #12；SR-009、SR-010、SR-011、SR-015 |
 | 2026-11-25 | 0.4.2 | Codex / GPT-6 | 正文 | §7 对齐 M.3 输入校验与候选排除顺序 | 消除执行歧义并同步中央设计 | Issue #12 |
 | 2026-11-26 | 0.4.3 | Codex / GPT-6 | 见本行变更 | §Tool 更正业务公共契约所有权 | 对齐跨仓实现与独立复验 | Issue #12 |
+| 2026-11-26 | 0.4.4 | GPT-6.2（ChatGPT） | 文档头、§13～§14 | 更新 ca-skills、ca-client-tools、ca-agent-demo、Studio 与 Next 当前 main/PR 状态；记录 #34 MERGED 到恢复分支及 SR-025 READY/#43 OPEN | 避免将 PR 合并、模块 CI 和系统 EX 混为一谈；同步外部 Publisher 与 Studio 消费状态 | Issue #12；IR-006；SR-003、SR-016、SR-024、SR-025；ca-client-tools #43；Studio #269/#272/#276 |
+| 2026-11-27 | 0.4.5 | GPT-6.2（ChatGPT） | 文档头、§13～§14 | 将 Studio main 更新为 `79bd2c3`；按 SR-003 v0.3.11 和 PR #41/#42 回填模块 VERIFIED 与双平台 CI，保留系统 EX NOT_RUN | 整合外部状态时保留恢复分支较新的模块验收结果，不将历史 IN_PROGRESS 快照带入当前架构状态 | Issue #53；Issue #12；SR-003、SR-016、SR-024、SR-025；PR #34/#41/#42；Studio #261/#269/#272/#276/#279/#290/#295 |
+| 2026-11-27 | 0.4.6 | GPT-6.2（ChatGPT） | 文档头 | 将全局 review_scope 声明调整为仓库治理规范要求的唯一规范文本；局部非目标继续由独立章节承载 | 修复 Review Context 正式文档头检查失败，不改变总体架构语义 | Issue #53；PR #54 |
+| 2026-11-27 | 0.4.7 | GPT-6.2（ChatGPT） | §13～§14 | 修正 Studio main 完整 SHA、#272 merge SHA 与 #296 merge 状态；明确 restore 当前 HEAD 和 PR #34/#41/#42 merge chain、PR #54 仅目标 restore | 避免把外部 main、PR merge SHA、PR head 和恢复分支 merge commit 混为同一身份 | Issue #53；Issue #12；PR #34/#41/#42/#54；Studio #261/#267/#269/#270/#272/#276/#279/#290/#295/#296 |
+| 2026-11-27 | 0.4.8 | GPT-6.2（ChatGPT） | 外部依赖快照、当前实现状态快照、修订记录 | 区分 PR #34 merge 与当前 restore HEAD；补齐 PR #34/#41/#42 merge chain、SR-003 tree/测试证据和 PR #54 第二轮评审 Base/Head/merge-base；标注 main/restore/refresh 的 branch protection API 观察 | 防止将历史分叉点误作当前 HEAD，明确第二轮评审的固定基线及分支保护真实状态 | Issue #53；PR #34/#41/#42/#54；SR-003；restore 34e99e0；refresh f63bbce |
+| 2026-11-27 | 0.4.9 | GPT-6.2（ChatGPT） | PR #54 当前快照、修订记录 | 区分第二轮复评历史 Head `50a1c149` 与修复后当前 Head `99a26c5`；记录 Run #312 SUCCESS、80/80 回归、review_scope PASS 和精确绑定当前 Head 的 Artifact | 防止继续引用已过期评审 Head；保留 PR OPEN/Draft、未合并和 restore/main 未修改的边界 | Issue #53；PR #54；Run #312；Artifact `review-context-pr-54-45959283144-1` |
+| 2026-11-27 | 0.4.10 | GPT-6.2（ChatGPT） | PR #54 验证快照、修订记录 | 将 `99a26c5` 明确为 Run #312 的最近已验证检查点，而非随后版本指针同步提交后的当前 PR Head | 避免架构快照硬编码 PR 自身的过期 Head；当前 PR Head 始终以远端 PR #54 引用为准 | Issue #53；PR #54；Run #312；Artifact `review-context-pr-54-45959283144-1` |
+| 2026-11-27 | 0.4.11 | GPT-6.2（ChatGPT） | 文档头、外部依赖快照、§13～§14、修订记录 | 修正外部依赖快照日期与 restore HEAD 时态；修复元数据块末行反斜杠；将 PR #54 历史评审与第三轮 Run #319/Artifact 当前验证信息移入评审快照小节 | 消除历史时点混杂、元数据字面反斜杠和导航章节错置；让当前验证证据精确绑定最终 Head | Issue #53；PR #54；R3-P3-01/02/05；Run #319；Artifact `review-context-pr-54-45961614681-1` |
