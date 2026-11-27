@@ -1,7 +1,7 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.17\
+> 文档版本：0.3.18\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
 > 修订日期：2026-11-27\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -199,14 +199,14 @@ AI Authoring 的 Change Set 只能新增或修改 Capability ID、Procedure argu
 
 **评审与实施门槛**：上述每项测试的正式 Package Schema、Compiler DTO/CLI/Worker、语言标识由对应发布者冻结后才允许产品 PASS。Studio 旧 Example 替换、旧 1.6.0 不兼容及历史导入结果仅用于审计，不能混入新 AC。SR-016 是该矩阵的实施与验收追踪入口；系统 E2E 不能代替 Studio 模块 AC。
 
-## 10. 3GPP Schema-only 包的作者体验与强校验（IR-009）
+## 10. 原版 3GPP YAML 只读展示与分离的 Adapter 类型（IR-009）
 
-- Package Explorer 可导入由 ca-skills / SR-031 **正式发布**的 3GPP Schema-only Interface Package，仅在依赖/Schema 视图显示标准类型、固定 source revision/$id、来源说明；**不**展示为 Tools/Operations/Capabilities，也不产生 Capability Grant。与 Host Context Package 的 `contexts` 使用入口区分。
-- Contract.requestSchema 保持 Skill-owned 根，编辑器为其显式声明的 3GPP 公共类型 `$ref` 提供类型/SourcePath 提示；当选择期 `when` 引用需 T2 Codec 取得的 NAS 字段，给出来自新 Compiler 的 `SOURCE_NOT_AVAILABLE` 或正式稳定等价诊断（以 Compiler Golden 为准），而不是偷偷触发解码。
-- Procedure 编辑器只显示 Codec 的 READ Capability，Provider Output Schema 固定到对应公共类型版本，执行期字段若为可选必须经存在性/空值守卫。缺发布 Schema / Snapshot / golden 时保持无效依赖并明确错误，不生成猜测 Schema 的 Change Set。
-- Lock 记录实际导入来源和 Package identity，Build/Verify 使用完整不可变依赖闭包。首批 0xD1 Profile 不意味着 Create/Modify 所需 Capability 资格已满足。Studio 不发布或重写 3GPP 公共类型，也不引入第二 Manager。
+- 工作台可展示 ca-skills SR-031 **原样代发布的 OpenAMSM 支持版本 YAML**，作为只读标准来源视图，保留原始 bytes、文件名/路径/相对引用，不提供自动格式化、重写、修补或保存对原件的修改；任何 AI Change Set 试图修改原件必须拒绝。
+- 原版 YAML Source Bundle **不是** CA-SL G.4 的已发布 Schema-only 类型；只有另行冻结、独立命名/版本的 Adapter Schema-only Package 才能出现在 Schema Explorer/类型补全，用显式依赖 $id 供 Skill 自有 Request root 引用。Adapter 与原版不可同名/同路径或彼此覆盖，Host Context Package 只经 `Contract.contexts`。
+- Procedure 可引用 ca-client-tools 正式 Codec **READ Capability** 与 Output Schema，但不能展示私有 Handler/Callable；当 T1 `when` 企图读取 T2 才解码的 NAS 字段，Compiler 应给稳定的 SourcePath/可用性诊断，不能偷偷触发解码。
+- 只读 A Source Lock、已发布 B/Provider 版本及 Schema identity 都进入 Project Lock/导入审计；没有 Adapter/Compiler 正式 Golden 时不要生成假 Schema，也不默认最新版标准。现行产品验收 NOT_RUN。
 
-[统一设计](../EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md) / [SR-031](../../SR/SR-031-3GPP公共Schema-only-Publisher.md)。新版产品验证 `NOT_RUN`。
+[统一权威设计](../EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)与 [SR-031](../../SR/SR-031-3GPP公共Schema-only-Publisher.md)。唯一语言 1.6.0，不创建第二管理器。
 
 ## 修订记录
 
@@ -234,3 +234,4 @@ AI Authoring 的 Change Set 只能新增或修改 Capability ID、Procedure argu
 | 2026-11-26 | 0.3.14 | GPT-6（ChatGPT） | §4.4～§6、§9.5、修订记录 | 明确零 Capability roots 不等于零 Package dependency closure；增加 Schema-only Host Context Package 的 Compiler gate、Studio 测试和 AC-016-04 映射 | 消除 F09 原“零根不调用 Compiler”与“无外部依赖 Assurance 可 Build”之间的矛盾，确保 Schema-only 依赖可被正确消费 | Issue #12/#40；SR-013 AC-013-06；SR-016 AC-016-04；SR-030；PR #46 |
 | 2026-11-26 | 0.3.15 | GPT-6（ChatGPT） | §5～§9、修订记录 | 同步 EC02 v0.2.12 与 SR-013 v0.2.18，保持 Schema-only Package / zero Capability roots 依赖契约一致 | 使 Studio Package Audit / AI Authoring 消费与 Compiler AC-013-06 使用同一 Schema-only 语义 | Issue #12/#40；EC02、SR-013、SR-016、SR-030；PR #46 |
 | 2026-11-27 | 0.3.17 | ChatGPT / GPT-6 | 3GPP Schema/Codec 分阶段消费 | 对齐 SR-031 公共类型、T1 Request 与 T2 Codec Result，新增分期拒绝/验收范围 | 修复标准输入来源与实现门禁的跨仓断点 | IR-009；Issue #47；SR-031/026 |
+| 2026-11-27 | 0.3.18 | ChatGPT / GPT-6 | 3GPP 原版发布裁决 | 版本随 OpenAMSM、原版 YAML 完全不改；将只读 Source Bundle 与可选 Adapter / Codec Output 分离 | 防止标准原件被类型适配误改 | Issue #47；SR-031/026 |
