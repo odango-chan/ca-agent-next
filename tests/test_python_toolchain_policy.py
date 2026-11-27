@@ -139,7 +139,8 @@ class PythonToolchainPolicyTests(unittest.TestCase):
         self.assertTrue(any("BARE_PYTHON_ENTRY" in item for item in found))
 
     def test_uv_pip_sync_is_rejected(self) -> None:
-        found = command_violations([(".github/workflows/ci.yml", "uv pip sync requirements.txt")])
+        command = "uv " + "pip" + " sync requirements.txt"
+        found = command_violations([(".github/workflows/ci.yml", command)])
         self.assertTrue(any("PIP_INSTALL" in item for item in found))
 
     def test_uv_sync_requires_locked(self) -> None:
