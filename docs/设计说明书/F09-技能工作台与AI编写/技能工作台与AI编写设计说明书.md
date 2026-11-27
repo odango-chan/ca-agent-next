@@ -151,7 +151,8 @@ Package Explorer、LSP、Problems 与 AI Workbench 必须区分源码诊断、�
 | MAS Owner Interface Package Publisher | READY / NOT_IMPLEMENTED | SR-025；[ca-client-tools #43](https://github.com/odango-chan/ca-client-tools/issues/43) OPEN；Publisher 尚未实施；Package version 固定 `1.0.0` |
 | Host Context Interface Package Publisher | VERIFIED / NOT_IMPORTED | SR-024；ca-agent-demo PR #253 MERGED，AC-024-01～07 PASS；ZIP 仍未导入 Studio lock |
 | Default Host Context Example provenance | IMPLEMENTED（仅默认 Example 专用路径） | `files.json` 显式声明 `sourceStatus=DEVELOPMENT_FIXTURE`；`prepareExampleHostContextDependency` 校验来源身份并将完整 `source` 写入 `skillc.lock/v0.1`；源码固定在 Studio main `79bd2c3f64a90e7f0f169204c866a3218655bab1` |
-| Ordinary ZIP sourceStatus provenance policy / reload | NOT_IMPLEMENTED / NOT_VERIFIED | 普通 ZIP `acquireInterfaceZip` 只保存 upload/contentDigest/packageId/version/publisher，不全局生成 `sourceStatus`；正式 ZIP 导入后的 provenance/reload 仍由 SR-016 / Studio #261/#269 验收 |\n| Real released ca-client-tools v1.2.0 as Compiler root | NOT_RUN | 需显式 `ca-client` synthetic Contract 正例；此 Provider 包不替代 MAS Owner Package |
+| Ordinary ZIP sourceStatus provenance policy / reload | NOT_IMPLEMENTED / NOT_VERIFIED | 普通 ZIP `acquireInterfaceZip` 只保存 upload/contentDigest/packageId/version/publisher，不全局生成 `sourceStatus`；正式 ZIP 导入后的 provenance/reload 仍由 SR-016 / Studio #261/#269 验收 |
+| Real released ca-client-tools v1.2.0 as Compiler root | NOT_RUN | 需显式 `ca-client` synthetic Contract 正例；此 Provider 包不替代 MAS Owner Package |
 | No-root UI state | NOT_IMPLEMENTED | 不调用 Compiler、无 Artifact、无 `NOT_ADMITTED` |
 
 #272 已合并，只证明 request builder 切片进入 main；其 merge SHA 为 `a8633553615d786e360a62c2b0042a27ae92d9d3`，当前 main 为 `79bd2c3f64a90e7f0f169204c866a3218655bab1`。#276 仍 OPEN / DRAFT，base `3b3c4ac9d4b3a2f2e2380793d028d92f24c62c27` 未对齐当前 main、GitHub 报告 DIRTY；历史 HEAD 检查不构成当前 exact-head 验收。PR #296 已 MERGED（merge `73523df2f7538ad51d37f1eaca2a40ab07c1e9a1`），但跟踪 Example replacement 的 Issue #295 仍 OPEN；必须以当前 main 重新执行相关验收。
