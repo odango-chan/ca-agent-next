@@ -263,7 +263,7 @@ Context 与 Artifact 的详细契约见 F05。Model Loop 不得将模型生成�
 
 ## 8. 配置与启动
 
-Host 启动时加载基础配置、Plugin manifests、Tool Interface Packages 和已发布 Skill Bundles；任何必需依赖加载失败时不得部分启用业务。配置包含 Plugin 安装位置、Model Client/Gateway、Skill Bundle 位置、Artifact staging/store 和日志级别。凭据通过部署安全配置提供，不接受业务 Event 注入 Provider Key。
+Host 启动时加载基础配置、Plugin manifests、Tool Interface Packages 和已发布 Skill Bundles；任何必需依赖加载失败时不得部分启用业务。配置包含 Plugin 安装位置、Model Client/Gateway、Skill Bundle 位置、Artifact staging/store 和日志级别；新增逻辑布尔设置 `scriptExecution.llmEnabled`（默认 false），仅显式启用后才允许 Host 向模型提供 host.skill-script.execute。该设置不替代 Package Registry 的 llmInvocable opt-in，也不授予业务 Capability。凭据通过部署安全配置提供，不接受业务 Event 注入 Provider Key。
 
 Demo 以单 Host 进程和本机/内网 Plugin 进程为基线；不要求 HA、分布式调度或在线 Marketplace。
 
