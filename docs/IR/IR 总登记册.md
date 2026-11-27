@@ -1,9 +1,9 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录\
-> 文档版本：0.1.28\
-> 修订日期：2026-11-27\
-> 状态：7 项 IR；IR-007 登记 Python 工程工具链统一需求，SR-028 为 DRAFT。\
+> 文档版本：0.1.29\
+> 修订日期：2026-11-27
+> 状态：8 项 IR；IR-008 登记 CA-SL 1.6.0 Capability-first 严格一对一与完全无旧版兼容，SR-029 设计待评审；SR-028 仍 DRAFT。
 > 全局评审范围：继承根目录 Agent.md 的 review_scope\
 > 本文局部非目标：生产级需求管理平台
 
@@ -100,6 +100,18 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 - 实施范围：首批仅覆盖 `ca-agent-next` 根 Python 项目；其他仓库采用 uv 或迁移依赖管理须各自登记目标仓、基线、Issue 和 SR。
 - 完成依据：SR-028 的全部必需验收在目标仓真实执行并 VERIFIED；设计评审或锁文件生成本身不代表实施完成。
 
+## IR-008
+
+**CA-SL 1.6.0 Capability-first Skill 作者模型与 Callable 一对一绑定（完全无兼容）**
+
+新 Skill 作者只描述 Capability；每个 Skill-facing Capability 与一个公开 Callable 必须严格双向一对一，编译器在固定 Package 身份下解析并绑定，Runtime 从已编译 Binding 取得精确 Callable，Skill Studio 只展示 Capability。Operation/Observation 只是 Node 阶段，不创建独立 Operation ID。
+
+- 决策与协作：[Next Issue #40](https://github.com/odango-chan/ca-agent-next/issues/40)；对应 [SR-029](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) **设计待评审 / 实施未 READY**。
+- 版本边界：**CA-SL 1.6.0 是唯一新作者/产品版本**，没有旧解析器、兼容映射、迁移工具、双轨编译、旧 Build DTO、旧 Artifact / Bundle 或混合 Catalog。历史 v1alpha5 仅供只读审计，旧 Skill 必须按新格式重新编写/编译/发布。
+- 设计入口：F02、F03.05、F04、F06、F08、F09、EC02，以及 [CA-SL 版本规范](../规范/CA-SL语言基线与版本规范.md)；SR-004 导入只支持新 Assurance Bundle，SR-027 负责正式发布。
+- 外部发行依赖：ca-skills 1.6.0 规范/机器标识；Owner/Provider 一对一 Package；Compiler 新 BuildRequest / BuildResult / Binding / Runtime Artifact；Studio 与 Agent 的 1.6.0 产品回归与 MAS Create→Modify→Release E2E。
+- 验收与状态：SR-029 的设计 AC 需独立审查；代码实施 Issue / 受测 SHA / Golden / 正式 Release / E2E 尚无 1.6.0 证据，不能宣称 READY / VERIFIED。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
@@ -136,3 +148,4 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 | 2026-11-26 | 0.1.23-pr44 | GPT-6.2（ChatGPT） | IR-003 | 登记 SR-004 独立设计 readiness Issue #43 | 使 Skill 导入与 Compiler/Bundle 依赖有单独的设计审查入口 | Issue #43；SR-004；SR-013；SR-027 |
 | 2026-11-26 | 0.1.24-pr44 | GPT-6.2（ChatGPT） | IR-003、修订记录 | 登记 Issue #40 的 CA-SL 1.6.0 单版本无兼容/迁移裁决，要求 SR-004 只消费新 Bundle | 避免 IR-003 上游仍允许旧 Assurance 运行输入 | Issue #40/#43；SR-004；SR-029 |
 | 2026-11-27 | 0.1.28 | Codex | 整合 | IR-003 的 SR-004 设计与 IR-006 的 Publisher 记录 | 对齐 #54 恢复基线与 #44 导入设计 | Issue #40、#43；PR #44 |
+| 2026-11-27 | 0.1.29 | GPT-6.2（ChatGPT） | IR-008、修订记录 | 整合 1.6.0-only Capability-first 设计与最新恢复基线；设计待评审，实施/发布 NOT_RUN | 整合 PR #45 的 CA-SL 1.6.0 Capability-first 设计与恢复分支最新状态，避免回滚已合入的 #44 及后续基线。 | Issue #12/#40/#43；PR #44/#45 |

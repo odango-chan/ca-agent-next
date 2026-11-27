@@ -1,9 +1,9 @@
 # Skill 管理与选择设计说明书
 
 > 文档类型：机制设计说明书\
-> 状态：CA-SL 1.6.0 为唯一新目标，尚未发布。v1alpha5 Release 仅供溯源。Compiler 新 Runtime Artifact 与 SR-027 正式 Bundle 待交付。
-> 文档版本：0.2.17
-> 修订日期：2026-11-27\
+> 状态：**设计待评审**（唯一新目标 CA-SL 1.6.0；全链路不兼容任何旧作者语法、Build DTO、Artifact、Bundle；1.6.0 产品未发布）
+> 文档版本：0.2.18
+> 修订日期：2026-11-27
 > 功能归属：F02 — Skill 管理与选择\
 > 关联 SR：SR-004、SR-005、SR-006\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
@@ -249,3 +249,4 @@ Next 在 Skill 导入时反序列化已检查程序和类型环境，建立运�
 | 2026-11-26 | 0.2.15 | GPT-6.2（ChatGPT） | 文档头、§2～4、§9、§12、修订记录 | 按 Issue #40 将新 Assurance 消费版本改为 CA-SL 1.6.0，固定已编译 Capability→Callable Binding 与新 Runtime API 联合门槛 | 避免用 v1alpha6 候选或旧 v1alpha5 Callable Artifact 作为新运行包，保留历史冻结身份 | Issue #40/#43；SR-029；SR-004；SR-013 |
 | 2026-11-26 | 0.2.16 | GPT-6.2（ChatGPT） | §4、§9、修订记录 | 新 Agent 导入/Catalog 全面拒绝历史语言与旧 Artifact、无双轨并存或 fallback | 实现 1.6.0 单版本运行时，不让历史数据混入当前 Skill 执行 | Issue #40/#43；SR-004；SR-005 |
 | 2026-11-27 | 0.2.17 | Codex | 整合 | 导入候选、选择条件与编译产物边界 | 对齐 #54 恢复基线与 #44 导入设计 | Issue #40、#43；PR #44 |
+| 2026-11-27 | 0.2.18 | GPT-6.2（ChatGPT） | 文档头、修订记录 | 整合 1.6.0-only 设计与当前权威基线；产品实现、发行与 E2E 仍 NOT_RUN | 合并 #45 的 1.6.0-only 设计增量并保留恢复分支当前状态，避免回滚 #44 与后续修订。 | Issue #12/#40/#43；PR #44/#45 |

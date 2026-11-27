@@ -1,7 +1,7 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.2.7\
-> 状态：设计补充待评审；Compiler 实施由 SR-013 跟踪  
+> 文档版本：0.2.9\
+> 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 修订日期：2026-11-26  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产准入、Owner 信任运营、签名、Trust Registry、生产资格及真实 5GC/MAS 认证。
@@ -10,11 +10,11 @@
 
 ## 1. 权威与版本边界
 
-1. CA-SL 作者语义由 ca-skills 拥有。当前目标保持 **connectionagent.io/v1alpha5**；本设计固定的规范来源为 [ca-skills commit 18d8184367982ccbc835756136c4a53f9096c3a0](https://github.com/odango-chan/ca-skills/tree/18d8184367982ccbc835756136c4a53f9096c3a0)。
+1. CA-SL 作者语义由 ca-skills 拥有。**唯一新产品语言目标为 CA-SL 1.6.0（尚未发布）**；准确机器 languageTarget 待 ca-skills / Compiler Owner 冻结。历史 v1alpha5 [normative SHA 18d8184](https://github.com/odango-chan/ca-skills/tree/18d8184367982ccbc835756136c4a53f9096c3a0) 仅作只读审计，不进入新 Parser/Build。
 2. Compiler 产品基线为 v2.1.0；本轮实现审查基线为 [ca-skill-compiler commit 255ab85fa5abb4b0bf36656bf64250cafebf45cb](https://github.com/odango-chan/ca-skill-compiler/tree/255ab85fa5abb4b0bf36656bf64250cafebf45cb)。
 3. 已发布 Artifact **connectionagent.io/compiler-artifact/v1alpha5** 完全冻结，保持 Manifest、文件布局、字节、Build/Verify 行为及 Golden 不变。
 4. Development Artifact **connectionagent.io/compiler-artifact/development/v1alpha1** 完全冻结，继续 **NOT_ADMITTED**；不得把它当作 Agent 可运行发布包。
-5. Contract.when 需要新的、独立版本化的发布 Runtime Artifact。它的 Artifact API 版本与 CA-SL languageTarget 是两个独立版本维度；新产物仍声明 **languageTarget=connectionagent.io/v1alpha5**。
+5. Contract.when、Request Schema 根/闭包与 Capability→Callable Binding 必须共同进入**CA-SL 1.6.0 新 Runtime Artifact**；API 版本和语言机器标识独立，由正式 Owner Gate 冻结。新版不接受旧 v1alpha5 Artifact/BuildRequest/BuildResult，也不提供旧版 fallback。
 6. Compiler 不执行 Skill、Tool、Observation、Python Script、网络或 Runtime 选择。Agent 不调用 Compiler；消费端设计由 F02 与 SR-004/005/006 负责。
 
 ## 2. 单一 Core、当前实现基线与复用边界
@@ -162,8 +162,8 @@ AC-013-01 报告采用 Go 1.26.6、cel-go 0.33.2、Go protobuf 1.36.10、CPython
 
 - connectionagent.io/compiler-artifact/v1alpha5 保持完全不变。
 - Development v1alpha1 保持完全不变并继续 NOT_ADMITTED。
-- 新发布 Runtime Artifact 使用独立版本化 Manifest/文件布局，languageTarget 仍为 connectionagent.io/v1alpha5。
-- 建议的新 Artifact API 候选为 connectionagent.io/compiler-artifact/2；对应的新 BuildResult API 候选为 connectionagent.io/compiler-build-result/2。**两者均为本设计提案，不是已冻结 API。** 新 Runtime Build 入口复用当前 BuildRequest API connectionagent.io/compiler-build-request/v1alpha5；DependencyInspection API connectionagent.io/compiler-dependency-inspection/v1alpha5 不变，除非代码审计证明输入 DTO 必须变化。新 Compiler 版本的正式 Runtime Build 只产生 2 BuildResult / Artifact，VerifyBuildResult 只接受该结果契约；不在同一二进制中双轨支持旧/新 Runtime BuildResult，不增加版本 dispatch、fallback 或兼容路由。旧 v2.1.0 Release 及其 Artifact/BuildResult v1alpha5 保持不可变历史发布。Development Build 继续使用其独立 v1alpha1 API/Artifact 家族，不因 when 扩展。AC-013-03 开始前 Compiler Owner 必须书面确认两个新 API version；如采用其他命名，先更新本节和 SR-013，再实施。Harness 不得自行发明第三个版本名。
+- 新发布 Runtime Artifact 使用唯一 1.6.0 版本化 Manifest/文件布局，准确 languageTarget 由 ca-skills / Compiler 正式冻结；不兼容旧包。
+- 建议的新 Artifact API 候选为 connectionagent.io/compiler-artifact/2；对应的新 BuildResult API 候选为 connectionagent.io/compiler-build-result/2。**两者均为本设计提案，不是已冻结 API。** 新 BuildRequest / BuildResult / DependencyInspection 必须提供只面向 1.6.0 的唯一新 DTO 与机器身份；**禁止复用旧 v1alpha5 BuildRequest/DependencyInspection 作为新入口**，具体 Schema 由 Compiler Owner 冻结。新 Compiler 版本的正式 Runtime Build 只产生 2 BuildResult / Artifact，VerifyBuildResult 只接受该结果契约；不在同一二进制中双轨支持旧/新 Runtime BuildResult，不增加版本 dispatch、fallback 或兼容路由。旧 v2.1.0 Release 及其 Artifact/BuildResult v1alpha5 保持不可变历史发布。Development Build 继续使用其独立 v1alpha1 API/Artifact 家族，不因 when 扩展。AC-013-03 开始前 Compiler Owner 必须书面确认两个新 API version；如采用其他命名，先更新本节和 SR-013，再实施。Harness 不得自行发明第三个版本名。
 - 不把 Development 专用 executionStatus=NOT_ADMITTED、hostAdmission 或 Skill Admission 状态写入新发布 Runtime Artifact。
 
 ### 5.2 候选文件布局
@@ -232,9 +232,9 @@ requestSchema 对象与 when 是否存在无关；Host 依照 CA-SL v1alpha5 M.3
 - DescriptorSet 只负责 CEL 类型，不得被当作完整 JSON Schema 验证器；Request Schema 快照必须保留 G.4 的 enum/const/范围/长度/数组约束。
 - BuildResult、Manifest 与 OutputFiles 的集合和字节一致。
 
-新版 Verify 必须按 Compiler #61 的要求对新版本产物执行完整重建/逐文件比较或等价的确定性复验。新 Runtime Build 复用 BuildRequest v1alpha5，返回唯一的 BuildResult 2；VerifyBuildResult 只接受该新 BuildResult 并验证 Artifact 2，不在同一二进制中双轨 dispatch 到旧 Runtime BuildResult v1alpha5。旧 v2.1.0 Release 保留旧 BuildResult/Artifact v1alpha5 的原有行为；Development Build 仍由独立 Development API v1alpha1 处理。当前 CLI 已在写入目录前用同一 Verify 函数验证成功 BuildResult；新版本必须保持“先 Verify、后原子写盘”的既有不变量，不得假设存在一个已发布 Artifact 的独立 CLI verify 子命令。
+新版 Verify 仅接受 1.6.0 新 BuildRequest/BuildResult/Artifact，执行完整重建/逐文件比较或 Compiler Owner 冻结的等价确定性复验；新 Compiler 不支持任何旧 v1alpha5 DTO、Artifact、双轨 dispatch 或兼容 fallback。旧 v2.1.0 Release 保留旧 BuildResult/Artifact v1alpha5 的原有行为；Development Build 仍由独立 Development API v1alpha1 处理。当前 CLI 已在写入目录前用同一 Verify 函数验证成功 BuildResult；新版本必须保持“先 Verify、后原子写盘”的既有不变量，不得假设存在一个已发布 Artifact 的独立 CLI verify 子命令。
 
-### 6.3 旧契约回归
+### 6.3 历史契约留档与新版拒绝（非兼容）
 
 每次新增 Artifact 版本都必须执行：
 
@@ -256,7 +256,7 @@ requestSchema 对象与 when 是否存在无关；Host 依照 CA-SL v1alpha5 M.3
 | Isolation | 多 Skill 共享 Lock、每 Skill Request Schema 根、跨 Skill 字段借用拒绝 |
 | Serialization | Go CheckedExpr Any + DescriptorSet；Python 直接反序列化同一字节；18/18 PoC 基线扩展为正式 fixtures |
 | Artifact | 新版 Build/Verify、Request Schema 根/闭包发布与验证、损坏文件拒绝、缺失 Descriptor 拒绝、无 when、重复构建确定性 |
-| Compatibility | 冻结 v1alpha5 和 Development v1alpha1 Golden/字节回归 |
+| Version rejection | 新 Compiler 对全部历史 v1alpha5 Build DTO、Artifact、Development v1alpha1 和未知 languageTarget 显式拒绝；旧 Release/Golden 只读归档不计入 1.6.0 PASS |
 | Platform | Native、WASM、CLI E2E、真实 Chromium Worker parity |
 
 Compiler 产品回归命令以 Compiler 仓库当前脚本和 CI 为准，SR-013 固定以下必需门禁：
@@ -290,6 +290,61 @@ Chromium parity 脚本使用真实 Headless Chrome；若默认路径不可用，
 - AC-013-05 Compiler Release 资产：依赖 AC-013-01～04 和单独发布授权，BLOCKED。
 - SR-013 整体保持 DRAFT；本设计补充不代表 Compiler 产品代码已实施、PR 已合并或 Release 已发布。
 
+## 10. Capability 静态链接与 Runtime Artifact v2 绑定
+
+### 10.1 输入语义
+
+本节是 SR-029 对现有 Artifact v2 候选的增量要求。新候选只面向 CA-SL 1.6.0；v1alpha5 / Compiler v2.1.0 已发布路径保持冻结，Development v1alpha1 继续 NOT_ADMITTED。
+
+Contract.capabilities 是 Capability Grant 列表；Procedure 的 operation.capability / observation.capability 是使用点。dependencies 仍提供精确 Owner Contract / Provider Interface Package 快照。Skill 作者源不出现 Callable ID。
+
+### 10.2 Link 算法
+
+Compiler 对每个 Procedure Capability 使用点执行以下确定性步骤：
+
+1. 校验 Capability ID 格式，并确认它已列在同一 Skill Contract.capabilities 中。
+2. 在该 Skill 的显式 dependency closure 中查找 Capability export；必须恰好命中一个 Package。零个报 CAPABILITY_UNRESOLVED；多个报 CAPABILITY_AMBIGUOUS。
+3. 读取该 Capability 的公开 Callable membership；数量必须恰好为 1。零个或多个报 CAPABILITY_CALLABLE_CARDINALITY_INVALID。
+4. 检查该 Callable 只归属一个 Skill-facing Capability；重复归属报 CALLABLE_CAPABILITY_CARDINALITY_INVALID。
+5. 在同一 Package / Owner 的 ToolCatalog 中解析 Callable；Owner、ID、kind、Effect、Input/Output Schema 必须唯一一致。
+6. operation.capability 必须匹配 kind=operation；observation.capability 必须匹配 kind=observation 且 Effect=READ。Operation Effect 由 ToolCatalog 决定，不由 Skill 声明。
+7. 复用现有 Schema closure、Evidence、Scope identity / provenance、Mutation Receipt / Commit Proof / Reconcile 校验；Reconcile 不作为普通 Capability 导出。
+8. 对未被任何 Procedure 使用的 Grant 报 CAPABILITY_GRANT_UNUSED；不得因未使用而保留隐式授权。
+
+Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId。Provider 内部的多 handler 路由由 Callable 的封闭 Input Schema 决定。
+
+### 10.3 Artifact v2 Capability Binding
+
+既有候选 API connectionagent.io/compiler-artifact/2 与 connectionagent.io/compiler-build-result/2 保持候选名称；本次将其唯一 languageTarget 更新为 （1.6.0 languageTarget 机器标识待发行方冻结）。它们尚未通过 Compiler Owner Gate，不是已冻结 API。新 BuildRequest 必须 1.6.0-only，精确字段经 Compiler Owner Gate 冻结。
+
+每个 Skill 的 Manifest 增加 capabilityBindings[]。每项至少包含：
+
+- capabilityId：作者源使用的 Capability ID；
+- dependencyId / stablePackageId：解析来源；
+- owner 或 publisher identity：所属契约权威；
+- callableId：唯一内部 Callable ID；
+- kind / effect：ToolCatalog 或 Interface Package 的规范值；
+- inputSchemaRef / outputSchemaRef：对应 Package 的精确 Schema 引用。
+
+编译后的 Procedure 节点保留 capabilityId；capabilityBindings[] 是 capabilityId 到 callableId 的唯一内部映射。Manifest 的 dependencyClosure.exports[] 仍列出精确 operation / observation Callable exports，Runtime 继续从该闭包建立 Callable allowlist。Capability ID 不是运行时模型选择器；Callable ID 不暴露给模型。
+
+### 10.4 稳定诊断与失败行为
+
+至少定义以下稳定诊断：CAPABILITY_UNRESOLVED、CAPABILITY_AMBIGUOUS、CAPABILITY_NOT_GRANTED、CAPABILITY_GRANT_UNUSED、CAPABILITY_CALLABLE_CARDINALITY_INVALID、CALLABLE_CAPABILITY_CARDINALITY_INVALID、CAPABILITY_PHASE_KIND_MISMATCH、CAPABILITY_SCHEMA_MISMATCH、CAPABILITY_BINDING_MISSING。
+
+任何 Capability Link、Schema、Evidence、Scope 或 Artifact 装配错误均返回完整诊断和空 OutputFiles，不生成部分 Artifact。禁止 fallback 到 v1alpha5、Development 或动态 Provider catalog。
+
+### 10.5 不变量
+
+- v1alpha5 已发布 Artifact / Golden 和 Compiler v2.1.0 不变。
+- 新 Artifact v2 只支持 languageTarget 1.6.0；新 Compiler 不解析旧版语法、旧 Build DTO 或 Artifact。
+- Development v1alpha1 Schema / Golden 不变并继续 NOT_ADMITTED。
+- 不增加包级 hash、签名、Trust Registry、Admission 或新的 Capability Manager；复用现有 Package identity、Schema 和文件清单机制。
+- 本节由 SR-029 设计；SR-013 继续跟踪 when / Request Schema / Build / Verify / Release 的 Compiler 实施，AC-013-03 必须消费本节唯一 Artifact v2 目标。
+
+**1.6.0-only 设计评审硬门槛：** 新 Compiler Parser/Check/Build/Verify/BuildRequest/BuildResult/Artifact 只支持 1.6.0。 此章节仅描述目标设计，外部代码/Release/E2E 均 NOT_RUN。
+
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
@@ -311,3 +366,5 @@ Chromium parity 脚本使用真实 Headless Chrome；若默认路径不可用，
 | 2026-11-25 | 0.2.5 | Codex | 正文 | 同步隔离 PoC 的固定归档与复跑状态 | 核对 Issue #12 与固定提交 | Issue #12 |
 | 2026-11-26 | 0.2.6 | Codex / GPT-6 | 见本行变更 | 将实际 Bundle CI/发布归入 ca-skills 生产端 SR-027 | 对齐跨仓实现与独立复验 | Issue #12 |
 | 2026-11-26 | 0.2.7 | Codex / GPT-6 | 见本行变更 | 将未发布 Runtime Artifact 与 BuildResult 的候选版本段改为纯数字 2，保留 Owner 冻结门禁 | 对齐跨仓实现与独立复验 | Issue #12 |
+| 2026-11-26 | 0.2.8 | GPT-6（ChatGPT） | 新增 1.6.0 目标章节、状态及修订记录 | 移植一对一 Binding / Selector / Action 设计并标为待评审 | 无旧版兼容或产品完成承诺 | Issue #40；SR-029 |
+| 2026-11-26 | 0.2.9 | GPT-6（ChatGPT） | §1、§5～7、修订记录 | 移除新 Compiler 复用 v1alpha5 BuildRequest/DependencyInspection/Verify 的旧假设，唯一目标为 1.6.0 DTO/Artifact，历史包在新版明确拒绝 | 贯彻 Issue #40 全链路无兼容、无双轨/迁移；准确机器标识待 Compiler Owner 冻结 | Issue #40；SR-029；SR-013 |

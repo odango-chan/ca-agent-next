@@ -1,11 +1,11 @@
 # SR-027：技能Bundle构建与发布
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.6\
-> 状态：DRAFT；Compiler 新 Runtime Artifact API 与正式 Bundle 正例尚不可用，不允许实施发布路径\
+> SR 版本：0.1.7\
+> 状态：**DRAFT（设计待评审）**；CA-SL 1.6.0-only、完全不兼容旧版；**代码实施/发布 NOT_READY**，模块验收 NOT_RUN
 > 创建日期：2026-11-26  
 > 上游需求：IR-006  
-> 设计依据：F08 v0.3.12 §4、§6；CA-SL 1.6.0 目标（Issue #40 / SR-029）。\
+> 设计依据：F08 v0.3.13 §4、§6；CA-SL 1.6.0 目标（Issue #40 / SR-029）。\
 > 关联 Issue：ca-agent-next#12（设计）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：见 §4；本批限外部构建与发布。
@@ -16,7 +16,7 @@
 
 ## 2. 在源仓交付
 
-历史 `scripts/compile_mas_v1alpha5.py`、`tests/test_compile_mas_v1alpha5.py` 及原有 CI **仅作为留档审计线索，不作为 1.6.0 新实现或验收入口**。新 Bundle 构建与测试必须基于 ca-skills 正式发布的 **1.6.0 作者语法**、SR-029 的 Capability→Callable Binding 和 Compiler 新版契约，从头定义单版本流程；不保留调用旧编译脚本的兼容分支。为本批指定的 Echo 作者源、MAS 作者源分别建立构建输入清单。Echo 在该基线缺失，准备 SR-008 所用的指导包和带 Assurance 的 Echo，登记路径、Capability、请求/响应样例及预期。MAS 输入选 `examples/skills/{establish,modify,release}-pdu-session-mas`，逐个给出依赖和 Verify 日志。
+历史 `scripts/compile_mas_v1alpha5.py`、`tests/test_compile_mas_v1alpha5.py` 及原有 CI **仅作为留档审计线索，不作为 1.6.0 新实现或验收入口**。新 Bundle 构建与测试必须基于 ca-skills 正式发布的 **1.6.0 作者语法**、SR-029 的 Capability→Callable Binding 和 Compiler 新版契约，从头定义单版本流程；不保留调用旧编译脚本的兼容分支。为本批指定的 Echo 作者源、MAS 作者源分别建立构建输入清单。Echo 在该基线缺失，准备 SR-008 所用的指导包和带 Assurance 的 Echo，登记路径、Capability、请求/响应样例及预期。MAS 业务样例选 `examples/skills/{establish,modify,release}-pdu-session-mas`，逐个给出依赖和 Verify 日志。**这些当前路径对应历史 v1alpha5 作者源，只作为业务语义与迁写参考；实际进入 1.6.0 Build 的必须是作者按 SR-029 人工重新编写、固定 revision 并经 1.6.0 Compiler Check/Build/Verify 的新源，禁止直接编译当前历史文件。**
 
 CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验证成功后组装发布目录。指导包只含作者入口及声明的资源；确定性包随附已验证的 Runtime Artifact。输出记录作者 revision、Compiler 实际版本、API、资产路径、各包结果。发布前在临时目录验证，失败不上传部分批次；由授权的发布步骤消费同一份候选。
 
@@ -57,3 +57,5 @@ CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验�
 | 2026-11-26 | 0.1.4 | GPT-6.2（ChatGPT） | 文档头、§1、§5、修订记录 | 将后续 Skill Bundle 生产目标更新为 CA-SL 1.6.0，增加 SR-029 Capability Binding 与 Compiler #61 联合 Release 门槛；避免继续发布 v1alpha6 候选或旧 v1alpha5 作者源作为最新运行包 | Issue #40/#43；SR-029；SR-013；SR-027 |
 | 2026-11-26 | 0.1.5 | GPT-6.2（ChatGPT） | §2～3、修订记录 | 将旧 v1alpha5 构建脚本与测试从新版验收入口移除，仅保留历史审计；1.6.0 Bundle 必须原生编译/验证；严格无兼容、无旧构建管线的 1.6.0 单版本发布 | Issue #40/#43；SR-029；SR-027 |
 | 2026-11-27 | 0.1.6 | Codex | 设计依据 | 关联 F08 整合版本，正式 Bundle 仍待交付 | Issue #40、#43；PR #44 |
+
+| 2026-11-27 | 0.1.7 | GPT-6.2（ChatGPT） | §2、设计依据、修订记录 | 明确历史 v1alpha5 MAS 路径仅作迁写参考；1.6.0 Build 必须使用人工重写并通过新版 Compiler 验证的作者源；同步 F08 最新版本 | Issue #40/#43；SR-029；PR #44/#45 |
