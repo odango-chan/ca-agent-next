@@ -193,7 +193,7 @@ Contract 声明 requestSchema 时必须存在 dialect-aware 闭包描述，与 w
 
 新 Manifest **只由 1.6.0 的唯一正式 Schema 定义**；可复用有用字段的含义，但不得把 v1alpha5 Manifest 或旧 BuildResult 当成兼容输入。每个声明 requestSchema 的 Skill 必须有 requestSchema 对象，记录 sourceRef、root dialect 和完整 resources[]。本地 G.4 根记录 Artifact rootPath、可选 rootSchemaId（仅该根声明 `$id` 时记录）及本地闭包的 schemaId/artifactPath；外部 OAS3 根记录 Source Bundle dependency identity、source commit / Git blob pin、原始 source file、JSON Pointer 和每项资源的 OAS3 dialect，不虚构 `$id` 或 G.4 Artifact path。该对象与 when 是否存在无关，供 Host 按正式 **CA-SL 1.6.0** Request Schema/when 契约验证 Event payload。只有生成的本地 G.4 文件进入 compiledFiles[] / Manifest outputFiles[]；原版 OAS3 YAML 属于锁定 Source Bundle dependency，在 Published Bundle 中保留一次，不列为 Compiler 输出文件，运行期离线解析。
 
-每个有 when 的 Skill 增加 when 对象，记录 checkedExprPath、descriptorSetPath、sourcePath 和 sourceRange（startLine/startColumn/endLine/endColumn）；仅当表达式引用 input 时，额外记录 requestSchemaRef 与 resolvedRequestSchemaPath，并与同一 Skill 的 requestSchema 元数据一致。when.checked.pb 与 when.types.pb 同时进入 compiledFiles[] 和 Manifest outputFiles[]。Manifest `outputFiles[]` 只列文件路径 / 角色等非摘要元数据；不定义 `sha256` / `sourceDigest` / `dependencyDigest` / `packageDigest`。Build / Verify 只检查路径、存在性、Schema、依赖闭包和语义结果，不计算或比较 SHA-256 / checksum / digest。Any type URL 固定为 type.googleapis.com/cel.expr.CheckedExpr；payload 为标准 cel.dev/expr.CheckedExpr。DescriptorSet 是标准 google.protobuf.FileDescriptorSet，只承担 CEL 类型描述，不替代 G.4 Schema 验证数据。
+每个有 when 的 Skill 增加 when 对象，记录 checkedExprPath、descriptorSetPath、sourcePath 和 sourceRange（startLine/startColumn/endLine/endColumn）；仅当表达式引用 input 时，额外记录 requestSchemaRef 与 resolvedRequestSchemaLocation；该位置引用按 requestSchema.rootDialect 区分本地 G.4 Artifact path 或外部 OAS3 dependency identity + source file + JSON Pointer，并与同一 Skill 的 requestSchema 元数据一致。when.checked.pb 与 when.types.pb 同时进入 compiledFiles[] 和 Manifest outputFiles[]。Manifest `outputFiles[]` 只列文件路径 / 角色等非摘要元数据；不定义 `sha256` / `sourceDigest` / `dependencyDigest` / `packageDigest`。Build / Verify 只检查路径、存在性、Schema、依赖闭包和语义结果，不计算或比较 SHA-256 / checksum / digest。Any type URL 固定为 type.googleapis.com/cel.expr.CheckedExpr；payload 为标准 cel.dev/expr.CheckedExpr。DescriptorSet 是标准 google.protobuf.FileDescriptorSet，只承担 CEL 类型描述，不替代 G.4 Schema 验证数据。
 
 ### 5.4 AC-013-03 验收
 
@@ -222,7 +222,7 @@ Contract 声明 requestSchema 时必须存在 dialect-aware 闭包描述，与 w
 
 - 验证 Artifact API / languageTarget。
 - 验证 Manifest、路径、文件清单、重复归属和必需文件。
-- 验证已声明 Request Schema 的根与全部资源可解析，保留精确 $id 和 G.4 约束，无未解析/越界/重复资源。
+- 验证已声明 Request Schema 的根与全部资源按声明 dialect 可解析：本地 G.4 保留精确 `$id`（若声明）和 G.4 约束；外部 OAS3 保留精确 Source Bundle pin、source file / JSON Pointer 与 OAS 3.0 原生约束语义，不要求 `$id`，不得投影为 G.4；无未解析/越界/重复资源。
 - 验证 Any type URL、CheckedExpr protobuf、bool 类型和 DescriptorSet。
 - 验证所有类型引用可解析，Request Schema identity 与该 Skill 一致。
 - 验证 SourcePath、表达式位置、程序文件与 Manifest 一致。
@@ -471,4 +471,4 @@ OpenAPI operation / multipart ingress 验证由 SR-010 负责；Compiler 负责 
 
 | 2026-11-27 | 0.2.36 | GPT-6.2（ChatGPT） | 文档头、设计依据、修订记录 | 同步 SKILL 作者规范 v0.2.3 的完整正向 Procedure Node 结构 | 保持 Compiler / 作者规范示例与 Node 阶段文法一致 | Issue #49；IR-008；SR-032；PR #52 |
 | 2026-11-27 | 0.2.37 | ChatGPT（GPT-6） | 设计依据、修订记录 | 同步 CA-SL v0.2.7 与作者规范 v0.2.4 的 Node 示例与 Predicate 规则修正；不改变 Compiler Owner 的 AC-013-07 BLOCKED / NOT_RUN 状态 | 保持 Compiler 设计依赖和作者规范当前候选一致 | Issue #49；IR-008/009；SR-013/032；PR #52 |
-| 2026-11-27 | 0.2.38 | ChatGPT（GPT-6.2） | 文档头、§5.2～§5.4、§6、§13 | 将 Request Schema Manifest / Artifact 闭包改为 dialect-aware：本地 G.4 生成文件，外部 OAS3 保留 Source Bundle pin / source file / JSON Pointer 引用；新增 07j 验收 | 使 AC-013-07 从语言层 dialect 规则闭合到 Artifact、Bundle 和 Host 的文件所有权，同时保持 wire contract / Resolver / Golden 未发布时 BLOCKED / NOT_RUN | Issue #47/#49；IR-008/009；SR-031；PR #52 |
+| 2026-11-27 | 0.2.38 | ChatGPT（GPT-6.2） | 文档头、§5.2～§5.4、§6、§13 | 将 Request Schema Manifest / Artifact 闭包改为 dialect-aware：本地 G.4 生成文件，外部 OAS3 保留 Source Bundle pin / source file / JSON Pointer 引用；新增 07j 验收，并统一 when 的 Schema 位置引用与 Verify dialect 检查 | 使 AC-013-07 从语言层 dialect 规则闭合到 Artifact、Bundle、Host 与 when 类型定位，同时保持 wire contract / Resolver / Golden 未发布时 BLOCKED / NOT_RUN | Issue #47/#49；IR-008/009；SR-031；PR #52 |
