@@ -1,7 +1,7 @@
 # SKILL 作者规范（CA-SL 1.6.0）
 
 > 文档类型：Skill 作者规范（Next 中央规范性设计稿）  
-> 文档版本：0.2.2  
+> 文档版本：0.2.3  
 > 状态：**DRAFT / REVIEW_REQUESTED**（作者规则待独立评审；CA-SL 1.6.0 尚未由 ca-skills 正式发布）  
 > 语言目标：CA-SL 1.6.0 only；不兼容任何历史作者语法  
 > 功能归属：EC01 — Skill 作者规范与业务 Skill；消费端关联 F02 / F09  
@@ -369,24 +369,22 @@ limits:
 `assurance/procedure.yaml`：
 
 ~~~yaml
-start: validate-request
+start: normalize-qos
 inputs:
   request: context.request.payload
   sessionRef: context.session.sessionRef
 
 nodes:
-  validate-request:
+  normalize-qos:
+    # Keep request validation and its local transformation in one business Node.
     precondition:
       predicates:
         - predicate: qos.request.valid
           arguments:
             - inputs.request
       routes:
-        PASS: normalize-qos
         FAIL: FAILED
         UNKNOWN: UNRESOLVED
-
-  normalize-qos:
     operation:
       script: normalize-qos
       arguments:
@@ -633,3 +631,5 @@ Apply 前仍须由用户确认，并对同一候选源码与依赖锁执行正�
 | 2026-11-27 | 0.2.1 | GPT-6.2（ChatGPT） | §4.3、§10、修订记录 | 修正 3GPP Request Schema 根为纯 $ref OAS3 引用别名或本地闭合 G.4 根两种明确形式；说明 requestType 可选并必须用 has 守卫；补充 Front Matter.when 在有/无 Assurance 两种包中均拒绝的作者验收 | 消除 G.4 闭合约束与原版 OAS3 直引冲突，防止 CEL 对可选字段不安全读取和双入口回归 | Issue #49；IR-008/009；SR-013/032；PR #52 |
 
 | 2026-11-27 | 0.2.2 | GPT-6.2（ChatGPT） | §6.4、修订记录 | 明确禁止人为拆出的中间 Predicate-only Node，但允许最终 Goal Postcondition-only Node 仅含一个 Predicate | 消除“单 Predicate Node 禁止”与“最终 Postcondition-only Node 允许”之间的作者歧义 | Issue #49；IR-008；SR-032；PR #52 |
+
+| 2026-11-27 | 0.2.3 | GPT-6.2（ChatGPT） | §6.4、§6.7、修订记录 | 将 QoS 正向示例的请求校验 Predicate 合并到 `normalize-qos` Node 的 Precondition，删除孤立 `validate-request` Predicate-only Node；保留 PASS 自动进入 Operation 与 FAIL/UNKNOWN 路由 | 使完整示例遵守同一业务 Node 的阶段合并规则，不再与禁止中间 Predicate-only Node 的作者原则冲突 | Issue #49；IR-008；SR-032；PR #52 |
