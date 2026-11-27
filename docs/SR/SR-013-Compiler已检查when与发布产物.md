@@ -2,7 +2,7 @@
 
 > 文档版本：0.2.31\
 > 状态：整项 DRAFT；阶段 READY（中央只读核验，仅 AC-013-01 归档完整性）；AC-013-02/04 NOT_RUN，AC-013-03/05/06 依正式 Compiler Owner 契约，AC-013-07 BLOCKED / NOT_RUN（待正式 OAS3 dependency wire contract、Resolver / Validator 和 Golden）；Compiler 仅从有 Assurance Skill 的 assurance/contract.yaml 读取可选顶层 when；SKILL.md Front Matter 不声明 when；无 Assurance Skill 没有 Contract、不声明 when、不调用 Compiler。
-> 下一步：核对 PR #18 归档、58 项校验清单及原始报告。复跑单列；02/04 NOT_RUN，03/05/06 等 Compiler Owner 与正式契约。  
+> 下一步：核对 PR #18 归档、58 项校验清单及原始报告。复跑单列；02/04 NOT_RUN，03/05/06 等 Compiler Owner 与正式契约；07 等待正式 OAS3 dependency wire contract、Resolver / Validator 和 Golden。  
 > 阶段依据：[独立评审 #77](https://github.com/odango-chan/ca-agent-next/issues/77#issuecomment-7209276846)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
 > 工作项：[阶段工作项 #95](https://github.com/odango-chan/ca-agent-next/issues/95)。
 > 创建日期：2026-11-25  
