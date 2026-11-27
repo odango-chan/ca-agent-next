@@ -75,7 +75,7 @@ Bundle 始终保留共享资源原始文件。无 Assurance 的 Skill 不生成 
 
 | 输入 | Agent 处理 | Compiler 调用 |
 |---|---|---|
-| 只有 SKILL.md 的 Skill 包 | 读取指导和候选元数据，返回 candidate，由 Catalog 原子激活；仅 LLM-guided | 不调用 |
+| 无 Assurance 的 Skill Package（可附 schemas/、scripts/、references/、assets/） | 读取指导与共享资源，校验 Script Registry，返回 candidate，由 Catalog 原子激活；仅 LLM-guided | 不调用 |
 | SKILL.md + 已发布 Assurance Artifact | 基本结构/必需文件/格式/类型数据检查，解析 Tool/Capability 及 contexts Schema 闭包，返回 candidate，由 Catalog 原子激活 | 不调用 |
 | 无效或不完整的发布包 | 显式导入失败，不得降级为 SKILL.md-only | 不调用 |
 
