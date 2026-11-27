@@ -1,7 +1,7 @@
 # SKILL 作者规范（CA-SL 1.6.0）
 
 > 文档类型：Skill 作者规范（Next 中央规范性设计稿）  
-> 文档版本：0.1.2  
+> 文档版本：0.1.3  
 > 状态：**DRAFT / REVIEW_REQUESTED**（作者规则待独立评审；CA-SL 1.6.0 尚未由 ca-skills 正式发布）  
 > 语言目标：CA-SL 1.6.0 only；不兼容任何历史作者语法  
 > 功能归属：EC01 — Skill 作者规范与业务 Skill；消费端关联 F02 / F09  
@@ -100,7 +100,7 @@ skill-root/
 | Contract.capabilities | 仅列公开 Capability ID；是授权请求，不等于依赖本身 |
 | Contract.precondition | 可选且至多一个全局门禁引用，精确指向 NodeId.precondition；阶段内部使用有序 predicates 列表 |
 | Contract.limits.maxActions | 可选正整数上界；只能收紧 Host / Deployment 的预算 |
-| Procedure.arguments | 必须显式绑定；Operation / Observation / Script 使用命名映射，Predicate 使用匹配参数签名的有序列表 |
+| Procedure.arguments | 每个调用点必须显式绑定；具体结构由 CA-SL 1.6.0 正式 Schema / Golden 冻结；Predicate arguments 与 Predicate.parameters 的有序签名一致 |
 | Predicate | 只做纯判断；UNKNOWN 不得转 PASS；Evidence 要求必须由正式 Predicate 契约声明 |
 | Observation | 只读查询，Capability 必须是 kind=observation 且 Effect=READ |
 | Reconcile | Owner / Host / Runtime 的内部结果确认机制，不是 Skill-facing Capability、作者阶段或独立 Node |
@@ -135,7 +135,7 @@ skill-root/
 
 Procedure 必须是单一静态 DAG，具有 `start` 和 `nodes`；不得动态生成节点、任意循环或嵌套 Procedure Call。Node 至少包含一个业务阶段。阶段可以省略，但不得重排、重复或用注释补足。Precondition / Postcondition 阶段内部使用非空、有序的 `predicates` 列表。Operation 阶段最多调用一个公开 Capability 或一个纯本地 Procedure Script；Observation 阶段最多调用一个只读 Observation Capability。非末阶段的正常 Outcome 按语言规则进入下一阶段；当前 Node 的末阶段必须显式路由。
 
-Node-entry Wait 是目标 Node 入口的可选控制，不是第五阶段，不创建 Wait-only Node；它由 Host Runtime 的内部 READ 触发机制执行，并引用显式依赖中的 package-scoped Ingress Operation / Event Contract。作者不得自行声明 `payloadSchema`、复制协议 Schema、把 MUTATION Capability 当作 Wait trigger，也不得写作者级 await / poll 循环。Wait 的 timeout 只走 Wait-scoped `TIMEOUT` 路由；事件接受后仍须执行业务阶段和 Postcondition，不能直接证明成功。Mutation Reconcile 是 Runtime / Owner 的内部流程，不创建作者 Reconcile Node。
+Node-entry Wait 是目标 Node 入口的可选控制，不是第五阶段，不创建 Wait-only Node；它由 Host Runtime 的内部 READ 触发机制执行，并引用显式依赖中的 package-scoped Ingress Operation / Event Contract。作者不得自行声明 `payloadSchema`、复制协议 Schema、把 MUTATION Capability 当作 Wait trigger，也不得写作者级 await / poll 循环。Wait 的 timeout 只走 Wait-scoped `TIMEOUT` 路由；事件接受是隐式正常边，不声明 `EVENT_RECEIVED`；事件接受后仍须执行业务阶段和 Postcondition，不能直接证明成功。Mutation Reconcile 是 Runtime / Owner 的内部流程，不创建作者 Reconcile Node。
 
 ## 6. Node 拆分与合并原则
 
@@ -330,3 +330,4 @@ Apply 前仍须由用户确认，并对同一候选源码与依赖锁执行正�
 | 2026-11-27 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 从 ca-skills 作者指南、作者模型、Granularity、Package Layout、Schema Ownership、创建工作流和真实 Skill 样本中提炼仍有效原则；按 CA-SL 1.6.0 重建作者包、Node 粒度与注释规则 | Issue #49；IR-008；SR-032；SR-023/029 |
 | 2026-11-27 | 0.1.1 | GPT-6.2（ChatGPT） | §3.1、§4.1～4.2、§7～8、§10 | 修正 Procedure.inputs 仅允许 context SourcePath 的边界，补充 SourcePath 根与 Node Producer 引用；移除无依据的英文强制要求；区分 Skill 作者语义与 Owner / Runtime 契约所有权；修复示例的正常路由 | 避免作者指南超出 CA-SL 1.6.0 语言稿或引入无依据的语言约束 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.2 | GPT-6.2（ChatGPT） | §3、§5、§7、§10 | 补充 Assurance 有效性与模式边界、空 PredicateSet、静态 DAG 和 Node-entry Wait 的作者要求；将代码示例缩为不伪装可构建的注释片段 | 避免作者误把参考片段当作完整 1.6.0 Procedure 或把无效 Assurance 静默降级 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.1.3 | GPT-6.2（ChatGPT） | §4、§5 | 将 arguments 结构明确留给正式 1.6.0 Schema / Golden，不再由作者规范预设映射形状；补充 Wait 事件接受的隐式正常边约束 | 避免作者规范超出当前语言设计已冻结的语法边界 | Issue #49；IR-008；SR-032 |
