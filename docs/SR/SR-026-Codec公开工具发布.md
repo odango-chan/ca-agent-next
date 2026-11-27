@@ -1,8 +1,10 @@
 # SR-026：Codec公开工具发布
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.0\
-> 状态：DRAFT（实施主状态）；第二轮及本次自评均 BLOCKED_EXTERNAL_INPUT（缺 Provider Owner 正式 Codec Capability/Callable、Schema 与发布身份）；库向量范围仅可独立审查，非实施 READY。
+> SR 版本：0.2.1\
+> 状态：整项 DRAFT；BLOCKED_EXTERNAL_INPUT（缺 Provider Owner 正式 Codec Capability/Callable、Input/Output Schema、slot/mediaType、handler 和发行版本）。  
+> 下一步：Provider Owner 需交付 Codec 公开 Capability、唯一 Callable、输入输出 Schema、slot/mediaType、handler 和包版本。v1.2.0 与候选 PR #39 分别记录。  
+> 阶段依据：[独立评审 #87](https://github.com/odango-chan/ca-agent-next/issues/87#issuecomment-7209366603)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。
 > 创建日期：2026-11-26  
 > 修订日期：2026-11-27\
 > 上游需求：IR-006  
@@ -78,6 +80,7 @@
 
 原 AC-026-01～03 与首批 0xD1 范围保持不变。新增 AC-026-04～06 均 BLOCKED_EXTERNAL_INPUT；SR-031 原版 OAS Source Bundle 的 byte-for-byte PASS 不能代替 SR-026 Codec 产品验收。消费者为 SR-010 / SR-027 / SR-011；详见 [EC01.3GPP 设计](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。
 
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
@@ -90,6 +93,7 @@
 | 2026-11-27 | 0.1.5 | Codex / GPT-6 | 评审状态 | 登记第二轮限定范围及外部依赖 | 未单独记录（历史原因未提供） | Issue #12，PR #46 |
 | 2026-11-27 | 0.1.6 | GPT-6（ChatGPT） | §4.1、修订表 | 固定 Codec 公开契约缺件及唯一生产者，保留现有库向量独立可审查范围，整理历史六列修订记录 | 将外部输入阻塞与静态候选审查隔离，杜绝猜测公开机器 ID | Issue #12；PR #46；SR-026 |
 | 2026-11-27 | 0.1.7 | GPT-6（ChatGPT） | 修订记录 | 将历史记录统一为七列并保留原始文字及原始关联，修正非规范行的分隔符 | 确保修订表可由文档校验器完整解析；不影响设计语义及 READY 主状态 | Issue #12；PR #46；SR-026 |
-| 2026-11-27 | 0.1.8 | ChatGPT / GPT-6 | 3GPP Schema/Codec 分阶段消费 | 对齐 SR-031 公共类型、T1 Request 与 T2 Codec Result，新增分期拒绝/验收范围 | 修复标准输入来源与实现门禁的跨仓断点 | IR-009；Issue #47；SR-031/026 |
+| 2026-11-27 | 0.1.8 | Codex / GPT-6；ChatGPT / GPT-6 | 文档头；3GPP Schema/Codec 分阶段消费 | 登记BLOCKED_EXTERNAL_INPUT及 AC 范围；对齐 SR-031 公共类型、T1 Request 与 T2 Codec Result，新增分期拒绝/验收范围 | 按单项独立评审推进；修复标准输入来源与实现门禁的跨仓断点 | Issue #12、#87；PR #46；IR-009；Issue #47；SR-031/026 |
 | 2026-11-27 | 0.1.9 | ChatGPT / GPT-6 | IR-009 OpenAMSM YAML 原件发布边界 | 版本随 OpenAMSM、原版不改动；Adapter 与 Provider Result 独立发版，保留阶段 AC | 避免把标准 YAML 代发布等同解码产品资格 | Issue #47；SR-031/026/010/027 |
 | 2026-11-27 | 0.2.0 | ChatGPT / GPT-6.2 | §5 | 移除 Adapter 共享类型前置；明确 SBI OAS3 binary part 与 NAS/NGAP Codec Output 的边界，补齐 OpenAMSM NAS DOCX / NGAP ASN.1 源证据及 Provider Profile 门槛 | 避免将 SBI transport schema 冒充解码结果契约 | IR-009；Issue #47；SR-031/010/013/027 |
+| 2026-11-27 | 0.2.1 | GPT-6.2（ChatGPT） | PR #46 / PR #48 集成刷新 | 合并 Provider 外部输入阻塞状态与 IR-009 NAS/NGAP Codec Result Schema、消息 Profile 和原生协议源证据 | 避免把 SBI binary part 冒充已发布 Codec Output 契约 | Issue #47/#12；PR #46/#48；IR-009；SR-026/031 |

@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.2.16\
+> 文档版本：0.2.19\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 修订日期：2026-11-27\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -189,7 +189,7 @@ skills/<skill-name>/compiled/when.types.pb
 
 ### 5.3 Manifest 最小语义
 
-新 Manifest **只由 1.6.0 唯一正式 Schema 定义**；候选语义包含 apiVersion、languageTarget、validationScope、generator、dependencyClosure、skills、outputFiles、已检查 capabilityBindings、when 和 Request Schema 闭包。任何历史 v1alpha5 字段名只可经新 Owner 明确裁决复用，**不能接受旧 Manifest/BuildResult 作为新 DTO**。每个 Skill 的 identity/sourceDigest、编译文件、Wait/Continuation linkage 必须可确定性重建。
+新 Manifest **只由 1.6.0 唯一正式 Schema 定义**；候选语义包含 apiVersion、languageTarget、validationScope、generator、dependencyClosure、skills、outputFiles、已检查 capabilityBindings、when 和 Request Schema 闭包。任何历史 v1alpha5 字段名只可经新 Owner 明确裁决复用，**不能接受旧 Manifest/BuildResult 作为新 DTO**。每个 Skill 的 identity、编译文件、Wait/Continuation linkage 必须可确定性重建；不生成或校验 sourceDigest。
 
 每个声明 Contract.requestSchema 的 Skill 增加 requestSchema 元数据对象，至少记录：
 
@@ -202,7 +202,7 @@ requestSchema 对象与 when 是否存在无关；Host 依照 CA-SL **1.6.0** �
 
 仅为声明 when 的 Skill 增加 when 元数据对象，至少记录 checkedExprPath、descriptorSetPath、sourcePath 和 sourceRange（startLine/startColumn/endLine/endColumn）。当表达式引用 input 时，when 元数据还记录 requestSchemaRef 与 resolvedRequestSchemaPath，且必须与同一 Skill 的 requestSchema.rootSchemaId / sourceRef 一致；只访问 event.type 时可省略这两个引用字段。没有 when 时不输出 when 元数据。
 
-建议字段名和文件名是本设计的实现默认值；Compiler Owner 在 AC-013-03 冻结 JSON Schema 前确认。when.checked.pb 与 when.types.pb 必须同时进入 compiledFiles[] 和 Manifest outputFiles[]；Request Schema 根与资源闭包也必须进入相同清单。outputFiles[].sha256 复用既有逐文件字节校验，sourceDigest 复用现有字段。不得增加第二套哈希字段、独立 SHA-256 体系、签名、Trust Registry 或包准入机制。
+建议字段名和文件名是本设计的实现默认值；Compiler Owner 在 AC-013-03 冻结 JSON Schema 前确认。when.checked.pb 与 when.types.pb 必须同时进入 compiledFiles[] 和 Manifest outputFiles[]；Request Schema 根与资源闭包也必须进入相同清单。Manifest 不定义 `outputFiles[].sha256` 或 `sourceDigest`；`outputFiles[]` 只保留文件路径 / 角色等非摘要元数据。Build / Verify 检查路径、文件存在性、Schema、依赖闭包和语义结果，不计算或比较 SHA-256 / checksum / digest。
 
 ## 6. Build / Verify 责任与行为
 
@@ -366,9 +366,10 @@ Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId�
 
 - **SR-031 Source Bundle**：ca-skills 原样代发布 OpenAMSM 实际支持的 OpenAPI 3.0 YAML 与已选 operation / Schema Component 的完整可达 `$ref` 闭包。原文件 bytes、路径和相对 `$ref` 不改；Source Bundle 不是 Interface Package，不导出 Capability / Callable。
 - **本地 G.4 与外部 OAS 3.0 分离**：Skill-owned `requestSchema` 根及本地 Schema 节点继续使用 CA-SL 1.6.0 G.4。只有在 Skill 显式声明并 pin Source Bundle dependency 后，才能引用其中精确的 `#/components/schemas/...`；目标由 OAS 3.0 Schema Object validator 解释，不套用 G.4 白名单，不做 projection / Adapter。
-- **Resolver**：从 dependency alias 解析唯一 Source Bundle snapshot；只允许固定相对文件路径和 Schema Component JSON Pointer；递归解析同一 snapshot 内的 nested `$ref`；拒绝 arbitrary URL、dynamic latest、path traversal、unresolved ref、cross-commit mixing、non-schema pointer 和循环引用。Build / Verify 必须离线使用锁定快照。
-- **Dialect-aware 验证**：本地节点使用 G.4 validator；外部目标及其可达引用使用 OpenAPI 3.0 Schema Object semantics。`nullable`、`oneOf`、`anyOf`、`allOf`、`format` 等必须按 OAS 3.0 真实语义处理，不得丢弃 / 改写。若可达闭包含不支持语义，使用 `SCHEMA_INVALID` 拒绝并输出 source file / JSON Pointer / Skill SourcePath；不得生成部分 Artifact。
-- **CEL 类型环境**：仅暴露在所有可达 Schema 分支中类型一致、字段存在性可证明的字段；union 分支类型不一致或字段不确定时静态拒绝，不猜测为某个类型。Plugin 的完整 operation / multipart 校验仍由 SR-010 原生 OAS consumer 负责，Compiler 不复制 operation 逻辑。
+- **选定根与 lazy Resolver**：Compiler 的根是精确 Schema Component JSON Pointer；Plugin ingress 的根是固定 operation identity + `requestBody` surface（当前 `PostSmContexts` 的 `jsonData`）。先解析原版根 YAML，再仅递归解析该根可达的 refs；不得 eager resolve 根文件中未选定 operation 的全部 refs。相对 `$ref` 以引用所在文件为基准按 RFC 3986 解析；fragment 按 RFC 6901 解码。`../` 仅在规范化后的目标仍位于 pin 的 Source Root 内时允许；拒绝任意 scheme / authority / query、绝对路径、逃出 Source Root 的路径、非法 pointer escape、Bundle 外文件、unresolved in-scope ref、cross-commit mixing、non-schema pointer 和循环引用。未选定闭包外 refs 不构成当前消费失败。Build / Verify 必须离线使用锁定快照。
+- **真实来源闭包基线**：在 OpenAMSM commit `dc83ccbf5be54dcc7112dd43ba95ea6fa5975550` 上，`PostSmContexts.requestBody → jsonData → SmContextCreateData` 静态引用遍历得到 4 份原版 YAML、102 个可达 Schema Component，无未解析目标或循环。闭包为 TS 29.502、TS 29.571、TS 29.510 NFManagement、TS 29.518 Namf Communication；不是全目录 472 份 YAML。
+- **Dialect-aware 验证**：本地节点使用 G.4 validator；外部目标及其可达引用使用 OpenAPI 3.0.0 Schema Object semantics。当前固定闭包实际包含 `allOf` 1、`anyOf` 25、`oneOf` 3、`nullable` 2、`format` 4（实际值为 `uuid` / `date-time` / `byte`）、`pattern` 42、`additionalProperties` 3（本快照三处均为 Schema Object）、`items` 23、`enum` 27、`required` 26、`default` 21 个关键字出现项；这些计数是该 source commit 的审计证据，Golden 应覆盖各实际出现语义，不应当作未来版本的固定数量。组合语义为 `allOf` 交集、`anyOf` 至少一个分支、`oneOf` 恰好一个分支；`pattern`、schema-valued `additionalProperties`、`nullable`、`format` 等不得丢弃 / 改写。OAS3 允许 boolean-valued `additionalProperties`，当前快照没有该形式；实现遇到时须按 OAS3 处理或明确 fail-closed，不得静默忽略。`default` 仅为注解，不自动填充输入。若可达闭包含不支持语义，使用 `SCHEMA_INVALID` 拒绝并输出 source file / JSON Pointer / Skill SourcePath；不得生成部分 Artifact。
+- **CEL 类型环境**：对 `anyOf` / `oneOf`，只有在每个可满足分支中均声明、均列入 `required` 且类型一致的字段，才能作为无条件可访问字段；其他字段仅在 CEL 类型系统显式支持 optional 时按 optional 暴露，否则不允许无条件访问。`allOf` 按交集组合属性约束并合并 required 集合，类型冲突拒绝；`nullable` 的 Null 与 Missing 分开处理。无法证明可用性的字段不进入无条件类型环境，不猜测为某个类型。Plugin 的完整 operation / multipart 校验仍由 SR-010 原生 OAS consumer 负责，Compiler 不复制 operation 逻辑。
 - **Host Context**：SR-030 Schema-only Package 仍只由 `Contract.contexts` 引用；它与 OpenAPI Source Bundle 是不同依赖 kind。两者都不产生 Capability / Callable Scope。
 - **机器字段门禁**：Source Bundle dependency kind、alias / URI / JSON Pointer 编码、Manifest / Lock / Build DTO 字段、OAS 3.0 validator 版本与 Golden 必须由 ca-skills / Compiler Owner 在正式 1.6.0 Schema / Golden 中冻结。当前没有正式发布，不允许 Harness 猜字段或宣称 READY。
 
@@ -404,3 +405,6 @@ SR-013 AC-013-07 需验证原版组件直接引用、跨文件 CommonData 闭包
 | 2026-11-27 | 0.2.14 | ChatGPT / GPT-6 | 3GPP Schema 与阶段输入补充 | 明确公共 Schema-only 导出、选择期 Request 与执行期 Codec Result 的 Link / 业务字段来源 | 关闭 Create 选择前依赖 NAS 解码的循环、固定跨包类型门禁 | IR-009；Issue #47；SR-031/026/013 |
 | 2026-11-27 | 0.2.15 | ChatGPT / GPT-6 | 本轮 IR-009 设计修正 | 固定 OpenAMSM 版本 + 原版 YAML 逐字节代发布；显式区分可选 Adapter 与 Provider Codec 输出 | 落实原版 YAML 不得改动、消除误把原版当 G.4 的风险 | Issue #47；SR-031/026/013 |
 | 2026-11-27 | 0.2.16 | ChatGPT / GPT-6.2 | §12 | 以原生 OAS3 外部 Schema Component 引用替代强制 Adapter；定义 dialect-aware Resolver、pin、嵌套 refs、类型推导与失败门槛 | G.4 与 OAS 3.0 是不同 dialect，不能用投影替代原版标准 | IR-009；Issue #47；SR-013/031 |
+| 2026-11-27 | 0.2.17 | ChatGPT / GPT-6.2 | §12 | 明确 selected-surface lazy Resolver、RFC 3986 / 6901 引用解析、PostSmContexts 四文件闭包及实际 OAS3 关键字 / 组合类型推导 | 避免全文件 eager resolve、漏锁传递引用和把 union / allOf 语义混为一谈 | IR-009；Issue #47；SR-013/031；EC01 |
+| 2026-11-27 | 0.2.18 | ChatGPT / GPT-6.2 | §12 | 将 CEL union 字段收紧为各分支 required；核准实际 additionalProperties / format 形态与 default 注解语义 | 防止静态类型误判可选字段，并使 Golden 覆盖真实 OAS3 dialect | IR-009；Issue #47；SR-013/031；EC01 |
+| 2026-11-27 | 0.2.19 | ChatGPT / GPT-6.2 | §12 Manifest / Build / Verify | 移除 sourceDigest 与 outputFiles SHA-256；Build / Verify 不计算或比较 SHA-256 / checksum / digest | 遵守 Demo 全链路无 hash 校验要求，避免 Compiler 产物另行引入完整性门禁 | IR-009；Issue #47；SR-013；CA-SL 1.6.0 |

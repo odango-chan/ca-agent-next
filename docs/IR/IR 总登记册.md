@@ -1,9 +1,9 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录  
-> 文档版本：0.1.35\
+> 文档版本：0.1.36\
 > 修订日期：2026-11-27\
-> 状态：9 项 IR（含 IR-009 3GPP 公共 Schema）；IR-008 登记 CA-SL 1.6.0 Capability-first 严格一对一与完全无旧版兼容，SR-029 设计待评审，SR-032 原有四阶段作者语法、共享 Package 资源 / Host Resource Read / 全 Registry Script Runner 作者模型待独立评审；IR-006 下 SR-030 Host Context Schema-only Publisher 设计待评审；SR-028 仍 DRAFT。\
+> 状态：9 项 IR；IR-008 由 SR-032 追踪（作者规范、共享资源、Script Registry、Host Resource Read / Script Runner）；IR-009 由 SR-031 追踪（OpenAMSM 原版 OAS3 Source Bundle）；两项均为独立设计候选，产品发布 / 验收 NOT_RUN。
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级需求管理平台
 
@@ -116,23 +116,21 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 
 **OpenAMSM 3GPP OpenAPI 原版 Source Bundle、原生 OAS3 引用与 Skill 分阶段 Codec 消费**
 
-3GPP SBI 标准来源只取 OpenAMSM 实际支持 / 构建使用的 OpenAPI 3.0 YAML 与所选 operation / Schema Component 的完整可达 `$ref` 闭包。ca-skills / SR-031 只做 byte-for-byte 原样代发布，不修改任何 YAML。**不要求 G.4 Adapter**：Plugin 原生消费 OpenAPI 3.0 operation / multipart；Compiler 对显式 pin 的 Source Bundle 中精确 `components/schemas` 直接引用并按 OAS3 Schema Object dialect 处理。Skill-owned `requestSchema` 根和本地 Schema 节点仍遵循 G.4；外部 OAS3 Schema 不投影、不重写。NAS / NGAP Codec Output Schema 由 ca-client-tools Provider 独立发布，不能由 SBI binary slot 推导。
+3GPP SBI 标准来源只取 OpenAMSM 实际支持 / 构建使用的 OpenAPI 3.0 YAML 与明确选定消费根的完整可达 `$ref` 闭包。当前 `PostSmContexts.requestBody` → `jsonData` → `SmContextCreateData` 的选定闭包为四份原版 YAML / 102 个 Schema Component；只 lazy resolve 选定根，不要求复制全部 472 份 YAML 或 eager resolve 未选定 operation。ca-skills / SR-031 只做 byte-for-byte 原样代发布，不修改任何 YAML。**不要求 G.4 Adapter**：Plugin 原生消费 OpenAPI 3.0 operation / multipart；Compiler 对显式 pin 的 Source Bundle 中精确 `components/schemas` 直接引用并按 OAS3 Schema Object dialect 处理。Skill-owned `requestSchema` 根和本地 Schema 节点仍遵循 G.4；外部 OAS3 Schema 不投影、不重写。Plugin 必须将 `RefToBinaryData.contentId` 精确关联到 N1/N2/N2 Ext1 对应 multipart part 的 `Content-ID`；引用目标缺失、重复 ID、错槽和媒体类型不符时拒绝。未被 JSON 引用的 part 不得交给 Codec；额外 part 的拒绝 / 忽略由 ingress profile 明确规定。NAS / NGAP Codec Output Schema 由 ca-client-tools Provider 独立发布，不能由 SBI binary slot 推导。
 
 - 协作设计 Issue：[Next #47](https://github.com/odango-chan/ca-agent-next/issues/47)；仅中央设计，不授权外仓实施。
 - 权威设计：[3GPP OpenAPI 原版引用与 Skill 分阶段消费](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)；关联 F02/F03.05/F06/F08/F09/EC02 与 CA-SL 1.6.0。
 - 分解：[SR-031](../SR/SR-031-3GPP公共Schema-only-Publisher.md)（ca-skills 原版 Source Bundle）、[SR-010](../SR/SR-010-OpenAMSM%20工具插件与按需编解码集成.md)（Plugin 原生 OAS3 ingress）、[SR-013](../SR/SR-013-Compiler已检查when与发布产物.md)（Compiler OAS3 直接引用）、[SR-026](../SR/SR-026-Codec公开工具发布.md)（Provider NAS/NGAP Result）、[SR-027](../SR/SR-027-技能Bundle构建与发布.md)（固定依赖快照）。
-- 已核实样本：OpenAMSM `dc83ccbf5be54dcc7112dd43ba95ea6fa5975550`；TS 29.502 V19.5.0 / OpenAPI `info.version 1.4.0`；TS 29.571 V19.6.0 / OpenAPI `info.version 1.6.1`。`info.version` 不等于 3GPP TS 版本。正式发行仍需 Owner 确认 source baseline。
+- 已核实样本：OpenAMSM `dc83ccbf5be54dcc7112dd43ba95ea6fa5975550`；当前 `SmContextCreateData` 选定闭包包含 TS 29.502 V19.5.0 / info.version 1.4.0 / blob `3572be0315a782691ce8b5546b7bc1d5b22fcd64`、TS 29.571 V19.6.0 / info.version 1.6.1 / blob `e09e9bb4aef0cf24aee008da06b1ef0023475efb`、TS 29.510 V19.6.0 / info.version 1.4.1 / blob `59d115ee6c7f4854aa123ad0c4ff7112fa879d73`、TS 29.518 V19.6.0 / info.version 1.4.1 / blob `b695453dad07d1dd7b0d9a5ee28a80a71fee805d`；四个文件固定在同一 commit。静态遍历为 102 个 Schema Component，无未解析目标或循环。`info.version` 不等于 3GPP TS 版本。正式发行仍需 Owner 确认 source baseline。
 - Skill 选择 T1 只能校验已到场 SBI / 归一化字段；NAS-only PDU Session Type / SSC mode 在已选 Procedure 的 Codec READ T2 才获得；0xD4 / N2 completion 只续跑原 Run，Codec Result 不能当 Owner Commit Proof。
-- 验收：Source Lock 固定 commit / 文件 blob / operation / 引用闭包；原版逐字节匹配；OAS3 direct component refs 保留 dialect semantics；未支持语义 fail-closed；正式 Source Bundle / Compiler Resolver / Codec / 1.6.0 Bundle 缺失时相应产品 AC 保持 BLOCKED / NOT_RUN，不将原版代发布算作全系统 READY / VERIFIED。
-
+- 验收：Source Lock 固定 commit / 四文件 Git blob / operation identity / 选定 requestBody 与 Schema Component roots / 引用闭包；原版逐字节匹配，不增加额外 per-file digest / package hash；OAS3 direct component refs 保留 dialect semantics，未选定 refs 不 eager resolve；Content-ID 与 N1/N2/N2 Ext1 part 精确匹配；未引用 part 不得交给 Codec，额外 part 拒绝 / 忽略策略由 ingress profile 明确规定；未支持语义 fail-closed。正式 Source Bundle / Compiler Resolver / Codec / 1.6.0 Bundle 缺失时相应产品 AC 保持 BLOCKED / NOT_RUN，不将原版代发布算作全系统 READY / VERIFIED。
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
 |---|---|---|---|---|---|---|
 | 2026-11-25 | 0.1.0 | 未记录（历史资料未提供） | 未记录（历史资料未提供） | 登记五项 IR 及其实施分解 | 建立双向需求追踪 | SR-001～SR-011 |
 | 2026-11-25 | 0.1.1 | 未记录（历史资料未提供） | 未记录（历史资料未提供） | 更新 EC02 归档与追踪 | 对齐中央设计及 Compiler #61 | SR-012 |
-| 2026-11-25 | 0.1.2 | 未记录（历史资料未提供） | 未记录（历史资料未提供） | Codex 登记 Compiler 实施 SR | 对齐跨仓实施门槛 | SR-013 |
-| 2026-11-25 | 0.1.2 | 未记录（历史资料未提供） | 未记录（历史资料未提供） | Codex / GPT-6 · IR-006 · 登记十项分仓 SR | 跨仓设计移交 | IR-006 |
+| 2026-11-25 | 0.1.2 | 未记录（历史资料未提供） | 未记录（历史资料未提供） | Codex 登记 Compiler 实施 SR；Codex / GPT-6 · IR-006 · 登记十项分仓 SR | 对齐跨仓实施门槛；跨仓设计移交 | SR-013；IR-006 |
 | 2026-11-25 | 0.1.3 | GPT-6.2（ChatGPT） | IR-003 | 明确 Compiler #61 为外部实现 Issue、Next #14 为文档刷新 Issue；不改变 SR-004/005/006 的消费端职责 | 区分外部实现和中央设计治理 | Issue #14、SR-013、Compiler #61 |
 | 2026-11-25 | 0.1.4 | GPT-6.2（ChatGPT） | IR-003 | 登记 PR #16 为中央设计 Draft PR，明确不计入产品实施 | 使需求、设计 PR 和实施 Issue 状态一致 | Issue #14、PR #16、Compiler #61 |
 | 2026-11-25 | 0.1.5 | GPT-6.2（ChatGPT） | IR-006 | 登记 Host Context Interface Package Publisher 独立需求 SR-024，并保留 SR-020 的参考宿主审计职责 | 修复 SR ID 冲突，保持 IR→SR 一对多追踪 | IR-006；SR-020、SR-024 |
@@ -156,14 +154,14 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 | 2026-11-26 | 0.1.23 | GPT-6.2（ChatGPT） | IR-003 | 登记 SR-004 独立设计 readiness Issue #43 | 使 Skill 导入与 Compiler/Bundle 依赖有单独的设计审查入口 | Issue #43；SR-004；SR-013；SR-027 |
 | 2026-11-26 | 0.1.24 | GPT-6.2（ChatGPT） | IR-003、修订记录 | 登记 Issue #40 的 CA-SL 1.6.0 单版本无兼容/迁移裁决，要求 SR-004 只消费新 Bundle | 避免 IR-003 上游仍允许旧 Assurance 运行输入 | Issue #40/#43；SR-004；SR-029 |
 | 2026-11-26 | 0.1.25 | GPT-6（ChatGPT） | IR-008、文档状态、修订记录 | 新增 CA-SL 1.6.0 Capability-first / Callable 一对一需求，并登记 SR-029 设计待评审与全链路无兼容门槛 | 防止下游把历史 v1alpha5 当作新系统可执行输入 | Issue #40；SR-029；SR-004 |
-| 2026-11-27 | 0.1.28 | Codex / GPT-6 | IR-002/007 | 更新模块验证状态及 G02 入口 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
-
 | 2026-11-26 | 0.1.26 | GPT-6（ChatGPT） | 1.6.0 Host Context Publisher / 依赖边界 | 将 Host Context 1.6.0 Schema-only Publisher 纳入 IR-006/IR-008，区分 SR-024 历史 VERIFIED 与 SR-030 新需求 | 避免旧 Development Package 被误认为新版正式输入 | Issue #12/#40；IR-006/008；SR-030 |
 | 2026-11-26 | 0.1.27 | GPT-6（ChatGPT） | IR-006/IR-008、修订记录 | 同步 SR-030 新版 Host Context 1.6.0 Schema-only Publisher 需求与 SR-024 历史 v1alpha5 Publisher 边界 | 使 IR→SR 追踪明确区分旧版已验证证据和新版待评审需求 | Issue #12/#40；IR-006/008；SR-024、SR-030；PR #46 |
+| 2026-11-27 | 0.1.28 | Codex / GPT-6 | IR-002/007 | 更新模块验证状态及 G02 入口 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
 | 2026-11-27 | 0.1.29 | ChatGPT / GPT-6 | IR-009 | 登记公共 3GPP Schema-only、选择期与执行期 Codec 输入来源并分解 SR-031 等跨仓任务 | 关闭 Create 选择前解码的架构与追踪断点 | Issue #47；SR-031/026/010/013/027 |
 | 2026-11-27 | 0.1.30 | ChatGPT / GPT-6 | IR-009 | 冻结 OpenAMSM 版本作为唯一来源与 YAML 字节原样代发布；将可选 G.4 Adapter 和 Codec Output 分离 | 明确仅代为发布、不改 3GPP YAML 的最新要求 | Issue #47；SR-031 |
 | 2026-11-27 | 0.1.31 | ChatGPT / GPT-6.2 | IR-009 | 撤销强制 G.4 Adapter；登记 OAS3 原生 operation / Schema Component 消费、OpenAMSM 标准版本与 blob 样本、NAS/NGAP 原生来源及 Compiler dialect-aware Resolver | 依据实际源文件核查，避免投影和标准影子副本 | Issue #47；SR-031/010/013/026/027 |
-| 2026-11-27 | 0.1.32 | GPT-6.2（ChatGPT） | IR-008 | 新增 SR-032，明确作者规范与 CA-SL 语法规范的职责分离 | 将 ca-skills 作者经验、Node 粒度和注释原则纳入中央追踪，保持 1.6.0-only | Issue #49；SR-032；IR-008 |
-| 2026-11-27 | 0.1.33 | GPT-6.2（ChatGPT） | IR-008、文档头 | 将 SR-032 的 Package / Schema / SourcePath / when / Wait / Evidence / AI Change Set 范围纳入 IR-008 摘要 | 让需求登记册完整表达中央作者规范的实际覆盖范围 | Issue #49；SR-032 |
-| 2026-11-27 | 0.1.34 | GPT-6.2（ChatGPT） | IR-008 | 将共享 Package 资源、Script Registry、Host Script Execution Capability 纳入 IR-008 作者模型，更新 F01～F09 设计入口 | 纠正 schemas/scripts 被错误限定在可选 Assurance 内的架构边界 | Issue #49；SR-032 |
+| 2026-11-27 | 0.1.32 | ChatGPT / GPT-6.2；GPT-6.2（ChatGPT） | IR-009；IR-008 | 补齐 PostSmContexts 四文件 / 102 Component 选定闭包、lazy refs、Content-ID 与 N1/N2/N2 Ext1 slot 映射及不新增 digest 的 Source Lock；新增 SR-032，明确作者规范与 CA-SL 语法规范的职责分离 | 按原版 OpenAMSM 源递归核查，关闭漏锁引用和 multipart 错配风险；将 ca-skills 作者经验、Node 粒度和注释原则纳入中央追踪，保持 1.6.0-only | Issue #47；SR-031/010/013/027；EC01/EC02；Issue #49；SR-032；IR-008 |
+| 2026-11-27 | 0.1.33 | ChatGPT / GPT-6.2；GPT-6.2（ChatGPT） | IR-009；IR-008、文档头 | 明确未被 JSON 引用的 MIME part 不交 Codec，额外 part 策略归 ingress profile；将 SR-032 的 Package / Schema / SourcePath / when / Wait / Evidence / AI Change Set 范围纳入 IR-008 摘要 | 保持原版 OpenAPI Schema 语义，不把额外 part 一概判为非法；让需求登记册完整表达中央作者规范的实际覆盖范围 | Issue #47；SR-010/031；EC01/F06；Issue #49；SR-032 |
+| 2026-11-27 | 0.1.34 | ChatGPT / GPT-6.2；GPT-6.2（ChatGPT） | IR-009；IR-008 | 在 Source Lock 验收摘要中加入 operation identity / selected Schema Component roots，并明确未引用 part 的 Codec 隔离；将共享 Package 资源、Script Registry、Host Script Execution Capability 纳入 IR-008 作者模型，更新 F01～F09 设计入口 | 避免 Lock 只锁 requestBody 而未锁精确引用根，也避免额外 MIME part 被误判；纠正 schemas/scripts 被错误限定在可选 Assurance 内的架构边界 | Issue #47；SR-010/031；EC01/F06/F09；Issue #49；SR-032 |
 | 2026-11-27 | 0.1.35 | GPT-6.2（ChatGPT） | IR-008、修订记录 | 删除 Skill 层 Wait 作者语法口径，登记原有 CA-SL 机器结构恢复、Host Resource Read、全 Registry Script Runner、Script Evidence / 错误契约 | 使 IR-008 与 SR-032 v0.1.11、CA-SL 1.6.0 v0.2.0 及 F01～F09 消费者设计一致 | Issue #49；SR-032 |
+| 2026-11-27 | 0.1.36 | GPT-6.2（ChatGPT） | IR-008 / IR-009 集成刷新 | 合并 3GPP OpenAPI 选定闭包 / Source Lock 的最新审计与 SKILL 作者规范、共享 Package 资源及 Script Runner 需求；保留 9 项 IR | 统一两项增量需求，不把设计登记误报为产品发布或验收 | Issue #47/#49；SR-031/032；IR-008/009 |

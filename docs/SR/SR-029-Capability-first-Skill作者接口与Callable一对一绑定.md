@@ -1,8 +1,8 @@
 # SR-029：Capability-first Skill 作者接口与 Callable 一对一绑定
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.7\
-> 状态：DRAFT（实施主状态）；第二轮独立评审 CHANGES_REQUESTED（历史结论）；第三轮自评 **DESIGN_READY_FOR_INDEPENDENT_REVIEW**（仅设计评审候选，非独立批准或实施 READY）；产品 AC NOT_RUN/BLOCKED。
+> SR 版本：0.2.9\
+> 状态：DRAFT。Issue #90 在 Head `42a7fe2c` 对 AC-029-10 给出 CHANGES_REQUESTED；§10 已修订，待独立复评。
 > 创建日期：2026-11-26  
 > 修订日期：2026-11-27\
 > 上游需求：[IR-008](../IR/IR%20总登记册.md#ir-008)；关联需求：[IR-003](../IR/IR%20总登记册.md#ir-003)  
@@ -10,8 +10,8 @@
 > 设计 Issue：[ca-agent-next #40](https://github.com/odango-chan/ca-agent-next/issues/40)  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：见 §12（不包含下游仓代码修改、产品实施/发行或旧版兼容）
-> 固定设计基线：PR #44 Head 7f83bf6135d4572dca7d3d5bdb6243765440b0f6
-> 工作分支：docs/issue-40-casl-160-capability-design-review
+> 中央架构来源基线（不含本 SR 文件）：PR #44 Head 7f83bf6135d4572dca7d3d5bdb6243765440b0f6
+> 复评入口：PR #46，`docs/issue-12-draft-design-review-20261126`
 > 本 SR 性质：中央架构与规范设计；不授权修改任何下游实现仓
 
 ## 0. 设计评审与无兼容门槛
@@ -199,13 +199,35 @@ Runtime 以 Capability ID 为 Skill / Procedure 作者侧 Action 入口，从当
 
 ## 10. OpenAMSM 示例映射
 
-| Skill | 当前 v1alpha5 Callable 引用 | 1.6.0 Capability 引用 |
-|---|---|---|
-| Create | SE.EMIT_EVENTS | mas.se.establishment-event.record |
-| Modify | UPN.MODIFY_QOS_DELTA | mas.upn.up.qos.delta |
-| Release | SE.EMIT_RELEASE_EVENT_C | mas.se.release-event-marker.write |
+以下按原 Procedure 的节点顺序列出全部 `tool: mas::…` 引用。固定作者源为 ca-skills `780497a2918ad3e7bdff554ab64b0ba627e867e0`，对应 [Create Procedure](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/examples/skills/establish-pdu-session-mas/assurance/procedure.yaml)、[Modify Procedure](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/examples/skills/modify-pdu-session-mas/assurance/procedure.yaml)、[Release Procedure](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/examples/skills/release-pdu-session-mas/assurance/procedure.yaml)。Callable 列省略共同的 `mas::` 前缀。目标列取自 §2 固定 Owner CapabilityContracts，并应用 §3.1 的两项事件拆分。
 
-Create / Release 继续分别使用原有 Schema 与 Evidence Guarantee；Modify 的 QoS Delta、Receipt、UNKNOWN 和 N1/N2 流程不变。Provider Observation 使用两个通用 READ Capability 和封闭 selector。此表是作者源映射，不是当前 ca-skills 已更新证据。
+| Skill | v1alpha5 Owner Callable | 1.6.0 设计目标 Capability |
+|---|---|---|
+| Create | `SC.VALIDATE_SUBSCRIPTION` | `mas.sc.subscription.validate` |
+| Create | `SAA.SECONDARY_AUTH` | `mas.saa.secondary.auth` |
+| Create | `SC.CREATE_SM_CONTEXT` | `mas.sc.context.create` |
+| Create | `SC.REGISTER_UECM` | `mas.sc.uecm.register` |
+| Create | `PA.CREATE_SM_POLICY` | `mas.pa.sm.policy.create` |
+| Create | `UPS.DECIDE_ANCHOR` | `mas.ups.anchor.decide` |
+| Create | `IAM.ALLOCATE_ADDRESS` | `mas.iam.address.allocate` |
+| Create | `PA.UPDATE_SM_POLICY` | `mas.pa.sm.policy.update` |
+| Create | `CA.CREATE_CHARGING` | `mas.ca.charging.create` |
+| Create | `UPN.CREATE_UP_SESSION` | `mas.upn.up.session.create` |
+| Create | `SSM.SIGNAL_UE_AN` | `mas.ssm.ue.an.signal` |
+| Create | `UPN.MODIFY_UP_SESSION` | `mas.upn.up.session.modify` |
+| Create | `SE.EMIT_EVENTS` | `mas.se.establishment-event.record` |
+| Modify | `SSM.PARSE_N1_MODIFY` | `mas.ssm.n1.modify.parse` |
+| Modify | `UPN.MODIFY_QOS_DELTA` | `mas.upn.up.qos.delta` |
+| Release | `SSM.PARSE_N1_RELEASE` | `mas.ssm.n1.release.parse` |
+| Release | `SSM.BUILD_RELEASE_COMMAND` | `mas.ssm.n1.release.build` |
+| Release | `SSM.RELEASE_CONFIRM_N1` | `mas.ssm.n1.release.confirm.n1` |
+| Release | `SSM.RELEASE_CONFIRM_N2` | `mas.ssm.n1.release.confirm.n2` |
+| Release | `PA.DELETE_SM_POLICY_C` | `mas.pa.sm.policy.delete` |
+| Release | `UPN.DELETE_UP_SESSION` | `mas.upn.up.session.delete` |
+| Release | `SE.EMIT_RELEASE_EVENT_C` | `mas.se.release-event-marker.write` |
+| Release | `SC.RELEASE_SM_CONTEXT_C` | `mas.sc.context.release` |
+
+AC-029-10 按 Skill 分别提取并去重 `mas::` 引用，与表中对应 Callable 集合做双向差集。Create 应有 13 项、Modify 2 项、Release 8 项；遗漏、额外引用或同一目标绑定多个 Callable 均不满足此项设计。按 §3.1 分别核对两项事件的 Schema 与 Evidence Guarantee，Modify 保留 QoS Delta、Receipt、UNKNOWN 与原 N1/N2 流程。表格只覆盖三个 Procedure 实际使用的 Owner Callable。Owner 全包目标 24/24 见 §3.1，Provider 查询与 Codec 的闭包另见 AC-029-05。正式作者源、Owner 发布和运行验收仍按各自门槛取证。
 
 ## 11. 实施分解与跨仓责任
 
@@ -243,7 +265,7 @@ Create / Release 继续分别使用原有 Schema 与 Evidence Guarantee；Modify
 | AC-029-07 | Compiler Link、诊断、Artifact v2 capabilityBindings 与 Build/Verify 边界明确 | 设计已记录，待独立评审 |
 | AC-029-08 | Runtime Action、Callable allowlist、Reconcile 内部入口明确 | 设计已记录，待独立评审 |
 | AC-029-09 | Skill Studio Capability-only Explorer / LSP / AI Authoring 明确 | 设计已记录，待独立评审 |
-| AC-029-10 | MAS Create / Modify / Release 的 1.6.0 Capability 映射与业务语义保持边界明确 | 设计已记录，待独立评审 |
+| AC-029-10 | MAS Create / Modify / Release 的 1.6.0 Capability 映射与业务语义保持边界明确 | §10 按固定源逐项对照 13/2/8；待独立复评 |
 | AC-029-11 | F02/F03/F03.05/F04/F06/F08/F09/EC02、IR/SR、版本规范/功能树/目录与 SR-004 一致；核查 EC02《工具链设计》、三层旧包拒绝与当前导航。查询子集 2/2，含 Codec 的总闭包 3/3；逐包检查唯一性，跨包重复也须拒绝，缺 Codec 不得计全量通过。实际发布前仅验设计 | 待静态检查与独立评审 |
 | AC-029-12 | 未修改下游仓；未把设计目标误报为实现或 E2E PASS | 待独立评审 |
 
@@ -275,3 +297,5 @@ Create / Release 继续分别使用原有 Schema 与 Evidence Guarantee；Modify
 | 2026-11-27 | 0.2.5 | Codex / GPT-6 | §3.2、§6、AC-029-05/11 | 区分查询子集与 Provider 全量 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
 | 2026-11-27 | 0.2.6 | Codex / GPT-6 | AC-029-11 | 覆盖 F03 主设计、EC02 工具链与跨包版本导航 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
 | 2026-11-27 | 0.2.7 | GPT-6（ChatGPT） | 第三轮设计自评/历史修订表 | CA-SL 1.6.0-only、Owner 24/24、Provider 查询 2/2 与含 Codec 3/3、旧包拒绝及跨包双射已明确；生产者机器契约另行冻结；将第二轮结论保留为历史、登记第三轮独立复评候选并按版本整理记录 | 设计范围可供外部评审而不提前授权代码实施或夸大 AC 状态 | Issue #12；PR #46；SR-029 |
+| 2026-11-27 | 0.2.8 | GPT-6（ChatGPT） | 文档头、评审状态、修订记录 | 将第三轮独立模型 Review #6082541121 的限定结论替换第三轮自评状态 | 区分中央语言/作者模型设计认可与生产者正式机器契约发布 | Issue #12；PR #46；Review #6082541121 |
+| 2026-11-27 | 0.2.9 | Codex / GPT-6 | 文档头、§10、AC-029-10 | 补全三个 Procedure 共 23 条 Owner 映射与集合核验规则，区分架构来源与评审入口 | 处理 R1-SR029-01/02 | Issue #12、#90；PR #46 |

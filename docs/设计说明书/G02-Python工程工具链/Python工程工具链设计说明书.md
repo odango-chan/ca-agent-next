@@ -1,18 +1,18 @@
 # G02：Python 工程工具链与环境管理设计说明书
 
 > 文档类型：工程治理功能设计说明书  
-> 文档版本：0.2.3\
-> 状态：设计第三轮自评候选 / REVIEW_REQUESTED；SR-028 主状态仍 DRAFT、实施 NOT_READY、uv 产品验收 NOT_RUN\
+> 文档版本：0.2.7\
+> 状态：第六轮独立 Review [#6083872622](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083872622) 对固定 Head `2d20a128a1574103d709d82f6c426580ecb47f48` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2` 给出 CHANGES_REQUESTED（0 P0 / 1 P1 / 2 P2）；R028-21～23 已按 Issue #12 完成设计整改并推送，等待新 Head 第七轮独立复评；当前分支修订前 Head 为 `072248ff6a5deac40437ab47c892aaa2064781da`；SR-028 仍 DRAFT、AC-028-01～10 产品验收 NOT_RUN、READY=0\
 > 修订日期：2026-11-27\
 > 功能节点：G02 Python 工程工具链与环境管理  
 > 关联需求：[IR-007](../../IR/IR%20总登记册.md#ir-007)、[SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md)  
-> 追踪 Issue：[ca-agent-next #35](https://github.com/odango-chan/ca-agent-next/issues/35)  
+> 追踪 Issue：[ca-agent-next #12](https://github.com/odango-chan/ca-agent-next/issues/12)（当前整改）；原设计 Issue [#35](https://github.com/odango-chan/ca-agent-next/issues/35) 已 CLOSED，仅作历史来源  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级供应链安全治理、跨仓批量迁移、Agent Runtime 架构变更
 
 ## 0. 设计评审入口（2026-11-26）
 
-本设计与 [SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md) 一同提交独立设计评审，关联 [Issue #35](https://github.com/odango-chan/ca-agent-next/issues/35) / [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12)。审查 uv/pin/lock、Python 3.14.6 基线、Worktree 隔离、setuptools 不变、GitHub Actions 与 AC-028-01～09 的实际命令及退出条件。
+本设计与 [SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md) 由 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12) 统一追踪；原设计 Issue #35 已 CLOSED。最新第六轮独立复评为 [PR #46 Review #6083872622](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083872622)，固定 Head `2d20a128a1574103d709d82f6c426580ecb47f48` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`，结论 CHANGES_REQUESTED（0 P0 / 1 P1 / 2 P2）。R028-21 为唯一 P1，R028-22/23 为 P2；本轮仅修订设计与验收定义，不授权产品实施。
 
 **设计待评审与实施 READY 分离：**PR #32 的评审上下文 CI 已完成，不构成 uv 迁移验收；SR-028 保持 DRAFT。评审未通过不得生成实施提示词，不开展跨仓批量迁移或不必要的生产供应链 DFX。
 
@@ -94,7 +94,7 @@ required-version = "==0.13.10"
 ### 3.5 Worktree 环境隔离
 
 - 每个 Git worktree 在自己的工作目录创建独立 `.venv/`；不得让多个 worktree 指向同一个虚拟环境目录。`uv sync` 默认将当前项目安装到该环境（项目开发模式），因此 distribution metadata 必须来自当前 checkout。
-- `.venv/` 必须作为独立行追加到仓库 `.gitignore`，不得覆盖或删除现有 ignore 规则；不得提交 `.venv/`。实施时以 `git check-ignore .venv/pyvenv.cfg` 验证。
+- 当前基线 `.gitignore` 已有独立 `.venv/` 规则；实施时必须保留。只有目标分支确实缺失该规则时才追加，且不得重复或删除其他 ignore 规则；不得提交 `.venv/`。以 `git check-ignore .venv/pyvenv.cfg` 验证。
 - 不设置共享的 `UV_PROJECT_ENVIRONMENT`；项目命令不得使用 `--system`、`--active` 或其他绕过项目环境的选项。
 - 不得在系统 Python 中执行 `pip install -e .`，不得依赖另一 worktree 安装的 editable distribution。
 - uv 的下载缓存可由 uv 自身跨 worktree 复用；缓存不等于虚拟环境，不共享 site-packages。
@@ -102,33 +102,102 @@ required-version = "==0.13.10"
 
 ### 3.6 统一命令入口
 
-从仓库根目录执行。实施者首次添加依赖组后用 `uv lock` 生成锁文件，与 pyproject.toml 一起提交。下列命令面向已有锁文件的干净 checkout 和 CI。
+从仓库根目录执行。实施者首次添加依赖组后用 `uv lock` 生成锁文件，与 `pyproject.toml` 一起提交。下列命令面向已有锁文件的干净 checkout 和 CI。
 
 ```bash
 uv python install
 uv sync --locked --group dev --extra plugins
-```
-
-测试和 Smoke：
-
-```bash
-uv run --locked --group dev --extra plugins python -m unittest discover -s tests -v
-uv run --locked --group dev --extra plugins python -m ca_agent_next --smoke
-```
-
-目标分支已包含 SR-001 生成器。用同一环境检查 CLI，真实 PR 的 Summary 与三文件 Artifact 另由 AC-028-08 检查。
-
-```bash
-uv run --locked --group dev --extra plugins python scripts/review_context.py --help
-```
-
-锁文件检查：
-
-```bash
 uv lock --check
 ```
 
-依赖更新时先编辑 pyproject.toml，再执行 `uv lock`，审阅锁文件差异后提交两者；普通测试和 CI 不得使用不带 `--locked` 的命令隐式更新锁文件。
+测试和 Smoke 使用项目环境；完成 sync 后统一禁止命令隐式同步：
+
+```bash
+uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --output-dir artifacts/unittest-gate
+uv run --no-sync --locked --group dev --extra plugins python -m ca_agent_next --smoke
+uv run --no-sync --locked --group dev --extra plugins python scripts/review_context.py --help
+```
+
+#### 本地 Go Echo 前置（AC-028-06）
+
+`tests/test_plugin.py` 的 `setUpModule()` 会调用 `ensure_echo_binary()`；完整测试会执行 Plugin 测试。`examples/echo/plugin/go.mod` 的 Go directive 为 `1.24`，不是 Go patch 版本 pin。干净 checkout 中 `bin/` 被忽略且可能没有二进制；不得依赖另一 checkout 的旧二进制。运行测试门禁前必须确认 Go 命令可用、记录完整 `go version`，设置并验证 `GOWORK=off`，删除当前平台旧二进制后从该模块源码构建。
+
+Linux/macOS/Git Bash（从仓库根目录执行；子 shell 保证构建后仍处于仓库根目录）：
+
+```bash
+set -euo pipefail
+ROOT="$(pwd -P)"
+(
+  cd "$ROOT/examples/echo/plugin"
+  export GOWORK=off
+  go version
+  test "$(go env GOWORK)" = "off"
+  GOOS="$(go env GOOS)"
+  mkdir -p bin
+  rm -f bin/echo-plugin bin/echo-plugin.exe
+  if [ "$GOOS" = "windows" ]; then
+    BINARY=bin/echo-plugin.exe
+  else
+    BINARY=bin/echo-plugin
+  fi
+  go build -trimpath -o "$BINARY" .
+)
+test "$(pwd -P)" = "$ROOT"
+```
+
+Windows PowerShell（从仓库根目录执行；`finally` 保证恢复 Location）：
+
+```powershell
+$ErrorActionPreference = 'Stop'
+Push-Location examples/echo/plugin
+try {
+    $env:GOWORK = 'off'
+    go version
+    if ($LASTEXITCODE -ne 0) { throw 'Go toolchain is unavailable' }
+    $gowork = (go env GOWORK)
+    if ($LASTEXITCODE -ne 0 -or $gowork -ne 'off') { throw 'GOWORK must be off' }
+    $goos = (go env GOOS)
+    if ($LASTEXITCODE -ne 0) { throw 'go env GOOS failed' }
+    New-Item -ItemType Directory -Force bin | Out-Null
+    Remove-Item bin/echo-plugin -ErrorAction SilentlyContinue
+    Remove-Item bin/echo-plugin.exe -ErrorAction SilentlyContinue
+    if ($goos -eq 'windows') {
+        go build -trimpath -o bin/echo-plugin.exe .
+    } else {
+        go build -trimpath -o bin/echo-plugin .
+    }
+    if ($LASTEXITCODE -ne 0) { throw 'Go Echo build failed' }
+} finally {
+    Pop-Location
+}
+```
+
+Go 版本必须满足 `go.mod` 的 `go 1.24` directive；不在本 SR 另行固定 Go patch。二进制名称必须由目标 `GOOS` 决定，与 `tests/plugin_test_support.py::echo_binary_name()` 的 Windows `.exe` 规则一致。Plugin 测试 helper 会在 Go 可用时再次从源码构建；AC-028-06 仍要求显式前置构建成功，不能利用测试 helper 在 Go 缺失时回退到忽略目录中的陈旧二进制。
+
+#### 统一 unittest 门禁脚本（新增 `scripts/unittest_gate.py`）
+
+CI 和本地验收不得直接依赖 `unittest` 的零退出码判断 PASS，因为标准 unittest 对 skipped 用例仍可能返回 0。实施时必须新增仅依赖 Python 标准库的 `scripts/unittest_gate.py`，按 Host、Plugin、Review Context、完整总计四个范围执行测试；即使某一范围失败，也继续执行其余范围并写出全部报告，最后统一返回非零。
+
+接口：
+
+```bash
+uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --output-dir artifacts/unittest-gate
+uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --suite host --output-dir "$EVIDENCE_DIR/a-host-gate"
+```
+
+`--suite` 可重复，取值为 `host`、`plugin`、`review-context`、`total`；不传时运行全部四项。每项的 discovery 范围分别是 `tests/test_host.py`、`tests/test_plugin.py`、`tests/test_review_context.py` 和 `tests/test*.py`。脚本必须通过 `unittest.TestLoader.discover(start_dir=tests, top_level_dir=tests, pattern=...)` 加载，不依赖 `tests/__init__.py`。
+
+脚本的规范性算法与报告字段：
+
+1. 每个范围使用独立 `unittest.TestLoader` 和 `unittest.TextTestRunner`。`discovered` 取 `suite.countTestCases()`，`tests_run` 取 `result.testsRun`；`failures`、`errors`、`skipped`、`expected_failures`、`unexpected_successes` 分别取 `TestResult` 对应列表的条目数。`loader_errors` 精确定义为本次独立 `TestLoader` 在 `discover()` 后其 `loader.errors` 列表的条目数（`len(loader.errors)`），每个列表元素计 1，不按多行 traceback 拆分；`loader_error_messages` 原样保存该列表。若 `discover()` 本身抛出异常而未返回 suite，将完整异常文本记录到 `discovery_exception`，该范围直接失败；若 discovery 正常完成，JSON 字段 `discovery_exception` 必须写为 `null`；此时 `loader_errors` 仍只表示 `len(loader.errors)`，不把异常重复计入该字段。
+2. `passed = tests_run - failures - errors - skipped - expected_failures - unexpected_successes`；不得用 `discovered - failures` 推算通过数。
+3. 单范围 `exit_code` 为 `0` 当且仅当 `discovered > 0`、`tests_run == discovered`、`failures == errors == skipped == expected_failures == unexpected_successes == loader_errors == 0` 且 `discovery_exception` 为 JSON `null`；否则为 `1`。`loader_errors` 与 `errors` 是不同阶段的观测字段：加载错误可能同时产生 `_FailedTest` 并出现在 `TestResult.errors`，此时两字段可同时计数，但不得相加或去重；PASS 必须分别满足两者为 0。任何 0 tests、skip、失败、错误、expected failure、unexpected success、加载诊断或 discovery 异常均失败。
+4. 每项分别写入 `<suite>.json` 与 `<suite>.log`；每个 `<suite>.json` 必须包含该范围的 `exit_code`（仅允许 `0` 或 `1`）、所有统计字段、`loader_error_messages` 和 `discovery_exception`。总计写入 `summary.json`，其中每个已选范围保留自己的 `exit_code`，并有独立的整体 `exit_code`。整体 `exit_code` 仅在所有已选范围的 `exit_code` 均为 0 且所有报告成功写入时为 0，否则为 1；进程退出码必须与整体 `exit_code` 一致。日志保留完整 unittest 输出/traceback。脚本即使某项失败也继续执行其他范围，全部报告落盘后才返回；报告/运行错误必须使整体退出码非零。
+5. `--suite host` 仅执行 Host 范围，供 worktree A→B→A 单独验证；仍执行相同的 `discovered>0`、`skipped=0` 等断言。
+
+实现不得引入第三方测试框架或新的运行时依赖。该脚本由 SR-028 实施阶段创建；本设计中的接口、字段、退出条件和 CI 调用为规范性要求。
+
+Host Smoke 另行记录 stdout/stderr/退出码；必须退出 0、stderr 为空，成功 stdout 符合演示验收基线。
 
 ### 3.7 GitHub Actions
 
@@ -144,7 +213,7 @@ setup-uv 的固定调用配置：
 - 使用官方 `astral-sh/setup-uv` action；本设计基线采用 action v10.4.0 的不可变 commit `1db35dd8eee11c5894872e0b383ae6c406cf738d`，并显式设置 `version: "0.13.10"`。
 - 使用 `uv python install` 从 `.python-version` 安装项目解释器。
 - 使用 `uv sync --locked --group dev --extra plugins` 安装当前项目及开发依赖。
-- 测试和项目脚本使用 `uv run --locked --group dev --extra plugins ...`。
+- 完成唯一一次 `uv sync --locked` 后，测试和项目脚本使用 `uv run --no-sync --locked --group dev --extra plugins ...`；禁止测试步骤自动同步。
 - Workflow 不得通过 `pip install PyYAML`、`pip install -e .` 或全局 site-packages 临时补依赖。
 - 可使用 setup-uv 自带的缓存；不另写自定义包缓存协议。
 
@@ -153,59 +222,518 @@ setup-uv 的固定调用配置：
 ```bash
 uv python install
 uv sync --locked --group dev --extra plugins
-uv run --locked --group dev --extra plugins python -m unittest discover -s tests -v
-uv run --locked --group dev --extra plugins python -m ca_agent_next --smoke
+uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --output-dir artifacts/unittest-gate
+uv run --no-sync --locked --group dev --extra plugins python -m ca_agent_next --smoke
 ```
 
-### 3.8 与 SR-001 Workflow 的衔接
+### 3.8 与 SR-001 Workflow 的衔接及双平台触发验收
 
-[PR #32](https://github.com/odango-chan/ca-agent-next/pull/32) 已合入恢复分支（`7a0fac41e573021207ab8201bbc718718c451e50`）。目标树已有 `.github/workflows/review-context.yml`、`scripts/review_context.py`、`tests/test_review_context.py` 和 SR-003 Plugin 回归工作流。SR-028 在独立实施 PR 迁移安装入口。AC-028-07 核验完整测试与 Smoke；AC-028-08 在同一受测提交的真实 PR Run 核对生成器、Summary 和三份规定文件。
+[PR #32](https://github.com/odango-chan/ca-agent-next/pull/32) 已合入当前设计基线（merge commit `7a0fac41e573021207ab8201bbc718718c451e50`）。目标树已有 `.github/workflows/review-context.yml`、`scripts/review_context.py`、`tests/test_review_context.py` 和 `.github/workflows/sr003-plugin-ci.yml`。SR-028 在独立实施 PR 迁移两个 Workflow 的 Python 安装、测试和脚本入口；不得修改 PR #32 历史分支。
 
-保留 `.github/workflows/sr003-plugin-ci.yml` 的 Linux/Python 3.12 和 Windows/Python 3.14 矩阵、Go Echo 构建及证据步骤。该工作流迁移安装和测试入口时，为每个任务的 uv sync/run 显式传入 `--python` 和矩阵解释器，保留 `--locked --group dev --extra plugins`；根环境和 Review Context 使用项目的 3.14.6。完整回归的 pull_request paths 至少覆盖 pyproject.toml、uv.lock、.python-version、src/**、tests/**、examples/echo/**、scripts/review_context.py、docs/SR/SR-003-*、.github/workflows/review-context.yml 及 .github/workflows/sr003-plugin-ci.yml 自身。逐类单文件变更均应触发两项矩阵任务。只改 Review Context workflow、`.python-version` 或 `uv.lock` 时也须能在 pull_request 上找到两项 Job。
+#### SR-003 双平台矩阵
 
-**AC-028-07 跨 OS 无猜测命令参考**：新的 SR-003 regression Job 在 checkout + 固定 setup-uv action 之后，分别在 `ubuntu-latest` 的 `3.12` 和 `windows-latest` 的 `3.14.6` 运行。为了不让默认 .python-version 的 3.14.6 覆盖 Linux 3.12，两个矩阵单元都使用显式 `--python`。以下是**拟实施的 Workflow 步骤示例**，并非已运行 CI；用 `shell: bash` 使 Windows/Linux 使用同一变量语法（保留现有 Go Echo 独立 Go 构建；compileall 与 Python 证据生成步骤通过已安装的矩阵 Python 运行）：
+迁移后的 `.github/workflows/sr003-plugin-ci.yml` 目标矩阵必须明确为：
+
+| Runner | Python | Go |
+|---|---|---|
+| `ubuntu-latest` | `3.12` | 从 `examples/echo/plugin/go.mod` 读取，满足 `go 1.24` |
+| `windows-latest` | `3.14.6` | 从 `examples/echo/plugin/go.mod` 读取，满足 `go 1.24` |
+
+不得使用浮动的 Windows `3.14`。两个矩阵 Job 均显式安装/查找矩阵解释器，记录 `python --version`；Windows 必须精确断言 `Python 3.14.6`。两个 Job 的 uv sync/run 必须显式传入 `--python "$PY"`。Python/uv 步骤在 Linux 使用 `shell: bash`、在 Windows 使用 `shell: pwsh`；Go Echo 构建步骤在两个 Runner 上均使用 `shell: bash`。Windows Git Bash 下 `go env GOOS` 为 `windows` 时必须生成并清理 `echo-plugin.exe`。不得把 Python/uv shell 约定扩大到 Go 步骤。
+
+拟实施的矩阵步骤（示例不是运行证据；以下片段位于具体 Job 下）：
 
 ```yaml
-- name: Install matrix Python
-  shell: bash
-  run: uv python install "${{ matrix.python-version }}"
-- name: Sync and test with matrix Python
-  shell: bash
-  run: |
-    PY="$(uv python find '${{ matrix.python-version }}')"
-    uv sync --python "$PY" --locked --group dev --extra plugins
-    uv run --python "$PY" --locked --group dev --extra plugins python -m unittest discover -s tests -v
-    uv run --python "$PY" --locked --group dev --extra plugins python -m ca_agent_next --smoke
+strategy:
+  fail-fast: false
+  matrix:
+    include:
+      - os: ubuntu-latest
+        python-version: '3.12'
+      - os: windows-latest
+        python-version: '3.14.6'
+runs-on: ${{ matrix.os }}
+env:
+  GOWORK: 'off'
+  PYTHONUTF8: '1'
+  PYTHON_VERSION: ${{ matrix.python-version }}
+steps:
+  - uses: actions/checkout@v4
+  - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+    with:
+      version: '0.13.10'
+  - uses: actions/setup-go@v5
+    with:
+      go-version-file: examples/echo/plugin/go.mod
+      cache: false
+  - name: Record Go version
+    shell: bash
+    run: go version
+  - name: Build native Go Echo Plugin
+    shell: bash
+    working-directory: examples/echo/plugin
+    run: |
+      set -euo pipefail
+      mkdir -p bin
+      rm -f bin/echo-plugin bin/echo-plugin.exe
+      if [ "$(go env GOOS)" = "windows" ]; then
+        go build -trimpath -o bin/echo-plugin.exe .
+      else
+        go build -trimpath -o bin/echo-plugin .
+      fi
+  - name: Install and test Linux matrix Python
+    if: runner.os == 'Linux'
+    shell: bash
+    run: |
+      set -euo pipefail
+      uv python install "$PYTHON_VERSION"
+      PY="$(uv python find "$PYTHON_VERSION")"
+      "$PY" --version
+      mkdir -p artifacts/sr028/unittest-gate
+      uv sync --python "$PY" --locked --group dev --extra plugins
+      uv run --python "$PY" --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --output-dir artifacts/sr028/unittest-gate
+      uv run --python "$PY" --no-sync --locked --group dev --extra plugins python -m compileall -q src tests
+      uv run --python "$PY" --no-sync --locked --group dev --extra plugins python -m ca_agent_next --smoke
+      uv run --python "$PY" --no-sync --locked --group dev --extra plugins python tests/capture_sr003_evidence.py > artifacts/sr028/sr003-evidence.json
+  - name: Install and test Windows matrix Python
+    if: runner.os == 'Windows'
+    shell: pwsh
+    run: |
+      $ErrorActionPreference = 'Stop'
+      uv python install $env:PYTHON_VERSION
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      $PY = (uv python find $env:PYTHON_VERSION)
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      $version = (& $PY --version)
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      Write-Host $version
+      if ($version -ne 'Python 3.14.6') { throw "Expected Python 3.14.6, got $version" }
+      New-Item -ItemType Directory -Force artifacts/sr028/unittest-gate | Out-Null
+      uv sync --python "$PY" --locked --group dev --extra plugins
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      uv run --python "$PY" --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --output-dir artifacts/sr028/unittest-gate
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      uv run --python "$PY" --no-sync --locked --group dev --extra plugins python -m compileall -q src tests
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      uv run --python "$PY" --no-sync --locked --group dev --extra plugins python -m ca_agent_next --smoke
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      uv run --python "$PY" --no-sync --locked --group dev --extra plugins python tests/capture_sr003_evidence.py > artifacts/sr028/sr003-evidence.json
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+  - name: Upload SR-028 test and Plugin evidence
+    if: always()
+    uses: actions/upload-artifact@v4
+    with:
+      name: sr028-${{ matrix.os }}-${{ matrix.python-version }}
+      path: artifacts/sr028/
+      if-no-files-found: error
 ```
 
-若目标 Job 仍沿用 PowerShell，则应明确使用 `$PY = (uv python find $env:PYTHON_VERSION)` 并将 `$PY` 传给每个 `uv ... --python`；不得把 Bash `$PY` 原样当 PowerShell 变量，也不得执行隐式默认解释器来替代矩阵。仅更新 `.github/workflows/review-context.yml` 的真实 PR 仍必须触发 `sr003-plugin-ci.yml` 的两项 Job，且从实际 Actions 日志核对解释器和测试总数，不能把上述 YAML 示例计为 AC PASS。
-迁移前的成功日志只证明原环境。
+两个矩阵 Job 都必须通过 `scripts/unittest_gate.py` 自动运行 Host、Plugin、Review Context 和完整总计；脚本逐范围断言 `discovered>0`、`tests_run=discovered`、`failures/errors/skipped/expected_failures/unexpected_successes/loader_errors=0` 且 `discovery_exception=null`，并在任何范围失败时最终非零退出。每项 JSON、log、summary、Smoke 和 Go Echo 证据由 `if: always()` Artifact 上传步骤保存。只记录绿色 Job 不足以 PASS；必须检查 gate 报告中四个范围的字段和退出码。`GOWORK=off` 必须应用于 Go 构建与 Plugin 测试。
 
+#### Review Context Workflow：诊断 Artifact 与正式 Artifact 分离
+
+`.github/workflows/review-context.yml` 在迁移后使用相同 uv 版本与 `uv sync --locked`。诊断证据目录与生成器正式输出目录必须是两个不同目录：
+
+- 正式输出目录：`$RUNNER_TEMP/review-context/`，仅允许包含 `review-scope.json`、`评审上下文.md`、`统一评审提示词.md` 三个完成态文件；Workflow Summary 位于 `$RUNNER_TEMP/review-context-summary.md`，不放入该目录。
+- 诊断目录：`$RUNNER_TEMP/review-context-diagnostics/`，不得放入上述三个正式输出文件。Job 开始时先创建该目录并写入 `run-context.txt`，记录 PR number、base SHA、head SHA、run ID 和 run attempt，确保即使早期步骤失败也有诊断 Artifact 可上传。
+
+Review Context gate 使用 `uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --suite review-context --output-dir "$RUNNER_TEMP/review-context-diagnostics/unittest-gate"`。诊断目录至少保留 `unittest-gate/review-context.json`、`unittest-gate/review-context.log`、`unittest-gate/summary.json`。生成器步骤执行时，必须将 stdout、stderr 分别保存为 `generator.stdout.log`、`generator.stderr.log`，将真实进程退出码保存为 `generator.exit-code`，并生成 `generator-output-manifest.txt`；manifest 对三个预期正式文件逐一记录文件名、PRESENT/MISSING 和字节数，不计算 hash，不复制文件内容。
+对应步骤必须按以下顺序实现（变量沿用 Workflow 已定义的 `PR_NUMBER`、`BASE_SHA`、`HEAD_SHA`）：
+
+```yaml
+- name: Prepare Review Context diagnostic evidence
+  if: always()
+  shell: bash
+  run: |
+    set -euo pipefail
+    diagnostics_dir="$RUNNER_TEMP/review-context-diagnostics"
+    mkdir -p "$diagnostics_dir/unittest-gate"
+    {
+      printf 'pr_number=%s\n' "$PR_NUMBER"
+      printf 'base_sha=%s\n' "$BASE_SHA"
+      printf 'head_sha=%s\n' "$HEAD_SHA"
+      printf 'generator_base_sha=%s\n' "$BASE_SHA"
+      printf 'failure_injection=none\n'
+      printf 'run_id=%s\n' "$GITHUB_RUN_ID"
+      printf 'run_attempt=%s\n' "$GITHUB_RUN_ATTEMPT"
+    } > "$diagnostics_dir/run-context.txt"
+
+- name: Run Review Context unittest gate
+  shell: bash
+  run: |
+    set -euo pipefail
+    uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --suite review-context --output-dir "$RUNNER_TEMP/review-context-diagnostics/unittest-gate"
+
+- name: Generate review context
+  id: generate
+  shell: bash
+  run: |
+    set -euo pipefail
+    work_dir="$RUNNER_TEMP/review-context"
+    diagnostics_dir="$RUNNER_TEMP/review-context-diagnostics"
+    summary_file="$RUNNER_TEMP/review-context-summary.md"
+    rm -rf "$work_dir"
+    mkdir -p "$work_dir"
+    if uv run --no-sync --locked --group dev --extra plugins python scripts/review_context.py \
+      --base "$BASE_SHA" \
+      --head "$HEAD_SHA" \
+      --out "$work_dir" \
+      --summary "$summary_file" \
+      --event-path "$GITHUB_EVENT_PATH" \
+      > "$diagnostics_dir/generator.stdout.log" \
+      2> "$diagnostics_dir/generator.stderr.log"; then
+      generator_rc=0
+    else
+      generator_rc=$?
+    fi
+    printf '%s\n' "$generator_rc" > "$diagnostics_dir/generator.exit-code"
+    : > "$diagnostics_dir/generator-output-manifest.txt"
+    for name in 'review-scope.json' '评审上下文.md' '统一评审提示词.md'; do
+      file="$work_dir/$name"
+      if [ -f "$file" ]; then
+        bytes="$(wc -c < "$file" | tr -d '[:space:]')"
+        printf '%s\tPRESENT\t%s\n' "$name" "$bytes" >> "$diagnostics_dir/generator-output-manifest.txt"
+      else
+        printf '%s\tMISSING\t0\n' "$name" >> "$diagnostics_dir/generator-output-manifest.txt"
+      fi
+    done
+    if [ "$generator_rc" -eq 0 ]; then
+      test -f "$work_dir/review-scope.json"
+      test -f "$work_dir/评审上下文.md"
+      test -f "$work_dir/统一评审提示词.md"
+    fi
+    exit "$generator_rc"
+```
+
+诊断 Artifact 上传步骤必须排在上述生成器步骤之后、成功 Summary/失败报告和正式 Artifact 上传步骤之前；使用 `if: always()`。`Report failure` 步骤使用 `if: failure()`，并排在正式 Artifact 之前；正式 Artifact 必须是 Job 最后一步，且仅在诊断 Artifact、生成器、成功 Summary 等所有前置步骤均成功时按 `if: success()` 上传。
+
+必须先上传诊断 Artifact，再执行成功 Summary（`if: success()`）或失败报告（`if: failure()`）；正式三文件 Artifact 上传步骤必须排在失败报告步骤之后，作为 Job 的最后一个步骤，并保持 `if: success()`。这样任一 gate、生成器、诊断上传或 Summary/失败报告步骤失败时，正式 Artifact 均不会执行；正式 Artifact 上传成功后也不再有后续步骤将该 Run 改为失败。诊断 Artifact 的名称固定为 `review-context-diagnostics-pr-${PR_NUMBER}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}`，上传条件为 `if: always()`，路径仅为 `$RUNNER_TEMP/review-context-diagnostics/`，`if-no-files-found: error`，保留 30 天。它用于失败诊断，不是完成态交付物；即使 gate 或生成器失败，也必须尝试上传。
+
+正式完成态 Artifact 沿用现有名称 `review-context-pr-${PR_NUMBER}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}`，上传条件必须保持 `if: success()`，`if-no-files-found: error`，保留 30 天；`path` 必须显式列出且只能列出 `$RUNNER_TEMP/review-context/review-scope.json`、`$RUNNER_TEMP/review-context/评审上下文.md`、`$RUNNER_TEMP/review-context/统一评审提示词.md`。不得将 gate、日志、manifest、Summary 或其他文件加入该 Artifact。上传后下载解包，文件集合必须恰好为这三份，不得多也不得少。
+
+失败语义：gate 失败时生成器和正式 Artifact 上传步骤不得执行；生成器失败时诊断 Artifact 仍上传，正式 Artifact 因 `if: success()` 不执行；诊断 Artifact 上传失败也必须阻止后续成功 Summary/正式 Artifact。任何失败 Run 均不得产生正式完成态 Artifact。成功 Run 必须同时产生诊断 Artifact 和恰含三份文件的正式 Artifact。诊断 Artifact 的上传不能改变或放宽正式 Artifact 的成功条件。
+
+拟实施的 Review Context Workflow 上传步骤（正式三文件步骤保留现有契约）：
+
+```yaml
+- name: Upload Review Context diagnostic evidence
+  if: always()
+  uses: actions/upload-artifact@v4
+  with:
+    name: review-context-diagnostics-pr-${{ github.event.pull_request.number }}-${{ github.run_id }}-${{ github.run_attempt }}
+    path: ${{ runner.temp }}/review-context-diagnostics/
+    if-no-files-found: error
+    retention-days: 30
+
+- name: Write workflow summary
+  if: success()
+  run: |
+    set -euo pipefail
+    summary_file="$RUNNER_TEMP/review-context-summary.md"
+    artifact_name="review-context-pr-${PR_NUMBER}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+    {
+      cat "$summary_file"
+      echo ""
+      echo "### 入口"
+      echo ""
+      echo "- Workflow Run：${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+      echo "- Artifact：${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts"
+      echo "  名称 \`$artifact_name\`"
+    } | tee -a "$GITHUB_STEP_SUMMARY"
+
+- name: Report failure
+  if: failure()
+  run: |
+    {
+      echo "## Review Context 生成失败"
+      echo ""
+      echo "本 Job 失败，未上传正式完成态 Artifact。诊断 Artifact 单独保留；具体错误见对应步骤日志。"
+      echo ""
+      echo "- Workflow Run：${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+    } >> "$GITHUB_STEP_SUMMARY"
+
+- name: Upload review context artifacts
+  if: success()
+  uses: actions/upload-artifact@v4
+  with:
+    name: review-context-pr-${{ github.event.pull_request.number }}-${{ github.run_id }}-${{ github.run_attempt }}
+    path: |
+      ${{ runner.temp }}/review-context/review-scope.json
+      ${{ runner.temp }}/review-context/评审上下文.md
+      ${{ runner.temp }}/review-context/统一评审提示词.md
+    if-no-files-found: error
+    retention-days: 30
+```
+
+AC-028-08 必须用真实成功 PR Run 下载核对两个 Artifact；另用一个受控负例 PR 验证“测试门禁通过、生成器失败”的真实 Workflow 路径。**负例 PR 必须保持 head 版 `Agent.md` 与有效 `review_scope` 不变**，不得通过破坏它触发生成器失败（测试模块在导入时从仓库根 `Agent.md` 派生全部 fixture，这样做会先使 gate 失败）。负例只在该临时 PR 的 `.github/workflows/review-context.yml` 中，将生成器命令的 `--base "$BASE_SHA"` 临时替换为 `--base "0000000000000000000000000000000000000000"`；同时将 `run-context.txt` 的 `generator_base_sha` 记录为该全零 SHA、`failure_injection=invalid-base`，但 `base_sha` 仍记录真实 PR base。预期 Review Context gate 全部通过，生成器实际执行并以非零退出，stderr 包含 `base 提交对象不可读取`；诊断 Artifact 必须包含 gate PASS JSON/log/summary、generator stdout/stderr/exit-code 与 manifest（三个正式文件均为 MISSING），正式三文件 Artifact 不存在。无效 `review_scope` 的拒绝能力由现有 `test_validation_failure_writes_no_artifact` 与 `test_subprocess_returns_non_zero_with_location` 在临时 Git 仓库中的单元测试覆盖；这两项必须随 gate 通过。负例 PR 不得合并；取得负例证据后，恢复 `--base "$BASE_SHA"`、`generator_base_sha=$BASE_SHA`、`failure_injection=none`，在恢复后的新 Head 上重新运行成功路径并核验两个 Artifact，最后关闭负例 PR（未合并）。
+
+#### paths 与独立堆叠验证 PR
+
+迁移后的 `sr003-plugin-ci.yml` 的 `pull_request.paths` 至少包括 `pyproject.toml`、`uv.lock`、`.python-version`、`.gitignore`、`src/**`、`tests/**`、`examples/echo/**`、`scripts/review_context.py`、`scripts/unittest_gate.py`、`docs/SR/SR-003-*`、`.github/workflows/review-context.yml` 和 `.github/workflows/sr003-plugin-ci.yml` 自身。每一类指定单文件变更均须触发两个矩阵 Job。
+
+“仅修改 `review-context.yml`”必须用独立堆叠验证 PR 证明，不能用主实施 PR 内某个单文件 commit 冒充，因为 `paths` 按 PR base...head 的累积文件差异判定：
+
+1. 主实施 PR 完成 pyproject/uv.lock/.python-version、`scripts/unittest_gate.py` 和两个 Workflow 迁移，先核验其常规双平台 CI 与 AC-028-06/08。
+2. 创建验证分支，以主实施 PR 的 head branch 作为验证 PR 的 base；该 base 已包含更新后的 `sr003-plugin-ci.yml`，其中 paths 明确包含 `.github/workflows/review-context.yml`。
+3. 验证 PR 相对 base 的三点差异文件清单必须且只能是 `.github/workflows/review-context.yml`。仅在该文件增加一条路径验证注释，不修改其他文件。打开 PR 后再向同一文件推送第二个 commit，产生 `pull_request.synchronize`。
+4. 对同一次 synchronize，核验 Review Context Workflow 与 SR-003 Workflow 均由相同 PR number 和 head SHA 触发；Review Context Job 成功，SR-003 的 Ubuntu 3.12 与 Windows 3.14.6 两个 Job 均实际运行且非 skipped。保存两个 Run URL、事件、head SHA、Job 日志、解释器版本、四范围 gate JSON/log 和退出码。
+5. 验证 PR 不合并；主实施 PR 和验证 PR 的合并都须另行授权。
+
+PR #32 原有 pip/单 Ubuntu Run 只证明迁移前 SR-001 基线有效，不得计为 uv、双平台、paths 触发或 AC-028-07/08 PASS。
 ## 4. 本地与 CI 流程
 
-### 4.1 新 worktree
+### 4.1 新 worktree 与 A→B→A 隔离验收
 
-1. 创建 worktree 后，在该 worktree 根目录运行 `uv python install`。
-2. 运行 `uv sync --locked --group dev --extra plugins`，由 uv 在当前 worktree 创建 `.venv/`。
-3. 通过 `uv run --locked --group dev --extra plugins` 运行测试、Smoke 和仓库脚本。
-4. 不复制其他 worktree 的 `.venv`，不复用其 editable 安装。
+AC-028-05 必须在干净 checkout 中用两个临时 detached worktree 执行 A→B→A。整个块从第一条命令启用 `set -euo pipefail`；`trap` 只清理 worktree，不删除证据，并必须保留原始退出码。任何创建、sync、断言、Host 测试、比较或清理失败均使整段非零退出。
 
-### 4.2 依赖更新
+```bash
+set -euo pipefail
+ROOT="$(pwd -P)"
+test -f "$ROOT/pyproject.toml"
+if [ -n "${SR028_EVIDENCE_DIR:-}" ]; then
+  EVIDENCE_DIR="$SR028_EVIDENCE_DIR"
+  test ! -e "$EVIDENCE_DIR"
+  mkdir -p "$EVIDENCE_DIR"
+else
+  EVIDENCE_DIR="$(mktemp -d "${TMPDIR:-/tmp}/sr028-ab-a-evidence.XXXXXX")"
+fi
+EVIDENCE_DIR="$(cd "$EVIDENCE_DIR" && pwd -P)"
+case "$EVIDENCE_DIR/" in "$ROOT/"*) echo 'Evidence directory must be outside the repository' >&2; exit 2 ;; esac
+WORKTREE_PARENT="$(mktemp -d "${TMPDIR:-/tmp}/sr028-ab-a-worktrees.XXXXXX")"
+A_PATH="$WORKTREE_PARENT/a"
+B_PATH="$WORKTREE_PARENT/b"
+A_ADDED=0
+B_ADDED=0
+cleanup() {
+  local original_rc=$?
+  local cleanup_rc=0
+  local cmd_rc=0
+  trap - EXIT
+  set +e
+  cd "$ROOT"
+  cmd_rc=$?
+  if [ "$cmd_rc" -ne 0 ] && [ "$cleanup_rc" -eq 0 ]; then cleanup_rc=$cmd_rc; fi
+  if [ "$B_ADDED" -eq 1 ]; then
+    git -C "$ROOT" worktree remove --force "$B_PATH"
+    cmd_rc=$?
+    if [ "$cmd_rc" -ne 0 ] && [ "$cleanup_rc" -eq 0 ]; then cleanup_rc=$cmd_rc; fi
+  fi
+  if [ "$A_ADDED" -eq 1 ]; then
+    git -C "$ROOT" worktree remove --force "$A_PATH"
+    cmd_rc=$?
+    if [ "$cmd_rc" -ne 0 ] && [ "$cleanup_rc" -eq 0 ]; then cleanup_rc=$cmd_rc; fi
+  fi
+  rmdir "$WORKTREE_PARENT"
+  cmd_rc=$?
+  if [ "$cmd_rc" -ne 0 ] && [ "$cleanup_rc" -eq 0 ]; then cleanup_rc=$cmd_rc; fi
+  printf 'SR028_EVIDENCE_DIR=%s\n' "$EVIDENCE_DIR"
+  if [ "$original_rc" -ne 0 ]; then exit "$original_rc"; fi
+  if [ "$cleanup_rc" -ne 0 ]; then exit "$cleanup_rc"; fi
+}
+trap cleanup EXIT
+git worktree add --detach "$A_PATH" HEAD
+A_ADDED=1
+git worktree add --detach "$B_PATH" HEAD
+B_ADDED=1
+
+capture_env() {
+  local label="$1"
+  local worktree="$2"
+  (
+    cd "$worktree"
+    uv run --no-sync --locked --group dev --extra plugins python - "$worktree" "$EVIDENCE_DIR/$label.json" "$EVIDENCE_DIR/$label.direct_url.json" <<'PY'
+import importlib.metadata as metadata
+import json
+import os
+import pathlib
+import sys
+import urllib.parse
+import urllib.request
+import ca_agent_next
+root = pathlib.Path(sys.argv[1]).resolve()
+report_path = pathlib.Path(sys.argv[2])
+direct_url_path = pathlib.Path(sys.argv[3])
+raw = metadata.distribution("ca-agent-next").read_text("direct_url.json")
+assert raw is not None, "direct_url.json is missing"
+direct = json.loads(raw)
+url = direct["url"]
+parsed = urllib.parse.urlparse(url)
+assert parsed.scheme == "file", url
+source = pathlib.Path(urllib.request.url2pathname(parsed.path)).resolve()
+venv = (root / ".venv").resolve()
+sys_prefix = pathlib.Path(sys.prefix).resolve()
+executable = pathlib.Path(os.path.abspath(sys.executable))
+module = pathlib.Path(ca_agent_next.__file__).resolve()
+editable = direct.get("dir_info", {}).get("editable") is True
+assert (venv / "pyvenv.cfg").is_file(), venv
+assert sys_prefix == venv, (sys_prefix, venv)
+assert executable.is_relative_to(venv), (executable, venv)
+assert module.is_relative_to(root / "src"), (module, root / "src")
+assert editable, direct
+assert source == root, (source, root)
+report = {"root":str(root),"venv":str(venv),"sys_prefix":str(sys_prefix),"executable":str(executable),"module":str(module),"direct_url":url,"direct_url_source":str(source),"editable":editable}
+report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+direct_url_path.write_text(raw + "\n", encoding="utf-8")
+PY
+    git -C "$worktree" check-ignore -v .venv/pyvenv.cfg > "$EVIDENCE_DIR/$label.git-check-ignore.txt"
+    test -s "$EVIDENCE_DIR/$label.git-check-ignore.txt"
+  )
+}
+
+run_host() {
+  local label="$1"
+  local worktree="$2"
+  (
+    cd "$worktree"
+    if uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --suite host --output-dir "$EVIDENCE_DIR/$label-host-gate" > "$EVIDENCE_DIR/$label-host-gate.stdout.log" 2>&1; then rc=0; else rc=$?; fi
+    printf '%s\n' "$rc" > "$EVIDENCE_DIR/$label-host-gate.exit-code"
+    cat "$EVIDENCE_DIR/$label-host-gate.stdout.log"
+    test "$rc" -eq 0
+  )
+}
+
+cd "$A_PATH"
+unset UV_PROJECT_ENVIRONMENT
+uv python install
+uv sync --locked --group dev --extra plugins
+capture_env a-before "$A_PATH"
+run_host a-before "$A_PATH"
+
+cd "$B_PATH"
+unset UV_PROJECT_ENVIRONMENT
+uv python install
+uv sync --locked --group dev --extra plugins
+capture_env b "$B_PATH"
+run_host b "$B_PATH"
+
+cd "$A_PATH"
+unset UV_PROJECT_ENVIRONMENT
+# 关键：返回 A 后只允许 --no-sync；不得执行 uv sync 或普通 uv run。
+capture_env a-return "$A_PATH"
+run_host a-return "$A_PATH"
+uv run --no-sync --locked --group dev --extra plugins python - "$EVIDENCE_DIR" <<'PY'
+import json, pathlib, sys
+evidence = pathlib.Path(sys.argv[1])
+a = json.loads((evidence / "a-before.json").read_text(encoding="utf-8"))
+b = json.loads((evidence / "b.json").read_text(encoding="utf-8"))
+a2 = json.loads((evidence / "a-return.json").read_text(encoding="utf-8"))
+for key in ("root", "venv", "sys_prefix", "executable", "module", "direct_url", "direct_url_source"): assert a[key] != b[key], (key, a[key], b[key])
+assert a2 == a, (a, a2)
+assert (evidence / "a-before.direct_url.json").read_bytes() == (evidence / "a-return.direct_url.json").read_bytes()
+assert (evidence / "a-before.git-check-ignore.txt").read_text() == (evidence / "a-return.git-check-ignore.txt").read_text()
+print("A/B/A isolation PASS; A return used --no-sync")
+PY
+printf 'A→B→A evidence retained at: %s\n' "$EVIDENCE_DIR"
+```
+
+Windows 本地执行此 Bash 块时使用 Git Bash 或 WSL；不得在 PowerShell 中粘贴 Bash 块。A→B→A 的 Python 检查、Host 测试和比较全部通过 `uv run --no-sync --locked ...` 运行；返回 A 后绝不执行 `uv sync`、`uv python install` 或普通 `uv run`。`--no-sync` 是本验收的关键条件，防止 uv 自动修复 editable metadata 污染。
+
+证据目录必须保留，不得由 trap 或后续 cleanup 删除。A-before、B、A-return 三份 JSON 必须包含 root、venv、sys_prefix、executable、module、原始 `direct_url` URL、解析后的 direct_url_source、editable；并分别保留原始 `direct_url.json`、`git check-ignore -v` 输出、Host gate JSON/log/exit code。将该目录作为验收附件归档，报告中记录绝对路径、受测 SHA 和附件位置。
+
+### 4.2 依赖更新与锁漂移负例
+
+正常依赖更新流程：
 
 1. 修改 `pyproject.toml` 中明确归属的运行时依赖或 dependency group。
 2. 执行 `uv lock` 更新 `uv.lock`。
 3. 审阅直接/传递依赖变化和 Python marker。
-4. 执行 `uv lock --check`、`uv sync --locked --group dev --extra plugins`、完整 unittest 和 Smoke。
-5. 在同一 Commit 提交 pyproject.toml 与 uv.lock；CI 只执行 locked 安装，不重新解析。
+4. 执行 `uv lock --check`、`uv sync --locked --group dev --extra plugins`、统一 unittest gate 和 Smoke。
+5. 在同一 Commit 提交 `pyproject.toml` 与 `uv.lock`；CI 只执行 locked 安装，不重新解析。
+
+AC-028-04 的失败路径必须在干净临时 worktree 执行。整个 Bash 块从第一条命令启用 `set -euo pipefail`，`trap` 清理 worktree 并保留原始退出码；初始 sync/lock-check 两条正例必须明确成功。只允许在两条预期失败命令的 `if` 条件中捕获退出码。
+
+```bash
+set -euo pipefail
+ROOT="$(pwd -P)"
+EVIDENCE_DIR="$(mktemp -d "${TMPDIR:-/tmp}/sr028-lock-evidence.XXXXXX")"
+WORKTREE_PARENT="$(mktemp -d "${TMPDIR:-/tmp}/sr028-lock-worktree.XXXXXX")"
+LOCK_PATH="$WORKTREE_PARENT/lock-drift"
+LOCK_ADDED=0
+cleanup() {
+  local original_rc=$?
+  local cleanup_rc=0
+  local cmd_rc=0
+  trap - EXIT
+  set +e
+  cd "$ROOT"
+  cmd_rc=$?
+  if [ "$cmd_rc" -ne 0 ] && [ "$cleanup_rc" -eq 0 ]; then cleanup_rc=$cmd_rc; fi
+  if [ "$LOCK_ADDED" -eq 1 ]; then
+    git -C "$ROOT" worktree remove --force "$LOCK_PATH"
+    cmd_rc=$?
+    if [ "$cmd_rc" -ne 0 ] && [ "$cleanup_rc" -eq 0 ]; then cleanup_rc=$cmd_rc; fi
+  fi
+  rmdir "$WORKTREE_PARENT"
+  cmd_rc=$?
+  if [ "$cmd_rc" -ne 0 ] && [ "$cleanup_rc" -eq 0 ]; then cleanup_rc=$cmd_rc; fi
+  printf 'SR028_LOCK_EVIDENCE_DIR=%s\n' "$EVIDENCE_DIR"
+  if [ "$original_rc" -ne 0 ]; then exit "$original_rc"; fi
+  if [ "$cleanup_rc" -ne 0 ]; then exit "$cleanup_rc"; fi
+}
+trap cleanup EXIT
+git worktree add --detach "$LOCK_PATH" HEAD
+LOCK_ADDED=1
+cd "$LOCK_PATH"
+unset UV_PROJECT_ENVIRONMENT
+uv python install
+if uv sync --locked --group dev --extra plugins > "$EVIDENCE_DIR/positive-sync.log" 2>&1; then
+  printf '0\n' > "$EVIDENCE_DIR/positive-sync.exit-code"
+else
+  rc=$?
+  printf '%s\n' "$rc" > "$EVIDENCE_DIR/positive-sync.exit-code"
+  cat "$EVIDENCE_DIR/positive-sync.log"
+  exit "$rc"
+fi
+if uv lock --check > "$EVIDENCE_DIR/positive-lock-check.log" 2>&1; then
+  printf '0\n' > "$EVIDENCE_DIR/positive-lock-check.exit-code"
+else
+  rc=$?
+  printf '%s\n' "$rc" > "$EVIDENCE_DIR/positive-lock-check.exit-code"
+  cat "$EVIDENCE_DIR/positive-lock-check.log"
+  exit "$rc"
+fi
+uv run --no-sync --locked --group dev --extra plugins python -c 'from pathlib import Path; p=Path("pyproject.toml"); s=p.read_text(encoding="utf-8"); old="PyYAML>=6.0,<7"; assert s.count(old)==1, "expected exactly one PyYAML constraint"; p.write_text(s.replace(old,"PyYAML>=6.0,<8",1), encoding="utf-8")'
+git diff -- pyproject.toml > "$EVIDENCE_DIR/pyproject-drift.diff"
+if uv lock --check > "$EVIDENCE_DIR/negative-lock-check.log" 2>&1; then
+  echo 'FAIL: uv lock --check unexpectedly accepted a stale lockfile' >&2
+  exit 1
+else
+  lock_check_rc=$?
+fi
+printf '%s\n' "$lock_check_rc" > "$EVIDENCE_DIR/negative-lock-check.exit-code"
+test "$lock_check_rc" -ne 0
+grep -Eiq 'lockfile.*needs to be updated' "$EVIDENCE_DIR/negative-lock-check.log"
+git diff --exit-code HEAD -- uv.lock
+test -z "$(git status --porcelain -- uv.lock)"
+if uv sync --locked --group dev --extra plugins > "$EVIDENCE_DIR/negative-sync-locked.log" 2>&1; then
+  echo 'FAIL: uv sync --locked unexpectedly accepted a stale lockfile' >&2
+  exit 1
+else
+  sync_locked_rc=$?
+fi
+printf '%s\n' "$sync_locked_rc" > "$EVIDENCE_DIR/negative-sync-locked.exit-code"
+test "$sync_locked_rc" -ne 0
+grep -Eiq 'lockfile.*needs to be updated' "$EVIDENCE_DIR/negative-sync-locked.log"
+git diff --exit-code HEAD -- uv.lock
+test -z "$(git status --porcelain -- uv.lock)"
+git restore --source=HEAD --worktree -- pyproject.toml
+git diff --exit-code HEAD -- pyproject.toml uv.lock
+test -z "$(git status --porcelain -- pyproject.toml uv.lock)"
+printf 'Lock-drift evidence retained at: %s\n' "$EVIDENCE_DIR"
+```
+
+正例失败会立即终止，不会进入负例；负例只有在退出码非零且 stdout/stderr 匹配 `lockfile ... needs to be updated` 诊断后才算预期失败。每次负例后都证明 `uv.lock` 的 tracked diff 和 status 均为空。恢复后 `pyproject.toml` 与 `uv.lock` 均必须干净。任何正例、诊断、锁文件不变断言、恢复或 cleanup 失败均使整个块非零退出；cleanup 不删除证据目录，也不能覆盖原始失败码。证据目录需归档并记录绝对路径、受测 SHA、正/负例日志与退出码。
 
 ### 4.3 CI
 
-1. Checkout 当前 PR HEAD。
-2. 通过固定版本的 setup-uv action 安装 uv 0.13.10。
-3. 按 `.python-version` 安装 CPython 3.14.6。
-4. 运行 locked sync。
-5. 运行完整 unittest、Host Smoke 和本 PR 所需的仓库脚本。
-6. 任一锁文件漂移、依赖缺失、测试失败或环境创建失败均使 Job 失败；不得降级为 pip 临时安装。
+1. Checkout 当前 PR HEAD，并记录 base/head SHA。
+2. 通过固定 setup-uv action 安装 uv 0.13.10。
+3. 按项目 `.python-version` 安装根环境 CPython 3.14.6；SR-003 矩阵另外显式安装 Ubuntu 3.12 或 Windows 3.14.6。
+4. 通过 `setup-go@v5` 和 `go-version-file: examples/echo/plugin/go.mod` 安装满足 Go 1.24 directive 的 Go；记录 `go version`，设置 `GOWORK=off` 并构建 Go Echo。Go 构建步骤统一使用 Bash；Windows Runner 的 `go env GOOS` 必须选择 `.exe` 输出名。
+5. 使用 `uv sync --python "$PY" --locked --group dev --extra plugins` 完成唯一一次环境同步；其后的测试、compileall、Smoke 和证据脚本统一使用 `uv run --python "$PY" --no-sync --locked --group dev --extra plugins ...`，不得在测试阶段隐式修复环境。
+6. 使用 `scripts/unittest_gate.py` 一次运行 Host、Plugin、Review Context、完整总计四个范围。脚本必须逐范围保存 JSON/log，自动断言 discovered>0、tests_run=discovered、failures/errors/skipped/expected_failures/unexpected_successes/loader_errors 均为 0，且 `discovery_exception` 为 JSON `null`，并在任一范围失败时最终非零退出。
+7. `actions/upload-artifact@v4` 必须在 `if: always()` 下上传 gate JSON/log、Smoke 与 Go Echo 证据；Artifact 不存在或文件缺失不得被记为验收 PASS。
+8. 任一锁文件漂移、依赖缺失、测试失败、必需用例 skipped、0 tests、脚本错误或环境创建失败均使 Job 失败；不得降级为 pip 临时安装。
 
 ## 5. 兼容性与责任边界
 
@@ -222,15 +750,18 @@ uv run --locked --group dev --extra plugins python -m ca_agent_next --smoke
 | 阶段 | 范围 | 依赖 | 说明 |
 |---|---|---|---|
 | D0 | 设计评审 | 无 | 本文与 SR-028 评审通过后，SR-028 才可 READY |
-| I1 | 根 Python 项目采用 uv | SR-028 READY、独立实施 Issue | pyproject、uv.lock、.python-version、.gitignore、测试命令 |
-| I2 | GitHub Actions 迁移 | I1；目标分支含已合并的 SR-001 和 SR-003 工作流 | 更新 review-context Workflow，运行完整测试与生成器，禁止改动 SR-001 分支 |
-| I3 | 环境隔离验收 | I1 | 至少两个独立 worktree 验证 .venv 与 distribution metadata 不互相污染 |
+| I1 | 根 Python 项目采用 uv | SR-028 READY、独立实施 Issue | pyproject、uv.lock、.python-version、保留 .venv ignore、Go 前置和本地测试 |
+| I2 | GitHub Actions 迁移 | I1；目标分支含已合并的 SR-001 和 SR-003 工作流 | 迁移 review-context 与 sr003-plugin-ci；固定双平台矩阵、Go 构建、统计门槛及独立堆叠路径验证 PR |
+| I3 | 环境隔离与锁漂移验收 | I1 | 执行两个 worktree 的 A→B→A 和临时声明漂移 fail-closed 负例 |
+| I4 | 当前文档入口刷新 | I1～I3 | 更新 README、Agent、SR-002/SR-003 当前复验命令和演示验收基线；历史 pip 证据只读保留 |
 
-I1 与 I3 可在 SR-028 实施 Issue 内按依赖顺序执行；I2 只在 SR-001 Workflow 已进入目标分支后执行。任何阶段依赖未满足时只暂停对应阶段/AC，不把无关设计评审阻塞。
+I1 与 I3 可在 SR-028 实施 Issue 内按依赖顺序执行；I2 只在 SR-001 Workflow 已进入目标分支后执行，并包含 `scripts/unittest_gate.py`、双平台自动门禁和 Artifact；I4 在命令与 Workflow 迁移验收完成后执行。任何阶段依赖未满足时只暂停对应阶段/AC，不把无关设计评审阻塞。
 
 ## 7. 验收映射
 
-具体验收 ID、命令和证据要求以 [SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md) 为准。本设计不将文档评审或示例命令视为实现 PASS。
+具体验收 ID、命令和证据要求以 [SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md) v0.2.9 为准：AC-028-01～03 元数据/版本/依赖分组；AC-028-04 锁漂移 fail-closed；AC-028-05 双 worktree A→B→A；AC-028-06 本地 Go、测试计数与 Smoke；AC-028-07 双平台 CI 与独立堆叠 paths 验证 PR；AC-028-08 Review Context 真实 PR Artifact；AC-028-09 范围边界；AC-028-10 当前文档入口刷新。
+
+设计文档、示例 YAML、历史 pip Run 或迁移前 Artifact 均不构成 uv 实施 PASS。每项产品 AC 只有在固定受测 SHA 上真实运行并留存命令、环境、结果和证据后才可更新状态。
 
 ## 8. 参考
 
@@ -252,3 +783,7 @@ I1 与 I3 可在 SR-028 实施 Issue 内按依赖顺序执行；I2 只在 SR-001
 | 2026-11-27 | 0.2.1 | Codex / GPT-6 | §3.8 | 补全双平台路径触发范围 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
 | 2026-11-27 | 0.2.2 | GPT-6（ChatGPT） | §3.8、文档头、修订记录 | 增加 uv 双平台矩阵 Python 显式选择的可执行 YAML 示例和 PowerShell 分支说明 | 避免 Harness 在 Windows 把 Bash 变量误用或因 .python-version 让 Ubuntu 3.12 误用 3.14.6；仍需真实 CI 独验 | Issue #12/#35；PR #46；SR-028 |
 | 2026-11-27 | 0.2.3 | GPT-6（ChatGPT） | §3.8、修订记录 | 澄清 Go Echo 由 Go 工具链构建，Python compileall/证据脚本才使用矩阵 Python | 消除示例描述中将 Go build 错写成通过 Python 运行的歧义 | Issue #12/#35；PR #46；SR-028 |
+| 2026-11-27 | 0.2.4 | GPT-6.2（ChatGPT） | §0、§3.5～3.8、§4.1～4.3、§6～§7 | 按 Review #6082874849 补齐 Go 1.24 前置与 GOWORK=off、锁漂移负例、双 worktree A→B→A、测试统计、Windows 3.14.6、独立堆叠验证 PR 和文档验收映射；修正 `.venv/` 既有规则表述 | 关闭 SR-028 的实施歧义，同时保持所有产品 AC NOT_RUN 和 SR DRAFT | Issue #12；PR #46；Review #6082874849；SR-028 v0.2.6 |
+| 2026-11-27 | 0.2.5 | GPT-6.2（ChatGPT） | §0、§3.6～3.8、§4.1～4.3、§6～§7 | 按 Review #6083225844 修复 Bash fail-open：锁漂移与 A→B→A 从块首 fail-fast 并使用保码 cleanup trap；A 返回阶段全部改用 `uv run --no-sync`；新增标准库 unittest gate 并在双平台 Workflow 自动断言 skipped=0/非空测试且上传报告；Python 检查使用显式 uv 项目环境；补齐 A/B/A sys.prefix、原始 direct_url、ignore 证据持久化；Go 构建子 shell 恢复 CWD，按 GOOS 生成 Windows `.exe`，澄清 Workflow shell 边界 | 消除 R028-10～16 的 fail-open、自动同步、CI skipped 假 PASS、隐式解释器及跨平台/证据歧义；保持产品 AC NOT_RUN 与 SR DRAFT | Issue #12；PR #46；Review #6083225844；SR-028 v0.2.7 |
+| 2026-11-27 | 0.2.6 | GPT-6.2（ChatGPT） | 文档头、§0、§3.6、§3.8、SR 引用 | 按第五轮 Review #6083641266 修复 Review Context 诊断 Artifact 与三文件正式 Artifact 的契约冲突；明确 `loader_errors` 来源/计数及 discovery 异常；统一逐范围与整体 `exit_code` | 关闭 R028-17 P1 与 R028-18 P2，确保失败诊断可留存且失败 Run 不产生完成态 Artifact；产品 AC 仍 NOT_RUN | Issue #12；PR #46；Review #6083641266；SR-028 v0.2.8 |
+| 2026-11-27 | 0.2.7 | GPT-6.2（ChatGPT） | 文档头、§0、§3.6、§3.8、§4.3、§7 | 按第六轮 Review #6083872622 修复 AC-028-08 受控负例：保留有效 Agent.md 与测试门禁，通过临时 Workflow PR 将生成器 `--base` 注入全零 SHA 形成可执行失败路径；run-context 记录实际/注入 SHA 与模式；补齐 AC 证据中的负例不合并、恢复后成功重跑；统一 gate 的 `discovery_exception=null` 断言 | 关闭 R028-21 P1 与 R028-22/23 P2；不修改测试代码或产品 Workflow，不将设计整改视为产品实施，SR-028 继续 DRAFT / NOT_RUN | Issue #12；PR #46；Review #6083872622；SR-028 v0.2.9 |

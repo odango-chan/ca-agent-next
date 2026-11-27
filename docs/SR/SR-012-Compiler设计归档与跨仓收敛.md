@@ -1,7 +1,10 @@
 # SR-012 Compiler 设计归档与跨仓收敛
 
-> 文档版本：0.1.8\
-> 状态：DRAFT（实施主状态）；第二轮独立评审 CHANGES_REQUESTED（历史结论）；第三轮自评 **DESIGN_READY_FOR_INDEPENDENT_REVIEW**（仅设计评审候选，非独立批准或实施 READY）；产品 AC NOT_RUN/BLOCKED。
+> 文档版本：0.1.10\
+> 状态：整项 DRAFT；阶段 READY（中央只读核验）。AC-012-01 的 Next→源仓静态部分、03。  
+> 下一步：固定 Compiler 源树清单 218/12 与历史边界；02 源仓链接替换等默认分支与源仓授权。  
+> 阶段依据：[独立评审 #76](https://github.com/odango-chan/ca-agent-next/issues/76#issuecomment-7210373026)，评审 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
+> 工作项：[阶段工作项 #95](https://github.com/odango-chan/ca-agent-next/issues/95)。[已核验的固定源证据](https://github.com/odango-chan/ca-agent-next/issues/95#issuecomment-7210746570)。
 > 上游 IR：IR-006  
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-27\
@@ -76,3 +79,5 @@ Issue [Next #2](https://github.com/odango-chan/ca-agent-next/issues/2)；依赖�
 | 2026-11-27 | 0.1.6 | Codex / GPT-6 | AC-012-02 | 固定逐文件清单、版本与文档差异检查 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
 | 2026-11-27 | 0.1.7 | Codex / GPT-6 | AC-012-03 | 将权威入口的版本一致性列为归档核查项 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
 | 2026-11-27 | 0.1.8 | GPT-6（ChatGPT） | 第三轮设计自评/历史修订表 | Compiler 固定源 docs/design 12 条、docs 218 文件已独立从 Git tree 对账；仅在 Next 中央链接进目标默认分支后替换源仓活动设计；将第二轮结论保留为历史、登记第三轮独立复评候选并按版本整理记录 | 设计范围可供外部评审而不提前授权代码实施或夸大 AC 状态 | Issue #12；PR #46；SR-012 |
+| 2026-11-27 | 0.1.9 | GPT-6（ChatGPT） | 文档头、评审状态、修订记录 | 将第三轮独立模型 Review #6082541121 的限定结论替换第三轮自评状态；明确只认可固定源清单静态核对，源仓正文替换仍未闭合 | 以可访问 GitHub Review 为准，不把仓内自评或旧评审登记冒充独立审批 | Issue #12；PR #46；Review #6082541121 |
+| 2026-11-27 | 0.1.10 | Codex / GPT-6 | 文档头 | 登记阶段 READY（中央只读核验）及 AC 范围与工作项 #95 | 按单项独立评审推进 | Issue #12、#76；PR #46 |
