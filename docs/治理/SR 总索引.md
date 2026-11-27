@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.55
+> 文档版本：0.3.56
 > 状态：31 项 SR：4 VERIFIED、1 IMPLEMENTED、26 DRAFT（原 24 项 PR #46 评审批次 + SR-031 / SR-032 两项独立增量设计），SR-003 模块 AC PASS，系统 EX NOT_RUN
 > 修订日期：2026-11-27\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -139,7 +139,7 @@ PR #46 上述十项第二轮 CHANGES_REQUESTED 已按各自反例复核并登记
 - 治理自动化：SR-001 VERIFIED；[PR #32](https://github.com/odango-chan/ca-agent-next/pull/32) MERGED（`7a0fac41e573021207ab8201bbc718718c451e50`）；AC-REV-01～10 PASS、80 tests OK、Run [45793590532](https://github.com/odango-chan/ca-agent-next/actions/runs/45793590532) success；SR-028 仍为 DRAFT。
 - Phase A：SR-002（VERIFIED；PR #23 已集成；AC-002-01～08 PASS；EX-01 仍 NOT_RUN）。
 - Phase B：**SR-003 VERIFIED（模块）**；[实施 PR #34](https://github.com/odango-chan/ca-agent-next/pull/34) 与 [治理回填 PR #41](https://github.com/odango-chan/ca-agent-next/pull/41) 均 MERGED。最终实施 Head `e8bcb1b` 与 Merge `32c7c1be` tree 一致；治理回填 Head `f3f59b54` 与 Merge `a899409` tree 一致。[CI #45815167442](https://github.com/odango-chan/ca-agent-next/actions/runs/45815167442)、[CI #45817800342](https://github.com/odango-chan/ca-agent-next/actions/runs/45817800342) 均 SUCCESS：Linux Python 3.12 + Windows Python 3.14 每平台 Plugin 87 / Host 52 / Review Context 80 tests PASS，Go Echo build、compileall 与证据采集 PASS；AC-003-01～04 均 PASS。系统 EX-02/03/04/18 仍 NOT_RUN；Provider v2 wire DTO 属 SR-010，不影响 SR-003 模块结论。
-- Phase C：SR-004 DRAFT / NOT READY；[设计 Issue #43](https://github.com/odango-chan/ca-agent-next/issues/43) OPEN，SR-004 v0.2.12 已定义 AC-004-01～06。SKILL.md-only 子路径可独立设计；新 Assurance 路径面向 **CA-SL 1.6.0**（Issue #40 / SR-029；NOT_RELEASED），还需 Compiler #61 / SR-013 唯一 Capability Binding Artifact 与 ca-skills SR-027 正式 Bundle 契约/正例。冻结 Artifact v1alpha5 与 Development v1alpha1 均不作为当前正例；未达到 READY，不创建实施 Issue、不提供 Harness 提示词。
+- Phase C：SR-004 DRAFT / NOT READY；[设计 Issue #43](https://github.com/odango-chan/ca-agent-next/issues/43) OPEN，SR-004 v0.2.12 已定义 AC-004-01～06。无 Assurance Package 子路径（可携带共享资源）可独立设计；新 Assurance 路径面向 **CA-SL 1.6.0**（Issue #40 / SR-029；NOT_RELEASED），还需 Compiler #61 / SR-013 唯一 Capability Binding Artifact 与 ca-skills SR-027 正式 Bundle 契约/正例。冻结 Artifact v1alpha5 与 Development v1alpha1 均不作为当前正例；未达到 READY，不创建实施 Issue、不提供 Harness 提示词。
 - Phase D：SR-005、SR-006。
 - Phase E：SR-007。
 - Phase F：SR-008。
@@ -237,3 +237,4 @@ PR #46 上述十项第二轮 CHANGES_REQUESTED 已按各自反例复核并登记
 | 2026-11-27 | 0.3.53 | GPT-6.2（ChatGPT） | SR 清单、IR-008 增量设计、修订记录 | 新增 SR-032 与 SKILL 作者规范，更新至 31 项 SR / 26 项 DRAFT | 将作者规则从历史资料提升为 Next 唯一中央规范入口，且不改变 PR #46 / Issue #47 历史评议 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.3.54 | GPT-6.2（ChatGPT） | §3、修订记录 | 清除 §3 中残留的 30 项 / 25 DRAFT 旧统计，统一当前 SR 状态 | 避免摘要与清单、实施状态总览不一致 | Issue #49；SR-032 |
 | 2026-11-27 | 0.3.55 | GPT-6.2（ChatGPT） | SR-032 清单 | 更新 SR-032 对共享 Package 资源、Script Registry 和 Host Script Execution 的描述 | 使索引与最新 SR-032 / CA-SL 1.6.0 设计一致 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.3.56 | GPT-6.2（ChatGPT） | Phase C | 将 SKILL.md-only 子路径更正为可携带共享资源的无 Assurance Package 子路径 | 保持 SR-004 实施阶段导航与 Package 根目录结构一致 | Issue #49；IR-008；SR-032 |
