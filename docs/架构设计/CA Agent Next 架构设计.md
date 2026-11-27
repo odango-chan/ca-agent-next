@@ -2,7 +2,7 @@
 
 > 文档类型：总体架构设计  
 > 状态：**CA-SL 1.6.0 Capability-first 架构增量待评审**；已通过的 SR-002/003 模块历史验收独立保留，1.6.0 新 Runtime/Compiler/Bundle/Studio 尚未发布    
-> 文档版本：0.4.5
+> 文档版本：0.4.6
 > 修订日期：2026-11-26  
 > 适用范围：ca-agent-next 通用 Agent Core、Host、Runtime、Skill 与 Plugin 公共机制  
 > 权威边界：本文是本仓唯一总体架构文档；字段级契约见规范，机制细节见设计说明书  
@@ -110,7 +110,7 @@ flowchart TB
 
 | 发布包形态 | LLM-guided | Deterministic |
 |---|---:|---:|
-| 只有 SKILL.md，没有 Assurance Artifact | 支持 | 不支持 |
+| 无 Assurance Package（必须有 SKILL.md，可附 schemas/、scripts/、references/、assets/） | 支持 | 不支持 |
 | SKILL.md + 有效已发布 Assurance Artifact | 支持 | 支持 |
 | 包声明了 Assurance Artifact，但产物或必需文件缺失、格式不支持或依赖无法解析 | 导入失败 | 导入失败 |
 
@@ -122,9 +122,9 @@ SKILL.md 是 Agent-facing 的自然语言指导。Procedure 是唯一确定性�
 
 Agent 只消费已发布 Skill 包，不负责从作者源构建 Artifact：
 
-1. SKILL.md-only 包直接导入，不调用 Compiler。
+1. 无 Assurance Package（必须有 SKILL.md，可附共享资源）直接导入；Importer 校验 Package 相对路径和共享资源 / Script Registry，不调用 Compiler。
 2. 含已发布 Assurance Artifact 的包，执行基本结构、必需文件、格式、类型数据和依赖检查后导入。
-3. 缺失文件、格式不支持、CEL/type data 损坏、路径不安全或 Tool/Capability 依赖无法解析时，导入失败；不得降级成 SKILL.md-only。
+3. 缺失文件、格式不支持、CEL/type data 损坏、路径不安全或 Tool/Capability 依赖无法解析时，导入失败；不得把无效 Assurance 降级成无 Assurance Package。
 
 Agent 不调用 Compiler 的 Check/Build/Inspect/Verify，不实现独立 Skill Admission。发布前的 CA-SL 语法、类型、链接和 Artifact 完整验证属于外部 Compiler/发布流程。Agent 只做消费端必要的结构检查与依赖解析，不重复实现 Compiler 语义。
 
@@ -137,7 +137,7 @@ SkillCatalog 由 Core/Host 拥有，是进程内不可变快照。启动或显�
 3. 固定当前 Catalog 代际。
 4. 先以每个 Assurance Skill 声明的完整 requestSchema 校验规范化输入；失配时记录诊断并排除该 Skill。对合格且声明 when 的 Skill 使用发布 Artifact 中已检查的 CEL 程序求值。
 5. 一个显式匹配直接选择；多个显式匹配只允许在精确匹配集合内消歧。
-6. 没有显式匹配时，只对 SKILL.md-only 和已通过适用 Schema 校验且没有声明 when 的 Skill 使用 SKILL.md 语义选择。
+6. 没有显式匹配时，只对无 Assurance Package（可附共享资源）和已通过适用 Schema 校验且没有声明 when 的 Assurance Skill 使用 SKILL.md 语义选择。
 7. when=false 或运行期错误的 Skill 不得重新进入无条件语义候选。
 8. 无候选则澄清或拒绝，不允许无 Skill 绑定地回退到 Generic Agent。
 
@@ -276,8 +276,8 @@ sequenceDiagram
 | Owner/Provider Package / F03.05 | Skill-facing Capability 与公开 Callable 双向一对一；两个 OpenAMSM 事件独立 Capability；Provider 封闭 selector 在内部路由 backendOperationId | 不以安装 Plugin 赋予 Grant；Reconcile 仅 Runtime internal-only |
 | ca-skill-compiler / EC02 | 唯一 1.6.0 Parser/Linker/Check/Build/Verify；静态产生唯一 Capability→Callable Binding、Request Schema/when Runtime Artifact 和新 Build DTO | 不接受旧 v1alpha5 BuildRequest/Result、Artifact 或作者源；不在 Agent 内编译 |
 | ca-skills 发布 / F08 | 重新编写/编译/验证 1.6.0 Skill，组装同语言版本的正式 Bundle | 不复用旧构建脚本作为 PASS，不发布部分成功批次 |
-| Agent Importer/Catalog / F02 | 仅消费已发布 1.6.0 Assurance Bundle；Importer 返回候选，Catalog 原子激活；SKILL.md-only 仍可 LLM-guided | 无旧 Bundle 解析、混合 Catalog、fallback、自动转换或版本协商 |
-| Runtime / F04 | 以 Capability 为作者侧 Action 入口，从 Artifact Binding 得到唯一 Callable，再执行 Scope/kind/Effect/Schema/Run 检查和 Plugin 分发 | 模型不可选择 Callable、backendOperationId 或 internal-only Reconcile |
+| Agent Importer/Catalog / F02 | 消费无 Assurance Package（可含根目录共享资源）和已发布 1.6.0 Assurance Bundle；Importer 返回候选，Catalog 原子激活；无 Assurance 仍可 LLM-guided | 无旧 Bundle 解析、混合 Catalog、fallback、自动转换或版本协商 |
+| Runtime / F04 | 以 Capability 为业务 Action 入口，从 Artifact Binding 得到唯一 Callable；Host Resource Read / Script Execution 作为 Host-owned system Action，经同一 Runtime Boundary 和 Host Extension 执行；Script Runner 对当前 Registry 全部登记脚本开放 | 模型不可选择 Callable、backendOperationId、任意文件路径或代码；Skill 层不定义 Wait / await / polling，异步由 Operation / Host Runtime 处理 |
 | Skill Studio / F09 | Package Explorer 仅展示 Capability；LSP/AI Authoring 仅生成 1.6.0 Capability 作者字段 | 无平级 Tools/Operations 作者树、旧项目兼容或自动迁移 |
 
 **当前阶段**：本新增章节及相关子架构**待独立评审**；1.6.0 正式语法、机器标识、Compiler API/Binding、Owner/Provider Package、Bundle、Studio 与 Agent/E2E 均未实施/发布。既有 SR-002/003 模块 VERIFIED 不构成 1.6.0 产品 PASS。
@@ -298,3 +298,4 @@ sequenceDiagram
 | 2026-11-26 | 0.4.3 | Codex / GPT-6 | 见本行变更 | §Tool 更正业务公共契约所有权 | 对齐跨仓实现与独立复验 | Issue #12 |
 | 2026-11-26 | 0.4.4 | GPT-6（ChatGPT） | §3、§15、修订记录 | 加入 CA-SL 1.6.0-only Capability-first 总体约束与完整责任矩阵 | 避免语言旧版兼容、Runtime Tool 选择和 Compiler 内嵌回归 | Issue #40；IR-008；SR-029 |
 | 2026-11-26 | 0.4.5 | GPT-6（ChatGPT） | 文档头与修订记录 | 把 review_scope 继承语句改为 CI 规范的一次精确声明 | 解除 PR #45 当前 Head Review Context formal-doc 校验失败 | Issue #40；PR #45 |
+| 2026-11-27 | 0.4.6 | GPT-6.2（ChatGPT） | §6、§7、§15 | 将 SKILL.md-only 统一修正为可携带共享资源的无 Assurance Package；明确 Host Resource Read / Script Execution 和无 Skill Wait 语法边界 | 使总体架构、Importer、Runtime 与 CA-SL 1.6.0 / F05 一致 | Issue #49；IR-008；SR-032 |
