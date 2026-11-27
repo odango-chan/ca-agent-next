@@ -1,7 +1,7 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书\
-> 文档版本：0.3.15\
+> 文档版本：0.3.16\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；Studio 新 Package Explorer/LSP/AI Authoring 尚未实施；既有 Studio PR 状态与 SR-024/025 验收保持独立）
 > 修订日期：2026-11-27
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
@@ -215,8 +215,9 @@ AI Authoring 的 Change Set 只能新增或修改 Capability ID、Procedure argu
 |  2026-11-26  |  0.3.8  |  GPT-6.2（ChatGPT）  |  文档头、§4.5、§7  |  回填 Studio main `79bd2c3`、#272 MERGED、#276 OPEN/DRAFT/DIRTY、#269 OPEN；更新 SR-024 VERIFIED、SR-025 READY；登记 #279/#290/#295 当前审计与 OPFS 替换回归 ；原因： 区分 Publisher 完成与 Studio lock 消费、request builder 合并与 Worker/Verify 完成；避免旧 PR HEAD 的历史 PASS 被当作当前门禁  |  Issue #12；IR-006；SR-016、SR-024、SR-025；Studio #269/#272/#276/#279/#290/#295  |
 |  2026-11-26  |  0.3.9  |  GPT-6.2（ChatGPT）  |  §4.5、文档头  |  将 SR-025 的目标仓实施追踪固定为 ca-client-tools #43 OPEN，明确 Publisher 尚未实施 ；原因： 补齐 READY → 目标仓 Issue 的可追踪关系，不将 Issue 创建误报为代码交付  |  Issue #12；IR-006；SR-025；ca-client-tools #43  |
 |  2026-11-27  |  0.3.10  |  GPT-6.2（ChatGPT）  |  文档头、§4.5、§7  |  将 Studio 当前 main 更新为 `79bd2c3`；确认 #272 MERGED、#276 OPEN/DRAFT/DIRTY、#269/#279/#290/#295 OPEN，以及 SR-024 VERIFIED / SR-025 READY ；原因： 使用本轮实际查询的 Studio main，继续区分 Publisher 完成、Studio lock 消费、Worker/Verify 和产品验收  |  Issue #53；IR-006；SR-016、SR-024、SR-025；Studio #261/#269/#272/#276/#279/#290/#295；ca-client-tools #43  |
-| 2026-11-27 | 0.3.11 | GPT-6.2（ChatGPT） | 文档头、§4.5、§7、修订记录 | 分开记录 #272 merge SHA 与当前 main；确认默认 Host Context Example provenance 已实现并持久化，普通 ZIP provenance/reload 与双根 Build/Verify 仍未完成；记录 #296 merge 与 #295 Issue 状态；规范化修订表 | 避免把默认 fixture 专用实现误报为未实现或扩大为普通 ZIP/产品验收；修复 Studio PR/main 身份混淆与静态表格列数错误 | Issue #53；IR-006；SR-016、SR-024、SR-025；Studio #261/#267/#269/#270/#272/#276/#279/#290/#295/#296 |
-| 2026-11-27 | 0.3.12 | GPT-6.2（ChatGPT） | §7、修订记录 | 将当前产品审计补充日期更新至 2026-11-27，保持 #295 Issue OPEN 与 #296 已合并修复的边界 | 防止将历史回归现象误报为当前 main 仍未修复，同时不把 PR merge 扩大为完整 Product Acceptance | Issue #53；Studio #279/#290/#295/#296 |
-| 2026-11-27 | 0.3.13 | GPT-6.2（ChatGPT） | §4.4～§4.6、修订记录 | 将 `ca-client` IntelliSense-only Interface Package 与 AC-016-06 统一至已发布 `ca-client-tools_interface_1.2.0.zip`，固定 Release asset SHA-256；保留 MAS Owner source 与 Owner Publisher 的独立边界；全局评审范围机器声明保持规范原文，以显式 `<br />` 保留原有渲染换行 | 消除 F09 与 SR-016 的版本冲突，区分 Provider v1.2.0 已发布的公共 READ Interface Package 和尚未实施的 MAS Owner Publisher | Issue #53；SR-016 v0.3.20；ca-client-tools Release v1.2.0；SR-025 |
+| 2026-11-27 | 0.3.11 | GPT-6.2（ChatGPT） | 文档头、§4.5、§7、修订记录 | 分开记录 #272 merge SHA 与当前 main；确认默认 Host Context Example provenance 已实现并持久化，普通 ZIP provenance/reload 与双根 Build/Verify 仍未完成；记录 #296 merge 与 #295 Issue 状态；规范化修订表；原因：避免把默认 fixture 专用实现误报为未实现或扩大为普通 ZIP/产品验收；修复 Studio PR/main 身份混淆与静态表格列数错误 | Issue #53；IR-006；SR-016、SR-024、SR-025；Studio #261/#267/#269/#270/#272/#276/#279/#290/#295/#296 |
+| 2026-11-27 | 0.3.12 | GPT-6.2（ChatGPT） | §7、修订记录 | 将当前产品审计补充日期更新至 2026-11-27，保持 #295 Issue OPEN 与 #296 已合并修复的边界；原因：防止将历史回归现象误报为当前 main 仍未修复，同时不把 PR merge 扩大为完整 Product Acceptance | Issue #53；Studio #279/#290/#295/#296 |
+| 2026-11-27 | 0.3.13 | GPT-6.2（ChatGPT） | §4.4～§4.6、修订记录 | 将 `ca-client` IntelliSense-only Interface Package 与 AC-016-06 统一至已发布 `ca-client-tools_interface_1.2.0.zip`，固定 Release asset SHA-256；保留 MAS Owner source 与 Owner Publisher 的独立边界；全局评审范围机器声明保持规范原文，以显式 `<br />` 保留原有渲染换行；原因：消除 F09 与 SR-016 的版本冲突，区分 Provider v1.2.0 已发布的公共 READ Interface Package 和尚未实施的 MAS Owner Publisher | Issue #53；SR-016 v0.3.20；ca-client-tools Release v1.2.0；SR-025 |
 | 2026-11-27 | 0.3.14 | GPT-6.2（ChatGPT） | 文档头、§5、§9、修订记录 | 合并 #45 的 1.6.0-only 设计增量并保留恢复分支当前状态，避免回滚 #44 与后续修订。 | Issue #12/#40/#43；PR #44/#45 |
 | 2026-11-27 | 0.3.15 | GPT-6.2（ChatGPT） | §3～4、§9、修订记录 | 防止新 Studio 将旧 v1alpha5/Development profile 误作 1.6.0 项目输入。 | Issue #40；SR-029；SR-013；SR-004 |
+| 2026-11-27 | 0.3.16 | GPT-6.2（ChatGPT） | §9、修订记录表格结构 | 合并 0.3.11～0.3.13 三条记录的“修改内容/原因”列并完整保留原文；原因：恢复六列表格结构，避免复审时修订记录错列。 | Issue #40/#12；PR #45；SR-013/SR-029 |

@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.2.11\
+> 文档版本：0.2.12\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 修订日期：2026-11-27
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -72,7 +72,7 @@ Compiler 必须实现 CA-SL 1.6.0 正式规范冻结的 G.4，不得因 cel-go �
 |---|---|
 | 值类型 | string、int64、finite binary64 double、bool、null、nullable T、闭合 object、array/list<T> |
 | 访问 | 已声明字段的静态点访问 |
-| 布尔逻辑 | !、&&、||、括号 |
+| 布尔逻辑 | !、&&、\|\|、括号 |
 | 比较 | ==、!=；同一数值类型的大小比较 |
 | 存在判断 | has(x.field) |
 | 长度 | size(x)，仅 string / array |
@@ -370,3 +370,4 @@ Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId�
 | 2026-11-26 | 0.2.9 | GPT-6（ChatGPT） | §1、§5～7、修订记录 | 移除新 Compiler 复用 v1alpha5 BuildRequest/DependencyInspection/Verify 的旧假设，唯一目标为 1.6.0 DTO/Artifact，历史包在新版明确拒绝 | 贯彻 Issue #40 全链路无兼容、无双轨/迁移；准确机器标识待 Compiler Owner 冻结 | Issue #40；SR-029；SR-013 |
 | 2026-11-27 | 0.2.10 | GPT-6.2（ChatGPT） | §2～7、§9、修订记录 | 将 when、G.4、Build/Verify、Manifest 和 Request Schema 的规范性目标统一为 CA-SL 1.6.0；旧 v1alpha5 仅作冻结历史与回归基线。 | 防止新 Compiler 沿用旧 v1alpha5 Build/Manifest/DTO 契约，保持与 SR-013、F08、SR-029 一致。 | Issue #40；SR-013；SR-029；F08 |
 | 2026-11-27 | 0.2.11 | GPT-6.2（ChatGPT） | §2、§5.3、修订记录 | 同步 Compiler 1.6.0-only 新契约的 M.3 / Request Schema Owner Gate 与跨文档当前版本引用；旧 v1alpha5 仅保留历史冻结语义。 | 避免将历史 v1alpha5 规范或 DTO 隐式复用为 CA-SL 1.6.0 的规范性输入。 | Issue #40；SR-004/013/027/029；EC02；F08；PR #45 |
+| 2026-11-27 | 0.2.12 | GPT-6.2（ChatGPT） | §3.3、修订记录 | 修复 G.4 布尔运算符 `\|\|` 在 Markdown 表格中被识别为列分隔符，保留原有 1.6.0 语义 | 确保 CA-SL 1.6.0-only 评审输入和当前文档结构无歧义。 | Issue #40/#12；PR #45；SR-013/SR-029 |
