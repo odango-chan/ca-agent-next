@@ -92,8 +92,29 @@ class PythonToolchainPolicyTests(unittest.TestCase):
         self.assertEqual(command_violations([(".github/workflows/ci.yml", line)]), [])
 
     def test_uv_no_project_policy_test_is_allowed(self) -> None:
-        line = "uv run --no-project --python 3.14.6 python -m unittest discover -s tests"
-        self.assertEqual(command_violations([(".github/workflows/ci.yml", line)]), [])
+        line = (
+            "uv run --no-project --python 3.14.6 "
+            + "python -m "
+            + "unittest discover -s tests -p test_python_toolchain_policy.py"
+        )
+        self.assertEqual(
+            command_violations([(".github/workflows/python-toolchain-policy.yml", line)]),
+            [],
+        )
+
+    def test_uv_no_project_cannot_run_application_tests(self) -> None:
+        line = (
+            "uv run --no-project --python 3.14.6 "
+            + "python -m "
+            + "unittest discover -s tests"
+        )
+        found = command_violations([(".github/workflows/ci.yml", line)])
+        self.assertTrue(any("UV_NO_PROJECT_BYPASS" in item for item in found))
+
+    def test_windows_py_launcher_is_rejected_without_uv(self) -> None:
+        line = "py -m " + "unittest discover -s tests"
+        found = command_violations([(".github/workflows/windows.yml", line)])
+        self.assertTrue(any("BARE_PYTHON_ENTRY" in item for item in found))
 
     def test_uv_project_test_without_locked_flags_is_rejected(self) -> None:
         line = "uv run " + "python -m " + "unittest discover -s tests"
