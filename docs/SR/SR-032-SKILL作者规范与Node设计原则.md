@@ -1,13 +1,13 @@
 # SR-032：SKILL 作者规范、Node 拆分与注释原则
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.11  
+> SR 版本：0.1.12  
 > 状态：**DRAFT（中央作者规范已形成设计候选，待独立设计评审；实施 NOT_READY）**  
 > 创建日期：2026-11-27  
 > 修订日期：2026-11-27  
 > 上游需求：IR-008（关联 IR-003）  
 > 功能：EC01 / F01 / F02 / F03 / F04 / F05 / F08 / F09（作者规范由 EC01 维护；Host、Importer、Runtime、Compiler、Studio 消费）  
-> 设计依据：[EC01 CA-SL 与 Skill 作者体系架构](../架构设计/外部能力域/EC01-CA-SL与Skill作者体系架构设计.md) v0.1.9；[CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md) v0.2.0；[SKILL 作者规范](../规范/SKILL作者规范.md) v0.1.8  
+> 设计依据：[EC01 CA-SL 与 Skill 作者体系架构](../架构设计/外部能力域/EC01-CA-SL与Skill作者体系架构设计.md) v0.2.0；[CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md) v0.2.2；[SKILL 作者规范](../规范/SKILL作者规范.md) v0.1.9  
 > 目标仓：odango-chan/ca-agent-next（仅中央设计和规范）  
 > 上游来源仓：odango-chan/ca-skills，固定 main 780497a2918ad3e7bdff554ab64b0ba627e867e0  
 > 关联 Issue：[ca-agent-next #49](https://github.com/odango-chan/ca-agent-next/issues/49)、父级迁移 Issue #12、CA-SL 设计 Issue #40  
@@ -119,6 +119,7 @@ F09 的 AI Authoring 必须使用同一作者规范和完整正向示例生成�
 | AC-032-12 | F01/F02/F03/F04/F05/F08/F09 与总体架构、SR-004/SR-007/SR-016 对无 Assurance 共享资源、Host Resource Read、完整 Script Registry、Compiler 资源闭包和 AI Change Set 边界无冲突；所有实现状态仍 NOT_RUN / NOT_IMPLEMENTED | 对应设计说明书版本、跨文档一致性审计和 PR 静态检查 |
 | AC-032-13 | CA-SL 1.6.0 保留原有 Node / routes / arguments / PredicateSet YAML 形状并明确规范文法；Procedure / Node / Stage / Predicate / Script Registry 字段、基数、映射/序列区别、SourcePath 和终态完整；不得新增 Wait 语法。正式机器 Schema / Golden 的发布责任与 NOT_RELEASED 状态明确 | CA-SL 1.6.0 §6.1～§6.3、§8；原 v1alpha4/v1alpha5 只读源规范对照；ca-skills 正式 Schema / Golden release gate |
 | AC-032-14 | Host Resource Read 有精确请求 / 响应、当前 Run Package snapshot 绑定、路径根 / 路径穿越拒绝、文本媒体类型、单文件大小上限、拒绝诊断；F01/F02/F03/F04/F05/F08/F09/SR-004/SR-007/SR-016 均引用同一接口 | F05 §2.1；F01 / F03 / F04；SR-004 AC-004-01/02；SR-007 AC-007-08 |
+| AC-032-15 | `when` 是有 Assurance Skill 的 SKILL.md Front Matter 可选 CA-Agent 扩展；无 Assurance Skill 不声明 when；`when` 不属于 Contract YAML，input 成员由 Contract.requestSchema 类型化，Compiler 发布 CheckedExpr/DescriptorSet，Importer 核对作者声明与 Artifact 一致 | SKILL 作者规范 §3～§4；CA-SL 1.6.0 §2、§4～§5、§9；F02 §6～§7；F08 §2～§3；SR-004 AC-004-01～03；SR-013 AC-013-02 |
 
 ## 7. 当前状态与门禁
 
@@ -145,3 +146,4 @@ F09 的 AI Authoring 必须使用同一作者规范和完整正向示例生成�
 | 2026-11-27 | 0.1.9 | GPT-6.2（ChatGPT） | §5～§6 | 删除 `llmInvocable` 与 `scriptExecution.llmEnabled` 双门禁，更新 AC-032-11 为同一 Script Runner | 明确 Demo 中 LLM 默认可执行当前 Skill scripts/ 登记脚本，与确定性执行使用相同脚本能力 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.10 | GPT-6.2（ChatGPT） | §6、设计依赖 | 将 SR-032 设计依赖版本更新至 CA-SL 1.6.0 v0.1.9 / SKILL 作者规范 v0.1.7 | 确保 SR 验收引用的机器语义与作者规则均为移除双门禁后的最新基线 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.11 | GPT-6.2（ChatGPT） | §1、§3～§6 | 移除 Skill 层 Wait / await / polling 语法；补齐 CA-SL 原有 YAML 机器结构、Script I/O / Evidence / 错误契约、Host Resource Read；新增 AC-032-13/14 并纳入 SR-004/007/016 | 回应独立评审的真实阻断项，同时恢复既定语言边界，不重构原有四阶段语法 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.1.12 | GPT-6.2（ChatGPT） | §3～§6、AC-032-15、设计依据 | 增加 `when` 的 Front Matter 位置、Assurance-only 适用范围、Request Schema 类型来源与 Compiler/Importer 一致性门禁 | 落实用户确认的入口方案，防止无 Assurance Skill 声明未经编译的 when | Issue #49；IR-008；F02/F08/F09；SR-004/013 |
