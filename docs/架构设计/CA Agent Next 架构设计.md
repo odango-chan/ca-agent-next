@@ -2,7 +2,7 @@
 
 > 文档类型：总体架构设计  
 > 状态：**CA-SL 1.6.0 Capability-first 架构增量待评审**；已通过的 SR-002/003 模块历史验收独立保留，1.6.0 新 Runtime/Compiler/Bundle/Studio 尚未发布    
-> 文档版本：0.4.6
+> 文档版本：0.4.7
 > 修订日期：2026-11-26  
 > 适用范围：ca-agent-next 通用 Agent Core、Host、Runtime、Skill 与 Plugin 公共机制  
 > 权威边界：本文是本仓唯一总体架构文档；字段级契约见规范，机制细节见设计说明书  
@@ -122,7 +122,7 @@ SKILL.md 是 Agent-facing 的自然语言指导。Procedure 是唯一确定性�
 
 Agent 只消费已发布 Skill 包，不负责从作者源构建 Artifact：
 
-1. 无 Assurance Package（必须有 SKILL.md，可附共享资源）直接导入；Importer 校验 Package 相对路径和共享资源 / Script Registry，不调用 Compiler。
+1. 无 Assurance Package（必须有 SKILL.md，可附共享资源）直接导入；Front Matter 不得声明 `when`，若声明则拒绝；Importer 校验 Package 相对路径和共享资源 / Script Registry，不调用 Compiler。
 2. 含已发布 Assurance Artifact 的包，执行基本结构、必需文件、格式、类型数据和依赖检查后导入。
 3. 缺失文件、格式不支持、CEL/type data 损坏、路径不安全或 Tool/Capability 依赖无法解析时，导入失败；不得把无效 Assurance 降级成无 Assurance Package。
 
@@ -135,13 +135,13 @@ SkillCatalog 由 Core/Host 拥有，是进程内不可变快照。启动或显�
 1. 校验并去重 Event。
 2. 精确 continuation 优先，恢复原 Run，不重新选择 Skill。
 3. 固定当前 Catalog 代际。
-4. 先以每个 Assurance Skill 声明的完整 requestSchema 校验规范化输入；失配时记录诊断并排除该 Skill。对合格且声明 when 的 Skill 使用发布 Artifact 中已检查的 CEL 程序求值。
+4. 先以每个 Assurance Skill 声明的完整 requestSchema 校验规范化输入；失配时记录诊断并排除该 Skill。对合格且声明 `when` 的 Assurance Skill，使用发布 Artifact 中已检查的 CEL 程序求值；无 Assurance Skill 不声明 when。
 5. 一个显式匹配直接选择；多个显式匹配只允许在精确匹配集合内消歧。
-6. 没有显式匹配时，只对无 Assurance Package（可附共享资源）和已通过适用 Schema 校验且没有声明 when 的 Assurance Skill 使用 SKILL.md 语义选择。
+6. 没有显式匹配时，只对无 Assurance Package（可附共享资源，且不得声明 when）和已通过适用 Schema 校验且没有声明 when 的 Assurance Skill 使用 SKILL.md 语义选择。
 7. when=false 或运行期错误的 Skill 不得重新进入无条件语义候选。
 8. 无候选则澄清或拒绝，不允许无 Skill 绑定地回退到 Generic Agent。
 
-when 是纯 CEL Skill 选择表达式，作者源位置为可选 Assurance 的 contract.yaml；predicates.yaml 只用于执行期业务判断。不新增 activation.yaml、constraint.yaml、独立 Package 或第二份 Contract。
+`when` 是纯 CEL Skill 选择表达式，作者源位置为有 Assurance Skill 的 SKILL.md YAML Front Matter（CA-Agent 扩展）；无 Assurance Skill 不声明 when，且 `assurance/contract.yaml` 不包含该字段。`predicates.yaml` 只用于执行期业务判断。不新增 activation.yaml、constraint.yaml、独立 Package 或第二份 Contract。
 
 ## 8. Plugin 与 Tool 统一机制
 
@@ -299,3 +299,4 @@ sequenceDiagram
 | 2026-11-26 | 0.4.4 | GPT-6（ChatGPT） | §3、§15、修订记录 | 加入 CA-SL 1.6.0-only Capability-first 总体约束与完整责任矩阵 | 避免语言旧版兼容、Runtime Tool 选择和 Compiler 内嵌回归 | Issue #40；IR-008；SR-029 |
 | 2026-11-26 | 0.4.5 | GPT-6（ChatGPT） | 文档头与修订记录 | 把 review_scope 继承语句改为 CI 规范的一次精确声明 | 解除 PR #45 当前 Head Review Context formal-doc 校验失败 | Issue #40；PR #45 |
 | 2026-11-27 | 0.4.6 | GPT-6.2（ChatGPT） | §6、§7、§15 | 将 SKILL.md-only 统一修正为可携带共享资源的无 Assurance Package；明确 Host Resource Read / Script Execution 和无 Skill Wait 语法边界 | 使总体架构、Importer、Runtime 与 CA-SL 1.6.0 / F05 一致 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.4.7 | GPT-6.2（ChatGPT） | §6～§7、§15 | 将 `when` 作者源位置统一为有 Assurance Skill 的 SKILL.md Front Matter；无 Assurance Skill 不声明 when，并由 Importer 拒绝 | 对齐 CA-SL 1.6.0、F02、Compiler 与作者规范的统一入口 | Issue #49；IR-008；SR-032 |
