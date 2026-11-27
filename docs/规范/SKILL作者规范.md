@@ -1,7 +1,7 @@
 # SKILL 作者规范（CA-SL 1.6.0）
 
 > 文档类型：Skill 作者规范（Next 中央规范性设计稿）  
-> 文档版本：0.1.7  
+> 文档版本：0.1.8  
 > 状态：**DRAFT / REVIEW_REQUESTED**（作者规则待独立评审；CA-SL 1.6.0 尚未由 ca-skills 正式发布）  
 > 语言目标：CA-SL 1.6.0 only；不兼容任何历史作者语法  
 > 功能归属：EC01 — Skill 作者规范与业务 Skill；消费端关联 F02 / F09  
@@ -82,7 +82,7 @@ skill-root/
 
 `schemas/` 与 `scripts/` 是公共资源层，不随 Assurance 是否存在而移动。Schema 文件以 YAML 1.2 表示 JSON Schema 数据模型，扩展名使用 `.schema.yaml`；Contract、Script Registry 和脚本输入/输出 Schema 的路径均相对 Skill Package 根目录。
 
-`Script Registry` 每个条目必须声明 Script ID、包内文件、顶层 entrypoint、purpose（transform / predicate）、inputSchema 和适用时的 outputSchema。Procedure Script 只引用 transform；Predicate evaluator 只引用 predicate。所有脚本是纯本地计算；LLM、Procedure 和 Predicate 均通过同一 Host Script Runner 调用当前 Skill Registry 中登记的脚本，不设置逐脚本 LLM 标记或额外 Host 开关。Host 仅解析当前 Skill 的固定 Package snapshot 和 Registry ID，不接受模型提供代码、路径、模块名、函数名或命令。
+`Script Registry` 每个条目必须声明 Script ID、包内文件、顶层 entrypoint、purpose（transform / predicate）、inputSchema 和适用时的 outputSchema。Procedure Script 只引用 transform；Predicate evaluator 只引用 predicate。LLM 可以通过同一 Host Script Runner 调用当前 Skill Registry 中登记的全部脚本，不按 purpose 过滤；LLM、Procedure 和 Predicate 共用同一脚本字节、Registry 和 I/O Schema，不设置逐脚本 LLM 标记或额外 Host 开关。Predicate Script 的 LLM 调用只返回普通计算结果，不产生 Evidence 或 Assurance 阶段 Outcome。Host 仅解析当前 Skill 的固定 Package snapshot 和 Registry ID，不接受模型提供代码、路径、模块名、函数名或命令。
 
 没有 Assurance 的 Skill 仍可拥有和使用这些公共资源，不需要 Compiler；Host Importer 负责共享资源与 Script Registry 的基本结构检查。存在 Assurance 时 Compiler 还必须验证其引用闭包。旧版 ca-skills 的其他目录（例如 cases/）不因此自动迁入新版；历史源结构只作追溯，不提供兼容。Skill Studio 的工作区目录（例如 lib / output）也不是 Skill Package 的作者文件。
 
@@ -129,7 +129,7 @@ skill-root/
 - Procedure.inputs 是唯一的命名输入映射；每个值必须是精确的 `context.*` SourcePath。Request 字段如需进入 Procedure，必须经 Host 声明并提供的 Context 路径（例如 `context.request.pduSessionId`），不得直接把 `request.*` 当作根。
 - 每个 Operation / Observation / Predicate 调用点都必须显式写 `arguments`；参数名称、数量、顺序和类型必须匹配目标 Schema / Predicate 签名。Procedure Script 通过 Registry Script ID 引用，并显式绑定其输入；不得在 Procedure 中直接写文件路径。
 - `arguments` 的值只允许 CA-SL 1.6.0 支持的 SourcePath 或标量字面量；禁止动态表达式、隐式转发、自动 null、参数猜测或重排。SourcePath 根只允许 `context`、`inputs` 和已声明 Node Producer；其他根拒绝。
-- Node 输出必须通过精确的 `NodeId.Stage.output` SourcePath 显式传递；Wait 规范化输入使用 `NodeId.wait.output`。所有引用必须由正式语言 Schema / Compiler 检查，不得依靠字段名推断。
+- Node 输出必须通过精确的 `NodeId.Stage.output` SourcePath 显式传递；只有 Operation / Observation 阶段产生可绑定 output。CA-SL 1.6.0 不定义 Wait、await、polling 或 `wait.output`。所有引用必须由正式语言 Schema / Compiler 检查，不得依靠字段名推断。
 - Operation / Observation / Procedure Script 的 arguments 具体结构以 CA-SL 1.6.0 正式 Schema / Golden 为准；Predicate arguments 按 Predicate.parameters 的有序签名提供。本文不另行发明参数结构。
 
 ## 5. Procedure Node 的结构
@@ -143,7 +143,7 @@ skill-root/
 
 Procedure 必须是单一静态 DAG，具有 `start` 和 `nodes`；不得动态生成节点、任意循环或嵌套 Procedure Call。Node 至少包含一个业务阶段。阶段可以省略，但不得重排、重复或用注释补足。Precondition / Postcondition 阶段内部使用非空、有序的 `predicates` 列表。Operation 阶段最多调用一个 `kind=operation` 的公开 Capability（Effect 由 Package 决定，可为 READ 或 MUTATION）或一个纯本地 Procedure Script；Observation 阶段最多调用一个 `kind=observation` 且 Effect=READ 的公开 Capability。各阶段的 `routes` 只作用于所属阶段，不得跨阶段借用。非末阶段的正常 Outcome 按语言规则进入下一阶段；当前 Node 的末阶段必须显式路由。
 
-Node-entry Wait 是目标 Node 入口的可选控制，不是第五阶段，不创建 Wait-only Node；它由 Host Runtime 的内部 READ 触发机制执行，并引用显式依赖中的 package-scoped Ingress Operation / Event Contract。作者不得自行声明 `payloadSchema`、复制协议 Schema、把 MUTATION Capability 当作 Wait trigger，也不得写作者级 await / poll 循环。Wait 的 timeout 必须是正的固定时长，只走 Wait-scoped `TIMEOUT` 路由；事件接受是隐式正常边，不声明 `EVENT_RECEIVED`；事件接受后仍须执行业务阶段和 Postcondition，不能直接证明成功。作者只引用已 pin 的 package-scoped Ingress Contract，不自行声明 Run、Node occurrence、generation 或 Correlation 绑定字段；这些由 Ingress / Host Runtime 契约负责。Mutation Reconcile 是 Runtime / Owner 的内部流程，不创建作者 Reconcile Node。
+CA-SL 1.6.0 不定义 Skill 层的 Wait、await、polling Node、Wait-only Node、`wait.output` 或 Wait timeout route。异步协议交互属于 Tool / Provider / SMF Operation；Operation 负责在返回最终规范化结果和适用 Evidence 后才完成。Host / Runtime 管理 Deadline、Cancellation、Correlation、Budget、UNKNOWN、迟到结果责任和必要的 Reconcile。作者不得拆出等待节点、声明 Wait trigger、复制协议 Schema 或编写轮询循环。Mutation Reconcile 是 Runtime / Owner 的内部流程，不创建作者 Reconcile Node。
 
 ## 6. Node 拆分与合并原则
 
@@ -178,7 +178,7 @@ Node 不是 HTTP 请求、函数调用、文件、协议报文或 Provider backe
 - **最终验证 Node：**当最终 Goal 需要独立聚合多个前序结果时，可以使用只含 Postcondition 的 Node；其聚合 PASS 必须直接路由 SUCCEEDED。
 - **纯 Observation Node：**当一个 READ 是独立业务步骤或其证据要单独消费时，可以使用只含 Observation 的 Node。
 - **纯 Script Node：**只有当本地纯转换具有明确的数据处理边界且无法用简单 arguments 表达时才使用；不得借 Script 隐藏副作用。
-- **不得创建：**start-only Node、wait-only Node、reconcile-only Node、HTTP-only Node、Provider handler Node、单 Predicate Node 或仅为增加图节点数量而存在的空 Node。
+- **不得创建：**start-only Node、wait-only Node、reconcile-only Node、HTTP-only Node、Provider handler Node、单 Predicate Node 或仅为增加图节点数量而存在的空 Node。此处的 wait-only Node 仅作为明确禁止项，不表示 CA-SL 存在 Wait 语法。
 
 ### 6.5 Node 命名
 
@@ -200,6 +200,245 @@ Node 不是 HTTP 请求、函数调用、文件、协议报文或 Provider backe
 | Release | `examples/skills/release-pdu-session-mas/assurance/procedure.yaml`（10 个历史 Node） | 区分 N1 解析、命令构建、N1/N2 确认、资源清理和最终释放验证 | 只有独立公开动作、独立提交或独立确认边界才拆分；Owner 内部协议子步骤不拆成 Skill Node |
 
 这些样本是历史行为证据，不保证旧 Tool 与未来 Capability 一对一对应。新作者不得从旧 Callable 名称、旧 Node 数量或旧参数结构推导 1.6.0 契约；缺少正式 Capability / Schema / Evidence 发布物时必须等待生产者输入，不得自行补造。
+
+### 6.7 完整正向示例：QoS 调整 Skill
+
+以下示例给出一份完整的 1.6.0 作者源结构，展示 `when`、共享 Schema / Script、Procedure.inputs、四阶段、显式 arguments、routes、Predicate Evidence 和 Node 拆分。外部 `host-context` 与 `mas` Package ID / Schema / Capability / Evidence ID 是教学占位符，真实 Skill 必须替换为 Owner / Host 已正式发布并固定版本的身份；本例不声称已通过正式 Compiler Golden。
+
+Package：
+
+~~~text
+qos-adjustment/
+  SKILL.md
+  schemas/
+    qos-request.schema.yaml
+    normalize-qos-input.schema.yaml
+    normalize-qos-output.schema.yaml
+  scripts/
+    manifest.yaml
+    normalize_qos.py
+  assurance/
+    contract.yaml
+    procedure.yaml
+    predicates.yaml
+~~~
+
+`SKILL.md`：
+
+~~~markdown
+---
+name: qos-adjustment
+description: Validate and apply a requested PDU Session QoS adjustment.
+---
+
+# QoS adjustment
+
+Use this Skill when an authorized request asks to change the QoS parameters of an existing PDU Session. A completed change must be confirmed by the Owner result and the declared postcondition.
+~~~
+
+`schemas/qos-request.schema.yaml`：
+
+~~~yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: urn:example:qos-adjustment:qos-request:v1
+type: object
+properties:
+  requestType:
+    type: integer
+    const: 1
+  pduSessionId:
+    type: integer
+    minimum: 1
+  target5qi:
+    type: integer
+    minimum: 1
+    maximum: 255
+  gbrUlKbps:
+    type: integer
+    minimum: 0
+  gbrDlKbps:
+    type: integer
+    minimum: 0
+required: [requestType, pduSessionId, target5qi, gbrUlKbps, gbrDlKbps]
+additionalProperties: false
+~~~
+
+`schemas/normalize-qos-input.schema.yaml`：
+
+~~~yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: urn:example:qos-adjustment:normalize-qos-input:v1
+type: object
+properties:
+  request:
+    $ref: qos-request.schema.yaml
+required: [request]
+additionalProperties: false
+~~~
+
+`schemas/normalize-qos-output.schema.yaml`：
+
+~~~yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: urn:example:qos-adjustment:normalize-qos-output:v1
+type: object
+properties:
+  pduSessionId:
+    type: integer
+    minimum: 1
+  qos:
+    type: object
+    properties:
+      fiveQi:
+        type: integer
+        minimum: 1
+        maximum: 255
+      gbrUlKbps:
+        type: integer
+        minimum: 0
+      gbrDlKbps:
+        type: integer
+        minimum: 0
+    required: [fiveQi, gbrUlKbps, gbrDlKbps]
+    additionalProperties: false
+required: [pduSessionId, qos]
+additionalProperties: false
+~~~
+
+`scripts/manifest.yaml`：
+
+~~~yaml
+scripts:
+  normalize-qos:
+    file: scripts/normalize_qos.py
+    entrypoint: run
+    purpose: transform
+    inputSchema: schemas/normalize-qos-input.schema.yaml
+    outputSchema: schemas/normalize-qos-output.schema.yaml
+~~~
+
+`scripts/normalize_qos.py`：
+
+~~~python
+def run(input):
+    request = input["request"]
+    return {
+        "pduSessionId": request["pduSessionId"],
+        "qos": {
+            "fiveQi": request["target5qi"],
+            "gbrUlKbps": request["gbrUlKbps"],
+            "gbrDlKbps": request["gbrDlKbps"],
+        },
+    }
+~~~
+
+`assurance/contract.yaml`：
+
+~~~yaml
+when: event.type == "nsmf.modify-sm-context" && input.requestType == 1
+requestSchema: schemas/qos-request.schema.yaml
+dependencies:
+  host-context: urn:example:host-context
+  mas: urn:example:mas-qos-contracts
+contexts:
+  request: host-context::urn:example:host-context:schema:request-context:v1
+  session: host-context::urn:example:host-context:schema:session-context:v1
+capabilities:
+  - mas.session.qos.modify
+limits:
+  maxActions: 4
+~~~
+
+`assurance/procedure.yaml`：
+
+~~~yaml
+start: validate-request
+inputs:
+  request: context.request.payload
+  sessionRef: context.session.sessionRef
+
+nodes:
+  validate-request:
+    precondition:
+      predicates:
+        - predicate: qos.request.valid
+          arguments:
+            - inputs.request
+      routes:
+        PASS: normalize-qos
+        FAIL: FAILED
+        UNKNOWN: UNRESOLVED
+
+  normalize-qos:
+    operation:
+      script: normalize-qos
+      arguments:
+        request: inputs.request
+      routes:
+        SUCCEEDED: modify-qos
+        FAILED: FAILED
+
+  modify-qos:
+    # This remains one business action; provider-internal SBI/PFCP steps are not Nodes.
+    operation:
+      capability: mas.session.qos.modify
+      arguments:
+        sessionRef: inputs.sessionRef
+        pduSessionId: normalize-qos.operation.output.pduSessionId
+        qos: normalize-qos.operation.output.qos
+      routes:
+        FAILED: SAFE_STOPPED
+        DENIED: FAILED
+        NOT_COMMITTED: FAILED
+        OUTCOME_UNKNOWN: UNRESOLVED
+    postcondition:
+      predicates:
+        - predicate: qos.change.confirmed
+          arguments:
+            - modify-qos.operation.output
+            - inputs.sessionRef
+      routes:
+        PASS: SUCCEEDED
+        FAIL: SAFE_STOPPED
+        UNKNOWN: UNRESOLVED
+~~~
+
+`assurance/predicates.yaml`：
+
+~~~yaml
+predicates:
+  qos.request.valid:
+    parameters:
+      - request: schemas/qos-request.schema.yaml
+    evaluator:
+      type: cel
+      expression: request.requestType == 1 &&
+        request.pduSessionId > 0 &&
+        request.target5qi >= 1 &&
+        request.target5qi <= 255
+
+  qos.change.confirmed:
+    parameters:
+      - result: mas::urn:example:mas:schema:qos-change-result:v1
+      - sessionRef: host-context::urn:example:host-context:schema:session-ref:v1
+    evidence:
+      requires:
+        result:
+          - mas.session.qos.change
+    evaluator:
+      type: cel
+      expression: result.status == "APPLIED" &&
+        result.sessionRef == sessionRef
+~~~
+
+作者检查要点：
+
+- 选择条件位于 `contract.yaml.when`；引用的 `input.requestType` 由本 Skill 的 `requestSchema` 定义。
+- `schemas/` 与 `scripts/` 位于 Package 根目录，不因是否存在 Assurance 而移动。
+- `normalize-qos` 是一个纯本地 transform Script，arguments 组装为一个 JSON Object 并由 inputSchema 校验。
+- `modify-qos` 只表达一个公开业务 Capability；Provider 内部 SBI / PFCP 子步骤不拆成 Skill Node。
+- 最终成功必须经过 Postcondition PASS；UNKNOWN 进入 UNRESOLVED，不能由 HTTP 200 或 Script 输出替代 Owner Evidence。
+- LLM 可通过相同 Script Runner 调用 `normalize-qos`；该调用结果只是普通计算输出，不会执行业务 Capability，也不会使 Procedure 自动通过。
 
 ## 7. 注释原则
 
@@ -233,7 +472,7 @@ ca-skills 的已核对作者指南、作者模型、Granularity、Syntax、Packa
 - READ / MUTATION Effect、幂等性、重试、Reconcile、超时或权限边界；这些属于 Capability Package、Owner / Provider Contract、Host / Runtime 契约的相应所有权层，不由 Skill 注释定义；
 - 成功、失败、UNKNOWN、终态和业务完成证明。
 
-Skill-facing 执行语义必须由正式 Contract、Schema、Capability 引用、Predicate、arguments、Wait 或 routes 表达；Effect、Receipt、幂等性、重试、Reconcile 和权限边界则由对应 Owner / Provider / Host / Runtime 契约定义。若注释与机器契约冲突，以相应权威契约为准，并必须修复过期注释；不能让作者或 Runtime 通过注释猜测行为。
+Skill-facing 执行语义必须由正式 Contract、Schema、Capability 引用、Predicate、arguments 或 routes 表达；Effect、Receipt、幂等性、重试、Reconcile 和权限边界则由对应 Owner / Provider / Host / Runtime 契约定义。若注释与机器契约冲突，以相应权威契约为准，并必须修复过期注释；不能让作者或 Runtime 通过注释猜测行为。
 
 ### 7.4 注释禁止事项
 
@@ -307,7 +546,7 @@ SKILL.md 正文与 YAML 注释遵循项目语言约定，并在同一 Skill Pack
 - [ ] Precondition / Postcondition 中的 Predicate 有序聚合，没有单 Predicate Node。
 - [ ] 所有 arguments 和输出引用显式绑定，没有隐式上下文或字段猜测。
 - [ ] UNKNOWN 没有被转成 PASS；最终 Postcondition PASS 直接路由 SUCCEEDED。
-- [ ] Wait 使用已 pin 的 Ingress Contract、正的固定 timeout 和 Wait-scoped TIMEOUT；不创建 Wait-only Node / 作者级 polling。
+- [ ] Procedure 不包含 Wait / await / polling / `wait.output`；异步完成由 Tool / Provider / SMF Operation 与 Host Runtime 负责。
 - [ ] Outcome-only 分支使用 routes；只有独立业务动作、提交或证据边界才拆 Node。
 - [ ] Create / Modify / Release 历史样本只用于识别业务边界，不复制旧 Callable / Node / arguments 结构。
 - [ ] 注释解释 why / source / 非显然约束；没有把执行语义写进注释。
@@ -317,7 +556,7 @@ SKILL.md 正文与 YAML 注释遵循项目语言约定，并在同一 Skill Pack
 
 ## 11. 与 AI Authoring 的关系
 
-Skill Studio 的文本编辑、AI Authoring 和代码评审必须使用同一份作者规范。AI 可以读取 schemas/ 与 scripts/ 作为上下文，并可通过正常 Agent Runtime 调用当前 Skill Registry 中登记的脚本；不得在 Studio Worker / AI Authoring 中创建第二套 Python 执行器，也不得：
+Skill Studio 的文本编辑、AI Authoring 和代码评审必须使用同一份作者规范。AI 可以通过 Host Resource Read 按需读取当前 Package snapshot 中的 schemas/、scripts/manifest.yaml、scripts/ 源码与 references；可以通过正常 Agent Runtime 的 host.skill-script.execute 调用当前 Skill Registry 中登记的全部脚本（包括 transform 和 predicate），并与 Assurance 共用同一 Script Runner。不得在 Studio Worker / AI Authoring 中创建第二套 Python 执行器，也不得：
 
 - 把 Callable / backendOperationId 写入 Skill；
 - 通过注释补足缺失的 Schema、arguments、Predicate 或 routes；
@@ -369,3 +608,4 @@ Apply 前仍须由用户确认，并对同一候选源码与依赖锁执行正�
 | 2026-11-27 | 0.1.5 | GPT-6.2（ChatGPT） | §3～§5、§10～§11 | 将 schemas/scripts 定为根目录共享资源，补充 Script Registry、Host Script Execution Capability、YAML Schema 源和 LLM-only Package 规则 | 确保 LLM 与 Assurance 使用同一资源，禁止模型任意 Python 执行 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.6 | GPT-6.2（ChatGPT） | §3、§11 | 明确 LLM Script Action 同时受 Registry `llmInvocable` 与 Host `scriptExecution.llmEnabled`（默认 false）约束 | 防止仅靠 Skill 包内标记就意外暴露 Host 脚本执行能力 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.7 | GPT-6.2（ChatGPT） | §3、§11 | 删除逐脚本 `llmInvocable` 和 Host `scriptExecution.llmEnabled`；LLM 与 Assurance 共用 Script Runner | 让 Demo 的模型调用能力与确定性执行能力一致，避免重复授权配置 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.1.8 | GPT-6.2（ChatGPT） | §3～§6、§7、§10～§11 | 删除作者级 Node-entry Wait / await / polling 规则；补齐完整正向 Skill 示例、共享资源读取和 transform / predicate 全 Registry 调用原则 | 回归既定 CA-SL 作者语法边界，证明作者仅凭规范可写出无 Wait 的 1.6.0 Skill | Issue #49；IR-008；SR-032 |
