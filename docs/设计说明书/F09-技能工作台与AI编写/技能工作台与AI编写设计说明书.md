@@ -1,7 +1,7 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书\
-> 文档版本：0.3.16\
+> 文档版本：0.3.17\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；Studio 新 Package Explorer/LSP/AI Authoring 尚未实施；既有 Studio PR 状态与 SR-024/025 验收保持独立）
 > 修订日期：2026-11-27
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
@@ -9,7 +9,7 @@
 > 本文局部非目标：生产级准入、额外 package-level digest、签名和 Trust Registry；仅保留 Compiler v2.1.0 Interface Package schema 明确要求的 `files[].sha256`
 > <br />
 
-关联 IR-006、SR-015、SR-016、SR-020（参考宿主架构审计）、SR-024（Host Context Publisher）、SR-025（MAS Owner Publisher）；Compiler 接口以 [EC02 Development Build 设计](../EC02-Compiler/Development%20Build设计.md) 为准。基线为 [docs/architecture/studio-boundaries.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/79bd2c3f64a90e7f0f169204c866a3218655bab1/docs/architecture/studio-boundaries.md)、[docs/design/ai-procedure-authoring.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/79bd2c3f64a90e7f0f169204c866a3218655bab1/docs/design/ai-procedure-authoring.md)。
+关联 IR-006、SR-015、SR-016、SR-020（参考宿主架构审计）、SR-024（Host Context Publisher）、SR-025（MAS Owner Publisher）；CA-SL 1.6.0 Compiler gate 以 [EC02 Compiler 设计](../EC02-Compiler/Compiler设计说明书.md) 与 Compiler Owner 正式冻结并发布的 1.6.0 契约为准；[Development Build 设计](../EC02-Compiler/Development%20Build设计.md) 仅用于历史实现审计，不是新 Studio 的可执行入口。基线为 [docs/architecture/studio-boundaries.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/79bd2c3f64a90e7f0f169204c866a3218655bab1/docs/architecture/studio-boundaries.md)、[docs/design/ai-procedure-authoring.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/79bd2c3f64a90e7f0f169204c866a3218655bab1/docs/design/ai-procedure-authoring.md)。
 
 ## 1. 编辑与语言服务
 
@@ -23,7 +23,7 @@ Theia 的 Package Explorer 以作者源码为工作区入口。可视化视图�
 
 正式语言刷新后，Contract 字段提示与诊断对齐中央规范。`when` 是 `assurance/contract.yaml` 中的可选顶层字段，不是 SKILL.md Front Matter 字段；其 Schema 类型、CEL 静态检查与错误定位必须对齐 CA-SL 1.6.0 正式作者规范；1.6.0 CEL/G.4 语义由 ca-skills Publisher 冻结，v1alpha5 仅作历史审计。没有 `when` 的 Contract 保持原有行为。文本与 AI 编辑均保持可预览，不能把选择条件写入 Predicate。覆盖 Browser Worker、源码往返、已有包、有效与无效表达式、Compiler gate 与应用后再打开。
 
-**历史实现基线说明：** §4～§8 记录现有 Studio 与 Compiler v2.1.0 Development profile 的包导入、项目快照和当前实施状态，仅用于审计既有产品；这些旧 Profile/Package/Skill 不构成新 1.6.0 Studio 的合法输入，也不建立兼容、迁移或双轨路径。新 Studio 的唯一目标见 §9。
+**历史实现基线说明：** §4、§7 中现有 Studio 与 Compiler v2.1.0 Development profile 的包导入、项目快照和既有实施状态，以及 §5.2/§6 明确标记的 Development 结果与 no-root 历史规则，仅用于审计既有产品；这些旧 Profile/Package/Skill 不构成新 1.6.0 Studio 的合法输入，也不建立兼容、迁移或双轨路径。新 Studio 唯一执行入口见 §5.1。
 
 ## 4. Interface Package 导入与项目快照
 
@@ -108,18 +108,22 @@ Compiler v2.1.0 的 `validDevelopmentVersion` 接受 `major.minor.patch` 和合�
 - 两个 Publisher 都只发布静态 Interface Package；`publisher` 是声明身份，不是 Owner Trust。Compiler v2.1.0 Development BuildRequest 不接受 `trustedBuildContext`、Owner attestation、Deployment Grant、live Evidence 或 Provider binding；成功结果仍为 `VALIDATED / LINKED / BUILT / NOT_ADMITTED`，不代表 Host Admission 或 Runtime Execution。
 ## 5. Compiler Development Build 与状态投影
 
-### 5.1 单一 Build 路径
+**本节边界：** §5.1 是新 Studio 唯一的 CA-SL 1.6.0 Build/Verify gate；§5.2 仅留存 v2.1.0 Development 结果的历史审计，不是新版状态契约。
 
-上述 Compiler v2.1.0 / Development v1alpha1 BuildRequest、Worker/WASM 与 VerifyDevelopment 是历史实现状态，不作为**1.6.0 新 Studio**的可执行入口。新的 Package Audit 和 AI Authoring 只能共用 Compiler Owner 正式冻结的 1.6.0-only 新 BuildRequest/Worker/WASM/Verify，不得自行实现 Linker/依赖闭包，也不得调用旧 Development Build 或做 fallback。
+### 5.1 单一 CA-SL 1.6.0 Build / Verify 路径
 
-- Package Audit 对当前保存源码和当前 lock generation 进行 Build + VerifyDevelopment。
-- AI Authoring 对**同一候选源码字节**和同一 lock generation 进行 Build + VerifyDevelopment；候选变更或 lock generation 改变立即使旧 Build/Verify 结果失效。
-- 仅在候选的 Build + VerifyDevelopment 成功后，才允许显示可应用的候选；Apply 仍需用户明确确认。Apply 使用原生编辑器 Buffer，Undo 必须恢复精确原文；Save 由用户决定。
-- Worker 只执行 Compiler Core，不下载依赖、不访问项目文件系统、不读取 Provider credentials、不授予 Owner Trust、不执行 Runtime Tool。
+Compiler v2.1.0 / Development v1alpha1 的 BuildRequest、Worker/WASM、Development Artifact 与 VerifyDevelopment 均为**历史实现状态**，只供既有产品审计；它们不是 CA-SL 1.6.0 新 Studio 的可执行入口。新 Studio 只能调用 Compiler Owner 正式冻结并发布的 **1.6.0-only Build 与 Verify 契约**。准确 apiVersion、DTO、Worker ABI、Artifact Schema 与调用名称均以该正式发布为准，本设计不从 v2.1.0 推导或发明。正式契约未发布前，Package Audit 与 AI Authoring 的 Compiler gate 必须为 **BLOCKED / NOT_RUN**，不得调用 VerifyDevelopment、旧 Development Build 或任何 fallback。
+
+- **Owner Gate**：对当前 Skill 声明的每个 Owner dependency，必须解析到正式发布的 Owner Contract Package，并按 Owner Publisher 冻结的身份、版本和发布摘要核对实际包及 Binding 引用；验证作者可见 Capability 与唯一公开 Callable 的一对一关系，以及 kind、Effect、Input/Output Schema 等契约一致性。Coordinator 内部 Reconcile 不得作为 Skill-facing Callable 暴露。Owner Gate 是契约/发布身份核验，不是 Trust Registry、生产准入或额外授权机制。
+- **Provider Interface Gate**：Provider Interface Package 是与 Owner Contract Package 不同的发布对象，必须独立核对其包身份、版本和 interface snapshot；不得以 Provider 包替代 Owner Contract，也不得由模型或 Skill 选择 Provider 私有 backend operation。
+- Package Audit 对当前保存源码和当前 lock generation 执行 **1.6.0 Build → Verify**，并完成上述 Owner Gate 与 Provider Interface Gate。只有 Build/Verify 和两类发布契约核验全部成功，才可报告 Package Audit 通过；任何一项未发布、未核对或失败都不得显示 PASS。
+- AI Authoring 对**同一候选源码字节**和同一 lock generation 执行同一 **1.6.0 Build → Verify + Owner Gate + Provider Interface Gate**；候选字节或 lock generation 改变，立即使旧检查结果失效并重新执行完整 gate。
+- 仅在候选的 1.6.0 Build/Verify 及两类发布契约 gate 全部成功后，才允许显示可应用的候选；Apply 仍需用户明确确认。Apply 使用原生编辑器 Buffer，Undo 必须恢复精确原文；Save 由用户决定。
+- Worker 只执行 Compiler Core，不下载依赖、不访问项目文件系统、不读取 Provider credentials、不授予 Owner Trust、不执行 Runtime Tool。Worker/ABI 的具体实现遵循 Compiler Owner 正式发布契约，不从旧 Development Worker 推断。
 
 ### 5.2 结果状态
 
-Compiler Development Build 成功结果固定为：
+**历史状态限定：** 以下字段和值只描述 Compiler v2.1.0 / Development v1alpha1 的历史 BuildResult，不是 CA-SL 1.6.0 新 Build/Verify 的结果契约；新版结果字段与状态由 Compiler Owner 正式冻结。
 
 | 字段 | 成功值 | 含义 |
 |---|---|---|
@@ -134,15 +138,17 @@ Package Explorer、LSP、Problems 与 AI Workbench 必须区分源码诊断、�
 
 ## 6. 无 Assurance、零根依赖与 no-root 状态
 
-- 只有 `SKILL.md`、没有 `assurance/` 的 Skill 按 CA-SL v1alpha5 走 LLM-guided only 路径：不调用 Compiler，不构造 Development BuildRequest，不生成 Deterministic Artifact。
-- 存在 Assurance 但 `contract.dependencies` 没有根依赖的 Skill，不能直接调用当前 Compiler v2.1.0 Development Build：冻结的 BuildRequest / Interface Dependency Lock 契约要求非空 `snapshots`、`roots` 和 `packages`。
-- Studio 必须显示显式 `NO_INTERFACE_ROOTS` / `BUILD_NOT_RUN` 状态和可理解的诊断，不合成假 Package、不构造空 roots 请求、不回退冻结 v2.0.2 Build、不生成 Artifact，也不伪造 `NOT_ADMITTED`（该值只来自成功 Development BuildResult）。
+**历史状态限定：** 除 SKILL.md-only 的 Agent Skills 独立路径外，本节 no-root 限制和状态名只用于 v2.1.0 Development 历史审计，不构成 1.6.0 新契约。
+
+- 只有 `SKILL.md`、没有 `assurance/` 的 Skill，按 [Agent Skills Specification](https://agentskills.io/specification) 处理其 Front Matter；这是与 CA-SL 独立的 Skill 元数据/指导路径，不属于任何 CA-SL 版本，不声明 `when`，不调用 Compiler，也不生成 CA-SL Runtime Artifact。该类 Skill 仅走 LLM-guided 路径。
+- 本节关于非空 `snapshots`、`roots`、`packages` 的约束，以及 `NO_INTERFACE_ROOTS` / `BUILD_NOT_RUN` 诊断，只描述 Compiler v2.1.0 / Development v1alpha1 历史 Build profile，不得作为 CA-SL 1.6.0 的实现规则。1.6.0 零根依赖行为须由 Compiler Owner 在正式契约中明确；冻结契约发布前标记 BLOCKED / NOT_RUN，不得继承旧限制或自行构造空 roots 请求。
+- 历史 Development profile 的 no-root 情况不得合成假 Package、不得回退冻结 v2.0.2 Build，也不得伪造 `NOT_ADMITTED`（该值只来自成功 Development BuildResult）；这些旧状态不构成 1.6.0 API 状态。
 - 本地编辑器语法提示可以继续工作，但不得将本地提示冒充 Compiler `VALIDATED`。Compiler 未运行时，其 `sourceStatus` 是 `NOT_RUN`，或根本不存在 BuildResult。
-- 如果产品需要“零外部依赖的 Assurance Skill 也生成确定性 Artifact”，必须另立 Compiler 契约变更并发布新契约版本；不得改变 v2.1.0 冻结 Schema 或在 Studio 中私自扩展。
+- CA-SL 1.6.0 若需要支持零外部依赖的 Assurance Skill，必须由 Compiler Owner 在 1.6.0 正式契约中定义请求、验证与产物语义；在此之前不得从 v2.1.0 冻结 Schema 推断或私自扩展。
 
 ## 7. 当前实施状态与验收门槛
 
-截至 2026-11-27：
+截至 2026-11-27，以下表格仅审计既有 Studio / Compiler v2.1.0 实施状态，不构成 CA-SL 1.6.0 Studio 或 Compiler 产品验收：
 
 | 项目 | 状态 | 证据 / 未完成 |
 |---|---|---|
@@ -221,3 +227,4 @@ AI Authoring 的 Change Set 只能新增或修改 Capability ID、Procedure argu
 | 2026-11-27 | 0.3.14 | GPT-6.2（ChatGPT） | 文档头、§5、§9、修订记录 | 合并 #45 的 1.6.0-only 设计增量并保留恢复分支当前状态，避免回滚 #44 与后续修订。 | Issue #12/#40/#43；PR #44/#45 |
 | 2026-11-27 | 0.3.15 | GPT-6.2（ChatGPT） | §3～4、§9、修订记录 | 防止新 Studio 将旧 v1alpha5/Development profile 误作 1.6.0 项目输入。 | Issue #40；SR-029；SR-013；SR-004 |
 | 2026-11-27 | 0.3.16 | GPT-6.2（ChatGPT） | §9、修订记录表格结构 | 合并 0.3.11～0.3.13 三条记录的“修改内容/原因”列并完整保留原文；原因：恢复六列表格结构，避免复审时修订记录错列。 | Issue #40/#12；PR #45；SR-013/SR-029 |
+| 2026-11-27 | 0.3.17 | GPT-6.2（ChatGPT） | 文档头、§5.1～§7、修订记录 | 将新 Studio 的唯一执行门改为 Compiler Owner 正式发布的 1.6.0 Build/Verify + Owner/Provider Package Gate；把 VerifyDevelopment 与 no-root 规则明确限定为历史 Development profile；SKILL.md-only 改为 Agent Skills Specification 独立路径；原因：消除新版 Gate 正文仍调用旧 VerifyDevelopment、并避免将 SKILL.md-only 误归入 CA-SL v1alpha5 的实施歧义 | Issue #40；SR-013；SR-029；PR #45 |

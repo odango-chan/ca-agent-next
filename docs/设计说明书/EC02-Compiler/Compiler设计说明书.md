@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.2.12\
+> 文档版本：0.2.13\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 修订日期：2026-11-27
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -87,9 +87,9 @@ CEL int 是有符号 64 位；double 是有限 IEEE-754 binary64。int/double �
 正式编译按以下逻辑执行：
 
 1. 对每个 Skill 读取同一次规范化 YAML 解析产生的 Contract AST。
-2. 若该 Skill 声明 Contract.requestSchema，定位 Request Schema 根并解析 $ref 闭包，验证根类型、闭合性、字段、必需性、可空性、enum/const、范围和数组元素。若 when 实际引用 input，则 requestSchema 必须存在；若 when 只引用 event.type，则不要求声明 requestSchema，也不得虚构 input 类型。
+2. 若该 Skill 声明 Contract.requestSchema，定位 Skill-owned G.4 Request Schema 根并解析完整 `$ref` 闭包。G.4 规则只校验该根；若引用原版 OpenAPI 3.0 Schema components，必须由 dialect-aware resolver 按 OAS3 语义解析和保留其约束，不得将 OAS3 资源强制套入 G.4、改写原件或静默丢弃 OAS3 关键字。若 when 实际引用 input，则 requestSchema 必须存在；若 when 只引用 event.type，则不要求声明 requestSchema，也不得虚构 input 类型。
 3. 复用 Compiler 现有 Schema Registry 与 Reference Resolver。必要时抽取共享内部函数，但不得把 Development Build 的 Request/Artifact 契约搬进正式发布链。
-4. 每个 when 的 CEL 环境始终包含统一 Host Event 的 event.type 类型；仅当表达式引用 input 时，才把当前 Skill 的 Request Schema 闭包加入类型环境和 DescriptorSet。event-only when 不依赖 Request Schema。若 Contract 已声明 requestSchema，即使 when 不引用 input，也仍须按 G.4 验证并在新版 Artifact 中发布该 Schema 快照，供 Host 按 M.3 验证 Event payload。
+4. 每个 when 的 CEL 环境始终包含统一 Host Event 的 event.type 类型；仅当表达式引用 input 时，才把当前 Skill 的 Request Schema 类型闭包加入类型环境和 DescriptorSet。event-only when 不依赖 Request Schema。若 Contract 已声明 requestSchema，即使 when 不引用 input，也仍须发布该 Skill-owned G.4 根及其 dialect-aware 引用资源，供 Host 按 CA-SL 1.6.0 Publisher 正式冻结的 Event/Input 校验契约验证 payload。
 5. 未知字段、缺失 Reference、跨 Skill 私有 Schema 借用、类型不匹配、非 bool 结果及 G.4 禁止语法均在 Compiler 静态阶段拒绝。
 6. 多 Skill 共享 Lock 时，对每个 Skill 单独建立 Root/Scope。共享依赖可以复用相同的权威依赖身份，但不得把 Skill A 的私有字段注册到 Skill B 的 CEL 环境。
 
@@ -168,6 +168,10 @@ AC-013-01 报告采用 Go 1.26.6、cel-go 0.33.2、Go protobuf 1.36.10、CPython
 
 ### 5.2 候选文件布局
 
+**Request Schema 与 OpenAPI dialect 边界：** `Contract.requestSchema` 的根是 Skill 自己维护的 G.4 文档；G.4 约束只适用于这个 Skill-owned root。该根可以直接引用 OpenAMSM 对应版本的原版 3GPP/OpenAPI 3.0 Schema components。原始 OpenAPI YAML 的 source bytes、相对 `$ref`、components 结构和 OAS3 dialect 必须保持不变；禁止改写、重新序列化、投影为 G.4 或强制生成 Adapter。Compiler 内部必须由 dialect-aware resolver 按资源来源 dialect 解析 `$ref`：Skill-owned root 按 G.4，原版 OpenAPI Schema Object 按 OAS3。内部类型分析/降低不得改变被引用源文件字节或静默丢弃 OAS3 语义。
+
+该原则只冻结源文件与 dialect 边界；跨 dialect `$ref` 的具体解析算法、资源身份表示、Manifest 字段及 OAS3 conformance matrix 仍待 Compiler Owner / SR-031（PR #48）正式设计冻结。PR #48 尚未合并，本说明书不复制或预先批准其中未冻结的实现细节；未冻结前不得宣称跨 dialect resolver 已交付，也不得要求修改原版 3GPP YAML。
+
 新版 Runtime Artifact 必须同时解决两类不同的运行时输入：Request Schema 校验数据与可选 when 程序。候选布局如下，精确文件名由 Compiler Owner 在 AC-013-03 定稿：
 
 ~~~text
@@ -180,7 +184,7 @@ skills/<skill-name>/compiled/when.checked.pb
 skills/<skill-name>/compiled/when.types.pb
 ~~~
 
-- 只要 Contract 声明 requestSchema，就必须输出规范化的 G.4 Request Schema 根及完整、可解析的 $ref 资源闭包；与 when 是否存在、是否读取 input 无关。
+- 只要 Contract 声明 requestSchema，就必须输出 Skill-owned G.4 Request Schema 根及完整、可解析的 `$ref` 资源闭包；与 when 是否存在、是否读取 input 无关。根文件保留作者源字节；闭包中的原版 OAS3 资源保留原始字节和 OAS3 dialect，由 dialect-aware resolver 解析，不得转换为 G.4。
 - 没有声明 requestSchema 时不输出 Request Schema 文件；event-only when 仍可编译，DescriptorSet 只需包含 event.type。
 - 只有声明 when 的 Skill 才输出 when.checked.pb 和 when.types.pb；无 when 时不生成空表达式或占位文件。
 - when.checked.pb 是 Any 序列化字节；when.types.pb 是 CEL 类型所需的 FileDescriptorSet。Request Schema 文件保留完整 G.4 断言，不能用 DescriptorSet 代替。
@@ -196,9 +200,9 @@ CA-SL 1.6.0 新 Manifest 由 Compiler Owner 重新冻结唯一 Schema；允许�
 1. sourceRef：Contract.requestSchema 的作者相对路径。
 2. rootPath：Artifact 内根 Schema 文件路径。
 3. rootSchemaId：若根 Schema 声明 $id，则记录其精确值；未声明时省略，不得为其虚构 URI 身份，根以 sourceRef + rootPath 标识。
-4. resources[]：闭包中每个已解析资源的精确 schemaId 与 Artifact path，覆盖完整、无循环的 G.4 $ref 闭包；根 Schema 若声明 $id，也纳入资源映射。
+4. resources[]：覆盖完整、无循环的 `$ref` 闭包，并保留每个资源的原始引用身份、来源 dialect 与 Artifact path；源资源声明 `$id` 时保留其精确值，未声明时不得虚构 URI。原版 OAS3 components 的资源身份/字段映射由 Compiler Owner 在 SR-031 / PR #48 的 dialect-aware 设计中冻结，不得强制其满足 G.4 `schemaId` 形态。
 
-requestSchema 对象与 when 是否存在无关；Host 依照 CA-SL 1.6.0 正式规范的 Event input 校验契约使用它；v1alpha5 M.3 仅作为历史语义参考，除非 1.6.0 Publisher 明确重新冻结相同规则。所有根/资源文件同时进入该 Skill 的 compiledFiles[] 和 Manifest outputFiles[]。
+requestSchema 对象与 when 是否存在无关；Host 依照 CA-SL 1.6.0 Publisher 正式冻结的 Event/Input 校验契约使用它。v1alpha5 M.3 仅作历史参考，不自动继承。所有根/资源文件同时进入该 Skill 的 compiledFiles[] 和 Manifest outputFiles[]；原版 OAS3 资源以原始字节进入资源快照，不做 dialect 投影。
 
 仅为声明 when 的 Skill 增加 when 元数据对象，至少记录 checkedExprPath、descriptorSetPath、sourcePath 和 sourceRange（startLine/startColumn/endLine/endColumn）。当表达式引用 input 时，when 元数据还记录 requestSchemaRef 与 resolvedRequestSchemaPath，且必须与同一 Skill 的 requestSchema.rootSchemaId / sourceRef 一致；只访问 event.type 时可省略这两个引用字段。没有 when 时不输出 when 元数据。
 
@@ -209,7 +213,7 @@ requestSchema 对象与 when 是否存在无关；Host 依照 CA-SL 1.6.0 正式
 ### 6.1 Build
 
 1. 通过 CA-SL 1.6.0 唯一新版本入口和正式解析/语义链；旧 v1alpha5 Build 入口由历史 Release 保持不变。
-2. 对声明 requestSchema 的 Skill 生成规范化 G.4 Schema 根和完整资源闭包，作为 Host 运行期输入校验数据；即使没有 when 也必须输出。
+2. 对声明 requestSchema 的 Skill 发布 Skill-owned G.4 Schema 根和完整 dialect-aware 资源闭包，作为 Host 运行期输入校验数据；即使没有 when 也必须输出。原版 OAS3 资源保留原始 source bytes / `$ref`，不改写、不投影。
 3. 对有 when 的 Skill 执行 §3 的 Schema-aware G.4 检查、Guard 分析和 typed lowering。只有表达式引用 input 时才使用 Request Schema 类型环境；event-only when 不要求 requestSchema。
 4. 生成 CheckedExpr Any 与对应 DescriptorSet。
 5. 按新 Runtime Artifact Manifest 组装完整产物；没有 when 的 Skill 不生成 when 文件。
@@ -255,7 +259,7 @@ requestSchema 对象与 when 是否存在无关；Host 依照 CA-SL 1.6.0 正式
 | Numeric | int64 最小/最大值、finite double、非有限值拒绝、int/double 混用拒绝 |
 | Isolation | 多 Skill 共享 Lock、每 Skill Request Schema 根、跨 Skill 字段借用拒绝 |
 | Serialization | Go CheckedExpr Any + DescriptorSet；Python 直接反序列化同一字节；18/18 PoC 基线扩展为正式 fixtures |
-| Artifact | 新版 Build/Verify、Request Schema 根/闭包发布与验证、损坏文件拒绝、缺失 Descriptor 拒绝、无 when、重复构建确定性 |
+| Artifact | 新版 Build/Verify、Skill-owned G.4 根与 dialect-aware `$ref` 闭包发布/验证、原版 OAS3 source bytes 和相对 `$ref` 保持不变、无强制 Adapter、损坏文件拒绝、缺失 Descriptor 拒绝、无 when、重复构建确定性 |
 | Version rejection | 新 Compiler 对全部历史 v1alpha5 Build DTO、Artifact、Development v1alpha1 和未知 languageTarget 显式拒绝；旧 Release/Golden 只读归档不计入 1.6.0 PASS |
 | Platform | Native、WASM、CLI E2E、真实 Chromium Worker parity |
 
@@ -371,3 +375,4 @@ Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId�
 | 2026-11-27 | 0.2.10 | GPT-6.2（ChatGPT） | §2～7、§9、修订记录 | 将 when、G.4、Build/Verify、Manifest 和 Request Schema 的规范性目标统一为 CA-SL 1.6.0；旧 v1alpha5 仅作冻结历史与回归基线。 | 防止新 Compiler 沿用旧 v1alpha5 Build/Manifest/DTO 契约，保持与 SR-013、F08、SR-029 一致。 | Issue #40；SR-013；SR-029；F08 |
 | 2026-11-27 | 0.2.11 | GPT-6.2（ChatGPT） | §2、§5.3、修订记录 | 同步 Compiler 1.6.0-only 新契约的 M.3 / Request Schema Owner Gate 与跨文档当前版本引用；旧 v1alpha5 仅保留历史冻结语义。 | 避免将历史 v1alpha5 规范或 DTO 隐式复用为 CA-SL 1.6.0 的规范性输入。 | Issue #40；SR-004/013/027/029；EC02；F08；PR #45 |
 | 2026-11-27 | 0.2.12 | GPT-6.2（ChatGPT） | §3.3、修订记录 | 修复 G.4 布尔运算符 `\|\|` 在 Markdown 表格中被识别为列分隔符，保留原有 1.6.0 语义 | 确保 CA-SL 1.6.0-only 评审输入和当前文档结构无歧义。 | Issue #40/#12；PR #45；SR-013/SR-029 |
+| 2026-11-27 | 0.2.13 | GPT-6.2（ChatGPT） | §3.4、§5.2～§5.3、§6.1、§7、修订记录 | 明确 Skill-owned G.4 Request Schema root 与原版 OpenAPI 3.0 resources 的 dialect-aware $ref 边界；原件 source bytes/$ref 不变，不要求 Adapter；具体 resolver/Manifest 细节留给 SR-031/PR #48 冻结 | 避免 G.4 profile 误约束原版 OAS3 components，并防止在 PR #48 未合并时提前声称实现细节已冻结 | Issue #40；SR-013；SR-031；PR #45/#48 |

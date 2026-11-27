@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书\
 > 状态：**设计待评审**（唯一新目标 CA-SL 1.6.0；全链路不兼容任何旧作者语法、Build DTO、Artifact、Bundle；1.6.0 产品未发布）
-> 文档版本：0.2.18
+> 文档版本：0.2.19
 > 修订日期：2026-11-27
 > 功能归属：F02 — Skill 管理与选择\
 > 关联 SR：SR-004、SR-005、SR-006\
@@ -103,6 +103,8 @@ Agent 不实现文件监视器、自动下载、分布式缓存或通用 Plugin 
 
 ## 6. Skill 选择语义
 
+**规范权威与实施状态：** 本节编号规则是 F02 对 1.6.0 的候选目标设计，不是已发布的 CA-SL 1.6.0 规范，也不是可直接交给 Runtime/Harness 实施的冻结契约。Event/Input 资格、`requestSchema` 验证顺序、`when` 选择语义和 CEL Profile 必须由 ca-skills Publisher 在正式 1.6.0 规范中重新冻结，并与 Compiler 1.6.0 发布契约一致。冻结前，依赖这些规则的 Event/when Runtime 实施必须标记 **BLOCKED / NOT_IMPLEMENTED**；不得从 v1alpha5 M.3/SA-012 或其历史 SHA 推导新版行为。
+
 1. 校验并去重 Event。
 2. 精确 continuation 优先，恢复原 Run，不重新选择 Skill。
 3. 对新 Event 固定当前 Catalog generation。
@@ -114,7 +116,7 @@ Agent 不实现文件监视器、自动下载、分布式缓存或通用 Plugin 
 9. 无候选时澄清或拒绝；不得无 Skill 绑定地回退到 Generic Agent。
 10. 精确绑定 Skill 后，才选择 Deterministic 或 LLM-guided 模式。
 
-无规范化 Event 的直接用户任务只走未声明 when 的语义候选路径。上面的 Event 资格规则取自 [CA-SL v1alpha5 正式 M.3／SA-012](../../规范/CA-SL语言基线与版本规范.md#3-when-的发布与运行时依赖)，规范固定于 `18d8184367982ccbc835756136c4a53f9096c3a0`。
+无规范化 Event 的直接用户任务在本候选设计中只走未声明 when 的语义候选路径。历史 CA-SL v1alpha5 M.3／SA-012（规范提交 `18d8184367982ccbc835756136c4a53f9096c3a0`）仅作为历史设计来源和审计材料；它不是 CA-SL 1.6.0 的 Event 资格、Request Schema 或 `when` 规范性依据。1.6.0 对应规则必须由 Publisher 重新冻结。
 
 when 只能读取规范化 Event 的 event.type 和 Contract.requestSchema 声明的 input 字段，不得访问 Tool、Observation、Runtime Context、时钟或可变 Host 状态。读取 input 成员必须由作者源 Contract 声明 requestSchema，并由外部 Compiler 在发布前静态检查。
 
@@ -139,7 +141,7 @@ CheckedExpr、google.protobuf.Any、FileDescriptorSet、DescriptorPool、字段�
 ## 9. 外部依赖与状态边界
 
 - SKILL.md Front Matter 以 [Agent Skills Specification](https://agentskills.io/specification) 为格式权威（本次核对日期 2026-11-26）；CA-SL v1alpha5 不定义该 Front Matter。
-- ca-skills PR #88（同标识 CA-SL v1alpha5 optional Assurance/when 刷新）与 PR #89（Release Record 固定）均已 MERGED；Release Record 固定规范提交 `18d8184367982ccbc835756136c4a53f9096c3a0`。PR #87 仍 OPEN（Contract.when 适用性提案），不改变正式规范基线。
+- ca-skills PR #88（CA-SL v1alpha5 optional Assurance/when 历史刷新）与 PR #89（对应历史 Release Record 固定）均已 MERGED；规范提交 `18d8184367982ccbc835756136c4a53f9096c3a0` 只证明 v1alpha5 历史版本已发布。该 Release 不冻结 CA-SL 1.6.0 的 Event 资格、Request Schema 或 `when` 语义；1.6.0 必须由 Publisher 发布新的正式规范和选择规则。在此之前 §6 仅是候选设计，Runtime 实施 BLOCKED / NOT_IMPLEMENTED。PR #87 仍 OPEN（v1alpha5 Contract.when 适用性提案），不改变上述版本边界。
 - ca-skill-compiler Issue #61 仍 OPEN：Compiler v2.1.0 保留冻结 Artifact v1alpha5 和 Development v1alpha1；新版 Runtime Artifact API、Request Schema 根/闭包与 CheckedExpr/DescriptorSet 尚未发布。**SR-029 的 1.6.0 Capability Binding 还需联合纳入新 Release**；单独完成历史 v1alpha5 when 不构成 1.6.0 产品门槛。详见本说明书 §11。
 - ca-agent-next：只负责已发布包的消费、Catalog、选择和 Runtime，不调用 Compiler。**新 Agent 的 Assurance Catalog 只接受 CA-SL 1.6.0 Bundle；不存在旧版导入适配层，也不允许在同一运行时加载历史 v1alpha5 Skill。**新运行包必须是 **CA-SL 1.6.0** 的正式 Compiler Artifact（准确 `languageTarget` 待冻结）；Manifest 应提供唯一 Capability→Callable Binding、精确依赖身份和可生成闭合 Callable Scope 的必要元数据；Provider Interface Package 与 Owner Contract Package 必须分别解析。新版 Manifest 的字段名、结构和引用路径尚未由 Compiler Owner 冻结，不能沿用旧字段猜测实现。Provider Interface bytes 必须匹配 provider.yaml 的 `interfaceSnapshotDigest`；Owner Contract 的实际部署版本由 Provider Runtime Bindings sidecar 的 stableId、version、publicationDigest、manifestDigest 固定，Agent 必须校验已安装 Owner publication 与 sidecar 一致。不得将 Owner ToolCatalog 当成 Provider Interface Package。冻结 Artifact API v1alpha5 不作为本 SR 的 Assurance Runtime 输入。
 - Development v1alpha1 Artifact 虽然携带 packageId/version/snapshotDigest 的 Dependency Lock，但 executionStatus 固定 `NOT_ADMITTED`，不是当前 Agent 的运行时输入；不能把该 profile 的 Lock 能力套用到冻结 Artifact API v1alpha5 或新版 Runtime Artifact。新版 API 是否包含 per-Skill digest pin 及其字段，必须由 Compiler #61 正式契约决定。
@@ -163,7 +165,8 @@ Agent 不调用 Compiler Inspect/Verify，也不实现 Skill Admission。Compile
 - Importer 只返回候选；Catalog generation、原子激活、失败回滚和 Invocation pinning 由 SR-005 验收。
 - 已发布 Assurance Artifact 包不调用任何 Compiler 命令。
 - 缺失文件、未知 Artifact 格式、无效 CEL/type data、路径越界和未解析依赖均导入失败，不降级。
-- when 在发布前静态检查；Agent 导入时反序列化一次；每个新 Event 独立求值。
+- when 在发布前静态检查；Agent 导入时反序列化一次；每个新 Event 独立求值；这些行为须以 CA-SL 1.6.0 Publisher 与 Compiler 正式发布契约为依据。
+- **版本负例**：1.6.0 Event/Input 资格和 `when` 正负例必须来源于正式 1.6.0 规范；当该规范尚未发布时，相关 AC 为 BLOCKED / NOT_RUN。测试必须证明运行时和 Harness 不会加载 v1alpha5 M.3/SA-012 或其固定 SHA 作为 1.6.0 现行语义。
 - when=false / error 的 Skill 不进入语义候选；多 true 只在精确集合内消歧。
 - Catalog 更新原子激活；失败保留旧代际；Invocation 固定 generation。
 - Event 热路径无 Skill 文件读取、Artifact 文件读取、目录扫描和 Compiler 调用。
@@ -250,3 +253,4 @@ Next 在 Skill 导入时反序列化已检查程序和类型环境，建立运�
 | 2026-11-26 | 0.2.16 | GPT-6.2（ChatGPT） | §4、§9、修订记录 | 新 Agent 导入/Catalog 全面拒绝历史语言与旧 Artifact、无双轨并存或 fallback | 实现 1.6.0 单版本运行时，不让历史数据混入当前 Skill 执行 | Issue #40/#43；SR-004；SR-005 |
 | 2026-11-27 | 0.2.17 | Codex | 整合 | 导入候选、选择条件与编译产物边界 | 对齐 #54 恢复基线与 #44 导入设计 | Issue #40、#43；PR #44 |
 | 2026-11-27 | 0.2.18 | GPT-6.2（ChatGPT） | 文档头、修订记录 | 整合 1.6.0-only 设计与当前权威基线；产品实现、发行与 E2E 仍 NOT_RUN | 合并 #45 的 1.6.0-only 设计增量并保留恢复分支当前状态，避免回滚 #44 与后续修订。 | Issue #12/#40/#43；PR #44/#45 |
+| 2026-11-27 | 0.2.19 | GPT-6.2（ChatGPT） | §6、§9、§10、修订记录 | 将 Event/Request Schema/when 规则明确限定为 CA-SL 1.6.0 候选；v1alpha5 M.3/SA-012 与 SHA 仅作历史来源；增加 Publisher 未冻结时的 BLOCKED 门槛和版本负例 | 防止把已发布的旧语言选择语义错误提升为 1.6.0 当前规范，并阻止 Harness 在正式 Publisher 输入缺失时自行推断 | Issue #40；SR-006；SR-013；SR-029；PR #45 |
