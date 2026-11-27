@@ -418,6 +418,33 @@ Review Context gate 使用 `uv run --no-sync --locked --group dev --extra plugin
     if-no-files-found: error
     retention-days: 30
 
+- name: Write workflow summary
+  if: success()
+  run: |
+    set -euo pipefail
+    summary_file="$RUNNER_TEMP/review-context-summary.md"
+    artifact_name="review-context-pr-${PR_NUMBER}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+    {
+      cat "$summary_file"
+      echo ""
+      echo "### 入口"
+      echo ""
+      echo "- Workflow Run：${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+      echo "- Artifact：${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts"
+      echo "  名称 \`$artifact_name\`"
+    } | tee -a "$GITHUB_STEP_SUMMARY"
+
+- name: Report failure
+  if: failure()
+  run: |
+    {
+      echo "## Review Context 生成失败"
+      echo ""
+      echo "本 Job 失败，未上传正式完成态 Artifact。诊断 Artifact 单独保留；具体错误见对应步骤日志。"
+      echo ""
+      echo "- Workflow Run：${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+    } >> "$GITHUB_STEP_SUMMARY"
+
 - name: Upload review context artifacts
   if: success()
   uses: actions/upload-artifact@v4
