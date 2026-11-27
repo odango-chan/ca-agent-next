@@ -1,7 +1,7 @@
 # SR-010：OpenAMSM 工具插件与按需编解码集成
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.5\
+> SR 版本：0.2.6\
 > 状态：DRAFT（实施主状态）；第二轮独立评审 CHANGES_REQUESTED（历史结论）；第三轮自评 **DESIGN_READY_FOR_INDEPENDENT_REVIEW**（仅设计评审候选，非独立批准或实施 READY）；产品 AC NOT_RUN/BLOCKED。
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-27\
@@ -95,13 +95,16 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 - 影响分析：初始分解；等待设计基线评审。
 - 本 SR 的范围和验收条件在进入 READY 后冻结。后续发生语义变化时创建新的 SR 并引用本 SR，不覆盖历史要求。
 
-## 8. OpenAMSM 3GPP 原版 YAML 与 Codec READ 消费（IR-009）
+## 8. OpenAMSM 原版 OpenAPI 3.0 Ingress 与 Codec READ 消费（IR-009）
 
-- SR-031 **Phase A** 只按当前 OpenAMSM 真实支持版本**逐字节代发布原版 YAML**。它是标准 Source Bundle，不是可直接送入有限 CA-SL G.4 的类型 Package；原版 YAML 不修改字段、注释、换行、引用或顺序。需要跨 Skill 共享类型时，等待**另行发布**的 G.4 Adapter Schema-only Package（0 Capability/0 Callable），不在 Host 中临时转换。
-- 经 SR-009 Plugin 将原始 N1/N2 staging 到 Host ArtifactStore，再由本 SR 的授权 artifact channel 交给 ca-client-tools SR-026 正式 Codec READ。结构化 NAS/NGAP Result Schema 由 Provider 发布并固定 OpenAMSM 支持的消息 Profile，不能让原版 TS29.502 SBI YAML 充当解码结果契约；原字节保留。
-- T1 只按已收到的 SBI/最小 discriminator 选择 Skill；T2 由选中的 Procedure 调 Codec 后才用 NAS-only PDU Session Type / SSC mode。0xD4/N2 completion 只能恢复旧 Run，不产生新候选。
-- 原 AC-010-01～05/09 的 Host Channel 可以独立验收，不因原版 YAML 尚未代发布被强制全阻塞；AC-010-07 0xD1 仍只证明首批 Codec 子集。新增 **AC-010-10** 仅在正式 Adapter（若需要）、Provider Create/Modify profiles、1.6.0 Bundle 可用后测试类型对齐、SBI/N1 冲突、越权 ref、原始 byte 未改与错误 generation。缺发布时 BLOCKED/NOT_RUN、零 Owner mutation。
-- 无 Codec 依赖的 Skill 禁止强制解码；不能发明 Provider Machine ID/Output Schema 或使用旧版迁移。权威说明见 [EC01.3GPP 设计](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。
+- SR-031 发布 OpenAMSM 实际支持的原版 OpenAPI 3.0 Source Bundle；逐字节保留 YAML、路径和相对 `$ref`。它是标准源快照，不是 Interface Package，不导出 Capability / Callable，也不需要 Adapter。
+- **T0 Ingress**：Plugin 按 pin 后的 TS 29.502 OAS 3.0 operation 解析 method/path/operationId、requestBody、`multipart/related`、JSON part、binary N1/N2 slots、media type 和 Content-ID。`PostSmContexts` 的 `jsonData` 引用 `SmContextCreateData`；N1 / N2 binary bytes 原样写入 Host ArtifactStore。所有可达 refs 必须在 Source Bundle snapshot 内闭合。
+- Plugin 只负责协议入口验证、最小业务 discriminator 和原始 Artifact staging；不完整解码 NAS / NGAP，不在 Host 中维护第二套 SBI Schema。OpenAPI 3.0 Schema Object 按原生语义解释，禁止改写 YAML。
+- **T1** 只按已收到的 SBI / 归一化 Event 字段选择 Skill；`when` 不调用 Codec。Skill-owned Request 根仍为 G.4，可经显式 pin 的 Source Bundle dependency 直接引用精确 OAS 3.0 `components/schemas`；Compiler 负责 dialect-aware Resolver（SR-013），Plugin 不做 Schema 投影。
+- **T2** 由已选 Skill Procedure 调用 ca-client-tools SR-026 正式 Codec READ；Provider Output Schema 必须匹配 OpenAMSM NAS / NGAP 支持版本和已资格化 Profile。原始 N1/N2 bytes 保留，Codec Result 不是 Owner Receipt / Commit Proof。
+- T4 的 0xD4 / N2 completion 只恢复原 Run，不创建新候选；核对 generation、PSI / PTI 和 N2 message type。
+- 原 AC-010-01～05/09 Host Channel 可独立验收；AC-010-07 的 0xD1 仅证明首批候选库向量，不代表公开 Provider。新增 **AC-010-10** 验证 OAS 3.0 operation / multipart / Content-ID、原始 byte staging、精确 Source Bundle pin、T1/T2 SourcePath、SBI/N1 冲突、越权 artifactRef 与错误 generation。缺正式 Source Bundle / Compiler Resolver / Provider 时对应子项 BLOCKED / NOT_RUN，零 Owner mutation。
+- 无 Codec 依赖的 Skill 不得被强制解码；不能发明 Provider Machine ID / Output Schema、动态 latest 或旧版迁移。权威说明见 [EC01.3GPP 设计](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。
 
 ## 修订记录
 
@@ -126,3 +129,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-27 | 0.2.3 | GPT-6（ChatGPT） | 修订记录 | 将历史记录统一为七列并保留原始文字及原始关联，修正非规范行的分隔符 | 确保修订表可由文档校验器完整解析；不影响设计语义及 READY 主状态 | Issue #12；PR #46；SR-010 |
 | 2026-11-27 | 0.2.4 | ChatGPT / GPT-6 | 3GPP Schema/Codec 分阶段消费 | 对齐 SR-031 公共类型、T1 Request 与 T2 Codec Result，新增分期拒绝/验收范围 | 修复标准输入来源与实现门禁的跨仓断点 | IR-009；Issue #47；SR-031/026 |
 | 2026-11-27 | 0.2.5 | ChatGPT / GPT-6 | IR-009 OpenAMSM YAML 原件发布边界 | 版本随 OpenAMSM、原版不改动；Adapter 与 Provider Result 独立发版，保留阶段 AC | 避免把标准 YAML 代发布等同解码产品资格 | Issue #47；SR-031/026/010/027 |
+| 2026-11-27 | 0.2.6 | ChatGPT / GPT-6.2 | §8 | 以原生 OAS3 operation / multipart 消费替代 Adapter 前置；补充 Compiler 精确组件引用、T0/T1/T2/T4 和 AC-010-10 | 使 Plugin、Compiler、Codec 各自承担正确协议层责任 | IR-009；Issue #47；SR-031/013/026/027 |

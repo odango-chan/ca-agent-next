@@ -1,7 +1,7 @@
 # SR-026：Codec公开工具发布
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.9\
+> SR 版本：0.2.0\
 > 状态：DRAFT（实施主状态）；第二轮及本次自评均 BLOCKED_EXTERNAL_INPUT（缺 Provider Owner 正式 Codec Capability/Callable、Schema 与发布身份）；库向量范围仅可独立审查，非实施 READY。
 > 创建日期：2026-11-26  
 > 修订日期：2026-11-27\
@@ -58,16 +58,25 @@
 
 这些字段由生产者在其签认 Issue/PR 和正式发布记录中提交。本 SR 现有 `2e 05 01 d1` 向量、`0xd4` 非目标负例可先供静态评议；任何字段尚缺时，禁止由 Harness 推断别名、Schema、版本或“兼容”路径，SR-026 整体仍 BLOCKED_EXTERNAL_INPUT。
 
-## 5. 原版 3GPP YAML 非 Codec Result，扩充 Create/Modify 子阶段（IR-009）
+## 5. 3GPP SBI OpenAPI 与 NAS / NGAP Codec Result 的边界（IR-009）
 
-**原 AC-026-01～03、首批 0xD1 Release Request 保持不变**。公共源只能来自 OpenAMSM 正式使用的 3GPP 原版 YAML，SR-031 Phase A 负责 byte-for-byte 代发布，不允许任何 YAML 改动；其发布**不等于 NAS/NGAP 解码结构的 Schema 已可用**。Provider Output Schema 仍由 ca-client-tools 负责，通过同一 OpenAMSM 支持版本和真实 NAS fixture 逐消息核对；如需公共复用类型，另用正式受审的 Adapter G.4 Schema-only Package，不把原版 YAML 改成投影。
+**TS 29.502 SBI OpenAPI 不是 NAS / NGAP Decoder Result Schema。** SR-031 原样代发布 OpenAMSM 实际使用的 OAS 3.0 YAML；`format: binary`、MIME type 与 Content-ID 只定义 N1/N2 multipart transport，不定义 NAS IE / NGAP ASN.1 解码字段。SR-026 Provider 必须独立发布真实 READ Capability / 唯一 Callable / Input Schema / Output Schema / message Profile。
 
-第二阶段追加计划验收：
-- **AC-026-04** 固定 OpenAMSM 源版本、NAS Establishment/0xC9/0xD1 消息 Profile、原始 bytes 与字段来源；不得假设 TS29.502 SBI YAML 中已有 NAS/NGAP 类型，未确认的类型 BLOCKED。
-- **AC-026-05** Provider Owner 发布真实 Codec READ Capability / 唯一 Callable、关闭 Input selector 与 Output Schema/版本/handler/测试，Create 中实际需要的 PSI/PTI/PDU Session Type/SSC mode、Modify 的实际解码字段必须来自真实测试，不由模型猜测；一次发布保持 1:1（若当前单 Callable 无法表达多 Profile，先提交新设计供评审，不能偷偷多建公开 Callable）。
-- **AC-026-06** 新 MAS 1.6.0 Skill T2 解码/Provider Result 逐字段校验，T1 不读取 NAS-only 字段、0xD4 不是 0xD1，截断/越权/Output schema 不符均 fail-closed、Owner mutation 为零。缺新 Provider 正式发布和 Composer Bundle 时 NOT_RUN。
+当前已核对的 OpenAMSM 源证据（`env-openamsm@dc83ccbf5be54dcc7112dd43ba95ea6fa5975550`）：
 
-**这些新增 AC 仍 BLOCKED_EXTERNAL_INPUT**；PR #39 Go 内部库的 0xD1 fixture 不代表 Tool Interface 或 NAS 全量支持。SR-031 Phase A 可以独立验收字节原样，Provider 产品不能冒充它。本 SR 的消费者为 SR-010/027/011；详见 [EC01.3GPP 设计](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。
+| 协议 | 原生标准源 | 生成 / 实现证据 | 当前边界 |
+|---|---|---|---|
+| NAS 5GSM | TS 24.501 R19.6.2：`lib/nas/5gs/support/r19.6.2/24501-j62-ch8-ch9.docx`，blob `82dcc4c97436ec85c3da14bb35f022385c9484b6` | OpenAMSM NAS README 说明生成 `message.h` / `ies.h` / `decoder.c` / `encoder.c` | 只证明 OpenAMSM 源版本和生成流程，不证明 Provider 已发布 |
+| NGAP | TS 38.413 R19.2.0：`lib/asn1c/support/ngap-r19.2.0/38413-j20.asn`，blob `3fa6da460a85bb2054316afec3da37d2b7043fe0` | `lib/asn1c/ngap/meson.build` / 生成 C 注释引用该 ASN.1 模块 | 不代表 Codec 已覆盖全部 NGAP PDU / IE |
+
+第二阶段追加验收：
+
+- **AC-026-04** 固定 OpenAMSM source commit、NAS / NGAP 原生协议源版本、消息 Profile、原始 bytes 和逐字段来源。不得把 SBI `binary` part 当作解码结果类型，不得凭空生成 NAS / NGAP 官方 YAML。
+- **AC-026-05** Provider Owner 发布正式 Codec READ Capability ↔ 唯一 Callable、关闭 Input selector、Artifact slot、Output Schema、版本、handler 和 Golden。Create 所需 PSI / PTI / PDU Session Type / SSC mode、Modify 字段及 N2 输出均须有真实 fixture。一个 Capability 若覆盖多个 Profile，必须证明一个封闭 Output Schema + 固定 enum selector 能表达每个 Profile 的字段约束并保持 1:1；否则先提出新设计，不能暗中扩张 Callable 或采用开放 tagged union。
+- **AC-026-06** 新 MAS 1.6.0 Skill 在 T2 调用 Codec READ 并逐字段校验 Provider Result；T1 不读取 NAS-only 字段；0xD4 不是 0xD1；截断、越权、错误 Profile、Output Schema 不符均 fail-closed，Owner mutation=0。缺正式 Provider / Bundle 时 NOT_RUN。
+- **现有证据隔离**：ca-client-tools PR #39 的 Go 内部库 / 解码向量不等于公开 Provider Capability / Callable / Output Schema；不得将 PR #39 库测试宣称为 Provider Release 或全量 NAS/NGAP 资格。
+
+原 AC-026-01～03 与首批 0xD1 范围保持不变。新增 AC-026-04～06 均 BLOCKED_EXTERNAL_INPUT；SR-031 原版 OAS Source Bundle 的 byte-for-byte PASS 不能代替 SR-026 Codec 产品验收。消费者为 SR-010 / SR-027 / SR-011；详见 [EC01.3GPP 设计](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。
 
 ## 修订记录
 
@@ -83,3 +92,4 @@
 | 2026-11-27 | 0.1.7 | GPT-6（ChatGPT） | 修订记录 | 将历史记录统一为七列并保留原始文字及原始关联，修正非规范行的分隔符 | 确保修订表可由文档校验器完整解析；不影响设计语义及 READY 主状态 | Issue #12；PR #46；SR-026 |
 | 2026-11-27 | 0.1.8 | ChatGPT / GPT-6 | 3GPP Schema/Codec 分阶段消费 | 对齐 SR-031 公共类型、T1 Request 与 T2 Codec Result，新增分期拒绝/验收范围 | 修复标准输入来源与实现门禁的跨仓断点 | IR-009；Issue #47；SR-031/026 |
 | 2026-11-27 | 0.1.9 | ChatGPT / GPT-6 | IR-009 OpenAMSM YAML 原件发布边界 | 版本随 OpenAMSM、原版不改动；Adapter 与 Provider Result 独立发版，保留阶段 AC | 避免把标准 YAML 代发布等同解码产品资格 | Issue #47；SR-031/026/010/027 |
+| 2026-11-27 | 0.2.0 | ChatGPT / GPT-6.2 | §5 | 移除 Adapter 共享类型前置；明确 SBI OAS3 binary part 与 NAS/NGAP Codec Output 的边界，补齐 OpenAMSM NAS DOCX / NGAP ASN.1 源证据及 Provider Profile 门槛 | 避免将 SBI transport schema 冒充解码结果契约 | IR-009；Issue #47；SR-031/010/013/027 |

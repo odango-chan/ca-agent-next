@@ -1,7 +1,7 @@
 # SR-027：技能Bundle构建与发布
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.5\
+> SR 版本：0.2.6\
 > 状态：DRAFT（实施主状态）；第二轮及本次自评均 BLOCKED_EXTERNAL_INPUT（1.6.0 五根作者提交、Echo Interface、Compiler Release/argv 未交付）；当前只可审查五根构建矩阵与发布原子性，非实施 READY。
 > 创建日期：2026-11-26  
 > 修订日期：2026-11-27\
@@ -82,13 +82,16 @@ CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验�
 
 缺任何正式输入，禁止把候选目录、旧 v1alpha5 脚本、mock Compiler 或历史 1.0.0 包算作新版本发布。设计矩阵可以独立审查，但 SR-027 完整 READY 仍受外部生产者交付阻塞；不得传递性阻塞 SR-004 的独立 SKILL.md-only 子范围。
 
-## 5.2 OpenAMSM 3GPP 原版 YAML 与 MAS 1.6.0 Bundle 的严格分层（IR-009）
+## 5.2 OpenAMSM OpenAPI Source Bundle 与 MAS 1.6.0 Bundle 的严格分层（IR-009）
 
-ca-skills / SR-031 **Phase A 只原样代发布 OpenAMSM 支持版本的 3GPP YAML**；原版 byte/相对路径一字不改，不能为适配 Compiler G.4 而修改原版。Source Bundle A 不自动是可 Link 的 Schema-only Package。只有正式单独发布的 **Adapter B** 才可作为 0 Capability/0 Callable、非空 G.4 Schema exports 的依赖；Host Context SR-030 另一 0/0 Package 仍只经 `Contract.contexts` 使用。没有 B 时，`requestSchema` 不可直接 `$ref` A 中的 OpenAPI `#/components` 或未支持的原版结构。
+ca-skills / SR-031 原样发布 OpenAMSM 实际支持版本的 OpenAPI 3.0 Source Bundle；原始 YAML bytes、相对路径和 `$ref` 不变。Source Bundle 是不可变标准来源快照，不是 Schema-only Interface Package，不导出 Capability / Callable，也不需要 Adapter。
 
-- 新 CA-SL 1.6.0 MAS Skill 的 Request 根始终自有且仅描述 T1 SBI 已可用字段；Create 的 NAS-only SSC mode/PDU Session Type 必须进入 T2 Codec READ Result/Procedure arguments。Modify 0xC9/Release 0xD1 与 T4 0xD4/N2 continuation 的来源、版本和 Provider Output Profile 独立核对。
-- Publisher CI 若用到 Adapter B，必须 pin B 的 identity/Source Lock 与当前 OpenAMSM baseline、正式 Codec Provider/Owner Interface Package、Compiler/作者 SHA；验证 Bundle 真实 Link/Build/Verify、精确 Request/Output Schema closure，并拒绝混源版本、缺 Adapter、旧 Bundle/DTO。原版 A 可独立作为只读参考资源发布；不强行让无 3GPP 依赖的 Echo 包下载 A/B。
-- 新增 **AC-027-05**：选择期 Request 与运行期 Codec Output 的类型/字段来源、版本及原始 YAML untouched 有正负向证据；A-only 通过不能升级为 B/Codec/系统 E2E PASS。缺正式产物标 BLOCKED / NOT_RUN。原 AC-027-01～04 不因新增跨包类型要求扩大范围。
+- 新 CA-SL 1.6.0 Skill 的 Request 根始终自有、遵循 G.4，并且只描述 T1 已可用的 SBI / 归一化字段。若字段类型需要复用原版 3GPP 类型，Skill 显式声明并 pin Source Bundle dependency，Compiler 直接解析精确 `components/schemas`；外部目标使用 OAS 3.0 dialect，不做投影。
+- Bundle / Compiler Lock 必须固定 OpenAMSM source commit、Source Bundle identity、每个文件的相对路径 / blob / digest、所用 operation、完整可达 `$ref` 闭包和标准版本取证；Build / Verify 不得动态下载 latest 或跨 commit 混源。
+- Provider Codec Output Schema 与 OpenAPI Source Bundle 是不同依赖。NAS / NGAP 结果由 ca-client-tools SR-026 发布，必须固定 OpenAMSM 协议源版本和已资格化 Profile；0xD1 首批不能证明 Create / Modify / N2 支持。
+- Host Context SR-030 的 0/0 Schema-only Package 仍只经 `Contract.contexts` 使用；不得把 Source Bundle 当 Host Context 或 Capability Package。
+- 无 3GPP 依赖的 Echo 不强制下载 Source Bundle / Codec。Publisher CI 验证真实 Link / Build / Verify 与完整快照；缺正式 OAS3 Resolver / Source Lock / Provider Output Schema 时相应子项 BLOCKED / NOT_RUN。
+- 新增 **AC-027-05**：Source Bundle 原件 byte-compare、OAS3 引用闭包、Compiler Build / Verify snapshot、Request / Codec Result 阶段可用性及版本隔离均有正反向证据；Source Bundle-only PASS 不能升级为 Codec / MAS Bundle / 系统 E2E PASS。原 AC-027-01～04 不因新增跨包类型要求扩大范围。
 
 [权威公共设计](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。
 
@@ -112,3 +115,4 @@ ca-skills / SR-031 **Phase A 只原样代发布 OpenAMSM 支持版本的 3GPP YA
 | 2026-11-27 | 0.2.3 | GPT-6（ChatGPT） | 修订记录 | 将历史记录统一为七列并保留原始文字及原始关联，修正非规范行的分隔符 | 确保修订表可由文档校验器完整解析；不影响设计语义及 READY 主状态 | Issue #12；PR #46；SR-027 |
 | 2026-11-27 | 0.2.4 | ChatGPT / GPT-6 | 3GPP Schema/Codec 分阶段消费 | 对齐 SR-031 公共类型、T1 Request 与 T2 Codec Result，新增分期拒绝/验收范围 | 修复标准输入来源与实现门禁的跨仓断点 | IR-009；Issue #47；SR-031/026 |
 | 2026-11-27 | 0.2.5 | ChatGPT / GPT-6 | IR-009 OpenAMSM YAML 原件发布边界 | 版本随 OpenAMSM、原版不改动；Adapter 与 Provider Result 独立发版，保留阶段 AC | 避免把标准 YAML 代发布等同解码产品资格 | Issue #47；SR-031/026/010/027 |
+| 2026-11-27 | 0.2.6 | ChatGPT / GPT-6.2 | §5.2 | Bundle 固定原版 OAS3 Source Bundle 与直接组件引用快照；删除 Adapter 依赖，分离 Provider Codec Output 与 Host Context | 避免 Bundle 锁定一套重复投影标准 | IR-009；Issue #47；SR-031/010/013/026 |
