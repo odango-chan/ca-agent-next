@@ -174,7 +174,7 @@ Goal 在开始前建立 GitHub 检查点，执行期间每完成一个独立工�
 可信 Workflow 对所有 Pull Request 运行轻量检查；只有变更触及根 Python 工程时才执行阻断策略，纯文档与独立 Go 示例不会被误判为 Python 实施。当前触发范围包括：
 
 - `src/**`、`tests/**`；
-- 根目录 Python `scripts/*.py`；
+- 根目录 `scripts/**`、`.github/scripts/**` 中调用 Python/uv 的脚本，以及根 Python `scripts/*.py`；
 - 根 `pyproject.toml`、`uv.lock`、`.python-version`、`.gitignore`；
 - 根 Python CI 的 `.github/workflows/*.yml|yaml`；
 - 根替代依赖/锁文件新增；
