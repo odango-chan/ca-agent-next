@@ -338,6 +338,67 @@ steps:
 - 诊断目录：`$RUNNER_TEMP/review-context-diagnostics/`，不得放入上述三个正式输出文件。Job 开始时先创建该目录并写入 `run-context.txt`，记录 PR number、base SHA、head SHA、run ID 和 run attempt，确保即使早期步骤失败也有诊断 Artifact 可上传。
 
 Review Context gate 使用 `uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --suite review-context --output-dir "$RUNNER_TEMP/review-context-diagnostics/unittest-gate"`。诊断目录至少保留 `unittest-gate/review-context.json`、`unittest-gate/review-context.log`、`unittest-gate/summary.json`。生成器步骤执行时，必须将 stdout、stderr 分别保存为 `generator.stdout.log`、`generator.stderr.log`，将真实进程退出码保存为 `generator.exit-code`，并生成 `generator-output-manifest.txt`；manifest 对三个预期正式文件逐一记录文件名、PRESENT/MISSING 和字节数，不计算 hash，不复制文件内容。
+对应步骤必须按以下顺序实现（变量沿用 Workflow 已定义的 `PR_NUMBER`、`BASE_SHA`、`HEAD_SHA`）：
+
+```yaml
+- name: Prepare Review Context diagnostic evidence
+  if: always()
+  shell: bash
+  run: |
+    set -euo pipefail
+    diagnostics_dir="$RUNNER_TEMP/review-context-diagnostics"
+    mkdir -p "$diagnostics_dir/unittest-gate"
+    {
+      printf 'pr_number=%s\n' "$PR_NUMBER"
+      printf 'base_sha=%s\n' "$BASE_SHA"
+      printf 'head_sha=%s\n' "$HEAD_SHA"
+      printf 'run_id=%s\n' "$GITHUB_RUN_ID"
+      printf 'run_attempt=%s\n' "$GITHUB_RUN_ATTEMPT"
+    } > "$diagnostics_dir/run-context.txt"
+
+- name: Run Review Context unittest gate
+  shell: bash
+  run: |
+    set -euo pipefail
+    uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --suite review-context --output-dir "$RUNNER_TEMP/review-context-diagnostics/unittest-gate"
+
+- name: Generate review context
+  id: generate
+  shell: bash
+  run: |
+    set -euo pipefail
+    work_dir="$RUNNER_TEMP/review-context"
+    diagnostics_dir="$RUNNER_TEMP/review-context-diagnostics"
+    summary_file="$RUNNER_TEMP/review-context-summary.md"
+    rm -rf "$work_dir"
+    mkdir -p "$work_dir"
+    if uv run --no-sync --locked --group dev --extra plugins python scripts/review_context.py \\
+      --base "$BASE_SHA" \\
+      --head "$HEAD_SHA" \\
+      --out "$work_dir" \\
+      --summary "$summary_file" \\
+      --event-path "$GITHUB_EVENT_PATH" \\
+      > "$diagnostics_dir/generator.stdout.log" \\
+      2> "$diagnostics_dir/generator.stderr.log"; then
+      generator_rc=0
+    else
+      generator_rc=$?
+    fi
+    printf '%s\\n' "$generator_rc" > "$diagnostics_dir/generator.exit-code"
+    : > "$diagnostics_dir/generator-output-manifest.txt"
+    for name in 'review-scope.json' '评审上下文.md' '统一评审提示词.md'; do
+      file="$work_dir/$name"
+      if [ -f "$file" ]; then
+        bytes="$(wc -c < "$file" | tr -d '[:space:]')"
+        printf '%s\\tPRESENT\\t%s\\n' "$name" "$bytes" >> "$diagnostics_dir/generator-output-manifest.txt"
+      else
+        printf '%s\\tMISSING\\t0\\n' "$name" >> "$diagnostics_dir/generator-output-manifest.txt"
+      fi
+    done
+    exit "$generator_rc"
+```
+
+诊断 Artifact 上传步骤必须排在上述生成器步骤之后、成功 Summary 和正式 Artifact 上传步骤之前；使用 `if: always()`。正式 Artifact 仍只能在诊断 Artifact 上传成功、生成器成功且所有前置步骤成功时按 `if: success()` 上传。
 
 必须先上传诊断 Artifact，再写成功 Summary 和上传正式 Artifact。诊断 Artifact 的名称固定为 `review-context-diagnostics-pr-${PR_NUMBER}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}`，上传条件为 `if: always()`，路径仅为 `$RUNNER_TEMP/review-context-diagnostics/`，`if-no-files-found: error`，保留 30 天。它用于失败诊断，不是完成态交付物；即使 gate 或生成器失败，也必须尝试上传。
 
