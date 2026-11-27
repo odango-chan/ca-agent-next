@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.23\
+> 文档版本：0.2.24\
 > 状态：DRAFT（实施主状态）。PR #46 第二轮独立评审（1bf748db）：APPROVE_FOR_READY（原限定的 Compiler 设计及 AC-013-01 归档复核）。产品验收依各 AC 单列。
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-27\
@@ -382,19 +382,23 @@ SR-013 只有 AC-013-01～06 均达到各自通过条件，Compiler Release 有�
 - 精确 machine languageTarget、API 名称、字段、Schema 与 Golden 必须由 ca-skills / Compiler Owner 在正式 Issue/PR/Release 冻结；历史 Go/Python CEL PoC 可作为算法审计，但不能宣称 1.6.0 产品 PASS。
 - 相关设计门禁为 [SR-029](SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md)、[SR-004](SR-004-已发布技能包导入.md)、[SR-027](SR-027-技能Bundle构建与发布.md)。按 §9、§11 评审各阶段 READY。Compiler Release 是 AC-013-05 的交付结果；禁止把它列为 AC-013-02～04 或 AC-013-06 的启动条件。AC-013-06 使用按正式 Schema 生成的真实 Publisher 候选做联合验证，记录候选来源和受测 Compiler 提交；AC-013-05 另验发行资产。当前设计仍待独立评审。
 
-## 13. AC-013-07：原版 YAML Source Bundle 与独立 Adapter Link、执行期 Codec Result
+## 13. AC-013-07：原版 OpenAPI 3.0 直接引用与执行期 Codec Result
 
-新增独立设计验收 AC-013-07，**不追溯改变** AC-013-01～06 的既有评审状态。3GPP 的版本仅随正式 OpenAMSM 支持基线，ca-skills 在 SR-031 Phase A **原样代发布**受信 YAML 源文件/引用闭包，byte-for-byte 不作任何修改；**Phase A 产物不是自然可供 G.4 `$ref` 消费的 Schema-only Interface Package**。
+新增独立 AC-013-07，不追溯改变 AC-013-01～06 的既有评审状态。本 AC 撤销“必须先发布 G.4 Adapter 才能引用 3GPP 类型”的假设。SR-031 发布不可变 OpenAMSM OpenAPI Source Bundle；Compiler 通过显式 pin 的 dependency 直接解析原版 OAS3 Schema Component。Skill-owned Request 根仍是本地 G.4，外部 OAS3 Schema Object 按自身 dialect 解释，不转换、不投影、不改原件。
 
-| 子例 | 固定输入 | 必须的结果 |
+| 子例 | 固定输入 | 必须结果 |
 |---|---|---|
-| 07a 原版保护 | 以 OpenAMSM 固定源和发行物逐文件 byte compare；添加注释/换行/字段一个 byte 的反例 | 完全一致的 Source Bundle 才可发布；任何字节变化拒绝；不得自动 load/dump/rewrite 原版 YAML |
-| 07b 原版负例 | 将 TS29.502 原始 OpenAPI `#/components` / `oneOf` 等当作新 G.4 `requestSchema` 外部 `$ref` 直接 Link | 不能因为“已代发布”就绕过 G.4；fail-closed、无部分 Artifact |
-| 07c 可选 Adapter 正例 | 另行正式发布的 Schema-only Adapter B（0 Capability/0 Callable、G.4、非空 export、独立 identity / 同一 OpenAMSM Source Lock），Skill-owned Request 根精确引用其公共类型 | 在 B 真正发布后才能 Link 完整 closure、固定身份，不授予 Callable Scope；原版 YAML 未修改 |
-| 07d T1/T2 | T1 仅 Event/Request；T2 已获授权的 Codec READ 输出 Provider 正式 Output Schema，后继 Procedure 使用 | Request 不需 NAS-only 解码字段；`when` 不读 Result；越序 SourcePath 失败，Provider READ 1:1 |
-| 07e 失败隔离 | 缺 Adapter/Provider、跨 OpenAMSM 版本、重复 $id、未知 Schema keyword、旧语言、错误输出 enum/nullable | 对应消费子项 BLOCKED 或 Link 明确拒绝；Host Context 与 Adapter 身份不混合，不能动态 latest |
+| 07a Source Bundle pin | OpenAMSM commit、TS 29.502 / TS 29.571 blob、标准版本、Bundle manifest | Lock 唯一不可变；dynamic latest / 混源 / 缺文件拒绝 |
+| 07b operation / schema ref | TS 29.502 `PostSmContexts` → `multipart/related` → `jsonData` → `#/components/schemas/SmContextCreateData`；跨文件 CommonData refs | 原生 OAS3 解析；所有可达 refs 同一 snapshot；原件 byte 不变 |
+| 07c dialect boundary | Skill G.4 root 内精确引用 OAS3 `components/schemas` | 本地按 G.4，外部按 OAS3 Schema Object；`nullable` / `oneOf` / `anyOf` / `allOf` / `format` 语义保留，不投影 |
+| 07d type inference | CEL 读取 OAS3 Schema Component 字段，含 union / optional / nullable / 不同分支类型 | 只暴露所有分支类型确定字段；歧义字段静态拒绝 |
+| 07e stage availability | T1 when / Request；T2 已选 Procedure Codec READ Output / SourcePath | when 不读 T2 Result、不调用 Codec；T2 Result 只能由后继 Node 显式引用 |
+| 07f failure isolation | 缺 dependency、错误 alias/path/pointer、path traversal、nested ref 缺失、unsupported OAS keyword、跨 source SHA、dynamic latest | `SCHEMA_INVALID` / 稳定诊断，Build 无部分 Artifact；不回退 Adapter / projection |
+| 07g Bundle / Verify | 固定 Source Bundle + Skill Request + Provider Output Schema + Host Context / Owner dependencies | 离线 Build / Verify；Lock 保存闭包；无 Codec Skill 不强制依赖 Source Bundle / Codec |
 
-上述内容由 Compiler Owner 在正式 1.6.0 Package Schema / Golden、Check/Build/Verify CLI、Go/WASM/Chromium 同源测试中冻结。未发布前 `AC-013-07=BLOCKED/NOT_RUN`；原版代发布 AC-031-01～03 可以独立验收。本 SR 的先前 AC-013-06 **Host Context 只能由 contexts 引用**不变，不能把该限制推广到另行发布的 Adapter 包。详见 [EC01.3GPP 设计](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。
+OpenAPI operation / multipart ingress 验证由 SR-010 负责；Compiler 负责 Request Schema 跨 dialect 引用和类型检查。NAS / NGAP Output Schema 由 SR-026 Provider 发布，不能用 SBI binary slot 代替。一个 Codec Capability 是否可用单一封闭 Output Schema + 固定 enum selector 表达多 Profile，必须以 Provider Golden 证明；否则另提设计，不能静默增加 Callable 或放宽 1:1。
+
+**产品门槛**：正式 Source Bundle dependency kind、URI / JSON Pointer wire 表示、Resolver / Validator 版本、Build DTO / Lock 字段和 Golden 未冻结前，`AC-013-07=BLOCKED/NOT_RUN`。SR-031 byte-compare 可独立验收，不得升级 Compiler AC。
 
 ## 修订记录
 
@@ -436,3 +440,4 @@ SR-013 只有 AC-013-01～06 均达到各自通过条件，Compiler Release 有�
 | 2026-11-27 | 0.2.20 | Codex / GPT-6 | 评审入口 | 回填独立评审批准评议的具体范围 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
 | 2026-11-27 | 0.2.22 | ChatGPT / GPT-6 | 3GPP Schema 与阶段输入补充 | 明确公共 Schema-only 导出、选择期 Request 与执行期 Codec Result 的 Link / 业务字段来源 | 关闭 Create 选择前依赖 NAS 解码的循环、固定跨包类型门禁 | IR-009；Issue #47；SR-031/026/013 |
 | 2026-11-27 | 0.2.23 | ChatGPT / GPT-6 | 本轮 IR-009 设计修正 | 固定 OpenAMSM 版本 + 原版 YAML 逐字节代发布；显式区分可选 Adapter 与 Provider Codec 输出 | 落实原版 YAML 不得改动、消除误把原版当 G.4 的风险 | Issue #47；SR-031/026/013 |
+| 2026-11-27 | 0.2.24 | ChatGPT / GPT-6.2 | AC-013-07 | 改为原版 OAS3 组件直接引用；新增跨 dialect Resolver、闭包、语义保真、CEL 类型推导和 T1/T2 负例 | 撤销强制 Adapter 假设，避免复制或改写标准 | IR-009；Issue #47；SR-031/010/026/027 |

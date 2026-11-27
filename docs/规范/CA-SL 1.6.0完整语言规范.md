@@ -1,7 +1,7 @@
 # CA-SL 1.6.0 完整语言规范（中央设计稿）
 
 > 文档类型：CA-SL 作者语言规范（中央规范性设计稿）
-> 文档版本：0.1.4
+> 文档版本：0.1.5
 > 语言版本：CA-SL 1.6.0
 > languageTarget 候选：connectionagent.io/v1.6.0（本设计建议值；发布前由 ca-skills 与 Compiler Owner 在正式 Schema / Golden 中确认）
 > 状态：**DRAFT / REVIEW_REQUESTED**；未发布、未冻结、不得作为已发布产品规范
@@ -270,19 +270,29 @@ Owner 不得声明 Runtime 保留的 DENIED、OUTCOME_UNKNOWN、COMMITTED 或 In
 
 ## 12. Request Schema / CEL 的 JSON Schema Profile
 
-本设计采用 JSON Schema Draft 2020-12 的显式有限子集；正式发布前必须由 ca-skills / Compiler 在 Schema / Golden 中冻结完全相同的关键字集合。允许的断言关键字：
-- $ref、type、properties、required、additionalProperties、items、minItems、maxItems、minLength、maxLength、minimum、maximum、exclusiveMinimum、exclusiveMaximum、enum、const。
+本地 Request Schema 采用 JSON Schema Draft 2020-12 的显式有限子集；正式发布前由 ca-skills / Compiler 在 Schema / Golden 冻结关键字集合。允许的本地断言关键字：`$ref`、`type`、`properties`、`required`、`additionalProperties`、`items`、`minItems`、`maxItems`、`minLength`、`maxLength`、`minimum`、`maximum`、`exclusiveMinimum`、`exclusiveMaximum`、`enum`、`const`。
 
-允许的非断言注解：
-- $schema、$id、title、description、default、examples。default 不得合成输入值。
+允许的本地非断言注解：`$schema`、`$id`、`title`、`description`、`default`、`examples`。default 不得合成输入值。本地 G.4 不支持 `$defs`、`definitions`、`allOf`、`anyOf`、`oneOf`、`not`、`if/then/else`、`pattern`、`patternProperties`、`unevaluatedProperties`、`contains`、`prefixItems`、`format`、动态引用和未声明扩展关键字。
 
-不支持：
-- $defs、definitions、allOf、anyOf、oneOf、not、if/then/else、pattern、patternProperties、unevaluatedProperties、contains、prefixItems、format、动态引用和扩展关键字。
-- type 仅允许单值 string / integer / number / boolean / object / array / null，或恰好两个成员的 [T, "null"]。
-- additionalProperties 只允许 true / false；用于 SourcePath 的对象必须闭合并声明 additionalProperties=false。
-- items 仅允许单一 Schema，不允许 tuple 数组。
-- $ref 必须解析到精确、独立的 Schema $id 和受信依赖快照；不支持片段引用和循环闭包。
-- 未知关键字不得忽略；不支持的现实 Owner Schema 必须由 Owner 发布受支持的正式投影，Skill 不得复制影子契约。
+- `type` 仅允许单值 string / integer / number / boolean / object / array / null，或恰好两个成员的 [T, "null"]。
+- `additionalProperties` 只允许 true / false；用于 SourcePath 的本地对象必须闭合并声明 additionalProperties=false。
+- `items` 仅允许单一 Schema，不允许 tuple 数组。
+- 本地 G.4 引用必须解析到精确 Schema ID 和受信依赖快照；循环引用拒绝。
+
+### 12.1 显式 OpenAPI 3.0 外部类型引用（IR-009）
+
+CA-SL 1.6.0 增加受限的跨 dialect 引用入口，不是把 OpenAPI 3.0 并入 G.4：
+
+1. Skill 的 `requestSchema` 根始终由 Skill 自己声明，根及本地 Schema 节点仍遵循上面的 G.4 子集。
+2. 仅当 Skill 显式声明并锁定 OpenAMSM OpenAPI Source Bundle dependency 时，本地 Schema 节点才可引用该 Bundle 中精确的 OAS 3.0 `components/schemas` 目标；引用包含源文件与 JSON Pointer，并经 dependency alias 绑定唯一快照。
+3. 外部目标按 OpenAPI 3.0 Schema Object 语义解析，不套用 G.4 白名单，不把 `nullable`、`oneOf`、`anyOf`、`allOf`、`format` 重写、丢弃或降级；嵌套 `$ref` 在同一固定 Bundle 闭包中递归解析。
+4. `requestSchema` 不得直接引用 Path Item、Operation、RequestBody、Response 或完整 multipart envelope；完整 operation / multipart 由 Plugin 原生 OAS3 ingress consumer 负责。
+5. 禁止任意网络 URL、dynamic latest、未声明依赖、路径穿越、Bundle 外文件、未解析 pointer、跨 OpenAMSM commit 混源和循环闭包；运行期不得下载未锁定资源。
+6. Compiler / Host 必须采用 dialect-aware Resolver / Validator；CEL 静态类型推导只暴露所有可达分支上类型一致且确定的字段。union 分支类型不一致或字段不确定时禁止猜测。
+7. 可达 OAS3 Schema 出现尚未支持的关键字 / 语义时，以稳定 `SCHEMA_INVALID` 失败并输出文件 / pointer / SourcePath；不得静默忽略或生成部分 Artifact。
+8. dependency alias、URI / pointer wire 编码、Source Bundle identity 与 Lock 字段由 ca-skills / Compiler Owner 在正式 CA-SL 1.6.0 Schema / Golden 冻结；本设计不预造机器字段名。
+
+此规则只解决原版 OpenAPI 组件的精确类型引用；不允许把完整 SBI multipart 复制进 Skill，不让 when 调用 Codec，也不改变 Host Context 只能通过 `Contract.contexts` 引用的约束。
 
 ## 13. 静态检查与稳定诊断
 
@@ -375,15 +385,17 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 - SR-027 负责新 Bundle；SR-004～006 负责导入、Catalog、Resolver；F04 负责 Runtime Action Boundary；F09 / SR-016 负责 Studio。
 - 未正式发布前，所有产品实现和运行验收保持 NOT_RELEASED / NOT_RUN；本设计通过不代表实施 READY。
 
-## 19. 原版 3GPP YAML 与 Skill 分阶段 Schema 的区分（IR-009）
+## 19. OpenAMSM 原版 OpenAPI 直接引用与 Skill 分阶段输入（IR-009）
 
-**用户新裁决优先**：3GPP 的具体版本**只**以 OpenAMSM 实际使用/支持的固定 OpenAPI YAML 目录与文件证据为依据。ca-skills / SR-031 原样代发布该文件及完整相对引用闭包；原始 YAML 的任意一个 byte（包括空白、注释、CRLF、路径/引用）均不得修改。原件是**Source Bundle**，不是自动符合本语言 §12 G.4 Profile 的 JSON Schema；不可将它无条件作为 `requestSchema` 的直接外部 `$ref` 导出。
+**原版来源**：SR-031 逐字节代发布 OpenAMSM 实际支持的 OAS 3.0 YAML 与所选 operation / Schema Component 的完整可达引用闭包。原始文件和相对 `$ref` 一字不改。Source Bundle 不是 Capability Package，也不是自动的 G.4 Schema-only Package。
 
-CA-SL 1.6.0 作者仍使用 **Skill 自有的关闭 `requestSchema` 根**，其中仅要求**选择前已得到的 Plugin Event 字段**。若确需公共类型并经独立评审，另用不同文件、不同 Package identity 发布**显式标记的 G.4 Adapter Schema-only Interface Package**（0 Capability/0 Callable、非空正式 Schema export、精确来源锁）；其引用必须来自声明的依赖和不带 fragment 的完整 $id。**Adapter 不属于 3GPP 原始 YAML，不得修改/覆盖原件**。Host Context Schema-only Package 仍**只**经 `Contract.contexts` 引用。
+**直接引用**：Skill-owned `requestSchema` 根仍是本地 G.4 闭合对象；显式依赖并 pin Source Bundle 后，可直接引用原版文件的精确 `#/components/schemas/...`。Compiler 对外部目标按 OAS 3.0 Schema Object dialect 解析，保留原语义；不生成 Adapter / Projection。缺少 Resolver、运行期 Validator 或 Golden 时相关 AC BLOCKED / NOT_RUN。
 
-`when` 永远只能读取 T1 `event.type` / `input`；不能调用 Codec 或访问输出。被选 Skill 的 Procedure 在 T2 使用已授权 Codec READ 获取其受验证消息 Profile 的 Result，类型由 **Provider 正式发布的 Output Schema** 定义；若引用 Adapter 则须固定同一 OpenAMSM 支持源版本。NAS-only PDU Session Type、SSC mode 等不能在 T1 无来源时成为 Request 必填；必须在 T2 解码后用显式 SourcePath 验证。Codec Result 不能替代 Owner Receipt / Commit Proof。无正式 Adapter/Provider 时仅对应消费路径 `BLOCKED`，不能放宽 G.4 或生成影子标准 YAML。
+**Ingress 与执行期分离**：Plugin T0 依据 TS 29.502 operation 校验 SBI JSON / multipart / Content-ID / N1/N2 binary slots；T1 `when` 只读取已规范化且到场的 Event / Request 字段。被选 Skill 的 Procedure 在 T2 才能调用授权 Codec READ，消费 Provider 正式 Output Schema。NAS-only PDU Session Type / SSC mode 不得在 T1 无来源时成为必填；Codec Result 不能替代 Owner Receipt / Commit Proof。
 
-规范详见 [EC01.3GPP 原版代发布与分阶段输入设计](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)；SR-031 Phase A 原样代发布与 Phase B 独立适配分别验收。CA-SL 1.6.0 唯一新语言，完全无旧兼容。
+**NAS / NGAP**：TS 29.502 binary slot 不定义 NAS IE / NGAP ASN.1 字段。Result Schema 由 SR-026 Provider 基于 OpenAMSM 实际支持的 TS 24.501 / TS 38.413 来源和已资格化消息 Profile 发布；未发布的消息类型保持 BLOCKED，不伪造官方 YAML。
+
+Host Context Schema-only Package 仍只经 `Contract.contexts` 引用，与 OpenAPI Source Bundle 不混同。CA-SL 1.6.0 唯一新语言，不提供旧版兼容。
 
 ## 修订记录
 
@@ -394,3 +406,4 @@ CA-SL 1.6.0 作者仍使用 **Skill 自有的关闭 `requestSchema` 根**，其�
 | 2026-11-26 | 0.1.2 | GPT-6（ChatGPT） | 文档头、修订记录 | 补齐根 Agent.md review_scope 标准声明，保持完整规范进入独立评审时的统一治理范围 | 避免正式 CA-SL 规范稿因缺少全局评审范围而无法生成 Review Context | Issue #12/#40；PR #46 |
 | 2026-11-27 | 0.1.3 | ChatGPT / GPT-6 | 3GPP Schema 与阶段输入补充 | 明确公共 Schema-only 导出、选择期 Request 与执行期 Codec Result 的 Link / 业务字段来源 | 关闭 Create 选择前依赖 NAS 解码的循环、固定跨包类型门禁 | IR-009；Issue #47；SR-031/026/013 |
 | 2026-11-27 | 0.1.4 | ChatGPT / GPT-6 | 本轮 IR-009 设计修正 | 固定 OpenAMSM 版本 + 原版 YAML 逐字节代发布；显式区分可选 Adapter 与 Provider Codec 输出 | 落实原版 YAML 不得改动、消除误把原版当 G.4 的风险 | Issue #47；SR-031/026/013 |
+| 2026-11-27 | 0.1.5 | ChatGPT / GPT-6.2 | §12、§19 | 保留本地 G.4 有限子集，增加 pin 后 OAS3 Schema Component 的 dialect-aware 直接引用；移除强制 Adapter | 遵循原版 OpenAPI 直接引用、不重写标准 | IR-009；Issue #47；SR-013/031 |
