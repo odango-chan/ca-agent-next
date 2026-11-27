@@ -76,7 +76,7 @@ FORBIDDEN_COMMANDS = (
 BARE_PYTHON_PROJECT_COMMAND = re.compile(
     r"\b(?:python(?:\d+(?:\.\d+)?)?|py(?:\.exe)?)\s+"
     r"(?:-m\s+(?:unittest|pytest|compileall|ca_agent_next)\b|"
-    r"(?:scripts|tests)/)",
+    r"(?:scripts|tests)/|[^\s]+\.py(?:\s|$))",
     re.IGNORECASE,
 )
 BARE_TEST_RUNNER = re.compile(r"(?<![\w./-])pytest(?:\s|$)", re.IGNORECASE)
@@ -219,7 +219,10 @@ def command_violations(added_lines: Iterable[tuple[str, str]]) -> list[str]:
             elif has_no_project:
                 is_policy_gate_test = (
                     path == ".github/workflows/python-toolchain-policy.yml"
-                    and "-s tests -p test_python_toolchain_policy.py" in line
+                    and (
+                        "python_toolchain_policy.py" in line
+                        or "-s tests -p test_python_toolchain_policy.py" in line
+                    )
                 )
                 if not is_policy_gate_test:
                     violations.append(
