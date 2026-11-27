@@ -1,9 +1,9 @@
 # CA-SL 1.6.0 完整语言规范（中央设计稿）
 
 > 文档类型：CA-SL 作者语言规范（中央规范性设计稿）
-> 文档版本：0.1.3
+> 文档版本：0.1.4
 > 语言版本：CA-SL 1.6.0
-> languageTarget 候选：connectionagent.io/v1.6.0（本设计建议值；发布前由 ca-skills 与 Compiler Owner 在正式 Schema / Golden 中确认）
+> languageTarget：`connectionagent.io/v1.6.0`（Next 中央设计冻结目标；尚未由 ca-skills 发布，不代表产品已符合）
 > 状态：**DRAFT / REVIEW_REQUESTED**；未发布、未冻结、不得作为已发布产品规范
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 修订日期：2026-11-27
@@ -14,6 +14,7 @@
 本文是 CA-SL 1.6.0 的完整中央作者语言设计稿，覆盖源码角色、Contract、Procedure、PredicateSet、Context、Request Schema、Capability、when、Wait、Evidence、Outcome、静态检查和版本边界。它不是 ca-skills 已发布的语言规范，也不授权下游实现。
 
 历史 [CA-SL v1alpha5 完整语言规范](CA-SL%20v1alpha5完整语言规范.md)及其 Release Record 仅作只读来源审计；不得把本文理解为 v1alpha5 的兼容解析器、别名、自动迁移或双轨实现。新 1.6.0 源码必须按本文重新编写。
+**when 的唯一作者位置。** 可选 `when` 是 `assurance/contract.yaml` 的顶层字段；不得放入 `SKILL.md` Front Matter，不得放入 `procedure.yaml` 或 `predicates.yaml`。无 Assurance 的 SKILL.md-only Skill 不调用 Compiler，也不声明 `when`。
 
 ## 1. 规范用语、范围与原则
 
@@ -383,3 +384,4 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 | 2026-11-26 | 0.1.1 | GPT-6（ChatGPT） | §4、§16、修订记录 | 明确 requestSchema 指向 Skill 自有 Schema，Host Context Schema-only Package 仅通过 Contract.contexts 引用 | 避免将 Host Context Package 当作 Request Schema 根，统一 Contract.requestSchema 与 contexts 的不同所有权 | Issue #12/#40；SR-029、SR-030；PR #46 |
 | 2026-11-26 | 0.1.2 | GPT-6（ChatGPT） | 文档头、修订记录 | 补齐根 Agent.md review_scope 标准声明，保持完整规范进入独立评审时的统一治理范围 | 避免正式 CA-SL 规范稿因缺少全局评审范围而无法生成 Review Context | Issue #12/#40；PR #46 |
 | 2026-11-27 | 0.1.3 | kimi-k3.1-pro | §2、修订记录 | 将 schemas、scripts 移出 assurance，与 assurance、references 同列于 Skill 根目录 | 修正目录树与 EC01 作者源布局不一致，明确辅助资源不属于 assurance 子目录 | Issue #95；SR-023 |
+| 2026-11-27 | 0.1.4 | GPT-6.2（ChatGPT） | 文档头、when 作者位置、修订记录 | 将 `connectionagent.io/v1.6.0` 从候选值提升为中央设计冻结目标，并明确 when 只位于 `assurance/contract.yaml` 顶层 | 避免生产仓在实现时重新决定 languageTarget 或把 when 错放到 SKILL.md | Issue #113；SR-013；SR-027；SR-029 |

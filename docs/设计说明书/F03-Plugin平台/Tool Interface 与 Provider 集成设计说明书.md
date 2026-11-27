@@ -1,7 +1,7 @@
 # Tool Interface 与 Provider 集成设计说明书
 
 > 文档类型：功能子模块设计说明书
-> 文档版本：0.4.4
+> 文档版本：0.4.5
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 功能归属：F03.05 — Tool Plugin 集成
 > 交叉功能：F03.01～F03.04、F04.01、F04.05、F05.02、F06
@@ -401,6 +401,65 @@ Next Runtime 必须从已验证 sidecar 中所有 Mutation 的 `commitProof.reco
 - Codec 不拥有 Skill 选择、网络传输、Owner 状态或 Runtime；不建立独立 Codec Plugin/Manager。
 - 只能使用发布契约明确标记并有证据支持的消息子集。reencodeVerified 不等于 qualified；不合格消息不得因 round-trip 相等而升级。
 - ca-client-tools PR #39 当前为 OPEN，Phase B facade/worker 证据已记录，Phase C Consumer Migration 未开始。本 SR 不依赖 PR #39 合并，不声明 Next 已消费该 Codec。
+### 8.2.1 Codec 公开 READ Operation（SR-026）
+
+Codec 的公开入口是现有 `ca-client-tools` Provider Interface Package 中的一个本地 READ Callable Operation；它不是第二个 Plugin、Manager 或远程网络 Tool。Skill 只声明 Capability，Runtime 仍通过现有 Provider / Tool Action Boundary 派发；Codec 不执行 SBI 请求、不产生 Owner Mutation，也不替代 Owner 的业务解析能力。
+
+**固定身份（中央设计目标，尚未发布）：**
+
+| 项目 | 唯一目标值 |
+|---|---|
+| Capability ID | `protocol.nas.5gsm.release-request.decode` |
+| Callable ID | `ca-client-tools.codec.nas.5gsm.release-request.decode` |
+| Interface Package ID | `urn:wtlab:ca-client-tools:openamsm-sbi-interface` |
+| Interface Package / Provider 目标版本 | `2.0.0`（11→3 的破坏性公开接口收敛；纯数字 SemVer） |
+| Runtime Bindings Sidecar | `ca.tool-provider-runtime-bindings/v2` |
+| Provider Wire Protocol | `ca-client-tools.provider/v2`（不升级线协议） |
+| Host Artifact Channel | `ca-host.artifact-store/v1` |
+| 首批消息 | NAS 5GSM PDU Session Release Request，消息类型 `0xD1` / `PDUSessRelReq` |
+
+Provider Interface Package 的公开闭包固定为 3 Capability / 3 Callable：
+
+| Capability | Callable |
+|---|---|
+| `openamsm.smf.mas.context.read` | `ca-client-tools.openamsm.smf.mas.context.read` |
+| `openamsm.nf.metrics.read` | `ca-client-tools.openamsm.nf.metrics.read` |
+| `protocol.nas.5gsm.release-request.decode` | `ca-client-tools.codec.nas.5gsm.release-request.decode` |
+
+前两项分别用封闭的 `contextKind`、`resourceKind` selector 收敛历史私有 backend 路由；第三项是本 SR 新增的协议级 Codec 能力。每个 Capability 只能绑定一个 Callable；Callable 内部可使用私有 backend 选择，但 backend ID 不进入 Skill 作者源或公开 Capability 集合。
+
+**输入契约：**公开 `inputSchema` 是 `type: object`、`properties: {}`、`additionalProperties: false` 的空闭合对象。原始 NAS 字节不是 Skill / LLM 参数，不接受 Base64、文件路径或任意 URL。Host 在完成 Capability 授权和公开 Schema 校验后，通过 Provider Runtime Bindings 私有参数注入当前 Invocation 的材料：
+
+~~~yaml
+apiVersion: ca.tool-provider-runtime-bindings/v2
+privateArguments:
+  - name: n1_sm
+    source: PRIVATE_MATERIAL
+    artifact:
+      direction: INPUT
+      slot: n1Message
+      mediaType: application/vnd.3gpp.5gnas
+      required: true
+~~~
+
+Provider `catalog` 对应 descriptor 必须声明 `artifactSlots.inputs`，pointer 为 `/n1_sm`、slot 为 `n1Message`、mediaType 为 `application/vnd.3gpp.5gnas`。Host 只注入绑定到当前 Invocation 的 `artifactRef`；该字段不进入公开 Input Schema，也不允许 Skill 自行构造。未配置 Artifact Channel、slot 不匹配或引用不属于当前 Invocation 时，在派发前 fail-closed。
+
+**输出契约：**Provider Interface Package 导出闭合的 `schemas/codec/nas-pdu-session-release-request-output.schema.json`。字段采用 3GPP 语义命名，不直接暴露 Free5GC Go struct 字段名或 `ProjectToJSON` 的反射字段名：
+
+- `protocol` 固定 `NAS`；`messageType` 固定 `PDU_SESSION_RELEASE_REQUEST`；`messageTypeCode` 固定 `209`。
+- `header` 必含 `extendedProtocolDiscriminator`（46）、`pduSessionIdentity`（1～15）和 `procedureTransactionIdentity`（0～254）。
+- `message` 只暴露首批已资格化的结构字段；首批 Golden 未覆盖的 IE（包括当前 Codec 标记为 lossy / NOT_QUALIFIED 的 ePCO）不得作为可用业务字段返回。
+- `qualification` 必含 `complete`、`qualified`、`rawPreserved`、`structuralParse`、`projectionValid`、`reencodeEligible`、`reencodeVerified`、`consumedBits`、`totalBits` 和 `ieToDo`。
+- `status` 使用 `SUCCESS`、`PARTIAL`、`UNSUPPORTED_MESSAGE`、`UNSUPPORTED_IE`、`DUPLICATE_IE`、`INVALID`、`NOT_QUALIFIED`；`diagnostics` 使用稳定 code/message，并可带 IEI / offset。
+- 不返回原始字节或 Base64；只返回 `rawLength` 和保留/往返验证标志。原始 Artifact 仍由 Host Artifact Store 持有。
+
+只有 `status=SUCCESS` 且 `complete=true`、`qualified=true`、`rawPreserved=true`、`projectionValid=true`、`reencodeVerified=true` 时，Runtime 才能把解码结构作为有效 Observation。其他状态是显式结果，不得提升为 PASS；传输、Artifact 引用或 Provider 失败仍按 Provider READ 错误处理。
+
+**执行路径：**Host 注入 invocation-scoped artifact reference → Provider Artifact Channel 读取原字节 → Provider 进程内直接调用 Go `protocol/codec` NAS Facade → 显式映射到上述 3GPP Output Schema → 返回 READ Observation。Provider 不启动 Python `codec-worker` 子进程，不向远端 SBI 转发，不修改原始 Artifact。Python Worker 仅是独立开发/消费入口，不是 Agent Runtime 依赖。
+
+**首批范围与反例：**有效向量 `2e 05 01 d1`（PSI=5、PTI=1、Release Request）必须完整解析、字节往返一致并满足资格标志；截断输入 `2e 05 01` 必须 `INVALID`；Release Complete 向量 `2e 05 07 d4` 对本 Capability 必须 `UNSUPPORTED_MESSAGE` / `MESSAGE_TYPE_OUT_OF_SCOPE`，即使底层库能识别该消息也不得越过本次公开范围。其他 NAS / NGAP 类型不属于本次发布范围，扩展必须新增中央设计与 Golden，不得从底层库支持列表自动扩展公开 Schema。
+
+该 Codec Capability 与 Owner 的 `mas.ssm.n1.modify.parse`、`mas.ssm.n1.release.parse` 是不同层次：后两者仍是 Owner 业务能力；本 Codec 只提供协议级 READ 解码，不替代 Owner Receipt、Reconcile、状态判定或提交证明。
 
 ## 9. 失败语义
 
@@ -521,7 +580,7 @@ Codec PR #39 的固定候选 `eb1169fe1d0e2e691d101908aad08ee8801da754` 在 `pro
 
 ### 12.3.1 Codec Capability 公开边界
 
-SR-026 在两个通用 READ Capability 之外新增一个 Codec Capability / Callable，首批仅发布 NAS Decode 的已冻结消息子集。Provider 新公开面为两个通用 READ 1:1 加一个 Codec 1:1，合计 **3 Capability / 3 Callable**。若 Publisher 拆包，跨包合计仍须 3/3，Codec 自身必须 1/1。不得把两个通用 READ 的 2/2 误报为包含 Codec 的最终总数。Codec Capability ID、Input / Output Schema、支持消息子集和 Package 归属由 SR-026 / Publisher 在发布前冻结；不得沿用旧 11 个 READ Callable 作为新 Codec 接口。
+SR-026 在两个通用 READ Capability 之外新增一个 Codec Capability / Callable，首批仅发布 NAS Decode 的已冻结消息子集。Provider 新公开面为两个通用 READ 1:1 加一个 Codec 1:1，合计 **3 Capability / 3 Callable**。若 Publisher 拆包，跨包合计仍须 3/3，Codec 自身必须 1/1。不得把两个通用 READ 的 2/2 误报为包含 Codec 的最终总数。Codec Capability ID、Callable ID、首批 NAS 消息范围、Input / Output Schema、Artifact slot/mediaType 与 Package identity 已由中央设计在 SR-026 固定；Provider Owner 负责按该设计实现，任何变更必须先回到 Next 修订。
 
 ### 12.4 Provider / Owner Package 的职责
 
@@ -590,3 +649,4 @@ Runtime Action 以 Capability ID 为 Skill / Procedure 作者侧入口。Runtime
 
 | 2026-11-26 | 0.4.2 | GPT-6（ChatGPT） | 1.6.0 Capability / Codec 目标 | 修正 Skill 仅声明 Capability，补齐 Codec 第三个 1:1 公开能力并区分历史 Provider 2/11 | 修正历史 Callable-only 描述和 Provider 能力基数遗漏 | Issue #12/#40；SR-025/026/030 |
 | 2026-11-27 | 0.4.3 | Codex / GPT-6 | Provider 一对一映射 | 区分查询 2/2 与包含 Codec 的 3/3 | 与 SR-029、F06 的发布范围对齐 | Issue #12，PR #46 |
+| 2026-11-27 | 0.4.5 | GPT-6.2（ChatGPT） | §8.2.1、§12.3.1 | 固定 Codec 本地 READ Operation、Capability/Callable 身份、Artifact Channel 私有输入、NAS 首批范围与资格结果语义；区分协议 Codec 与 MAS Owner Parse | 将“等待生产者发布接口”改为中央先定义、生产仓按契约实现；避免把底层库支持面误当公开能力 | Issue #113；SR-026；SR-029 |
