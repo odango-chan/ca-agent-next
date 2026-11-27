@@ -1,13 +1,13 @@
 # SR-025：MAS Owner Development Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.9
+> SR 版本：0.1.10
 > 状态：READY
 > 创建日期：2026-11-25
 > 所属阶段：外部 Publisher 实施移交
 > 上游需求：[IR-006](../IR/IR%20总登记册.md#ir-006)
 > 功能：F03.05 / EC03（消费方关联 F09.07）
-> 设计依据：[F03.05 Tool Interface / Provider 设计](../../docs/设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) v0.3.9；[F09 §4.5](../../docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md#45-两个-contract-root-的正式-publisher-输出) v0.3.11；[SR-015](SR-015-工具契约设计移交.md)；[Compiler v2.1.0 Development BuildRequest](https://github.com/odango-chan/ca-skill-compiler/blob/v2.1.0/internal/compiler/development_request.go)
+> 设计依据：[F03.05 Tool Interface / Provider 设计](../../docs/设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) v0.3.9；[F09 §4.5](../../docs/设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md#45-两个-contract-root-的正式-publisher-输出) v0.3.12；[SR-015](SR-015-工具契约设计移交.md)；[Compiler v2.1.0 Development BuildRequest](https://github.com/odango-chan/ca-skill-compiler/blob/v2.1.0/internal/compiler/development_request.go)
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：Provider v2 重构、Runtime Binding 重构、Owner Contract 语义修改、生产级 Trust/Admission/签名或额外包完整性体系
 
@@ -136,3 +136,4 @@
 | 2026-11-26 | 0.1.7 | GPT-6.2（ChatGPT） | §7 | 创建并关联 ca-client-tools 实施 Issue #43；明确 SR-025 已 READY、目标仓实施尚未开始 | 完成 SR READY → 目标仓 Issue 的治理交接，不提前声称代码或发布已实施 | IR-006；SR-025；ca-client-tools #43 |
 | 2026-11-27 | 0.1.8 | GPT-6.2（ChatGPT） | §1、§7 | 将 SR-025 v0.1.7 READY 设计基线及 ca-client-tools #43 OPEN 状态纳入恢复分支；重新核对目标仓 main `7bcb261` 与 Issue #43，未发现 Publisher 已实施证据 | 恢复此前未进入恢复分支的有效设计修订，同时明确本轮仅做文档整合，不宣称实施或发布完成 | Issue #53；Issue #12；IR-006；ca-client-tools #43；F03.05 v0.3.9；F09 v0.3.9 |
 | 2026-11-27 | 0.1.9 | GPT-6.2（ChatGPT） | §1、§3、§7 | 将 F09 设计依据更新至 v0.3.11；将未来 Capability-first 方向统一表述为 CA-SL 1.6.0 NOT_RELEASED、准确 languageTarget 待正式冻结；保留当前 v1alpha5 + Owner v1alpha4 Publisher 输入 | 消除未冻结的 v1alpha6 机器版本猜测，避免未来设计污染当前 READY Publisher 契约 | Issue #53；Issue #40；PR #45；SR-029；F09 v0.3.11；ca-client-tools #43 |
+| 2026-11-27 | 0.1.10 | GPT-6.2（ChatGPT） | 文档头 | 将 F09 §4.5 权威设计引用更新至 v0.3.12 | 保证 Publisher 输入契约引用当前 F09，而不改变 SR-025 READY 与当前 v1alpha5 + Owner v1alpha4 发布输入 | Issue #53；F09 v0.3.12；SR-025；ca-client-tools #43 |
