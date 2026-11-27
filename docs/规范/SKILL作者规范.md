@@ -626,6 +626,6 @@ Apply 前仍须由用户确认，并对同一候选源码与依赖锁执行正�
 | 2026-11-27 | 0.1.6 | GPT-6.2（ChatGPT） | §3、§11 | 明确 LLM Script Action 同时受 Registry `llmInvocable` 与 Host `scriptExecution.llmEnabled`（默认 false）约束 | 防止仅靠 Skill 包内标记就意外暴露 Host 脚本执行能力 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.7 | GPT-6.2（ChatGPT） | §3、§11 | 删除逐脚本 `llmInvocable` 和 Host `scriptExecution.llmEnabled`；LLM 与 Assurance 共用 Script Runner | 让 Demo 的模型调用能力与确定性执行能力一致，避免重复授权配置 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.8 | GPT-6.2（ChatGPT） | §3～§6、§7、§10～§11 | 删除作者级 Node-entry Wait / await / polling 规则；补齐完整正向 Skill 示例、共享资源读取和 transform / predicate 全 Registry 调用原则 | 回归既定 CA-SL 作者语法边界，证明作者仅凭规范可写出无 Wait 的 1.6.0 Skill | Issue #49；IR-008；SR-032 |
-| 2026-11-27 | 0.1.9 | GPT-6.2（ChatGPT） | §2～§4、§6、§9～§10 | 将 `when` 从 `assurance/contract.yaml` 移至 SKILL.md Front Matter，限定仅有 Assurance 的 Skill 可声明；无 Assurance Skill 不声明 when | 对齐既定 Skill 入口决策，避免无 Assurance 包引入未经 Compiler 检查的 CEL 选择条件 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.1.9 | GPT-6.2（ChatGPT） | §2～§4、§6、§9～§10 | 将 `when` 从 `assurance/contract.yaml` 移至 SKILL.md Front Matter，限定仅有 Assurance 的 Skill 可声明；无 Assurance Skill 不声明 when | 对齐既定 Skill 入口决策，避免无 Assurance 包引入未经 Compiler 检查的 CEL 选择条件；历史错误入口判断，已由 0.2.0 撤销，不构成兼容方案| Issue #49；IR-008；SR-032 |
 
 | 2026-11-27 | 0.2.0 | GPT-6.2（ChatGPT） | §3～§4、§6.7、§9～§10、修订记录 | 将 `when` 恢复为 assurance/contract.yaml 顶层唯一入口；SKILL.md Front Matter 不声明 when；拆分 MAS 自定义 QoS 示例与 3GPP 原版 OpenAPI Create 示例，并将 requestType 修正为字符串枚举 | 撤销误引入的 Front Matter 方案；避免把自定义字段误当作 3GPP SBI Schema | Issue #49；IR-008/009；SR-013/031/032；F02/F08/F09 |
