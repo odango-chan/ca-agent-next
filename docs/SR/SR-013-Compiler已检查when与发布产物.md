@@ -1,10 +1,10 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.24\
+> 文档版本：0.2.25\
 > 状态：整项 DRAFT；阶段 READY（中央只读核验）。AC-013-01 归档完整性。  
-> 下一步：核对 PR #18 归档、58 项校验清单及原始报告。复跑单列；02/04 NOT_RUN，03/05/06 等 Compiler Owner 与正式契约。  
+> 下一步：修复 PR #18 归档中 audit 登记不一致、绝对式校验路径及 vet 日志缺项后重新静态复核。复跑单列；02/04 NOT_RUN，03/05/06 等 Compiler Owner 与正式契约。\
 > 阶段依据：[独立评审 #77](https://github.com/odango-chan/ca-agent-next/issues/77#issuecomment-7209276846)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
-> 工作项：[阶段工作项 #95](https://github.com/odango-chan/ca-agent-next/issues/95)。
+> 工作项：[阶段工作项 #95](https://github.com/odango-chan/ca-agent-next/issues/95)。[本轮固定归档核验报告](../issue-95-fixed-source-handoff/SR-013.md)。
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-27\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -58,7 +58,7 @@ SR-013 整体仍为 DRAFT。AC-013-01 的隔离 PoC 完成不自动把 SR-013 �
 
 | AC | 当前状态 | 下一步 |
 |---|---|---|
-| AC-013-01 | PASS（已归档的隔离 PoC 报告）；本轮复跑 NOT_RUN | 固定归档 SHA；产品验收继续按 AC-013-02～06 取证 |
+| AC-013-01 | FAIL（归档完整性未完全闭合）；历史隔离 PoC 报告 18/18；本轮复跑 NOT_RUN | 修正 audit 登记、校验路径和 vet 日志缺项；产品验收继续按 AC-013-02～06 取证 |
 | AC-013-02 | NOT_RUN | 正式 Contract.when AST、G.4、Schema-aware Guard / Nullable lowering | 
 | AC-013-03 | BLOCKED（依赖 AC-013-02 和 Owner Gate） | Compiler Owner 确认新版 Artifact API 与 Manifest | 
 | AC-013-04 | NOT_RUN | 新版 Build / Verify、Go/Python、Native/WASM/Chromium 与旧契约回归 | 
@@ -119,7 +119,7 @@ SR-013 整体仍为 DRAFT。AC-013-01 的隔离 PoC 完成不自动把 SR-013 �
 
 AC-013-01 可记录为 **PASS（隔离 PoC 范围）**，但必须同时保留以下状态：
 
-- 归档完整性复核：PASS；本轮独立复跑：NOT_RUN。
+- 归档完整性复核：FAIL（本轮发现三处归档缺陷，详见第 13 节）；本轮独立复跑：NOT_RUN。
 - Compiler 产品代码实现：NOT_RUN。
 - 新 Runtime Artifact API：未定稿。
 - Build/Verify 产品门禁：NOT_RUN。
@@ -388,6 +388,18 @@ SR-013 只有 AC-013-01～06 均达到各自通过条件，Compiler Release 有�
 - 精确 machine languageTarget、API 名称、字段、Schema 与 Golden 必须由 ca-skills / Compiler Owner 在正式 Issue/PR/Release 冻结；历史 Go/Python CEL PoC 可作为算法审计，但不能宣称 1.6.0 产品 PASS。
 - 相关设计门禁为 [SR-029](SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md)、[SR-004](SR-004-已发布技能包导入.md)、[SR-027](SR-027-技能Bundle构建与发布.md)。按 §9、§11 评审各阶段 READY。Compiler Release 是 AC-013-05 的交付结果；禁止把它列为 AC-013-02～04 或 AC-013-06 的启动条件。AC-013-06 使用按正式 Schema 生成的真实 Publisher 候选做联合验证，记录候选来源和受测 Compiler 提交；AC-013-05 另验发行资产。当前设计仍待独立评审。
 
+## 13. 本轮固定归档核验（Issue #95）
+
+[完整报告](../issue-95-fixed-source-handoff/SR-013.md)基于固定 Next Head `93f1389e7c5968cd30e8a74137207094864ecca0` 与 PR #18 Head `c3e5bb78ff49306329bcbc2387da6108280903bc`。59 个归档文件中，`SHA256SUMS` 覆盖其余 58 个；将清单开头 `/` 归一化为归档相对路径后，额外/缺失文件均为 0、SHA-256 不匹配为 0。18 个历史结果与 36 个 protobuf 可读；本轮未运行 Go/Python。
+
+本轮 AC-013-01 归档完整性判定为 **FAIL**，不是本轮复跑失败：
+
+1. `audit.json` 将 `py-results.json` 登记为 2460 字节、SHA `17cdb49b…`，实际为 2333 字节、SHA `f6abbc68…`；后者与 `SHA256SUMS` 相符。
+2. `SHA256SUMS` 全部路径以 `/` 开头，原说明的直接 `sha256sum -c SHA256SUMS` 不能作为可搬移的归档相对校验。
+3. `EVIDENCE.md` 声明的 `vet.log` 未归档；历史 vet 结果不得当作本轮执行证据。
+
+AC-013-02/04 仍 NOT_RUN，03/05/06 仍 BLOCKED。整项 DRAFT 主状态不变；本核验不实施 Compiler、不发布 Artifact，也不把历史报告或 CI 当当前产品验收。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修订内容 | 原因 | 关联 |
@@ -427,3 +439,4 @@ SR-013 只有 AC-013-01～06 均达到各自通过条件，Compiler Release 有�
 | 2026-11-27 | 0.2.22 | GPT-6（ChatGPT） | §2、§6.1～6.4、修订记录 | 明确 CheckedExpr/DescriptorSet/Any 的确定性 protobuf 序列化与逐 `.pb` 字节验收；统一 AC-013-02/04 NOT_RUN、AC-013-03/05/06 BLOCKED；按版本恢复连续修订账本 | 处理独立模型 Review #6082541121 的 R3-SR013-01/02 与 R3-LEDGER-01，避免 protobuf 默认 Marshal 导致 Build 非确定及状态表冲突 | Issue #12；PR #46；Review #6082541121 |
 | 2026-11-27 | 0.2.23 | GPT-6（ChatGPT） | §0、文档头、修订记录 | 将历史 fd80c74 评审登记替换为正式 Review #6082541121 的固定 Head/Base；明确 P2 修订发生在后续 Head，必须重新独立复评 | 防止把不可访问或不同 Head 的评审记录混为一谈 | Issue #12；PR #46；Review #6082541121 |
 | 2026-11-27 | 0.2.24 | Codex / GPT-6 | 文档头 | 登记阶段 READY（中央只读核验）及 AC 范围与工作项 #95 | 按单项独立评审推进 | Issue #12、#77；PR #46 |
+| 2026-11-27 | 0.2.25 | kimi-k3.1-pro | AC-013-01、§13、文档头 | 核对 58 项归档哈希与历史结果，发现 audit 登记不一致、绝对式校验路径及 vet 日志缺项；将本轮归档完整性记为 FAIL，复跑 NOT_RUN | 区分文件存在性、内部一致性和产品运行验收，避免过度判 PASS | Issue #95；PR #18 |
