@@ -59,11 +59,14 @@ class PythonToolchainPolicyTests(unittest.TestCase):
                     "requirements.txt",
                     "requirements-dev.txt",
                     "poetry.lock",
+                    "Pipfile.lock",
+                    "conda-lock.yaml",
+                    "environment.yaml",
                     "tests/fixtures/requirements.txt",
                     "uv.lock",
                 }
             ),
-            ["poetry.lock", "requirements-dev.txt", "requirements.txt"],
+            ["Pipfile.lock", "conda-lock.yaml", "environment.yaml", "poetry.lock", "requirements-dev.txt", "requirements.txt"],
         )
 
     def test_pip_install_is_rejected(self) -> None:
@@ -106,6 +109,11 @@ class PythonToolchainPolicyTests(unittest.TestCase):
         assignment = "UV_PROJECT_" + "ENVIRONMENT=/tmp/shared-venv"
         found = command_violations([(".github/workflows/ci.yml", assignment)])
         self.assertTrue(any("SHARED_UV_ENVIRONMENT" in item for item in found))
+
+    def test_uv_system_bypass_is_rejected(self) -> None:
+        line = "uv run " + "--system " + "python -m " + "unittest discover -s tests"
+        found = command_violations([(".github/workflows/ci.yml", line)])
+        self.assertTrue(any("UV_ENVIRONMENT_BYPASS" in item for item in found))
 
     def test_extract_added_lines_ignores_removed_lines_and_headers(self) -> None:
         diff = (
