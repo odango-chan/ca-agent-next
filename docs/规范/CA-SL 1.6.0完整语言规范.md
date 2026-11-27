@@ -1,7 +1,7 @@
 # CA-SL 1.6.0 完整语言规范（中央设计稿）
 
 > 文档类型：CA-SL 作者语言规范（中央规范性设计稿）
-> 文档版本：0.2.5
+> 文档版本：0.2.6
 > 语言版本：CA-SL 1.6.0
 > languageTarget 候选：connectionagent.io/v1.6.0（本设计建议值；发布前由 ca-skills 与 Compiler Owner 在正式 Schema / Golden 中确认）
 > 状态：**DRAFT / REVIEW_REQUESTED**；CA-SL 1.6.0 唯一正式语言设计，Assurance 可选；有 Assurance Skill 时 `assurance/contract.yaml` 可声明顶层 `when`；`SKILL.md` Front Matter 不声明 when；无 Assurance Skill 不声明 when；未发布、未冻结。
@@ -130,7 +130,7 @@ Contract 的 precondition 是至多一个全局阶段引用；该引用必须指
 - `requestSchema` 必须指向 Skill Package 根目录下的 Skill-owned `.schema.yaml` 入口文件。若入口是本地 G.4 对象 Schema，根必须明确 `additionalProperties: false` 并保持闭合；若入口文件仅含一个 `$ref`、精确指向显式 pin 的 OpenAPI 3.0 `components/schemas`，则它是跨 dialect 引用别名，不是本地对象 Schema，不对别名文件套用 G.4 对象闭合断言。别名文件不得包含 `$ref` 以外的兄弟关键字；目标和完整可达闭包按 OAS 3.0 原生语义验证。
 - 对存在 Assurance 的 Skill，Contract 顶层 `when` 与 Contract `requestSchema` 是否存在相互独立。只使用 event.type 的 `when` 不要求 requestSchema；`when` 访问 input 成员时必须在 `assurance/contract.yaml` 声明 requestSchema。可选字段必须先以 `has(input.field)` 守卫，并依赖左到右 `&&` 短路事实后再读取。无 Assurance Skill 没有 Contract，不声明 when；任何 Skill 的 SKILL.md Front Matter `when` 都是非法未知字段。
 - 只要 Contract 声明 requestSchema，即使 when 不存在或只读取 event.type，Compiler 仍必须验证并把 Request Schema 根和完整资源闭包发布到新 Runtime Artifact。
-- 未知 Schema 关键字、循环引用、开放对象、未解析引用或不支持方言均拒绝；不得静默忽略关键字或猜测类型。
+- 未知 Schema 关键字、循环引用、未解析引用或不支持方言均拒绝；不得静默忽略关键字或猜测类型。**本地 G.4 对象根及用于 SourcePath 的本地对象节点必须闭合**（明确 `additionalProperties: false`）；OAS3 根引用别名及其外部闭包不套用 G.4 的开放对象拒绝规则，按 OAS 3.0 原生语义处理，未声明 `additionalProperties` 时保留默认允许额外属性的行为。
 
 ### 5.2 Contexts
 
@@ -603,3 +603,5 @@ Host Context Schema-only Package 仍只经 `Contract.contexts` 引用，与 Open
 | 2026-11-27 | 0.2.4 | GPT-6.2（ChatGPT） | §1～§5、§6.1、§9、§12.1、§17、修订记录 | 恢复 `assurance/contract.yaml` 顶层 `when` 为唯一作者入口；SKILL.md Front Matter 不声明 when；补入 PostSmContexts / SmContextCreateData / RequestType 的固定原版 OpenAPI 字段与字符串枚举证据 | 撤销误引入的 Front Matter 入口，确保 Compiler、作者规范和 3GPP 原版契约一致 | Issue #49；IR-008/009；SR-013/031/032；F02/F08/F09 |
 
 | 2026-11-27 | 0.2.5 | GPT-6.2（ChatGPT） | §4、§5.1、§12.1、§13、§19、修订记录 | 为 3GPP 可选 requestType 增加 has 守卫；定义 Skill-owned 纯 $ref OAS3 根引用别名，明确 G.4 闭合对象与外部 OAS3 dialect 的边界、默认 additionalProperties 语义、Resolver 方向和 Golden 正负例 | 避免可选字段 CEL 访问与原版 OAS3 直接引用被 G.4 根闭合规则迫使投影/复制字段；保持上游原件不变 | Issue #49；IR-008/009；SR-013/031；F08；PR #52 |
+
+| 2026-11-27 | 0.2.6 | GPT-6.2（ChatGPT） | §5.1、修订记录 | 将“开放对象拒绝”限定为本地 G.4 对象根 / SourcePath 对象节点；明确 OAS3 根引用别名及外部闭包按 OAS 3.0 默认语义处理 | 消除一般性 G.4 闭合规则与 OAS3 未声明 additionalProperties 默认允许额外属性之间的规范冲突 | Issue #49；IR-009；SR-013；PR #52 |
