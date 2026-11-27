@@ -7,7 +7,7 @@
 > 修订日期：2026-11-27  
 > 上游需求：IR-008（关联 IR-003）  
 > 功能：EC01 / F02 / F09（作者规范由 EC01 维护，F09 AI Authoring 消费）  
-> 设计依据：[EC01 CA-SL 与 Skill 作者体系架构](../架构设计/外部能力域/EC01-CA-SL与Skill作者体系架构设计.md) v0.1.5；[CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md) v0.1.5；[SKILL 作者规范](../规范/SKILL作者规范.md) v0.1.4  
+> 设计依据：[EC01 CA-SL 与 Skill 作者体系架构](../架构设计/外部能力域/EC01-CA-SL与Skill作者体系架构设计.md) v0.1.6；[CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md) v0.1.6；[SKILL 作者规范](../规范/SKILL作者规范.md) v0.1.5  
 > 目标仓：odango-chan/ca-agent-next（仅中央设计和规范）  
 > 上游来源仓：odango-chan/ca-skills，固定 main 780497a2918ad3e7bdff554ab64b0ba627e867e0  
 > 关联 Issue：[ca-agent-next #49](https://github.com/odango-chan/ca-agent-next/issues/49)、父级迁移 Issue #12、CA-SL 设计 Issue #40  
