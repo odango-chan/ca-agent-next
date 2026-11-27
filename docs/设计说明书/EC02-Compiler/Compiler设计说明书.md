@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.2.13\
+> 文档版本：0.2.14\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 修订日期：2026-11-27\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -362,6 +362,14 @@ Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId�
 
 上述目标规则已经可供设计评审；精确字段和可执行命令尚未发行，必须等正式发布后才能宣称对应产品验收 PASS。旧 v2.1.0 Development v1alpha1 和 v1alpha5 的历史设计/Golden 不在新二进制内实现兼容分支。
 
+## 12. 3GPP 共享 Schema Link 与阶段输入（IR-009）
+
+早期 §10.2、SR-013 AC-013-06 对 **Host Context Schema-only** 的 `contexts` 入口限制继续生效，但不能推广为“任何 Schema-only Package 只能由 contexts 引用”。新增 **ca-skills / SR-031 的 3GPP Common Schema-only Package**：Skill-owned `requestSchema` 根可通过显式依赖 `$ref` 引用其**类型导出**，并不是引用它作为 Request 根；Host Context Package 仍只由 `contexts` 引用。
+
+Compiler 1.6.0 Check/Link/Build/Verify 的新增门槛（由 SR-013 AC-013-07 记录）：(1) 区分 Host Context schema、3GPP shared type 和 Provider Codec Output Schema 的所有权；(2) 各 $ref 必须为不带 fragment 的精确 schemaId、声明 alias、固定不可变 Package snapshot，闭包可解析；(3) Request 校验只依赖 Event T1 已存在字段，SourcePath 引用 Codec Result 必须在 Procedure T2 调用之后，禁止将工具结果注入 when；(4) Codec Output Schema 与公共 3GPP 类型使用一致固定来源和版本、Provider 同一 1:1 READ binding；(5) Schema-only 0/0 不生成 Capability/Callable/Scope，Provider 查询 2/2+Codec 1/1 仍为 3/3；(6) 同源不同版本、缺失 export、开口对象、旧版构建、错误阶段依赖均 fail-closed，无部分 Artifact。
+
+实际 Package Schema / Build DTO / Manifest 字段、跨包 $ref 算法及 Golden 由 ca-skills / Compiler / Provider Owner 正式发布，不能凭本章推断接口已经可用。[权威设计](../EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)；产品验证 NOT_RUN、依赖发布 BLOCKED。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
@@ -389,3 +397,4 @@ Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId�
 | 2026-11-26 | 0.2.11 | GPT-6（ChatGPT） | §1、§9～§11、修订记录 | 明确 Schema-only Interface Package 仅由 Contract.contexts 引用并进入 Schema dependency closure，且零 Capability roots 与零 Package dependency closure 是不同概念；增加 SR-013 AC-013-06 / SR-030 AC-030-03 联合验收入口 | 防止 Compiler Linker 把 Schema-only Package 错误当成 Capability root，或要求虚构 Callable 满足旧结构 | Issue #12/#40；SR-013、SR-029、SR-030；PR #46 |
 | 2026-11-26 | 0.2.12 | GPT-6（ChatGPT） | §10.2、§11.1、修订记录 | 收紧 Schema-only Package 的引用入口为 Contract.contexts，requestSchema 仍由 Skill 自有 Schema 提供 | 与 CA-SL 1.6.0 / SR-030 的 Request Schema 与 Host Context Schema 所有权边界一致 | Issue #12/#40；CA-SL 1.6.0；SR-013、SR-030；PR #46 |
 | 2026-11-27 | 0.2.13 | Codex / GPT-6 | Provider 一对一映射 | 区分查询 2/2 与包含 Codec 的 3/3 | 与 SR-029、F06 的发布范围对齐 | Issue #12，PR #46 |
+| 2026-11-27 | 0.2.14 | ChatGPT / GPT-6 | 3GPP Schema 与阶段输入补充 | 明确公共 Schema-only 导出、选择期 Request 与执行期 Codec Result 的 Link / 业务字段来源 | 关闭 Create 选择前依赖 NAS 解码的循环、固定跨包类型门禁 | IR-009；Issue #47；SR-031/026/013 |
