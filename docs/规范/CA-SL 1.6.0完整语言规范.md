@@ -1,7 +1,7 @@
 # CA-SL 1.6.0 完整语言规范（中央设计稿）
 
 > 文档类型：CA-SL 作者语言规范（中央规范性设计稿）
-> 文档版本：0.1.6
+> 文档版本：0.1.7
 > 语言版本：CA-SL 1.6.0
 > languageTarget 候选：connectionagent.io/v1.6.0（本设计建议值；发布前由 ca-skills 与 Compiler Owner 在正式 Schema / Golden 中确认）
 > 状态：**DRAFT / REVIEW_REQUESTED**；未发布、未冻结、不得作为已发布产品规范
@@ -289,7 +289,7 @@ CA-SL 1.6.0 增加受限的跨 dialect 引用入口，不是把 OpenAPI 3.0 并�
 4. 外部目标按 OpenAPI 3.0 Schema Object 语义解析，不套用 G.4 白名单。必须保留可达的 `nullable`、`oneOf`、`anyOf`、`allOf`、`format`、`pattern`、`additionalProperties`、`items`、`enum`、`required`、`default` 等语义；不得重写、丢弃、降级或投影。其组合语义分别为：`allOf` 交集（所有子 Schema 均须满足）、`anyOf` 至少一个分支满足、`oneOf` 恰好一个分支满足。
 5. `requestSchema` 不得直接引用 Path Item、Operation、RequestBody、Response 或完整 multipart envelope；完整 operation / multipart 由 Plugin 原生 OAS3 ingress consumer 负责。NAS / NGAP binary slot 不构成解码后字段 Schema。
 6. 禁止任意网络 URL、dynamic latest、未声明依赖、绝对路径、规范化后逃出 pin Source Root 的路径、Bundle 外文件、未解析 pointer、跨 OpenAMSM commit 混源和循环闭包；运行期不得下载未锁定资源。仅选定闭包内的未解析引用构成错误，闭包外未选定 operation 的引用不构成当前消费失败。
-7. Compiler / Host 必须采用 dialect-aware Resolver / Validator。CEL 静态类型推导对 `anyOf` / `oneOf` 只无条件暴露所有分支均保证存在且类型一致的字段；`allOf` 按交集合并属性约束和 required 集合，冲突类型拒绝；`nullable` 的 Null 与 Missing 必须区分。分支可用性不能证明时禁止猜测。
+7. Compiler / Host 必须采用 dialect-aware Resolver / Validator。CEL 静态类型推导对 `anyOf` / `oneOf` 只无条件暴露在每个可满足分支中均声明、均列入 `required` 且类型一致的字段；其他字段仅在现有 CEL 类型系统能显式表示 optional 时按 optional 暴露，否则不得无条件访问。`allOf` 按交集合并属性约束和 required 集合，冲突类型拒绝；`nullable` 的 Null 与 Missing 必须区分。分支可用性不能证明时禁止猜测。
 8. 可达 OAS3 Schema 出现尚未支持的关键字 / 语义时，以稳定 `SCHEMA_INVALID` 失败并输出文件 / pointer / SourcePath；不得静默忽略或生成部分 Artifact。
 9. dependency alias、URI / pointer wire 编码、Source Bundle identity 与 Lock 字段由 ca-skills / Compiler Owner 在正式 CA-SL 1.6.0 Schema / Golden 冻结；本设计不预造机器字段名。
 
@@ -392,7 +392,7 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 
 **直接引用**：Skill-owned `requestSchema` 根仍是本地 G.4 闭合对象；显式依赖并 pin Source Bundle 后，可直接引用原版文件的精确 `#/components/schemas/...`。Compiler 对外部目标按 OAS 3.0 Schema Object dialect 解析，保留 `allOf` / `anyOf` / `oneOf` / `nullable` / `pattern` / `additionalProperties` / `format` 等原语义；不生成 Adapter / Projection。缺少 Resolver、运行期 Validator 或 Golden 时相关 AC BLOCKED / NOT_RUN。
 
-**Ingress 与执行期分离**：Plugin T0 依据 TS 29.502 operation 的选定 `requestBody` 校验 SBI JSON / multipart / Content-ID / N1/N2 binary slots；T1 `when` 只读取已规范化且到场的 Event / Request 字段。对 `PostSmContexts`，`n1SmMsg.contentId`、`n2SmInfo.contentId`、`n2SmInfoExt1.contentId` 必须分别匹配 N1、N2、N2 Ext1 对应 binary part 的 `Content-ID`；缺失、重复、错槽、错媒体类型或孤立 part 均拒绝。被选 Skill 的 Procedure 在 T2 才能调用授权 Codec READ，消费 Provider 正式 Output Schema。NAS-only PDU Session Type / SSC mode 不得在 T1 无来源时成为必填；Codec Result 不能替代 Owner Receipt / Commit Proof。
+**Ingress 与执行期分离**：Plugin T0 依据 TS 29.502 operation 的选定 `requestBody` 校验 SBI JSON / multipart / Content-ID / N1/N2 binary slots；T1 `when` 只读取已规范化且到场的 Event / Request 字段。对 `PostSmContexts`，`n1SmMsg.contentId`、`n2SmInfo.contentId`、`n2SmInfoExt1.contentId` 必须分别匹配 N1、N2、N2 Ext1 对应 binary part 的 `Content-ID`；引用目标缺失、重复 ID、错槽或媒体类型不符均拒绝。未被 JSON 引用的 part 不得交给 Codec；额外或未引用 part 的拒绝 / 忽略必须由选定 ingress profile 明确规定，不从 OpenAPI Schema 隐含推断。被选 Skill 的 Procedure 在 T2 才能调用授权 Codec READ，消费 Provider 正式 Output Schema。NAS-only PDU Session Type / SSC mode 不得在 T1 无来源时成为必填；Codec Result 不能替代 Owner Receipt / Commit Proof。
 
 **NAS / NGAP**：TS 29.502 binary slot 不定义 NAS IE / NGAP ASN.1 字段。Result Schema 由 SR-026 Provider 基于 OpenAMSM 实际支持的 TS 24.501 / TS 38.413 来源和已资格化消息 Profile 发布；未发布的消息类型保持 BLOCKED，不伪造官方 YAML。
 
@@ -409,3 +409,4 @@ Host Context Schema-only Package 仍只经 `Contract.contexts` 引用，与 Open
 | 2026-11-27 | 0.1.4 | ChatGPT / GPT-6 | 本轮 IR-009 设计修正 | 固定 OpenAMSM 版本 + 原版 YAML 逐字节代发布；显式区分可选 Adapter 与 Provider Codec 输出 | 落实原版 YAML 不得改动、消除误把原版当 G.4 的风险 | Issue #47；SR-031/026/013 |
 | 2026-11-27 | 0.1.5 | ChatGPT / GPT-6.2 | §12、§19 | 保留本地 G.4 有限子集，增加 pin 后 OAS3 Schema Component 的 dialect-aware 直接引用；移除强制 Adapter | 遵循原版 OpenAPI 直接引用、不重写标准 | IR-009；Issue #47；SR-013/031 |
 | 2026-11-27 | 0.1.6 | ChatGPT / GPT-6.2 | §12.1、§19 | 冻结选定消费面与 lazy `$ref` 闭包；补齐 OAS3 组合 / nullable / pattern / additionalProperties 语义及 Content-ID 到 multipart slot 的精确映射 | 防止对未选定 operation 全局解析，并确保 SBI 二进制引用与 MIME part 一致 | Issue #47；SR-031/010/013；EC01/EC02 |
+| 2026-11-27 | 0.1.7 | ChatGPT / GPT-6.2 | §12.1、§19 | 将 union 字段推导收紧为每分支 required；明确未引用 multipart part 不得交给 Codec，但是否拒绝由 ingress profile 决定 | 避免把可选字段误判为必有，避免超出原版 OAS3 schema 的额外拒绝 | Issue #47；SR-031/010/013；EC01/EC02 |
