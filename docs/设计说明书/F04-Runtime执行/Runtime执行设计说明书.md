@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
-> 文档版本：0.3.8
+> 文档版本：0.3.9
 > 功能归属：F04 — Runtime 执行  
 > 关联 SR：SR-007    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -14,7 +14,7 @@
 
 ## 1. 设计目标
 
-Runtime 是唯一执行路径的控制点，负责将已绑定 Skill 的执行意图转化为经过基本契约检查、范围检查和结果记录的 Action。Deterministic Procedure Engine 与 LLM Model Loop 是两种不同的 Action 提议来源，但不得形成两条执行或 Tool 分发路径。
+Runtime 是唯一执行路径的控制点，负责将已绑定 Skill 的执行意图转化为经过基本契约检查、范围检查和结果记录的 Action。Deterministic Procedure Engine 与 LLM Model Loop 是两种不同的 Action 提议来源，但不得形成两条执行或 Tool 分发路径。业务 Capability Action 与 Host Script Execution system Capability 均经过同一 Action Boundary；后者只执行当前 Skill Package Registry 中精确登记的纯本地 Script。
 
 本 Demo 不建设独立 Skill Admission 或生产级授权体系。Runtime 仍必须检查 Action 是否属于当前 Skill 已发布 Artifact 声明的 Callable Scope，并确保两种执行模式使用相同的调用边界。
 
@@ -25,24 +25,25 @@ Runtime 是唯一执行路径的控制点，负责将已绑定 Skill 的执行�
 | Host / Agent Model Loop | 推理、Context 组装、Skill 选择协调、提出 LLM Action |
 | Procedure Engine | 推进已发布 Artifact 中的确定性 Procedure，提出下一步 Action |
 | Runtime | Run 状态、Callable Scope 检查、Action Boundary、Outcome/Evidence、Wait/Resume/Reconcile |
-| Plugin Manager | 将 Runtime 放行的 Tool 调用分发到对应 Plugin |
+| Plugin Manager | 将 Runtime 放行的 Tool 调用分发到对应 Plugin / Host 内建 Tools Extension |
 | Tool Plugin | 执行 Operation，返回契约定义的结果 |
+| Host Script Runner | 通过 Host Script Execution system Capability 执行当前 Skill Registry 中精确登记的 Script entrypoint；校验输入/输出 Schema 和资源预算 |
 | Owner | 权威业务状态和最终提交结果 |
 
 Host 不直接调用 Tool Plugin。LLM 不得绕过 Runtime，也不得自行扩大 Skill 声明的 Callable Scope、制造 Evidence 或声明 Owner mutation 已提交。
 
 ## 3. 统一 Action Boundary（CA-SL 1.6.0 唯一目标）
 
-Deterministic Procedure 与 LLM-guided **统一提交概念 Action Request**：`runId`、`catalogGeneration`、`skillId`、`stage`、`capabilityId`、`arguments`、当前 `artifactRefs` 与 `correlation`。这些是设计级字段含义；最终 wire/DTO 精确名称由 Runtime/Compiler 正式 Schema 冻结。模型只能提出当前 Skill 已授权的 Capability ID/arguments，绝不能指定 Callable ID、Provider、Owner alias、backendOperationId 或 URL。
+Deterministic Procedure 与 LLM-guided **统一提交概念 Action Request**：`runId`、`catalogGeneration`、`skillId`、`stage`、`capabilityId`、`arguments`、当前 `artifactRefs` 与 `correlation`。这些是设计级字段含义；最终 wire/DTO 精确名称由 Runtime/Compiler 正式 Schema 冻结。模型只能提出当前 Skill 已授权的业务 Capability，或 Host 按当前 Skill Script Registry / Host policy 显式提供的 `host.skill-script.execute` system Capability；绝不能指定 Callable ID、Provider、Owner alias、backendOperationId、脚本路径、Python 代码或 URL。
 
 Runtime 分发前必须按固定顺序：
 
 1. 验证 Run 状态、当前绑定的 Skill、固定 Catalog generation，以及当前 stage 对应合法 Procedure/LLM 执行上下文。
-2. 从 **1.6.0 已发布 Artifact 的 `capabilityBindings`** 根据该 Skill/Capability ID 精确查出唯一公开 Callable；Binding 缺失、多个命中、重复归属、未授权或处于历史 API 的输入全部 fail-closed。
+2. 对业务 Capability，从 **1.6.0 已发布 Artifact 的 `capabilityBindings`** 根据该 Skill/Capability ID 精确查出唯一公开 Callable；Binding 缺失、多个命中、重复归属、未授权或处于历史 API 的输入全部 fail-closed。对 `host.skill-script.execute`，不查业务 Artifact Binding，转入 Host Script Execution 专用检查：必须存在当前 Skill 固定 Package snapshot 的 scripts/manifest.yaml，且目标 scriptId 的 llmInvocable=true、purpose=transform，并受 Host policy 允许；任何不满足条件均 fail-closed。
 3. 验证 Capability 处于该 Skill 的已检查授权集合；`operation.capability` 只能使用 kind=operation，`observation.capability` 只能使用 kind=observation 且 Effect=READ。Callable 的 kind/Effect/Schema/Owner identity 来自已编译 Binding 和部署固定的正式契约，不能由模型覆盖。
 4. 验证 Provider Interface 或 Owner Contract Package 的固定来源身份、Version/Publication/Manifest identity、准确 Callable exports 与 Schema；Provider 安装的 Interface snapshot/Runtime Bindings sidecar 必须与 Artifact 绑定的身份一致。缺失、版本不符、歧义、Scope 不匹配不得派发。
 5. 在 Host-owned ArtifactStore 内校验本次 Invocation 的 Artifact Reference 及 Schema、Effect、deadline/budget 和 continuation 约束；**所有拒绝发生在 Plugin IPC 之前**，其 dispatch/Owner mutation 计数必须为 0。
-6. 只有检查通过后，唯一 Plugin Manager 的 Tools Extension 执行内部 Callable 派发。Provider 私有 backendOperationId 可由已冻结的封闭输入 discriminator 确定，不暴露给 Skill/模型，也不扩大 Scope；Owner Receipt/Commit Proof 决定状态，UNKNOWN 不能升级成 COMMITTED，Reconcile 仅 Coordinator 可按原 Invocation 私有调用。
+6. 只有检查通过后，唯一 Plugin Manager 的 Tools Extension 执行内部 Callable 派发；Host Script Execution 则交给同一 Plugin Manager 下的 Host 内建 Tools Extension / Script Runner，不派发到外部 Provider。Provider 私有 backendOperationId 可由已冻结的封闭输入 discriminator 确定，不暴露给 Skill/模型，也不扩大 Scope；Owner Receipt/Commit Proof 决定状态，UNKNOWN 不能升级成 COMMITTED，Reconcile 仅 Coordinator 可按原 Invocation 私有调用。
 
 **历史审计边界：**旧 v1alpha5 Artifact 曾只导出 Callable allowlist、不序列化作者 Capability ID，旧 `mas::CALLABLE` 不等于新规范。此事实仅用来解释旧版本无法作为 1.6.0 Runtime 输入；不得据此删除/跳过新 Artifact `capabilityBindings`，不再以旧 dependencyClosure 的字段布局定义当前 Runtime DTO。
 
@@ -56,9 +57,9 @@ Runtime 分发前必须按固定顺序：
 
 没有 Assurance Artifact 的 Skill 只能使用 LLM-guided。有有效 Assurance Artifact 的 Skill 也可以使用 LLM-guided，但仍然受该 Skill 的 Callable Scope、Context 和 Runtime Action Boundary 约束。LLM 提出的 Action 不编译成临时 Procedure，不为每个 Action 调用 Compiler。
 
-对于只有 SKILL.md、没有可验证 Callable 声明的包，模型可生成指导答复或请求澄清；该包的有效 Callable 集为空。模型文本、已安装的 ToolCatalog 和 Plugin 列表均不能赋予调用权限。若模型仍提出 Tool Action，Runtime 在 dispatch 前拒绝并记录诊断。Echo 的有 Tool 双模式正例使用同一份有效 Assurance Bundle。
+对于没有 Assurance 的 Skill，业务 Capability Scope 仍为空；模型可生成指导答复或请求澄清。若 Package 同时包含 scripts/manifest.yaml，且至少一个 transform Script 标记 llmInvocable=true，Host policy 也启用脚本执行，则 Host 可额外提供 `host.skill-script.execute` system Capability。该系统能力只允许调用当前 Skill 的精确 Script ID，不增加业务 Capability Scope。模型文本、已安装的 ToolCatalog 和 Plugin 列表均不能赋予业务调用权限。若模型提出未授权业务 Tool Action、未登记 Script ID 或任意代码/路径，Runtime 在 dispatch 前拒绝并记录诊断。
 
-两种模式共享同一个 Runtime Action Boundary、Plugin Manager、Outcome 和 Evidence 解释路径。
+Deterministic Procedure 的 `operation.script` 经 Compiler 映射到 Host Script Runner；LLM-guided Script Action 使用相同的 Registry、脚本字节、输入/输出 Schema 和 Runner。Predicate Script 由 Runtime 内部纯求值入口调用，不作为模型 Action 暴露。两种模式共享同一个 Runtime Action Boundary、Plugin Manager 和 Script Runner；只有业务 Capability Action 产生 Owner Outcome / Evidence，纯 Script 不产生业务提交证明。
 
 ## 5. Run、Context 与来源
 
@@ -90,6 +91,9 @@ Skill/Artifact 无效、Callable Scope 不匹配、普通 Skill 调用 internal-
 ## 8. 验收要求
 
 - Deterministic 和 LLM-guided 两种模式都经过同一 Action Boundary。
+- LLM 可读取当前 Skill 的 schemas/ 与 scripts/；只有 Registry 明确标记 llmInvocable=true 且 Host policy 启用时，才可通过 host.skill-script.execute 调用精确 transform Script。
+- Script Action 只能使用 scriptId + JSON input；任意路径、代码、模块名、函数名、命令和其他 Skill 的 Script ID 均拒绝。
+- Script 输入/输出按 Registry 引用的 Schema 校验；Script 不得产生外部副作用或替代业务 Capability。
 - LLM 无法直接访问 Plugin，也无法扩大 Skill 声明的 Callable Scope。
 - READ Observation 与 Owner Mutation Evidence 有明确来源。
 - UNKNOWN 不得变成 COMMITTED。
@@ -125,11 +129,21 @@ Runtime 从当前 Artifact 的 capabilityBindings 中按 Capability ID 解析唯
 - Capability 无绑定、多重绑定、重复归属、阶段 kind 不匹配、Schema 不匹配或依赖包身份不一致，均 fail-closed。
 - Provider 可在一个 Callable 内部按封闭 Schema selector 选择私有 backendOperationId；Runtime / LLM 不参与该选择。
 
-### 10.3 Reconcile
+### 10.3 Host Script Execution
 
-MAS.RECONCILE 不是 Skill-facing Capability。普通 Skill / LLM Action 必须在 Provider IPC 前拒绝并返回 INTERNAL_RECONCILE_ONLY；Runtime Coordinator 仅按原 Mutation 的 originalInvocationId、Scope 和 Correlation 使用内部 Reconcile 绑定。该约束不改变 Owner Receipt / Commit Proof / UNKNOWN 语义。
+Host Script Execution 是 Host-owned system Capability `host.skill-script.execute`，由现有 Plugin Manager 下的 Host 内建 Tools Extension 实现；不新增 Plugin Manager、Tool Registry 或第二条 IPC。它不是 Owner / Provider 业务 Capability，不进入 Contract.capabilities，也不占用外部 Capability Binding。
 
-### 10.4 版本边界
+Action 输入固定为 `scriptId` 与 JSON `input`。Runtime 必须校验当前 Run / Skill / Package snapshot、Script Registry 条目、`purpose=transform`、`llmInvocable=true`、Host policy、输入 Schema、deadline / budget；Script Runner 解析 manifest 中的精确 file / entrypoint，执行后校验 outputSchema。模型不得提交 file、entrypoint、源代码、模块、命令或任意路径。
+
+Deterministic Procedure 的 `operation.script` 使用同一 Runner，但 Script ID 由已编译 Procedure 固定；LLM-guided 只能调用 Registry 显式开放的 Script ID。Predicate Script 由内部 Predicate evaluator 调用，不出现在模型 Action 列表。所有脚本只允许纯本地计算，禁止网络、任意文件系统、子进程、环境秘密、时钟、随机数、动态加载、Tool / Capability 调用和外部副作用。需要业务副作用必须调用正式业务 Capability。
+
+Demo 的入口 allowlist、JSON Schema、超时和资源上限是功能边界，不声称构成生产级恶意代码沙箱或 Admission。
+
+### 10.4 Reconcile
+
+MAS.RECONCILE 不是 Skill-facing Capability.普通 Skill / LLM Action 必须在 Provider IPC 前拒绝并返回 INTERNAL_RECONCILE_ONLY；Runtime Coordinator 仅按原 Mutation 的 originalInvocationId、Scope 和 Correlation 使用内部 Reconcile 绑定。该约束不改变 Owner Receipt / Commit Proof / UNKNOWN 语义。
+
+### 10.5 版本边界
 
 上述 Capability Action 只适用于 CA-SL 1.6.0 及其新 Runtime Artifact。历史 v1alpha5 Artifact 仅留档，新 Runtime 一律拒绝；Next Runtime 当前未实现本节目标。
 
@@ -156,3 +170,4 @@ MAS.RECONCILE 不是 Skill-facing Capability。普通 Skill / LLM Action 必须�
 | 2026-11-26 | 0.3.7 | GPT-6（ChatGPT） | 核心规范与验收章节 | 以唯一 1.6.0 Capability Action Request 重写 §3，旧 Callable-only Runtime 降为历史审计 | 消除 §3 与 §10 规范相互否定，明确 dispatch 前 fail-closed 顺序 | Issue #12/#40；SR-007；SR-029 |
 
 | 2026-11-26 | 0.3.8 | GPT-6（ChatGPT） | 最终一致性复评 / 规范性描述 | 更新规范性 Capability Action Boundary 修订日期和 Release/SourcePath 责任追踪 | 消除 1.6.0 与历史 Development 的模糊措辞，修正后续评审的可执行门槛 | Issue #12/#40；PR #46 |
+| 2026-11-27 | 0.3.9 | GPT-6.2（ChatGPT） | §1～4、§8、§10 | 增加 Host Script Execution system Capability，统一 LLM / Procedure Script Runner、Package snapshot 与 Registry 校验 | 使无 Assurance Skill 可使用共享脚本，同时禁止任意 Python 执行和业务副作用绕过 | Issue #49；IR-008；SR-032 |
