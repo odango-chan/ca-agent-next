@@ -1,13 +1,13 @@
 # SR-032：SKILL 作者规范、Node 拆分与注释原则
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.15  
+> SR 版本：0.1.16  
 > 状态：**DRAFT（中央作者规范已形成设计候选，待独立设计评审；实施 NOT_READY）**  
 > 创建日期：2026-11-27  
 > 修订日期：2026-11-27  
 > 上游需求：IR-008（关联 IR-003）  
 > 功能：EC01 / F01 / F02 / F03 / F04 / F05 / F08 / F09（作者规范由 EC01 维护；Host、Importer、Runtime、Compiler、Studio 消费）  
-> 设计依据：[EC01 CA-SL 与 Skill 作者体系架构](../架构设计/外部能力域/EC01-CA-SL与Skill作者体系架构设计.md) v0.2.3；[CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md) v0.2.6；[SKILL 作者规范](../规范/SKILL作者规范.md) v0.2.1  
+> 设计依据：[EC01 CA-SL 与 Skill 作者体系架构](../架构设计/外部能力域/EC01-CA-SL与Skill作者体系架构设计.md) v0.2.3；[CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md) v0.2.6；[SKILL 作者规范](../规范/SKILL作者规范.md) v0.2.2  
 > 目标仓：odango-chan/ca-agent-next（仅中央设计和规范）  
 > 上游来源仓：odango-chan/ca-skills，固定 main 780497a2918ad3e7bdff554ab64b0ba627e867e0  
 > 关联 Issue：[ca-agent-next #49](https://github.com/odango-chan/ca-agent-next/issues/49)、父级迁移 Issue #12、CA-SL 设计 Issue #40  
@@ -68,7 +68,7 @@ ca-skills 固定源提交：780497a2918ad3e7bdff554ab64b0ba627e867e0。
 
 应保持合并：同一 Capability 内部的 Provider / HTTP / SBI / NAS / N2 / PFCP 子步骤；同一阶段的多个 Predicate；仅需通过 routes 跳转的 Outcome 分支；同一动作的直接 Observation / Postcondition 确认；简单参数映射。
 
-允许最终 Postcondition-only Node、独立 Observation-only Node 和有明确边界的纯 Script Node；禁止 start-only、reconcile-only、HTTP-only、Provider handler-only、单 Predicate Node。
+允许最终 Postcondition-only Node（即使只有一个 Postcondition Predicate）、独立 Observation-only Node 和有明确边界的纯 Script Node；禁止 start-only、reconcile-only、HTTP-only、Provider handler-only，以及仅为承载单个中间 Predicate 而人为拆出的 Predicate-only Node。
 
 ### 3.4 注释
 
@@ -153,3 +153,5 @@ F09 的 AI Authoring 必须使用同一作者规范和完整正向示例生成�
 | 2026-11-27 | 0.1.14 | GPT-6.2（ChatGPT） | 文档头、修订记录 | 同步 CA-SL 1.6.0 v0.2.5 与 SKILL 作者规范 v0.2.1；确认可选 3GPP requestType 的 has 守卫与 OAS3 根引用别名边界进入作者规范 | 保证 SR-032 的设计依据与当前唯一作者入口、原版 OpenAPI dialect 规则一致 | Issue #49；IR-008/009；PR #52 |
 
 | 2026-11-27 | 0.1.15 | GPT-6.2（ChatGPT） | 文档头、设计依据、修订记录 | 同步 EC01 v0.2.3 与 CA-SL v0.2.6；纳入 3GPP optional requestType has 守卫和 OAS3 开放对象语义边界 | 保持作者规范与语言 / 架构权威文档一致，避免遗留无守卫示例和 dialect 冲突 | Issue #49；IR-008/009；PR #52 |
+
+| 2026-11-27 | 0.1.16 | GPT-6.2（ChatGPT） | §3.3、设计依据、修订记录 | 澄清最终单 Predicate Postcondition-only Node 的合法例外，并与作者规范 v0.2.2 对齐 | 使 Node 粒度裁决不与 CA-SL 阶段文法和最终 Goal 聚合规则冲突 | Issue #49；IR-008；SR-032；PR #52 |
