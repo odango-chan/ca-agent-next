@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
-> 文档版本：0.3.10
+> 文档版本：0.3.11
 > 功能归属：F03 — Plugin 平台  
 > 关联 SR：SR-003、SR-010、SR-032    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -35,7 +35,8 @@
 | Plugin Process | 实现声明的 Extension，访问自己拥有的资源 | 选择 Skill、扩大 Capability |
 | Event Extension | 解析外部协议并发布规范化 Event | 业务 Skill 映射、Owner Tool 调用 |
 | Tool Extension | 执行 Runtime 已放行的公开 Callable / Owner Operation | 自行授权、声明业务提交 |
-| Host Script Execution Extension | 由 Host 提供的内建 Tools Extension；只执行当前 Skill Package Script Registry 中已允许的 transform entrypoint；经统一 Runtime Action Boundary / Plugin Manager 分发 | 执行模型提交的代码、任意路径或命令；访问外部业务系统；扩大 Skill business Capability Scope |
+| Host Skill Resource Read Extension | 由 Host 提供的只读内建 Tools Extension；按 F05 契约读取当前 Run 固定 Package snapshot 中的 UTF-8 文本资源 | 读取其他 Skill / Run、宿主任意路径、Package 外资源或写入资源 |
+| Host Script Execution Extension | 由 Host 提供的内建 Tools Extension；执行当前 Skill Package Script Registry 中登记的全部 transform / predicate entrypoint；经统一 Runtime Action Boundary / Plugin Manager 分发 | 执行模型提交的代码、任意路径或命令；访问外部业务系统；扩大 Skill business Capability Scope |
 | Delivery Extension | 按 Host 指令向外部协议响应方交付 | 选择 Run、改变 Owner outcome |
 | Tool Interface Package | Provider 自身导出的 Callable ID、输入/输出 Schema、Effect、Capability membership | Owner 业务 Callable、Owner 结果语义、Provider 私有 backend 映射 |
 | Owner Contract Package | Owner ToolCatalog Callable、Owner IO Schema、CapabilityContracts membership、Evidence Guarantee、Owner Outcomes、Receipt、Commit Proof、Reconcile | Provider 进程和私有 handler |
@@ -141,14 +142,17 @@ F03.05 的详细设计见 [Tool Interface 与 Provider 集成设计说明书](To
 
 Capability 是 Skill-facing Package API；Callable 是 Compiler / Runtime / Provider 使用的调用身份。Plugin Manager 仍是唯一 Manager，Provider 仍是 Tools Extension，不新增 Capability Manager、Tool Registry 或第二条授权路径。
 
-Host Script Execution 是 Host-owned system Capability（逻辑 ID：`host.skill-script.execute`），由 Host 内建 Tools Extension 提供一个内部 Callable；它不是 Owner / Provider 业务 Capability，不进入 Skill `contract.capabilities`，也不生成外部 Capability Binding。当前 Skill 的 `scripts/manifest.yaml` 存在登记脚本时，Runtime 即向模型提供该系统 Action；所有登记脚本均可由 LLM 按 Script ID 调用，不设置逐脚本标记或额外 Host 开关。该 Action 仍经统一 Runtime Action Boundary 和现有 Plugin Manager 分发；不新增 Manager、Registry 或 IPC。
+Host Skill Resource Read 是 Host-owned 只读 system Capability（逻辑 ID：`host.skill-resource.read`），由 Host 内建 Tools Extension 提供；请求仅含 Package-relative `path`，Host 从当前 Run 绑定 Skill 和不可变 Package snapshot，路径、大小、媒体类型和拒绝语义遵循 F05 §2.1。它不进入 Skill `contract.capabilities`，不生成外部 Capability Binding，也不改变业务 Capability Scope。
+
+Host Script Execution 是 Host-owned system Capability（逻辑 ID：`host.skill-script.execute`），由 Host 内建 Tools Extension 提供一个内部 Callable；它不是 Owner / Provider 业务 Capability，不进入 Skill `contract.capabilities`，也不生成外部 Capability Binding。当前 Skill 的 `scripts/manifest.yaml` 存在登记脚本时，Runtime 即向模型提供该系统 Action；所有登记脚本（包括 purpose=transform / predicate）均可由 LLM 按 Script ID 调用，不设置逐脚本标记或额外 Host 开关。该 Action 仍经统一 Runtime Action Boundary 和现有 Plugin Manager 分发；不新增 Manager、Registry 或 IPC。
 
 - Owner Contract Package 的 CapabilityContracts 与 Provider Interface Package 的 capabilities.json 发布 Capability→Callable membership；Skill-facing 每个 Capability 必须恰好一个 Callable，每个 Callable 也只归属一个 Capability。
 - Plugin Manager 负责 Provider Package 加载、生命周期、握手和 Tools Extension 分发，不授予 Skill Capability，也不把安装状态解释为 Grant。
 - Compiler 在 Build 时完成 Capability Link 并写入 Artifact Binding；Runtime 按该 Binding 派发 Callable。ProviderV2 Driver 只接收已声明的内部 Callable 身份，不让模型选择 Callable。
 - Provider Backend Binding Catalog 仍为 Provider 私有；一个公开 Callable 可根据封闭 Schema selector 路由多个 backendOperationId。Catalog 只做显式 binding availability 核对，不发现或扩张 Skill-facing Capability。
 - Reconcile 是 Runtime Coordinator 专用目标，不出现在 Skill-facing Package Explorer 或模型 Action 列表。
-- Host Script Execution Extension 只解析当前 Run 绑定的不可变 Skill Package snapshot；scriptId 必须命中当前 Skill Registry，输入 / 输出分别按条目 Schema 验证。模型不得提供 file、entrypoint、Python 源码、模块、命令或任意文件路径。该 Host system Capability 不授权外部副作用，也不改变 Owner / Provider Capability↔Callable 一对一规则。
+- Host Skill Resource Read 只读取 F05 §2.1 允许的当前 Package 文本资源，不暴露宿主路径，不读取其他 Skill / Run。
+- Host Script Execution Extension 只解析当前 Run 绑定的不可变 Skill Package snapshot；scriptId 必须命中当前 Skill Registry，输入 / 输出分别按 CA-SL 1.6.0 §8 校验。LLM、Procedure 和 Predicate 共用同一 Runner；Predicate 的 LLM Action 结果不作为 Assurance Outcome / Evidence。模型不得提供 file、entrypoint、Python 源码、模块、命令或任意文件路径。该 Host system Capability 不授权外部副作用，也不改变 Owner / Provider Capability↔Callable 一对一规则。
 - Skill Studio 的能力导航见 F09；Provider 的一对一基数和 MAS 例外见 F03.05。
 
 **1.6.0-only 设计评审硬门槛：** 唯一 Plugin Manager 不增加兼容分发、动态授权或第二套能力管理器。 此章节仅描述目标设计，外部代码/Release/E2E 均 NOT_RUN。
@@ -177,3 +181,4 @@ Host Script Execution 是 Host-owned system Capability（逻辑 ID：`host.skill
 | 2026-11-27 | 0.3.8 | GPT-6.2（ChatGPT） | §3、§12、§12.1 | 增加 Host-owned Script Execution system Capability 与内建 Tools Extension；复用唯一 Plugin Manager / Runtime Action Boundary | 使 LLM 能调用包内共享 Script，同时不增加第二套 Manager 或业务授权 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.3.9 | GPT-6.2（ChatGPT） | §3、§12 | 明确 Host Script Execution 的 LLM Action 还必须受 `scriptExecution.llmEnabled` 配置控制，默认 false | 使 Host 配置与 Runtime / CA-SL 暴露条件完全一致 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.3.10 | GPT-6.2（ChatGPT） | §3、§12 | 移除逐脚本 LLM 标记与 Host LLM 开关；Host Script Execution 默认使用当前 Skill Registry 的全部登记脚本 | 保持 LLM 与 Assurance 的脚本能力一致，不增加第二套授权机制 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.3.11 | GPT-6.2（ChatGPT） | §3、§12 | 将 Host Script Execution 扩展为当前 Registry 全部 transform / predicate Script；新增 Host Skill Resource Read Extension 并引用 F05 精确契约 | 修复 F03 对 Predicate Script 的错误限制，补齐 Host 资源读取的 Plugin Manager 边界 | Issue #49；IR-008；SR-032 |
