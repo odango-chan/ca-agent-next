@@ -1,7 +1,7 @@
 # Context 与 Artifact 管理设计说明书
 
 > 文档类型：机制设计说明书  
-> 文档版本：0.4.9\
+> 文档版本：0.4.10\
 > 状态：目标设计已重建；ca-host.artifact-store/v1 已冻结并由 Provider v1.2.0 消费；ca-agent Go Host P1 已验收；Next Python Host / ArtifactStore / Channel NOT_IMPLEMENTED  
 > 功能归属：F05 — Context 与 Artifact 管理  
 > 关联 SR：SR-009；交叉 SR：SR-007、SR-010、SR-011、SR-015、SR-017、SR-030、SR-032\
@@ -96,7 +96,7 @@ byteLength: 512
 | RESOURCE_MEDIA_TYPE_UNSUPPORTED | 文件不是受支持 UTF-8 文本 | 拒绝文本读取 |
 | RESOURCE_SNAPSHOT_UNAVAILABLE | 当前 Run 的 Package snapshot 不可用或不匹配 | 拒绝读取，不回退到其他版本 |
 
-Resource Read 不暴露宿主文件系统路径，不读取其他 Skill / 其他 Run 的资源，不产生写入或业务副作用。Action 次数仍受当前 Run 的统一 Action Budget 约束。
+Resource Read 不暴露宿主文件系统路径，不读取其他 Skill / 其他 Run 的资源，不产生写入或业务副作用。每次读取消耗一个 Host-owned per-Run Runtime Action Budget 单位；该预算与 `Contract.limits.maxActions` 分离，后者只统计业务 Capability Actions。Host Script Execution 使用同一 Runtime Action Budget，详见 F04 §10.3。
 
 ## 3. Fact、Observation 与 Evidence
 
@@ -431,3 +431,5 @@ Demo 必须具备：本地 Host-owned ArtifactStore、精确 slot、相对路径
 | 2026-11-27 | 0.4.7 | GPT-6.2（ChatGPT） | §2、§4 | 将 Host Script Execution 的 LLM 暴露条件对齐为 `scriptExecution.llmEnabled` 与 Registry `llmInvocable` 双门禁 | 使 Package Resource Access 与脚本执行授权保持独立、明确 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.4.8 | GPT-6.2（ChatGPT） | §2、§4 | 移除 LLM 专属 Script 执行门禁，LLM 与 Assurance 共用 Script Registry / Runner | 使 Context 资源读取、脚本执行和 Package snapshot 的边界保持统一 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.4.9 | GPT-6.2（ChatGPT） | §2、§4 | 定义 Host Resource Read system Action 的请求、响应、Package snapshot 绑定、路径 / 大小限制和拒绝诊断；明确 LLM 可调用全部登记 Script | 补齐 LLM 读取 Schema / Script 的实际接口，消除只写“按需读取”却无请求输出契约的问题 | Issue #49；IR-008；SR-032 |
+
+| 2026-11-27 | 0.4.10 | GPT-6.2（ChatGPT） | §2.1、修订记录 | 明确 Resource Read 使用 Host per-Run Runtime Action Budget，而非 Contract.limits.maxActions 业务动作预算 | 与 F04 Script Execution 预算规则统一，防止系统内建动作绕过 Host 资源上限 | Issue #49；IR-008；SR-007/032；PR #52 |
