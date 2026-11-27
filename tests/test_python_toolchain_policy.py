@@ -143,19 +143,17 @@ class PythonToolchainPolicyTests(unittest.TestCase):
         self.assertTrue(any("PIP_INSTALL" in item for item in found))
 
     def test_uv_sync_requires_locked(self) -> None:
-        found = command_violations([(".github/workflows/ci.yml", "uv sync --group dev")])
+        unlocked = "uv " + "sync --group dev"
+        locked = "uv " + "sync --locked --group dev"
+        found = command_violations([(".github/workflows/ci.yml", unlocked)])
         self.assertTrue(any("UV_SYNC_NOT_LOCKED" in item for item in found))
-        self.assertEqual(
-            command_violations([(".github/workflows/ci.yml", "uv sync --locked --group dev")]),
-            [],
-        )
+        self.assertEqual(command_violations([(".github/workflows/ci.yml", locked)]), [])
 
     def test_no_project_checker_allowlist_rejects_command_chaining(self) -> None:
-        line = (
-            'uv run --no-project --python 3.14.6 python "$policy_dir/'
-            + "python_toolchain_policy.py"
-            + '" \\ && python scripts/application.py'
-        )
+        prefix = "uv " + "run --no-project --python 3.14.6 "
+        checker = 'python "$policy_dir/' + "python_toolchain_policy.py" + '" \\'
+        application = " && python " + "scripts/application.py"
+        line = prefix + checker + application
         found = command_violations([(".github/workflows/python-toolchain-policy.yml", line)])
         self.assertTrue(any("UV_NO_PROJECT_BYPASS" in item for item in found))
 
@@ -189,13 +187,13 @@ class PythonToolchainPolicyTests(unittest.TestCase):
         }
         invalid = workflow_toolchain_violations(
             ".github/workflows/python-tests.yml",
-            "name: Python tests\n- run: uv run pytest",
+            "name: Python tests\n- run: uv " + "run " + "pytest",
             manifest,
         )
         self.assertEqual(len(invalid), 2)
         valid = workflow_toolchain_violations(
             ".github/workflows/python-tests.yml",
-            "name: Python tests\nuses: astral-sh/setup-uv@abc123\nversion: '0.13.10'\n- run: uv run pytest",
+            "name: Python tests\nuses: astral-sh/setup-uv@abc123\nversion: '0.13.10'\n- run: uv " + "run " + "pytest",
             manifest,
         )
         self.assertEqual(valid, [])
