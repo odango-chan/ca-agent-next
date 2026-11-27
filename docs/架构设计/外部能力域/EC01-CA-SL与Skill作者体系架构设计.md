@@ -1,7 +1,7 @@
 # EC01 — CA-SL 与 Skill 作者体系架构设计
 
 > 文档类型：外部能力域架构设计（Next 中央权威设计）  
-> 文档版本：0.1.3\
+> 文档版本：0.1.4\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 唯一新目标；作者规范/Compiler/Bundle 未发布）  
 > 功能归属：EC01；关联 F02、F06、F08、F09  
 > 关联需求：IR-003、IR-006；SR-004～SR-006、SR-011、SR-023  
@@ -119,7 +119,9 @@ CA-SL v1alpha5 的 when 已进入已合并的 ca-skills #88/#89 发布刷新；�
 
 - 完整新规范设计：[CA-SL 1.6.0 完整语言规范](../../规范/CA-SL%201.6.0完整语言规范.md)；历史来源：[CA-SL v1alpha5 完整语言规范](../../规范/CA-SL%20v1alpha5完整语言规范.md)，仅只读审计。
 - 作者模型原文：[CA-SL 作者模型](../../设计说明书/外部能力域/EC01-CA-SL/CA-SL作者模型原文.md)。
-- 作者指南原文：[CA-SL 作者指南](../../设计说明书/外部能力域/EC01-CA-SL/CA-SL作者指南原文.md)。
+- 作者指南原文：[CA-SL 作者指南中文原文](../../设计说明书/外部能力域/EC01-CA-SL/CA-SL作者指南原文.md)、[英文原文](../../设计说明书/外部能力域/EC01-CA-SL/CA-SL作者指南英文原文.md)。
+- **当前作者规则权威**：[SKILL 作者规范](../../规范/SKILL作者规范.md)，定义 Skill / Capability / Node 粒度、四阶段 Node 拆分 / 合并、注释原则和 AI Authoring 消费要求；不覆盖 CA-SL 1.6.0 语言语法。
+- 配套历史原文归档：[作者模型](../../设计说明书/外部能力域/EC01-CA-SL/CA-SL作者模型原文.md)、[Skill Granularity](../../设计说明书/外部能力域/EC01-CA-SL/CA-SL%20Skill%20Granularity%20原文.md)、[Authoring Syntax](../../设计说明书/外部能力域/EC01-CA-SL/CA-SL%20Authoring%20Syntax%20原文.md)、[Package Layout](../../设计说明书/外部能力域/EC01-CA-SL/CA-SL%20Package%20Layout%20原文.md)、[Schema Ownership](../../设计说明书/外部能力域/EC01-CA-SL/CA-SL%20Schema%20Ownership%20原文.md)、[Create Skill 工作流](../../设计说明书/外部能力域/EC01-CA-SL/CA-SL%20Create%20Skill%20工作流原文.md)。
 - Ingress Operation 契约：[原始设计](../../设计说明书/外部能力域/EC01-CA-SL/Ingress%20Operation契约设计原文.md)。
 - Schema 闭包：[原始设计](../../设计说明书/外部能力域/EC01-CA-SL/Schema闭包摘要设计原文.md)。
 
@@ -128,7 +130,7 @@ CA-SL v1alpha5 的 when 已进入已合并的 ca-skills #88/#89 发布刷新；�
 | 能力 | 当前证据 | 状态 |
 |---|---|---|
 | CA-SL v1alpha5 规范刷新 | ca-skills #88、#89 已合并；发布记录固定规范提交 18d818436 | IMPLEMENTED / RELEASED |
-| 作者模型与指南 | ca-skills main 有 authoring-model.md、authoring.zh-CN.md | IMPLEMENTED |
+| 作者模型与指南 | ca-skills main 有 authoring-model.md、authoring.zh-CN.md；Next Issue #49 / SR-032 新增 1.6.0 作者规则 | 历史 v1alpha5 作者材料已归档；1.6.0 作者规范 DRAFT / REVIEW_REQUESTED，ca-skills Release NOT_RELEASED |
 | when 作者语义 | 已进入 CA-SL v1alpha5 正式发布记录；main 文档头部仍有 Proposed Refresh 字样，与 Release Record 状态冲突 | RELEASED；源仓文档状态不一致，需后续清理 |
 | Compiler when CheckedExpr / DescriptorSet | ca-skill-compiler Issue #61 OPEN；Compiler v2.1.0 当前没有 Contract.when AST / 运行时选择程序 | NOT_IMPLEMENTED |
 | Next Bundle Importer / Catalog generation / when evaluator | 当前设计待完整实施验收 | NOT_VERIFIED |
@@ -155,3 +157,4 @@ CA-SL v1alpha5 的 when 已进入已合并的 ca-skills #88/#89 发布刷新；�
 | 2026-11-26 | 0.1.2 | GPT-6（ChatGPT） | 文档头与修订记录 | 补齐 EC01 规范 review_scope 与非目标头部声明 | Issue #40；PR #45 |
 
 | 2026-11-26 | 0.1.3 | GPT-6（ChatGPT） | 1.6.0 新目标与历史边界 | 将 EC01 完整规范入口切换至 CA-SL 1.6.0，固定 languageTarget 候选并明确 v1alpha5 只读 | Issue #12/#40；PR #46 |
+| 2026-11-27 | 0.1.4 | GPT-6.2（ChatGPT） | §7～8、修订记录 | 增加 1.6.0 SKILL 作者规范权威入口，迁入 Granularity、Syntax、Package Layout、Schema Ownership 和创建工作流原文 | 将作者规则、语言语法和历史 v1alpha5 来源分层，明确新规范未发布 | IR-008；Issue #49；SR-032 |
