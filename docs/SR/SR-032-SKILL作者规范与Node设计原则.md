@@ -1,12 +1,12 @@
 # SR-032：SKILL 作者规范、Node 拆分与注释原则
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.6  
+> SR 版本：0.1.7  
 > 状态：**DRAFT（中央作者规范已形成设计候选，待独立设计评审；实施 NOT_READY）**  
 > 创建日期：2026-11-27  
 > 修订日期：2026-11-27  
 > 上游需求：IR-008（关联 IR-003）  
-> 功能：EC01 / F02 / F09（作者规范由 EC01 维护，F09 AI Authoring 消费）  
+> 功能：EC01 / F01 / F02 / F03 / F04 / F05 / F08 / F09（作者规范由 EC01 维护；Host、Importer、Runtime、Compiler、Studio 消费）  
 > 设计依据：[EC01 CA-SL 与 Skill 作者体系架构](../架构设计/外部能力域/EC01-CA-SL与Skill作者体系架构设计.md) v0.1.6；[CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md) v0.1.6；[SKILL 作者规范](../规范/SKILL作者规范.md) v0.1.5  
 > 目标仓：odango-chan/ca-agent-next（仅中央设计和规范）  
 > 上游来源仓：odango-chan/ca-skills，固定 main 780497a2918ad3e7bdff554ab64b0ba627e867e0  
@@ -138,3 +138,4 @@ F09 的 AI Authoring 必须使用同一作者规范生成和检查 Change Set；
 | 2026-11-27 | 0.1.4 | GPT-6.2（ChatGPT） | 文档头、§3.3、§6 | 修正 SR 局部非目标；细化独立证据与分支拆分条件，补齐真实样本对照和注释正反例验收 | 防止 SR 自身非目标误指向归档文件，并让验收条件对应可核验内容 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.5 | GPT-6.2（ChatGPT） | 文档头、设计依据 | 将 EC01 架构设计基线更新至 v0.1.5 | 确保 SR 评审引用与 PR Head 中的架构文档一致 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.6 | GPT-6.2（ChatGPT） | §1、§3～§6 | 将 Package 根目录共享资源、YAML Schema 源、Script Registry 与 Host Script Execution 纳入作者规范范围，更新 F01～F09 依赖和 AC-032-10～12 | 修复 schemas/scripts 归入可选 Assurance 导致 LLM-only Skill 无法共享资源的架构问题 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.1.7 | GPT-6.2（ChatGPT） | 文档头、设计消费者 | 扩展 SR-032 功能归属至 F01/F03/F04/F05/F08，覆盖 Model Context、Host 内建 Tools Extension、Runtime Action Boundary、资源快照和 Bundle | 确保 Host Script Execution 的跨模块消费方纳入同一设计门禁 | Issue #49；IR-008；SR-032 |
