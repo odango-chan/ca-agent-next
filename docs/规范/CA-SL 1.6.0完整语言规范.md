@@ -1,7 +1,7 @@
 # CA-SL 1.6.0 完整语言规范（中央设计稿）
 
 > 文档类型：CA-SL 作者语言规范（中央规范性设计稿）
-> 文档版本：0.2.4
+> 文档版本：0.2.5
 > 语言版本：CA-SL 1.6.0
 > languageTarget 候选：connectionagent.io/v1.6.0（本设计建议值；发布前由 ca-skills 与 Compiler Owner 在正式 Schema / Golden 中确认）
 > 状态：**DRAFT / REVIEW_REQUESTED**；CA-SL 1.6.0 唯一正式语言设计，Assurance 可选；有 Assurance Skill 时 `assurance/contract.yaml` 可声明顶层 `when`；`SKILL.md` Front Matter 不声明 when；无 Assurance Skill 不声明 when；未发布、未冻结。
@@ -102,7 +102,7 @@ contract.yaml 是唯一 Contract。它不需要 apiVersion / kind 包装；语�
 示例：
 
 ~~~yaml
-when: 'event.type == "nsmf.create-sm-context" && input.requestType == "INITIAL_REQUEST"'
+when: 'event.type == "nsmf.create-sm-context" && has(input.requestType) && input.requestType == "INITIAL_REQUEST"'
 precondition: validate-request.precondition
 requestSchema: schemas/create-request.schema.yaml
 dependencies:
@@ -127,8 +127,8 @@ Contract 的 precondition 是至多一个全局阶段引用；该引用必须指
 
 - requestSchema 指向 Skill Package 根目录下的 Skill 自有 Schema 资源，定义规范化 Event payload 的业务输入契约。源文件采用 YAML 1.2 序列化的 JSON Schema 数据模型（`.schema.yaml`）；Compiler 解析为 JSON 数据模型后按 G.4 JSON Schema Profile 校验。Schema 引用路径始终相对 Skill Package 根目录，不相对 assurance/。
 - Host 先验证 Plugin Event Schema，再独立验证 Skill Request Schema；两者不是同一 Schema，也不得把完整 3GPP multipart Schema 复制到 Skill。
-- requestSchema 根必须是闭合对象，明确 additionalProperties=false；完整 $ref 闭包必须可解析。
-- 对存在 Assurance 的 Skill，Contract 顶层 `when` 与 Contract `requestSchema` 是否存在相互独立。只使用 event.type 的 `when` 不要求 requestSchema；`when` 访问 input 成员时必须在 `assurance/contract.yaml` 声明 requestSchema。无 Assurance Skill 没有 Contract，不声明 when；SKILL.md Front Matter `when` 是非法未知字段。
+- `requestSchema` 必须指向 Skill Package 根目录下的 Skill-owned `.schema.yaml` 入口文件。若入口是本地 G.4 对象 Schema，根必须明确 `additionalProperties: false` 并保持闭合；若入口文件仅含一个 `$ref`、精确指向显式 pin 的 OpenAPI 3.0 `components/schemas`，则它是跨 dialect 引用别名，不是本地对象 Schema，不对别名文件套用 G.4 对象闭合断言。别名文件不得包含 `$ref` 以外的兄弟关键字；目标和完整可达闭包按 OAS 3.0 原生语义验证。
+- 对存在 Assurance 的 Skill，Contract 顶层 `when` 与 Contract `requestSchema` 是否存在相互独立。只使用 event.type 的 `when` 不要求 requestSchema；`when` 访问 input 成员时必须在 `assurance/contract.yaml` 声明 requestSchema。可选字段必须先以 `has(input.field)` 守卫，并依赖左到右 `&&` 短路事实后再读取。无 Assurance Skill 没有 Contract，不声明 when；任何 Skill 的 SKILL.md Front Matter `when` 都是非法未知字段。
 - 只要 Contract 声明 requestSchema，即使 when 不存在或只读取 event.type，Compiler 仍必须验证并把 Request Schema 根和完整资源闭包发布到新 Runtime Artifact。
 - 未知 Schema 关键字、循环引用、开放对象、未解析引用或不支持方言均拒绝；不得静默忽略关键字或猜测类型。
 
@@ -455,19 +455,19 @@ Owner 不得声明 Runtime 保留的 DENIED、OUTCOME_UNKNOWN、COMMITTED 或 In
 
 CA-SL 1.6.0 增加受限的跨 dialect 引用入口，不是把 OpenAPI 3.0 并入 G.4：
 
-1. Skill 的 `requestSchema` 根始终由 Skill 自己声明，根及本地 Schema 节点仍遵循上面的 G.4 子集。
-2. 仅当 Skill 显式声明并锁定 OpenAMSM OpenAPI Source Bundle dependency 时，本地 Schema 节点才可引用该 Bundle 中精确的 OAS 3.0 `components/schemas` 目标；引用必须绑定唯一 dependency alias、源文件和 JSON Pointer。相对引用以引用所在文件为基准按 RFC 3986 解析；fragment 按 RFC 6901 解码。`../` 只有在规范化后的目标仍位于 pin 的 Source Root 内时才允许。
+1. `requestSchema` 始终指向 Skill Package 根目录下由 Skill 自己拥有的 `.schema.yaml` 入口文件。入口文件有且只有两种形式：**本地 G.4 根**（根及本地节点均遵循 G.4，根对象必须闭合并声明 `additionalProperties: false`）；或**OAS3 根引用别名**（文件内容恰好只有一个 `$ref`，指向已 pin Source Bundle 中精确的 OAS 3.0 `components/schemas`，不含 `type`、`properties`、`required`、`additionalProperties` 等兄弟关键字）。后者是 Package-owned 引用入口，但目标 Schema 根按 OAS 3.0 dialect 解释，不是 G.4 对象根。不得为满足 G.4 闭合要求在外部目标周围合成 wrapper 或复制字段。
+2. 仅当 Skill 显式声明并锁定 OpenAMSM OpenAPI Source Bundle dependency 时，OAS3 根引用别名或本地 G.4 Schema 节点才可引用该 Bundle 中精确的 OAS 3.0 `components/schemas` 目标；引用必须绑定唯一 dependency alias、源文件和 JSON Pointer。相对引用以引用所在文件为基准按 RFC 3986 解析；fragment 按 RFC 6901 解码。`../` 只有在规范化后的目标仍位于 pin 的 Source Root 内时才允许。
 3. 引用闭包以明确选定的消费根为边界，只递归解析该根可达的 `$ref`。Plugin ingress 的选定面是 operation identity + `requestBody`（当前 `PostSmContexts` 进入 `jsonData`）；Compiler 的选定面是精确 Schema Component pointer。原始根 YAML 中其他 operation 的引用不自动进入闭包，也不得要求消费端全局 eager resolve；若未来消费 response / callback，必须将其作为额外选定根显式 pin。
-4. 外部目标按 OpenAPI 3.0 Schema Object 语义解析，不套用 G.4 白名单。必须保留可达的 `nullable`、`oneOf`、`anyOf`、`allOf`、`format`、`pattern`、`additionalProperties`、`items`、`enum`、`required`、`default` 等语义；不得重写、丢弃、降级或投影。其组合语义分别为：`allOf` 交集（所有子 Schema 均须满足）、`anyOf` 至少一个分支满足、`oneOf` 恰好一个分支满足。
+4. 外部目标按 OpenAPI 3.0 Schema Object 语义解析，不套用 G.4 白名单。必须保留可达的 `nullable`、`oneOf`、`anyOf`、`allOf`、`format`、`pattern`、`additionalProperties`、`items`、`enum`、`required`、`default` 等语义；不得重写、丢弃、降级或投影。特别是 OAS3 Schema Object 未声明 `additionalProperties` 时，按 OAS 3.0 默认语义处理（允许额外属性），不得补写 `false`。其组合语义分别为：`allOf` 交集（所有子 Schema 均须满足）、`anyOf` 至少一个分支满足、`oneOf` 恰好一个分支满足。
 5. `requestSchema` 不得直接引用 Path Item、Operation、RequestBody、Response 或完整 multipart envelope；完整 operation / multipart 由 Plugin 原生 OAS3 ingress consumer 负责。NAS / NGAP binary slot 不构成解码后字段 Schema。
-6. 禁止任意网络 URL、dynamic latest、未声明依赖、绝对路径、规范化后逃出 pin Source Root 的路径、Bundle 外文件、未解析 pointer、跨 OpenAMSM commit 混源和循环闭包；运行期不得下载未锁定资源。仅选定闭包内的未解析引用构成错误，闭包外未选定 operation 的引用不构成当前消费失败。
+6. Resolver 必须显式跟踪每个节点的 dialect：本地 G.4 节点按 G.4 解析；进入 pin 后的 OAS3 目标后，其所有可达 `$ref` 均继续按同一 OAS3 Source Bundle / OAS 3.0 dialect 解析。OAS3 闭包不得反向引用 Skill-local G.4 文件，不得跳到其他 dependency 或 Source Bundle。禁止任意网络 URL、dynamic latest、未声明依赖、绝对路径、规范化后逃出 pin Source Root 的路径、Bundle 外文件、未解析 pointer、跨 OpenAMSM commit 混源和循环闭包；运行期不得下载未锁定资源。仅选定闭包内的未解析引用构成错误，闭包外未选定 operation 的引用不构成当前消费失败。
 7. Compiler / Host 必须采用 dialect-aware Resolver / Validator。CEL 静态类型推导对 `anyOf` / `oneOf` 只无条件暴露在每个可满足分支中均声明、均列入 `required` 且类型一致的字段；其他字段仅在现有 CEL 类型系统能显式表示 optional 时按 optional 暴露，否则不得无条件访问。`allOf` 按交集合并属性约束和 required 集合，冲突类型拒绝；`nullable` 的 Null 与 Missing 必须区分。分支可用性不能证明时禁止猜测。
 8. 可达 OAS3 Schema 出现尚未支持的关键字 / 语义时，以稳定 `SCHEMA_INVALID` 失败并输出文件 / pointer / SourcePath；不得静默忽略或生成部分 Artifact。
 9. dependency alias、URI / pointer wire 编码、Source Bundle identity 与 Lock 字段由 ca-skills / Compiler Owner 在正式 CA-SL 1.6.0 Schema / Golden 冻结；本设计不预造机器字段名。
 
 此规则只解决原版 OpenAPI 组件的精确类型引用；不允许把完整 SBI multipart 复制进 Skill，不让 when 调用 Codec，也不改变 Host Context 只能通过 `Contract.contexts` 引用的约束。
 
-**PostSmContexts 的真实输入字段核对（固定 OpenAMSM 来源）：** Plugin 从 TS 29.502 `PostSmContexts.requestBody` 的 `multipart/related` 中提取 `jsonData`；该 JSON 对象引用 `#/components/schemas/SmContextCreateData`，因此规范化给 CEL 的 `input` 根对象就是 `SmContextCreateData`，`requestType` 的路径为 `input.requestType`。原版 `SmContextCreateData.requestType` 引用同文件 `#/components/schemas/RequestType`；`RequestType` 是字符串类型，枚举包含 `INITIAL_REQUEST`、`EXISTING_PDU_SESSION`、`INITIAL_EMERGENCY_REQUEST`、`EXISTING_EMERGENCY_PDU_SESSION`，并保留 OAS3 的未来字符串扩展分支。因此示例必须比较字符串 `"INITIAL_REQUEST"`，不得比较整数。固定来源为 OpenAMSM commit `dc83ccbf5be54dcc7112dd43ba95ea6fa5975550`、文件 `upstream/openamsm/lib/sbi/support/r19-20260402-openapitools-7.20.0/standard/TS29502_Nsmf_PDUSession.yaml`、Git blob `3572be0315a782691ce8b5546b7bc1d5b22fcd64`。Skill 的 `requestSchema` 根仍由 Skill 自己声明，并在显式 pin 的 Source Bundle 中直接引用精确 OAS3 Component；不复制或投影原件。
+**PostSmContexts 的真实输入字段核对（固定 OpenAMSM 来源）：** Plugin 从 TS 29.502 `PostSmContexts.requestBody` 的 `multipart/related` 中提取 `jsonData`；该 JSON 对象引用 `#/components/schemas/SmContextCreateData`，因此规范化给 CEL 的 `input` 根对象就是 `SmContextCreateData`，`requestType` 的路径为 `input.requestType`。固定原版 `SmContextCreateData.requestType` 引用同文件 `#/components/schemas/RequestType`；`RequestType` 是字符串类型，枚举包含 `INITIAL_REQUEST`、`EXISTING_PDU_SESSION`、`INITIAL_EMERGENCY_REQUEST`、`EXISTING_EMERGENCY_PDU_SESSION`，并保留 OAS3 的未来字符串扩展分支。该属性不在 `SmContextCreateData.required` 列表中，是可选字段；因此正例必须先用 `has(input.requestType)` 守卫，再比较字符串 `"INITIAL_REQUEST"`。未守卫直接读取可选字段必须得到 `CEL_INVALID`；比较整数仍是类型错误。固定来源为 OpenAMSM commit `dc83ccbf5be54dcc7112dd43ba95ea6fa5975550`、文件 `upstream/openamsm/lib/sbi/support/r19-20260402-openapitools-7.20.0/standard/TS29502_Nsmf_PDUSession.yaml`、Git blob `3572be0315a782691ce8b5546b7bc1d5b22fcd64`。Skill 的 `requestSchema` 入口文件仍由 Skill 自己拥有；它可以是仅含 `$ref` 的引用别名，直接指向精确 OAS3 Component。原件不复制、不重写、不投影。
 
 ## 13. 静态检查与稳定诊断
 
@@ -524,6 +524,11 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 | Operation 引用 observation kind 或 Observation 引用 MUTATION | 静态拒绝 |
 | 仅 event.type 的 when，无 requestSchema | 可通过 CEL 静态检查 |
 | when 引用 input 但无 requestSchema | CEL_INVALID |
+| `input.requestType` 为可选字段且无 `has` 守卫 | CEL_INVALID；有 `has(input.requestType) && ...` 左到右短路守卫 | 类型检查通过 |
+| 3GPP `input.requestType == 1` | CEL 类型不匹配，CEL_INVALID | 拒绝 |
+| OAS3 根引用别名文件恰好只有一个 `$ref`，目标位于 pin 闭包 | 按 OAS3 dialect 验证目标和可达闭包，保留原始默认语义 | 通过 |
+| OAS3 根引用别名文件含 `additionalProperties: false` 等兄弟 Schema 关键字 | `SCHEMA_INVALID`；不把 OAS3 目标投影为 G.4 | 拒绝 |
+| OAS3 Schema 未声明 `additionalProperties` | 保留 OAS 3.0 默认允许额外属性的语义 | 不得补写 `false` |
 | requestSchema 存在但无 when | Schema 仍验证并发布闭包 |
 | Schema-only Package：0 Capability / 0 Callable，含已声明 Schema export | 可作为 Contract.contexts 的 Host Context Schema 依赖；requestSchema 仍必须指向 Skill 自有请求 Schema |
 | 未声明依赖却引用 Capability / Schema | 静态拒绝 |
@@ -596,3 +601,5 @@ Host Context Schema-only Package 仍只经 `Contract.contexts` 引用，与 Open
 | 2026-11-27 | 0.2.2 | GPT-6.2（ChatGPT） | §1～§5、§9、EBNF、修订记录 | 将 `when` 定义为有 Assurance Skill 的 SKILL.md Front Matter 扩展字段，从 Contract YAML 中移除；明确无 Assurance Skill 不声明 when | 对齐已确认的 SKILL 入口方案，保证无 Assurance 包不依赖未编译的 CEL；历史错误入口判断，已由 0.2.4 撤销，不构成兼容方案| Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.2.3 | GPT-6.2（ChatGPT） | §1～§5、§9、§12、§19、修订记录 | 合并 CA-Agent Assurance-only SKILL.md Front Matter.when / 无 Assurance 禁用 when 规则与原版 3GPP OpenAPI 3.0 外部 Schema dialect、直接引用和闭包验证 | 保持选择期字段不进入 Contract YAML，同时确保 Compiler 可消费未投影的原版 OpenAPI schema；历史错误入口判断，已由 0.2.4 撤销，不构成兼容方案| Issue #47/#49；IR-008/009；SR-013/031/032 |
 | 2026-11-27 | 0.2.4 | GPT-6.2（ChatGPT） | §1～§5、§6.1、§9、§12.1、§17、修订记录 | 恢复 `assurance/contract.yaml` 顶层 `when` 为唯一作者入口；SKILL.md Front Matter 不声明 when；补入 PostSmContexts / SmContextCreateData / RequestType 的固定原版 OpenAPI 字段与字符串枚举证据 | 撤销误引入的 Front Matter 入口，确保 Compiler、作者规范和 3GPP 原版契约一致 | Issue #49；IR-008/009；SR-013/031/032；F02/F08/F09 |
+
+| 2026-11-27 | 0.2.5 | GPT-6.2（ChatGPT） | §4、§5.1、§12.1、§13、§19、修订记录 | 为 3GPP 可选 requestType 增加 has 守卫；定义 Skill-owned 纯 $ref OAS3 根引用别名，明确 G.4 闭合对象与外部 OAS3 dialect 的边界、默认 additionalProperties 语义、Resolver 方向和 Golden 正负例 | 避免可选字段 CEL 访问与原版 OAS3 直接引用被 G.4 根闭合规则迫使投影/复制字段；保持上游原件不变 | Issue #49；IR-008/009；SR-013/031；F08；PR #52 |
