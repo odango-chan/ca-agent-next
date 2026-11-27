@@ -28,8 +28,8 @@ Source Bundle 不是 Interface Package，不导出 Capability / Callable，不�
 
 | 文件 | 3GPP 标准版本 | OpenAPI / 源版本 | Git blob |
 |---|---|---|---|
-| `.../standard/TS29502_Nsmf_PDUSession.yaml` | TS 29.502 V19.5.0 | OpenAPI 3.0.0；`info.version: 1.4.0` | `3572be0315a782691ce8b5546b7bc1d5b22fcd64` |
-| `.../standard/TS29571_CommonData.yaml` | TS 29.571 V19.6.0 | OpenAPI 3.0.0；`info.version: 1.6.1` | `e09e9bb4aef0cf24aee008da06b1ef0023475efb` |
+| `upstream/openamsm/lib/sbi/support/r19-20260402-openapitools-7.20.0/standard/TS29502_Nsmf_PDUSession.yaml` | TS 29.502 V19.5.0 | OpenAPI 3.0.0；`info.version: 1.4.0` | `3572be0315a782691ce8b5546b7bc1d5b22fcd64` |
+| `upstream/openamsm/lib/sbi/support/r19-20260402-openapitools-7.20.0/standard/TS29571_CommonData.yaml` | TS 29.571 V19.6.0 | OpenAPI 3.0.0；`info.version: 1.6.1` | `e09e9bb4aef0cf24aee008da06b1ef0023475efb` |
 
 不得把 OpenAPI `info.version` 误认为 3GPP TS 版本。当前 standard 目录有 472 份 YAML，不意味着每个 Bundle 都复制全部 472 份；按所选 operation / Schema Component 的完整可达 `$ref` 闭包确定文件集。
 

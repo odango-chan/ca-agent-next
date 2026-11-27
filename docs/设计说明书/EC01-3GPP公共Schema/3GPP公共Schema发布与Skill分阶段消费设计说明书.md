@@ -26,10 +26,10 @@
 
 | 用途 | 原始路径 | 3GPP 标准版本 | OpenAPI / 源版本与 blob |
 |---|---|---|---|
-| SBI Nsmf | `.../standard/TS29502_Nsmf_PDUSession.yaml` | TS 29.502 V19.5.0 | OpenAPI 3.0.0；`info.version: 1.4.0`；`3572be0315a782691ce8b5546b7bc1d5b22fcd64` |
-| Common Data | `.../standard/TS29571_CommonData.yaml` | TS 29.571 V19.6.0 | OpenAPI 3.0.0；`info.version: 1.6.1`；`e09e9bb4aef0cf24aee008da06b1ef0023475efb` |
-| NAS 5GSM | `lib/nas/5gs/support/r19.6.2/24501-j62-ch8-ch9.docx` | TS 24.501 R19.6.2 | `82dcc4c97436ec85c3da14bb35f022385c9484b6` |
-| NGAP ASN.1 | `lib/asn1c/support/ngap-r19.2.0/38413-j20.asn` | TS 38.413 R19.2.0 | `3fa6da460a85bb2054316afec3da37d2b7043fe0` |
+| SBI Nsmf | `upstream/openamsm/lib/sbi/support/r19-20260402-openapitools-7.20.0/standard/TS29502_Nsmf_PDUSession.yaml` | TS 29.502 V19.5.0 | OpenAPI 3.0.0；`info.version: 1.4.0`；`3572be0315a782691ce8b5546b7bc1d5b22fcd64` |
+| Common Data | `upstream/openamsm/lib/sbi/support/r19-20260402-openapitools-7.20.0/standard/TS29571_CommonData.yaml` | TS 29.571 V19.6.0 | OpenAPI 3.0.0；`info.version: 1.6.1`；`e09e9bb4aef0cf24aee008da06b1ef0023475efb` |
+| NAS 5GSM | `upstream/openamsm/lib/nas/5gs/support/r19.6.2/24501-j62-ch8-ch9.docx` | TS 24.501 R19.6.2 | `82dcc4c97436ec85c3da14bb35f022385c9484b6` |
+| NGAP ASN.1 | `upstream/openamsm/lib/asn1c/support/ngap-r19.2.0/38413-j20.asn` | TS 38.413 R19.2.0 | `3fa6da460a85bb2054316afec3da37d2b7043fe0` |
 
 OpenAPI `info.version` 是 API 文档版本，不是 3GPP TS 版本。TS 29.571 externalDocs 标记 V19.6.0，`info.version` 为 1.6.1。OpenAMSM standard 目录有 472 份 YAML；Bundle 只需包含选定 operation / Schema Component 的完整可达 `$ref` 闭包，不默认复制全部 472 份。NAS README 说明 NAS C files 从 TS 24.501 Word 源生成；NGAP C files 由 ASN.1 源生成。二者不是 OpenAPI YAML。
 
