@@ -1,7 +1,7 @@
 # 通用 Agent Core 与 Host 设计说明书
 
 > 文档类型：功能设计说明书  
-> 文档版本：0.3.11\
+> 文档版本：0.3.12\
 > 状态：Next 目标设计；本仓实现状态需独立验收，不以参考仓 PASS 代替  
 > 功能归属：F01 — 通用 Agent Core 与 Host  
 > 关联 SR：SR-002、SR-020、SR-021、SR-032  
@@ -33,7 +33,7 @@
 | ModelClient | 通过稳定 Protocol 接收 ModelRequest 并返回 ModelProposal；由组合入口注入 | Host 内部创建 Provider、Plugin dispatch、Owner outcome |
 | Skill Importer / Catalog | 导入已发布 Skill Bundle、构建不可变 Catalog generation | 编译作者源、生产准入 |
 | Skill Resolver | 对新 Event 选择精确 Skill；Continuation 恢复原 Skill | 业务执行 |
-| Runtime | Run 状态、Action Boundary、Procedure、Wait/Resume、Outcome 解释 | Plugin 进程生命周期、模型推理 |
+| Runtime | Run 状态、Action Boundary、Procedure、异步 Operation Continuation / Reconcile、Outcome 解释 | Plugin 进程生命周期、模型推理、Skill 层 Wait / Resume Node |
 | Plugin Manager | Plugin 包/进程、IPC、Extension 分发 | Skill 选择、Owner outcome |
 | Host ArtifactStore | 原始字节、opaque refs、Run/Invocation 关联与访问控制 | 协议业务解码 |
 
@@ -329,3 +329,5 @@ SR-002 的独立模块验收为 AC-002-01～AC-002-08，详见《演示验收基
 | 2026-11-27 | 0.3.9 | GPT-6.2（ChatGPT） | §3、§5 | 将 LLM Script Action 的 Host 显式配置门禁固定为 `scriptExecution.llmEnabled`，默认关闭 | 防止仅凭 Script Registry 标记就向模型暴露脚本执行能力 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.3.10 | GPT-6.2（ChatGPT） | §3、§5 | 删除 Script Registry 的逐脚本 LLM 标记与 Host LLM 配置开关；模型和 Assurance 共用 Script Runner | 简化 Demo 执行模型，避免模型调用权限与确定性执行权限分裂 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.3.11 | GPT-6.2（ChatGPT） | §3、§5、§8 | 将 Host Resource Read 的 system Action 纳入 Model Loop / Runtime 边界，引用 F05 的请求响应与路径限制；明确 LLM 可调用全部登记 Script | 使 Schema / Script 按需读取具备可实施接口，并保持 LLM 与 Assurance 的 Script 能力一致 | Issue #49；IR-008；SR-032 |
+
+| 2026-11-27 | 0.3.12 | GPT-6.2（ChatGPT） | §2 组件职责、修订记录 | 将 Runtime 的 Wait/Resume 表述改为异步 Operation Continuation / Reconcile，并明确不提供 Skill 层 Wait / Resume Node | 对齐 CA-SL 1.6.0 与 F04 的无 Skill Wait 设计，避免将协议异步恢复误读为作者级 Wait Node | Issue #49；IR-008；SR-032；PR #52 |
