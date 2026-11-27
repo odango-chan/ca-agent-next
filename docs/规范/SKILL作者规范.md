@@ -1,7 +1,7 @@
 # SKILL 作者规范（CA-SL 1.6.0）
 
 > 文档类型：Skill 作者规范（Next 中央规范性设计稿）  
-> 文档版本：0.1.9  
+> 文档版本：0.2.0  
 > 状态：**DRAFT / REVIEW_REQUESTED**（作者规则待独立评审；CA-SL 1.6.0 尚未由 ca-skills 正式发布）  
 > 语言目标：CA-SL 1.6.0 only；不兼容任何历史作者语法  
 > 功能归属：EC01 — Skill 作者规范与业务 Skill；消费端关联 F02 / F09  
@@ -68,8 +68,8 @@ skill-root/
 
 | 文件 / 目录 | 作者职责 | 不应放入的内容 |
 |---|---|---|
-| SKILL.md | Agent-facing 身份、用途、适用场景、业务输入、完成语义、限制与指导；可选 CA-Agent 扩展 `when`（仅当存在 Assurance） | Capability Grant、Procedure、Tool 权限、Provider 内部细节 |
-| assurance/contract.yaml | 唯一作者 Contract：requestSchema、contexts、dependencies、capabilities、单一全局 precondition、limits | when、第二份 Contract、独立 Goal 字段、Callable ID、Git URL / branch / 下载指令 / 作者自选 Callable |
+| SKILL.md | Agent-facing 身份、用途、适用场景、业务输入、完成语义、限制与指导；Front Matter 只遵循 Agent Skills Specification | `when`、Capability Grant、Procedure、Tool 权限、Provider 内部细节 |
+| assurance/contract.yaml | 唯一作者 Contract：可选顶层 when、requestSchema、contexts、dependencies、capabilities、单一全局 precondition、limits | 第二份 Contract、独立 Goal 字段、Callable ID、Git URL / branch / 下载指令 / 作者自选 Callable |
 | assurance/procedure.yaml | 唯一静态 Procedure DAG、显式 inputs、Node 阶段和 routes | 动态生成图、隐式状态传递、私有 backendOperationId |
 | assurance/predicates.yaml | Predicate 参数签名、Evidence 要求和 evaluator；没有 Predicate 时仍保留合法空 PredicateSet | Skill 选择条件、隐藏副作用 |
 | schemas/ | Skill Package 自有 Schema；YAML 1.2 文件表示 JSON Schema 数据模型，LLM 可读、Host 可校验、Assurance 可引用 | 复制 Owner / Provider / Host 的外部 Schema |
@@ -92,7 +92,7 @@ skill-root/
 - 正文使用清晰、简洁的 Markdown，先写业务目标和适用范围，再写输入、完成条件、失败 / 不确定语义和限制。语言遵循项目与目标使用者的约定，并在同一 Skill Package 内保持一致；CA-SL 1.6.0 不规定 SKILL.md 正文语言。
 - 不重复 Procedure 的逐节点执行细节。较长的 3GPP 条款映射、字段来源和历史决策放入 references。
 - allowed-tools 即使存在也只是元数据，不授予 Capability、Callable 或 Runtime 权限。
-- `when` 是 CA-Agent 对 SKILL.md YAML Front Matter 的扩展字段，仅在 Skill 存在 `assurance/` 时可选声明；没有 Assurance 的 Skill 不声明 `when`，也不使用 CEL 做确定性过滤。
+- SKILL.md Front Matter 只使用 Agent Skills Specification 规定的标准字段；CA-Agent 不扩展 `when`。`when` 只能作为 `assurance/contract.yaml` 的可选顶层字段；没有 Assurance 的 Skill 没有 Contract，因此不声明 `when`。Front Matter 出现 `when` 必须按未知字段拒绝。
 
 ## 4. CA-SL 1.6.0 作者契约边界
 
@@ -100,7 +100,7 @@ skill-root/
 
 | 位置 | 作者规则 |
 |---|---|
-| SKILL.md Front Matter.when | 可选的纯 CEL 选择表达式；仅适用于存在 Assurance 的 Skill；只读取 event.type 和当前 Skill requestSchema 对应的 input；不是 Agent Skills Specification 原生字段，也不是执行期 Predicate |
+| Contract.when | `assurance/contract.yaml` 的可选顶层纯 CEL 选择表达式；仅适用于存在 Assurance 的 Skill；只读取 event.type 和当前 Skill requestSchema 对应的 input；不是 SKILL.md Front Matter 字段，也不是执行期 Predicate |
 | Contract.requestSchema | Skill 自有公共 Request 根；有请求输入时必须声明；字段只能使用选择阶段已经可用的数据 |
 | Contract.contexts | 集中声明 Host Context 的精确 Schema 引用；Host 拥有 Context，Skill 不复制 Host Schema |
 | Contract.dependencies | Alias → 稳定 Package ID；不写 Git URL、分支、下载指令或作者自选 Callable |
@@ -131,6 +131,22 @@ skill-root/
 - `arguments` 的值只允许 CA-SL 1.6.0 支持的 SourcePath 或标量字面量；禁止动态表达式、隐式转发、自动 null、参数猜测或重排。SourcePath 根只允许 `context`、`inputs` 和已声明 Node Producer；其他根拒绝。
 - Node 输出必须通过精确的 `NodeId.Stage.output` SourcePath 显式传递；只有 Operation / Observation 阶段产生可绑定 output。CA-SL 1.6.0 不定义 Wait、await、polling 或 `wait.output`。所有引用必须由正式语言 Schema / Compiler 检查，不得依靠字段名推断。
 - Operation / Observation / Procedure Script 的 arguments 具体结构以 CA-SL 1.6.0 正式 Schema / Golden 为准；Predicate arguments 按 Predicate.parameters 的有序签名提供。本文不另行发明参数结构。
+
+
+### 4.3 3GPP PostSmContexts 的原版 OpenAPI 与 when 示例
+
+3GPP SBI 已有正式契约时，Skill 直接消费 pin 后的 OpenAMSM 原版 OpenAPI 3.0 Component，不另造字段投影。对于 `nsmf.create-sm-context`，`input` 是 Plugin 从 `PostSmContexts.requestBody` 的 `multipart/related` 中抽取并规范化后的 `jsonData` 对象；该对象的 Schema 根是 `#/components/schemas/SmContextCreateData`，不是整个 multipart envelope。
+
+`assurance/contract.yaml`：
+
+~~~yaml
+when: 'event.type == "nsmf.create-sm-context" && input.requestType == "INITIAL_REQUEST"'
+requestSchema: schemas/create-sm-context-request.schema.yaml
+~~~
+
+`schemas/create-sm-context-request.schema.yaml` 是 Skill-owned G.4 根；在显式 pin 的 OpenAMSM Source Bundle dependency 下，它必须直接引用 `TS29502_Nsmf_PDUSession.yaml#/components/schemas/SmContextCreateData`。引用的 dependency alias / wire 编码由 ca-skills 与 Compiler Owner 在正式 1.6.0 Schema / Golden 中冻结；本设计不猜造该机器字段或 URI 形式，也不复制、重写或投影上游 YAML。
+
+原版 `SmContextCreateData.requestType` 引用同文件 `#/components/schemas/RequestType`；`RequestType` 是 string schema，枚举包含 `INITIAL_REQUEST`、`EXISTING_PDU_SESSION`、`INITIAL_EMERGENCY_REQUEST`、`EXISTING_EMERGENCY_PDU_SESSION`，另有 OAS3 未来字符串扩展分支。因此唯一正确的字段路径是 `input.requestType`，比较值是字符串 `"INITIAL_REQUEST"`，不是整数。固定来源：OpenAMSM commit `dc83ccbf5be54dcc7112dd43ba95ea6fa5975550`；原始文件 blob `3572be0315a782691ce8b5546b7bc1d5b22fcd64`。
 
 ## 5. Procedure Node 的结构
 
@@ -203,7 +219,7 @@ Node 不是 HTTP 请求、函数调用、文件、协议报文或 Provider backe
 
 ### 6.7 完整正向示例：QoS 调整 Skill
 
-以下示例给出一份完整的 1.6.0 作者源结构，展示 `when`、共享 Schema / Script、Procedure.inputs、四阶段、显式 arguments、routes、Predicate Evidence 和 Node 拆分。外部 `host-context` 与 `mas` Package ID / Schema / Capability / Evidence ID 是教学占位符，真实 Skill 必须替换为 Owner / Host 已正式发布并固定版本的身份；本例不声称已通过正式 Compiler Golden。
+以下示例给出一份完整的 1.6.0 作者源结构，展示自定义 MAS 请求契约、共享 Schema / Script、Procedure.inputs、四阶段、显式 arguments、routes、Predicate Evidence 和 Node 拆分。该 QoS 示例使用 MAS 自定义 Event / Request Schema，不代表 3GPP SBI 契约；3GPP 原版 OpenAPI 用法见 §4.3。外部 `host-context` 与 `mas` Package ID / Schema / Capability / Evidence ID 是教学占位符，真实 Skill 必须替换为 Owner / Host 已正式发布并固定版本的身份；本例不声称已通过正式 Compiler Golden。
 
 Package：
 
@@ -229,7 +245,7 @@ qos-adjustment/
 ---
 name: qos-adjustment
 description: Validate and apply a requested PDU Session QoS adjustment.
-when: 'event.type == "nsmf.modify-sm-context" && input.requestType == 1'
+
 ---
 
 # QoS adjustment
@@ -244,9 +260,9 @@ $schema: https://json-schema.org/draft/2020-12/schema
 $id: urn:example:qos-adjustment:qos-request:v1
 type: object
 properties:
-  requestType:
-    type: integer
-    const: 1
+  adjustmentType:
+    type: string
+    enum: [QOS_ADJUSTMENT]
   pduSessionId:
     type: integer
     minimum: 1
@@ -260,7 +276,7 @@ properties:
   gbrDlKbps:
     type: integer
     minimum: 0
-required: [requestType, pduSessionId, target5qi, gbrUlKbps, gbrDlKbps]
+required: [adjustmentType, pduSessionId, target5qi, gbrUlKbps, gbrDlKbps]
 additionalProperties: false
 ~~~
 
@@ -336,6 +352,7 @@ def run(input):
 `assurance/contract.yaml`：
 
 ~~~yaml
+when: 'event.type == "mas.qos.adjust-request" && input.adjustmentType == "QOS_ADJUSTMENT"'
 requestSchema: schemas/qos-request.schema.yaml
 dependencies:
   host-context: urn:example:host-context
@@ -412,7 +429,7 @@ predicates:
       - request: schemas/qos-request.schema.yaml
     evaluator:
       type: cel
-      expression: request.requestType == 1 &&
+      expression: request.adjustmentType == "QOS_ADJUSTMENT" &&
         request.pduSessionId > 0 &&
         request.target5qi >= 1 &&
         request.target5qi <= 255
@@ -433,7 +450,7 @@ predicates:
 
 作者检查要点：
 
-- 选择条件位于 `SKILL.md` Front Matter 的 `when`；引用的 `input.requestType` 由 `assurance/contract.yaml` 的 `requestSchema` 定义。
+- 选择条件位于 `assurance/contract.yaml` 顶层 `when`；引用的 `input` 字段由同一 Contract 的 `requestSchema` 定义。SKILL.md Front Matter 不声明 `when`。
 - `schemas/` 与 `scripts/` 位于 Package 根目录，不因是否存在 Assurance 而移动。
 - `normalize-qos` 是一个纯本地 transform Script，arguments 组装为一个 JSON Object 并由 inputSchema 校验。
 - `modify-qos` 只表达一个公开业务 Capability；Provider 内部 SBI / PFCP 子步骤不拆成 Skill Node。
@@ -530,7 +547,7 @@ SKILL.md 正文与 YAML 注释遵循项目语言约定，并在同一 Skill Pack
 | 用注释写“必须 READ 后才能成功” | Compiler 无法校验 | 声明 Observation、Predicate、Evidence 和 Postcondition |
 | 用一个 Script 包装 HTTP / 文件 / 数据库调用 | 通过本地 Script 绕过 Capability / Effect | 副作用必须由公开 Capability 承担；Script 只做纯本地计算 |
 | 在 Skill 中引用旧版 Callable 别名 | 把内部调用身份泄漏给作者 | 只声明 Capability ID |
-| 在没有 Assurance 的 Skill 中声明 when | 无 Assurance 包不编译确定性选择条件 | 只允许存在 Assurance 的 Skill 在 SKILL.md Front Matter 声明可选 when |
+| 在没有 Assurance 的 Skill 中声明 when | 无 Assurance 包没有 Contract，不编译确定性选择条件；Front Matter 的 when 是非法未知字段 | 只允许存在 Assurance 的 Skill 在 assurance/contract.yaml 声明可选顶层 when |
 | 把 Reconcile 写成一个作者 Node | 把 Host / Runtime 内部机制暴露给 Skill | 由 Owner Contract 和 Runtime 负责原始调用的结果确认 |
 
 ## 10. 作者自检清单
@@ -538,7 +555,7 @@ SKILL.md 正文与 YAML 注释遵循项目语言约定，并在同一 Skill Pack
 - [ ] Skill 具有可复用业务语义，不是单 Tool / 单 Provider call 的包装。
 - [ ] SKILL.md 有符合 Agent Skills Specification 的 Front Matter；name / description 准确描述 Skill，正文简洁且语言一致。
 - [ ] 新 Assurance 只使用 CA-SL 1.6.0；没有旧版字段、Callable 或兼容入口。
-- [ ] 有 Assurance 时，可选 `when` 位于 SKILL.md Front Matter；无 Assurance Skill 不声明 `when`；引用 `input` 时 `requestSchema` 必须存在。
+- [ ] 有 Assurance 时，可选 `when` 位于 `assurance/contract.yaml` 顶层；SKILL.md Front Matter 不声明 `when`；无 Assurance Skill 不声明 `when`；引用 `input` 时 `requestSchema` 必须存在。
 - [ ] requestSchema、contexts、dependencies、capabilities 的所有权与身份准确。
 - [ ] Procedure 是单一静态 DAG；每个 Node 的阶段顺序正确，每种阶段不重复；末阶段正常 Outcome 显式路由。
 - [ ] 每个 Operation 阶段最多一个 Capability / 纯 Script；每个 Observation 阶段最多一个 READ Capability。
@@ -610,3 +627,5 @@ Apply 前仍须由用户确认，并对同一候选源码与依赖锁执行正�
 | 2026-11-27 | 0.1.7 | GPT-6.2（ChatGPT） | §3、§11 | 删除逐脚本 `llmInvocable` 和 Host `scriptExecution.llmEnabled`；LLM 与 Assurance 共用 Script Runner | 让 Demo 的模型调用能力与确定性执行能力一致，避免重复授权配置 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.8 | GPT-6.2（ChatGPT） | §3～§6、§7、§10～§11 | 删除作者级 Node-entry Wait / await / polling 规则；补齐完整正向 Skill 示例、共享资源读取和 transform / predicate 全 Registry 调用原则 | 回归既定 CA-SL 作者语法边界，证明作者仅凭规范可写出无 Wait 的 1.6.0 Skill | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.9 | GPT-6.2（ChatGPT） | §2～§4、§6、§9～§10 | 将 `when` 从 `assurance/contract.yaml` 移至 SKILL.md Front Matter，限定仅有 Assurance 的 Skill 可声明；无 Assurance Skill 不声明 when | 对齐既定 Skill 入口决策，避免无 Assurance 包引入未经 Compiler 检查的 CEL 选择条件 | Issue #49；IR-008；SR-032 |
+
+| 2026-11-27 | 0.2.0 | GPT-6.2（ChatGPT） | §3～§4、§6.7、§9～§10、修订记录 | 将 `when` 恢复为 assurance/contract.yaml 顶层唯一入口；SKILL.md Front Matter 不声明 when；拆分 MAS 自定义 QoS 示例与 3GPP 原版 OpenAPI Create 示例，并将 requestType 修正为字符串枚举 | 撤销误引入的 Front Matter 方案；避免把自定义字段误当作 3GPP SBI Schema | Issue #49；IR-008/009；SR-013/031/032；F02/F08/F09 |
