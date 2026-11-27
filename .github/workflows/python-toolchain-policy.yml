@@ -42,6 +42,33 @@ jobs:
           git fetch --no-tags origin "$BASE_SHA" "$HEAD_SHA" "refs/heads/$BASE_REF:refs/remotes/origin/$BASE_REF"
           git cat-file -e "${BASE_SHA}^{commit}"
           git cat-file -e "${HEAD_SHA}^{commit}"
+
+      - name: Determine Python scope
+        id: scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          python_scope=false
+          while IFS= read -r path; do
+            case "$path" in
+              src/*|tests/*|scripts/*.py|.github/scripts/*.py|pyproject.toml|uv.lock|.python-version|.gitignore|.github/python-toolchain-baseline.json|requirements*.txt|Pipfile*|poetry.lock|conda-lock.yml|conda-lock.yaml|environment.yml|environment.yaml|.github/workflows/review-context.yml|.github/workflows/sr003-plugin-ci.yml|.github/workflows/python-toolchain-policy.yml)
+                python_scope=true
+                ;;
+              .github/workflows/*.yml|.github/workflows/*.yaml)
+                if { git show "$BASE_SHA:$path" 2>/dev/null || true; git show "$HEAD_SHA:$path" 2>/dev/null || true; } | grep -Eiq 'uv |python|pyproject|unittest|pytest'; then
+                  python_scope=true
+                fi
+                ;;
+            esac
+          done < <(git diff --name-only --no-renames "$BASE_SHA...$HEAD_SHA")
+          echo "python_scope=$python_scope" >> "$GITHUB_OUTPUT"
+          echo "Python scope: $python_scope"
+
+      - name: Validate current PR Base ref
+        if: steps.scope.outputs.python_scope == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
           remote_base_sha="$(git rev-parse "refs/remotes/origin/$BASE_REF")"
           if [ "$remote_base_sha" != "$BASE_SHA" ]; then
             echo "::error::PR Base SHA is stale: event=$BASE_SHA remote=$remote_base_sha"
@@ -49,14 +76,17 @@ jobs:
           fi
 
       - name: Set up uv
+        if: steps.scope.outputs.python_scope == 'true'
         uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
         with:
           version: '0.13.10'
 
       - name: Install policy interpreter
+        if: steps.scope.outputs.python_scope == 'true'
         run: uv python install 3.14.6
 
       - name: Load trusted policy snapshot and baseline manifest
+        if: steps.scope.outputs.python_scope == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -84,6 +114,7 @@ jobs:
             --baseline-file "$policy_dir/baseline.json"
 
       - name: Test policy positive and negative cases
+        if: steps.scope.outputs.python_scope == 'true'
         run: |
           uv run --no-project --python 3.14.6 python -m unittest discover \
             -s tests -p test_python_toolchain_policy.py -v
