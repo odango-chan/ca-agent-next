@@ -1,8 +1,8 @@
 # SR-032：SKILL 作者规范、Node 拆分与注释原则
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.18  
-> 状态：**DRAFT（中央作者规范已形成设计候选，待独立设计评审；实施 NOT_READY）**  
+> SR 版本：0.1.19  
+> 状态：**DRAFT / NEEDS_REVISION（PR #52 固定 Head `d39080091dc640eaf83eb2a338fc338abe8054e9` 的独立复评发现 2 P1 / 3 P2；整改后须在新 Head 复评；实施 NOT_READY）**  
 > 创建日期：2026-11-27  
 > 修订日期：2026-11-27  
 > 上游需求：IR-008（关联 IR-003）  
@@ -95,7 +95,7 @@ F09 的 AI Authoring 必须使用同一作者规范和完整正向示例生成�
 
 | 类型 | 依赖 | 影响 |
 |---|---|---|
-| 设计依赖 | CA-SL 1.6.0 v0.2.7 / SR-029；SKILL 作者规范 v0.2.4 | 原有 Node / routes / arguments / PredicateSet 语法、Capability 绑定、四阶段、共享资源根目录、Script Registry、Script I/O / Evidence / 错误契约、Host Resource Read / Script Execution 和 when 语义必须一致；Skill 层无 Wait / await / polling；本 SR 不冻结 Compiler wire API |
+| 设计依赖 | CA-SL 1.6.0 v0.2.8 / SR-029；SKILL 作者规范 v0.2.4 | 原有 Node / routes / arguments / PredicateSet 语法、Capability 绑定、四阶段、共享资源根目录、Script Registry、Script I/O / Evidence / 错误契约、Host Resource Read / Script Execution 和 when 语义必须一致；Skill 层无 Wait / await / polling；本 SR 不冻结 Compiler wire API |
 | 历史来源 | SR-023 / ca-skills v1alpha5 | 只用于来源核对和历史归档 |
 | 消费者设计 | F01 / F02 / F03 / F04 / F05 / F08 / F09；SR-004 / SR-007 / SR-016 | Host Model Loop、Importer、Plugin Manager、Runtime Action Boundary、Host Resource Read、完整 Script Registry、Compiler / Bundle 和 AI Authoring 必须消费同一共享资源与 Script Execution 契约；现有产品实现状态不自动变化 |
 | 外部发布依赖 | ca-skills 1.6.0 正式 Schema / Golden / Release | 正式发布前，本规范与语言稿均保持设计候选，不声称产品可执行 |
@@ -112,19 +112,19 @@ F09 的 AI Authoring 必须使用同一作者规范和完整正向示例生成�
 | AC-032-05 | Package 文件职责、Schema 所有权、Capability-only、显式 arguments、when、Evidence / UNKNOWN 与 1.6.0 设计一致；明确 Skill 层不定义 Wait / await / polling，异步由 Operation / Host Runtime 负责 | 作者规范 §3～§5、§8～§10；CA-SL 1.6.0 §2、§5、§6、§10～§11 |
 | AC-032-06 | F09 明确 AI Authoring 必须遵守同一作者规范，并保留用户确认和 Compiler gate | F09 §9.3 |
 | AC-032-07 | IR、功能树、SR 索引、实施状态、文档目录、迁移审计和修订记录完整互链；不误报 1.6.0 Release / 实施 / E2E 状态 | 本 SR、各治理索引、PR 静态检查 |
-| AC-032-08 | Procedure.inputs 只绑定精确 context SourcePath；Capability / Script arguments 使用具名映射，Predicate arguments 与参数签名有序对应；Node 输出只引用 NodeId.operation.output / NodeId.observation.output；不定义 wait.output；作者规范不得发明正式语言 Schema 未冻结的参数结构 | 作者规范 §4.2；CA-SL 1.6.0 §6.1～§6.3 |
+| AC-032-08 | Procedure.inputs 只绑定精确 context SourcePath；Capability / Script arguments 使用具名映射，Predicate arguments 与参数签名有序对应；Predicate 参数 Schema 类型必须使用 CA-SL 定义的 `PackageSchemaPath | QualifiedSchemaId`（即 `SchemaReference`），本地路径严格相对 Package 根目录且限定 `schemas/`，外部 Schema ID 必须由 `Contract.dependencies` 中的精确 Alias 导出；Node 输出只引用 NodeId.operation.output / NodeId.observation.output；不定义 wait.output；作者规范不得发明正式语言 Schema 未冻结的参数结构 | 作者规范 §4.2；CA-SL 1.6.0 §6.1～§6.3 |
 | AC-032-09 | 无 assurance/ 的 Skill 仅 LLM-guided，仍可携带并使用共享资源；存在 assurance/ 时所有必需文件与静态语义必须完整有效，不得静默降级；Skill 层无 Wait / await / polling 语法 | 作者规范 §3、§5；CA-SL 1.6.0 §2、§10 |
 | AC-032-10 | schemas/、scripts/、references/、assets/ 位于 Skill Package 根目录，不受 assurance/ 可选性影响；Schema / Script 路径相对 Package 根目录；Schema YAML 源与 JSON Schema G.4 语义明确；同一资源不在 assurance/ 复制 | CA-SL 1.6.0 §2、§5、§8；作者规范 §3～§4；Package 格式规范 §2～§4 |
 | AC-032-11 | Script Registry 精确登记 Script ID / file / entrypoint / purpose / I/O Schema；LLM 可调用全部已登记 transform / predicate Script，Procedure / Predicate 通过同一 Script Runner 调用；补齐 arguments → JSON input、Predicate Evidence projection / evidenceUsed、异常 / timeout / output invalid 诊断；无逐脚本 LLM 标记或额外 Host 开关；禁止模型提交代码/路径/命令和脚本外部副作用 | CA-SL 1.6.0 §8；F03 / F04 / F05 / F08；作者规范 §3～§4 |
-| AC-032-12 | F01/F02/F03/F04/F05/F08/F09 与总体架构、SR-004/SR-007/SR-016 对无 Assurance 共享资源、Host Resource Read、完整 Script Registry、Compiler 资源闭包和 AI Change Set 边界无冲突；所有实现状态仍 NOT_RUN / NOT_IMPLEMENTED | 对应设计说明书版本、跨文档一致性审计和 PR 静态检查 |
-| AC-032-13 | CA-SL 1.6.0 保留原有 Node / routes / arguments / PredicateSet YAML 形状并明确规范文法；Procedure / Node / Stage / Predicate / Script Registry 字段、基数、映射/序列区别、SourcePath 和终态完整；不得新增 Wait 语法。正式机器 Schema / Golden 的发布责任与 NOT_RELEASED 状态明确 | CA-SL 1.6.0 §6.1～§6.3、§8；原 v1alpha4/v1alpha5 只读源规范对照；ca-skills 正式 Schema / Golden release gate |
+| AC-032-12 | F01/F02/F03/F04/F05/F08/F09 与总体架构、SR-004/SR-007/SR-016 对无 Assurance 共享资源、Host Resource Read、完整 Script Registry、Compiler 资源闭包和 AI Change Set 边界无冲突；本 SR 新增的 Host Resource Read、完整 Script Registry / Script Runner 与 CA-SL 1.6.0 集成在各消费者中的实现仍 NOT_RUN / NOT_IMPLEMENTED；此项不覆盖其他 SR 已有的 VERIFIED / IMPLEMENTED 结果 | 对应设计说明书版本、跨文档一致性审计和 PR 静态检查 |
+| AC-032-13 | CA-SL 1.6.0 保留原有 Node / routes / arguments / PredicateSet YAML 形状并明确规范文法；Procedure / Node / Stage / Predicate / Script Registry 字段、基数、映射/序列区别、SourcePath、SchemaReference（PackageSchemaPath / QualifiedSchemaId）和终态完整；不得新增 Wait 语法。正式机器 Schema / Golden 的发布责任与 NOT_RELEASED 状态明确 | CA-SL 1.6.0 §6.1～§6.3、§8；原 v1alpha4/v1alpha5 只读源规范对照；ca-skills 正式 Schema / Golden release gate |
 | AC-032-14 | Host Resource Read 有精确请求 / 响应、当前 Run Package snapshot 绑定、路径根 / 路径穿越拒绝、文本媒体类型、单文件大小上限、拒绝诊断；F01/F02/F03/F04/F05/F08/F09/SR-004/SR-007/SR-016 均引用同一接口 | F05 §2.1；F01 / F03 / F04；SR-004 AC-004-01/02；SR-007 AC-007-08 |
 | AC-032-15 | `when` 是有 Assurance Skill 的 `assurance/contract.yaml` 可选顶层字段；SKILL.md Front Matter 不声明 when，出现时按未知字段拒绝；无 Assurance Skill 没有 Contract、不声明 when；input 成员由同一 Contract.requestSchema 类型化，Compiler 发布 CheckedExpr/DescriptorSet，Importer 只校验正式 Manifest 与编译产物，不从 Front Matter 推导 | SKILL 作者规范 §3～§4；CA-SL 1.6.0 §2、§4～§5、§9；F02 §6～§7；F08 §2～§3；SR-004 AC-004-01～03；SR-013 AC-013-02 |
 
 ## 7. 当前状态与门禁
 
 - 中央作者规范和历史来源归档：本 PR 提交候选。
-- 独立设计评审：待执行；不得标记 APPROVE_FOR_READY。
+- 独立设计评审：PR #52 Review #6089086623 对固定 Head `d39080091dc640eaf83eb2a338fc338abe8054e9` 的结论为 NEEDS_REVISION（2 P1 / 3 P2）；本轮整改完成后须对新 Head 重新独立评审；不得标记 APPROVE_FOR_READY。
 - CA-SL 1.6.0 正式作者 Schema / Golden / Release：NOT_RELEASED。
 - Compiler / Bundle / Studio / Runtime 产品验收：NOT_RUN。
 - ca-skills 或其他外仓实施：未授权、未执行。
@@ -158,3 +158,4 @@ F09 的 AI Authoring 必须使用同一作者规范和完整正向示例生成�
 
 | 2026-11-27 | 0.1.17 | GPT-6.2（ChatGPT） | 文档头、设计依据、修订记录 | 同步 SKILL 作者规范 v0.2.3 的最终单 Predicate 例外和 QoS 示例 Node 合并 | 保持 SR-032 粒度原则、作者正向示例和 CA-SL 阶段自动推进语义一致 | Issue #49；IR-008；PR #52 |
 | 2026-11-27 | 0.1.18 | ChatGPT（GPT-6） | §3.3、AC-032-03、设计依据、依赖版本、修订记录 | 以 CA-SL v0.2.7 / 作者规范 v0.2.4 为当前依据，明确中间 Predicate-only 负例、最终单 Predicate Postcondition-only 正例，以及 QoS 请求验证合并和异常路由不退化的验收项 | 将 Node 粒度争议转为可判定的 SR 验收条件，修复旧版本引用漂移 | Issue #49；IR-008；SR-032；PR #52 |
+| 2026-11-27 | 0.1.19 | ChatGPT（GPT-6.2） | 文档头、AC-032-08/12/13、§7 | 限定 AC-032-12 的 NOT_RUN 范围为本 SR 新增能力；将 Predicate Schema 参数引用与 CA-SL SchemaReference 文法绑定；回填固定 Head 独立复评 NEEDS_REVISION 状态 | 避免将其他 SR 的既有实现状态覆盖为 NOT_RUN，并消除作者正向示例与 CA-SL EBNF 的不一致 | Issue #49；IR-008；CA-SL 1.6.0 v0.2.8；PR #52 |
