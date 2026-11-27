@@ -1,7 +1,7 @@
 # Tool Interface 与 Provider 集成设计说明书
 
 > 文档类型：功能子模块设计说明书
-> 文档版本：0.4.5
+> 文档版本：0.4.6
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 功能归属：F03.05 — Tool Plugin 集成
 > 交叉功能：F03.01～F03.04、F04.01、F04.05、F05.02、F06
@@ -505,12 +505,12 @@ Codec PR #39 的固定候选 `eb1169fe1d0e2e691d101908aad08ee8801da754` 在 `pro
 
 | 当前关系 | 真实成员 | 审计结果 | 1.6.0 目标 |
 |---|---|---|---|
-| 24 个 Capability 条目 / 25 个 membership | 23 个单成员 Capability + mas.se.events.emit 的 2 个成员 | 唯一多成员 Capability 为 mas.se.events.emit | 事件语义拆分，形成 24 个 Capability / 24 个 membership |
+| 24 个 Capability 条目 / 25 个 membership | 23 个单成员 Capability + mas.se.events.emit 的 2 个成员 | 唯一多成员 Capability 为 mas.se.events.emit | 拆分事件及排除 Reconcile 后**暂计 24/24**，仍须决定两个 N1 Parser 的去留/重构；最终为条件 22/22 或 24/24（按 Owner 冻结） |
 | mas.se.events.emit | SE.EMIT_EVENTS；SE.EMIT_RELEASE_EVENT_C | Input Schema 不同：ESTABLISHED + sessionKeys；RELEASED marker。Evidence Guarantee 不同：se.establishment-event-recorded 与 se.release-event-marker-written | 分别导出 mas.se.establishment-event.record → SE.EMIT_EVENTS；mas.se.release-event-marker.write → SE.EMIT_RELEASE_EVENT_C |
 | mas.reconcile.exact_original | MAS.RECONCILE | 当前 CapabilityContracts 中存在，但它是 Mutation Reconcile 专用 READ target | 从 Skill-facing CapabilityContracts 移除；保留 ToolCatalog contract、mutation.reconcile binding 和 Runtime internal-only Coordinator 路径 |
 | mas.receipt.query | MAS.RECEIPT_QUERY | 普通 READ evidence Callable，受 Capability / Scope 约束 | 保留当前 Skill-facing Capability / Callable 一对一映射 |
 
-目标 Owner ToolCatalog 仍保留 25 个 contracts（21 MUTATION + 4 READ）；其中 MAS.RECONCILE 仍在 ToolCatalog，但不再是可授予 Skill 的 Capability。移除 Reconcile Capability 并拆分事件 Capability 后，目标 Skill-facing CapabilityContracts 为 24 个 Capability / 24 个 Callable membership。其余 23 个当前单成员映射保持语义和 Callable ID 不变。
+现有 Owner ToolCatalog 的 **25 contracts（21 MUTATION + 4 READ）是 v1alpha4 历史基数**；MAS.RECONCILE 在新版仍为 internal-only，不可授予 Skill。移除 Reconcile Capability 并拆分事件时，尚未处理 N1 Parser 的**临时目标**为 24/24。因旧 SSM.PARSE_N1_MODIFY 实际内含 NAS 解码、SSM.PARSE_N1_RELEASE 需进一步 handler 审计，最终必须由 Owner 在两个互斥方案中签认：从新 Skill-facing Package 移出两个 Parser 时目标 **22/22**；或发布只接受已验证 Codec Result 的纯业务 READ，若两项均保留则目标 **24/24**；其他重组应重新计数。不能未经签认就断言其余 23 个单成员身份均可原样沿用，也不擅自修改旧 ToolCatalog。
 
 事件拆分保留原有 ToolCatalog Schema 和 Evidence Guarantee，不把两种事件合并成泛化接口。建立事件仍使用 ESTABLISHED + sessionKeys 和 se.establishment-event-recorded；释放标记仍使用 RELEASED 与 se.release-event-marker-written。只替换 Skill-facing Capability ID，不更改 Owner 的业务副作用或保证含义。
 
@@ -522,8 +522,9 @@ Codec PR #39 的固定候选 `eb1169fe1d0e2e691d101908aad08ee8801da754` 在 `pro
 |---|---:|---|---|
 | openamsm.smf.mas.context.read | 8 | 全部 kind=observation、effect=READ；共用 mas-context-query-input 与 mas-context-result Schema | 一个公开 Callable；Input 增加封闭 contextKind 枚举 sc / pa / upn / ssm / iam / ups / ca / saa |
 | openamsm.nf.metrics.read | 3 | 全部 kind=observation、effect=READ；共用 metrics-page-query 与 metrics-page Schema | 一个公开 Callable；Input 增加封闭 resourceKind 枚举 amf.ue-info / amf.gnb-info / smf.pdu-info |
+| **Codec READ（ID 由 Provider 发布）** | **现有 v1.2.0 未发布** | PR #39 仅为内部 Codec 候选库/Worker，不等于 Interface Package | **一个独立 Capability 对应唯一 READ Callable**；0xD1 首批候选、0xC9/NGAP 均需各自资格化 Profile 与封闭 Result Schema |
 
-第一组当前 backendOperationId 分别为 sc.query、pa.query、upn.query、ssm.query、iam.query、ups.query、ca.query、saa.query；第二组为 amf.ue-info.list、amf.gnb-info.list、smf.pdu-info.list。它们保留为 Provider 私有 backend 路由，不再作为 11 个 Skill-facing Callable。两个 Capability 分别发布一个公开 Callable，Callable ID 可使用与 Capability 同名的包内导出身份；实际版本号由 Provider Publisher 在实施 SR 中固定。
+第一组当前 backendOperationId 分别为 sc.query、pa.query、upn.query、ssm.query、iam.query、ups.query、ca.query、saa.query；第二组为 amf.ue-info.list、amf.gnb-info.list、smf.pdu-info.list。它们保留为 Provider 私有 backend 路由，不再作为 11 个 Skill-facing Callable。两个历史查询 Capability 各收敛为一个公开 Callable，另增加独立 Codec READ Capability/唯一 Callable，**Provider 新目标合计 3/3**。Callable ID、Codec Schema、slot/mediaType、Profile、handler 和包版本均必须由 ca-client-tools Publisher 正式冻结，不得根据 Capability 名称推造 callableId，也不得从当前 0xD1 库向量推断 0xC9/NGAP 合格。
 
 封闭 selector 是 Callable Input Schema 的业务参数，不是 Callable 选择器。未知 selector、缺失 selector、跨组 selector 或 Schema 不匹配均在 Provider 调用前拒绝。不得使用任意字符串、动态 URL/path/header 或 Provider catalog 扩权。
 
@@ -582,3 +583,4 @@ Runtime Action 以 Capability ID 为 Skill / Procedure 作者侧入口。Runtime
 | 2026-11-27 | 0.4.3 | GPT-6.2（ChatGPT） | §5、修订记录 | 将 CA-SL 1.6.0 Skill Author Source 与 Compiled Skill Artifact 分列：作者源仅声明 Capability ID，Artifact 保存 Compiler 生成的唯一 Capability→Callable Binding | 消除把 Capability / Callable 并列描述为作者依赖的歧义，保持 Callable 仅作为编译产物内部与 Runtime dispatch 身份 | Issue #40；SR-029；PR #45 |
 | 2026-11-27 | 0.4.4 | GPT-6.2（ChatGPT） | F03.05 §5 | 分列历史 v1alpha5 Compiler 职责与 CA-SL 1.6.0 Compiler 目标职责，消除组件表版本混用。 | 明确历史实现与新目标模型边界，避免将旧 resolved dependency snapshots / Owner bindings 误读为 1.6.0 职责。 | Issue #40/#62；PR #45 |
 | 2026-11-28 | 0.4.5 | GPT-6（ChatGPT） | §8.3 | 固定 3/3 Codec Provider 目标、READ 不等于纯业务 Parser 的源证据、Owner 两种条件基数与 T1/T2 限界 | 消除第六轮 P1-01 的 Provider/Owner 责任混合与隐式 fallback | Issue #40/#113；PR #45；SR-026/029；F06 |
+| 2026-11-28 | 0.4.6 | GPT-6（ChatGPT） | §12.2～12.3 | 将基数表和正文同步为 Codec Provider 3/3、Owner 22/22 或 24/24 的条件目标，明确发布者未冻结身份/Schema | 消除正文 §12 与新增 §8.3 口径冲突，避免第七轮再次出现 2/2 旧目标 | Issue #40/#113；PR #45；SR-026/029 |
