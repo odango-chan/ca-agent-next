@@ -2,7 +2,7 @@
 
 > 文档类型：工程治理功能设计说明书  
 > 文档版本：0.2.6\
-> 状态：Review #6083641266 对固定 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2` 给出 CHANGES_REQUESTED（0 P0 / 1 P1 / 3 P2）；第五轮仅授权文档整改；SR-028 仍 DRAFT、AC-028-01～10 产品验收 NOT_RUN、READY=0\
+> 状态：Review #6083641266 对固定 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2` 给出 CHANGES_REQUESTED（0 P0 / 1 P1 / 3 P2）；R028-17～20 已按 Issue #12 完成设计整改并推送，等待新 Head 第六轮独立复评；SR-028 仍 DRAFT、AC-028-01～10 产品验收 NOT_RUN、READY=0\
 > 修订日期：2026-11-27\
 > 功能节点：G02 Python 工程工具链与环境管理  
 > 关联需求：[IR-007](../../IR/IR%20总登记册.md#ir-007)、[SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md)  
