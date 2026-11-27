@@ -174,7 +174,7 @@ CA-SL v1alpha5 的 when 已进入已合并的 ca-skills #88/#89 发布刷新；�
 | 2026-11-27 | 0.1.7 | GPT-6.2（ChatGPT） | 文档头、§2 | 扩展 EC01 功能追踪至 F01/F03/F04/F05，并将 Host Script Execution 的 LLM 暴露门禁固定为显式 Host 配置 | 确保 Model Context、Plugin Extension、Runtime、Resource Access 均纳入统一架构边界 | IR-008；Issue #49；SR-032 |
 | 2026-11-27 | 0.1.8 | GPT-6.2（ChatGPT） | §2～§3 | 删除逐脚本 `llmInvocable` 和 Host `scriptExecution.llmEnabled`；所有已登记 Package Script 对 LLM 与 Assurance 使用同一执行入口 | 避免 Demo 引入不必要的调用者授权分层 | IR-008；Issue #49；SR-032 |
 | 2026-11-27 | 0.1.9 | GPT-6.2（ChatGPT） | §2～§3 | 移除 Skill 层 Wait / await / polling 作者语义，新增 Host Resource Read 系统 Action，并明确 LLM 可调用全部登记 Script | 使 EC01 架构边界与 CA-SL 1.6.0、F05 和统一 Script Runner 一致 | IR-008；Issue #49；SR-032 |
-| 2026-11-27 | 0.2.0 | GPT-6.2（ChatGPT） | §2～§4、§10 | 将 `when` 作者源位置统一为有 Assurance Skill 的 SKILL.md Front Matter；无 Assurance Skill 不声明 when | 对齐 CA-SL 1.6.0、F02、Compiler 和作者规范的统一入口，避免双重 Contract 语义 | IR-008；Issue #49；SR-032；F02/F08/F09 |
-| 2026-11-27 | 0.2.1 | GPT-6.2（ChatGPT） | §4、§8、修订记录 | 将 Compiler when 状态描述改为 SKILL.md Front Matter 扩展来源 | 与 1.6.0 作者入口统一，避免把历史 Contract.when 状态误作当前实现 | IR-008；Issue #49；SR-032；SR-013 |
+| 2026-11-27 | 0.2.0 | GPT-6.2（ChatGPT） | §2～§4、§10 | 将 `when` 作者源位置统一为有 Assurance Skill 的 SKILL.md Front Matter；无 Assurance Skill 不声明 when | 对齐 CA-SL 1.6.0、F02、Compiler 和作者规范的统一入口，避免双重 Contract 语义；历史错误入口判断，已由 0.2.2 撤销，不构成兼容方案| IR-008；Issue #49；SR-032；F02/F08/F09 |
+| 2026-11-27 | 0.2.1 | GPT-6.2（ChatGPT） | §4、§8、修订记录 | 将 Compiler when 状态描述改为 SKILL.md Front Matter 扩展来源 | 与 1.6.0 作者入口统一，避免把历史 Contract.when 状态误作当前实现；历史错误入口判断，已由 0.2.2 撤销，不构成兼容方案| IR-008；Issue #49；SR-032；SR-013 |
 
 | 2026-11-27 | 0.2.2 | GPT-6.2（ChatGPT） | §2～§4、§8、修订记录 | 恢复 `assurance/contract.yaml` 顶层 `when` 为唯一入口，修正 Create 示例为原版 OpenAPI 字符串枚举 | 撤销 Front Matter 旧方案，确保 EC01、CA-SL、Compiler 与 3GPP 输入契约一致 | IR-008/009；Issue #49；SR-013/031/032 |
