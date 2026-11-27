@@ -125,6 +125,7 @@ uv lock --check
 Linux/macOS/Git Bash（工作目录为仓库根目录）：
 
 ```bash
+set -euo pipefail
 cd examples/echo/plugin
 export GOWORK=off
 go version
@@ -138,9 +139,12 @@ Windows PowerShell（工作目录为仓库根目录）：
 
 ```powershell
 Push-Location examples/echo/plugin
+$ErrorActionPreference = 'Stop'
 $env:GOWORK = 'off'
 go version
-if ((go env GOWORK) -ne 'off') { throw 'GOWORK must be off' }
+if ($LASTEXITCODE -ne 0) { throw 'Go toolchain is unavailable' }
+$gowork = (go env GOWORK)
+if ($LASTEXITCODE -ne 0 -or $gowork -ne 'off') { throw 'GOWORK must be off' }
 New-Item -ItemType Directory -Force bin | Out-Null
 Remove-Item bin/echo-plugin.exe -ErrorAction SilentlyContinue
 go build -trimpath -o bin/echo-plugin.exe .
@@ -221,6 +225,7 @@ steps:
     shell: bash
     working-directory: examples/echo/plugin
     run: |
+      set -euo pipefail
       mkdir -p bin
       if [ "$RUNNER_OS" = "Windows" ]; then
         rm -f bin/echo-plugin.exe
@@ -233,6 +238,7 @@ steps:
     if: runner.os == 'Linux'
     shell: bash
     run: |
+      set -euo pipefail
       uv python install "$PYTHON_VERSION"
       PY="$(uv python find "$PYTHON_VERSION")"
       "$PY" --version
@@ -246,17 +252,27 @@ steps:
     if: runner.os == 'Windows'
     shell: pwsh
     run: |
+      $ErrorActionPreference = 'Stop'
       uv python install $env:PYTHON_VERSION
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       $PY = (uv python find $env:PYTHON_VERSION)
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       $version = (& $PY --version)
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       Write-Host $version
       if ($version -ne 'Python 3.14.6') { throw "Expected Python 3.14.6, got $version" }
       uv sync --python "$PY" --locked --group dev --extra plugins
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       uv run --python "$PY" --locked --group dev --extra plugins python -m unittest discover -s tests -p test_host.py -v
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       uv run --python "$PY" --locked --group dev --extra plugins python -m unittest discover -s tests -p test_plugin.py -v
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       uv run --python "$PY" --locked --group dev --extra plugins python -m unittest discover -s tests -p test_review_context.py -v
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       uv run --python "$PY" --locked --group dev --extra plugins python -m unittest discover -s tests -v
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       uv run --python "$PY" --locked --group dev --extra plugins python -m ca_agent_next --smoke
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 ```
 
 矩阵 Job 还必须保存 Host、Plugin、Review Context、完整总计的 discovered/passed/failures/errors/skipped/exit code；所有必需套件和总计 discovered 均大于 0，必需用例 skipped=0，failures/errors=0，退出码为 0。Go Echo build、compileall 和证据采集仍保留。`GOWORK=off` 必须应用于 Go 构建与 Plugin 测试。
