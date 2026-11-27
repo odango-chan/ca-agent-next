@@ -166,14 +166,21 @@ def is_python_scope_path(path: str, workflow_content: str = "") -> bool:
         return True
     if normalized.startswith(("src/", "tests/")):
         return True
-    if normalized.startswith("scripts/") and normalized.endswith(".py"):
-        return True
-    if normalized.startswith(".github/scripts/") and normalized.endswith(".py"):
-        return True
     candidate = Path(normalized)
-    if candidate.name.lower() in EXECUTABLE_NAMES or candidate.suffix.lower() == ".mk":
+    if normalized.startswith("scripts/") and candidate.suffix.lower() == ".py":
+        return True
+    if normalized.startswith(".github/scripts/") and candidate.suffix.lower() == ".py":
+        return True
+    is_script_launcher = (
+        normalized.startswith(("scripts/", ".github/scripts/"))
+        and candidate.suffix.lower() in EXECUTABLE_SUFFIXES
+    )
+    is_build_command_file = (
+        candidate.name.lower() in EXECUTABLE_NAMES or candidate.suffix.lower() == ".mk"
+    )
+    if is_script_launcher or is_build_command_file:
         lowered = workflow_content.lower()
-        return any(token in lowered for token in ("python", "uv ", "pytest", "unittest", "pyproject"))
+        return any(token in lowered for token in ("python", "uv ", "pytest", "unittest", "pyproject", "pip "))
     if normalized.startswith(".github/workflows/") and normalized.endswith((".yml", ".yaml")):
         if Path(normalized).name in {
             "review-context.yml",
@@ -197,6 +204,7 @@ def has_python_scope(
         candidate = Path(path)
         inspect_content = (
             path.startswith(".github/workflows/")
+            or path.startswith(("scripts/", ".github/scripts/"))
             or candidate.name.lower() in EXECUTABLE_NAMES
             or candidate.suffix.lower() == ".mk"
         )
