@@ -1,7 +1,7 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.27\
+> 文档版本：0.3.28\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
 > 修订日期：2026-11-27\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -173,7 +173,7 @@ Skill Studio 的 Package Explorer 以 Capability 作为唯一 Skill-facing 业�
 
 ### 9.3 AI Authoring
 
-AI Authoring 的 Change Set 必须遵守中央 [SKILL 作者规范](../../规范/SKILL作者规范.md)的全部适用规则：Skill / Capability 粒度、共享 Package 资源与 Schema 所有权、SourcePath / 显式 arguments、when / Wait、Evidence / UNKNOWN、静态 DAG、四阶段顺序、Node 拆分 / 合并和注释非执行语义。AI Authoring 可以读取当前 Package snapshot 的 schemas/、scripts/manifest.yaml 与 scripts/ 源码作为上下文；读取不等于执行。当前 Procedure Authoring Change Set 只修改 `assurance/procedure.yaml`：允许新增 / 删除 / 修改 `start`、Node、四阶段、已发布 Capability / Predicate / Script ID 的引用、显式 arguments、阶段 routes、Node-entry Wait 和解释性注释；引用只能来自已导入并 pin 的 Package exports / PredicateSet / Script Registry，不得自行创造 Capability / Predicate / Schema / Script 身份。该 Change Set 不修改 `assurance/contract.yaml`、`schemas/`、`assurance/predicates.yaml`、`scripts/`、`scripts/manifest.yaml`、Package Manifest 或外部 Package exports；Contract.when 的字段编辑仍走 §3 的独立编辑与校验路径，不混入 Procedure Change Set。若重命名 / 删除的 Node 被 `contract.precondition` 引用，或其他 Procedure 修改必须同步修改 Contract 字段，当前 Change Set 必须返回 OUT_OF_SCOPE；不得只改 `procedure.yaml` 留下悬空的跨文件引用。超出范围的提案必须明确返回 OUT_OF_SCOPE，不得静默扩大变更集。不得生成 Callable ID、backendOperationId 或动态 Provider 选择，不得通过注释补足缺失的 Schema、Predicate、Evidence 或 routes。AI Authoring 不在 Studio Worker 中执行脚本；需要运行脚本时使用正常 Agent Runtime，由 Host 通过 host.skill-script.execute 调用当前 Skill Registry 中登记的脚本，与 Assurance 共用同一 Script Runner；不能在 Studio Worker / AI Authoring 中创建第二套 Python 执行器。Apply 前仍须用户确认，随后对同一候选源码和项目锁使用同一 1.6.0 Compiler Build / Verify 路径重新检查；本设计不表示当前 Studio 已实现作者规范感知或 Compiler gate。
+AI Authoring 的 Change Set 必须遵守中央 [SKILL 作者规范](../../规范/SKILL作者规范.md)的全部适用规则：Skill / Capability 粒度、共享 Package 资源与 Schema 所有权、SourcePath / 显式 arguments、when、Evidence / UNKNOWN、无 Wait 的静态 DAG、四阶段顺序、Node 拆分 / 合并和注释非执行语义。AI Authoring 通过 F05 定义的 `host.skill-resource.read` 读取当前 Package snapshot 的 schemas/、scripts/manifest.yaml、scripts/ 源码与 references；读取不等于执行。当前 Procedure Authoring Change Set 只修改 `assurance/procedure.yaml`：允许新增 / 删除 / 修改 `start`、Node、四阶段、已发布 Capability / Predicate / Script ID 的引用、显式 arguments、阶段 routes 和解释性注释；引用只能来自已导入并 pin 的 Package exports / PredicateSet / Script Registry，不得自行创造 Capability / Predicate / Schema / Script 身份。该 Change Set 不修改 `assurance/contract.yaml`、`schemas/`、`assurance/predicates.yaml`、`scripts/`、`scripts/manifest.yaml`、Package Manifest 或外部 Package exports；Contract.when 的字段编辑仍走 §3 的独立编辑与校验路径，不混入 Procedure Change Set。若重命名 / 删除的 Node 被 `contract.precondition` 引用，或其他 Procedure 修改必须同步修改 Contract 字段，当前 Change Set 必须返回 OUT_OF_SCOPE；不得只改 `procedure.yaml` 留下悬空的跨文件引用。超出范围的提案必须明确返回 OUT_OF_SCOPE，不得静默扩大变更集。不得生成 Callable ID、backendOperationId 或动态 Provider 选择，不得通过注释补足缺失的 Schema、Predicate、Evidence 或 routes。AI Authoring 不在 Studio Worker 中执行脚本；需要运行脚本时使用正常 Agent Runtime，由 Host 通过 host.skill-script.execute 调用当前 Skill Registry 中登记的全部脚本（包括 transform / predicate），与 Assurance 共用同一 Script Runner；Predicate Script 的直接调用不产生 Evidence 或 Assurance Outcome。不能在 Studio Worker / AI Authoring 中创建第二套 Python 执行器。Apply 前仍须用户确认，随后对同一候选源码和项目锁使用同一 1.6.0 Compiler Build / Verify 路径重新检查；本设计不表示当前 Studio 已实现作者规范感知或 Compiler gate。
 
 ### 9.4 版本与导入
 
@@ -245,3 +245,4 @@ AI Authoring 的 Change Set 必须遵守中央 [SKILL 作者规范](../../规范
 | 2026-11-27 | 0.3.25 | GPT-6.2（ChatGPT） | §9.2～§9.3、修订记录 | 增加 Script ID 的 Procedure / Predicate LSP 补全与跳转；明确 Studio 不执行脚本，Host 暴露仍受双门禁控制；清理重复修订行 | 保持作者体验、Host Script Execution 和文档版本历史一致 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.3.26 | GPT-6.2（ChatGPT） | §6 | 将 SKILL.md-only 子路径更正为可携带共享资源的无 Assurance Skill Package | 使 Studio 的资源视图与 Agent 的无 Assurance 导入语义一致 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.3.27 | GPT-6.2（ChatGPT） | §9.3 | AI Authoring 只禁止在 Studio Worker 自建执行器；正常 Agent Runtime 的 Script Action 使用完整 Registry 和共享 Script Runner，不增加双门禁 | 区分 Authoring 工作台与 Agent Runtime 的职责，不限制 LLM 在运行时使用 Package scripts/ | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.3.28 | GPT-6.2（ChatGPT） | §9.3 | 删除 Procedure Change Set 的 Node-entry Wait 字段；AI Authoring 通过 F05 Resource Read 读取共享资源，正常 Runtime 可调用全部登记 Script | 保持 Studio 作者体验与无 Wait CA-SL 语法、共享资源读取和统一 Script Runner 一致 | Issue #49；IR-008；SR-032 |
