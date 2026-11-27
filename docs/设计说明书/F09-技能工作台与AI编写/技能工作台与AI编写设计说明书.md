@@ -1,7 +1,7 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.11  
+> 文档版本：0.3.12  
 > 状态：目标设计基线待评审；当前实现快照 2026-11-27：#272 MERGED、#276 OPEN/DRAFT/DIRTY、#269 OPEN；SR-024 VERIFIED、SR-025 READY  
 > 修订日期：2026-11-27  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -161,7 +161,7 @@ Package Explorer、LSP、Problems 与 AI Workbench 必须区分源码诊断、�
 
 
 
-当前产品审计补充（2026-11-26）：Studio Issue [#279](https://github.com/odango-chan/ca-skill-studio-demo/issues/279) 仍 OPEN，负责统一 Product Acceptance 与架构/代码审计；[#290](https://github.com/odango-chan/ca-skill-studio-demo/issues/290) 仍 OPEN，负责运行文档与 main 对齐。Example 替换回归仍由 [Issue #295](https://github.com/odango-chan/ca-skill-studio-demo/issues/295) 跟踪：历史 Pages Chromium run `45788420150` 曾在可选 `.vscode/settings.json` 缺失时复现 OPFS `EntryNotFound`；修复 PR [#296](https://github.com/odango-chan/ca-skill-studio-demo/pull/296) 已合并（`73523df2f`），但 Issue #295 仍 OPEN，不能据此宣称完整 Product Acceptance 通过。
+当前产品审计补充（2026-11-27）：Studio Issue [#279](https://github.com/odango-chan/ca-skill-studio-demo/issues/279) 仍 OPEN，负责统一 Product Acceptance 与架构/代码审计；[#290](https://github.com/odango-chan/ca-skill-studio-demo/issues/290) 仍 OPEN，负责运行文档与 main 对齐。Example 替换回归仍由 [Issue #295](https://github.com/odango-chan/ca-skill-studio-demo/issues/295) 跟踪：历史 Pages Chromium run `45788420150` 曾在可选 `.vscode/settings.json` 缺失时复现 OPFS `EntryNotFound`；修复 PR [#296](https://github.com/odango-chan/ca-skill-studio-demo/pull/296) 已合并（`73523df2f`），但 Issue #295 仍 OPEN，不能据此宣称完整 Product Acceptance 通过。
 
 SR-024 的 Host Publisher 已 VERIFIED，但生成 ZIP 尚未创建 Release/Registry，也未导入当前 Studio lock；SR-025 设计 READY；实施 Issue [ca-client-tools #43](https://github.com/odango-chan/ca-client-tools/issues/43) OPEN，MAS Publisher 代码和 ZIP 均未产生。Studio main `79bd2c3` 的 #272 已合并（merge `a863355`），#276 仍 dirty；默认 Host Context Example provenance 已由专用路径实现并持久化；普通 ZIP provenance/reload、#269 的 Build/Verify、Package Audit、AI Authoring gate、no-root 和双根正式包消费仍未闭合。PR #296 已合并但 Issue #295 仍 OPEN；Pages 最新部署 SHA 未重新核验。
 
@@ -188,3 +188,4 @@ EC06 历史决策已统一归档于中央仓：[ADR-0001 Source-first Visual](..
 |  2026-11-26  |  0.3.9  |  GPT-6.2（ChatGPT）  |  §4.5、文档头  |  将 SR-025 的目标仓实施追踪固定为 ca-client-tools #43 OPEN，明确 Publisher 尚未实施 ；原因： 补齐 READY → 目标仓 Issue 的可追踪关系，不将 Issue 创建误报为代码交付  |  Issue #12；IR-006；SR-025；ca-client-tools #43  |
 |  2026-11-27  |  0.3.10  |  GPT-6.2（ChatGPT）  |  文档头、§4.5、§7  |  将 Studio 当前 main 更新为 `79bd2c3`；确认 #272 MERGED、#276 OPEN/DRAFT/DIRTY、#269/#279/#290/#295 OPEN，以及 SR-024 VERIFIED / SR-025 READY ；原因： 使用本轮实际查询的 Studio main，继续区分 Publisher 完成、Studio lock 消费、Worker/Verify 和产品验收  |  Issue #53；IR-006；SR-016、SR-024、SR-025；Studio #261/#269/#272/#276/#279/#290/#295；ca-client-tools #43  |
 | 2026-11-27 | 0.3.11 | GPT-6.2（ChatGPT） | 文档头、§4.5、§7、修订记录 | 分开记录 #272 merge SHA 与当前 main；确认默认 Host Context Example provenance 已实现并持久化，普通 ZIP provenance/reload 与双根 Build/Verify 仍未完成；记录 #296 merge 与 #295 Issue 状态；规范化修订表 | 避免把默认 fixture 专用实现误报为未实现或扩大为普通 ZIP/产品验收；修复 Studio PR/main 身份混淆与静态表格列数错误 | Issue #53；IR-006；SR-016、SR-024、SR-025；Studio #261/#267/#269/#270/#272/#276/#279/#290/#295/#296 |
+| 2026-11-27 | 0.3.12 | GPT-6.2（ChatGPT） | §7、修订记录 | 将当前产品审计补充日期更新至 2026-11-27，保持 #295 Issue OPEN 与 #296 已合并修复的边界 | 防止将历史回归现象误报为当前 main 仍未修复，同时不把 PR merge 扩大为完整 Product Acceptance | Issue #53；Studio #279/#290/#295/#296 |
