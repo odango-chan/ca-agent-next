@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.65
+> 文档版本：0.3.66
 > 状态：29 项 SR：4 VERIFIED、1 IMPLEMENTED、24 DRAFT；PR #46 Review #6083872622 对 SR-028 的第六轮独立复评为 CHANGES_REQUESTED（固定 Head 2d20a128，0 P0 / 1 P1 / 2 P2）；R028-21～23 已按 Issue #12 完成文档整改并推送，等待新 Head 第七轮独立复评，SR-028 仍 DRAFT、AC-028-01～10 产品执行 NOT_RUN、READY=0。
 > 修订日期：2026-11-27\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -144,7 +144,7 @@
 | [SR-011](../SR/SR-011-真实%20OpenAMSM%20创建修改释放端到端验证.md) | 限定设计已认可，等待直接依赖 | AC-011-06 静态架构断言 | 已获限定设计认可。组合实现具备后检查 Core 零业务分支；01～05 等同批 Bundle、Compiler Verify、Provider/Owner Package 和隔离对端。 | [#75](https://github.com/odango-chan/ca-agent-next/issues/75#issuecomment-7210271472) |
 | [SR-012](../SR/SR-012-Compiler设计归档与跨仓收敛.md) | 阶段 READY（中央只读核验） | AC-012-01 的 Next→源仓静态部分、03 | [固定源报告](../issue-95-fixed-source-handoff/SR-012.md)已核对 218/12、blob 与正文差异；01 限定范围及 03 静态门槛 PASS；02 与源仓回链 NOT_RUN。 | [#76](https://github.com/odango-chan/ca-agent-next/issues/76#issuecomment-7210373026)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95) |
 | [SR-013](../SR/SR-013-Compiler已检查when与发布产物.md) | 阶段 READY（中央只读核验） | AC-013-01 归档完整性 | [归档报告](../issue-95-fixed-source-handoff/SR-013.md)：58/58 哈希相符但三处归档缺陷未闭合，本轮 FAIL、复跑 NOT_RUN；02～06 原状态不变。 | [#77](https://github.com/odango-chan/ca-agent-next/issues/77#issuecomment-7209276846)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95) |
-| [SR-016](../SR/SR-016-工作台设计移交与条件编辑.md) | 阶段 READY（中央只读核验） | MIG-016-01、AC-016-09 设计对照 | [报告](../issue-95-fixed-source-handoff/SR-016.md)：MIG/09 静态 PASS；其余产品 AC BLOCKED/NOT_RUN，六宿主未实测；#272 合并仅作差异。 | [#78](https://github.com/odango-chan/ca-agent-next/issues/78#issuecomment-7210318006)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95) |
+| [SR-016](../SR/SR-016-工作台设计移交与条件编辑.md) | 阶段 READY（中央只读核验） | AC-016-01（MIG-016-01 作为历史迁移证据台账）、AC-016-09 设计对照；AC-016-01 当前 NOT_RUN | [报告](../issue-95-fixed-source-handoff/SR-016.md)：MIG-016-01 / AC-016-09 静态 PASS；本版 AC-016-01 新定义待复核、NOT_RUN；其余产品 AC BLOCKED/NOT_RUN，六宿主未实测；#272 合并仅作差异。 | [#78](https://github.com/odango-chan/ca-agent-next/issues/78#issuecomment-7210318006)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95) |
 | [SR-017](../SR/SR-017-业务插件设计移交.md) | 阶段 READY（中央只读核验） | AC-017-01～04 静态移交 | [报告](../issue-95-fixed-source-handoff/SR-017.md)：01/03/04 限定 PASS，02 FAIL；缺 F06 关键 fixtures/Schema 且旧 ack 冲突，实现归 SR-009。 | [#79](https://github.com/odango-chan/ca-agent-next/issues/79#issuecomment-7210393284)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95) |
 | [SR-018](../SR/SR-018-业务所有者设计移交.md) | 阶段 READY（中央只读核验） | AC-018-01、02（除 Release 子项）、04 | [报告](../issue-95-fixed-source-handoff/SR-018.md)：01/02 FAIL，04 静态 PASS；声明路径、Evidence 与 Reconcile 缺陷待 Owner 修复，Release 另记。 | [#80](https://github.com/odango-chan/ca-agent-next/issues/80#issuecomment-7210419119)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95) |
 | [SR-019](../SR/SR-019-仿真对端设计移交.md) | 阶段 READY（中央只读核验） | AC-019-01/02/04 静态移交 | [报告](../issue-95-fixed-source-handoff/SR-019.md)：01/04 静态 PASS，02 FAIL，03 NOT_RUN；联合 fixture 缺项另记。 | [#81](https://github.com/odango-chan/ca-agent-next/issues/81#issuecomment-7210443123)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95) |
@@ -288,3 +288,4 @@
 | 2026-11-27 | 0.3.63 | kimi-k3.1-pro | §2.4、修订记录 | 回填 SR-018/019 静态 FAIL/PASS 分层及联合证据缺项 | 不用历史 Owner/peer 实现或场景替代当前静态正确性和运行验收 | Issue #95；SR-018/019 |
 | 2026-11-27 | 0.3.64 | kimi-k3.1-pro | §2.4、修订记录 | 回填 SR-016/030 限定静态 PASS 与产品 BLOCKED/NOT_RUN | 区分 Studio 状态模型、固定 Schema 字节与未实施产品验收 | Issue #95；SR-016/030 |
 | 2026-11-27 | 0.3.65 | kimi-k3.1-pro | §2.4、修订记录 | 回填 SR-023 历史规范 01～03 静态 PASS 与新版 04 BLOCKED | 区分历史语言移交与新版 Compiler/Bundle/Importer 验收 | Issue #95；SR-023 |
+| 2026-11-27 | 0.3.66 | GPT-6（ChatGPT） | §2.4 SR-016、修订记录 | 同步 AC-016-01 作为迁移完整性正式验收项，MIG-016-01 仅为历史证据台账；AC-016-01 当前 NOT_RUN | 避免新正式 AC 与旧审计 PASS 被索引误同一化，回应 #107 复评 P2-01 | Issue #106；SR-016；PR #107 |
