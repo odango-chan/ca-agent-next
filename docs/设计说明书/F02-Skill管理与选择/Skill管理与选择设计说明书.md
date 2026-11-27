@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：**设计待评审**（唯一新目标 CA-SL 1.6.0；全链路不兼容任何旧作者语法、Build DTO、Artifact、Bundle；1.6.0 产品未发布）
-> 文档版本：0.3.2
+> 文档版本：0.3.3
 > 功能归属：F02 — Skill 管理与选择  
 > 关联 SR：SR-004、SR-005、SR-006    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -235,14 +235,13 @@ Next 在 Skill 导入时反序列化已检查程序和类型环境，建立运�
 按 [CA-SL 发布与候选](../../规范/CA-SL语言基线与版本规范.md) 确认 when 的发布状态。[F08 编译与发布](../F08-技能编译与发布/技能编译与发布设计说明书.md)负责组装 Bundle，EC02 负责生成已检查程序，Next 由 SR-004～006 消费与验收；F09 Studio 维护作者编辑。SR-004 只负责返回已验证 import candidate；SR-005 负责 Catalog generation；SR-006 负责选择与 Continuation。Compiler API 和 Bundle 生产依赖分别由 SR-013、SR-027 提供。Issue #40 / SR-029 定义的 **CA-SL 1.6.0** 是下一正式产品目标；历史 v1alpha5 规范和产物继续冻结但不作为新 Runtime 输入。1.6.0 未正式发布前相关实施仍 BLOCKED。
 
 
-## 13. 3GPP Event 选择输入与执行期 Codec Result 的分离（IR-009）
+## 13. 3GPP 原版来源与 Event 选择 / Codec Result 分段（IR-009）
 
-F02 选择算法保持 **Event Schema → Skill-owned `requestSchema` → `when` → candidate**，选择期绝不调用 Codec 或读取 Tool result。3GPP 标准类型可通过 `requestSchema` 的显式公共 Schema-only 依赖精确 $ref 重用，但根仍属于 Skill；该公共包不是 SR-030 Host Context 包，不能混入 `Contract.contexts` 或 Callable allowlist。
+3GPP OpenAPI **只代发布 OpenAMSM 实际支持的原版 YAML**，逐字节不变；原件 Source Bundle A 不是自动可给 CA-SL Compiler G.4 直接 $ref 的 Schema。类型复用必须等待不同文件/不同 identity 的受审 Adapter Schema-only Package B（非 3GPP 原版），Host Context 仍只经 `Contract.contexts` 引用。见 [EC01.3GPP 设计](../EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。
 
-- T1 的 Request 只能要求 EC04 在 Plugin Event Schema 验证后**已提供**的 SBI JSON、路径/operation、最小 NAS discriminator、已授权原始 Artifact ref；Create 的 `requestedPduSessionType` / `requestedSscMode` 若只存在于 N1，必须从 T1 必填转至选定 Skill 的 T2 Codec READ Result。
-- continuation （含 0xD4 和 N2 三类 completion）只恢复原 Run，不新建候选，不重新验证其选择期 `when`；其 payload / Evidence 与原 Run 完整 correlation。
-- 导入的 Artifact 必须携带完整已验证 Request 根/公共类型 $ref closure；缺 Schema-only 依赖、重复版本/Schema ID、编码后才可见字段或不匹配 output 类型时 fail-closed。缺正式 Schema/Codec Package 不阻塞与其无关的 SKILL.md-only 或无 Codec Assurance 子集。
-- 具体来源和正负例见 [3GPP 公共 Schema 设计](../EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)及 [SR-031](../../SR/SR-031-3GPP公共Schema-only-Publisher.md)；新的 1.6.0 Bundle/Compiler 产品均未发布，相关集成 `NOT_RUN/BLOCKED`。
+F02 保持 **Event Schema → Skill 自有 `requestSchema` → `when` → candidates**。T1 只能使用 OpenAMSM SBI 中实际到场的字段、业务操作 identity、最小 discriminator、受授权原始 Artifact 引用；没有 T2 解码就不能要求 NAS-only 的 PDU Session Type/SSC mode。B 发布后才可被 Request 根以已声明的精确类型 $id 引用；**不能**让 Resolver 在 T1 调 Codec 或把 A 原版强塞进有限 G.4。T2 的 Provider Result 仅在选定 Skill Procedure 的 READ 后可用；0xD4/N2 completion 只续跑旧 Run，不重新选择/评估 when。
+
+没有 B/正式 Codec 包时，阻塞**只有对应类型/解码依赖的 Assurance Skill**，无 Codec 的 SKILL.md-only 或独立无解码 Skill 不受影响。所有产品 AC 未执行，CA-SL 1.6.0-only，无旧版兼容或默认值补造。
 
 ## 修订记录
 
@@ -274,3 +273,4 @@ F02 选择算法保持 **Event Schema → Skill-owned `requestSchema` → `when`
 | 2026-11-26 | 0.2.18 | GPT-6（ChatGPT） | 核心规范与验收章节 | 去除 v1alpha5 M.3 规范依赖；新增 1.6.0 Resolver 结果表、拒绝和 continuation invariants | 为 SR-005/006 提供唯一可审查的选择语义 | Issue #12/#40；SR-005/006；SR-029 |
 | 2026-11-27 | 0.3.0 | Codex / GPT-6 | §2～6 | 固定 Schema-only、Program 归属及 Resolver 输入边界 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
 | 2026-11-27 | 0.3.2 | ChatGPT / GPT-6 | 3GPP Schema/Codec 分阶段消费 | 对齐 SR-031 公共类型、T1 Request 与 T2 Codec Result，新增分期拒绝/验收范围 | 修复标准输入来源与实现门禁的跨仓断点 | IR-009；Issue #47；SR-031/026 |
+| 2026-11-27 | 0.3.3 | ChatGPT / GPT-6 | 3GPP 原版发布裁决 | 版本随 OpenAMSM、原版 YAML 完全不改；将只读 Source Bundle 与可选 Adapter / Codec Output 分离 | 防止标准原件被类型适配误改 | Issue #47；SR-031/026 |
