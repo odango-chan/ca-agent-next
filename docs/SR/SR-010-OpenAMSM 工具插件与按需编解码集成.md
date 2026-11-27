@@ -1,7 +1,7 @@
 # SR-010：OpenAMSM 工具插件与按需编解码集成
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.8\
+> SR 版本：0.2.9\
 > 状态：DRAFT（实施主状态）；第二轮独立评审 CHANGES_REQUESTED（历史结论）；第三轮自评 **DESIGN_READY_FOR_INDEPENDENT_REVIEW**（仅设计评审候选，非独立批准或实施 READY）；产品 AC NOT_RUN/BLOCKED。
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-27\
@@ -31,7 +31,7 @@
 - 在 Next Host 实现 Host-owned ArtifactStore 和 `ca-host.artifact-store/v1` loopback HTTP/1.1 channel；Host 在 Provider `initialize` 中传入闭合 `artifactChannel`，由 Provider 使用 GET 输入 / POST 输出交接原始 bytes。
 - Artifact reference 使用 Host 生成的随机 opaque token，并绑定 invocation、direction、slot；不包含路径、URL、mediaType、size 或 digest。
 - Provider `artifactSlots` 必须来自可信 Backend Catalog；原始 bytes 不进入 NDJSON、不使用 Base64、不暴露任意本地路径。
-- 按 v1 contract 完成逐 Artifact SHA-256 传输校验、大小/数量配额、超时/取消、过期清理和输出原子发布；该摘要不是引用身份、内容寻址或去重。
+- 按 Demo channel 完成原始 bytes 流交接、长度/数量配额、超时/取消、过期清理和输出原子发布；不计算或校验 SHA-256、checksum 或 digest。
 - 缺少 `artifactChannel` 时 artifact-bearing binding 必须 `NOT_CONFIGURED`，并在远端 SBI I/O 前拒绝。
 - Codec Decode/Encode/最小分类操作必须先发布在权威 Tool Interface Package；Skill 需要结构化协议字段时才调用 Codec Tool。
 - Codec 输出 JSON 投影或新 Artifact Reference；原始 Artifact 不被替换。
@@ -41,7 +41,7 @@
 - 不把当前纯 Go codec library 误报为已发布 Agent-callable Tool。
 - 不创建独立 Codec Plugin/Manager，不在 Host/Event Plugin 复制编解码实现。
 - 不宣称未验收的全量 NGAP 支持。
-- 不实现新的 content-addressed artifact identity、去重、额外 package hash、签名或 Trust Registry；仅实现 v1 channel 已规定的逐 Artifact 传输校验。
+- 不实现 content-addressed artifact identity、去重、SHA-256 / checksum / digest 校验、签名、Trust Registry 或生产级 package integrity；只做 opaque ref、Invocation/slot 绑定、长度/数量配额与原子发布。
 - 不允许 Provider 自行选择文件路径、远端 URL 或凭据。
 
 ## 4. 依赖与分阶段门槛（遵循 SR 管理规范 §6.1）
@@ -50,6 +50,7 @@
 |---|---|---|
 | 设计 | F03.05/ F05 正式 ca-host.artifact-store/v1、SR-029 1.6.0 Capability Binding | Host Artifact Channel 与 Provider Tool/Codec 不能混成双 Provider Manager |
 | 实施 | SR-003 单 Plugin Manager、SR-007 Action Boundary、SR-009 Plugin staging；Provider v1.2.0 旧 API 只作 Host channel 历史互操作参考 | Host ArtifactStore / Channel 可独立实现，外部新 1.6.0 Capability 导出不阻塞本 Host 子阶段 |
+**Demo 完整性边界**：现有 `odango-chan/ca-agent` `ca-host.artifact-store/v1`（commit `2c0b07f2eaff3bc1020bfc6775ef9bf09e3052ae`）仍规定逐 Artifact SHA-256，不能原样复用。该外部契约必须先修订为无 hash 的 Demo channel；在此之前 AC-010-03 保持 BLOCKED_EXTERNAL_INPUT，不得由 Harness 自行兼容或绕过。
 | 模块验收 | Host channel v1 已冻结 conformance fixtures；SR-026 新 Codec Capability 发布包 | AC-010-01～05 用测试 Host/Provider；09 使用真实 Go Provider 与 Python Host，无需真实 NF；06a 本地拒绝，06b/07/08 依赖正式 1.6.0 资产 |
 | 系统 OM | OM-04/10/13 与真实 NF/Owner | 不作为 Host Channel 模块 READY 前置 |
 
@@ -61,7 +62,7 @@
 |---|---|---|
 | AC-010-01 | 通过唯一 Plugin Manager 初始化 Provider Tools Extension；配置缺失/非法 | 无第二 Manager；缺 channel 可初始化但 Artifact Binding NOT_CONFIGURED；非法配置 PROVIDER_CONFIGURATION_INVALID，远端 I/O=0 |
 | AC-010-02 | Host 生成 opaque artifactRef 与同一/跨 Invocation、direction、slot 的读取 | 合法引用通过，跨边界/过期/路径泄漏拒绝，token 不编码文件/URL |
-| AC-010-03 | Provider GET 输入/POST 输出正确二进制与 mediaType、Content-Length、逐 Artifact 传输校验 | 输出原子发布，字节一致；slot/schema/size/digest 不符不形成可读产物 |
+| AC-010-03 | Provider GET 输入/POST 输出正确二进制与 mediaType、Content-Length、长度/数量配额 | 输出原子发布，字节流与交接长度一致；slot/schema/size 不符不形成可读产物；不计算或校验摘要 |
 | AC-010-04 | 取消、超时、Provider 退出、部分写入、配额超限 | 所有 staged outputs 清理；未完成 Artifact 不可读取；无重复 Owner mutation |
 | AC-010-05 | Codec 未发布、Host 不需要 Decode、Codec 必需但不存在 | no-decode 路径不触发 Codec；必需 Codec 未发布只阻塞对应 AC，不冒充已发布能力 |
 | AC-010-06 | 06a 本地传私有 backendOperationId、旧 READ Callable 或非法 selector；06b 在正式 1.6.0 Package 与 Bundle 上按已 Link 的 Capability 分发 | 06a 同时向 Skill 包加载入口、Resolver、Runtime Action Boundary 分别注入旧 v1alpha5 与 Development Artifact，逐层断言无 candidate／无 Scope／无派发，三个入口各自 Provider IPC=0；Provider 安装 Loader 无需当前 Skill。非法 selector 负例在后端 I/O 前拒绝；06b 核对唯一公开映射、合法路由及 Scope；缺正式输入时 06b BLOCKED，单独 06a 不能使整项 PASS |
@@ -134,3 +135,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-27 | 0.2.6 | ChatGPT / GPT-6.2 | §8 | 以原生 OAS3 operation / multipart 消费替代 Adapter 前置；补充 Compiler 精确组件引用、T0/T1/T2/T4 和 AC-010-10 | 使 Plugin、Compiler、Codec 各自承担正确协议层责任 | IR-009；Issue #47；SR-031/013/026/027 |
 | 2026-11-27 | 0.2.7 | ChatGPT / GPT-6.2 | §8、AC-010-10 | 固定 requestBody 选定面与 lazy refs；补齐 RefToBinaryData.contentId 到 N1/N2/N2 Ext1 part 的精确映射和负例 | 防止只检查 Header 存在却把错误二进制交给 Codec | IR-009；Issue #47；SR-031/026；EC01/F06 |
 | 2026-11-27 | 0.2.8 | ChatGPT / GPT-6.2 | §5、§8、AC-010-10 | 补入正式 AC-010-10 表格行；未引用 part 不交 Codec，额外 part 策略显式归 ingress profile | 避免 AC 仅在摘要出现，并避免超出 OpenAPI schema 的隐含拒绝 | IR-009；Issue #47；SR-031/026；EC01/F06 |
+| 2026-11-27 | 0.2.9 | ChatGPT / GPT-6.2 | §2～5、AC-010-03 | 移除 Demo 的逐 Artifact SHA-256 校验；明确 ca-agent 现有 artifact-store v1 不兼容，修订前阻塞实施 | 遵守 Demo 不做 hash 校验的范围，避免复用不兼容的外部契约 | IR-009；Issue #47；SR-031；F03.05 |
