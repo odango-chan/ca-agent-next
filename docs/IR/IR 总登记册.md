@@ -1,7 +1,7 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录  
-> 文档版本：0.1.32\
+> 文档版本：0.1.33\
 > 修订日期：2026-11-27\
 > 状态：9 项 IR（含 IR-009 3GPP 公共 Schema）；IR-008 登记 CA-SL 1.6.0 Capability-first 严格一对一与完全无旧版兼容，SR-029 设计待评审；IR-006 下 SR-030 Host Context Schema-only Publisher 设计待评审；SR-028 仍 DRAFT。\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -115,7 +115,7 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 
 **OpenAMSM 3GPP OpenAPI 原版 Source Bundle、原生 OAS3 引用与 Skill 分阶段 Codec 消费**
 
-3GPP SBI 标准来源只取 OpenAMSM 实际支持 / 构建使用的 OpenAPI 3.0 YAML 与明确选定消费根的完整可达 `$ref` 闭包。当前 `PostSmContexts.requestBody` → `jsonData` → `SmContextCreateData` 的选定闭包为四份原版 YAML / 102 个 Schema Component；只 lazy resolve 选定根，不要求复制全部 472 份 YAML 或 eager resolve 未选定 operation。ca-skills / SR-031 只做 byte-for-byte 原样代发布，不修改任何 YAML。**不要求 G.4 Adapter**：Plugin 原生消费 OpenAPI 3.0 operation / multipart；Compiler 对显式 pin 的 Source Bundle 中精确 `components/schemas` 直接引用并按 OAS3 Schema Object dialect 处理。Skill-owned `requestSchema` 根和本地 Schema 节点仍遵循 G.4；外部 OAS3 Schema 不投影、不重写。Plugin 必须将 `RefToBinaryData.contentId` 精确关联到 N1/N2/N2 Ext1 对应 multipart part 的 `Content-ID`，拒绝缺失、重复、错槽和孤立 part。NAS / NGAP Codec Output Schema 由 ca-client-tools Provider 独立发布，不能由 SBI binary slot 推导。
+3GPP SBI 标准来源只取 OpenAMSM 实际支持 / 构建使用的 OpenAPI 3.0 YAML 与明确选定消费根的完整可达 `$ref` 闭包。当前 `PostSmContexts.requestBody` → `jsonData` → `SmContextCreateData` 的选定闭包为四份原版 YAML / 102 个 Schema Component；只 lazy resolve 选定根，不要求复制全部 472 份 YAML 或 eager resolve 未选定 operation。ca-skills / SR-031 只做 byte-for-byte 原样代发布，不修改任何 YAML。**不要求 G.4 Adapter**：Plugin 原生消费 OpenAPI 3.0 operation / multipart；Compiler 对显式 pin 的 Source Bundle 中精确 `components/schemas` 直接引用并按 OAS3 Schema Object dialect 处理。Skill-owned `requestSchema` 根和本地 Schema 节点仍遵循 G.4；外部 OAS3 Schema 不投影、不重写。Plugin 必须将 `RefToBinaryData.contentId` 精确关联到 N1/N2/N2 Ext1 对应 multipart part 的 `Content-ID`；引用目标缺失、重复 ID、错槽和媒体类型不符时拒绝。未被 JSON 引用的 part 不得交给 Codec；额外 part 的拒绝 / 忽略由 ingress profile 明确规定。NAS / NGAP Codec Output Schema 由 ca-client-tools Provider 独立发布，不能由 SBI binary slot 推导。
 
 - 协作设计 Issue：[Next #47](https://github.com/odango-chan/ca-agent-next/issues/47)；仅中央设计，不授权外仓实施。
 - 权威设计：[3GPP OpenAPI 原版引用与 Skill 分阶段消费](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)；关联 F02/F03.05/F06/F08/F09/EC02 与 CA-SL 1.6.0。
@@ -163,3 +163,4 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 | 2026-11-27 | 0.1.30 | ChatGPT / GPT-6 | IR-009 | 冻结 OpenAMSM 版本作为唯一来源与 YAML 字节原样代发布；将可选 G.4 Adapter 和 Codec Output 分离 | 明确仅代为发布、不改 3GPP YAML 的最新要求 | Issue #47；SR-031 |
 | 2026-11-27 | 0.1.31 | ChatGPT / GPT-6.2 | IR-009 | 撤销强制 G.4 Adapter；登记 OAS3 原生 operation / Schema Component 消费、OpenAMSM 标准版本与 blob 样本、NAS/NGAP 原生来源及 Compiler dialect-aware Resolver | 依据实际源文件核查，避免投影和标准影子副本 | Issue #47；SR-031/010/013/026/027 |
 | 2026-11-27 | 0.1.32 | ChatGPT / GPT-6.2 | IR-009 | 补齐 PostSmContexts 四文件 / 102 Component 选定闭包、lazy refs、Content-ID 与 N1/N2/N2 Ext1 slot 映射及不新增 digest 的 Source Lock | 按原版 OpenAMSM 源递归核查，关闭漏锁引用和 multipart 错配风险 | Issue #47；SR-031/010/013/027；EC01/EC02 |
+| 2026-11-27 | 0.1.33 | ChatGPT / GPT-6.2 | IR-009 | 明确未被 JSON 引用的 MIME part 不交 Codec，额外 part 策略归 ingress profile | 保持原版 OpenAPI Schema 语义，不把额外 part 一概判为非法 | Issue #47；SR-010/031；EC01/F06 |
