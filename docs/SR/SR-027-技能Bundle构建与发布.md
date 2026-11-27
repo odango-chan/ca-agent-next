@@ -1,7 +1,7 @@
 # SR-027：技能Bundle构建与发布
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.3\
+> SR 版本：0.2.4\
 > 状态：DRAFT（实施主状态）；第二轮及本次自评均 BLOCKED_EXTERNAL_INPUT（1.6.0 五根作者提交、Echo Interface、Compiler Release/argv 未交付）；当前只可审查五根构建矩阵与发布原子性，非实施 READY。
 > 创建日期：2026-11-26  
 > 修订日期：2026-11-27\
@@ -82,6 +82,17 @@ CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验�
 
 缺任何正式输入，禁止把候选目录、旧 v1alpha5 脚本、mock Compiler 或历史 1.0.0 包算作新版本发布。设计矩阵可以独立审查，但 SR-027 完整 READY 仍受外部生产者交付阻塞；不得传递性阻塞 SR-004 的独立 SKILL.md-only 子范围。
 
+## 5.2 3GPP Common Schema 与 MAS 作者源的 1.6.0 Bundle 门槛（IR-009）
+
+SR-031 正式发布的 3GPP Common Schema-only Package 与 SR-030 Host Context Schema-only Package 是**两个不同的依赖**（均合法 0 Capability/0 Callable）。各 MAS Skill 的 `requestSchema` 根仍在自己的 `assurance/schemas/`；前者可作为字段类型 `$ref` 的精确闭包，后者只经 `Contract.contexts` 引用。
+
+- Create 的旧作者 Request 不得在选择时要求 NAS-only PDU Session Type/SSC mode；新作者源必须在 T2 Codec READ 后以显式 SourcePath 消费。Modify 0xC9 / Release 0xD1 的解码子集和 0xD4 continuation 按 F06/SR-026 的正式资格化依赖判断。
+- Publisher CI 的精确 source lock 应涵盖公共 3GPP Schema $id/snapshot、Host Context Schema、Owner/Provider Interface、Codec READ Output Schema、新 Compiler 1.6.0 发行版及新 MAS 作者 SHA；构建/Verify 阶段拒错版、缺 Schema closure、未授权 Codec、旧 DTO/Bundle。无 Codec 的 Echo 包不应增加 3GPP 依赖。
+- 新增 `AC-027-05` 设计验收：Create/Modify/Release 新作者 Bundle 中 T1/T2 字段来源和 Schema 闭包可核对、从正式发布物导入后 SourcePath/Capability Grant 与被引用的标准字段一致；缺正式 Provider/Schema Publisher 应标 BLOCKED/NOT_RUN，**不得**把五包旧矩阵成功或本地 fixture 自动算作新 E2E 通过。
+- 原 AC-027-01～04 的早期发布/独立设计范围不因本子项被错误扩大为全量 3GPP 支持。
+
+[权威公共设计](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。
+
 ## 6. 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
@@ -100,3 +111,4 @@ CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验�
 | 2026-11-27 | 0.2.1 | Codex / GPT-6 | 评审状态 | 登记第二轮限定范围及外部依赖 | 未单独记录（历史原因未提供） | Issue #12，PR #46 |
 | 2026-11-27 | 0.2.2 | GPT-6（ChatGPT） | §5.1、修订表 | 明确五根作者提交、Echo Interface、Compiler Release/argv 与发行授权的生产者边界，整理历史六列修订记录 | 允许审查固定设计而不臆造缺失发布物或将下游联验误作上传门槛 | Issue #12；PR #46；SR-027 |
 | 2026-11-27 | 0.2.3 | GPT-6（ChatGPT） | 修订记录 | 将历史记录统一为七列并保留原始文字及原始关联，修正非规范行的分隔符 | 确保修订表可由文档校验器完整解析；不影响设计语义及 READY 主状态 | Issue #12；PR #46；SR-027 |
+| 2026-11-27 | 0.2.4 | ChatGPT / GPT-6 | 3GPP Schema/Codec 分阶段消费 | 对齐 SR-031 公共类型、T1 Request 与 T2 Codec Result，新增分期拒绝/验收范围 | 修复标准输入来源与实现门禁的跨仓断点 | IR-009；Issue #47；SR-031/026 |
