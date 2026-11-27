@@ -1,8 +1,8 @@
 # G02：Python 工程工具链与环境管理设计说明书
 
 > 文档类型：工程治理功能设计说明书  
-> 文档版本：0.2.5\
-> 状态：Review #6083225844 对固定 Head `42a7fe2ce7826b7cda74110e843f39401571299c` 给出 CHANGES_REQUESTED（0 P0 / 4 P1 / 3 P2）；本轮按 Issue #12 整改中；SR-028 仍 DRAFT、AC-028-01～10 产品验收 NOT_RUN、READY=0\
+> 文档版本：0.2.6\
+> 状态：Review #6083641266 对固定 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2` 给出 CHANGES_REQUESTED（0 P0 / 1 P1 / 3 P2）；第五轮仅授权文档整改；SR-028 仍 DRAFT、AC-028-01～10 产品验收 NOT_RUN、READY=0\
 > 修订日期：2026-11-27\
 > 功能节点：G02 Python 工程工具链与环境管理  
 > 关联需求：[IR-007](../../IR/IR%20总登记册.md#ir-007)、[SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md)  
@@ -12,7 +12,7 @@
 
 ## 0. 设计评审入口（2026-11-26）
 
-本设计与 [SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md) 由 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12) 统一追踪；原设计 Issue #35 已 CLOSED。最新独立复评为 [PR #46 Review #6083225844](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083225844)，固定 Head `42a7fe2ce7826b7cda74110e843f39401571299c` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`，结论 CHANGES_REQUESTED（0 P0 / 4 P1 / 3 P2）。四项 P1 均阻断 READY；本轮仅修订设计与验收定义，不授权产品实施。
+本设计与 [SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md) 由 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12) 统一追踪；原设计 Issue #35 已 CLOSED。最新第五轮独立复评为 [PR #46 Review #6083641266](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083641266)，固定 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`，结论 CHANGES_REQUESTED（0 P0 / 1 P1 / 3 P2）。唯一 P1 为 R028-17 Artifact 契约冲突；本轮仅修订设计与验收定义，不授权产品实施。
 
 **设计待评审与实施 READY 分离：**PR #32 的评审上下文 CI 已完成，不构成 uv 迁移验收；SR-028 保持 DRAFT。评审未通过不得生成实施提示词，不开展跨仓批量迁移或不必要的生产供应链 DFX。
 
@@ -189,10 +189,10 @@ uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_ga
 
 脚本的规范性算法与报告字段：
 
-1. 每个范围使用独立 `TestLoader` 和 `TextTestRunner`，记录 `suite.countTestCases()` 为 `discovered`，`result.testsRun` 为 `tests_run`，并记录 `failures`、`errors`、`skipped`、`expected_failures`、`unexpected_successes`、`loader_errors`。
+1. 每个范围使用独立 `unittest.TestLoader` 和 `unittest.TextTestRunner`。`discovered` 取 `suite.countTestCases()`，`tests_run` 取 `result.testsRun`；`failures`、`errors`、`skipped`、`expected_failures`、`unexpected_successes` 分别取 `TestResult` 对应列表的条目数。`loader_errors` 精确定义为本次独立 `TestLoader` 在 `discover()` 后其 `loader.errors` 列表的条目数（`len(loader.errors)`），每个列表元素计 1，不按多行 traceback 拆分；`loader_error_messages` 原样保存该列表。若 `discover()` 本身抛出异常而未返回 suite，将完整异常记录到 `discovery_exception`，该范围直接失败；此时 `loader_errors` 仍只表示 `len(loader.errors)`，不把异常重复计入该字段。
 2. `passed = tests_run - failures - errors - skipped - expected_failures - unexpected_successes`；不得用 `discovered - failures` 推算通过数。
-3. 单范围 PASS 当且仅当 `discovered > 0`、`tests_run == discovered`、`failures == errors == skipped == expected_failures == unexpected_successes == loader_errors == 0`。任何 0 tests、skip、失败、错误、expected failure、unexpected success 或加载错误均失败。
-4. 每项分别写入 `<suite>.json` 与 `<suite>.log`；总计写入 `summary.json`，包含各范围字段和整体 `exit_code`。日志保留完整 unittest 输出/traceback。脚本即使某项失败也继续执行其他范围，全部报告落盘后才返回 `1`；脚本自身发生报告/运行错误返回非零。
+3. 单范围 `exit_code` 为 `0` 当且仅当 `discovered > 0`、`tests_run == discovered`、`failures == errors == skipped == expected_failures == unexpected_successes == loader_errors == 0` 且 `discovery_exception` 为空；否则为 `1`。`loader_errors` 与 `errors` 是不同阶段的观测字段：加载错误可能同时产生 `_FailedTest` 并出现在 `TestResult.errors`，此时两字段可同时计数，但不得相加或去重；PASS 必须分别满足两者为 0。任何 0 tests、skip、失败、错误、expected failure、unexpected success、加载诊断或 discovery 异常均失败。
+4. 每项分别写入 `<suite>.json` 与 `<suite>.log`；每个 `<suite>.json` 必须包含该范围的 `exit_code`（仅允许 `0` 或 `1`）、所有统计字段、`loader_error_messages` 和 `discovery_exception`。总计写入 `summary.json`，其中每个已选范围保留自己的 `exit_code`，并有独立的整体 `exit_code`。整体 `exit_code` 仅在所有已选范围的 `exit_code` 均为 0 且所有报告成功写入时为 0，否则为 1；进程退出码必须与整体 `exit_code` 一致。日志保留完整 unittest 输出/traceback。脚本即使某项失败也继续执行其他范围，全部报告落盘后才返回；报告/运行错误必须使整体退出码非零。
 5. `--suite host` 仅执行 Host 范围，供 worktree A→B→A 单独验证；仍执行相同的 `discovered>0`、`skipped=0` 等断言。
 
 实现不得引入第三方测试框架或新的运行时依赖。该脚本由 SR-028 实施阶段创建；本设计中的接口、字段、退出条件和 CI 调用为规范性要求。
@@ -330,9 +330,47 @@ steps:
 
 两个矩阵 Job 都必须通过 `scripts/unittest_gate.py` 自动运行 Host、Plugin、Review Context 和完整总计；脚本逐范围断言 `discovered>0`、`tests_run=discovered`、`failures/errors/skipped/expected_failures/unexpected_successes/loader_errors=0`，并在任何范围失败时最终非零退出。每项 JSON、log、summary、Smoke 和 Go Echo 证据由 `if: always()` Artifact 上传步骤保存。只记录绿色 Job 不足以 PASS；必须检查 gate 报告中四个范围的字段和退出码。`GOWORK=off` 必须应用于 Go 构建与 Plugin 测试。
 
-#### Review Context Workflow
+#### Review Context Workflow：诊断 Artifact 与正式 Artifact 分离
 
-`.github/workflows/review-context.yml` 在迁移后使用相同 uv 版本与 `uv sync --locked`；安装完成后调用 `uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --suite review-context --output-dir artifacts/sr028/unittest-gate`，然后运行 Review Context 生成器。它必须在 `if: always()` 下上传 Review Context gate JSON/log 和生成器证据。AC-028-08 仍需真实 PR Run、Summary 和三文件 Artifact 验收。
+`.github/workflows/review-context.yml` 在迁移后使用相同 uv 版本与 `uv sync --locked`。诊断证据目录与生成器正式输出目录必须是两个不同目录：
+
+- 正式输出目录：`$RUNNER_TEMP/review-context/`，仅允许包含 `review-scope.json`、`评审上下文.md`、`统一评审提示词.md` 三个完成态文件；Workflow Summary 位于 `$RUNNER_TEMP/review-context-summary.md`，不放入该目录。
+- 诊断目录：`$RUNNER_TEMP/review-context-diagnostics/`，不得放入上述三个正式输出文件。Job 开始时先创建该目录并写入 `run-context.txt`，记录 PR number、base SHA、head SHA、run ID 和 run attempt，确保即使早期步骤失败也有诊断 Artifact 可上传。
+
+Review Context gate 使用 `uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --suite review-context --output-dir "$RUNNER_TEMP/review-context-diagnostics/unittest-gate"`。诊断目录至少保留 `unittest-gate/review-context.json`、`unittest-gate/review-context.log`、`unittest-gate/summary.json`。生成器步骤执行时，必须将 stdout、stderr 分别保存为 `generator.stdout.log`、`generator.stderr.log`，将真实进程退出码保存为 `generator.exit-code`，并生成 `generator-output-manifest.txt`；manifest 对三个预期正式文件逐一记录文件名、PRESENT/MISSING 和字节数，不计算 hash，不复制文件内容。
+
+必须先上传诊断 Artifact，再写成功 Summary 和上传正式 Artifact。诊断 Artifact 的名称固定为 `review-context-diagnostics-pr-${PR_NUMBER}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}`，上传条件为 `if: always()`，路径仅为 `$RUNNER_TEMP/review-context-diagnostics/`，`if-no-files-found: error`，保留 30 天。它用于失败诊断，不是完成态交付物；即使 gate 或生成器失败，也必须尝试上传。
+
+正式完成态 Artifact 沿用现有名称 `review-context-pr-${PR_NUMBER}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}`，上传条件必须保持 `if: success()`，`if-no-files-found: error`，保留 30 天；`path` 必须显式列出且只能列出 `$RUNNER_TEMP/review-context/review-scope.json`、`$RUNNER_TEMP/review-context/评审上下文.md`、`$RUNNER_TEMP/review-context/统一评审提示词.md`。不得将 gate、日志、manifest、Summary 或其他文件加入该 Artifact。上传后下载解包，文件集合必须恰好为这三份，不得多也不得少。
+
+失败语义：gate 失败时生成器和正式 Artifact 上传步骤不得执行；生成器失败时诊断 Artifact 仍上传，正式 Artifact 因 `if: success()` 不执行；诊断 Artifact 上传失败也必须阻止后续成功 Summary/正式 Artifact。任何失败 Run 均不得产生正式完成态 Artifact。成功 Run 必须同时产生诊断 Artifact 和恰含三份文件的正式 Artifact。诊断 Artifact 的上传不能改变或放宽正式 Artifact 的成功条件。
+
+拟实施的 Review Context Workflow 上传步骤（正式三文件步骤保留现有契约）：
+
+```yaml
+- name: Upload Review Context diagnostic evidence
+  if: always()
+  uses: actions/upload-artifact@v4
+  with:
+    name: review-context-diagnostics-pr-${{ github.event.pull_request.number }}-${{ github.run_id }}-${{ github.run_attempt }}
+    path: ${{ runner.temp }}/review-context-diagnostics/
+    if-no-files-found: error
+    retention-days: 30
+
+- name: Upload review context artifacts
+  if: success()
+  uses: actions/upload-artifact@v4
+  with:
+    name: review-context-pr-${{ github.event.pull_request.number }}-${{ github.run_id }}-${{ github.run_attempt }}
+    path: |
+      ${{ runner.temp }}/review-context/review-scope.json
+      ${{ runner.temp }}/review-context/评审上下文.md
+      ${{ runner.temp }}/review-context/统一评审提示词.md
+    if-no-files-found: error
+    retention-days: 30
+```
+
+AC-028-08 必须用真实成功 PR Run 下载核对两个 Artifact；另用一个受控负例 PR（保留测试通过，但令 head 版 `Agent.md` 的唯一 `review_scope` 无效，使生成器失败）证明诊断 Artifact 存在且包含 gate/生成器失败证据，而正式三文件 Artifact 不存在。负例 PR 不合并，恢复有效 `review_scope` 后再执行成功路径。
 
 #### paths 与独立堆叠验证 PR
 
@@ -626,7 +664,7 @@ I1 与 I3 可在 SR-028 实施 Issue 内按依赖顺序执行；I2 只在 SR-001
 
 ## 7. 验收映射
 
-具体验收 ID、命令和证据要求以 [SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md) v0.2.7 为准：AC-028-01～03 元数据/版本/依赖分组；AC-028-04 锁漂移 fail-closed；AC-028-05 双 worktree A→B→A；AC-028-06 本地 Go、测试计数与 Smoke；AC-028-07 双平台 CI 与独立堆叠 paths 验证 PR；AC-028-08 Review Context 真实 PR Artifact；AC-028-09 范围边界；AC-028-10 当前文档入口刷新。
+具体验收 ID、命令和证据要求以 [SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md) v0.2.8 为准：AC-028-01～03 元数据/版本/依赖分组；AC-028-04 锁漂移 fail-closed；AC-028-05 双 worktree A→B→A；AC-028-06 本地 Go、测试计数与 Smoke；AC-028-07 双平台 CI 与独立堆叠 paths 验证 PR；AC-028-08 Review Context 真实 PR Artifact；AC-028-09 范围边界；AC-028-10 当前文档入口刷新。
 
 设计文档、示例 YAML、历史 pip Run 或迁移前 Artifact 均不构成 uv 实施 PASS。每项产品 AC 只有在固定受测 SHA 上真实运行并留存命令、环境、结果和证据后才可更新状态。
 
@@ -652,3 +690,4 @@ I1 与 I3 可在 SR-028 实施 Issue 内按依赖顺序执行；I2 只在 SR-001
 | 2026-11-27 | 0.2.3 | GPT-6（ChatGPT） | §3.8、修订记录 | 澄清 Go Echo 由 Go 工具链构建，Python compileall/证据脚本才使用矩阵 Python | 消除示例描述中将 Go build 错写成通过 Python 运行的歧义 | Issue #12/#35；PR #46；SR-028 |
 | 2026-11-27 | 0.2.4 | GPT-6.2（ChatGPT） | §0、§3.5～3.8、§4.1～4.3、§6～§7 | 按 Review #6082874849 补齐 Go 1.24 前置与 GOWORK=off、锁漂移负例、双 worktree A→B→A、测试统计、Windows 3.14.6、独立堆叠验证 PR 和文档验收映射；修正 `.venv/` 既有规则表述 | 关闭 SR-028 的实施歧义，同时保持所有产品 AC NOT_RUN 和 SR DRAFT | Issue #12；PR #46；Review #6082874849；SR-028 v0.2.6 |
 | 2026-11-27 | 0.2.5 | GPT-6.2（ChatGPT） | §0、§3.6～3.8、§4.1～4.3、§6～§7 | 按 Review #6083225844 修复 Bash fail-open：锁漂移与 A→B→A 从块首 fail-fast 并使用保码 cleanup trap；A 返回阶段全部改用 `uv run --no-sync`；新增标准库 unittest gate 并在双平台 Workflow 自动断言 skipped=0/非空测试且上传报告；Python 检查使用显式 uv 项目环境；补齐 A/B/A sys.prefix、原始 direct_url、ignore 证据持久化；Go 构建子 shell 恢复 CWD，按 GOOS 生成 Windows `.exe`，澄清 Workflow shell 边界 | 消除 R028-10～16 的 fail-open、自动同步、CI skipped 假 PASS、隐式解释器及跨平台/证据歧义；保持产品 AC NOT_RUN 与 SR DRAFT | Issue #12；PR #46；Review #6083225844；SR-028 v0.2.7 |
+| 2026-11-27 | 0.2.6 | GPT-6.2（ChatGPT） | 文档头、§0、§3.6、§3.8、SR 引用 | 按第五轮 Review #6083641266 修复 Review Context 诊断 Artifact 与三文件正式 Artifact 的契约冲突；明确 `loader_errors` 来源/计数及 discovery 异常；统一逐范围与整体 `exit_code` | 关闭 R028-17 P1 与 R028-18 P2，确保失败诊断可留存且失败 Run 不产生完成态 Artifact；产品 AC 仍 NOT_RUN | Issue #12；PR #46；Review #6083641266；SR-028 v0.2.8 |
