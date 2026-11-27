@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：**设计待评审**（唯一新目标 CA-SL 1.6.0；全链路不兼容任何旧作者语法、Build DTO、Artifact、Bundle；1.6.0 产品未发布）
-> 文档版本：0.4.2
+> 文档版本：0.4.3
 > 功能归属：F02 — Skill 管理与选择  
 > 关联 SR：SR-004、SR-005、SR-006、SR-032    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -88,7 +88,7 @@ Agent 只执行以下消费端检查：
 - SKILL.md 存在且可读取。
 - Artifact 的 apiVersion 必须属于 SR-004 明确支持的 Compiler 正式 Runtime Artifact API；当前目标是 Compiler/SR-029 联合发布的 **CA-SL 1.6.0** Runtime Artifact（精确机器标识仍待发布）。历史冻结 Artifact v1alpha5、Development Artifact v1alpha1、未知 API 均拒绝，不做兼容映射。
 - 必需 Artifact 文件存在且路径位于包根目录内。
-- Manifest 引用的文件、Schema/type data 和本地依赖可解析；scripts/manifest.yaml 中每个 file、entrypoint、inputSchema / outputSchema 都必须在当前 Package snapshot 内精确解析，拒绝路径穿越、缺文件、未知 Script ID、错误 purpose 或无效 Schema。
+- Manifest 引用的文件、Schema/type data 和本地依赖可解析；scripts/manifest.yaml 中每个 `file`、`entrypoint`、`inputSchema` 都必须在当前 Package snapshot 内精确解析；`purpose=transform` 必须声明并解析 `outputSchema`，`purpose=predicate` 不得声明 `outputSchema`，其输出按 CA-SL 1.6.0 固定的 PredicateEvaluationResult 契约校验，且 `inputSchema` 必须覆盖业务参数与 Host 注入的 Evidence projection。拒绝路径穿越、缺文件、未知 Script ID、错误 purpose、缺失/多余字段或无效 Schema。
 - LLM Script Action 只允许 host.skill-script.execute；Runtime 必须校验当前 Run / Skill / Package snapshot、Script Registry ID，并按 CA-SL 1.6.0 §8 对 transform / predicate 分别验证输入输出契约；不按 purpose 过滤 LLM 调用范围，不设置逐脚本 LLM 标记或额外 Host 开关。Predicate Script 的直接调用不产生 Assurance Outcome / Evidence。模型不得提供路径、模块、函数、代码或命令。
 - 新版 **CA-SL 1.6.0** Artifact 必须包含 Compiler 静态解析的唯一 Capability→Callable Binding，携带精确依赖包身份、kind、Effect、Schema、operation/observation exports 并供 Runtime 生成闭合 Callable allowlist；具体 Manifest 字段与路径由 SR-029 + Compiler #61 / SR-013 正式契约冻结。Callable 依赖可来自 Provider Interface 或业务 Owner Contract；contexts 的 Schema-only 依赖按 §2.3 保存，仅贡献 Schema。Provider Interface 快照按 `provider.yaml.interfacePackagePath` / `interfaceSnapshotDigest` 固定；Owner publication 由 Runtime Bindings sidecar identity 固定。旧 v1alpha5 MAS alias/Callable 作者格式属于冻结历史，不得拿来作为 1.6.0 运行时数据。
 - when 的 CheckedExpr 和类型描述数据可被指定 Python CEL Runtime 反序列化。
@@ -297,3 +297,5 @@ T2 的 Provider Codec Result 只在选定 Skill Procedure 的 READ 后可用，�
 | 2026-11-27 | 0.4.1 | GPT-6.2（ChatGPT） | §2、§6～§7 | 将 Front Matter 字段表补齐 CA-Agent 扩展 when，并明确无 Assurance Skill 不声明；删除 F02 对 contract.yaml.when 的旧定义 | 修复入口说明中的残留旧口径，保证 Importer / Resolver 一致；历史错误入口判断，已由 0.4.2 撤销，不构成兼容方案| Issue #49；IR-008；SR-032；SR-004/013 |
 
 | 2026-11-27 | 0.4.2 | GPT-6.2（ChatGPT） | §2、§6～§7、修订记录 | 将 `when` 作者源恢复为 assurance/contract.yaml 顶层唯一入口；Front Matter 不声明 when；无 Assurance Skill 无 Contract | 修正与 CA-SL / EC02 Compiler 权威契约冲突的 Front Matter 入口 | Issue #49；IR-008；SR-032；F08/SR-004/013 |
+
+| 2026-11-27 | 0.4.3 | GPT-6.2（ChatGPT） | §4、修订记录 | 将 Script Registry 导入校验改为按 purpose 区分 outputSchema：transform 必需，predicate 禁止并使用固定 PredicateEvaluationResult；补充 predicate Evidence projection 输入契约 | 对齐 CA-SL 1.6.0 §8，避免 Importer 错误要求 predicate outputSchema 或漏检其固定输出契约 | Issue #49；IR-008；SR-004/007/032；PR #52 |
