@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：**设计待评审**（唯一新目标 CA-SL 1.6.0；全链路不兼容任何旧作者语法、Build DTO、Artifact、Bundle；1.6.0 产品未发布）
-> 文档版本：0.3.5
+> 文档版本：0.3.6
 > 功能归属：F02 — Skill 管理与选择  
 > 关联 SR：SR-004、SR-005、SR-006、SR-032    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -289,3 +289,4 @@ T2 的 Provider Codec Result 只在选定 Skill Procedure 的 READ 后可用，�
 | 2026-11-27 | 0.3.3 | ChatGPT / GPT-6 | 3GPP 原版发布裁决 | 版本随 OpenAMSM、原版 YAML 完全不改；将只读 Source Bundle 与可选 Adapter / Codec Output 分离 | 防止标准原件被类型适配误改 | Issue #47；SR-031/026 |
 | 2026-11-27 | 0.3.4 | ChatGPT / GPT-6.2 | §13 | 改为原版 OAS3 组件直接引用与 T1/T2 阶段约束；移除 Adapter 前置 | 对齐原始标准直接引用与 Compiler dialect-aware 解析 | IR-009；Issue #47；SR-031/013/026 |
 | 2026-11-27 | 0.3.5 | GPT-6.2（ChatGPT） | §2～5、§8～10 | 将 schemas/scripts 作为根目录共享资源，允许无 Assurance Skill 使用资源；增加 Host Script Execution Capability 的导入与运行边界 | 使 LLM-guided 与 Deterministic 共用资源，同时不授予任意 Python 执行 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.3.6 | GPT-6.2（ChatGPT） | §2、§4、§8、§10 | 将 Host Script Execution 的 LLM 暴露条件统一为 Registry 标记与 `scriptExecution.llmEnabled` 双门禁；统一 Assurance 文件路径 | 消除 F02 与 CA-SL / Host 配置之间的口径歧义 | Issue #49；IR-008；SR-032 |
