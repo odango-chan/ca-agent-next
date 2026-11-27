@@ -1,7 +1,7 @@
 # SKILL 作者规范（CA-SL 1.6.0）
 
 > 文档类型：Skill 作者规范（Next 中央规范性设计稿）  
-> 文档版本：0.1.5  
+> 文档版本：0.1.6  
 > 状态：**DRAFT / REVIEW_REQUESTED**（作者规则待独立评审；CA-SL 1.6.0 尚未由 ca-skills 正式发布）  
 > 语言目标：CA-SL 1.6.0 only；不兼容任何历史作者语法  
 > 功能归属：EC01 — Skill 作者规范与业务 Skill；消费端关联 F02 / F09  
@@ -367,3 +367,4 @@ Apply 前仍须由用户确认，并对同一候选源码与依赖锁执行正�
 | 2026-11-27 | 0.1.3 | GPT-6.2（ChatGPT） | §4、§5 | 将 arguments 结构明确留给正式 1.6.0 Schema / Golden，不再由作者规范预设映射形状；补充 Wait 事件接受的隐式正常边约束 | 避免作者规范超出当前语言设计已冻结的语法边界 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.4 | GPT-6.2（ChatGPT） | §4～§7、§10、§12 | 对齐 Operation / Observation kind 与 Effect，明确 routes 的阶段归属、Wait timeout、分支拆分边界；加入 Create / Modify / Release 样本结构性裁决和注释正反例 | 消除 Node 过度拆分歧义，补齐 AC 所需的真实样本解释和注释反例 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.5 | GPT-6.2（ChatGPT） | §3～§5、§10～§11 | 将 schemas/scripts 定为根目录共享资源，补充 Script Registry、Host Script Execution Capability、YAML Schema 源和 LLM-only Package 规则 | 确保 LLM 与 Assurance 使用同一资源，禁止模型任意 Python 执行 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.1.6 | GPT-6.2（ChatGPT） | §3、§11 | 明确 LLM Script Action 同时受 Registry `llmInvocable` 与 Host `scriptExecution.llmEnabled`（默认 false）约束 | 防止仅靠 Skill 包内标记就意外暴露 Host 脚本执行能力 | Issue #49；IR-008；SR-032 |
