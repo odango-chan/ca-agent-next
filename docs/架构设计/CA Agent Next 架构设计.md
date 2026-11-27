@@ -2,7 +2,7 @@
 
 > 文档类型：总体架构设计  
 > 状态：**CA-SL 1.6.0 Capability-first 架构增量待评审**；已通过的 SR-002/003 模块历史验收独立保留，1.6.0 新 Runtime/Compiler/Bundle/Studio 尚未发布    
-> 文档版本：0.4.8
+> 文档版本：0.4.9
 > 修订日期：2026-11-26  
 > 适用范围：ca-agent-next 通用 Agent Core、Host、Runtime、Skill 与 Plugin 公共机制  
 > 权威边界：本文是本仓唯一总体架构文档；字段级契约见规范，机制细节见设计说明书  
@@ -24,7 +24,7 @@ CA Agent Next 是一个通用 Agent。Agent Core 不内置 OpenAMSM、5GC 或其
 - Python Agent Core、Host、Agent Model Loop、Skill Importer、Skill Resolver 和 Runtime。
 - 唯一 Plugin Manager、Plugin Package、统一 IPC 与 Extension 分发。
 - Skill 包结构、可选 Assurance、已发布 Artifact 消费、SkillCatalog 和 Skill 选择。
-- 统一 Action Boundary、Run、Context、Outcome/Evidence 和 Wait/Resume。
+- 统一 Action Boundary、Run、Context、Outcome/Evidence 和异步 Operation Continuation / Reconcile。
 - Host-owned Artifact Handoff、SBI JSON/multipart 接入和按需 Codec Tool。
 - Echo 第一垂直示例，随后接入 OpenAMSM。
 
@@ -98,7 +98,7 @@ flowchart TB
 | Skill Importer | 读取 SKILL.md 和已发布 Artifact，检查基本结构/必需文件/依赖，生成 Catalog 候选代际 | 调用 Compiler、Build/Verify、Skill Admission |
 | SkillCatalog | 进程内 Skill 快照、缓存的 SKILL.md、候选元数据、已反序列化 when 程序和代际 | Plugin 生命周期、Tool 调度 |
 | Skill Resolver | 精确 continuation 优先；对新 Event 评估 when 并完成候选选择 | 执行 Procedure 或直接调用 Tool |
-| Runtime | Run 执行、Declared Callable Scope 检查、Action 分发、Outcome/Evidence、Wait/Resume/Reconcile | Compiler 调用、Skill Admission、生产级授权、LLM Model Loop、外部 SBI 协议解析 |
+| Runtime | Run 执行、Declared Callable Scope 检查、Action 分发、Outcome/Evidence、异步 Operation Continuation / Reconcile | Compiler 调用、Skill Admission、生产级授权、LLM Model Loop、外部 SBI 协议解析、Skill 层 Wait / Resume Node |
 | Procedure Engine | 推进已发布 Artifact 中的确定性 Procedure 并提出 Action | 独立授权或直接调用 Plugin |
 | Plugin Manager | Plugin 进程生命周期、握手、IPC、关联与 Extension 分发 | Skill 选择、Action 授权、Owner 结果判断 |
 | Plugin | 实现声明的 Event、Delivery 或 Tool Extension | 选择 Skill、授予 Capability、改变 Owner 结果 |
@@ -301,3 +301,5 @@ sequenceDiagram
 | 2026-11-27 | 0.4.6 | GPT-6.2（ChatGPT） | §6、§7、§15 | 将 SKILL.md-only 统一修正为可携带共享资源的无 Assurance Package；明确 Host Resource Read / Script Execution 和无 Skill Wait 语法边界 | 使总体架构、Importer、Runtime 与 CA-SL 1.6.0 / F05 一致 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.4.7 | GPT-6.2（ChatGPT） | §6～§7、§15 | 将 `when` 作者源位置统一为有 Assurance Skill 的 SKILL.md Front Matter；无 Assurance Skill 不声明 when，并由 Importer 拒绝 | 对齐 CA-SL 1.6.0、F02、Compiler 与作者规范的统一入口；历史错误入口判断，已由 0.4.8 撤销，不构成兼容方案| Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.4.8 | GPT-6.2（ChatGPT） | §6～§7、修订记录 | 将 `when` 作者源唯一位置恢复为 assurance/contract.yaml 顶层；Front Matter 不声明 when；无 Assurance 无 Contract | 撤销入口位置回归，统一架构、CA-SL、Compiler 与 Importer 契约 | Issue #49；IR-008；SR-032；F02/F08/F09/SR-004/013 |
+
+| 2026-11-27 | 0.4.9 | GPT-6.2（ChatGPT） | §2.1、§5 组件职责、修订记录 | 将 Runtime 的 Wait/Resume 总体术语统一为异步 Operation Continuation / Reconcile，并明确不提供 Skill 层 Wait / Resume Node | 与 CA-SL 1.6.0、F01、F04 保持一致，避免把协议异步恢复误读为作者级 Wait 语法 | Issue #49；IR-008；SR-032；PR #52 |
