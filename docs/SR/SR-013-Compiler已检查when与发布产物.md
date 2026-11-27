@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.26\
+> 文档版本：0.2.27\
 > 状态：整项 DRAFT；阶段 READY（中央只读核验）。AC-013-01 归档完整性。  
 > 下一步：修复 PR #18 归档中 audit 登记不一致、绝对式校验路径及 vet 日志缺项后重新静态复核。复跑单列；02/04 NOT_RUN，03/05/06 等 Compiler Owner 与正式契约。\
 > 阶段依据：[独立评审 #77](https://github.com/odango-chan/ca-agent-next/issues/77#issuecomment-7209276846)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
@@ -10,9 +10,9 @@
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：Next 消费端实现、生产准入、Owner Trust 治理、自动发布及真实 5GC/MAS 资格。
 
-上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。功能归属：EC02 Compiler、F08 技能编译与发布；消费端关联 F02。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.13、[F08 技能编译与发布设计说明书](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.16、[F02 Skill 管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md) §7/§11、[CA-SL 1.6.0 中央语言设计](../规范/CA-SL%201.6.0完整语言规范.md)。
+上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。功能归属：EC02 Compiler、F08 技能编译与发布；消费端关联 F02。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.14、[F08 技能编译与发布设计说明书](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.17、[F02 Skill 管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md) §7/§11、[CA-SL 1.6.0 中央语言设计](../规范/CA-SL%201.6.0完整语言规范.md)。
 
-目标仓：odango-chan/ca-skill-compiler。实施 Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)。文档刷新 Issue：[Next #14](https://github.com/odango-chan/ca-agent-next/issues/14)。目标代码基线：Compiler v2.1.0，commit 255ab85fa5abb4b0bf36656bf64250cafebf45cb。历史来源：[ca-skills #88](https://github.com/odango-chan/ca-skills/pull/88) 已合并，正式发布身份见 [ca-skills release record](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs/releases/ca-sl-v1alpha5.md)。
+目标仓：`odango-chan/ca-skill-compiler`。实施 Issue：`NOT_CREATED`（仅本 SR 独立评审达到 READY 后创建）。现有 [Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) 以 CA-SL v1alpha5 为目标，仅作历史审计，不是 1.6.0 实施入口。中央设计跟踪：[Next #113](https://github.com/odango-chan/ca-agent-next/issues/113)；文档刷新 Issue：[Next #14](https://github.com/odango-chan/ca-agent-next/issues/14)。目标代码基线：Compiler v2.1.0，commit 255ab85fa5abb4b0bf36656bf64250cafebf45cb。历史来源：[ca-skills #88](https://github.com/odango-chan/ca-skills/pull/88) 已合并，正式发布身份见 [ca-skills release record](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs/releases/ca-sl-v1alpha5.md)。
 
 ## 0. 本轮设计评审入口（2026-11-26）
 
@@ -21,7 +21,7 @@
 本 SR 纳入 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12) 的中央设计评审批次。**SR 实施主状态依旧为 `DRAFT`；设计 `REVIEW_REQUESTED` 不等于独立 APPROVED、实施 READY 或产品 PASS。** 单版本决定见 [SR-029](SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) / [PR #45](https://github.com/odango-chan/ca-agent-next/pull/45)。
 
 - **本轮评审重点：**1.6.0 when、Request Schema、1:1 Capability Binding、Build/Verify、Runtime Artifact/Manifest 和 Golden 验收。
-- **阻塞/未验证：**旧 AC-013-01 PoC 不是新产品发布；正式 Schema/机器标识/DTO 未冻结，AC-013-02～06 NOT_RUN / BLOCKED（含 Schema-only Package 与零 Capability roots 规则）。
+- **阻塞/未验证：**旧 AC-013-01 PoC 不是新产品发布；中央设计目标已在 Next 固定；正式 ca-skills Schema/Golden、Compiler 实现、Release 与产品验收尚未交付，AC-013-02～06 NOT_RUN / BLOCKED（含 Schema-only Package 与零 Capability roots 规则）。
 - **通用架构约束：**新 CA-SL 作者源、Compiler API/Build DTO、Runtime Artifact、Bundle、Studio 与 Agent Importer/Runtime **只支持 1.6.0**；Skill 只选择 Capability ID，公开 Capability↔Callable 双向一对一。历史版本材料只读留档；不做别名、兼容、双轨、迁移或 fallback。机器字段/ID 必须等待发布者冻结，不猜测。
 - **评审输出：**逐项核对范围、非目标、外部 Owner、错误/状态语义、Acceptance 与证据路径。设计无独立结论写 `PENDING_REVIEW`；未发布依赖写 `BLOCKED`；未运行测试写 `NOT_RUN`。当前不得派发 DeepSeek Harness 实施任务。
 
@@ -31,7 +31,7 @@
 
 必须保持：
 
-- **唯一新 CA-SL 语言目标为 1.6.0**；准确 `languageTarget` 机器标识由 ca-skills / Compiler Owner 联合正式冻结；新版 Compiler/Agent 拒绝旧 v1alpha5 与未发布的候选语言。
+- **唯一新 CA-SL 语言目标为 `connectionagent.io/v1.6.0`**；该机器标识由 Next 中央设计冻结；新版 Compiler / Agent 拒绝旧 v1alpha5 与未发布的候选语言。
 - 已发布 Artifact v1alpha5 完全冻结。
 - Development Artifact v1alpha1 完全冻结并继续 NOT_ADMITTED。
 - 单一 Go Compiler Core；Native CLI 与 WASM Worker 共用。
@@ -165,11 +165,11 @@ PoC 中复用 Development Schema/Lock fixture 只证明共享 Schema 解析机�
 
 ### 5.1 版本决策
 
-设计推荐候选 API：Artifact 为 connectionagent.io/compiler-artifact/2，BuildResult 为 connectionagent.io/compiler-build-result/2。新 Runtime Build/DependencyInspection/BuildRequest 均必须提供 **仅支持 CA-SL 1.6.0** 的唯一新 DTO；不复用旧 v1alpha5 机器 API。精确 Schema、Artifact/BuildResult 版本与机器 languageTarget 均由 Compiler Owner Gate 冻结，不能预先把候选值当成已发布契约。
+中央设计冻结唯一目标：languageTarget=`connectionagent.io/v1.6.0`；BuildRequest=`connectionagent.io/compiler-build-request/2`；DependencyInspection=`connectionagent.io/compiler-dependency-inspection/2`；BuildResult=`connectionagent.io/compiler-build-result/2`；Runtime Artifact=`connectionagent.io/compiler-artifact/2`；Compiler Release SemVer=`3.0.0`。这些值是 Next 的设计契约，不代表 Schema、Golden、可执行文件或 Release 已发布。新 DTO 只支持 CA-SL 1.6.0，不复用旧 v1alpha5 机器 API。
 
 新 Compiler Runtime Build 只产生 2 BuildResult / Artifact，VerifyBuildResult 只接受该新结果契约；不在同一二进制中双轨支持旧/新 Runtime BuildResult，不增加版本 dispatch、fallback 或兼容路由。旧 v2.1.0 Release 保留冻结 Artifact/BuildResult v1alpha5 历史行为；历史 Compiler v2.1.0 的 Development Build 及 v1alpha1 API/Artifact 只留在**旧版发布物**中作审计，不作为新 Compiler 的输入/备用实现。
 
-**Owner Gate：** Compiler Owner 必须在 AC-013-03 代码实施前确认 Artifact 与 BuildResult 两个 API 名称。若拒绝，先在 EC02 / SR-013 中更新决策及理由；Harness 不得自行改用 v1alpha6、Development v1alpha2 或其他临时名字。
+**中央契约门禁：**API 名称和版本已由 Next / EC02 冻结。Compiler Owner 必须按该契约实现；如存在不可实现问题，先回到 Next 修订设计并取得新 SHA，再更新实施 Issue。不得在目标仓自行改名、添加兼容别名或选择 v1alpha6 / Development v1alpha2。
 
 ### 5.2 候选文件
 
@@ -399,6 +399,14 @@ SR-013 只有 AC-013-01～06 均达到各自通过条件，Compiler Release 有�
 3. `EVIDENCE.md` 声明的 `vet.log` 未归档；历史 vet 结果不得当作本轮执行证据。
 
 AC-013-02/04 仍 NOT_RUN，03/05/06 仍 BLOCKED。整项 DRAFT 主状态不变；本核验不实施 Compiler、不发布 Artifact，也不把历史报告或 CI 当当前产品验收。
+## 14. 跨仓实施绑定
+
+| 中央设计责任 | 目标仓 | 实施 Issue | 约束 |
+|---|---|---|---|
+| SR-013 / EC02 Compiler 1.6.0 | `odango-chan/ca-skill-compiler` | `NOT_CREATED`，SR-013 READY 后创建 | Issue #61 是 v1alpha5 历史任务，不得复用；新 Issue 固定本 SR、EC02 设计 SHA、四个 API ID、Compiler 3.0.0 与 AC-013-02～06 |
+| CA-SL 作者 Schema / Golden | `odango-chan/ca-skills` | 由 SR-027 / SR-029 的目标仓实施任务覆盖；未 READY 前不创建 | 规范语义以 Next 的 CA-SL 1.6.0 规范为准；ca-skills 发布 Schema / Golden / 作者源，不得自行改变语言契约 |
+
+当前只完成中央设计修订，不修改 Compiler 代码、不创建 Release、不创建目标仓实施 Issue。
 
 ## 修订记录
 
@@ -441,3 +449,4 @@ AC-013-02/04 仍 NOT_RUN，03/05/06 仍 BLOCKED。整项 DRAFT 主状态不变�
 | 2026-11-27 | 0.2.24 | Codex / GPT-6 | 文档头 | 登记阶段 READY（中央只读核验）及 AC 范围与工作项 #95 | 按单项独立评审推进 | Issue #12、#77；PR #46 |
 | 2026-11-27 | 0.2.25 | kimi-k3.1-pro | AC-013-01、§13、文档头 | 核对 58 项归档哈希与历史结果，发现 audit 登记不一致、绝对式校验路径及 vet 日志缺项；将本轮归档完整性记为 FAIL，复跑 NOT_RUN | 区分文件存在性、内部一致性和产品运行验收，避免过度判 PASS | Issue #95；PR #18 |
 | 2026-11-27 | 0.2.26 | GPT-6.2（ChatGPT） | AC-013-01、AC-013-02/04、§13、修订记录 | 将证据指针固定到 PR #18 的不可变归档路径；为 AC-013-02/04 补直接外部前置；归档字节/清单整改单独跟踪 Issue #102，未将文档修订视为归档验收 PASS | 分离设计前置、固定源证据与归档修复，避免把未发布的外部输入或历史 PoC 当作产品完成 | Issue #95；#102；#106；PR #18；Review #77 |
+| 2026-11-27 | 0.2.27 | GPT-6.2（ChatGPT） | 文档头、§5.1、§12、§14 | 冻结 1.6.0 languageTarget 与 Compiler 四类机器 API，明确 #61 为 v1alpha5 历史任务并登记 ca-skill-compiler 目标仓实施 Issue 创建门槛 | 将 Compiler 实施从“等待 Owner 自行定契约”改为按 Next 设计执行 | Issue #113；EC02；F08 |

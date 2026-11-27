@@ -1,9 +1,9 @@
 # SR-026：Codec公开工具发布
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.8\
-> 状态：整项 DRAFT；BLOCKED_EXTERNAL_INPUT。BLOCKED_EXTERNAL_INPUT。  
-> 下一步：Provider Owner 需交付 Codec 公开 Capability、唯一 Callable、输入输出 Schema、slot/mediaType、handler 和包版本。v1.2.0 与候选 PR #39 分别记录。  
+> SR 版本：0.2.0\
+> 状态：整项 DRAFT；本轮中央生产端设计已补齐，`DESIGN_REVIEW_REQUESTED`；产品 AC 仍 NOT_RUN。实施 Issue 未创建，须待 SR-026 READY。  
+> 下一步：独立评审本轮中央契约；达到 READY 后再在 ca-client-tools 创建实施 Issue。PR #39 仅是 Codec 库 / Worker 的 Phase B 候选，不是公开 Provider Tool 发布。  
 > 阶段依据：[独立评审 #87](https://github.com/odango-chan/ca-agent-next/issues/87#issuecomment-7209366603)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。
 > 创建日期：2026-11-26  
 > 修订日期：2026-11-27\
@@ -24,42 +24,69 @@
 
 ## 1. 目标与前置
 
-目标仓 ca-client-tools，功能 F03.05 / EC03，消费方 ca-agent-next SR-010。中央依据为 F03.05 §8.2、§11 及 [Tool Interface 与 Provider 集成设计](../设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md#ec03-外部生产端与复验)。现状为 Provider v1.2.0 有 11 个 READ，Codec 候选 PR #39 有本地库和 Worker。先固定可复验的 Phase B revision，仅选已通过正反向 fixture 的一类 NAS Decode 做第一批。现有 11 个公开导出和 Owner 契约不包含此操作。
+目标仓：`odango-chan/ca-client-tools`；消费方为 Next / SR-010。中央依据为 F03.05 §8.2.1、§12.3.1、SR-026 与 SR-029。Provider v1.2.0 的 11 个历史 READ 和 PR #39 的 Codec 库 / Worker 仅作实现来源；本 SR 的目标是按 1.6.0 Provider Interface Package 2.0.0 发布 3 Capability / 3 Callable，其中 Codec 是第三个本地 READ。
 
 ## 2. 在源仓交付
 
 1. 以 `protocol/codec/nas.go` 的 DecodeNAS 与同目录测试为输入，固定一个已支持的消息类型、原始输入和预期 JSON。声明新的公开 Callable ID、Capability membership、READ、精确输入输出 Schema、输入 artifact slot 和媒体类型。READY 前由 Provider 所有者在本节登记精确 ID、Schema、handler 与版本，不由消费端命名。
 2. 在 `internal/provider/` 接入进程内本地 handler，通过 Host artifact channel 取原字节；结果不经过远端 SBI，拒绝错误 slot、非法消息与超限。以现有 v2 schema 实测能否合法表示本地结果；若必须改变冻结 envelope，先给出版本化契约、Driver 选择和兼容测试，再启动该部分。
 3. 同步 Provider 发布包生成器、公开 Interface、bindings 和私有 backend catalog；真实进程只在声明的 ID 上响应。将构建所得包交给 Next，禁止直接从分支代码导入 Go 库作为 Tool。包的新增版本使用纯数字 SemVer。
+## 2.2 中央固定的生产端接口契约（设计目标，尚未发布）
+
+本 SR 的目标不是等待 Provider Owner 自行发明公开接口，而是按 F03.05 中央设计实现以下契约：
+
+| 项目 | 唯一目标值 |
+|---|---|
+| Capability ID | `protocol.nas.5gsm.release-request.decode` |
+| Callable ID | `ca-client-tools.codec.nas.5gsm.release-request.decode` |
+| Interface Package ID | `urn:wtlab:ca-client-tools:openamsm-sbi-interface` |
+| Package / Provider 目标 SemVer | `2.0.0` |
+| Runtime Bindings Sidecar | `ca.tool-provider-runtime-bindings/v2` |
+| Provider Protocol | `ca-client-tools.provider/v2` |
+| Artifact Channel | `ca-host.artifact-store/v1` |
+| 首批消息 | NAS 5GSM PDU Session Release Request `0xD1` / `PDUSessRelReq` |
+
+公开 Provider Interface 1.6.0 目标闭包为 3/3：`openamsm.smf.mas.context.read` ↔ `ca-client-tools.openamsm.smf.mas.context.read`；`openamsm.nf.metrics.read` ↔ `ca-client-tools.openamsm.nf.metrics.read`；`protocol.nas.5gsm.release-request.decode` ↔ `ca-client-tools.codec.nas.5gsm.release-request.decode`。前两项分别使用闭合 `contextKind`、`resourceKind` selector；第三项使用唯一 Codec Callable。Capability 与 Callable 一对一，backendOperationId 只留在 Provider 私有映射。
+
+**输入：**公开 Input Schema 是空闭合对象；原始 N1 字节通过 Host-owned `PRIVATE_MATERIAL` 注入，不暴露给 Skill / LLM。Runtime Bindings v2 私有参数为 `n1_sm`，Artifact slot=`n1Message`，direction=`INPUT`，mediaType=`application/vnd.3gpp.5gnas`。Provider catalog descriptor 声明 `artifactSlots.inputs` pointer `/n1_sm`。Host 注入当前 Invocation 的 `artifactRef`；缺少 Artifact Channel、slot/mediaType 不符或引用不属于当前 Invocation 时派发前拒绝。
+
+**输出：**发布闭合 Output Schema，字段为 3GPP 语义名：`protocol=NAS`、`messageType=PDU_SESSION_RELEASE_REQUEST`、`messageTypeCode=209`、header（EPD=46、PSI、PTI）、qualification（complete/qualified/rawPreserved/structuralParse/projectionValid/reencodeEligible/reencodeVerified/consumedBits/totalBits/ieToDo）、status 和 diagnostics。首批只允许当前 Golden 已覆盖的 Release Request 投影；底层返回 ePCO 等未资格化字段时必须 `NOT_QUALIFIED`，不得作为可用业务数据。原始字节不返回、不 Base64 化，保留在 Host Artifact Store。
+
+**状态与错误：**Codec 状态枚举为 `SUCCESS`、`PARTIAL`、`UNSUPPORTED_MESSAGE`、`UNSUPPORTED_IE`、`DUPLICATE_IE`、`INVALID`、`NOT_QUALIFIED`。只有 `SUCCESS && complete && qualified && rawPreserved && projectionValid && reencodeVerified` 才是可消费 Observation。Release Complete `2e 05 07 d4` 对本 Capability 返回 `UNSUPPORTED_MESSAGE` / `MESSAGE_TYPE_OUT_OF_SCOPE`；截断 `2e 05 01` 返回 `INVALID`。
+
+**执行：**Provider 进程内直接调用 Go `protocol/codec` Facade，不启动 Python Worker 子进程、不发远程 SBI、不修改 Owner 状态。旧 `protocol/nas5gsm` helper（ca-client-tools#18）仍是独立 Host/Mock AMF 协议辅助库，不等同于本 SR 的公开 Provider Capability；PR #39 的 `protocol/codec` 仅是本地库候选。
+
+以上为中央设计目标，尚未发布。Provider Owner 不得自行改名或扩大消息范围；实现中如发现不可行，必须先回到 Next 更新 F03.05 / SR-026。
 
 ## 3. 验收与退出条件
 
 | ID | 入口与判据 |
 |---|---|
 | AC-026-01 | 在选定候选根运行 `go test ./protocol/codec/...`，记录受测 SHA、支持子集、具体 fixture 和测试数；截断/不支持的消息失败 |
-| AC-026-02 | 在生产端运行 `go test ./internal/provider ./internal/runtimebindings ./internal/interfacepkg`，再用发行包的 `provider serve` 完成 initialize/catalog/invoke；断言精确投影、零远端 SBI 请求、原字节不变，缺通道时该绑定 unavailable |
-| AC-026-03 | 用同一发行包和同一 fixture 执行 SR-010。先无 decode 声明验证零调用，再在有授权的 Skill 上验证一次调用；越权在派发前拒绝 |
+| AC-026-02 | 按 F03.05 中央契约实现 Provider Interface Package 2.0.0 与 Runtime Bindings v2；运行 `go test ./internal/provider ./internal/runtimebindings ./internal/interfacepkg`，再用正式包的 `provider serve` 完成 initialize/catalog/invoke；断言 3/3 Capability↔Callable、私有 Artifact slot、闭合输出 Schema、零远端 SBI 请求、原字节不变，缺通道时绑定 unavailable |
+| AC-026-03 | 用同一正式 Provider 包和同一 NAS fixture 执行 SR-010；未声明 `protocol.nas.5gsm.release-request.decode` 时验证零调用，声明并授权后验证一次 READ Observation；越权在派发前拒绝，任何非 SUCCESS/未资格化结果不得提升为 PASS |
 
 ## 4. 状态与非目标
 
-源仓实施 Issue、PR、commit、正式包未登记，测试 NOT_RUN。前述公开 ID/Schema、版本与本地结果 profile 未冻结，维持 DRAFT。第一批不含 Encode、全量 NGAP、ext=1 或其他未经资格化消息。SR-015 的设计移交和 SR-010 已发布 Provider 部分可单独验收。无替代 SR。
+目标仓为 `odango-chan/ca-client-tools`；实施 Issue=`NOT_CREATED`，仅 SR-026 与 SR-029 均 READY 后创建。测试仍 NOT_RUN。首批不含 Encode、全量 NGAP、ext=1 或其他未经资格化消息。SR-015 的设计移交和 SR-010 已发布 Provider 部分可单独验收。无替代 SR。
 
-**外部契约决定（D14，OPEN）**。已核对 ca-client-tools main `7bcb2614aa3615d8358df31eecefd0909e894e40` 与 [PR #39](https://github.com/odango-chan/ca-client-tools/pull/39) 的候选库 `eb1169fe1d0e2e691d101908aad08ee8801da754`。生产者需提供同一固定源中的 Package ID/纯数字版本、公开 Capability 与唯一 Callable、入出参 Schema 及 slot/mediaType、handler 路径/符号与本地结果 profile，并记录正式发布或签认的 PR/commit。AC-026-01 仅复核库向量。此记录为空时 02/03、AC-010-06b 的全量 3/3 及 07/08 均不得使用候选别名或推测 Schema。
+**中央设计裁决（D14 CLOSED，Issue #113）：**Package ID、Capability ID、Callable ID、Input/Output Schema、Artifact slot/mediaType、首批消息范围和 Provider 执行路径已在 Next / F03.05 / SR-026 固定。生产仓只负责实现和发布，不得把这些设计空白留给 Harness 或临时决定。`ca-client-tools#18` 只覆盖历史 `protocol/nas5gsm` helper；PR #39 是 `protocol/codec` Phase B 候选库，不是公开 Provider Package。
 
 ### 首批 NAS 向量
 
-固定 PR #39 `protocol/codec/codec_test.go::TestDecodeNASOpenAMSMVectors` 中的 `release-request`，原始四个 octet 为 `2e 05 01 d1`，Decoder 的消息类型应为 `PDUSessRelReq`，PSI=5、PTI=1。加入截断到三个 octet、同头但最后 octet 为 0xd4 的反例，后者是有效 Release Complete、超出首批指定的消息类型。以 `go test ./protocol/codec -run TestDecodeNASOpenAMSMVectors -count=1 -v` 单独核对原始库向量，再由公开 Provider 调用重跑。本节只定义第一批公开子集。
+固定 PR #39 `protocol/codec/codec_test.go::TestDecodeNASOpenAMSMVectors` 中的 `release-request`，原始四个 octet 为 `2e 05 01 d1`，Decoder 的消息类型应为 `PDUSessRelReq`，PSI=5、PTI=1。加入截断到三个 octet、同头但最后 octet 为 0xd4（Release Complete 固定向量 `2e 05 07 d4`）的反例，后者是有效 Release Complete、超出首批指定的消息类型。以 `go test ./protocol/codec -run TestDecodeNASOpenAMSMVectors -count=1 -v` 单独核对原始库向量，再由公开 Provider 调用重跑。本节只定义第一批公开子集。
 
-### 4.1 公开 Codec Package 生产者交接表（尚未交付）
+### 4.1 目标仓与实施 Issue 绑定
 
-| 生产者 | 必须固定且可复核的内容 | 缺失时受阻的门槛 |
-|---|---|---|
-| ca-client-tools / Provider Owner | 正式源 SHA、Package ID / SemVer、1.6.0 languageTarget、公开 Capability ID 与唯一 Callable ID、READ kind/Effect、真实 handler 路径和符号 | AC-026-02/03 及 Consumer SR-010 正向运行 |
-| ca-client-tools / Provider Owner | 输入/输出 Schema、Artifact slot/方向/mediaType、Release Request 专属 JSON 结果 profile、错误码及截断/错误类型负例 | 正式 Codec Tool 的准确参数与结果验收 |
-| ca-client-tools / Provider Owner | 同一发行包 initialize/catalog/invoke 证据、零远端 SBI 请求、与原 Provider 查询 2/2 合成 3/3 的一对一对账 | 不得将 PR #39 库向量或私有 backend 名称冒充公开 Tool |
+| 项目 | 绑定值 |
+|---|---|
+| 中央 SR | SR-026（F03.05 §8.2.1 / §12.3.1） |
+| 目标仓 | `odango-chan/ca-client-tools` |
+| 实施 Issue | `NOT_CREATED`；仅 SR-026 与 Provider 3/3 设计依赖 SR-029 均 READY 后创建 |
+| 相关历史工作 | PR #39（Phase B Codec 库 / Worker，OPEN）；ca-client-tools#18（旧 `protocol/nas5gsm` Host/Mock AMF 辅助库） |
+| 新 Issue 必须引用 | 本 SR、F03.05 固定设计 SHA、Capability/Callable、Package 2.0.0、Runtime Bindings v2、AC-026-01～03 |
 
-这些字段由生产者在其签认 Issue/PR 和正式发布记录中提交。本 SR 现有 `2e 05 01 d1` 向量、`0xd4` 非目标负例可先供静态评议；任何字段尚缺时，禁止由 Harness 推断别名、Schema、版本或“兼容”路径，SR-026 整体仍 BLOCKED_EXTERNAL_INPUT。
-
+目标 Issue 创建前不授权 Provider 代码实施或发布。实现完成后，PR / Commit / 测试日志 / Release 资产必须回填本 SR；任何契约变化先回到 Next 修订。
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
@@ -73,3 +100,4 @@
 | 2026-11-27 | 0.1.6 | GPT-6（ChatGPT） | §4.1、修订表 | 固定 Codec 公开契约缺件及唯一生产者，保留现有库向量独立可审查范围，整理历史六列修订记录 | 将外部输入阻塞与静态候选审查隔离，杜绝猜测公开机器 ID | Issue #12；PR #46；SR-026 |
 | 2026-11-27 | 0.1.7 | GPT-6（ChatGPT） | 修订记录 | 将历史记录统一为七列并保留原始文字及原始关联，修正非规范行的分隔符 | 确保修订表可由文档校验器完整解析；不影响设计语义及 READY 主状态 | Issue #12；PR #46；SR-026 |
 | 2026-11-27 | 0.1.8 | Codex / GPT-6 | 文档头 | 登记BLOCKED_EXTERNAL_INPUT及 AC 范围 | 按单项独立评审推进 | Issue #12、#87；PR #46 |
+| 2026-11-27 | 0.2.0 | GPT-6.2（ChatGPT） | §2.2、§3、§4.1、文档头 | 固定 Codec Capability/Callable、Provider Package 3/3、Runtime Bindings v2、Host Artifact slot、NAS 首批范围与资格结果；明确目标仓 Issue 仅在 READY 后创建 | 将外部输入阻塞改为中央先定义、生产仓按契约实施，避免 Provider Owner 在发布时自行发明接口 | Issue #113；F03.05；SR-029 |
