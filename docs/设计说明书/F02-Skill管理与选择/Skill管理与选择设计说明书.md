@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：**设计待评审**（唯一新目标 CA-SL 1.6.0；全链路不兼容任何旧作者语法、Build DTO、Artifact、Bundle；1.6.0 产品未发布）
-> 文档版本：0.3.1
+> 文档版本：0.3.2
 > 功能归属：F02 — Skill 管理与选择  
 > 关联 SR：SR-004、SR-005、SR-006    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -235,6 +235,15 @@ Next 在 Skill 导入时反序列化已检查程序和类型环境，建立运�
 按 [CA-SL 发布与候选](../../规范/CA-SL语言基线与版本规范.md) 确认 when 的发布状态。[F08 编译与发布](../F08-技能编译与发布/技能编译与发布设计说明书.md)负责组装 Bundle，EC02 负责生成已检查程序，Next 由 SR-004～006 消费与验收；F09 Studio 维护作者编辑。SR-004 只负责返回已验证 import candidate；SR-005 负责 Catalog generation；SR-006 负责选择与 Continuation。Compiler API 和 Bundle 生产依赖分别由 SR-013、SR-027 提供。Issue #40 / SR-029 定义的 **CA-SL 1.6.0** 是下一正式产品目标；历史 v1alpha5 规范和产物继续冻结但不作为新 Runtime 输入。1.6.0 未正式发布前相关实施仍 BLOCKED。
 
 
+## 13. 3GPP Event 选择输入与执行期 Codec Result 的分离（IR-009）
+
+F02 选择算法保持 **Event Schema → Skill-owned `requestSchema` → `when` → candidate**，选择期绝不调用 Codec 或读取 Tool result。3GPP 标准类型可通过 `requestSchema` 的显式公共 Schema-only 依赖精确 $ref 重用，但根仍属于 Skill；该公共包不是 SR-030 Host Context 包，不能混入 `Contract.contexts` 或 Callable allowlist。
+
+- T1 的 Request 只能要求 EC04 在 Plugin Event Schema 验证后**已提供**的 SBI JSON、路径/operation、最小 NAS discriminator、已授权原始 Artifact ref；Create 的 `requestedPduSessionType` / `requestedSscMode` 若只存在于 N1，必须从 T1 必填转至选定 Skill 的 T2 Codec READ Result。
+- continuation （含 0xD4 和 N2 三类 completion）只恢复原 Run，不新建候选，不重新验证其选择期 `when`；其 payload / Evidence 与原 Run 完整 correlation。
+- 导入的 Artifact 必须携带完整已验证 Request 根/公共类型 $ref closure；缺 Schema-only 依赖、重复版本/Schema ID、编码后才可见字段或不匹配 output 类型时 fail-closed。缺正式 Schema/Codec Package 不阻塞与其无关的 SKILL.md-only 或无 Codec Assurance 子集。
+- 具体来源和正负例见 [3GPP 公共 Schema 设计](../EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)及 [SR-031](../../SR/SR-031-3GPP公共Schema-only-Publisher.md)；新的 1.6.0 Bundle/Compiler 产品均未发布，相关集成 `NOT_RUN/BLOCKED`。
+
 ## 修订记录
 
 
@@ -264,3 +273,4 @@ Next 在 Skill 导入时反序列化已检查程序和类型环境，建立运�
 | 2026-11-26 | 0.2.17 | GPT-6（ChatGPT） | 文档头、修订记录 | 将 CA-SL 1.6.0-only 的目标设计明确推进待独立评审；完整规范/API/Bundle 未发布 | 保持设计评审与实施 READY、产品 RELEASED 分离 | Issue #40；SR-029；PR #44 |
 | 2026-11-26 | 0.2.18 | GPT-6（ChatGPT） | 核心规范与验收章节 | 去除 v1alpha5 M.3 规范依赖；新增 1.6.0 Resolver 结果表、拒绝和 continuation invariants | 为 SR-005/006 提供唯一可审查的选择语义 | Issue #12/#40；SR-005/006；SR-029 |
 | 2026-11-27 | 0.3.0 | Codex / GPT-6 | §2～6 | 固定 Schema-only、Program 归属及 Resolver 输入边界 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
+| 2026-11-27 | 0.3.2 | ChatGPT / GPT-6 | 3GPP Schema/Codec 分阶段消费 | 对齐 SR-031 公共类型、T1 Request 与 T2 Codec Result，新增分期拒绝/验收范围 | 修复标准输入来源与实现门禁的跨仓断点 | IR-009；Issue #47；SR-031/026 |
