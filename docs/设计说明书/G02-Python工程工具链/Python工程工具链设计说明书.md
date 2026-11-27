@@ -368,6 +368,9 @@ cleanup() {
   local cmd_rc=0
   trap - EXIT
   set +e
+  cd "$ROOT"
+  cmd_rc=$?
+  if [ "$cmd_rc" -ne 0 ] && [ "$cleanup_rc" -eq 0 ]; then cleanup_rc=$cmd_rc; fi
   if [ "$B_ADDED" -eq 1 ]; then
     git -C "$ROOT" worktree remove --force "$B_PATH"
     cmd_rc=$?
