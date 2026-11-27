@@ -1,22 +1,22 @@
 # SR-028：Python 工程工具链与 uv 环境管理
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.9\
+> SR 版本：0.2.10\
 > 修订日期：2026-11-27\
-> 状态：DRAFT（实施主状态）；第六轮独立模型 Review [#6083872622](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083872622)（固定 Head `2d20a128a1574103d709d82f6c426580ecb47f48` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`）：CHANGES_REQUESTED（0 P0 / 1 P1 / 2 P2）；R028-21～23 已按 Issue #12 完成设计整改并推送，等待新 Head 第七轮独立复评；产品 AC-028-01～10 全部 NOT_RUN，READY=0。
+> 状态：READY（实施主状态）；第七轮独立模型 Review [#6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6084094037)（Head `93f1389e7c5968cd30e8a74137207094864ecca0` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`）：APPROVE_FOR_READY（0 P0 / 0 P1 / 2 P2）；实施 Issue [#96](https://github.com/odango-chan/ca-agent-next/issues/96) 已建立；AC-028-01～10 产品执行全部 NOT_RUN。两个非阻断 P2 纳入实施证据要求\
 > 创建日期：2026-11-26  
 > 所属阶段：G02 工程治理支撑  
 > 上游需求：[IR-007](../IR/IR%20总登记册.md#ir-007)  
-> 设计依据：[G02 Python 工程工具链与环境管理设计说明书](../设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md) v0.2.7 §1～§8；[SR-002](SR-002-Python%20核心与宿主基础骨架.md) v0.2.10 §2.1；[SR 管理规范](../规范/SR%20管理规范.md) v0.8.1 §6.1、§8.3\
-> 设计/治理 Issue：[ca-agent-next #12](https://github.com/odango-chan/ca-agent-next/issues/12)（当前整改追踪）；原设计 Issue [#35](https://github.com/odango-chan/ca-agent-next/issues/35) 已 CLOSED，仅作历史来源；均不是实施 Issue  
+> 设计依据：[G02 Python 工程工具链与环境管理设计说明书](../设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md) v0.2.8 §1～§8；[SR-002](SR-002-Python%20核心与宿主基础骨架.md) v0.2.10 §2.1；[SR 管理规范](../规范/SR%20管理规范.md) v0.8.1 §6.1、§8.2、§8.3\
+> 设计/治理 Issue：[ca-agent-next #12](https://github.com/odango-chan/ca-agent-next/issues/12)；实施 Issue：[ca-agent-next #96](https://github.com/odango-chan/ca-agent-next/issues/96)；原设计 Issue [#35](https://github.com/odango-chan/ca-agent-next/issues/35) 已 CLOSED，仅作历史来源\
 > 目标仓：`odango-chan/ca-agent-next`  
-> 最新独立复评：PR #46 Review [#6083872622](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083872622)，固定 Head `2d20a128a1574103d709d82f6c426580ecb47f48` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`；平台事件 COMMENTED，模型结论 CHANGES_REQUESTED（0 P0 / 1 P1 / 2 P2）。R028-21 为唯一 P1，R028-22/23 为 P2；第六轮问题已按 Issue #12 修订，必须针对新 Head 进行第七轮独立复评。
+> 最新独立复评：PR #46 Review [#6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6084094037)，固定 Head `93f1389e7c5968cd30e8a74137207094864ecca0` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`；平台事件 COMMENTED，独立模型结论 APPROVE_FOR_READY（0 P0 / 0 P1 / 2 P2）。两个 P2 不阻断 READY，但必须按实施 Issue #96 在 AC-028-08 证据回填时关闭\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：其他仓库迁移、生产级供应链安全、运行时架构改造和完整 Python 版本矩阵资格认证
 
-## 0. 本轮设计评审入口（2026-11-26）
+## 0. 第七轮独立设计复评与实施 READY（2026-11-27）
 
-本 SR 的当前整改依据为 [PR #46 Review #6083872622](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083872622)，固定 Head `2d20a128a1574103d709d82f6c426580ecb47f48` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`。结论为 `CHANGES_REQUESTED`，共 0 P0 / 1 P1 / 2 P2；R028-21 阻断 READY，R028-22/23 为 P2。问题均可由 Next 自身修订，无外部输入阻塞。**SR 主状态仍为 `DRAFT`；本次仅授权 G02/SR-028 与治理追踪文档整改，不授权代码、配置、Workflow 或产品实施。**
+第七轮独立复评 [PR #46 Review #6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6084094037) 绑定 Head `93f1389e7c5968cd30e8a74137207094864ecca0` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`，模型结论为 `APPROVE_FOR_READY`（0 P0 / 0 P1 / 2 P2），平台事件为 `COMMENTED`。独立评审确认 AC-028-01～10 全部 DESIGN_PASS；产品执行仍全部 NOT_RUN。R028-21 已 CLOSED；两个非阻断 P2 分别为受控负例 PR 的 base/来源分支及单文件 diff 约束、AC-028-08 证据列对 run-context 三行和负例 PR 文件清单的核验。用户已批准将 SR-028 提升为 READY，并按 SR 管理规范 §8.2 在未合并候选设计 SHA 上开展范围受限实施；正式实施追踪为 [Issue #96](https://github.com/odango-chan/ca-agent-next/issues/96)。
 
 - **评审范围：**核查 uv 版本/锁文件、worktree 虚拟环境隔离、与现有 setuptools 工程共存、CI 与回退/失败路径。
 - **外部依赖/证据状态：**设计可独立评审；SR-028 无实施 Issue，不应把 PR #32 的既有 CI 验收误作 uv 迁移 PASS。
@@ -62,7 +62,8 @@
 
 - AC-028-01～AC-028-06：SR-028 达到 READY、独立实施 Issue 建立后即可执行，不依赖 Agent Runtime 产品阶段。
 - AC-028-07（CI 环境与测试入口）和 AC-028-08（SR-001 Workflow/Artifact 迁移）：所需 SR-001 Workflow 与脚本已随 PR #32 合入。独立实施 PR 核对目标分支仍含这些入口及 SR-003 回归工作流后，按 G02 §3.8 迁移与复验。既有成功结果不计为迁移 PASS。
-- SR-028 当前没有实施 Issue。当前设计整改关联 Issue #12；原 Issue #35 已 CLOSED，仅为原始 G02 设计追踪。两者均不授予代码、配置、pyproject、锁文件或 Workflow 写入授权。
+- SR-028 的实施 Issue 为 [#96](https://github.com/odango-chan/ca-agent-next/issues/96)；设计/治理整改由 Issue #12 跟踪，原 Issue #35 已 CLOSED。实施从 PR #46 Head `93f1389e7c5968cd30e8a74137207094864ecca0` 派生独立分支，按 §8.2 限定在候选设计基线上执行；不得修改 PR #46 分支或 main。
+- 第七轮两个非阻断 P2 由 Issue #96 作为实施补证要求：受控负例 PR 必须以已包含 SR-028 Workflow 迁移和 `scripts/unittest_gate.py` 的实施分支为 base，head 累积 diff 仅含 `.github/workflows/review-context.yml`；AC-028-08 必须核验诊断 Artifact 的 `run-context.txt` 中真实 `base_sha`、全零 `generator_base_sha`、`failure_injection=invalid-base` 三行及负例 PR 文件清单。
 
 ## 5. Acceptance
 
@@ -119,7 +120,7 @@ Host Smoke 必须退出 0，成功 stdout 符合演示验收基线，stderr 为�
 
 ## 7. 当前状态与停止条件
 
-SR-028 当前仍为 DRAFT。最新第六轮独立复评 Review #6083872622 对固定 Head `2d20a128a1574103d709d82f6c426580ecb47f48` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2` 给出 CHANGES_REQUESTED（0 P0 / 1 P1 / 2 P2）。本轮按 Issue #12 仅整改 G02/SR-028 与治理文档；AC-028-01～10 的产品执行全部 NOT_RUN；不得创建实施 Issue、修改 `pyproject.toml`、生成 `uv.lock`、添加 `.python-version`、修改 Workflow 或向 DeepSeek Harness 发出产品实施提示词。第六轮整改已推送，必须对新 Head 进行第七轮独立复评。
+SR-028 当前为 READY，正式实施追踪为 [Issue #96](https://github.com/odango-chan/ca-agent-next/issues/96)。第七轮独立复评 Review #6084094037 对固定 Head `93f1389e7c5968cd30e8a74137207094864ecca0` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2` 给出 APPROVE_FOR_READY（0 P0 / 0 P1 / 2 P2）。AC-028-01～10 产品执行全部 NOT_RUN；不得将设计 PASS 或旧 Run 45947586118 当作 uv 产品验收。两个非阻断 P2 按 Issue #96 纳入实施证据，完成前不得将 AC-028-08 标记 PASS。实施仅基于候选设计 SHA 按 SR 管理规范 §8.2 受限执行，不修改 PR #46、PR #32 历史分支或 main。
 
 若评审发现 G02 与 SR-002 的 setuptools/运行时依赖约束冲突，先修订设计，不允许实施者自行选择替代后端或把开发依赖升级为运行时依赖。
 
@@ -143,3 +144,5 @@ SR-028 当前仍为 DRAFT。最新第六轮独立复评 Review #6083872622 对�
 | 2026-11-27 | 0.2.7 | GPT-6.2（ChatGPT） | 文档头、§0、§2、§4、AC-028-04～07、§5.1～5.2 | 按 Review #6083225844 补齐锁漂移/Worktree fail-fast 与保码 cleanup、A 返回 `--no-sync`、显式 uv 项目解释器、标准库 unittest gate 自动断言 skipped=0 和 discovered>0、双平台 Artifact、A/B/A 完整 sys.prefix/direct_url/ignore 证据，以及 Go CWD/Windows `.exe` 规则；产品 AC 全部仍 NOT_RUN | 修复四项阻断 READY 的 P1 和三项 P2，不把设计整改当成产品实施或验收 | Issue #12；PR #46；Review #6083225844；G02 v0.2.5 |
 | 2026-11-27 | 0.2.8 | GPT-6.2（ChatGPT） | 文档头、§0、AC-028-07/08、§5.1～5.2、§7 | 按第五轮 Review #6083641266 分离 Review Context 诊断 Artifact 与三文件正式 Artifact；恢复完整 paths 枚举；定义 `loader_errors`/`loader_error_messages`/`discovery_exception`；统一逐范围与整体 `exit_code` | 关闭 R028-17 P1、R028-18/19/20 P2，避免诊断文件污染 AC-028-08 完成态交付；保持 DRAFT 与全部产品 AC NOT_RUN | Issue #12；PR #46；Review #6083641266；G02 v0.2.6 |
 | 2026-11-27 | 0.2.9 | GPT-6.2（ChatGPT） | 文档头、§0、AC-028-08、§5.1、修订记录 | 按第六轮 Review #6083872622 修复受控负例的 gate/生成器先后矛盾：改为有效 Agent.md + 测试 gate PASS + 临时 Workflow PR 注入无效 base SHA 触发生成器失败；补齐负例 PR 不合并、恢复后成功重跑的证据；明确 discovery_exception 成功时为 JSON null | 关闭 R028-21 P1 与 R028-22/23 P2；保留 invalid review_scope 单元测试覆盖，产品 AC 仍全部 NOT_RUN，SR 保持 DRAFT | Issue #12；PR #46；Review #6083872622；G02 v0.2.7 |
+
+| 2026-11-27 | 0.2.10 | GPT-6.2（ChatGPT） | 文档头、§0、§4.2、§7、修订记录 | 回填第七轮 Review #6084094037 的固定 Head/Base 与 APPROVE_FOR_READY；SR-028 提升 READY，建立实施 Issue #96；将两个非阻断 P2 纳入实施证据要求并固定 §8.2 候选设计基线 | 允许在不合并 PR #46 的前提下启动范围受限实施，同时保持 AC-028-01～10 产品执行 NOT_RUN | Issue #12；Issue #96；PR #46；Review #6084094037；G02 v0.2.8 |
