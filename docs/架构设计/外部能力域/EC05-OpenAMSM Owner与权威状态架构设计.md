@@ -126,9 +126,11 @@ UE-requested Release 的 NAS message type 是 0xD1，与 AMF/network-initiated R
 | Durable Receipt / Commit Proof | `docs/mas-owner-contracts-and-receipt.md`、`0023-mas-durable-receipt.patch`；候选分支更新条件 Receipt Schema | 历史实现材料存在；候选终态 Schema 与缺字段路径待验证，测试 NOT_RUN |
 | Exact-original Reconcile | `docs/scheme-c-pfcp-reconcile.md`、历史 Owner PR #21 / Issue #23；候选分支增加原 Receipt 与 PFCP deletion binding 比对 | 历史设计/实现记录保留；固定 main 审计发现包装层缺口，候选分支尚未动态验证 |
 | Scheme C Modify | `docs/scheme-c-owner-qos-delta.md`、Owner patches 0006～0010；候选分支校准 source/step | 历史 PFCP 52/53 与 N1/N2 证据保留；候选 C 回归 NOT_RUN |
-| UE-requested Release | Owner patches 0011～0017、N1 0xD1 / 0xD4 和 N2 response binding | 历史隔离 E2E 证据保留；SR-018 本轮 Release 子项 NOT_COVERED / BLOCKED / NOT_RUN |
+| UE-requested Release | Owner PR #21 merged（main commit `3201202b`，patches 0011～0014）；env-5gc-sim main `artifacts/acceptance/20261122-scheme-c-ue-release/run-manifest.json` | 历史 Owner / 隔离 `ac` E2E：normal、negative、timeout、pure-MAS parity gates PASS；SR018-G PASS（限定）。Network-requested ReleaseSMContext #10、并发 UE、Next E2E、CI/Production 不在该证据范围 |
 | Next Plugin / Runtime 端到端调用 | EC04 Plugin main 尚无代码，ca-agent-demo PR #246 未合并 | NOT_IMPLEMENTED / NOT_RUN |
 | Production Qualification | 本项目 Demo 非目标 | NOT_CLAIMED |
+
+**UE-requested Release follow-up（2026-11-27）**：`ca-5gc-sim` 解析到 canonical `env-5gc-sim`（同 repo ID 1374330228）；Owner PR #21 已合并，隔离 `ac` run-manifest `c-release-20261122-04` 及 negative/timeout checks 均可从 env-5gc-sim main 读取。SR-018 Release 子项据此为历史 Owner E2E PASS（限定）；不覆盖 Network-requested ReleaseSMContext #10、并发 UE、CA Agent/Provider/Skill E2E、CI 或 Production。
 
 **当前候选分支与证据边界（2026-11-27）**：固定 main `dc83ccbf5be54dcc7112dd43ba95ea6fa5975550` 的 SR-018 AC-018-01/02 固定源静态审计结论仍为 FAIL。候选分支 `c83be9c803c1ffd3a04964f6c2d80787c3798190` 相对 main Ahead 33 / Behind 0，尚无 PR/未合并；已静态核对 source/step、Evidence 参数绑定、Publisher fail-closed、PFCP DELETE UNKNOWN 条件 Receipt Schema 与 exact-original binding。Manifest 58 个 artifact 的 SHA-256 及 publicationDigest 独立核对一致，但 `publish.py --check`、Python 全套测试、19 Patch 应用、C 回归、原生构建和真实 PFCP UNKNOWN → Receipt Query → Reconcile 均 NOT_RUN。候选实现的缺字段 Receipt、operator/reason 审计留存及 generation 语义仍由 [env-openamsm#28](https://github.com/odango-chan/env-openamsm/issues/28) 关闭；不得把候选静态状态提升为 IMPLEMENTED/VERIFIED。
 
@@ -151,3 +153,4 @@ UE-requested Release 的 NAS message type 是 0xD1，与 AMF/network-initiated R
 | 2026-11-26 | 0.1.1 | GPT-6（ChatGPT） | 1.6.0 新目标与历史边界 | 增加 1.6.0 Owner Capability 24/24 目标与 Reconcile internal-only 边界，保留 v1alpha4 为历史实现基线 | Issue #12/#40；PR #46 |
 | 2026-11-26 | 0.1.2 | GPT-6（ChatGPT） | 文档头、§2.1、修订记录 | 补齐治理要求的全局评审范围与局部非目标；将 SR-025 纳入 1.6.0 Publisher 关联 | 使正式文档通过 review_scope 头部门禁，并显式追踪 Owner 新发布责任 | Issue #12/#40；SR-025；PR #46 |
 | 2026-11-27 | 0.1.3 | GPT-6.2（ChatGPT） | 文档头、§8、修订记录 | 区分固定 main 历史实现、候选源修复分支与未运行验收；把源仓验证责任指向 env-openamsm#28 | 避免用历史 Owner E2E 或候选静态代码误报当前 Reconcile/Receipt 通过 | SR-018；ca-agent-next#104；env-openamsm#28 |
+| 2026-11-27 | 0.1.4 | GPT-6.2（ChatGPT） | §8、修订记录 | 补充核验 Owner PR #21 合并后的 UE-requested Release 正常/负例/超时证据，并明确历史范围限制 | 修正旧仓名 alias 造成的 Release 子项误阻塞，同时不外推为 Next/Network Release/Production PASS | SR-018；env-openamsm#11/#21；env-5gc-sim#79 |
