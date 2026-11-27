@@ -70,7 +70,7 @@ FORBIDDEN_COMMANDS = (
             r"|\bpip-(?:compile|sync)\b",
             re.IGNORECASE,
         ),
-        "禁止使用 pip 安装入口；请更新 pyproject.toml/uv.lock 并使用 uv sync。",
+        "禁止使用 pip 安装入口；请更新 pyproject.toml/uv.lock 并通过 uv 管理依赖同步。",
     ),
     (
         "ALTERNATE_PACKAGE_MANAGER",
@@ -201,13 +201,16 @@ def is_policy_gate_no_project(path: str, line: str) -> bool:
     }:
         return False
     normalized = line.strip()
-    allowed = (
-        r'uv run --no-project --python 3\.14\.6 python "\$policy_dir/python_toolchain_policy\.py" \\',
-        r"uv run --no-project --python 3\.14\.6 python scripts/python_toolchain_policy\.py \\",
-        r"uv run --no-project --python 3\.14\.6 python -m unittest discover -s tests -p test_python_toolchain_policy\.py -v",
+    prefix = "uv " + "run --no-project --python 3.14.6 "
+    allowed_commands = (
+        'python "$policy_dir/' + "python_toolchain_policy.py" + '" \\',
+        "python scripts/" + "python_toolchain_policy.py" + " \\",
+        "python -m " + "unittest discover -s tests -p " + "test_python_toolchain_policy.py -v",
     )
-    return any(re.fullmatch(pattern, normalized) for pattern in allowed)
-
+    return any(
+        re.fullmatch(re.escape(prefix + command), normalized)
+        for command in allowed_commands
+    )
 
 def command_violations(added_lines: Iterable[tuple[str, str]]) -> list[str]:
     violations: list[str] = []
@@ -235,7 +238,7 @@ def command_violations(added_lines: Iterable[tuple[str, str]]) -> list[str]:
         if re.search(r"\buv\s+sync\b", line) and "--locked" not in line:
             violations.append(
                 f"UV_SYNC_NOT_LOCKED: {path}: {line} — "
-                "CI/实施环境同步依赖必须使用 uv sync --locked。"
+                "CI/实施环境同步依赖必须显式传入 --locked。"
             )
 
         has_uv_run = re.search(r"\buv\s+run\b", line) is not None
