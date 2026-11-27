@@ -16,7 +16,7 @@
 | SR | 静态报告 | 本 Goal 范围 |
 |---|---|---|
 | SR-012 | [Compiler 原始设计资产](SR-012.md) | AC-012-01 Next→源仓静态部分、03 |
-| SR-013 | Compiler when / Artifact 归档（进行中） | AC-013-01 归档完整性 |
+| SR-013 | [Compiler when / Artifact 归档](SR-013.md) | AC-013-01：FAIL（归档一致性）；历史结果与本轮复跑分开 |
 | SR-016 | Skill Studio 历史实现（进行中） | MIG-016-01、AC-016-09 设计对照 |
 | SR-017 | 业务 Plugin（进行中） | AC-017-01～04 |
 | SR-018 | Owner（进行中） | AC-018-01、02（除 Release）、04 |
