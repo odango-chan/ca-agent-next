@@ -2,8 +2,8 @@
 
 > 文档类型：总体架构设计  
 > 状态：目标架构基线；SR-002 Python Host/Model Loop 最小切片 VERIFIED；SR-003 v0.3.11 VERIFIED（模块 AC-003-01～04）；PR #34/#41/#42 已合入恢复分支，双平台 CI SUCCESS；系统 EX-02/03/04/18 未完成；完整 Runtime 尚未验收    
-> 文档版本：0.4.4
-> 修订日期：2026-11-26  
+> 文档版本：0.4.5
+> 修订日期：2026-11-27  
 > 适用范围：ca-agent-next 通用 Agent Core、Host、Runtime、Skill 与 Plugin 公共机制  
 > 权威边界：本文是本仓唯一总体架构文档；字段级契约见规范，机制细节见设计说明书  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope；本文局部非目标见 §2.2
@@ -250,7 +250,7 @@ sequenceDiagram
 ## 当前实现状态快照（2026-11-26）
 
 - Phase A：SR-002 Python Host + Model Loop 最小切片 VERIFIED，AC-002-01～08 PASS；完整 Runtime、EX-01 和 CPython 全矩阵仍未完成。
-- Phase B：SR-003 VERIFIED（模块）；系统 EX NOT_RUN；PR #34 已 MERGED 到恢复分支，merge commit `32c7c1b`；PR head `52f0fa32` 的 Ubuntu/Python 3.12 与 Windows/Python 3.14 模块 CI SUCCESS。该结果不等于 merge commit 的 post-merge exact verification；EX-02/03/04/18 仍 NOT_RUN。并行任务负责 SR-003 后续收尾，本轮只回填状态，不修改其实现。
+- Phase B：SR-003 VERIFIED（模块）；系统 EX NOT_RUN；PR #34 已 MERGED 到恢复分支，merge commit `32c7c1b`；PR head `52f0fa32` 的 Ubuntu/Python 3.12 与 Windows/Python 3.14 模块 CI SUCCESS。模块 AC-003-01～04 已 VERIFIED；EX-02/03/04/18 仍 NOT_RUN，Provider v2 wire DTO 与完整 Runtime E2E 由后续 SR 单独验收。
 - Skill Studio：main `79bd2c3`；#267/#270/#272 MERGED，#269 OPEN，#276 OPEN/DRAFT/DIRTY；SR-024 VERIFIED，SR-025 READY / ca-client-tools #43 OPEN；两个 Publisher ZIP 均未完成 Studio lock 双根消费验收。
 - CA-SL：v1alpha5 RELEASED，规范提交 `18d8184367982ccbc835756136c4a53f9096c3a0`；Compiler #61 OPEN，when Runtime Artifact/Go-Python 产品互操作未完成。
 - 本架构描述目标与当前差异；外部仓 main/PR 状态不等于 Next 实现或系统 Acceptance。
