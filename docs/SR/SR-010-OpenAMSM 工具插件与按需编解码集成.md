@@ -1,13 +1,16 @@
 # SR-010：OpenAMSM 工具插件与按需编解码集成
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.9\
-> 状态：DRAFT（实施主状态）；第二轮独立评审 CHANGES_REQUESTED（历史结论）；第三轮自评 **DESIGN_READY_FOR_INDEPENDENT_REVIEW**（仅设计评审候选，非独立批准或实施 READY）；产品 AC NOT_RUN/BLOCKED。
+> SR 版本：0.3.0\
+> 状态：整项 DRAFT；阶段 READY（本仓 Host Channel 设计）；AC-010-03 BLOCKED_EXTERNAL_INPUT（外部 ca-host.artifact-store/v1 仍含 SHA-256 约束，须先修订为无 hash 的 Demo channel）；其他 Host Channel AC 按各自阶段独立验收。  
+> 下一步：仅实现 Next Python Host ArtifactStore/Channel 与 no-decode 路径。06a 等真实 Importer/Catalog/Runtime 三层入口，09 等固定共享 fixtures 和联测；06b/07/08 等正式包。  
+> 阶段依据：[独立评审 #74](https://github.com/odango-chan/ca-agent-next/issues/74#issuecomment-7210244694)，评审 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
+> 工作项：[阶段工作项 #94](https://github.com/odango-chan/ca-agent-next/issues/94)。
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-27\
 > 所属阶段：Phase G  
 > 上游需求：[IR-005](../IR/IR%20总登记册.md#ir-005)  
-> 设计依据：[Plugin平台设计说明书](../设计说明书/F03-Plugin平台/Plugin平台设计说明书.md) v0.3.7 §8；[Tool Interface 与 Provider 集成设计](../设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) v0.4.4 全文；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.5 §5～10；[公共契约与所有权规范](../规范/公共契约与所有权规范.md) v0.2.6 §2、5、6、8、10\
+> 设计依据：[Plugin平台设计说明书](../设计说明书/F03-Plugin平台/Plugin平台设计说明书.md) v0.3.7 §8；[Tool Interface 与 Provider 集成设计](../设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) v0.4.4 §6.2/§6.5/§8.1；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.5 §5～6；[公共契约与所有权规范](../规范/公共契约与所有权规范.md) v0.2.7 §2、5、6、8、10\
 > Acceptance：OM-04、OM-10、OM-13（见[演示验收基线](../验收与实施/演示验收基线.md)）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：见第 3 节
@@ -65,7 +68,7 @@
 | AC-010-03 | Provider GET 输入/POST 输出正确二进制与 mediaType、Content-Length、长度/数量配额 | 输出原子发布，字节流与交接长度一致；slot/schema/size 不符不形成可读产物；不计算或校验摘要 |
 | AC-010-04 | 取消、超时、Provider 退出、部分写入、配额超限 | 所有 staged outputs 清理；未完成 Artifact 不可读取；无重复 Owner mutation |
 | AC-010-05 | Codec 未发布、Host 不需要 Decode、Codec 必需但不存在 | no-decode 路径不触发 Codec；必需 Codec 未发布只阻塞对应 AC，不冒充已发布能力 |
-| AC-010-06 | 06a 本地传私有 backendOperationId、旧 READ Callable 或非法 selector；06b 在正式 1.6.0 Package 与 Bundle 上按已 Link 的 Capability 分发 | 06a 同时向 Skill 包加载入口、Resolver、Runtime Action Boundary 分别注入旧 v1alpha5 与 Development Artifact，逐层断言无 candidate／无 Scope／无派发，三个入口各自 Provider IPC=0；Provider 安装 Loader 无需当前 Skill。非法 selector 负例在后端 I/O 前拒绝；06b 核对唯一公开映射、合法路由及 Scope；缺正式输入时 06b BLOCKED，单独 06a 不能使整项 PASS |
+| AC-010-06 | 06a 本地旧包拒绝：先通过真实 Importer 测旧 Artifact 拒绝；再以测试专用 fixture **绕过 Importer**，直接构造含旧 Artifact 的 Catalog entry/Resolver input；再直接构造旧 Run/旧 Callable-only Binding 注入 Runtime Action Boundary。06b 在正式 1.6.0 Package 与 Bundle 上按已 Link 的 Capability 分发 | 06a 每一层单独记录输入和计数：Importer candidate=0；直注 Catalog/Resolver 不得产生可选 candidate；Runtime 不得建立 Scope/dispatch；每层 Provider IPC=0。Resolver 与 Runtime 子例不得复用“Importer 已拒绝”的同一结果冒充独立测试。非法 selector 在后端 I/O 前拒绝；06b 核对唯一公开映射、合法路由及 Scope；缺正式输入时 06b BLOCKED，单独 06a 不能使整项 PASS |
 | AC-010-07 | SR-026 正式发布的 DecodeNAS Capability 与单消息 0xD1、截断/错误类型 | 正常 Decode 输出结构化 JSON 且原 bytes 保留；负例 fail-closed；未发布时 BLOCKED |
 | AC-010-08 | 1.6.0 Bundle 对已导出 Codec READ Capability 做真实 Runtime Tool Action | 必须经统一 Action Boundary + Provider channel；所需 new Package/Runtime Artifact 缺失时 NOT_RUN |
 | AC-010-09 | 同一 conformance fixtures 的 Host Python / Provider Go 联合测试 | 准确记录受测 SHA、请求/响应、GET/POST 字节、Slot、配额与错误映射；另测只有 Provider ok=true、HTTP 2xx、IPC 成功或模型成功文本，及 Receipt 的 Scope/Invocation 不符：按 SR-007 AC-007-05/06 均不得记 COMMITTED，无重复 mutation；仅算 Host 子模块，不算 OM E2E |
@@ -82,7 +85,7 @@
 | 项目 | 当前值 |
 |---|---|
 | 实施仓库 | ca-agent-next |
-| GitHub Issue | 未创建 |
+| GitHub Issue | [阶段工作项 #94](https://github.com/odango-chan/ca-agent-next/issues/94)（限定范围） |
 | 实施 PR | 未创建 |
 | Commit | 无 |
 | 实施状态 | NOT_STARTED |
@@ -109,6 +112,7 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 - 原 AC-010-01～05/09 Host Channel 可独立验收；AC-010-07 的 0xD1 仅证明首批候选库向量，不代表公开 Provider。AC-010-10 验证 OAS 3.0 选定 requestBody / multipart / 三组 Content-ID 到 N1/N2/N2 Ext1 slot 的映射和负例；未引用或未知 part 不得交给 Codec，其拒绝 / 忽略策略由 ingress profile 明确规定。同时验证原始 byte staging、精确 Source Bundle pin、T1/T2 SourcePath、SBI/N1 冲突、越权 artifactRef 与错误 generation。缺正式 Source Bundle / Compiler Resolver / Provider 时对应子项 BLOCKED / NOT_RUN。
 - 无 Codec 依赖的 Skill 不得被强制解码；不能发明 Provider Machine ID / Output Schema、动态 latest 或旧版迁移。权威说明见 [EC01.3GPP 设计](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。
 
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
@@ -122,7 +126,7 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-25 | 0.1.6 | 未记录（历史资料未提供） | 历史条目未细分 | Codex / GPT-6 · §5 固定目标代码位置、复验入口及可观察断言；同步所引权威设计版本 | 对齐当前架构与实施门禁 | Issue #12 SR-010 |
 | 2026-11-26 | 0.1.7 | 未记录（历史资料未提供） | 历史条目未细分 | §5 对齐真实 Provider v2，分别验收消费与外部发布 | 对齐跨仓实现与独立复验 | Issue #12 |
 | 2026-11-26 | 0.1.8 | 未记录（历史资料未提供） | 历史条目未细分 | 同步设计依据到本次复审的修订版本 | 对齐跨仓实现与独立复验 | Issue #12 |
-| 2026-11-26 | 0.1.9 | 未记录（历史资料未提供） | 历史条目未细分 | F03.05 v0.3.9 已包含 SR-015 设计移交，但本 SR Provider v2 wire contract 仍待设计门禁 | Issue #28；SR-003；SR-010 | undefined |
+| 2026-11-26 | 0.1.9 | 未记录（历史资料未提供） | 历史条目未细分 | F03.05 v0.3.9 已包含 SR-015 设计移交，但本 SR Provider v2 wire contract 仍待设计门禁 | Issue #28；SR-003；SR-010 | Issue #28；SR-003；SR-010（其余历史关联未记录）；undefined |
 | 2026-11-26 | 0.1.10 | 未记录（历史资料未提供） | 历史条目未细分 | 登记独立设计待评审批次、专项审查重点与缺失输入，保留 SR DRAFT/产品 NOT_RUN | 按 1.6.0-only / Capability-first 设计集中审查；避免提前授予实施门禁 | Issue #12；SR-029；PR #45 |
 | 2026-11-26 | 0.1.11 | 未记录（历史资料未提供） | 历史条目未细分 | 按治理 §6.1 拆分设计/实施/模块/系统依赖；补齐 AC-010-xx 正反验收 | 解除全局 VERIFIED 门槛与缺模块 AC 问题，避免 Harness 猜测/EX 倒灌 | Issue #12/#40；PR #46；SR 管理规范 §6.1 |
 | 2026-11-26 | 0.1.12 | 未记录（历史资料未提供） | 历史条目未细分 | 同步本次 1.6.0 实质整改后的权威 Feature/Compiler 文档版本 | 保证 SR 新旧规范引用与固定审核 Head 一致 | Issue #12/#40；PR #46 |
@@ -130,9 +134,10 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-27 | 0.2.1 | 未记录（历史资料未提供） | 历史条目未细分 | Codex / GPT-6，设计依据、AC-010-06，加入三层旧包拒绝及公共契约 §10 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
 | 2026-11-27 | 0.2.2 | GPT-6（ChatGPT） | 第三轮设计自评/历史修订表 | Host Artifact Channel AC-010-01～05/09 与 Codec 公开能力 AC-010-06b/07/08 分阶段，旧包三层零 IPC 负例可独立验；将第二轮结论保留为历史、登记第三轮独立复评候选并按版本整理记录 | 设计范围可供外部评审而不提前授权代码实施或夸大 AC 状态 | Issue #12；PR #46；SR-010 |
 | 2026-11-27 | 0.2.3 | GPT-6（ChatGPT） | 修订记录 | 将历史记录统一为七列并保留原始文字及原始关联，修正非规范行的分隔符 | 确保修订表可由文档校验器完整解析；不影响设计语义及 READY 主状态 | Issue #12；PR #46；SR-010 |
-| 2026-11-27 | 0.2.4 | ChatGPT / GPT-6 | 3GPP Schema/Codec 分阶段消费 | 对齐 SR-031 公共类型、T1 Request 与 T2 Codec Result，新增分期拒绝/验收范围 | 修复标准输入来源与实现门禁的跨仓断点 | IR-009；Issue #47；SR-031/026 |
-| 2026-11-27 | 0.2.5 | ChatGPT / GPT-6 | IR-009 OpenAMSM YAML 原件发布边界 | 版本随 OpenAMSM、原版不改动；Adapter 与 Provider Result 独立发版，保留阶段 AC | 避免把标准 YAML 代发布等同解码产品资格 | Issue #47；SR-031/026/010/027 |
+| 2026-11-27 | 0.2.4 | GPT-6（ChatGPT）；ChatGPT / GPT-6 | 文档头、AC-010-06、历史修订账本、修订记录；3GPP Schema/Codec 分阶段消费 | 补齐 F03.05/F05/公共契约固定版本与章节；要求直接注入旧 Catalog/Run/Binding 分层验证；将历史 undefined 关联改为可审计说明；对齐 SR-031 公共类型、T1 Request 与 T2 Codec Result，新增分期拒绝/验收范围 | 处理独立模型 Review #6082541121 的 R3-SR010-01/02/03，避免占位符和同一 Importer 错误冒充多层 fail-closed；修复标准输入来源与实现门禁的跨仓断点 | Issue #12；PR #46；Review #6082541121；IR-009；Issue #47；SR-031/026 |
+| 2026-11-27 | 0.2.5 | Codex / GPT-6；ChatGPT / GPT-6 | 文档头；IR-009 OpenAMSM YAML 原件发布边界 | 登记阶段 READY（本仓 Host Channel）及 AC 范围与工作项 #94；版本随 OpenAMSM、原版不改动；Adapter 与 Provider Result 独立发版，保留阶段 AC | 按单项独立评审推进；避免把标准 YAML 代发布等同解码产品资格 | Issue #12、#74；PR #46；Issue #47；SR-031/026/010/027 |
 | 2026-11-27 | 0.2.6 | ChatGPT / GPT-6.2 | §8 | 以原生 OAS3 operation / multipart 消费替代 Adapter 前置；补充 Compiler 精确组件引用、T0/T1/T2/T4 和 AC-010-10 | 使 Plugin、Compiler、Codec 各自承担正确协议层责任 | IR-009；Issue #47；SR-031/013/026/027 |
 | 2026-11-27 | 0.2.7 | ChatGPT / GPT-6.2 | §8、AC-010-10 | 固定 requestBody 选定面与 lazy refs；补齐 RefToBinaryData.contentId 到 N1/N2/N2 Ext1 part 的精确映射和负例 | 防止只检查 Header 存在却把错误二进制交给 Codec | IR-009；Issue #47；SR-031/026；EC01/F06 |
 | 2026-11-27 | 0.2.8 | ChatGPT / GPT-6.2 | §5、§8、AC-010-10 | 补入正式 AC-010-10 表格行；未引用 part 不交 Codec，额外 part 策略显式归 ingress profile | 避免 AC 仅在摘要出现，并避免超出 OpenAPI schema 的隐含拒绝 | IR-009；Issue #47；SR-031/026；EC01/F06 |
 | 2026-11-27 | 0.2.9 | ChatGPT / GPT-6.2 | §2～5、AC-010-03 | 移除 Demo 的逐 Artifact SHA-256 校验；明确 ca-agent 现有 artifact-store v1 不兼容，修订前阻塞实施 | 遵守 Demo 不做 hash 校验的范围，避免复用不兼容的外部契约 | IR-009；Issue #47；SR-031；F03.05 |
+| 2026-11-27 | 0.3.0 | GPT-6.2（ChatGPT） | PR #46 / PR #48 集成刷新 | 合并最新 PR #46 的 Host Channel 分阶段状态与 PR #48 的原版 OAS3 / multipart / Codec 消费设计；保留 AC-010-06 分层旧包拒绝及 AC-010-10 Content-ID 映射 | 解决堆叠分支基线漂移并保持无 hash Demo 边界、Host Channel 外部契约阻塞状态一致 | Issue #47/#12；PR #46/#48；IR-009；SR-010/013/026/027 |

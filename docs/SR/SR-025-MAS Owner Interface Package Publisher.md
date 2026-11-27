@@ -1,8 +1,10 @@
 # SR-025：MAS Owner 1.6.0 Capability-first Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.12
-> 状态：DRAFT（实施主状态）。PR #46 第二轮独立评审（1bf748db）：APPROVE_FOR_READY（中央 MAS Owner Publisher 设计）。产品验收依各 AC 单列。
+> SR 版本：0.1.15
+> 状态：整项 DRAFT；限定设计已认可，等待直接依赖。中央 Owner Publisher 设计已认可。  
+> 下一步：AC-025-01～08 的执行等待新 Owner 24/24 源、正式 Package Schema/CLI 与 Compiler 验证入口；发布另需授权。  
+> 阶段依据：[独立评审 #86](https://github.com/odango-chan/ca-agent-next/issues/86#issuecomment-7209318291)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。
 > 创建日期：2026-11-25
 > 修订日期：2026-11-27\
 > 所属阶段：外部 Publisher 实施移交
@@ -96,8 +98,6 @@ Owner `v1alpha4` source 的 `tool-catalog.yaml` 含 25 published contracts、旧
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
 |---|---|---|---|---|---|
 | 2026-11-25 | 0.1.0 | GPT-6.2（ChatGPT） | §1～6 | 新增 ca-client-tools MAS Owner Development Interface Package Publisher 独立实施 SR；固定 Owner source、25/24/25/53 exports、127 exports、56 payload files、Compiler Build/Verify gate 和 Release 集成；记录 SemVer 映射待用户确认。 | IR-006 · F03.05 · F09 · SR-015 · SR-016 · SR-024 · Issue #12 |
-| 2026-11-27 | 0.1.12 | Codex / GPT-6 | 评审状态 | 登记第二轮限定范围及外部依赖 | Issue #12，PR #46 |
-
 | 2026-11-25 | 0.1.1 | GPT-6.2（ChatGPT） | §2～7 | 补齐 AC-025-01～08，明确 package.version SemVer 决策门槛、导出闭包、负向测试和既有 Release 流程 ；让 ca-client-tools Publisher 达到可评审、可执行的 SR 粒度；不在决策确认前生成实施提示词 | Issue #12；F03.05；F09；SR-015、SR-016、SR-024 |
 | 2026-11-25 | 0.1.2 | Codex / GPT-6 | 正文 | §2、4～6 固定 MAS 包身份，解除 Publisher 对下游 Studio 的循环前置 | Issue #12 SR-025 |
 | 2026-11-25 | 0.1.3 | Codex / GPT-6 | 正文 | §6 明确发布者独立验收输入；同步所引权威设计版本；清理重复基线指针 | Issue #12 SR-025 |
@@ -105,9 +105,11 @@ Owner `v1alpha4` source 的 `tool-catalog.yaml` 含 25 published contracts、旧
 | 2026-11-26 | 0.1.5 | Codex / GPT-6 | 见本行变更 | 同步设计依据到本次复审的修订版本 | Issue #12 |
 | 2026-11-26 | 0.1.6 | GPT-6（ChatGPT） | 文档头、§0、设计依据 | 提交设计待评审、明确新旧契约/验收隔离并保留 DRAFT 主状态 | Issue #12；PR #45；SR-029 |
 | 2026-11-26 | 0.1.7 | GPT-6（ChatGPT） | 目标合同、实施 AC 和旧版留档 | 原旧 v1alpha5 Development Publisher 实施与验收全部替换为 1.6.0 Owner 24/24 能力映射、验收及分类型依赖 | Issue #12/#40；SR-016/025/029；PR #46 |
-
 | 2026-11-26 | 0.1.8 | GPT-6（ChatGPT） | 设计依据与新版本路径 | 刷新 1.6.0 正式目标设计引用：v0.4.0→v0.4.1、v0.3.10→v0.3.11、历史 F09 §4.5→新 §5-9 | Issue #12/#40；PR #46 |
 | 2026-11-26 | 0.1.9 | GPT-6（ChatGPT） | 文档头与 1.6.0 当前设计依据 | 修复 PR #46 Review Context 文档头检查及旧 Development Build 设计依据，更新新 Compiler/SR-013 正式入口 | Issue #12/#40；PR #46；CI #45837224652 |
-
 | 2026-11-26 | 0.1.10 | GPT-6（ChatGPT） | 最终一致性复评 / 规范性描述 | AC-025-07 明确唯一新 1.6.0 Compiler，不混用 Development profile | Issue #12/#40；PR #46 |
 | 2026-11-27 | 0.1.11 | Codex / GPT-6 | 文档头 | 统一中央权威文档的相对路径与版本 | Issue #12，PR #46 |
+| 2026-11-27 | 0.1.12 | Codex / GPT-6 | 评审状态 | 登记第二轮限定范围及外部依赖 | Issue #12，PR #46 |
+| 2026-11-27 | 0.1.13 | GPT-6（ChatGPT） | 修订记录 | 修复修订记录表空行与版本顺序，完整保留历史条目 | 处理 R3-LEDGER-01，确保历史修订可连续审计 | Issue #12；PR #46；Review #6082541121 |
+| 2026-11-27 | 0.1.14 | GPT-6（ChatGPT） | 文档头、评审状态、修订记录 | 将第三轮独立模型 Review #6082541121 的限定结论替换不可访问的第二轮评审登记 | 中央 Publisher 设计认可不代表 Owner 新机器契约、Package 或 Release 已发布 | Issue #12；PR #46；Review #6082541121 |
+| 2026-11-27 | 0.1.15 | Codex / GPT-6 | 文档头 | 登记限定设计已认可，等待直接依赖及 AC 范围 | 按单项独立评审推进 | Issue #12、#86；PR #46 |
