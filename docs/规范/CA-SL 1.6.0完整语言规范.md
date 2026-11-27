@@ -1,7 +1,7 @@
 # CA-SL 1.6.0 完整语言规范（中央设计稿）
 
 > 文档类型：CA-SL 作者语言规范（中央规范性设计稿）
-> 文档版本：0.1.3
+> 文档版本：0.1.4
 > 语言版本：CA-SL 1.6.0
 > languageTarget 候选：connectionagent.io/v1.6.0（本设计建议值；发布前由 ca-skills 与 Compiler Owner 在正式 Schema / Golden 中确认）
 > 状态：**DRAFT / REVIEW_REQUESTED**；未发布、未冻结、不得作为已发布产品规范
@@ -375,17 +375,15 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 - SR-027 负责新 Bundle；SR-004～006 负责导入、Catalog、Resolver；F04 负责 Runtime Action Boundary；F09 / SR-016 负责 Studio。
 - 未正式发布前，所有产品实现和运行验收保持 NOT_RELEASED / NOT_RUN；本设计通过不代表实施 READY。
 
-## 19. 3GPP 公共 Schema 的阶段化输入语义（IR-009）
+## 19. 原版 3GPP YAML 与 Skill 分阶段 Schema 的区分（IR-009）
 
-**Skill 的 `requestSchema` 根始终属于 Skill 自有 Schema**，这不排斥其属性 `$ref` 引用显式声明的、可信的公共 3GPP Schema-only Interface Package 中的精确导出类型。Host Context Schema-only Package **只能**经 `Contract.contexts` 引用，不能与 3GPP Common Schema 互换；二者均可有 0 Capability / 0 Callable，均不授予 Tool Scope。
+**用户新裁决优先**：3GPP 的具体版本**只**以 OpenAMSM 实际使用/支持的固定 OpenAPI YAML 目录与文件证据为依据。ca-skills / SR-031 原样代发布该文件及完整相对引用闭包；原始 YAML 的任意一个 byte（包括空白、注释、CRLF、路径/引用）均不得修改。原件是**Source Bundle**，不是自动符合本语言 §12 G.4 Profile 的 JSON Schema；不可将它无条件作为 `requestSchema` 的直接外部 `$ref` 导出。
 
-- `requestSchema` 仅约束**选择前** Event Plugin 已验证且实际存在的结构化字段；即使按 3GPP 命名，也不得要求只有在 Codec Tool 解码 N1/N2 后才存在的 NAS/NGAP 字段。
-- `when` 只读取选择前 `event.type` / `input`，不得调用 Codec、访问 Tool result 或 Context；Procedure 在选定 Skill 后才能通过已授予的 Codec READ Capability 获取**执行期**类型化结果。结果必须符合 Provider 正式 Output Schema，并与依赖中的 3GPP Common Schema 使用相同固定标准源及导出版本。
-- 共享 Schema 的引用必须是 **独立的完整 $id**（无 fragment）、显式依赖别名与精确发布快照；旧版、不同标准版本、重复 schemaId、缺 export 或未闭合依赖拒绝。单独只有公共 Schema 引用的包合法，Capability roots 仍可为零。
-- Compiler 将 Skill-owned Request 根及其公共类型闭包、Procedure 引用的 Codec/Owner Output Schema 闭包和 SourcePath 类型检查一并固定到 1.6.0 Artifact；不允许模型或 Host 自动补造未提供的值，不能把 Provider Codec READ 结果当作 Owner Receipt / Commit Proof。
-- 若标准 OpenAPI 使用本规范 §12 不允许的关键字（如 `#/components`、`oneOf`、`format`），公共 Producer 必须提供受支持且来源可审计的字段类型投影；不得在 Compiler 中放宽 Profile 或忽略未知断言。
+CA-SL 1.6.0 作者仍使用 **Skill 自有的关闭 `requestSchema` 根**，其中仅要求**选择前已得到的 Plugin Event 字段**。若确需公共类型并经独立评审，另用不同文件、不同 Package identity 发布**显式标记的 G.4 Adapter Schema-only Interface Package**（0 Capability/0 Callable、非空正式 Schema export、精确来源锁）；其引用必须来自声明的依赖和不带 fragment 的完整 $id。**Adapter 不属于 3GPP 原始 YAML，不得修改/覆盖原件**。Host Context Schema-only Package 仍**只**经 `Contract.contexts` 引用。
 
-见 [3GPP 公共 Schema 发布与 Skill 分阶段消费](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)及 SR-031。此处冻结的是**中央设计目标**，具体正式 machine schema / languageTarget、Publisher Release 与 Golden 尚未发布；本语言规范仍为 DRAFT。
+`when` 永远只能读取 T1 `event.type` / `input`；不能调用 Codec 或访问输出。被选 Skill 的 Procedure 在 T2 使用已授权 Codec READ 获取其受验证消息 Profile 的 Result，类型由 **Provider 正式发布的 Output Schema** 定义；若引用 Adapter 则须固定同一 OpenAMSM 支持源版本。NAS-only PDU Session Type、SSC mode 等不能在 T1 无来源时成为 Request 必填；必须在 T2 解码后用显式 SourcePath 验证。Codec Result 不能替代 Owner Receipt / Commit Proof。无正式 Adapter/Provider 时仅对应消费路径 `BLOCKED`，不能放宽 G.4 或生成影子标准 YAML。
+
+规范详见 [EC01.3GPP 原版代发布与分阶段输入设计](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)；SR-031 Phase A 原样代发布与 Phase B 独立适配分别验收。CA-SL 1.6.0 唯一新语言，完全无旧兼容。
 
 ## 修订记录
 
@@ -395,3 +393,4 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 | 2026-11-26 | 0.1.1 | GPT-6（ChatGPT） | §4、§16、修订记录 | 明确 requestSchema 指向 Skill 自有 Schema，Host Context Schema-only Package 仅通过 Contract.contexts 引用 | 避免将 Host Context Package 当作 Request Schema 根，统一 Contract.requestSchema 与 contexts 的不同所有权 | Issue #12/#40；SR-029、SR-030；PR #46 |
 | 2026-11-26 | 0.1.2 | GPT-6（ChatGPT） | 文档头、修订记录 | 补齐根 Agent.md review_scope 标准声明，保持完整规范进入独立评审时的统一治理范围 | 避免正式 CA-SL 规范稿因缺少全局评审范围而无法生成 Review Context | Issue #12/#40；PR #46 |
 | 2026-11-27 | 0.1.3 | ChatGPT / GPT-6 | 3GPP Schema 与阶段输入补充 | 明确公共 Schema-only 导出、选择期 Request 与执行期 Codec Result 的 Link / 业务字段来源 | 关闭 Create 选择前依赖 NAS 解码的循环、固定跨包类型门禁 | IR-009；Issue #47；SR-031/026/013 |
+| 2026-11-27 | 0.1.4 | ChatGPT / GPT-6 | 本轮 IR-009 设计修正 | 固定 OpenAMSM 版本 + 原版 YAML 逐字节代发布；显式区分可选 Adapter 与 Provider Codec 输出 | 落实原版 YAML 不得改动、消除误把原版当 G.4 的风险 | Issue #47；SR-031/026/013 |
