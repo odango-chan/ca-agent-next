@@ -144,6 +144,10 @@ def is_python_scope_path(path: str, workflow_content: str = "") -> bool:
         return True
     if normalized.startswith(".github/scripts/") and normalized.endswith(".py"):
         return True
+    candidate = Path(normalized)
+    if candidate.name.lower() in EXECUTABLE_NAMES or candidate.suffix.lower() == ".mk":
+        lowered = workflow_content.lower()
+        return any(token in lowered for token in ("python", "uv ", "pytest", "unittest", "pyproject"))
     if normalized.startswith(".github/workflows/") and normalized.endswith((".yml", ".yaml")):
         if Path(normalized).name in {
             "review-context.yml",
@@ -164,7 +168,13 @@ def has_python_scope(
     changed_paths: Iterable[str],
 ) -> bool:
     for path in changed_paths:
-        if path.startswith(".github/workflows/"):
+        candidate = Path(path)
+        inspect_content = (
+            path.startswith(".github/workflows/")
+            or candidate.name.lower() in EXECUTABLE_NAMES
+            or candidate.suffix.lower() == ".mk"
+        )
+        if inspect_content:
             content = (git_blob(repo_root, base_sha, path) or "") + "\n" + (
                 git_blob(repo_root, head_sha, path) or ""
             )
