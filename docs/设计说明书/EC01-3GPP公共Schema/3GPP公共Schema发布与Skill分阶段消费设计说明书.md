@@ -1,7 +1,7 @@
 # 3GPP 公共 OpenAPI 原版引用与 Skill 分阶段消费设计说明书
 
 > 文档类型：功能设计说明书（EC01.3GPP；关联 EC03/F02/F06/F08/F09）
-> 文档版本：0.3.1
+> 文档版本：0.3.2
 > 修订日期：2026-11-27
 > 状态：DRAFT / REVIEW_REQUESTED；原版 Source Bundle、OAS3 Consumer、Compiler 外部引用与 Codec 产品均未完成产品验收
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
@@ -53,11 +53,11 @@ TS 29.502 `PostSmContexts` 的选定 ingress surface 为 operation 的 `requestB
 
 Plugin 按 OAS3 原件解析选定 operation / requestBody / content / multipart encoding / part Schema / media type / Content-ID，不能把 binary part 当作已解码字段。原始 TS 29.502 YAML 中其他 operation 的 refs 不属于当前选定闭包；Plugin / Compiler 必须 selection-scoped lazy resolve，不得因未选定 refs 不在 Bundle 中而失败。相对 `$ref` 以引用文件为基准；`../` 只有在规范化后仍位于锁定 Source Root 内才允许，逃出 Source Root 必须拒绝。
 
-3GPP CommonData 的 `RefToBinaryData.contentId` 表示被引用 binary body part 的 `Content-ID` header 值。对 `PostSmContexts` 必须精确关联：`jsonData.n1SmMsg.contentId` ↔ `binaryDataN1SmMessage`；`jsonData.n2SmInfo.contentId` ↔ `binaryDataN2SmInformation`；`jsonData.n2SmInfoExt1.contentId` ↔ `binaryDataN2SmInformationExt1`。每个已声明引用必须且只能命中对应 slot；Content-ID 在 parts 间唯一；缺失、重复、错槽、媒体类型不符或未被 JSON 引用的孤立 part 均 fail-closed。Header 名按 MIME 规则识别，Content-ID 值不做自行大小写转换或去括号归一化。
+3GPP CommonData 的 `RefToBinaryData.contentId` 表示被引用 binary body part 的 `Content-ID` header 值。对 `PostSmContexts` 必须精确关联：`jsonData.n1SmMsg.contentId` ↔ `binaryDataN1SmMessage`；`jsonData.n2SmInfo.contentId` ↔ `binaryDataN2SmInformation`；`jsonData.n2SmInfoExt1.contentId` ↔ `binaryDataN2SmInformationExt1`。每个已声明引用必须且只能命中对应 slot；Content-ID 在 parts 间唯一；引用目标缺失、重复 ID、错槽或媒体类型不符均 fail-closed。未被 JSON 引用的 part 不得交给 Codec；额外或未引用 part 的拒绝 / 忽略由选定 ingress profile 明确规定，不能由 Schema 隐含推断。Header 名按 MIME 规则识别，Content-ID 值按标准 MIME 解析结果精确比较，不做自定义大小写转换或字符串裁剪。
 
 Skill-owned `requestSchema` 根仍是本地 G.4 闭合对象。它可以在显式 pin Source Bundle dependency 后直接引用原版 OAS3 `components/schemas`，并保留 `nullable`、`oneOf`、`anyOf`、`allOf`、`pattern`、`additionalProperties`、`format` 等 OAS3 语义；不做 Adapter / Projection。只允许 pin 后的 Schema Component，不允许任意 URL、dynamic latest、Path Item / Operation / RequestBody / Response 或 Bundle 外文件。Compiler / Host 不支持可达语义时必须 fail-closed，不得静默忽略或产生部分 Artifact。
 
-CEL 类型推导对 union 只无条件暴露所有分支均保证存在且类型一致的字段；`allOf` 按交集合并约束，nullable 的 Null 与 Missing 区分。dependency alias、relative path、JSON Pointer、Source Bundle identity 和 Lock wire 字段必须由 ca-skills / Compiler Owner 在正式 1.6.0 Schema / Golden 冻结；本设计不预造机器字段名。
+CEL 类型推导对 `anyOf` / `oneOf` 只无条件暴露在每个可满足分支中均声明、均列入 `required` 且类型一致的字段；其他字段仅在 CEL 类型系统显式支持 optional 时按 optional 暴露，否则不得无条件访问。`allOf` 按交集合并约束并合并 required 集合；nullable 的 Null 与 Missing 区分。dependency alias、relative path、JSON Pointer、Source Bundle identity 和 Lock wire 字段必须由 ca-skills / Compiler Owner 在正式 1.6.0 Schema / Golden 冻结；本设计不预造机器字段名。
 
 ## 5. T0～T4 分阶段边界
 
@@ -106,3 +106,4 @@ SR-031、SR-010、SR-013、SR-026、SR-027 各自独立验收；任何一层 PAS
 | 2026-11-27 | 0.2.0 | ChatGPT / GPT-6 | 全文 | 冻结 OpenAMSM 实际支持版本与原版 YAML byte-for-byte 代发布 | 禁止任何 3GPP YAML 变更 | Issue #47；SR-031/026/013 |
 | 2026-11-27 | 0.3.0 | ChatGPT / GPT-6.2 | 全文 | 撤销强制 Adapter，确立 OAS3 原生消费与精确组件引用；补齐源版本 / blob、Compiler Resolver 和 Codec Output 边界 | 不应因 G.4 限制复制或投影 3GPP 标准 | Issue #47；SR-031/010/013/026/027 |
 | 2026-11-27 | 0.3.1 | ChatGPT / GPT-6.2 | §2、§4、§7 | 补齐 PostSmContexts 四文件 / 102 Component 的选定闭包、lazy ref 解析、OAS3 实际关键字与 RefToBinaryData Content-ID 对应关系 | 防止漏锁传递依赖、全文件 eager resolve 和 multipart 二进制错配 | Issue #47；SR-031/010/013；CA-SL 1.6.0 |
+| 2026-11-27 | 0.3.2 | ChatGPT / GPT-6.2 | §4、DS-3GPP-03～04 | 收紧 union 类型推导到 required 字段；明确未引用 multipart part 的消费隔离与 ingress profile 策略 | 不把可选字段误判为必有，也不超出原版 OpenAPI Schema 施加隐含拒绝 | Issue #47；SR-010/013；CA-SL 1.6.0 |
