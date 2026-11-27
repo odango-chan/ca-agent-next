@@ -29,7 +29,7 @@ Native CLI 与 Go/WASM Worker 必须继续调用同一个 Go Compiler Core。现
 | internal/compiler/inherited_semantics.go | 既有 CA-SL 语义主链 | Contract.when 进入同一 Skill 语义链，不建立平行解析器 |
 | internal/compiler/cel_check.go | 现有 Predicate CEL 检查 | 复用 cel-go 与 G.4 白名单思想；不能把当前 Predicate 检查误认为已实现 Contract.when |
 | internal/compiler/schema_registry.go | Schema Registry、引用和闭包相关能力 | 复用解析能力并建立逐 Skill Request Schema 类型环境 |
-| internal/compiler/v1alpha5_artifact.go、v1alpha5_artifact_verify.go、contracts/v1alpha5/artifact-manifest.schema.json | 冻结 v1alpha5 Artifact 只输出 procedure.json / ingress-links.json；sourceFiles 只记录源路径，不携带本地 Request Schema 字节 | 新 2 必须发布已验证 Request Schema 根与完整 G.4 引用闭包，供 Host 运行期按 M.3 验证 Event input；不得修改冻结 v1alpha5 |
+| internal/compiler/v1alpha5_artifact.go、v1alpha5_artifact_verify.go、contracts/v1alpha5/artifact-manifest.schema.json | 冻结 v1alpha5 Artifact 只输出 procedure.json / ingress-links.json；sourceFiles 只记录源路径，不携带本地 Request Schema 字节 | 新 1.6.0 必须发布已验证的 dialect-aware Request Schema 描述，供 Host 运行期按 M.3 验证 Event input：本地 G.4 根及本地闭包进入 Artifact；外部 OAS3 根别名只引用精确 pin 的 Source Bundle 根与可达闭包，不复制或投影原件；不得修改冻结 v1alpha5 |
 | internal/compiler/development_link.go、development_multi_skill_test.go | Development Link / 多 Skill Lock 测试 | 仅作为 Schema 作用域和多 Skill fixture 的参考；不是正式发布 Artifact 路径 |
 
 AC-013-01 的 PoC 通过 Development 多 Skill 共享 Lock fixture，复用了 buildSchemaRegistry、resolveReferenceFrom 和 resolveSchemaRoot 等真实 Schema 解析能力。这证明的是可复用的 Schema 解析与跨语言序列化路径，不代表产品 Build 应调用 validateDevelopmentRequest、buildDevelopmentLinkScope 或 newDevelopmentSemantics。
@@ -185,7 +185,7 @@ skills/<skill-name>/compiled/when.types.pb
 - 没有声明 requestSchema 时不输出 Request Schema 文件；event-only when 仍可编译，DescriptorSet 只需包含 event.type。
 - 只有声明 when 的 Skill 才输出 when.checked.pb 和 when.types.pb；无 when 时不生成空表达式或占位文件。
 - when.checked.pb 是 Any 序列化字节；when.types.pb 是 CEL 类型所需的 FileDescriptorSet。Request Schema 的本地 G.4 Artifact 文件保留完整 G.4 断言，不能用 DescriptorSet 代替；外部 OAS3 Schema 不转换为 G.4 文件，原版 YAML bytes 由锁定 Source Bundle 保留并按 OAS 3.0 dialect 解析。
-- 根 Schema 与所有闭包资源保留精确 $id；Artifact 内部以 Manifest 的资源表完成 ID 到文件路径映射，运行期不得访问远端或作者工作区。
+- 本地 G.4 Schema 资源若声明 `$id`，必须保留精确值并由 Manifest 资源表映射至 Artifact path；外部 OAS3 资源以 Source Bundle dependency identity + 原始 source file + JSON Pointer 标识，允许原件未声明 `$id`，不得虚构 URI。运行期不得访问远端或作者工作区。
 - 文件路径和资源映射是本设计候选值，Compiler Owner 必须在正式 Artifact Schema、Golden 和 PR 中定稿，不得同时保留多个兼容别名布局。
 
 ### 5.3 Manifest 最小语义
@@ -195,23 +195,23 @@ skills/<skill-name>/compiled/when.types.pb
 每个声明 Contract.requestSchema 的 Skill 增加 requestSchema 元数据对象，至少记录：
 
 1. sourceRef：Contract.requestSchema 的作者相对路径。
-2. rootPath：Artifact 内根 Schema 文件路径。
-3. rootSchemaId：若根 Schema 声明 $id，则记录其精确值；未声明时省略，不得为其虚构 URI 身份，根以 sourceRef + rootPath 标识。
+2. rootDialect：明确为本地 G.4 或外部 OAS 3.0 Schema Object。
+3. rootLocation：本地 G.4 记录 Artifact rootPath 和可选 rootSchemaId（仅原根声明 `$id` 时）；外部 OAS3 记录 Source Bundle dependency identity、原始 source file 与 JSON Pointer，不要求根有 `$id`，也不生成 G.4 Artifact path。
 4. resources[]：闭包中每个已解析资源的精确身份和 dialect。若为本地 G.4，记录 `schemaId`（若声明）与 Artifact path，覆盖完整、无循环的本地 G.4 `$ref` 闭包；若为外部 OAS3，记录 Source Bundle dependency identity、原始 source file、JSON Pointer 和 OAS 3.0 Schema Object dialect，不提供 G.4 Artifact path。外部 OAS3 根没有 `$id` 时，以 dependency identity + source file + JSON Pointer 标识，不虚构 URI。
 
 requestSchema 对象与 when 是否存在无关；Host 依照 CA-SL **1.6.0** 正式 requestSchema/when 契约使用它验证 Event payload。若为本地 G.4，根与本地闭包文件进入该 Skill 的 compiledFiles[] 和 Manifest outputFiles[]；若为外部 OAS3，原版 YAML 文件由精确 pin 的 Source Bundle dependency 提供，不进入 Compiler 生成的 compiledFiles[] / outputFiles[]，只在 Manifest 的 dependencyClosure / resources[] 中记录精确引用。Source Bundle 在 Published Skill Bundle 中只保留一次，运行期不得访问远端。
 
-仅为声明 when 的 Skill 增加 when 元数据对象，至少记录 checkedExprPath、descriptorSetPath、sourcePath 和 sourceRange（startLine/startColumn/endLine/endColumn）。当表达式引用 input 时，when 元数据还记录 requestSchemaRef 与 resolvedRequestSchemaPath，且必须与同一 Skill 的 requestSchema.rootSchemaId / sourceRef 一致；只访问 event.type 时可省略这两个引用字段。没有 when 时不输出 when 元数据。
+仅为声明 when 的 Skill 增加 when 元数据对象，至少记录 checkedExprPath、descriptorSetPath、sourcePath 和 sourceRange（startLine/startColumn/endLine/endColumn）。当表达式引用 input 时，when 元数据还记录 requestSchemaRef 与 resolvedRequestSchemaLocation；后者按 requestSchema.rootDialect 使用带类型的位置引用（本地 G.4 为 Artifact path；外部 OAS3 为 dependency identity + source file + JSON Pointer），并必须指向同一 Skill 的 requestSchema descriptor。只访问 event.type 时可省略这两个引用字段。没有 when 时不输出 when 元数据。
 
-建议字段名和文件名是本设计的实现默认值；Compiler Owner 在 AC-013-03 冻结 JSON Schema 前确认。when.checked.pb 与 when.types.pb 必须同时进入 compiledFiles[] 和 Manifest outputFiles[]；Request Schema 根与资源闭包也必须进入相同清单。Manifest 不定义 `outputFiles[].sha256` 或 `sourceDigest`；`outputFiles[]` 只保留文件路径 / 角色等非摘要元数据。Build / Verify 检查路径、文件存在性、Schema、依赖闭包和语义结果，不计算或比较 SHA-256 / checksum / digest。
+建议字段名和文件名是本设计的实现默认值；Compiler Owner 在 AC-013-03 冻结 JSON Schema 前确认。when.checked.pb 与 when.types.pb 必须同时进入 compiledFiles[] 和 Manifest outputFiles[]；本地 G.4 规范化根/资源文件也进入这两个清单；外部 OAS3 原版文件由 Source Bundle dependency 提供，只进入 dependencyClosure / resources[] 引用，不进入 Compiler 生成的 compiledFiles[] / outputFiles[]。Manifest 不定义 `outputFiles[].sha256` 或 `sourceDigest`；`outputFiles[]` 只保留实际生成文件的路径 / 角色等非摘要元数据。Build / Verify 检查路径、文件存在性、Schema、依赖闭包和语义结果，不计算或比较 SHA-256 / checksum / digest。
 
 ## 6. Build / Verify 责任与行为
 
 ### 6.1 Build
 
 1. 通过新 **CA-SL 1.6.0** 单一 Parser/AST/Check/BuildRequest/DependencyInspection；先按 SR-029 静态检查 Capability→唯一 Callable、kind/Effect/Schema/Package/Scope，再执行 when/Request Schema 静态分析，旧语言不能进入新入口。
-2. 对声明 requestSchema 的 Skill 生成规范化 G.4 Schema 根和完整资源闭包，作为 Host 运行期输入校验数据；即使没有 when 也必须输出。
-3. 对有 when 的 Skill 执行 §3 的 Schema-aware G.4 检查、Guard 分析和 typed lowering。只有表达式引用 input 时才使用 Request Schema 类型环境；event-only when 不要求 requestSchema。
+2. 对声明 requestSchema 的 Skill 生成 dialect-aware Schema 闭包描述，作为 Host 运行期输入校验数据；本地 G.4 根及完整本地闭包规范化进入 Artifact，外部 OAS3 根及完整可达闭包以精确 pin 的 Source Bundle 引用表示；即使没有 when 也必须输出该描述。
+3. 对有 when 的 Skill 执行 §3 的 dialect-aware Schema 检查、Guard 分析和 typed lowering。本地 G.4 使用 G.4 检查；外部根别名使用 OAS 3.0 Schema Object 语义。只有表达式引用 input 时才使用该 Skill 的 Request Schema 类型环境；event-only when 不要求 requestSchema。
 4. 生成 CheckedExpr Any 与对应 DescriptorSet。
 5. 按新 Runtime Artifact Manifest 组装完整产物；没有 when 的 Skill 不生成 when 文件。
 6. 使用 RFC 8785 JCS、稳定排序和既有确定性约束；不得写入时间、随机值、绝对宿主路径或环境相关数据。
@@ -223,14 +223,14 @@ requestSchema 对象与 when 是否存在无关；Host 依照 CA-SL **1.6.0** �
 
 - Artifact API version 与 languageTarget 精确受支持。
 - Manifest、文件清单、路径、重复归属和必需文件完整。
-- 每个已声明 Request Schema 的根文件与全部资源可解析，保留精确 $id、G.4 关键字和约束；不存在未解析、越界或重复资源。
+- 每个已声明 Request Schema 的根与全部资源按其声明 dialect 可解析：本地 G.4 保留精确 `$id`（若声明）、G.4 关键字和约束；外部 OAS3 保留 Source Bundle pin、原始文件 / JSON Pointer 及 OAS 3.0 Schema Object 语义（不要求 `$id`）；不存在未解析、越界或重复资源。
 - 每个 CheckedExpr Any 可反序列化，type URL 与标准类型一致。
 - 每个 DescriptorSet 可解析，所有 CheckedExpr 类型引用均可解析。
 - CheckedExpr 最终类型为 bool；引用 input 时，其类型闭包必须与该 Skill 的 Request Schema root/closure 精确匹配。event-only when 不得被强制要求 Request Schema。
 - when 源路径/位置、程序路径和 DescriptorSet 路径相互一致。
 - 不存在跨 Skill 私有 Schema 或 Descriptor 引用。
-- 无 when 的 Skill 不得带伪造/空的 when 程序；但若其 Contract 声明 requestSchema，仍必须携带 Schema 根和闭包。
-- DescriptorSet 只负责 CEL 类型，不得被当作完整 JSON Schema 验证器；Request Schema 快照必须保留 G.4 的 enum/const/范围/长度/数组约束。
+- 无 when 的 Skill 不得带伪造/空的 when 程序；但若其 Contract 声明 requestSchema，仍必须携带 dialect-aware Schema 描述（本地 G.4 Artifact 或外部 OAS3 Source Bundle 引用）。
+- DescriptorSet 只负责 CEL 类型，不得被当作完整 JSON Schema 验证器；本地 G.4 Request Schema Artifact 必须保留 G.4 的 enum/const/范围/长度/数组约束；外部 OAS3 Request Schema 必须保留其原生约束语义，不得套用 G.4 白名单或默认闭合规则。
 - BuildResult、Manifest 与 OutputFiles 的集合和字节一致。
 
 新版 Verify 仅接受 1.6.0 新 BuildRequest/BuildResult/Artifact，执行完整重建/逐文件比较或 Compiler Owner 冻结的等价确定性复验；新 Compiler 不支持任何旧 v1alpha5 DTO、Artifact、双轨 dispatch 或兼容 fallback。旧 v2.1.0 Release 保留旧 BuildResult/Artifact v1alpha5 的原有行为；历史 Development Build 只保留在旧 v2.1.0 Release 中作只读审计，新 Compiler 不提供 v1alpha1 兼容执行入口。当前 CLI 已在写入目录前用同一 Verify 函数验证成功 BuildResult；新版本必须保持“先 Verify、后原子写盘”的既有不变量，不得假设存在一个已发布 Artifact 的独立 CLI verify 子命令。
@@ -409,4 +409,4 @@ SR-013 AC-013-07 需验证原版组件直接引用、跨文件 CommonData 闭包
 | 2026-11-27 | 0.2.17 | ChatGPT / GPT-6.2 | §12 | 明确 selected-surface lazy Resolver、RFC 3986 / 6901 引用解析、PostSmContexts 四文件闭包及实际 OAS3 关键字 / 组合类型推导 | 避免全文件 eager resolve、漏锁传递引用和把 union / allOf 语义混为一谈 | IR-009；Issue #47；SR-013/031；EC01 |
 | 2026-11-27 | 0.2.18 | ChatGPT / GPT-6.2 | §12 | 将 CEL union 字段收紧为各分支 required；核准实际 additionalProperties / format 形态与 default 注解语义 | 防止静态类型误判可选字段，并使 Golden 覆盖真实 OAS3 dialect | IR-009；Issue #47；SR-013/031；EC01 |
 | 2026-11-27 | 0.2.19 | ChatGPT / GPT-6.2 | §12 Manifest / Build / Verify | 移除 sourceDigest 与 outputFiles SHA-256；Build / Verify 不计算或比较 SHA-256 / checksum / digest | 遵守 Demo 全链路无 hash 校验要求，避免 Compiler 产物另行引入完整性门禁 | IR-009；Issue #47；SR-013；CA-SL 1.6.0 |
-| 2026-11-27 | 0.2.20 | ChatGPT（GPT-6.2） | §5.2～§5.3、§12 | 将 Request Schema Artifact / Manifest 闭包按 dialect 分型；本地 G.4 写入规范化 Artifact，外部 OAS3 只引用精确 pin 的 Source Bundle 原件及 JSON Pointer，不列入编译输出文件 | 使 Manifest、Bundle、Host 对 OAS3 原始 bytes 和运行期离线闭包有唯一一致的所有权表达 | Issue #49/#47；IR-008/009；SR-013/031；PR #52 |
+| 2026-11-27 | 0.2.20 | ChatGPT（GPT-6.2） | §1、§5.2～§5.3、§6、§12 | 将 Request Schema Artifact / Manifest 闭包按 dialect 分型；本地 G.4 写入规范化 Artifact，外部 OAS3 只引用精确 pin 的 Source Bundle 原件及 JSON Pointer；when 类型位置引用也改为 dialect-aware | 使 Build/Verify、Manifest、Bundle、Host 对 OAS3 原始 bytes、Schema 定位与运行期离线闭包有唯一一致的所有权表达 | Issue #49/#47；IR-008/009；SR-013/031；PR #52 |
