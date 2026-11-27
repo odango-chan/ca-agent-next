@@ -24,7 +24,7 @@
 | SR-020 | [Python Host](SR-020.md) | AC-020-01/02/04 静态 PASS；03 NOT_RUN |
 | SR-021 | [Go Native Host](SR-021.md) | AC-021-01/02/04 静态 PASS；03 NOT_RUN |
 | SR-022 | [Runtime 执行内核](SR-022.md) | AC-022-01/02/04 静态 PASS；03 NOT_RUN |
-| SR-023 | Skill 作者源与语言规范（进行中） | AC-023-01～03 |
+| SR-023 | [Skill 作者源与语言规范](SR-023.md) | AC-023-01～03 静态 PASS；04 BLOCKED/NOT_RUN |
 | SR-030 | [Host Context Schema-only Publisher](SR-030.md) | AC-030-01、06/07 静态 PASS；02～05 BLOCKED/NOT_RUN |
 
 ## 3. 修订记录
