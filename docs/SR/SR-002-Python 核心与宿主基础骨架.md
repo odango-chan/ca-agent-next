@@ -1,7 +1,7 @@
 # SR-002：Python 核心与宿主基础骨架
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.10  
+> SR 版本：0.2.11  
 > 修订日期：2026-11-26  
 > 状态：VERIFIED；实现已集成，AC-002-01～AC-002-08 全部 PASS；EX-01 NOT_RUN  
 > 创建日期：2026-11-25  
@@ -146,6 +146,19 @@ python -m unittest discover -s tests -p "test_host.py" -v
 - 测试注入的 `model_client` 仅用于 CLI 失败路径测试；注入型 `main()` 的成功输出及其 `model_calls` 不属于公开契约，不要求实现或断言。成功调用次数在 AgentLoop/Host 单元测试中直接读取测试 Fake 自身的调用记录。
 - 失败不得输出 traceback、凭据、token 或完整敏感请求内容。
 
+### 5.2 SR-028 迁移后当前复验入口（uv，2026-11-27）
+
+§5 的 pip 命令是 SR-002 原始模块验收环境（CPython 3.14.6、pip）的历史记录，保留不改。自 SR-028 起，仓库根 Python 工程的当前复验入口统一为 uv 0.13.10 + `uv.lock`：
+
+```bash
+uv python install
+uv sync --locked --group dev --extra plugins
+uv run --no-sync --locked --group dev --extra plugins python -m ca_agent_next --smoke
+uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --suite host --output-dir artifacts/unittest-gate/host
+```
+
+Host 范围仍要求 discovered>0、tests_run=discovered、failures/errors/skipped=0 且退出码 0 才计 PASS。该入口只替换当前命令执行方式，不改变 §5.1 Smoke 契约与 AC-002-01～08 的验收定义，也不改写上文历史 PASS 证据。
+
 ## 6. 实施位置与复验入口
 
 目标交付位置：
@@ -216,3 +229,4 @@ SR-002 的模块 AC-002-01～08 已全部通过，实施 PR #23 已集成。上�
 | 2026-11-26 | 0.2.8 | GPT-6.2（ChatGPT） | 文档头部、§2 | 将当前设计依据和公共契约引用从 F01 v0.3.5 更新为 F01 v0.3.6；本次 F01 仅澄清 Smoke 注入测试边界，不改变 SR-002 类型契约。 | 确保 READY SR 引用当前权威设计版本，避免 Harness 读取过期版本号。 | Issue #19；Issue #21；F01 v0.3.6；PR #20 |
 | 2026-11-26 | 0.2.9 | GPT-6.2（ChatGPT） | §7 | 创建并登记独立 SR-002 实施 Issue #22，固定其与设计 Issue #19、治理 Issue #21 和设计 PR #20 的关系。 | 满足 READY 后先建实施 Issue、再交付 Harness Goal 的治理顺序，避免设计 Issue 被误作实施授权。 | Issue #19；Issue #21；Issue #22；PR #20 |
 | 2026-11-26 | 0.2.10 | GPT-6.2（ChatGPT） | §7、修订记录 | 回填 PR #23 的集成 Commit、受测 SHA、CPython 3.14.6 环境、安装/Smoke/52 项测试与 AC-002-01～08 PASS；将实施状态更新为 IMPLEMENTED、SR 状态更新为 VERIFIED。 | 使 SR 状态由 READY 随实际实现、模块验收和证据集成推进；明确 EX-01、版本矩阵与 DeepSeek Harness 仍 NOT_RUN。 | Issue #22；PR #23；merge commit `49964464`；证据 comment `7183057195`；PR #25 |
+| 2026-11-27 | 0.2.11 | DeepSeek Harness（Goal 执行） | §5.2、修订记录 | 按 SR-028 新增迁移后当前 uv 复验入口（uv 0.13.10 + uv.lock + unittest gate --suite host），§5 原始 pip 验收命令、受测 SHA 与 52 项 PASS 记录保持原文 | 统一仓库当前工具链入口，同时不覆盖历史受测环境与 VERIFIED 证据 | Issue #96；PR #99；SR-028；G02 |

@@ -18,6 +18,31 @@ CA Agent Next 是下一代通用 Agent 的独立实现仓。目标是用尽可�
 
 [IR 总登记册](docs/IR/IR%20总登记册.md)记录需求项、Issue 协作入口和 SR 分解。
 
+## 当前开发与复验入口（SR-028 迁移后）
+
+自 SR-028 起，本仓根 Python 工程统一使用 uv `0.13.10` 解析、锁定和运行依赖；`uv.lock` 是唯一锁文件，`.python-version` 精确为 `3.14.6`（`requires-python >=3.11` 仍只是包元数据下限，不代表 3.11～3.13 版本矩阵已通过）。历史 pip 命令只保留在各 SR 与验收记录的原始受测环境中（见 SR-002、SR-003、演示验收基线），不作为当前入口。
+
+```bash
+# 前置：Go 1.24+（满足 examples/echo/plugin/go.mod 的 go 1.24 directive）
+go version
+
+# 安装/同步（首次或依赖声明变化后；本地与 CI 一致使用 --locked）
+uv python install
+uv sync --locked --group dev --extra plugins
+uv lock --check
+
+# 本地测试门禁：Host / Plugin / Review Context / 完整总计，skipped=0，任一失败即非零
+uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --output-dir artifacts/unittest-gate
+
+# Host Smoke（stdout 固定单行 JSON，stderr 为空）
+uv run --no-sync --locked --group dev --extra plugins python -m ca_agent_next --smoke
+
+# Review Context 生成器
+uv run --no-sync --locked --group dev --extra plugins python scripts/review_context.py --help
+```
+
+Go Echo Plugin 构建（Plugin 测试前置）：在 `examples/echo/plugin/` 下设置 `GOWORK=off` 后执行 `go build -trimpath -o bin/echo-plugin .`；Windows 目标文件名为 `bin/echo-plugin.exe`。GitHub Actions 入口为 `.github/workflows/sr003-plugin-ci.yml`（Ubuntu Python 3.12 / Windows Python 3.14.6 矩阵）与 `.github/workflows/review-context.yml`（诊断与正式 Artifact 分离）。
+
 ## 文档体系
 
 正式文档和 IR/SR 数量见[文档索引](docs/治理/文档总目录与索引.md#3-文档数量快照)。

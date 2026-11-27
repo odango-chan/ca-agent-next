@@ -23,7 +23,7 @@ DeepSeek Harness 默认使用 Goal 模式。按[SR 管理规范](docs/规范/SR%
 ## 2. 仓库与语言边界
 
 - Agent Core、Host、Agent Model Loop、Skill Importer、Skill Resolver 和 Runtime 使用 Python。
-- Python 工程工具链设计入口见 [G02 Python 工程工具链与环境管理](docs/设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md)；SR-028 当前为 DRAFT，uv 尚未实施。只有 SR-028 经评审达到 READY 并建立独立实施 Issue 后，才按其要求迁移依赖、锁文件、worktree 环境和 CI；不得将 uv 迁移混入 SR-001 PR #32。
+- Python 工程工具链设计入口见 [G02 Python 工程工具链与环境管理](docs/设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md)。SR-028 已按 PR #46 固定设计快照 READY，并在实施 Issue [#96](https://github.com/odango-chan/ca-agent-next/issues/96) 中实施：根项目使用 uv 0.13.10 + `uv.lock`，`.python-version` 为 CPython 3.14.6，开发依赖进入 `[dependency-groups].dev`，Agent Core 运行时依赖保持为空。当前安装、测试、Smoke、Go Echo 前置与 Review Context 入口见 README「当前开发与复验入口」与 SR-028 §8。
 - 独立 Plugin 可以使用 Go；Go Plugin 不代表 Go Host。
 - ca-agent-demo 是既有 Python 实现和测试证据来源，只能逐文件选择性复用，不得整体复制。
 - ca-skills、ca-skill-compiler、ca-client-tools、ca-openamsm-plugin、env-openamsm、env-5gc-sim、ca-skill-studio-demo 等保有独立实现和发布职责；ca-runtime 与 ca-agent 是参考/目标仓，不是 Next 运行时依赖。
@@ -31,6 +31,21 @@ DeepSeek Harness 默认使用 Goal 模式。按[SR 管理规范](docs/规范/SR%
 - 所有项目群任务从本仓进入。修改协作仓须获得当前任务的授权，并在本仓登记覆盖目标仓、变更范围和验收的 SR。SR 达到 READY 且当前实施阶段的实施依赖满足后方可实施，再回填目标仓 PR、Commit 和验收证据。设计/治理 Issue 与代码实施 Issue 分开；实施 Issue 必须在代码开始前创建。READY 仅表示具备实施条件，不授予写入权限。每批实现必须 Commit、Push 并核对远端 SHA；合并 PR 和发布 Release 需要单独授权。
 
 - 规范或设计尚在评审时，负责人可按 [SR 管理规范 §8.2](docs/规范/SR%20管理规范.md#82-使用评审中的固定提交开展受限实施)批准固定 PR SHA，供 READY 阶段实施和验收。按 SR 记录范围、授权和证据。正式发布、集成和主分支可达性按各阶段要求核对。
+
+### 2.1 当前 Python 工具链入口（SR-028）
+
+从仓库根目录执行，首次或依赖声明变化后先同步，其后测试/脚本一律禁止隐式同步：
+
+```bash
+uv python install
+uv sync --locked --group dev --extra plugins
+uv lock --check
+uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --output-dir artifacts/unittest-gate
+uv run --no-sync --locked --group dev --extra plugins python -m ca_agent_next --smoke
+uv run --no-sync --locked --group dev --extra plugins python scripts/review_context.py --help
+```
+
+Go Echo Plugin 前置：在 `examples/echo/plugin/` 下设置 `GOWORK=off` 后 `go build -trimpath -o bin/echo-plugin .`，Windows 目标为 `bin/echo-plugin.exe`。测试门禁 `scripts/unittest_gate.py` 对 Host、Plugin、Review Context 和完整总计分别要求 discovered>0、tests_run=discovered、skipped=0 且无失败/错误，任一范围失败整体非零。CI 矩阵与 Artifact 契约见 SR-028 AC-028-06～08；历史 pip 入口保留在 SR-002/SR-003/演示验收基线的原始受测记录中。
 
 ## 3. 不可违反的架构约束
 
@@ -162,6 +177,7 @@ review_scope:
 
 | 日期 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
 |---|---|---|---|---|---|
+| 2026-11-27 | — | DeepSeek Harness（Goal 执行） | §2、§2.1、修订记录 | 回填 SR-028 实施后的当前 uv 安装、测试门禁、Smoke、Go Echo 前置和 Review Context 入口；说明 SR-028 已 READY 并在 Issue #96 实施 | 使协作入口与当前工具链一致，同时保留各 SR 历史 pip 受测记录 | Issue #96；PR #99；SR-028；G02 |
 | 2026-11-27 | GPT-6（ChatGPT） | §1 | 强制长时间运行 Goal 启动前建立并核验 GitHub 检查点；规定执行中增量更新、原 Goal 恢复/续跑，以及评审快照固定规则入口 | 防止 Goal 中断丢失进度、重复执行和因 PR 普通提交导致评审误暂停 | Issue #92；Issue #12；PR #46 |
 | 2026-11-25 | 历史修订者/模型未记录 | 原第 1～11 节及 review_scope | 既有协作约束和机器可读评审范围；逐章历史记录未建立 | 原始修订者未记录，本轮不臆造 | PR #1 |
 | 2026-11-25 | GPT-6.2（ChatGPT） | 第 1～6 节 | 将功能识别和按需阅读流程交给功能树，精简硬约束，保留 review_scope 原始区块 | Agent.md 过长且重复设计细节 | F01～F07、G01；SR-001～011；PR #1 |

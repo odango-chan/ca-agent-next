@@ -1,8 +1,8 @@
 # G02：Python 工程工具链与环境管理设计说明书
 
 > 文档类型：工程治理功能设计说明书  
-> 文档版本：0.2.7\
-> 状态：第六轮独立 Review [#6083872622](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083872622) 对固定 Head `2d20a128a1574103d709d82f6c426580ecb47f48` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2` 给出 CHANGES_REQUESTED（0 P0 / 1 P1 / 2 P2）；R028-21～23 已按 Issue #12 完成设计整改并推送，等待新 Head 第七轮独立复评；当前分支修订前 Head 为 `072248ff6a5deac40437ab47c892aaa2064781da`；SR-028 仍 DRAFT、AC-028-01～10 产品验收 NOT_RUN、READY=0\
+> 文档版本：0.2.8\
+> 状态：第六轮独立 Review [#6083872622](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083872622) 对固定 Head `2d20a128a1574103d709d82f6c426580ecb47f48` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2` 给出 CHANGES_REQUESTED（0 P0 / 1 P1 / 2 P2）；R028-21～23 已按 Issue #12 完成设计整改并推送，等待新 Head 第七轮独立复评；当前分支修订前 Head 为 `072248ff6a5deac40437ab47c892aaa2064781da`；SR-028 仍 DRAFT、AC-028-01～10 产品验收 NOT_RUN、READY=0；**实施注记（2026-11-27）**：SR-028 已经用户授权按 PR #97 回填 READY，实施 Issue #96 / PR #99 已按本设计落地 uv 工具链、本地门禁与双平台 CI，当前复验入口见 §9；本版仅新增实施后入口与修订记录，不改变 §3～§7 设计决策与 AC 定义\
 > 修订日期：2026-11-27\
 > 功能节点：G02 Python 工程工具链与环境管理  
 > 关联需求：[IR-007](../../IR/IR%20总登记册.md#ir-007)、[SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md)  
@@ -770,6 +770,20 @@ I1 与 I3 可在 SR-028 实施 Issue 内按依赖顺序执行；I2 只在 SR-001
 - [uv 0.13.10 Release](https://github.com/astral-sh/uv/releases/tag/0.13.10)
 - [setup-uv v10.4.0 Release](https://github.com/astral-sh/setup-uv/releases/tag/v10.4.0)
 
+## 9. 实施后当前复验入口（SR-028，2026-11-27）
+
+本设计 §3.6/§3.7 的命令已由 Issue #96 / PR #99 落地到仓库根 `pyproject.toml`、`uv.lock`、`.python-version`、`scripts/unittest_gate.py` 与两个 Workflow。当前复验入口：
+
+```bash
+uv python install
+uv sync --locked --group dev --extra plugins
+uv lock --check
+uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --output-dir artifacts/unittest-gate
+uv run --no-sync --locked --group dev --extra plugins python -m ca_agent_next --smoke
+```
+
+Go Echo 前置（在 `examples/echo/plugin/`，`GOWORK=off`）：`go build -trimpath -o bin/echo-plugin .`，Windows 目标为 `bin/echo-plugin.exe`。CI 矩阵、paths 与诊断/正式 Artifact 契约见 §3.8；锁漂移、A→B→A 隔离和双平台 Run 的实测证据记录在实施 Issue #96 与实施 PR #99，不在本设计文档中重复或改写。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
@@ -787,3 +801,4 @@ I1 与 I3 可在 SR-028 实施 Issue 内按依赖顺序执行；I2 只在 SR-001
 | 2026-11-27 | 0.2.5 | GPT-6.2（ChatGPT） | §0、§3.6～3.8、§4.1～4.3、§6～§7 | 按 Review #6083225844 修复 Bash fail-open：锁漂移与 A→B→A 从块首 fail-fast 并使用保码 cleanup trap；A 返回阶段全部改用 `uv run --no-sync`；新增标准库 unittest gate 并在双平台 Workflow 自动断言 skipped=0/非空测试且上传报告；Python 检查使用显式 uv 项目环境；补齐 A/B/A sys.prefix、原始 direct_url、ignore 证据持久化；Go 构建子 shell 恢复 CWD，按 GOOS 生成 Windows `.exe`，澄清 Workflow shell 边界 | 消除 R028-10～16 的 fail-open、自动同步、CI skipped 假 PASS、隐式解释器及跨平台/证据歧义；保持产品 AC NOT_RUN 与 SR DRAFT | Issue #12；PR #46；Review #6083225844；SR-028 v0.2.7 |
 | 2026-11-27 | 0.2.6 | GPT-6.2（ChatGPT） | 文档头、§0、§3.6、§3.8、SR 引用 | 按第五轮 Review #6083641266 修复 Review Context 诊断 Artifact 与三文件正式 Artifact 的契约冲突；明确 `loader_errors` 来源/计数及 discovery 异常；统一逐范围与整体 `exit_code` | 关闭 R028-17 P1 与 R028-18 P2，确保失败诊断可留存且失败 Run 不产生完成态 Artifact；产品 AC 仍 NOT_RUN | Issue #12；PR #46；Review #6083641266；SR-028 v0.2.8 |
 | 2026-11-27 | 0.2.7 | GPT-6.2（ChatGPT） | 文档头、§0、§3.6、§3.8、§4.3、§7 | 按第六轮 Review #6083872622 修复 AC-028-08 受控负例：保留有效 Agent.md 与测试门禁，通过临时 Workflow PR 将生成器 `--base` 注入全零 SHA 形成可执行失败路径；run-context 记录实际/注入 SHA 与模式；补齐 AC 证据中的负例不合并、恢复后成功重跑；统一 gate 的 `discovery_exception=null` 断言 | 关闭 R028-21 P1 与 R028-22/23 P2；不修改测试代码或产品 Workflow，不将设计整改视为产品实施，SR-028 继续 DRAFT / NOT_RUN | Issue #12；PR #46；Review #6083872622；SR-028 v0.2.9 |
+| 2026-11-27 | 0.2.8 | DeepSeek Harness（Goal 执行） | 文档头、新增 §9、修订记录 | 新增 SR-028 实施后当前 uv 复验入口与状态注记（Issue #96 / PR #99）；§3～§7 设计决策与 AC 定义不变 | 使设计文档的当前复验入口与已实施的仓库工具链一致，同时保留固定设计快照内容 | Issue #96；PR #99；SR-028 |
