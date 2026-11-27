@@ -1,7 +1,7 @@
 # CA-SL 1.6.0 完整语言规范（中央设计稿）
 
 > 文档类型：CA-SL 作者语言规范（中央规范性设计稿）
-> 文档版本：0.1.9
+> 文档版本：0.2.0
 > 语言版本：CA-SL 1.6.0
 > languageTarget 候选：connectionagent.io/v1.6.0（本设计建议值；发布前由 ca-skills 与 Compiler Owner 在正式 Schema / Golden 中确认）
 > 状态：**DRAFT / REVIEW_REQUESTED**；未发布、未冻结、不得作为已发布产品规范
@@ -11,7 +11,7 @@
 > 关联：IR-003、IR-008；Issue #40、#49；SR-023、SR-029、SR-013、SR-027、SR-032
 > 本文局部非目标：Compiler API / Artifact 字段级 Schema、Provider / Owner 发布物字段、Agent Runtime 实现、生产 Admission、签名、Trust Registry、生产 Qualification
 
-本文是 CA-SL 1.6.0 的完整中央作者语言设计稿，覆盖源码角色、Contract、Procedure、PredicateSet、Context、Request Schema、Capability、when、Wait、Evidence、Outcome、静态检查和版本边界。它不是 ca-skills 已发布的语言规范，也不授权下游实现。
+本文是 CA-SL 1.6.0 的完整中央作者语言设计稿，覆盖源码角色、Contract、Procedure、PredicateSet、Context、Request Schema、Capability、when、Evidence、Outcome、Script Runner 和版本边界。它不是 ca-skills 已发布的语言规范，也不授权下游实现。
 
 历史 [CA-SL v1alpha5 完整语言规范](CA-SL%20v1alpha5完整语言规范.md)及其 Release Record 仅作只读来源审计；不得把本文理解为 v1alpha5 的兼容解析器、别名、自动迁移或双轨实现。新 1.6.0 源码必须按本文重新编写。
 
@@ -51,11 +51,11 @@ skill-root/
 
 - SKILL.md：Agent-facing 身份、用途和指导；不声明业务 Capability Grant、Procedure 或 when。
 - schemas/：Skill Package 自有 Schema 资源；LLM 可读取，Host 可用于结构化输入/输出校验，Assurance 可引用。文件使用 YAML 1.2 表示 JSON Schema 数据模型，扩展名为 `.schema.yaml`；JSON Schema 语义仍遵循 §12 的 G.4 Profile。
-- scripts/：Skill Package 自有 Python Script 源码；LLM 可读取，Assurance 可引用，LLM 调用则必须经过 Host Script Execution Capability。
-- scripts/manifest.yaml：Script ID、精确入口、用途、输入/输出 Schema 和 LLM 可调用标记；它是资源索引，不是第二份 Skill Descriptor，也不授予业务 Capability。
+- scripts/：Skill Package 自有 Python Script 源码；LLM 可读取，Assurance 可引用；所有登记脚本均通过统一 Host Script Runner 执行。
+- scripts/manifest.yaml：Script ID、精确入口、用途、输入/输出 Schema；它是资源索引，不是第二份 Skill Descriptor，也不授予业务 Capability。
 - references/、assets/：按需读取的共享参考资料和静态资源，不是隐式 Runtime 输入。
 - assurance/contract.yaml：Skill 选择条件、Request Schema、Context、依赖、业务 Capability Grants、全局前置引用和动作预算。
-- assurance/procedure.yaml：唯一入口 Procedure DAG、显式输入绑定、Node 阶段、Wait 和路由。
+- assurance/procedure.yaml：唯一入口 Procedure DAG、显式输入绑定、Node 四阶段和阶段路由。
 - assurance/predicates.yaml：可复用 Predicate 定义及其参数 / Evidence 契约；没有 Predicate 时仍须存在合法空 PredicateSet。
 
 没有 assurance/ 的 Skill 仍可携带 schemas/、scripts/、references/ 和 assets/，并仅支持 LLM-guided；LLM 可通过 Host Script Execution Capability 调用 `scripts/manifest.yaml` 登记的脚本；不设置逐脚本可调用标记或额外 Host 开关。存在 assurance/ 时，contract.yaml、procedure.yaml、predicates.yaml、被引用的共享 Schema / Script、依赖和所有静态语义必须全部有效，才同时具备 Deterministic 与 LLM-guided 两种模式。Assurance 无效时必须拒绝导入，不得静默降级。不得新增 constraint.yaml、activation.yaml、applicability.yaml、第二份 Skill Descriptor 或 Domain Contract Package；predicates.yaml 只描述执行期 Predicate，不参与 Skill 选择。
@@ -69,9 +69,9 @@ skill-root/
 | Procedure | 静态确定性执行图 | procedure.yaml |
 | PredicateSet | 可复用的纯判断定义 | assurance/predicates.yaml |
 | Shared Resource | LLM、Host 和可选 Assurance 共用的 Schema / Script / references / assets；资源身份相对 Skill Package 根目录 | Skill Package root |
-| Script Registry | Package-local Script ID、入口、purpose、Schema 与 LLM 可调用声明；不授予业务 Capability | scripts/manifest.yaml |
+| Script Registry | Package-local Script ID、入口、purpose、输入/输出 Schema；不授予业务 Capability | scripts/manifest.yaml |
 | Host Script Execution Capability | Host-owned system Capability；只执行当前 Skill Registry 中显式允许的 Script ID | Host Runtime / built-in Tools Extension |
-| Node | Procedure 图中的执行节点，最多声明四个业务阶段及可选入口 Wait | procedure.yaml |
+| Node | Procedure 图中的执行节点，最多声明四个业务阶段 | procedure.yaml |
 | Capability | Skill-facing 的业务能力身份 / 授权项 | Owner Contract Package 或 Provider Interface Package |
 | Callable | Package 内稳定的公开调用身份，含 kind、Effect、Input / Output Schema | ToolCatalog / Provider Package |
 | backendOperationId | Provider 私有后端路由身份 | Provider Runtime Bindings |
@@ -164,23 +164,104 @@ nodes:
 - Procedure.inputs 只负责把 context.* 显式绑定为 Procedure 局部输入名；不得隐式复制整个 Context。
 - 每个 Operation / Observation / Predicate 调用点都必须显式写 arguments；参数名、数量、顺序和类型必须匹配目标 Schema / Predicate 签名。
 - arguments 值只允许受支持 SourcePath 或标量字面量；不支持动态表达式、隐式转发、自动 null、参数猜测或重排。
-- Node 输出必须通过精确的 NodeId.Stage.output SourcePath 显式传递；Wait 规范化输入使用 NodeId.wait.output SourcePath。
+- Node 输出必须通过精确的 NodeId.Stage.output SourcePath 显式传递；只有 Operation / Observation 阶段产生可绑定 output。
 - context、inputs、已声明 Node Producer 和标量字面量之外的根均拒绝。
 
 ## 6. Procedure、Node 与四阶段
 
-Procedure 只有一张静态有向无环图（DAG），必须有 start 和 nodes。start 必须引用真实 Node；Node ID 不得与保留根或终态冲突；未知、悬空、循环和歧义路由均阻断构建。
+Procedure 只有一张静态有向无环图（DAG），必须有 `start` 和 `nodes`。start 必须引用真实 Node；Node ID 不得与保留根或终态冲突；未知、悬空、循环和歧义路由均阻断构建。
 
 一个 Node 可按固定顺序声明以下业务阶段，每个阶段最多一次：
 
-1. precondition：调用有序 Predicate 列表；全部 PASS 才产生聚合 PASS。
-2. operation：二选一调用一个 kind=operation 的公开 Capability（Effect 由目标 Package 决定，可为 READ 或 MUTATION），或引用一个 purpose=transform 的 Package-local Script ID；两者互斥。Script 不是业务 Capability，不进入 contract.capabilities。
-3. observation：调用一个 kind=observation 且 Effect=READ 的 Capability；不得产生副作用。
-4. postcondition：调用有序 Predicate 列表；全部 PASS 才产生聚合 PASS。
+1. `precondition`：调用有序 Predicate 列表；全部 PASS 才产生聚合 PASS。
+2. `operation`：二选一调用一个 `kind=operation` 的公开 Capability（Effect 由目标 Package 决定，可为 READ 或 MUTATION），或引用一个 `purpose=transform` 的 Package-local Script ID；两者互斥。Script 不是业务 Capability，不进入 `contract.capabilities`。
+3. `observation`：调用一个 `kind=observation` 且 Effect=READ 的公开 Capability；不得产生副作用。
+4. `postcondition`：调用有序 Predicate 列表；全部 PASS 才产生聚合 PASS。
 
-Node 可以省略不适用阶段，但必须至少声明一个业务阶段。阶段按上述顺序执行；正常 Outcome 在非末阶段自动进入下一阶段，末阶段必须显式路由。阶段 routes 属于该阶段，不得跨阶段借用。Procedure 不支持动态生成节点、任意循环、嵌套 Procedure Call 或同名自动绑定。
+Node 可以省略不适用阶段，但必须至少声明一个业务阶段。阶段按上述顺序执行；正常 Outcome 在非末阶段自动进入下一阶段，末阶段必须显式路由。阶段 `routes` 属于该阶段，不得跨阶段借用。Procedure 不支持动态生成节点、任意循环、嵌套 Procedure Call、Wait 字段或同名自动绑定。
 
-**成功边规则：** 唯一允许请求 Invocation SUCCEEDED 的边，是一个可达 Postcondition 阶段的聚合 PASS 直接指向 SUCCEEDED。Operation / Observation / Precondition 不得直接证明最终成功；任何分支都不得复用另一条分支的旧 PASS。
+**成功边规则：** 唯一允许请求 Invocation `SUCCEEDED` 的边，是一个可达 Postcondition 阶段的聚合 PASS 直接指向 `SUCCEEDED`。Operation / Observation / Precondition 不得直接证明最终成功；任何分支都不得复用另一条分支的旧 PASS。
+
+### 6.1 规范性 YAML 结构文法
+
+以下文法是 CA-SL 1.6.0 的作者对象结构，不是示意性自由 YAML。字段名、层级、基数和参数形状均为规范要求；未知字段、重复 Mapping Key、错误类型或未列出的结构必须拒绝。
+
+结构记法：`map(key: Type, ...)` 表示 YAML 映射；`list<Type>` 表示 YAML 序列；字段后的 `?` 表示可省略；`NonEmptyList<T>` 表示非空序列。
+
+~~~ebnf
+Contract              = map(when?: CELBoolean,
+                            precondition?: NodeId ".precondition",
+                            requestSchema?: PackageSchemaPath,
+                            contexts?: map<ContextName, QualifiedSchemaId>,
+                            dependencies?: map<Alias, StablePackageId>,
+                            capabilities?: list<CapabilityId>,
+                            limits?: map(maxActions?: PositiveInteger)) ;
+
+Procedure             = map(start: NodeId,
+                            inputs?: map<InputName, ContextSourcePath>,
+                            nodes: map<NodeId, Node>) ;
+
+Node                  = map(precondition?: PredicateStage,
+                            operation?: OperationStage,
+                            observation?: ObservationStage,
+                            postcondition?: PredicateStage) ;
+
+PredicateStage        = map(predicates: NonEmptyList<PredicateCall>,
+                            routes?: OutcomeRoutes) ;
+
+PredicateCall         = map(predicate: PredicateId,
+                            arguments: list<Expression>) ;
+
+OperationStage        = CapabilityOperation | ScriptOperation ;
+CapabilityOperation   = map(capability: CapabilityId,
+                            arguments: map<InputName, Expression>,
+                            routes?: OutcomeRoutes) ;
+ScriptOperation       = map(script: ScriptId,
+                            arguments: map<InputName, Expression>,
+                            routes?: OutcomeRoutes) ;
+
+ObservationStage      = map(capability: CapabilityId,
+                            arguments: map<InputName, Expression>,
+                            routes?: OutcomeRoutes) ;
+
+PredicateSet          = map(predicates: map<PredicateId, Predicate>) ;
+Predicate             = map(parameters: NonEmptyList<ParameterDeclaration>,
+                            evidence?: EvidenceRequirements,
+                            evaluator: CELEvaluator | PredicateScriptEvaluator) ;
+ParameterDeclaration  = map<ParameterName: PrimitiveType | QualifiedSchemaId) ;
+CELEvaluator          = map(type: "cel", expression: CELExpression) ;
+PredicateScriptEvaluator = map(type: "script", script: ScriptId) ;
+
+OutcomeRoutes         = map<StageOutcome, RouteTarget> ;
+RouteTarget           = NodeId | TerminalStatus ;
+TerminalStatus        = "SUCCEEDED" | "FAILED" | "UNRESOLVED" | "SAFE_STOPPED" ;
+Expression            = SourcePath | ScalarLiteral ;
+~~~
+
+### 6.2 arguments 与输入对象的精确形状
+
+- `Procedure.inputs` 是 Procedure 唯一的命名输入映射；每个值必须是已声明 Host Context 的精确 SourcePath。它只把 `context.*` 显式绑定为 `inputs.*`，不得隐式复制整个 Context。
+- `operation.capability`、`operation.script` 和 `observation.capability` 的 `arguments` 必须是具名映射。键对应目标 Callable Input Schema 或 Script `inputSchema` 的属性名；零参数调用写 `arguments: {}`。
+- `precondition.predicates[]` 和 `postcondition.predicates[]` 中每个 Predicate Call 的 `arguments` 必须是有序列表，位置与 `Predicate.parameters` 严格对应；零参数 Predicate 写 `arguments: []`。
+- 每个参数值只允许受支持 SourcePath 或 YAML 1.2 标量字面量；不允许内联对象/数组、动态表达式、隐式转发、自动 null、参数猜测或重排。
+- SourcePath 只允许 `context.<name>...`、`inputs.<name>...`，以及已在当前可达路径成功产生的 `<node-id>.operation.output...` / `<node-id>.observation.output...`。Predicate 阶段不产生可绑定 output。
+- 不定义 `wait.output` 或任何 Wait 专用 Producer。未知根、未声明路径、不可达 Producer、当前分支尚未产生的输出均拒绝。
+
+### 6.3 routes 与阶段推进
+
+- `routes` 只能位于具体阶段映射根，不得写在 Node 根或单个 Predicate Call 成员内。
+- Predicate 阶段的 Outcome 为 PASS / FAIL / UNKNOWN。Script Operation 的 Outcome 为 SUCCEEDED / FAILED。Capability Operation / Observation 的可用 Outcome 由已链接的正式 Capability / Owner Contract 和 Runtime 保留 Outcome 联合确定；不得由作者自行扩展。
+- 当前阶段后仍有同 Node 后续阶段时，正常 Outcome 自动进入下一阶段，不得在该阶段 `routes` 中重复声明正常 Outcome。阶段是 Node 最后一个已声明阶段时，正常 Outcome 必须显式路由。
+- 所有合法非正常 Outcome 必须有显式路由。目标只能是同一 Procedure 的 Node ID 或四种 TerminalStatus。多个 Outcome 可以指向同一目标；无默认分支。
+- DAG 静态检查必须覆盖所有可达路由；禁止循环、悬空目标、跨 Procedure 引用和对不可用 Producer 的引用。
+
+### 6.4 Capability 与 Script 的作者边界
+
+- Contract 只列业务 Capability ID；Operation / Observation 只写 Capability ID，不写 Callable ID、Owner alias、backendOperationId 或 Provider selector。
+- 一个 Node 的 Operation 只能是一个业务 Operation Capability 或一个纯本地 transform Script，不能同时声明，也不能在同一阶段调用多个目标。
+- Observation 只能引用 kind=observation 且 Effect=READ 的业务 Capability。
+- Script ID 仅来自当前 Skill Package 的 Script Registry；Script 不是业务 Capability，不进入 `contract.capabilities`。
+- 一个公开 Capability 与一个公开 Callable 双向一对一；这是 Package 导出约束，不限制同一 Capability 被多个 Skill / Node 引用。
 
 ## 7. Capability、Callable 与 Plugin 契约
 
@@ -197,25 +278,54 @@ Node 可以省略不适用阶段，但必须至少声明一个业务阶段。阶
 
 ## 8. PredicateSet 与 Script
 
-predicates.yaml 定义具名 Predicate。每个 Predicate 声明有序 parameters、可选 Evidence requirements 和唯一 evaluator。每个 Predicate 调用的 arguments 数量与参数顺序必须精确一致。
+### 8.1 PredicateSet 的作者结构
 
-Predicate 结果严格为：
-- PASS：输入和 Evidence 足以支持命题成立；
-- FAIL：输入和 Evidence 足以支持命题不成立；
-- UNKNOWN：缺失、冲突、过期、Scope 不匹配、来源不可信或求值失败，无法可靠判断。
+`assurance/predicates.yaml` 的唯一根字段是 `predicates`。每个 Predicate 以稳定 Predicate ID 为键，并声明有序 `parameters`、可选 `evidence` 和唯一 `evaluator`。
 
-UNKNOWN 不是 FAIL，也不得提升为 PASS。Predicate 不得调用 Tool / Observation、访问网络、文件系统、时钟、随机数或可变全局 Context。
+~~~yaml
+predicates:
+  qos.request.valid:
+    parameters:
+      - request: schemas/qos-request.schema.yaml
+    evaluator:
+      type: cel
+      expression: request.pduSessionId > 0 &&
+        request.target5qi >= 1 && request.target5qi <= 255
 
-Script 是 Skill Package 的共享资源，不属于 assurance/。源码放在 `scripts/`，由 `scripts/manifest.yaml` 建立唯一的 package-local Script Registry。Registry 每个条目必须声明：
-- `file`：相对 Skill Package 根目录的精确路径，必须位于 `scripts/`；
-- `entrypoint`：该文件中的一个顶层函数名，不接受动态模块名、属性链或命令；
-- `purpose`：只能是 `transform` 或 `predicate`；
-- `inputSchema`：相对 Skill Package 根目录的 `schemas/*.schema.yaml`；
-- `outputSchema`：`transform` 必需，引用相对根目录的 `schemas/*.schema.yaml`；`predicate` 不得声明此字段，其结果固定为 PASS / FAIL / UNKNOWN；
+  qos.change.confirmed:
+    parameters:
+      - result: mas::urn:openamsm:mas:schema:qos-change-result:v1
+      - sessionRef: host-context::urn:connectionagent:context:session-ref:v1
+    evidence:
+      requires:
+        result:
+          - mas.qos.change
+    evaluator:
+      type: cel
+      expression: result.status == "APPLIED" &&
+        result.sessionRef == sessionRef
+~~~
 
-Script ID 在同一 Skill Package 内唯一且稳定。Procedure 的 `operation.script` 只引用 `purpose=transform` 的 Script ID；Predicate 的唯一 `evaluator` 只引用 `purpose=predicate` 的 Script ID。所有 Script 输入和输出均为 JSON 值并按对应 Schema 验证。入口函数分别为 `run(input: JSONValue) -> JSONValue` 与 `evaluate(input: JSONValue) -> PASS|FAIL|UNKNOWN`。
+规则：
 
-Script Registry 示例：
+- `parameters` 是非空有序列表；每个成员必须是单键映射，键为参数名，值为 Primitive Type 或精确 Schema 引用。同一 Predicate 内参数名唯一。
+- `evidence.requires` 只能引用已声明参数；Evidence 保证必须来自正式 Owner / Package 契约，不能由作者注释或 Script 创建。
+- `evaluator` 恰好一个：`type: cel` 搭配 `expression`，或 `type: script` 搭配 Registry Script ID。
+- Precondition / Postcondition 的每个 Predicate Call 必须提供完整有序 arguments，数量和类型与参数签名完全一致。
+- Predicate 的结果严格为 PASS / FAIL / UNKNOWN。UNKNOWN 不是 FAIL，也不得提升为 PASS。
+- Predicate 不得调用 Tool / Observation、访问网络、文件系统、时钟、随机数或可变全局 Context。
+
+### 8.2 Script Registry
+
+Script 是 Skill Package 根目录共享资源，不属于 `assurance/`。源码位于 `scripts/`，唯一 Registry 位于 `scripts/manifest.yaml`。Registry 每项必须声明：
+
+- `file`：相对 Skill Package 根目录的精确文件路径，必须位于 `scripts/`；
+- `entrypoint`：文件中的一个顶层函数名，不接受动态模块名、属性链或命令；
+- `purpose`：只能是 `transform` 或 `predicate`，仅约束 CA-SL Assurance 的静态引用位置；
+- `inputSchema`：Package 根目录下 `schemas/*.schema.yaml` 的精确路径；
+- `outputSchema`：transform 必需，指向 Package 根目录下 `schemas/*.schema.yaml`；predicate 不声明该字段，其输出使用本节固定的 PredicateEvaluationResult 契约。
+
+Script ID 在同一 Package 内唯一且稳定。Registry 不包含 `llmInvocable`、权限开关或调用者名单。
 
 ~~~yaml
 scripts:
@@ -225,6 +335,7 @@ scripts:
     purpose: transform
     inputSchema: schemas/normalize-qos-input.schema.yaml
     outputSchema: schemas/normalize-qos-output.schema.yaml
+
   qos-is-valid:
     file: scripts/qos_is_valid.py
     entrypoint: evaluate
@@ -232,24 +343,45 @@ scripts:
     inputSchema: schemas/qos-valid-input.schema.yaml
 ~~~
 
-Assurance Procedure 对 transform Script 的引用示例：
+### 8.3 Script 输入、Evidence 与输出契约
 
-~~~yaml
-operation:
-  script: normalize-qos
-  arguments:
-    - inputs.qos
-~~~
+**Transform Script**
 
-Predicate evaluator 只写 Registry Script ID，不写路径、模块名或函数名。
+- Procedure 的 `operation.script` 只能引用 `purpose=transform`。
+- 具名 `arguments` 按 Script `inputSchema` 的属性名组装为一个 JSON Object；Host 在调用前校验完整输入 Schema。
+- Runner 调用唯一入口 `run(input: JSONValue) -> JSONValue`；正常返回值必须通过 Registry 的 `outputSchema`，通过后才产生 Operation SUCCEEDED 和 `<node-id>.operation.output`。
+- Script 不得自行读取 Context、文件或环境；所需数据必须通过 arguments 显式传入。
 
-LLM 可以通过 Host 的只读 Skill Resource Access 读取 `scripts/` 下的源码和 Registry，并通过 Host-owned system Capability `host.skill-script.execute` 调用当前 Skill Registry 中登记的任意 Script，参数固定为 `scriptId` 与 `input`。LLM 与 Assurance Procedure / Predicate 使用同一 Host Script Runner、同一份脚本字节、Registry 和 I/O Schema；不设置逐脚本可调用标记，也不设置额外 Host 开关。Host 只解析当前 Run 绑定的固定 Package snapshot，按 Registry 校验输入 Schema、执行精确 entrypoint 并验证输出 Schema；模型不得提交文件路径、模块名、函数名、代码、解释器参数或任意命令。Host 仅在当前 Skill 有已登记 Script 时提供该 Action。purpose 仍约束 CA-SL 调用点：operation.script 只能引用 transform，Predicate evaluator 只能引用 predicate；它不是 LLM 权限开关。
+**Predicate Script**
 
-Deterministic Procedure 的 `operation.script` 与 Predicate evaluator 均映射到同一 Host Script Runner；LLM 也通过同一 Runner 按 Script ID 调用 Registry 中登记的脚本。purpose 仅约束 Assurance 的静态引用位置，不构成 LLM 可调用性区分。三种调用共享同一份脚本字节、Registry 和 Schema，不复制脚本或生成第二套定义。
+- Predicate 的 `evaluator.script` 只能引用 `purpose=predicate`。
+- Predicate 的有序 arguments 按 `Predicate.parameters` 的参数名组装为 JSON Object；Host 额外注入只读保留命名空间 `evidence`。业务参数不得命名为 `evidence`。
+- `input.evidence` 的形状固定为 `{ parameterName: { refs: string[] } }`；它只包含 Runtime 已附加到本次 Predicate 调用的 Evidence Ref，不包含可由 Script 创建的证明。
+- 唯一入口为 `evaluate(input: PredicateInput) -> PredicateEvaluationResult`。PredicateInput 包含声明的业务参数和 Host 注入的 Evidence projection。
+- PredicateEvaluationResult 固定为闭合 JSON Object：`result` 为 PASS / FAIL / UNKNOWN，`reasonCode` 为非空字符串，`evidenceUsed` 为字符串数组。缺失字段、额外字段、非法枚举或类型错误均为无效结果。
+- Runtime 在路由前检查 `evidenceUsed` 中每个 Ref 是否属于本次输入 `input.evidence.<parameter>.refs` 的并集。Script 不得创建、重绑、扩大或伪造 Evidence；LLM 直接调用 Predicate Script 时 Host 注入空 Evidence projection，因此 `evidenceUsed` 必须为空。
+- CEL Predicate 与 Script Predicate 使用相同 PASS / FAIL / UNKNOWN 语义和 Runtime Evidence 检查。
 
-所有 Script 必须是确定性、无外部副作用的本地计算：不得访问网络、任意宿主文件系统、子进程、环境秘密、时钟、随机数或动态加载；不得调用 Tool / Capability、Plugin 或 Owner，也不得制造 Receipt、Commit Proof 或 Evidence。需要外部副作用时必须调用正式业务 Capability，不得包进 Script。
+**LLM 与确定性执行的统一调用能力**
 
-Host Script Execution 是受限的包内入口调用，不是模型提供代码的 Python REPL，也不构成生产级恶意代码隔离或 Admission。Demo 按受控 Skill Package 来源处理脚本，并实施明确的入口 allowlist、输入/输出 Schema、超时和资源上限；不得声称具备生产级沙箱安全资格。
+- Host-owned system Capability `host.skill-script.execute` 对当前 Skill Registry 中登记的全部 Script ID 开放，不按 `purpose` 过滤；LLM、Procedure 和 Predicate 使用同一 Script Runner、同一脚本字节、Registry 和 I/O Schema。
+- Action 输入固定为 `scriptId` 与 JSON `input`。Transform 的 input 按 Registry `inputSchema` 验证；Predicate 的 input 仅包含其业务参数，Host 追加空的只读 Evidence projection。模型不得提交 Evidence、file、entrypoint、模块名、函数名、代码、解释器参数或任意命令。
+- LLM 调用 Predicate Script 的返回值只是普通计算结果，不会代替 Assurance Predicate 阶段，不产生 Evidence，也不能单独证明 Goal。只有 Runtime 执行 Procedure 中已链接的 Predicate 调用，才会把结果纳入该阶段聚合和路由。
+- 不存在逐脚本 LLM 可调用标记，不存在 `scriptExecution.llmEnabled` 或其他 LLM 专用开关。Registry 登记即表示脚本属于当前 Skill 的共享本地计算能力。
+- `purpose` 只约束 Assurance 静态引用：`operation.script` 只能引用 transform；Predicate evaluator 只能引用 predicate。它不限制 LLM 的 Script ID 调用范围。
+
+### 8.4 Script 执行错误与纯本地边界
+
+- Registry 缺失、字段不完整、路径越界、入口不唯一或 Schema 无效：导入 / Compiler 阶段拒绝，诊断 `SCRIPT_REGISTRY_INVALID` 或 `SCRIPT_CONTRACT_INVALID`，不产生可执行 Artifact。
+- Script ID 不存在或不属于当前 Package snapshot：调用前拒绝，诊断 `SCRIPT_NOT_FOUND`。
+- 输入不符合 inputSchema：拒绝执行，诊断 `INPUT_VALIDATION_FAILED`；不调用 entrypoint、不产生 output。
+- Transform entrypoint 抛出未处理异常：诊断 `SCRIPT_EXECUTION_FAILED`，该 Operation 阶段产生 FAILED，无成功 output。
+- Transform 超过 Host 固定的单次 Script 执行预算（Demo 默认 5000ms，且不得超过 Run 剩余 Deadline）：诊断 `SCRIPT_TIMEOUT`，该 Operation 阶段产生 FAILED，无成功 output。Run 全局 Deadline / Cancellation 优先，按 Runtime 全局停止处理。
+- Transform 正常返回但不符合 outputSchema：诊断 `OUTPUT_SCHEMA_INVALID`，隔离输出，该 Operation 阶段产生 FAILED。
+- Predicate Script 抛异常、超时、返回值不符合 PredicateEvaluationResult 或 Evidence Ref 校验失败：分别记录 `SCRIPT_EXECUTION_FAILED`、`SCRIPT_TIMEOUT`、`PREDICATE_RESULT_INVALID`、`PREDICATE_EVIDENCE_INVALID`；该 Predicate 结果为 UNKNOWN，不得产生 PASS。
+- 普通 LLM Script Action 发生上述错误时，Action 返回明确失败诊断，不产生业务 Capability Outcome / Evidence，不改变 Run 的业务成功状态。
+
+所有 Script 必须是确定性、无外部副作用的本地计算：不得访问网络、任意宿主文件系统、子进程、环境秘密、时钟、随机数或动态加载；不得调用 Tool / Capability、Plugin 或 Owner，也不得制造 Receipt、Commit Proof 或 Evidence。需要外部副作用时必须调用正式业务 Capability。Host Script Execution 是受限的包内入口调用，不是模型提供代码的 Python REPL，也不构成生产级恶意代码隔离或 Admission。
 
 ## 9. Contract.when 与 Skill 选择
 
@@ -277,20 +409,15 @@ when 不得读取 Context、Tool Result、Observation、Evidence、环境变量�
 5. when=false 或运行期求值错误的 Skill 必须排除，不能重新加入未声明 when 的候选集合。
 6. 模型提出候选集合外的 Skill ID 必须拒绝。不得走 unbound Generic Agent fallback。
 
-## 10. Node-entry Wait
+## 10. 异步 Operation 与 Host Runtime 控制边界
 
-Wait 是可选 Node-entry 控制，不是第五个业务阶段、Wait-only Node、独立 Wait Node 或作者级 await / polling 循环。Wait 发生在目标 Node 的第一个业务阶段之前；事件接受后隐式进入该 Node 的第一个已声明业务阶段。
+**CA-SL 1.6.0 不定义 Skill 层的 `wait`、`await`、polling Node、Wait-only Node、`wait.output` 或 Wait 专用 timeout route。** Procedure 源码中出现这些字段或结构必须作为未知字段 / 不支持语法拒绝。
 
-- Wait 由 Host Runtime 的内部 READ 触发机制执行；它不是 Skill-facing Capability，也不是业务 Mutation。
-- Wait 必须引用显式依赖中的 package-scoped Ingress Operation / Event contract；该契约拥有协议来源、服务与操作身份、归一化 Request Schema、认证、Correlation 和重复 / 迟到处理规则。
-- Skill 不得声明 payloadSchema、复制协议 Schema、创建全局 EventCatalog 或根据未认证 Body 选择 Schema。
-- Wait 输出是 Integration 归一化后的 typed request，使用 NodeId.wait.output SourcePath；不得把原始 HTTP envelope、multipart 原始 bytes 或未授权路径直接交给模型。
-- Wait 必须绑定精确 Run、Node occurrence、generation 和 Correlation；SUPI 单独不能被假定为充分唯一标识。
-- Wait timeout 使用正的固定时长；只允许 Wait-scoped TIMEOUT 路由。事件接受是隐式正常边，不声明 EVENT_RECEIVED。
-- 可选 response.after 将配对协议响应绑定到 Node completion boundary；它独立于 Invocation 最终终态，不能错误地提前发送 3GPP 成功响应。
-- Wait 不能创建 Evidence、证明 Predicate 或满足最终成功条件。Event 到达后仍必须执行业务阶段和 Postcondition。
-- 现有 Observation-based Runtime Evidence Wait 与 push-driven Event Wait 不同，不得混为同一机制。
-- 普通 Skill / LLM 不得把 MUTATION Callable 填为 Wait READ trigger；例如 N1 / N2 确认 Mutation 不能冒充 Wait 触发器。
+异步协议交互属于执行该协议动作的 Tool / Provider / SMF Operation。负责该动作的 Operation 必须在返回最终结果时提供规范化输出和适用 Evidence；Procedure 只在该 Operation 返回最终 Outcome 后继续推进。不得把一个尚未完成的协议动作拆成作者级 Wait Loop，也不得要求 Skill 作者自行轮询。
+
+Host / Runtime 仍负责 Deadline、Cancellation、Correlation、Budget、UNKNOWN、迟到结果责任和必要的 Reconcile；READ / Observation 仍通过已声明并授权的普通 READ Capability 执行。这些是 Runtime 控制和受治理查询，不是 Skill 作者定义的 Wait 语法或额外阶段。
+
+例如，N4 Session 建立、RAN signaling / adoption 和 N4 forwarding 修改均属于对应 SMF / Provider Operation 的内部完成责任。具体真实 Tool / Owner 契约必须由其发布者确认；本节不虚构 callable 名称或产品实现状态。
 
 ## 11. Observation、Evidence、Outcome 与恢复
 
@@ -309,7 +436,6 @@ Procedure / Runtime Outcome 至少区分：
 - Predicate：PASS / FAIL / UNKNOWN。
 - 普通调用：SUCCEEDED / FAILED；Runtime 可产生 DENIED / UNKNOWN。
 - Mutation：另可有 NOT_COMMITTED / OUTCOME_UNKNOWN；受信恢复已提交但没有承诺普通成功输出时可产生 Runtime COMMITTED。
-- Wait：TIMEOUT。
 - Invocation 终态：SUCCEEDED / FAILED / UNRESOLVED / SAFE_STOPPED。
 
 Owner 不得声明 Runtime 保留的 DENIED、OUTCOME_UNKNOWN、COMMITTED 或 Invocation 终态。未知 Owner Outcome 必须隔离并 fail-closed。
@@ -342,7 +468,7 @@ CA-SL 1.6.0 增加受限的跨 dialect 引用入口，不是把 OpenAPI 3.0 并�
 
 ## 13. 静态检查与稳定诊断
 
-Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后执行结构、字段、标识符、依赖、Schema、Capability Link、Procedure Graph、CEL、Predicate / Evidence 和 Wait 检查。未知字段、重复 YAML Key、自定义 Tag、循环 Alias、未知根类型和不确定标量必须拒绝。
+Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后执行结构、字段、标识符、依赖、Schema、Capability Link、Procedure Graph、CEL、Predicate / Evidence 和 Script Registry / Script Contract 检查。未知字段、重复 YAML Key、自定义 Tag、循环 Alias、未知根类型和不确定标量必须拒绝。
 
 最低诊断集合：
 
@@ -354,7 +480,7 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 | Procedure / SourcePath | PROCEDURE_START_MISSING、NODE_ID_RESERVED、CONTROL_FLOW_CYCLE、CONTROL_FLOW_DANGLING、CONTROL_FLOW_AMBIGUOUS、SOURCE_PATH_INVALID、SOURCE_NOT_AVAILABLE、INPUT_TYPE_MISMATCH、INPUT_NULLABILITY_MISMATCH |
 | Predicate / Evidence | PREDICATE_GROUP_INVALID、PREDICATE_ARITY_MISMATCH、PREDICATE_TYPE_MISMATCH、PREDICATE_EVIDENCE_REQUIRED、PREDICATE_EVIDENCE_UNSATISFIABLE、EVIDENCE_GUARANTEE_LINK_INVALID |
 | CEL / when | CEL_INVALID |
-| Wait | WAIT_INGRESS_EXPORT_NOT_FOUND、WAIT_INGRESS_EXPORT_AMBIGUOUS、WAIT_CORRELATION_BINDING_INVALID、WAIT_TIMEOUT_INVALID |
+| Script | SCRIPT_REGISTRY_INVALID、SCRIPT_CONTRACT_INVALID、SCRIPT_NOT_FOUND、SCRIPT_EXECUTION_FAILED、SCRIPT_TIMEOUT、INPUT_VALIDATION_FAILED、OUTPUT_SCHEMA_INVALID、PREDICATE_RESULT_INVALID、PREDICATE_EVIDENCE_INVALID |
 | Outcome / Reconcile | ROUTE_OUTCOME_MISSING、ROUTE_OUTCOME_UNKNOWN、ROUTE_NORMAL_OUTCOME_NOT_ALLOWED、FINAL_POSTCONDITION_MISSING、SUCCESS_BYPASSES_FINAL_POSTCONDITION、RECONCILE_CONTRACT_INVALID、RETRY_CONTRACT_INVALID |
 
 诊断必须带 SourcePath / 行列位置、稳定 Code、简短原因和必要的依赖 / Node / Capability 上下文。诊断失败不得产生部分 Runtime Artifact。未使用依赖可以警告；不可达 Node 可以警告，但所有 Node 仍须通过语法和链接检查。
@@ -368,6 +494,10 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 - Agent 不内置 Compiler，不调用 Check / Build / Verify；只导入正式发布的 1.6.0 Bundle。
 - Skill Studio 只编辑 1.6.0；Package Explorer 以 Capability 为唯一作者可见能力导航，不显示平级 Tools / Operations / Callable 树。
 - Host Context Package 的源码身份、上传来源和导入快照属于 Studio Project Lock / Import Provenance，不是 Package Manifest 的额外字段；不得增加 sourceStatus、包级 hash、签名或 Trust Registry 来弥补。
+- Host 提供只读 system Capability `host.skill-resource.read`，供当前 Run 的 LLM 按需读取当前 Skill Package snapshot 内的文本资源。请求只含 Package-relative `path`；`skillId` 与 snapshot 由 Host 从当前 Run 绑定，不接受模型指定。
+- Resource Read 允许 `SKILL.md`、`assurance/`（存在时）、`schemas/`、`scripts/`、`references/`、`assets/` 中的已导入文件；拒绝绝对路径、`..`、反斜杠、符号链接逃逸、Package 外路径、未登记文件和跨 Skill 读取。
+- 仅返回受支持 UTF-8 文本资源；单文件读取上限为 1 MiB，超限完整拒绝、不截断。响应包含精确相对路径、媒体类型、原始文本内容和字节数。
+- 稳定拒绝诊断：`RESOURCE_PATH_INVALID`、`RESOURCE_NOT_FOUND`、`RESOURCE_TOO_LARGE`、`RESOURCE_MEDIA_TYPE_UNSUPPORTED`、`RESOURCE_SNAPSHOT_UNAVAILABLE`。该 Action 只读、不属于业务 Capability，不改变 Capability Scope，不通过宿主文件系统路径暴露 Package 内容。
 
 ## 15. 安全、版本与不兼容
 
@@ -383,7 +513,7 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 | 输入 / 场景 | 必需结果 |
 |---|---|
 | 无 Assurance、无共享资源 | 可导入；仅 LLM-guided；不调用 Compiler |
-| 无 Assurance、含 schemas/ 与 scripts/manifest.yaml | 可导入；仅 LLM-guided；Host 校验共享资源；当前 Skill 的 Script Registry 非空时提供 Host Script Execution Capability；不调用 Compiler |
+| 无 Assurance、含 schemas/ 与 scripts/manifest.yaml | 可导入；仅 LLM-guided；Host 校验共享资源；提供 Host Resource Read；Script Registry 非空时提供 Host Script Execution Capability，且全部登记 Script 可调用；不调用 Compiler |
 | 完整有效 Assurance | 只有正式 1.6.0 Compiler Build / Verify / Bundle 后才可导入 |
 | Assurance 目录缺文件或无效 | 拒绝；不得降级 |
 | Contract 只声明 Capability，唯一映射 Callable | Link 通过 |
@@ -396,9 +526,9 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 | 未声明依赖却引用 Capability / Schema | 静态拒绝 |
 | 多个 when=true | 仅在精确 true 候选集合内消歧 |
 | when=false / runtime error | 排除，不重新加入无 when 集合 |
-| Wait event 接受 | 进入目标 Node 首个业务阶段；不直接产生 Evidence / Goal 成功 |
-| Wait timeout | 只走 TIMEOUT 路由；不触发 Mutation 重放 |
+| Procedure 中出现 `wait` / `await` / `wait.output` / polling 语法 | 拒绝为未知字段或不支持语法；异步完成由 Tool / Provider / SMF Operation 与 Host Runtime 负责 |
 | 普通 Skill / LLM 调用 MAS.RECONCILE | IPC=0，INTERNAL_RECONCILE_ONLY |
+| LLM 调用任意已登记 transform / predicate Script | 通过同一 Host Script Runner；Predicate 返回值仅为普通计算结果，不构成 Assurance 阶段 PASS / Evidence |
 | 模型提交任意 Python 代码、路径或未登记 Script ID | Runtime 在 Script Runner 前拒绝；不创建进程、不执行代码 |
 | 旧 v1alpha5 / Development Artifact / Bundle | 新 Compiler / Agent / Studio 明确拒绝 |
 
@@ -459,3 +589,4 @@ Host Context Schema-only Package 仍只经 `Contract.contexts` 引用，与 Open
 | 2026-11-27 | 0.1.7 | GPT-6.2（ChatGPT） | §7～§8 | 明确业务 Operation Capability 与 `operation.script` 的互斥语法分支，避免把 Package-local Script 误列为业务 Capability | 保持 Capability-only 授权模型，同时让 Procedure 明确引用共享 Script Registry | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.8 | GPT-6.2（ChatGPT） | §2、§7 | 统一无 Assurance Package 的术语，避免误读为只能包含 SKILL.md 单文件 | 明确无 Assurance 包仍可携带共享 Schema / Script / references / assets | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.9 | GPT-6.2（ChatGPT） | §2、§8、§16 | 删除 `llmInvocable` 与 `scriptExecution.llmEnabled` 双重门禁；LLM、Procedure 和 Predicate 统一调用当前 Package Registry 中的脚本 | Demo 不区分脚本调用者权限；保留固定 Package snapshot、精确入口、I/O Schema 和无副作用边界 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.2.0 | GPT-6.2（ChatGPT） | §1～§18 | 恢复原有四阶段 DAG / arguments / PredicateSet 结构语法，补齐 Predicate Evidence 与 Script 输入输出 / 异常契约；删除 Skill 层 Node-entry Wait / await / polling；定义 Host Resource Read Action 与完整 Script Registry 调用模型 | 避免作者语法重构和 Wait 回流；使 CA-SL 1.6.0 的机器形状、运行时边界和评审验收闭合 | Issue #49；IR-008；SR-032 |
