@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "scope": "ca-agent-next-root-python",
+  "baseline": {
+    "sha": "83d23e8c04b1c05eb304c2a24a3392f6459ed0f1",
+    "source_pr": 99,
+    "source_branch": "feature/issue-96-sr-028-uv-toolchain"
+  },
+  "bootstrap": {
+    "pr_number": 112,
+    "base_ref": "feature/issue-96-sr-028-uv-toolchain",
+    "base_sha": "83d23e8c04b1c05eb304c2a24a3392f6459ed0f1"
+  },
+  "allowed_base_refs": [
+    "docs/issue-111-shared-uv-implementation-baseline",
+    "main"
+  ],
+  "uv_version": "0.13.10",
+  "python_version": "3.14.6",
+  "uv_setup_action": "astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d",
+  "required_base_files": [
+    "pyproject.toml",
+    "uv.lock",
+    ".python-version",
+    "scripts/unittest_gate.py",
+    ".github/workflows/review-context.yml",
+    ".github/workflows/sr003-plugin-ci.yml"
+  ]
+}
