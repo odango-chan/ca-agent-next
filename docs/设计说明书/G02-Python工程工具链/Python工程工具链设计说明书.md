@@ -395,6 +395,11 @@ Review Context gate 使用 `uv run --no-sync --locked --group dev --extra plugin
         printf '%s\tMISSING\t0\n' "$name" >> "$diagnostics_dir/generator-output-manifest.txt"
       fi
     done
+    if [ "$generator_rc" -eq 0 ]; then
+      test -f "$work_dir/review-scope.json"
+      test -f "$work_dir/评审上下文.md"
+      test -f "$work_dir/统一评审提示词.md"
+    fi
     exit "$generator_rc"
 ```
 
