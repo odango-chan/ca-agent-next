@@ -1,7 +1,7 @@
 # SR-031：OpenAMSM 3GPP OpenAPI 原版 Source Bundle 发布
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.3.1
+> SR 版本：0.3.2
 > 创建日期：2026-11-27
 > 修订日期：2026-11-27
 > 状态：DRAFT / REVIEW_REQUESTED；Publisher / Compiler / Plugin / Codec 产品均 NOT_RUN 或 BLOCKED_EXTERNAL_INPUT
@@ -43,7 +43,7 @@ Source Lock 必须固定 OpenAMSM repo / commit、源码根（当前为 `upstrea
 
 - 二进制复制；禁止 YAML load/dump、格式化、重序列化、key 重排、编码 / 换行转换、注释修改或生成“等价 YAML”。
 - 原文件名、目录、相对 `$ref` 保持原样；外围 manifest / Source Lock 放在原件树外。
-- 逐文件比较 Git blob（可用时）、byte length 和 bytes；单字节、空格、注释、BOM、CRLF/LF 变化都失败。
+- 对固定 commit 对应的源文件与发行文件直接 byte-for-byte 比较；单字节、空格、注释、BOM、CRLF/LF 变化都失败。Git blob ID 只作上游来源定位，不作为新增哈希校验机制。
 - 不能以解析后的 JSON/YAML 相等证明原件不变；不能重写 `$ref` 使引用看似可用。
 - OpenAMSM 升级时发布新 snapshot，不覆盖旧版本，不使用动态 latest。
 - 每个选定根必须明确到消费 surface，而不是只写 operation 名。当前 Plugin ingress 选定根是 `PostSmContexts.requestBody`，其 multipart `jsonData` schema 指向 `SmContextCreateData`；Compiler 选定根是精确 `components/schemas` pointer。
@@ -53,7 +53,7 @@ Source Lock 必须固定 OpenAMSM repo / commit、源码根（当前为 `upstrea
 
 TS 29.502 `PostSmContexts` 的 ingress surface 使用 `multipart/related`：`jsonData` 引用 `#/components/schemas/SmContextCreateData`。该 Schema Component 除 TS 29.571 CommonData 外，还引用 TS 29.510 NFManagement（`ServiceName` / `WAgfInfo` / `TngfInfo` / `TwifInfo`）和 TS 29.518 Namf Communication（`NgRanTargetId` / `SbiBindingLevel`）；所以当前 requestBody / jsonData 闭包必须锁定四份原版 YAML。其余 binary parts 为 `binaryDataN1SmMessage`（`application/vnd.3gpp.5gnas`）、`binaryDataN2SmInformation` / `binaryDataN2SmInformationExt1`（`application/vnd.3gpp.ngap`）；encoding 声明 JSON `application/json` 和 binary parts 的 `Content-Id`。
 
-CommonData `RefToBinaryData.contentId` 是被引用 binary body part 的 `Content-ID` header 值。Plugin 必须精确校验 `jsonData.n1SmMsg.contentId` ↔ `binaryDataN1SmMessage`、`jsonData.n2SmInfo.contentId` ↔ `binaryDataN2SmInformation`、`jsonData.n2SmInfoExt1.contentId` ↔ `binaryDataN2SmInformationExt1`。每个引用必须唯一命中对应 slot；Content-ID 不得在 parts 间重复；缺失、错槽、错媒体类型或孤立 part 均拒绝。
+CommonData `RefToBinaryData.contentId` 是被引用 binary body part 的 `Content-ID` header 值。Plugin 必须精确校验 `jsonData.n1SmMsg.contentId` ↔ `binaryDataN1SmMessage`、`jsonData.n2SmInfo.contentId` ↔ `binaryDataN2SmInformation`、`jsonData.n2SmInfoExt1.contentId` ↔ `binaryDataN2SmInformationExt1`。每个出现的引用必须唯一命中对应 slot；Content-ID 不得在 parts 间重复；引用目标缺失、错槽或媒体类型不符均拒绝。未被 JSON 引用的 part 不得交给 Codec；额外或未引用 part 的拒绝 / 忽略由选定 ingress profile 明确规定，不从 Schema 隐含推断。
 
 Plugin 必须按原版 OAS 3.0 解释选定 operation / requestBody / content / multipart encoding / part Schema / media type / Content-ID，不得手写第二套 SBI Schema，也不得把 binary slot 当作已解码 NAS/NGAP 字段。只解析选定 surface 的可达 refs，不全局 eager resolve 根文件中其他 operation 的 refs。
 
@@ -93,3 +93,4 @@ SR-031 主状态保持 DRAFT；本设计可独立评审，但 Publisher、Compil
 | 2026-11-27 | 0.2.0 | ChatGPT / GPT-6 | 全文 | 冻结 OpenAMSM 实际支持版本与原版 YAML byte-for-byte 代发布 | 禁止任何 3GPP YAML 变更 | Issue #47；SR-031/026/013 |
 | 2026-11-27 | 0.3.0 | ChatGPT / GPT-6.2 | 全文 | 撤销强制 Adapter 假设；改为原生 OAS3 消费和精确组件引用；补齐源文件 / blob / 标准版本、Source Lock、NAS/NGAP 原生源 | G.4 与 OAS3 是不同 dialect，不应复制一套标准 | Issue #47；SR-010/013/026/027 |
 | 2026-11-27 | 0.3.1 | ChatGPT / GPT-6.2 | §1～4、AC-031-01～05 | 补齐 PostSmContexts requestBody 四文件 / 102 Component 闭包、选定面 lazy refs、Git blob + byte-compare Lock、RefToBinaryData Content-ID 对应 | 修复漏锁跨文件依赖、全文件 eager resolve 和 multipart part 错配风险 | Issue #47；SR-010/013/027；EC01/EC02 |
+| 2026-11-27 | 0.3.2 | ChatGPT / GPT-6.2 | §2～4 | 统一 Git blob 仅作来源定位、byte-for-byte 为唯一原件比较；未引用 multipart part 不交 Codec，拒绝策略归 ingress profile | 避免额外哈希机制和超出原版 Schema 的隐含拒绝 | Issue #47；SR-010/013；EC01/EC02 |
