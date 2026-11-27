@@ -170,6 +170,16 @@ def command_violations(added_lines: Iterable[tuple[str, str]]) -> list[str]:
         for code, pattern, message in FORBIDDEN_COMMANDS:
             if pattern.search(line):
                 violations.append(f"{code}: {path}: {line} — {message}")
+        if re.search(r"\\bUV_PROJECT_ENVIRONMENT\\s*=", line):
+            violations.append(
+                f"SHARED_UV_ENVIRONMENT: {path}: {line} — "
+                "每个 worktree 必须使用本地 .venv，禁止设置共享 UV_PROJECT_ENVIRONMENT。"
+            )
+        if re.search(r"\\buv\\s+(?:run|sync)\\b.*(?:--system|--active)\\b", line):
+            violations.append(
+                f"UV_ENVIRONMENT_BYPASS: {path}: {line} — "
+                "禁止使用 --system/--active 绕过项目虚拟环境。"
+            )
 
         has_uv_run = re.search(r"\buv\s+run\b", line) is not None
         has_no_project = "--no-project" in line
@@ -277,11 +287,17 @@ def validate_base_contents(
     if required_uv not in pyproject:
         raise PolicyError(f"PR Base 的 pyproject.toml 未固定 uv {manifest.get('uv_version')}。")
 
-    workflow = git_blob(repo_root, base_sha, ".github/workflows/review-context.yml") or ""
-    if manifest.get("uv_setup_action") not in workflow:
-        raise PolicyError("PR Base 的 Review Context Workflow 未使用固定 SHA 的 setup-uv action。")
-    if f"version: '{manifest.get('uv_version')}'" not in workflow:
-        raise PolicyError("PR Base 的 Review Context Workflow 未显式固定 uv 版本。")
+    workflow_paths = [
+        path
+        for path in required
+        if path.startswith(".github/workflows/")
+    ]
+    for path in workflow_paths:
+        workflow = git_blob(repo_root, base_sha, path) or ""
+        if manifest.get("uv_setup_action") not in workflow:
+            raise PolicyError(f"PR Base 的 {path} 未使用固定 SHA 的 setup-uv action。")
+        if f"version: '{manifest.get('uv_version')}'" not in workflow:
+            raise PolicyError(f"PR Base 的 {path} 未显式固定 uv 版本。")
 
 
 def validate_dependency_lock(
