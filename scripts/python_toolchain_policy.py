@@ -163,10 +163,6 @@ def forbidden_root_lockfiles(changed_paths: Iterable[str]) -> list[str]:
 def command_violations(added_lines: Iterable[tuple[str, str]]) -> list[str]:
     violations: list[str] = []
     for path, raw_line in added_lines:
-        if path in {POLICY_SCRIPT_PATH, POLICY_TEST_PATH}:
-            # The policy implementation and its negative fixtures necessarily
-            # mention forbidden commands as data; they are covered by unit tests.
-            continue
         if Path(path).suffix.lower() not in EXECUTABLE_SUFFIXES:
             continue
         line = raw_line.strip()
