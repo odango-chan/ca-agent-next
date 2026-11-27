@@ -1,8 +1,10 @@
 # SR-011：真实 OpenAMSM 创建修改释放端到端验证
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.3.3\
-> 状态：DRAFT（实施主状态）；独立模型 Review #6082541121（固定 Head 3d5f17b7）：CHANGES_REQUESTED，P1 R3-SR011-01 阻断 AC-011-04；真实 1.6.0 E2E 仍 BLOCKED/NOT_RUN，READY=0。
+> SR 版本：0.3.4\
+> 状态：整项 DRAFT；限定设计已认可，等待直接依赖。AC-011-06 静态架构断言。  
+> 下一步：已获限定设计认可。组合实现具备后检查 Core 零业务分支；01～05 等同批 Bundle、Compiler Verify、Provider/Owner Package 和隔离对端。  
+> 阶段依据：[独立评审 #75](https://github.com/odango-chan/ca-agent-next/issues/75#issuecomment-7210271472)，评审 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-27\
 > 所属阶段：Phase H  
@@ -122,3 +124,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-27 | 0.3.1 | Codex / GPT-6 | §5.1 | 隔离复用 SUPI/PSI 前排空并轮换 listener，验证过期回调 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
 | 2026-11-27 | 0.3.2 | GPT-6（ChatGPT） | 第三轮设计自评/历史修订表 | 隔离真实 NF、旧 listener 排空、新 generation/key reuse 与两路 Owner Proof 的场景及停止条件已写明；真实组合输入未齐；将第二轮结论保留为历史、登记第三轮独立复评候选并按版本整理记录 | 设计范围可供外部评审而不提前授权代码实施或夸大 AC 状态 | Issue #12；PR #46；SR-011 |
 | 2026-11-27 | 0.3.3 | GPT-6（ChatGPT） | AC-011-04/05、文档头、修订记录 | 增加 N1/N2 两种顺序、跨事务交错、迟到回调、旧 generation 和错 Session 的独立断言；将 STALE_SM_CONTEXT 映射到模块 AC | 处理独立模型 Review #6082541121 的 P1 R3-SR011-01，避免仅覆盖重复/迟到 N2 而漏掉乱序和交错清理 | Issue #12；PR #46；F06 v0.3.1；Review #6082541121 |
+| 2026-11-27 | 0.3.4 | Codex / GPT-6 | 文档头 | 登记限定设计已认可，等待直接依赖及 AC 范围 | 按单项独立评审推进 | Issue #12、#75；PR #46 |

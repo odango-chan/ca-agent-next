@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.56
+> 文档版本：0.3.57
 > 状态：29 项 SR：4 VERIFIED、1 IMPLEMENTED、24 DRAFT；PR #46 Review #6083641266 对 SR-028 的第五轮独立复评为 CHANGES_REQUESTED（固定 Head ee73ad48，0 P0 / 1 P1 / 3 P2）；第五轮 R028-17～20 已按 Issue #12 整改并推送，等待新 Head 第六轮独立复评，SR-028 仍 DRAFT、AC-028-01～10 产品执行 NOT_RUN、READY=0。
 > 修订日期：2026-11-27\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -17,7 +17,7 @@
 - 状态变化先更新 SR 文件，再更新本索引和[实施状态总览](实施状态总览.md)。
 - 正式独立评审必须在 GitHub PR Review/Issue comment 留存完整 SHA 和逐 SR/AC 结果；独立性由评审模型/上下文判定，同一 GitHub 账号不构成否定理由。模型结论与平台 Review event 分开记录，详见[SR 管理规范 §8.3](../规范/SR%20管理规范.md#83-正式评审结果必须持久化到-github)。
 - ca-agent-next PR #1 是文档/设计基线 PR，不是任何 SR 的实现 PR。
-- PR #1、#32、#34 已合并；SR-001/SR-002/SR-003/SR-024 VERIFIED，SR-015 IMPLEMENTED，其余 24 项 DRAFT（设计均已提交待评审，非实施 READY）。
+- PR #1、#32、#34 已合并；SR-001/SR-002/SR-003/SR-024 VERIFIED，SR-015 IMPLEMENTED，其余 24 项 DRAFT（整项主状态；阶段 READY 见 §2.4）。
 
 ## 2. SR 清单
 
@@ -120,6 +120,34 @@
 
 [23 项独立设计评审汇总](https://github.com/odango-chan/ca-agent-next/issues/12#issuecomment-7210551945)中，前 10 项绑定 Head `42a7fe2ce7826b7cda74110e843f39401571299c`，后 13 项绑定 `ee73ad48f9cf4132561f7a72065086ef00bb3606`，共同 Base 为 `3c7c48383c52504a4861900bc1f8b731442f16c2`。19 项获限定或静态设计认可；[SR-029 #90](https://github.com/odango-chan/ca-agent-next/issues/90#issuecomment-7209221629) 与 [SR-007 #71](https://github.com/odango-chan/ca-agent-next/issues/71#issuecomment-7209489999) 要求修订，SR-026/027 缺外部输入。SR-028 由专项跟踪。AC-029-10 和 AC-007-05 的本轮修订等待新快照独立复评。
 
+### 2.4 其余 21 项的下一阶段
+
+工作依据为 PR #46 `8c4cb284627ef34d25e18051814897d274dcd346`。21 份 SR 的正文 blob 与各自独立评审快照一致。公共术语的一对一修订符合原批准范围；SR-007 的收据矩阵相关运行项留在后续阶段。完整 SR 主状态与单项 AC 的阶段 READY 分列。下表登记 4 项本仓代码子阶段、11 项中央只读子阶段和 6 项交接或等待项。各产品 AC 仍须提供运行证据。
+
+| SR | 阶段 | AC 范围 | 实施依赖、交付与排除 | 独立评审 |
+|---|---|---|---|---|
+| [SR-004](../SR/SR-004-已发布技能包导入.md) | 阶段 READY（本仓 Skill 链路） | AC-004-01/02/05/06A | SKILL.md-only 导入与旧作者源/旧包拒绝。03/04/06B 等 Compiler 与正式 Bundle。 | [#68](https://github.com/odango-chan/ca-agent-next/issues/68#issuecomment-7209411777) |
+| [SR-005](../SR/SR-005-技能目录与条件程序消费.md) | 阶段 READY（本仓 Skill 链路） | AC-005-01/03/04/06 | 不可变 Catalog、原子激活和 generation。集成读取 A 批 SR-004 的 candidate；02/05 等正式 CheckedExpr/DescriptorSet。 | [#69](https://github.com/odango-chan/ca-agent-next/issues/69#issuecomment-7209428208) |
+| [SR-006](../SR/SR-006-技能解析器与续跑选择.md) | 阶段 READY（本仓 Skill 链路） | AC-006-01～04/06/07 | 以本地 fixture 检查选择与精确续跑，接入 A 批 SR-005 generation。05 的正式 typed-input 互操作另验。 | [#70](https://github.com/odango-chan/ca-agent-next/issues/70#issuecomment-7209449444) |
+| [SR-008](../SR/SR-008-Echo%20垂直端到端示例.md) | 限定设计已认可，等待直接依赖 | AC-008-01/04（SKILL.md-only） | 已获限定设计认可。接入 A 批真实 Importer、Catalog、Resolver 后验证 Fake Model、文本 Delivery、重放与越权拒绝；02/03/05 等 Echo Interface、Bundle 和组合环境。 | [#72](https://github.com/odango-chan/ca-agent-next/issues/72#issuecomment-7210341882) |
+| [SR-009](../SR/SR-009-OpenAMSM%20SBI%20事件插件与二进制产物交接.md) | 模块设计已认可，待目标仓实施交接 | AC-009-01～06（测试 Host/peer） | 独立 Go Plugin 模块已获设计认可。目标仓 ca-openamsm-plugin 的实施分支和 Issue 需登记；联调验证由 SR-011 跟踪。Create 断言须覆盖 eventType；responseObligationId 由 Host 分配。 | [#73](https://github.com/odango-chan/ca-agent-next/issues/73#issuecomment-7210217168) |
+| [SR-010](../SR/SR-010-OpenAMSM%20工具插件与按需编解码集成.md) | 阶段 READY（本仓 Host Channel） | AC-010-01～05（Next Host Channel） | 仅实现 Next Python Host ArtifactStore/Channel 与 no-decode 路径。06a 等真实 Importer/Catalog/Runtime 三层入口，09 等固定共享 fixtures 和联测；06b/07/08 等正式包。 | [#74](https://github.com/odango-chan/ca-agent-next/issues/74#issuecomment-7210244694) |
+| [SR-011](../SR/SR-011-真实%20OpenAMSM%20创建修改释放端到端验证.md) | 限定设计已认可，等待直接依赖 | AC-011-06 静态架构断言 | 已获限定设计认可。组合实现具备后检查 Core 零业务分支；01～05 等同批 Bundle、Compiler Verify、Provider/Owner Package 和隔离对端。 | [#75](https://github.com/odango-chan/ca-agent-next/issues/75#issuecomment-7210271472) |
+| [SR-012](../SR/SR-012-Compiler设计归档与跨仓收敛.md) | 阶段 READY（中央只读核验） | AC-012-01 的 Next→源仓静态部分、03 | 固定 Compiler 源树清单 218/12 与历史边界；02 源仓链接替换等默认分支与源仓授权。 | [#76](https://github.com/odango-chan/ca-agent-next/issues/76#issuecomment-7210373026) |
+| [SR-013](../SR/SR-013-Compiler已检查when与发布产物.md) | 阶段 READY（中央只读核验） | AC-013-01 归档完整性 | 核对 PR #18 归档、58 项校验清单及原始报告。复跑单列；02/04 NOT_RUN，03/05/06 等 Compiler Owner 与正式契约。 | [#77](https://github.com/odango-chan/ca-agent-next/issues/77#issuecomment-7209276846) |
+| [SR-016](../SR/SR-016-工作台设计移交与条件编辑.md) | 阶段 READY（中央只读核验） | MIG-016-01、AC-016-09 设计对照 | 核对 Studio 迁移来源和状态模型；02～08/10 依赖正式包与 Compiler；六宿主实测另行登记。 | [#78](https://github.com/odango-chan/ca-agent-next/issues/78#issuecomment-7210318006) |
+| [SR-017](../SR/SR-017-业务插件设计移交.md) | 阶段 READY（中央只读核验） | AC-017-01～04 静态移交 | 核对固定源、F06 Event、Host/Plugin 权责和证据类型。实现归 SR-009。 | [#79](https://github.com/odango-chan/ca-agent-next/issues/79#issuecomment-7210393284) |
+| [SR-018](../SR/SR-018-业务所有者设计移交.md) | 阶段 READY（中央只读核验） | AC-018-01、02（除 Release 子项）、04 | 核对 Receipt/Proof/QoS/Reconcile 固定源；Release 子项需补原始证据，03 等 Owner 24/24 正式包。 | [#80](https://github.com/odango-chan/ca-agent-next/issues/80#issuecomment-7210419119) |
+| [SR-019](../SR/SR-019-仿真对端设计移交.md) | 阶段 READY（中央只读核验） | AC-019-01/02/04 静态移交 | 核对 Mock peer 源文件、场景与 fixture；03 运行测试另记。 | [#81](https://github.com/odango-chan/ca-agent-next/issues/81#issuecomment-7210443123) |
+| [SR-020](../SR/SR-020-参考宿主设计移交.md) | 阶段 READY（中央只读核验） | AC-020-01/02/04 静态审计 | 核对 Python 参考 Host 采用/排除表及历史/现行 Publisher 边界；03 的运行证据另记。 | [#82](https://github.com/odango-chan/ca-agent-next/issues/82#issuecomment-7210465672) |
+| [SR-021](../SR/SR-021-原生宿主设计移交.md) | 阶段 READY（中央只读核验） | AC-021-01/02/04 静态审计 | 核对 Go Host 来源、边界与晋级条件；03 的 ArtifactStore 实测另记。 | [#83](https://github.com/odango-chan/ca-agent-next/issues/83#issuecomment-7210492778) |
+| [SR-022](../SR/SR-022-执行内核设计移交.md) | 阶段 READY（中央只读核验） | AC-022-01/02/04 静态对照 | 核对参考 Runtime 的语义、采用/排除及权威划分；03 的执行测试另记。 | [#84](https://github.com/odango-chan/ca-agent-next/issues/84#issuecomment-7210514058) |
+| [SR-023](../SR/SR-023-技能作者源与语言规范移交.md) | 阶段 READY（中央只读核验） | AC-023-01～03 静态移交 | 以固定源核对历史作者规范、Release 与迁移目录；04 等新版 Compiler/Bundle/Importer。 | [#85](https://github.com/odango-chan/ca-agent-next/issues/85#issuecomment-7210543020) |
+| [SR-025](../SR/SR-025-MAS%20Owner%20Interface%20Package%20Publisher.md) | 限定设计已认可，等待直接依赖 | 中央 Owner Publisher 设计已认可 | AC-025-01～08 的执行等待新 Owner 24/24 源、正式 Package Schema/CLI 与 Compiler 验证入口；发布另需授权。 | [#86](https://github.com/odango-chan/ca-agent-next/issues/86#issuecomment-7209318291) |
+| [SR-026](../SR/SR-026-Codec公开工具发布.md) | BLOCKED_EXTERNAL_INPUT | BLOCKED_EXTERNAL_INPUT | Provider Owner 需交付 Codec 公开 Capability、唯一 Callable、输入输出 Schema、slot/mediaType、handler 和包版本。v1.2.0 与候选 PR #39 分别记录。 | [#87](https://github.com/odango-chan/ca-agent-next/issues/87#issuecomment-7209366603) |
+| [SR-027](../SR/SR-027-技能Bundle构建与发布.md) | BLOCKED_EXTERNAL_INPUT | BLOCKED_EXTERNAL_INPUT | ca-skills 需交付同提交五根作者源、Echo Interface、匹配 Compiler Release/argv/Verify 和 Bundle 发布授权。 | [#89](https://github.com/odango-chan/ca-agent-next/issues/89#issuecomment-7209388846) |
+| [SR-030](../SR/SR-030-Host%20Context%201.6.0%20Schema-only%20Interface%20Package%20Publisher.md) | 阶段 READY（中央只读核验） | AC-030-01 固定源，06/07 设计约束 | 核对 Subject Schema 原始字节与来源、Provenance 归属和 Demo 排除项。02～05、Publisher 实现与发布等待正式 Schema/languageTarget。 | [#91](https://github.com/odango-chan/ca-agent-next/issues/91#issuecomment-7209340753) |
+
 ## 3. 设计恢复与实施顺序
 
 ### 3.1 中央设计恢复批次（按各 SR 状态与依赖门禁执行）
@@ -145,7 +173,7 @@
 - 治理自动化：SR-001 VERIFIED；[PR #32](https://github.com/odango-chan/ca-agent-next/pull/32) MERGED（`7a0fac41e573021207ab8201bbc718718c451e50`）；AC-REV-01～10 PASS、80 tests OK、Run [45793590532](https://github.com/odango-chan/ca-agent-next/actions/runs/45793590532) success。SR-028 仍为 DRAFT；最新专项 Review #6083641266 为 CHANGES_REQUESTED，第五轮设计整改已推送，等待第六轮独立复评，uv 尚未实施。
 - Phase A：SR-002（VERIFIED；PR #23 已集成；AC-002-01～08 PASS；EX-01 仍 NOT_RUN）。
 - Phase B：**SR-003 VERIFIED（模块）**；[实施 PR #34](https://github.com/odango-chan/ca-agent-next/pull/34) 与 [治理回填 PR #41](https://github.com/odango-chan/ca-agent-next/pull/41) 均 MERGED。最终实施 Head `e8bcb1b` 与 Merge `32c7c1be` tree 一致；治理回填 Head `f3f59b54` 与 Merge `a899409` tree 一致。[CI #45815167442](https://github.com/odango-chan/ca-agent-next/actions/runs/45815167442)、[CI #45817800342](https://github.com/odango-chan/ca-agent-next/actions/runs/45817800342) 均 SUCCESS：Linux Python 3.12 + Windows Python 3.14 每平台 Plugin 87 / Host 52 / Review Context 80 tests PASS，Go Echo build、compileall 与证据采集 PASS；AC-003-01～04 均 PASS。系统 EX-02/03/04/18 仍 NOT_RUN；Provider v2 wire DTO 属 SR-010，不影响 SR-003 模块结论。
-- Phase C：SR-004 DRAFT / NOT READY；[设计 Issue #43](https://github.com/odango-chan/ca-agent-next/issues/43) OPEN，SR-004 v0.2.12 已定义 AC-004-01～06。SKILL.md-only 子路径可独立设计；新 Assurance 路径面向 **CA-SL 1.6.0**（Issue #40 / SR-029；NOT_RELEASED），还需 Compiler #61 / SR-013 唯一 Capability Binding Artifact 与 ca-skills SR-027 正式 Bundle 契约/正例。冻结 Artifact v1alpha5 与 Development v1alpha1 均不作为当前正例；未达到 READY，不创建实施 Issue、不提供 Harness 提示词。
+- Phase C：SR-004 的 SKILL.md-only 子阶段范围见 §2.4；Assurance 消费等待正式 Compiler 契约与 Bundle。
 - Phase D：SR-005、SR-006。
 - Phase E：SR-007。
 - Phase F：SR-008。
@@ -242,3 +270,4 @@
 | 2026-11-27 | 0.3.54 | GPT-6.2（ChatGPT） | 文档头、§2.1.1、§2.2、§3.2、修订记录 | 回填 SR-028 第四轮独立 Review #6083225844 的固定 Head/Base、0 P0/4 P1/3 P2、AC 设计结论与产品 NOT_RUN；记录第四轮整改已推送并等待新 Head 复评 | 不沿用已被第四轮复评覆盖的旧 7 P1/2 P2 结论，不提前提升 READY | Issue #12；PR #46；Review #6083225844；G02 v0.2.5；SR-028 v0.2.7 |
 | 2026-11-27 | 0.3.55 | GPT-6.2（ChatGPT） | 文档头、§2.1.1、§2.2、§3.2、修订记录 | 回填 SR-028 第五轮独立 Review #6083641266 的固定 Head/Base、0 P0/1 P1/3 P2 与 R028-17～20；记录第五轮整改已推送的 G02 v0.2.6 / SR-028 v0.2.8 版本与第六轮复评门槛，READY=0、产品 AC NOT_RUN 不变 | 防止 SR 索引沿用第四轮问题统计或将本轮文档整改误认为产品实施/READY | Issue #12；PR #46；Review #6083641266；G02 v0.2.6；SR-028 v0.2.8 |
 | 2026-11-27 | 0.3.56 | Codex / GPT-6 | §2.3 | 归档 23 项评审和两项整改的复评范围 | 区分原评审结论、设计修订与实施状态 | Issue #12、#71、#90；PR #46 |
+| 2026-11-27 | 0.3.57 | Codex / GPT-6 | 分阶段门槛与追踪 | 登记 21 项下一阶段与直接依赖 | 依独立评审启动限定范围 | Issue #12；PR #46 |

@@ -1,8 +1,10 @@
 # SR-009：OpenAMSM SBI 事件插件与二进制产物交接
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.7\
-> 状态：DRAFT（实施主状态）；独立模型 Review #6082541121（固定 Head 3d5f17b7）：CHANGES_REQUESTED，P1 R3-SR009-01/02 阻断 AC-009-04；READY=0，产品 AC NOT_RUN/BLOCKED。
+> SR 版本：0.2.8\
+> 状态：整项 DRAFT；模块设计已认可，待目标仓实施交接。AC-009-01～06（测试 Host/peer）。  
+> 下一步：独立 Go Plugin 模块已获设计认可。目标仓 ca-openamsm-plugin 的实施分支和 Issue 需登记；联调验证由 SR-011 跟踪。Create 断言须覆盖 eventType；responseObligationId 由 Host 分配。  
+> 阶段依据：[独立评审 #73](https://github.com/odango-chan/ca-agent-next/issues/73#issuecomment-7210217168)，评审 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-27\
 > 所属阶段：Phase G  
@@ -133,3 +135,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-27 | 0.2.5 | Codex / GPT-6 | 评审状态 | 登记第二轮限定范围及外部依赖 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
 | 2026-11-27 | 0.2.6 | GPT-6（ChatGPT） | §2、§5～5.2、设计依据、修订记录 | 扩展 AC-009-04 到 0xD4 与三种 N2 completion；模块验证和 Host Continuation/Owner 验证分离；按版本整理修订记录 | 关闭合法回调被误拒/误发新 mutation 的设计缺口，保持既定 AC 数量与实施非目标 | Issue #12；PR #46；SR-009；F06 §EC04 |
 | 2026-11-27 | 0.2.7 | GPT-6（ChatGPT） | §2、§5～5.2、设计依据、修订记录 | 移除 Plugin 对 Run/responseObligation/continuation state 的持有要求；引用 F06 冻结的三个 Event type、payload.request、discriminator、Content-ID/slot 与 Host-owned continuation 关联规则 | 处理独立模型 Review #6082541121 的 P1 R3-SR009-01/02，避免 IPC 违反 Host-only Run 边界和实现者猜测 Event 契约 | Issue #12；PR #46；F06 v0.3.1；Review #6082541121 |
+| 2026-11-27 | 0.2.8 | Codex / GPT-6 | 文档头 | 登记模块设计已认可，待目标仓实施交接及 AC 范围 | 按单项独立评审推进 | Issue #12、#73；PR #46 |

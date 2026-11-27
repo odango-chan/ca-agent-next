@@ -1,8 +1,10 @@
 # SR-027：技能Bundle构建与发布
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.3\
-> 状态：DRAFT（实施主状态）；第二轮及本次自评均 BLOCKED_EXTERNAL_INPUT（1.6.0 五根作者提交、Echo Interface、Compiler Release/argv 未交付）；当前只可审查五根构建矩阵与发布原子性，非实施 READY。
+> SR 版本：0.2.4\
+> 状态：整项 DRAFT；BLOCKED_EXTERNAL_INPUT。BLOCKED_EXTERNAL_INPUT。  
+> 下一步：ca-skills 需交付同提交五根作者源、Echo Interface、匹配 Compiler Release/argv/Verify 和 Bundle 发布授权。  
+> 阶段依据：[独立评审 #89](https://github.com/odango-chan/ca-agent-next/issues/89#issuecomment-7209388846)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。
 > 创建日期：2026-11-26  
 > 修订日期：2026-11-27\
 > 上游需求：IR-006  
@@ -100,3 +102,4 @@ CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验�
 | 2026-11-27 | 0.2.1 | Codex / GPT-6 | 评审状态 | 登记第二轮限定范围及外部依赖 | 未单独记录（历史原因未提供） | Issue #12，PR #46 |
 | 2026-11-27 | 0.2.2 | GPT-6（ChatGPT） | §5.1、修订表 | 明确五根作者提交、Echo Interface、Compiler Release/argv 与发行授权的生产者边界，整理历史六列修订记录 | 允许审查固定设计而不臆造缺失发布物或将下游联验误作上传门槛 | Issue #12；PR #46；SR-027 |
 | 2026-11-27 | 0.2.3 | GPT-6（ChatGPT） | 修订记录 | 将历史记录统一为七列并保留原始文字及原始关联，修正非规范行的分隔符 | 确保修订表可由文档校验器完整解析；不影响设计语义及 READY 主状态 | Issue #12；PR #46；SR-027 |
+| 2026-11-27 | 0.2.4 | Codex / GPT-6 | 文档头 | 登记BLOCKED_EXTERNAL_INPUT及 AC 范围 | 按单项独立评审推进 | Issue #12、#89；PR #46 |
