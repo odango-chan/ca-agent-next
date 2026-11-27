@@ -1,7 +1,7 @@
 # CA-SL 1.6.0 完整语言规范（中央设计稿）
 
 > 文档类型：CA-SL 作者语言规范（中央规范性设计稿）
-> 文档版本：0.1.7
+> 文档版本：0.1.8
 > 语言版本：CA-SL 1.6.0
 > languageTarget 候选：connectionagent.io/v1.6.0（本设计建议值；发布前由 ca-skills 与 Compiler Owner 在正式 Schema / Golden 中确认）
 > 状态：**DRAFT / REVIEW_REQUESTED**；未发布、未冻结、不得作为已发布产品规范
@@ -27,7 +27,7 @@ CA-SL 1.6.0 定义 Skill 可选 Assurance 的作者语言。它不定义 SKILL.m
 4. 历史 v1alpha5 文件、Schema、Golden、Release Record 和字节保持只读；其设计可作为重新审查语义的来源，但不是新语言的规范性输入。
 5. Skill-facing 接口只声明 Capability。每个公开 Capability 与一个公开 Callable 双向一对一；Callable ID 只存在于 Package / Compiler / Runtime / Provider 内部。
 6. Procedure 的 Operation / Observation 是 Node 阶段，不是作者级 Operation ID。
-7. Assurance 是可选的；存在但无效时必须拒绝导入，不得降级成 SKILL.md-only Skill。
+7. Assurance 是可选的；存在但无效时必须拒绝导入，不得降级成无 Assurance Package。
 8. Demo 不增加生产 Admission、签名、额外包级 hash、Trust Registry、复杂 IAM 或完整生产 DFX。
 
 ## 2. 语言分层与包形状
@@ -460,3 +460,4 @@ Host Context Schema-only Package 仍只经 `Contract.contexts` 引用，与 Open
 | 2026-11-27 | 0.1.5 | ChatGPT / GPT-6.2 | §12、§19 | 保留本地 G.4 有限子集，增加 pin 后 OAS3 Schema Component 的 dialect-aware 直接引用；移除强制 Adapter | 遵循原版 OpenAPI 直接引用、不重写标准 | IR-009；Issue #47；SR-013/031 |
 | 2026-11-27 | 0.1.6 | GPT-6.2（ChatGPT） | §2、§3、§5、§6、§8、§14、§16 | 将 schemas/scripts 提升为 Skill Package 根目录共享资源；定义 YAML Schema 源、Script Registry、Host Script Execution Capability 与 Assurance / LLM 共用资源路径 | 修复可选 Assurance 导致 LLM-only Skill 无法使用 Schema / Script 的结构矛盾，禁止模型任意 Python 执行 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.1.7 | GPT-6.2（ChatGPT） | §7～§8 | 明确业务 Operation Capability 与 `operation.script` 的互斥语法分支，避免把 Package-local Script 误列为业务 Capability | 保持 Capability-only 授权模型，同时让 Procedure 明确引用共享 Script Registry | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.1.8 | GPT-6.2（ChatGPT） | §2、§7 | 统一无 Assurance Package 的术语，避免误读为只能包含 SKILL.md 单文件 | 明确无 Assurance 包仍可携带共享 Schema / Script / references / assets | Issue #49；IR-008；SR-032 |
