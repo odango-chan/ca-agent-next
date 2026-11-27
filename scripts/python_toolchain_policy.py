@@ -16,9 +16,7 @@ import tomllib
 from pathlib import Path
 from typing import Any, Iterable
 
-POLICY_SCRIPT_PATH = "scripts/python_toolchain_policy.py"
 BASELINE_MANIFEST_PATH = ".github/python-toolchain-baseline.json"
-POLICY_TEST_PATH = "tests/test_python_toolchain_policy.py"
 
 ROOT_TOOLCHAIN_FILES = {
     "pyproject.toml",
