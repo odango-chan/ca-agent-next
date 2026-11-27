@@ -1,10 +1,10 @@
 # SR-012 Compiler 设计归档与跨仓收敛
 
-> 文档版本：0.1.10\
+> 文档版本：0.1.11\
 > 状态：整项 DRAFT；阶段 READY（中央只读核验）。AC-012-01 的 Next→源仓静态部分、03。  
 > 下一步：固定 Compiler 源树清单 218/12 与历史边界；02 源仓链接替换等默认分支与源仓授权。  
 > 阶段依据：[独立评审 #76](https://github.com/odango-chan/ca-agent-next/issues/76#issuecomment-7210373026)，评审 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
-> 工作项：[阶段工作项 #95](https://github.com/odango-chan/ca-agent-next/issues/95)。[已核验的固定源证据](https://github.com/odango-chan/ca-agent-next/issues/95#issuecomment-7210746570)。
+> 工作项：[阶段工作项 #95](https://github.com/odango-chan/ca-agent-next/issues/95)。[本轮固定源静态核验报告](../issue-95-fixed-source-handoff/SR-012.md)；历史首批证据见 [Issue #95 评论](https://github.com/odango-chan/ca-agent-next/issues/95#issuecomment-7210746570)。
 > 上游 IR：IR-006  
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-27\
@@ -65,6 +65,17 @@ Issue [Next #2](https://github.com/odango-chan/ca-agent-next/issues/2)；依赖�
 
 **执行及证据**：设计 AC 以固定中央设计 HEAD、源仓 SHA、准确文件/符号/静态 diff 与逐项对照表取证；若此轮未实际读/跑某源代码或测试，则记录 `NOT_RUN` 而不是 PASS。跨仓源仓代码修改必须有独立实施 Issue/PR、授权并在相应产品 SR 留痕。已有的 SRxxx-A/B/... 原验收保留作细项追踪，不能据此把模块产品或 Next E2E 状态提升为 VERIFIED。
 
+## 本轮固定源静态核验（Issue #95）
+
+[完整报告](../issue-95-fixed-source-handoff/SR-012.md)基于固定 Next Head `93f1389e7c5968cd30e8a74137207094864ecca0` 与 Compiler `255ab85fa5abb4b0bf36656bf64250cafebf45cb`。实际 `git ls-tree` / `Compare-Object` 为 218 个 docs 文件、12 个 docs/design 文件，双向集合差集为空，并记录 12 个 blob SHA。三份移交正文已实际执行 `git diff --no-index`，不宣称逐字节一致。
+
+- AC-012-01：仅 Next→源仓静态部分 PASS；源仓→Next 链接仍 NOT_RUN。
+- AC-012-02：NOT_RUN；没有修改外部仓或执行其文档门禁。
+- AC-012-03：冻结决策与 Harness 门槛的静态对照 PASS；真实 Harness、1.6.0 Build/Verify 和旧包拒绝测试 NOT_RUN。
+- 差异：Compiler #61 仍以 v1alpha5 为 when 目标，Next 的 1.6.0-only 新目标尚需 Compiler Owner 与正式 Schema/Release 闭合。
+
+本记录不改变 SR 的 DRAFT 主状态，也不代表产品实施或 E2E 完成。
+
 ## 修订记录
 
 
@@ -81,3 +92,4 @@ Issue [Next #2](https://github.com/odango-chan/ca-agent-next/issues/2)；依赖�
 | 2026-11-27 | 0.1.8 | GPT-6（ChatGPT） | 第三轮设计自评/历史修订表 | Compiler 固定源 docs/design 12 条、docs 218 文件已独立从 Git tree 对账；仅在 Next 中央链接进目标默认分支后替换源仓活动设计；将第二轮结论保留为历史、登记第三轮独立复评候选并按版本整理记录 | 设计范围可供外部评审而不提前授权代码实施或夸大 AC 状态 | Issue #12；PR #46；SR-012 |
 | 2026-11-27 | 0.1.9 | GPT-6（ChatGPT） | 文档头、评审状态、修订记录 | 将第三轮独立模型 Review #6082541121 的限定结论替换第三轮自评状态；明确只认可固定源清单静态核对，源仓正文替换仍未闭合 | 以可访问 GitHub Review 为准，不把仓内自评或旧评审登记冒充独立审批 | Issue #12；PR #46；Review #6082541121 |
 | 2026-11-27 | 0.1.10 | Codex / GPT-6 | 文档头 | 登记阶段 READY（中央只读核验）及 AC 范围与工作项 #95 | 按单项独立评审推进 | Issue #12、#76；PR #46 |
+| 2026-11-27 | 0.1.11 | kimi-k3.1-pro | 本轮固定源静态核验、文档头 | 回填 218/12 文件集合、12 个 blob、三份正文实际差异与限定 AC 结果，链接完整报告 | 固定源中央移交可复核；不改变主状态或产品验收 | Issue #95；PR #46 |
