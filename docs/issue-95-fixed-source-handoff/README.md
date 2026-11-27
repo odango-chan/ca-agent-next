@@ -21,9 +21,9 @@
 | SR-017 | 业务 Plugin（进行中） | AC-017-01～04 |
 | SR-018 | Owner（进行中） | AC-018-01、02（除 Release）、04 |
 | SR-019 | Mock AMF（进行中） | AC-019-01/02/04 |
-| SR-020 | Python Host（进行中） | AC-020-01/02/04 |
-| SR-021 | Go Native Host（进行中） | AC-021-01/02/04 |
-| SR-022 | Runtime 执行内核（进行中） | AC-022-01/02/04 |
+| SR-020 | [Python Host](SR-020.md) | AC-020-01/02/04 静态 PASS；03 NOT_RUN |
+| SR-021 | [Go Native Host](SR-021.md) | AC-021-01/02/04 静态 PASS；03 NOT_RUN |
+| SR-022 | [Runtime 执行内核](SR-022.md) | AC-022-01/02/04 静态 PASS；03 NOT_RUN |
 | SR-023 | Skill 作者源与语言规范（进行中） | AC-023-01～03 |
 | SR-030 | Host Context Schema-only Publisher（进行中） | AC-030-01、06/07 设计约束 |
 
