@@ -1,7 +1,7 @@
 # SR-025：MAS Owner 1.6.0 Capability-first Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.16
+> SR 版本：0.1.17
 > 状态：整项 DRAFT；限定设计已认可，等待直接依赖。中央 Owner Publisher 设计已认可。  
 > 下一步：AC-025-01～08 等待 Owner Publisher 对 `SSM.PARSE_N1_MODIFY`/`SSM.PARSE_N1_RELEASE` 的正式处置签认、冻结公开 1:1 最终成员数、正式 Package Schema/CLI 与 Compiler #62 验证入口；发布另需授权。  
 > 阶段依据：[独立评审 #86](https://github.com/odango-chan/ca-agent-next/issues/86#issuecomment-7209318291)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。
@@ -10,7 +10,7 @@
 > 所属阶段：外部 Publisher 实施移交
 > 上游需求：[IR-006](../IR/IR%20总登记册.md#ir-006)
 > 功能：F03.05 / EC03（消费方关联 F09.07）
-> 设计依据：[F03.05 Tool Interface / Provider 设计](../设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) v0.4.4；[F09 新版 1.6.0 设计 §5～§9](../设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md) v0.3.16；[SR-015](SR-015-工具契约设计移交.md)；[EC02 新 1.6.0 Compiler 设计](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.13 与 [SR-013](SR-013-Compiler已检查when与发布产物.md)；历史 Compiler v2.1.0 Development BuildRequest 仅供审计
+> 设计依据：[F03.05 Tool Interface / Provider 设计](../设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) v0.4.8；[F09 新版 1.6.0 设计 §5～§9](../设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md) v0.3.19；[SR-015](SR-015-工具契约设计移交.md)；[EC02 新 1.6.0 Compiler 设计](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.13 与 [SR-013](SR-013-Compiler已检查when与发布产物.md)；历史 Compiler v2.1.0 Development BuildRequest 仅供审计
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：Provider v2 重构、Host Runtime Binding 重构、生产级 Trust/Admission/签名或额外包完整性体系；历史 v1alpha4/v1alpha5 Development Bundle 仅供源审计
 
@@ -37,7 +37,7 @@
 ### 2.1 新发布契约（需 Owner/Compiler 正式冻结）
 
 - 唯一语言目标 **CA-SL 1.6.0**；准确 `languageTarget`、Interface Package `apiVersion`、Schema/文件名、Publisher package `version` 和 Builder CLI 由 ca-skills / Compiler / Owner 发布，不得假定旧 `connectionagent.io/v1alpha5`、`interface-package/v1alpha1`、旧 `1.0.0` 仍合法。
-- 目标 Owner Skill-facing Capability ↔ 公开 Callable 严格双向一对一；**最终数量尚未由 Owner Publisher 冻结**：两项历史 N1 Parser `SSM.PARSE_N1_MODIFY`、`SSM.PARSE_N1_RELEASE` 必须分别签认移除（候选 22/22）、或重构为只接收已验证 Codec Result 的纯业务 READ（保留两项时候选 24/24）；其他决策重新计数。**历史 25 个 Owner ToolCatalog contracts / 24 Capability IDs 与 25 memberships 仅供只读审计**，不能当作 1.6.0 正式发布合同。`MAS.RECONCILE` 仅 Runtime Coordinator internal-only，不属于 Skill-facing Capability；不得作为 NAS/NGAP Codec fallback。详见 [SR-029 §3/§6](SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md)。
+- 目标 Owner Skill-facing Capability ↔ 公开 Callable 严格双向一对一；**最终数量尚未由 Owner Publisher 冻结**：两项历史 N1 Parser `SSM.PARSE_N1_MODIFY`、`SSM.PARSE_N1_RELEASE` 必须分别签认。双移除候选 22/22；一项移除、一项重构为只接收已验证 Codec Result 的纯业务 READ 候选 23/23；两项均重构为纯业务 READ 候选 24/24；任一项未签认则不得冻结成员数或发布。其他导出变化重新计数。**历史 25 个 Owner ToolCatalog contracts / 24 Capability IDs 与 25 memberships 仅供只读审计**，不能当作 1.6.0 正式发布合同。`MAS.RECONCILE` 仅 Runtime Coordinator internal-only，不属于 Skill-facing Capability；不得作为 NAS/NGAP Codec fallback。详见 [SR-029 §3/§6](SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md)。
 - 原 `mas.se.events.emit` 一对二（`SE.EMIT_EVENTS`、`SE.EMIT_RELEASE_EVENT_C`）必须拆为 `mas.se.establishment-event.record` 和 `mas.se.release-event-marker.write`：Input Schema、Effect、Evidence Guarantee 分开保留，不能伪合并为一种动态 Callable。
 - `MAS.RECEIPT_QUERY` 是可对 Skill 授权的 READ Capability/Callable；`MAS.RECONCILE` 虽保留 Owner ToolCatalog/Runtime Bindings，但任何普通 Skill/LLM/Studio 补全不得将其当作公开 Capability。所有公开 Callable 都应恰好有一个 Capability，只有 Reconcile 这类明确 internal-only callable 被排除于公开双射。
 - Owner 权威发布应明确每个 Capability 的全局 ID、唯一 Callable ID、kind、Effect、输入/输出 Schema、Evidence / Receipt/Commit Proof 描述和 Owner identity。Publisher 只验证并输出 Owner 已冻结的事实；不能由 ca-client-tools 根据旧数组猜测新 Identity/Schema、生成新业务语义或改变 Owner guarantee。
@@ -70,10 +70,10 @@ Owner `v1alpha4` source 的 `tool-catalog.yaml` 含 25 published contracts、旧
 
 | AC | 正/负输入与操作 | 预期 |
 |---|---|---|
-| AC-025-01 | 固定 Owner 新发布源 SHA、两项 Parser 的正式去留/纯业务 READ 签认、最终 Capability↔Callable 一对一 mapping、与历史 24/25 清单差异 | 有可复核 Owner 权威发布来源与签认；22/22/24/24 只有条件候选，历史 24/25 仅审计 |
+| AC-025-01 | 固定 Owner 新发布源 SHA、两项 Parser 分别作出的移除/纯业务 READ 签认、最终 Capability↔Callable 一对一 mapping、与历史 24/25 清单差异 | 有可复核 Owner 权威发布来源与两项独立签认；22/22、23/23、24/24 仅为条件候选，任一未签认则最终数量未冻结且不得发布 |
 | AC-025-02 | 合法 1.6.0 Package ID/版本/Publisher/languageTarget 与旧 v1alpha5 / v1alpha1 反例 | 仅正式新 Schema 验证通过；旧/未知版本拒绝 |
 | AC-025-03 | Schema/Evidence/Callable 闭包、引用完整性；缺 $ref、重复导出 | 合法闭包通过，丢失/重复任何成员 fail-closed |
-| AC-025-04 | 按 Owner 正式冻结成员数做双向一对一；旧一对二 `mas.se.events.emit`、重复 Callable、Reconcile Skill-facing 与旧 Parser Codec fallback 反例 | 全部异常拒绝，正确拆分 + internal-only 保留，不依赖未签认的固定 24/24 |
+| AC-025-04 | 按 Owner 分别签认后的实际成员数做双向一对一；覆盖双移除、一删一留、双保留为纯业务 READ、任一未签认，以及旧一对二 `mas.se.events.emit`、重复 Callable、Reconcile Skill-facing 与旧 Parser Codec fallback 反例 | 仅已签认且正确拆分的 1:1 Package 通过；未签认/重复/一对多/Codec fallback 均拒绝，不依赖固定 24/24 |
 | AC-025-05 | 两个不同 Event Schema/Guarantee、Receipt Query/Receipt Proof、Reconcile 原始 invocation | 两种事件不能互换；READ 与内部 Reconcile 不混用 |
 | AC-025-06 | 同一 Owner 输入重复构建 + 来源包缺失或损坏 | 输出稳定可重验；失败零部分可发布资产 |
 | AC-025-07 | **正式新 1.6.0** Compiler Schema/Build/Verify 使用一个 Capability-first MAS synthetic Skill | 通过**唯一新 1.6.0 Compiler** 的正式 Check/Build/Verify 接口；历史 `build-development` / `verify-development` 不能算 PASS；记录精确命令、结果与诊断 |
@@ -133,3 +133,4 @@ Owner `v1alpha4` source 的 `tool-catalog.yaml` 含 25 published contracts、旧
 | 2026-11-27 | restore-0.1.11（历史分支） | GPT-6.2（ChatGPT） | 文档头 | 将 F09 §4.5 权威设计引用更新至 v0.3.13 | 保持 Publisher 与 F09 最新正式设计版本一致；SR-025 READY、当前 v1alpha5 + Owner v1alpha4 输入和 package version 1.0.0 均不变 | Issue #53；F09 v0.3.13；SR-025；ca-client-tools #43 |
 | 2026-11-28 | 0.1.16 | GPT-6（ChatGPT） | 文档头、§1～6、修订记录 | 合并 #46 新 1.6.0 Owner Publisher 架构与恢复分支历史 Development READY/固定源记录；Parser 22/22/24/24 仅条件候选，正式数量需 Owner 签认，保留 Codec 唯一解码与新 Compiler #62 门槛 | 避免把已合 #45 后的历史 Development Publisher 意外激活为 1.6.0 产品路径 | Issue #12；#40；#113；PR #45；#46 |
 | 2026-11-28 | 0.1.16-integration-2 | GPT-6（ChatGPT） | 历史固定源、修订记录 | 补齐恢复分支不可变 Owner manifest/blob/buildIdentity 与逐 export 身份规则；标明仅历史 Development Package 审计 | 保存 Owner 来源可追溯性且不绕过两个 N1 Parser 正式签认 | Issue #12；#40；#95；#113；PR #45；#46 |
+| 2026-11-28 | 0.1.17 | GPT-6（ChatGPT） | §2.1、AC-025-01/04、修订记录 | 补齐 Owner 两项 Parser 分别签认的双移除、混合、双保留和未签认矩阵 | 让 Publisher 依据 Owner 实际冻结成员数验收，不强制不存在的固定 24/24 契约 | Issue #12；PR #46；Review #6095143611 |
