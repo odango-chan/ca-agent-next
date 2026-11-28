@@ -534,7 +534,7 @@ def _workflow_step_records(content: str) -> list[dict[str, str | None]]:
 
         if not in_jobs:
             field = _yaml_key_value(body) if indent == 0 else None
-            if field and field[0] == "jobs" and not field[1]:
+            if field and field[0] == "jobs" and not _yaml_scalar(field[1]):
                 in_jobs = True
                 jobs_indent = indent
                 job_indent = None
@@ -568,7 +568,7 @@ def _workflow_step_records(content: str) -> list[dict[str, str | None]]:
                 continue
             if job_indent is not None and indent == job_indent + 2:
                 field = _yaml_key_value(body)
-                if field and field[0] == "steps" and not field[1]:
+                if field and field[0] == "steps" and not _yaml_scalar(field[1]):
                     in_steps = True
                     steps_indent = indent
                     step_indent = None
@@ -610,7 +610,7 @@ def _workflow_step_records(content: str) -> list[dict[str, str | None]]:
             elif first_field and first_field[0] == "with":
                 with_indent = indent + 2
                 inline_version = re.search(
-                    r"(?:^|[,{]\\s*)version\\s*:\\s*([^,}]+)",
+                    r"(?:^|[,{]\s*)version\s*:\s*([^,}]+)",
                     first_field[1],
                 )
                 if inline_version:
@@ -631,7 +631,7 @@ def _workflow_step_records(content: str) -> list[dict[str, str | None]]:
             elif key == "with":
                 with_indent = indent
                 inline_version = re.search(
-                    r"(?:^|[,{]\\s*)version\\s*:\\s*([^,}]+)",
+                    r"(?:^|[,{]\s*)version\s*:\s*([^,}]+)",
                     value,
                 )
                 if inline_version:
