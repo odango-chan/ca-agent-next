@@ -1,7 +1,7 @@
 # SR-027：技能Bundle构建与发布
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.3.4\
+> SR 版本：0.3.5\
 > 状态：整项 DRAFT；中央作者源与 Bundle 构建机器契约已固定，DESIGN_REVIEW_REQUESTED；产品 AC 仍 NOT_RUN，ca-skills 1.6.0 作者 Schema/Golden、Compiler 3.0.0 Release 与五根作者源尚未发布。
 > 下一步：独立评审本轮五根作者源、Compiler pin、release/bundle-inputs.yaml、Bundle 目录与原子 ZIP 契约；达到 SR-027 READY 后再创建 ca-skills 实施 Issue。
 > 阶段依据：[独立评审 #89](https://github.com/odango-chan/ca-agent-next/issues/89#issuecomment-7209388846)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。
@@ -54,7 +54,7 @@ CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验�
 
 **作者源与构建矩阵：**五个 Skill 根来自同一个 ca-skills commit。echo-guide 是 SKILL.md-only，不调用 Compiler；其余四个 Assurance 根分别使用同一 Compiler 3.0.0 执行 Check、DependencyInspection、Build、Verify。when 只允许写在 assurance/contract.yaml 顶层，不得写入 SKILL.md Front Matter。assurance/ 源文件不得进入发布包。
 
-**归属边界：**ca-skills 只负责作者源、CI 调度、Bundle 组装和发布；Compiler 负责单个 Assurance Skill 的 Runtime Artifact，不组装 Bundle；Next 负责 Runtime 导入与选择，不调用 Compiler。Echo Interface Package 由 Next / SR-008 产生；MAS Owner Capability 和 Host Context Schema-only Package 分别由 SR-025 / SR-030 产生。SR-026 正式 Codec READ 是 1.6.0 Skill 在 T2 的**唯一 NAS/NGAP 协议解码路径**，不得回退至历史 MAS Owner N1 Parser，也不得让 Owner 对原始 N1/N2 bytes 二次协议解码。两项历史 `mas.ssm.n1.modify.parse` / `mas.ssm.n1.release.parse` 的新公开身份及用途由 Owner 按 SR-029 §3.1 签认：方案 A 移出 Skill-facing 契约（条件性 Owner 22/22）；或方案 B 改造为只消费已验证 Codec Result 的纯业务 READ 并发布新的 ID/Schema/Evidence（若保留两项且满足双向一对一，条件性 Owner 24/24）。此处不代 Owner 选择，也不将历史 Callable 直接计为新 Bundle 的有效 Grant。Create 所需消息、Modify 0xC9 与 Release 0xD1 等 Profile 分别资格化，缺正式 Publisher 资产时相应 Bundle 根保持 BLOCKED / NOT_RUN。
+**归属边界：**ca-skills 只负责作者源、CI 调度、Bundle 组装和发布；Compiler 负责单个 Assurance Skill 的 Runtime Artifact，不组装 Bundle；Next 负责 Runtime 导入与选择，不调用 Compiler。Echo Interface Package 由 Next / SR-008 产生；MAS Owner Capability 和 Host Context Schema-only Package 分别由 SR-025 / SR-030 产生。SR-026 正式 Codec READ 是 1.6.0 Skill 在 T2 的**唯一 NAS/NGAP 协议解码路径**，不得回退至历史 MAS Owner N1 Parser，也不得让 Owner 对原始 N1/N2 bytes 二次协议解码。两项历史 `mas.ssm.n1.modify.parse` / `mas.ssm.n1.release.parse` **必须分别**由 Owner 按 SR-025 §2.1 / SR-029 §3.1 签认：双移除旧公开 Parser → 条件性 Owner **22/22**；移除一项、将另一项重定义为只消费验证后 Codec Result 的纯业务 READ → 条件性 **23/23**；两项均重定义为业务 READ → 条件性 **24/24**。如有其他导出变化重新计算；保留业务 READ 时均须正式发布新的 ID/Schema/Evidence。上述均非已冻结的实际发布数量。此处不代 Owner 选择，也不将历史 Callable 直接计为新 Bundle 的有效 Grant。Create 所需消息、Modify 0xC9 与 Release 0xD1 等 Profile 分别资格化，缺正式 Publisher 资产时相应 Bundle 根保持 BLOCKED / NOT_RUN。
 
 **单个 Skill 发布目录：**
 
@@ -153,3 +153,4 @@ ca-skills / SR-031 原样发布 OpenAMSM 实际支持版本的 OpenAPI 3.0 Sourc
 | 2026-11-28 | 0.3.2 | GPT-6（ChatGPT） | §2.1、§2.2、§5.1、修订记录 | 将正式 Codec Package、消息 Profile、Output Schema 和 Source Bundle 纳入精确 Bundle pin；明确 MAS Owner/Codec/Host 生产者交接；新增缺 Codec、错 Profile、旧 Parser fallback 负例 | 避免 1.6.0 Bundle 只锁 Owner/Host 而遗漏 Codec 造成 T2 运行期动态扩权与错误解码 | Issue #40/#47/#113；SR-026/027/029/031；PR #125 |
 | 2026-11-28 | 0.3.3 | GPT-6（ChatGPT） | §6、文档头、修订记录 | 区分 Skill-owned requestSchema 本地 G.4 闭合根与纯单 $ref OAS3 根别名；仅本地节点按 G.4 校验，原件保留 OAS3 dialect | 与 SR-031/CA-SL 1.6.0 的原版标准引用设计一致，禁止 Publisher/Compiler 误加 G.4 闭合规则或改写 OAS3 | Issue #47/#40；SR-013/027/031；PR #125 |
 | 2026-11-28 | 0.3.4 | GPT-6（ChatGPT） | §3、文档头、修订记录 | 修复 AC-027-05 三列表格与两列表头不一致，保留 NOT_RUN / BLOCKED 原判定 | 确保 SR-027 验收矩阵可机器解析，不改变产品 AC 状态 | Issue #40/#47；SR-027；PR #125 |
+| 2026-11-28 | 0.3.5 | GPT-6（ChatGPT） | §2.2、文档头、修订记录 | 对齐 SR-025 的双 Parser 逐项签认矩阵，补充一删一改的条件性 23/23 与未签认阻断 | 防止把 22/22、24/24 错写成唯一双选项，误拒合法 Owner 混合裁决 | Issue #40/#113；SR-025/027/029；PR #125 |
