@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.42\
+> 文档版本：0.2.43\
 > 状态：整项 DRAFT；阶段 READY（中央只读核验，仅 AC-013-01 历史隔离 PoC/归档完整性范围）；AC-013-01 固定归档完整性与历史 PoC 独立复验 PASS（Issue #102；PR #110 修复快照 `39ccb00be8d14f7f1be7b02061454e9b927471b8`）；`vet.log` NOT_ARCHIVED / NOT_INDEPENDENTLY_VERIFIABLE；AC-013-02～06 产品仍 NOT_RUN/BLOCKED；AC-013-07 BLOCKED / NOT_RUN；when 唯一来自 assurance/contract.yaml。
 > 下一步：按本 SR 已冻结的 CA-SL 1.6.0 / Compiler 3.0.0 / API /2 契约推进 AC-013-02～07 的正式输入与独立评审；AC-013-01 仅为历史隔离 PoC/归档完整性 PASS，不授权 Compiler 产品实现、发布或 Next Runtime 验收。
 > 阶段依据：[独立评审 #77](https://github.com/odango-chan/ca-agent-next/issues/77#issuecomment-7209276846)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
@@ -10,7 +10,7 @@
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：Next 消费端实现、生产准入、Owner Trust 治理、自动发布及真实 5GC/MAS 资格。
 
-上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。功能归属：EC02 Compiler、F08 技能编译与发布；消费端关联 F02。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.21、[F08 技能编译与发布设计说明书](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.33、[F02 Skill 管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md) v0.4.3、[CA-SL 1.6.0 中央语言设计](../规范/CA-SL%201.6.0完整语言规范.md) v0.2.9、[SKILL 作者规范](../规范/SKILL作者规范.md) v0.2.4。
+上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。功能归属：EC02 Compiler、F08 技能编译与发布；消费端关联 F02。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.22、[F08 技能编译与发布设计说明书](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.34、[F02 Skill 管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md) v0.4.3、[CA-SL 1.6.0 中央语言设计](../规范/CA-SL%201.6.0完整语言规范.md) v0.2.10、[SKILL 作者规范](../规范/SKILL作者规范.md) v0.2.4。
 
 目标仓：odango-chan/ca-skill-compiler。实施 Issue：[Compiler #62](https://github.com/odango-chan/ca-skill-compiler/issues/62)。文档刷新 Issue：[Next #14](https://github.com/odango-chan/ca-agent-next/issues/14)。目标代码基线：Compiler v2.1.0，commit 255ab85fa5abb4b0bf36656bf64250cafebf45cb。历史来源：[ca-skills #88](https://github.com/odango-chan/ca-skills/pull/88) 已合并，正式发布身份见 [ca-skills release record](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs/releases/ca-sl-v1alpha5.md)。
 
@@ -100,8 +100,8 @@ SR-013 整体仍为 DRAFT。AC-013-01 的隔离 PoC 完成不自动把 SR-013 �
 - 证据单：docs/参考与审计/fixtures/ac-013-01/isolated-poc/EVIDENCE.md。
 - 产物目录：docs/参考与审计/fixtures/ac-013-01/isolated-poc/artifacts/，含 cases.json 及逐用例 .checked.pb / .types.pb。
 - 隔离源码：compiler-255ab85/internal/compiler/ac013_poc_test.go。
-- [PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)已核对 58 个文件与 SHA256SUMS；归档报告为 Go/Python 18/18，2026-11-28 独立 detached checkout 复验 PASS（58/58、SHA256SUMS、audit_evidence.py、Python 18/18）。原始提交 78dddd5 的追溯保留在 PR #18 的提交 trailer。
-- 已检查归档清单与 Git blob；PR #18 报告在干净 Compiler 基线独立复跑。当前审计未重新执行 Go/Python。
+- 修复前归档的历史来源为 [PR #18](https://github.com/odango-chan/ca-agent-next/pull/18)；当前修复后归档以 [PR #115 固定证据目录](../参考与审计/fixtures/ac-013-01/isolated-poc/README.md) 为唯一入口，完整 59 Blob（58 个清单覆盖文件 + SHA256SUMS）已纳入本分支。Issue #102 独立 detached checkout 复验 58/58、SHA256SUMS、audit_evidence.py、Python 18/18 PASS；原始提交 78dddd5 仅保留历史追溯。
+- Issue #102 的 detached checkout 复验覆盖归档完整性、58/58 清单、SHA256SUMS、audit_evidence.py 与 Python 18/18；本轮未重新运行 Go 产品测试。`vet.log` 未归档，因此历史 `go vet` 退出码不可独立复核，保持 NOT_ARCHIVED / NOT_INDEPENDENTLY_VERIFIABLE。
 
 ### 3.4 未覆盖边界
 
@@ -476,3 +476,4 @@ OpenAPI operation / multipart ingress 验证由 SR-010 负责；Compiler 负责 
 | 2026-11-27 | 0.2.38 | ChatGPT（GPT-6.2） | 文档头、§5.2～§5.4、§6、§13 | 将 Request Schema Manifest / Artifact 闭包改为 dialect-aware：本地 G.4 生成文件，外部 OAS3 保留 Source Bundle pin / source file / JSON Pointer 引用；新增 07j 验收，并统一 when 的 Schema 位置引用与 Verify dialect 检查 | 使 AC-013-07 从语言层 dialect 规则闭合到 Artifact、Bundle、Host 与 when 类型定位，同时保持 wire contract / Resolver / Golden 未发布时 BLOCKED / NOT_RUN | Issue #47/#49；IR-008/009；SR-031；PR #52 |
 | 2026-11-28 | 0.2.41 | GPT-6.2（ChatGPT） | 文档头、§3.2～§3.3、AC-013-01、修订记录 | 纳入 PR #110 修复后的完整 59 Blob 归档树与 Issue #102 独立 detached checkout 复验；将 58/58、checksum、audit_evidence.py、Python 18/18 记录为归档/历史 PoC 范围 PASS，并保留 vet.log 未归档 | 避免沿用 #107 的旧 FAIL 或 #115 的本地 .agent-tmp 路径；不将历史 PoC 扩大为 Compiler 1.6.0 产品验收 | Issue #102；PR #110；PR #115 |
 | 2026-11-28 | 0.2.42 | GPT-6.2（ChatGPT） | §3.2～§3.3、AC-013-01、修订记录 | 将专用证据分支完整 59 Blob 归档树纳入 PR #115（58 个清单覆盖文件 + SHA256SUMS），不再仅登记五份修复元数据文件 | 确保 58/58 独立复验结论对应当前集成树中完整可搬移的归档材料 | Issue #102；PR #110；PR #115 |
+| 2026-11-28 | 0.2.43 | GPT-6.2（ChatGPT） | 文档头、§1、§3.2～§3.3、修订记录 | 同步 EC02/F08/CA-SL 当前版本；将修复后归档的唯一入口改为 PR #115 已纳入的完整 59 Blob 目录；区分 Python 18/18 复验与未重新运行的 Go 产品测试、未归档 vet.log | 消除旧 PR #18 修复前归档链接和“未复验”表述与 Issue #102 实际证据之间的矛盾 | Issue #102；PR #110/#115 |
