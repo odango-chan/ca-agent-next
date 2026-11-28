@@ -28,13 +28,18 @@ jobs:
         with:
           ref: ${{ github.event.repository.default_branch }}
           persist-credentials: false
+      - name: Set up fixed uv toolchain for trusted verifier
+        uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+        with:
+          version: '0.13.10'
       - name: Verify live PR SHA and immutable Git tree
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          python3 scripts/verify_sr003_provenance.py \
+          uv python install 3.14.6
+          uv run --no-project --python 3.14.6 python scripts/verify_sr003_provenance.py \
             --event-path "$GITHUB_EVENT_PATH" \
             --out artifacts/sr003/trusted-provenance.json
       - name: Upload pass or fail-closed provenance
