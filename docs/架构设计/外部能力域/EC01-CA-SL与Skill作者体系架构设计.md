@@ -183,4 +183,4 @@ CA-SL v1alpha5 的 when 已进入已合并的 ca-skills #88/#89 发布刷新；�
 | 2026-11-27 | 0.2.2 | GPT-6.2（ChatGPT） | §2～§4、§8、修订记录 | 恢复 `assurance/contract.yaml` 顶层 `when` 为唯一入口，修正 Create 示例为原版 OpenAPI 字符串枚举 | 撤销 Front Matter 旧方案，确保 EC01、CA-SL、Compiler 与 3GPP 输入契约一致 | IR-008/009；Issue #49；SR-013/031/032 |
 
 | 2026-11-27 | 0.2.3 | GPT-6.2（ChatGPT） | §4、修订记录 | 修正 3GPP Create `when` 示例，为可选 `input.requestType` 增加 has 守卫，并明确左到右短路约束 | 使 EC01 示例与 CA-SL §3.6 / §12.1、SR-013 Golden 一致，避免示例无法通过 Compiler 类型检查 | Issue #49；IR-009；SR-013/032；PR #52 |
-| 2026-11-28 | 0.2.5 | DeepSeek Harness / deepseek-v4.1-flash-1017 | §1、§5、修订记录 | 将 languageTarget 从“建议值/共同确认”改为 Next 中央已冻结 `connectionagent.io/v1.6.0`，发布者只负责正式 Schema/Golden/Release | 消除活动架构仍把已冻结机器身份当作待确认候选的冲突 | F05、SR-013/030；Issue #50；PR #115 |
+| 2026-11-28 | 0.2.5 | DeepSeek Harness / deepseek-v4.1-flash-1017 | §2、§10、修订记录 | 将 languageTarget 从“建议值/共同确认”改为 Next 中央已冻结 `connectionagent.io/v1.6.0`，发布者只负责正式 Schema/Golden/Release | 消除活动架构仍把已冻结机器身份当作待确认候选的冲突 | F05、SR-013/030；Issue #50；PR #115 |

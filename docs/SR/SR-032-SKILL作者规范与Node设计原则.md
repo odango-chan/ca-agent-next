@@ -1,13 +1,13 @@
 # SR-032：SKILL 作者规范、Node 拆分与注释原则
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.1.21  
+> SR 版本：0.1.22  
 > 状态：**DRAFT / APPROVE_WITH_NON_BLOCKING_FOLLOWUPS**（PR #52 固定 Head `2dada9b1a5302e2e6fd7fbb36fb24c681ecc1d87` 的第四轮独立设计复评结论：P0=0 / P1=0 / P2=2 NON_BLOCKING；R4-P2-03 已由 SR-004 / SR-016 更新活动引用，R4-P2-04 已由 F09 §9.2 补齐 SchemaReference LSP；PR #115 集成后独立复评待完成；未授权 ca-skills / Compiler / Studio / Runtime 实施，产品 NOT_RUN）
 > 创建日期：2026-11-27  
 > 修订日期：2026-11-28  
 > 上游需求：IR-008（关联 IR-003）  
 > 功能：EC01 / F01 / F02 / F03 / F04 / F05 / F08 / F09（作者规范由 EC01 维护；Host、Importer、Runtime、Compiler、Studio 消费）  
-> 设计依据：[EC01 CA-SL 与 Skill 作者体系架构](../架构设计/外部能力域/EC01-CA-SL与Skill作者体系架构设计.md) v0.2.4；[CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md) v0.2.10；[SKILL 作者规范](../规范/SKILL作者规范.md) v0.2.4  
+> 设计依据：[EC01 CA-SL 与 Skill 作者体系架构](../架构设计/外部能力域/EC01-CA-SL与Skill作者体系架构设计.md) v0.2.5；[CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md) v0.2.11；[SKILL 作者规范](../规范/SKILL作者规范.md) v0.2.4  
 > 目标仓：odango-chan/ca-agent-next（仅中央设计和规范）  
 > 上游来源仓：odango-chan/ca-skills，固定 main 780497a2918ad3e7bdff554ab64b0ba627e867e0  
 > 关联 Issue：[ca-agent-next #49](https://github.com/odango-chan/ca-agent-next/issues/49)、父级迁移 Issue #12、CA-SL 设计 Issue #40  
@@ -162,3 +162,4 @@ F09 的 AI Authoring 必须使用同一作者规范和完整正向示例生成�
 | 2026-11-27 | 0.1.18 | ChatGPT（GPT-6） | §3.3、AC-032-03、设计依据、依赖版本、修订记录 | 以 CA-SL v0.2.7 / 作者规范 v0.2.4 为当前依据，明确中间 Predicate-only 负例、最终单 Predicate Postcondition-only 正例，以及 QoS 请求验证合并和异常路由不退化的验收项 | 将 Node 粒度争议转为可判定的 SR 验收条件，修复旧版本引用漂移 | Issue #49；IR-008；SR-032；PR #52 |
 | 2026-11-27 | 0.1.19 | ChatGPT（GPT-6.2） | 文档头、AC-032-08/12/13、§7 | 限定 AC-032-12 的 NOT_RUN 范围为本 SR 新增能力；将 Predicate Schema 参数引用与 CA-SL SchemaReference 文法绑定；回填固定 Head 独立复评 NEEDS_REVISION 状态 | 避免将其他 SR 的既有实现状态覆盖为 NOT_RUN，并消除作者正向示例与 CA-SL EBNF 的不一致 | Issue #49；IR-008；CA-SL 1.6.0 v0.2.8；PR #52 |
 | 2026-11-28 | 0.1.21 | GPT-6（ChatGPT） | 文档头、设计依据、修订记录 | 将 CA-SL 1.6.0 规范引用从 v0.2.9 对齐到现行 v0.2.10；增加追踪记录，保留 SR-032 整项 DRAFT 及产品 NOT_RUN | 避免已冻结 languageTarget、SchemaReference 与作者规范继续引用旧语言版号 | Issue #40/#49/#50；SR-029/032；PR #115 |
+| 2026-11-28 | 0.1.22 | DeepSeek Harness / deepseek-v4.1-flash-1017 | 设计依据、修订记录 | 同步 EC01 v0.2.5 与 CA-SL 1.6.0 v0.2.11 当前版本引用 | 清理终审发现的版本引用漂移，不改变 SR 状态 | Issue #50；EC01、SR-013；PR #115 |

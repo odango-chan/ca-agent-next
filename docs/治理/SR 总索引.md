@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.88
+> 文档版本：0.3.89
 > 状态：共 31 项 SR：4 VERIFIED（各自限定历史模块范围）、1 IMPLEMENTED（设计移交）、25 DRAFT、1 IN_PROGRESS（SR-028；设计 READY、uv 实施候选 IMPLEMENTED，mainline 尚未 VERIFIED）。PR #115 是唯一面向 `main` 的集成入口，当前仍 OPEN / Draft / 未合并；PR #46 的恢复设计仅合入恢复分支，不等于 main。**当前 PR Head/CI 必须以 GitHub API 即时读取为准**，不在此状态行写入会随每次文档提交失效的自指 HEAD。最近已冻结的 SR-003 代码/测试快照 `92474dba8faca34a088c3adfa4c3a9a8663d078c`：双平台 Regression #46139810346 均 273/273 SUCCESS，Review Context #46139810415 SUCCESS、Python Toolchain Bootstrap #46139810321 SUCCESS；其原始 Artifact 和根因见 SR-003 v0.3.16 §6.2。此处只引用该特定代码 SHA 的证据，不代表随后 docs-only Head 的测试已完成。PR #115 全量独立设计/集成复评仍未完成，未授权 Ready/合并/删分支。
 > 修订日期：2026-11-28\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -126,7 +126,7 @@
 - **P2（25 条）**：覆盖 SR-004/005/006/007/008/010/013/017/020/030、SR 总索引证据说明，以及 SR-005/013/017/018/019/020/021/022/023/025 十份修订账本；修订完成不等于原 Review 自动重新批准。
 - **外部阻塞**：SR-026/027 仍缺生产者正式输入；不允许以文档补写替代外部发布。
 - **实施门槛（当前集成范围）：**除历史范围外的 24 项整项 SR 仍 DRAFT；但已经创建 SR-028 实施 Issue #96 和 #93/#94 实施入口，且 PR #99 已归档 uv 双平台候选证据。其有效内容已选择性收编进唯一 mainline 分支 #115（尚未合入 main），不能把候选分支 PASS 自动计入当前产品 VERIFIED；Compiler、Host/Runtime/Codec、OpenAMSM 真实 E2E 仍单独待验。新 Head 结论须绑定完整 Base/Head SHA 和真实 GitHub Review。
-- **SR-028 专项门槛（当前）：**第七轮独立 Review [#6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#issuecomment-6084094037) 固定 Head `93f1389e7c5968cd30e8a74137207094864ecca0` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`，设计结论 APPROVE_FOR_READY（0 P0 / 0 P1 / 2 非阻断 P2）；该批准仅限 SR-028 设计。Issue #96 OPEN；#97（base `93f1389` / head `66a82f0`）OPEN/未合并；#99（base `93f1389` / head `83d23e8`）OPEN/未合并；#112（base `83d23e8` / head `da91ed8`）OPEN/Draft/未合并。三者的限定内容已选择性收编进 #115，源 PR 均未合并；必须按 #115 固定 Head 重新核对依赖与最新设计，不得将候选分支 AC/Artifact 计入当前分支 VERIFIED/RELEASED。
+- **SR-028 专项门槛（当前）：**第七轮独立 Review [#6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#issuecomment-6084094037) 固定 Head `93f1389e7c5968cd30e8a74137207094864ecca0` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`，设计结论 APPROVE_FOR_READY（0 P0 / 0 P1 / 2 非阻断 P2）；该批准仅限 SR-028 设计。Issue #96 OPEN；#97（base `93f1389` / head `66a82f0`）OPEN/未合并；#99（base `93f1389` / head `83d23e8`）OPEN/未合并；#112（base `83d23e8` / head `dbc0bcb`）OPEN/Draft/未合并。三者的限定内容已选择性收编进 #115，源 PR 均未合并；必须按 #115 固定 Head 重新核对依赖与最新设计，不得将候选分支 AC/Artifact 计入当前分支 VERIFIED/RELEASED。
 
 
 ### 2.3 23 项逐 SR 独立评审与复评入口
@@ -338,3 +338,4 @@
 | 2026-11-28 | 0.3.86 | GPT-6（ChatGPT） | §4 SR-030、修订记录 | 将 SR-030 唯一 languageTarget 从“待冻结”改为 Next 既有设计值 connectionagent.io/v1.6.0；分离 01/06/07 固定源/设计静态限定核验与 02～05 正式 Publisher 产品 NOT_RUN | 不让原 SR-030 设计值跨文档回退或将静态 PASS 冒充正式发布 | Issue #40/#50/#95；PR #115 |
 | 2026-11-28 | 0.3.87 | GPT-6（ChatGPT） | §2.4 SR-009、Phase G、修订记录 | 对齐 F05 v0.4.15、F06 v0.3.10、SR-009 v0.2.16 的现行声明，更新外部 Plugin PR #3 `4232b20` 双平台 CI 证据；不提升 Host 三元系统验收 | 保留 31 SR 状态与 #115 唯一集成入口，历史 #116 原限定设计批准和 #117 阻塞独立呈现 | Issue #50/#116；PR #115；ca-openamsm-plugin#3 |
 | 2026-11-28 | 0.3.88 | DeepSeek Harness / deepseek-v4.1-flash-1017 | §2、§2.4、§3.2、修订记录 | 修正 AC-010-03 仍被 v1 SHA-256 误写为 BLOCKED 的过期状态；将 #97/#99/#112 的“未集成”改为已选择性收编进 #115（源 PR 未合并） | 消除状态索引与 SR-010 v2 设计、第三批收编事实不一致 | Issue #50；SR-010/028；PR #97/#99/#112/#115 |
+| 2026-11-28 | 0.3.89 | DeepSeek Harness / deepseek-v4.1-flash-1017 | §2.2、修订记录 | 修正 #112 当前 Head 为 `dbc0bcb`（旧 `da91ed8` 为其 base 线），与文档总目录/PR #112 实际快照一致 | 清理终审发现的快照 SHA 漂移 | Issue #50；PR #112/#115 |
