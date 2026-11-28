@@ -2,7 +2,7 @@
 
 > 文档类型：总体架构设计\
 > 状态：目标架构基线；SR-002 Python Host/Model Loop 最小切片 VERIFIED；SR-003 v0.3.11 VERIFIED（模块 AC-003-01～04）；PR #34/#41/#42 已合入恢复分支，双平台 CI SUCCESS；系统 EX-02/03/04/18 未完成；CA-SL 1.6.0 Capability-first 架构增量待评审，产品未发布
-> 文档版本：0.4.15
+> 文档版本：0.4.16
 > 修订日期：2026-11-28
 > 适用范围：ca-agent-next 通用 Agent Core、Host、Runtime、Skill 与 Plugin 公共机制\
 > 权威边界：本文是本仓唯一总体架构文档；字段级契约见规范，机制细节见设计说明书\
@@ -204,7 +204,7 @@ SBI 不限于 JSON。Event Plugin 负责 HTTP/SBI 外层解析、JSON、multipar
 1. Event/Delivery Plugin ↔ Host：通过 Host 创建的本地 inbound/outbound staging directory 和相对 stagingPath 描述符交接。Host 校验 slot、路径边界和真实 byteLength，再导入 ArtifactStore。
 2. Host/Runtime ↔ Tool Plugin：Tool 只能访问当前 Invocation 授权的 Artifact。其二进制传输依赖独立 Host Artifact Store Channel，不得使用 Event stagingPath，也不得把原始 bytes/Base64 塞进 NDJSON。
 
-**当前限制：** `ca-host.artifact-store/v1` 已冻结（contract pin `2c0b07f`）；ca-client-tools Provider v1.2.0 已实现 consumer 与共享 fixtures；ca-agent Go Host main `447d0cc` 的 P1 外部参考验收为 43/43（read-only 11/11），real-NF multipart 仍 NOT_VERIFIED。Next Python Host 的 channel server/adapter 尚未实现；在 SR-010 完成并通过共享 fixtures 前，所有 artifact-bearing Provider binding 必须 NOT_CONFIGURED，并在任何远端 I/O 前拒绝。不得自行发明 Provider 私有文件路径协议。
+**当前限制：** `ca-host.artifact-store/v1` 已冻结（contract pin `2c0b07f`）并作为历史外部契约保留：ca-client-tools Provider v1.2.0 已实现 consumer 与共享 fixtures；ca-agent Go Host main `447d0cc` 的 P1 外部参考验收为 43/43（read-only 11/11），real-NF multipart 仍 NOT_VERIFIED；其逐 Artifact SHA-256 仅属历史传输校验。Next 1.6.0 的唯一目标为 `ca-host.artifact-store/v2`（no-hash：随机 opaque artifactRef、Invocation/direction/slot、mediaType/byteLength/配额、原子发布），不计算、不传输、不校验 SHA-256/checksum/digest，不提供 v1↔v2 兼容。Next Python Host 的 v2 channel server/adapter 尚未实现；在 SR-010 完成并通过共享 fixtures 前，所有 artifact-bearing Provider binding 必须 NOT_CONFIGURED，并在任何远端 I/O 前拒绝。不得自行发明 Provider 私有文件路径协议。
 
 Codec 不作为 Agent Core 的内置能力。Skill 不需要协议内部字段时，直接把授权 artifactRef 交给业务 Tool；需要结构化字段时，按需调用 ca-client-tools tools Extension 中正式发布的 Codec Callable。Codec 解码结果不能替换原始字节。Event Plugin 只允许为共享 SBI Operation 提取最小必要 NAS discriminator 来规范化 Event，不承担完整协议解码或 Skill 选择。只声明实际发布和测试过的 NAS/NGAP 消息子集。
 
@@ -353,3 +353,4 @@ sequenceDiagram
 | 2026-11-27 | 0.4.13 | GPT-6.2（ChatGPT） | 总体架构外部依赖状态 | 更新 Compiler 跨仓状态，明确 #61 历史范围和 #62 的 1.6.0 新目标追踪。 | 使总体架构的外部依赖快照与新建的 1.6.0 实施 Issue 一致。 | Issue #40/#62；PR #45 |
 | 2026-11-28 | 0.4.14 | GPT-6.2（ChatGPT） | §7.1、修订记录 | 加入标准契约优先与业务 Owner 契约补位；明确 3GPP Request 与 Owner Callable Contract 分离、jsonData Request 根和 `assurance/contract.yaml` 唯一 when 入口 | 防止领域字段污染标准请求、误把 Owner Callable IO 当 Event Request，或回退 Front Matter.when 旧方案 | Issue #47/#49；IR-009；SR-031/010/013/026；PR #48/#101/#115 |
 | 2026-11-28 | 0.4.15 | GPT-6.2（ChatGPT） | §7.2、修订记录 | 补齐 Package 根目录共享资源、无 Assurance Package 与 Host Resource Read / Script Runner 的总体架构边界 | 使总体架构与 SR-032、CA-SL 1.6.0、F01～F05、F08/F09 作者体系一致，不把共享资源误归入 Assurance | Issue #49；IR-008；SR-004/007/032；PR #52/#115 |
+| 2026-11-28 | 0.4.16 | DeepSeek Harness / deepseek-v4.1-flash-1017 | §10、修订记录 | 明确 ca-host.artifact-store/v1 仅为历史外部契约（SHA-256 非 Next 要求），Next 1.6.0 唯一目标为 v2 no-hash，并保持 v2 channel NOT_IMPLEMENTED/NOT_CONFIGURED 边界 | 消除总体架构“当前限制”仍把 v1 SHA-256 作为 Next 实现要求的 P1 冲突 | F05、SR-010；Issue #50；PR #115 |

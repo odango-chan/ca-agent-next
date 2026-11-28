@@ -1,7 +1,7 @@
 # EC01 — CA-SL 与 Skill 作者体系架构设计
 
 > 文档类型：外部能力域架构设计（Next 中央权威设计）  
-> 文档版本：0.2.4\
+> 文档版本：0.2.5\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 唯一新目标；作者规范/Compiler/Bundle 未发布）  
 > 功能归属：EC01；关联 F01、F02、F03、F04、F05、F06、F08、F09  
 > 关联需求：IR-003、IR-006、IR-008；SR-004～SR-006、SR-011、SR-023、SR-032  
@@ -68,7 +68,7 @@ SKILL.md 是每个 Skill 的基础身份和描述入口，至少提供稳定名�
 4. Assurance 有效时，Skill 可供 Deterministic 与 LLM-guided 两种模式使用。
 5. LLM 通过 Host Resource Read 按需读取当前 Package snapshot 的共享文本资源；当前 Skill Registry 中登记的全部 transform / predicate Script 均可通过 Host-owned host.skill-script.execute Capability 调用，LLM 与 Assurance 共用同一 Script Runner，不设置逐脚本标记或额外 Host 开关。
 6. 不允许 Agent 自行编译作者源；Agent 只导入发布好的 Skill Bundle。
-7. **唯一新语言目标 CA-SL 1.6.0**；languageTarget 建议值为 connectionagent.io/v1.6.0，须由 ca-skills / Compiler 在正式 Schema / Golden 中共同确认；完全不支持 v1alpha5 旧语法、旧 Build DTO/Artifact/Bundle、双轨、转换、迁移或 fallback。
+7. **唯一新语言目标 CA-SL 1.6.0**；languageTarget=connectionagent.io/v1.6.0 已由 Next 中央设计冻结，ca-skills / Compiler 在正式 Schema / Golden / Release 中必须使用该值，不得重新选择或引入别名；完全不支持 v1alpha5 旧语法、旧 Build DTO/Artifact/Bundle、双轨、转换、迁移或 fallback。
 
 ## 3. Contract、Procedure、Predicate 的语义分层
 
@@ -157,7 +157,7 @@ CA-SL v1alpha5 的 when 已进入已合并的 ca-skills #88/#89 发布刷新；�
 
 - **作者输入**：SKILL.md Front Matter 遵守 Agent Skills Specification；schemas/、scripts/、references/、assets/ 位于 Skill Package 根目录并供 LLM / Host / Assurance 共用；可选 assurance/ 仅含 contract.yaml、procedure.yaml、predicates.yaml。Script Registry scripts/manifest.yaml 登记精确入口和 Schema。Contract grants 只列业务 Capability ID；Procedure operation.capability/observation.capability 引用业务 Capability，operation.script 只引用 Registry Script ID。Skill 不表达 Owner/Provider Callable ID，也不引入额外 Operation ID。
 - **基数**：每个 Skill-facing Capability ↔ 唯一公开 Callable；编译时强制双向一对一，kind/Effect/Input/Output Schema/依赖闭包静态匹配；Provider 内部可用封闭 selector 将一个公开 Callable 路由到多个私有 backendOperationId。Reconcile 是 Runtime internal-only，Receipt Query 仍为普通受控 READ。
-- **发布链**：ca-skills 发布 1.6.0 完整规范、Schema、作者示例、languageTarget（建议 connectionagent.io/v1.6.0）；Compiler 仅为 1.6.0 创建新的 BuildRequest/BuildResult、Capability Binding、CheckedExpr/Request Schema Runtime Artifact，SR-027 重新 Build/Verify/Bundle；Agent 只导入该版本的正式 Bundle，Studio 只编辑 1.6.0。
+- **发布链**：ca-skills 发布 1.6.0 完整规范、Schema、作者示例与正式 Release（languageTarget=connectionagent.io/v1.6.0 已由 Next 中央冻结）；Compiler 仅为 1.6.0 创建新的 BuildRequest/BuildResult、Capability Binding、CheckedExpr/Request Schema Runtime Artifact，SR-027 重新 Build/Verify/Bundle；Agent 只导入该版本的正式 Bundle，Studio 只编辑 1.6.0。
 - **彻底无兼容**：历史 v1alpha5 规范 / Golden / Release Record 只读留档，不被新 Compiler/Agent/Studio 加载；没有双语法、旧包解析、映射、版本协商、自动迁移或 fallback，旧 Skill 必须手工重写并重新发布。
 - **阶段**：本 EC01 架构增量处于**待评审**，SR-029 / SR-013 / SR-027 必须分别完成规范审查和外部发行。1.6.0 代码、Golden、Bundle 与 E2E 均 NOT_RUN；不因旧 v1alpha5 发布历史提前宣布 PASS。
 
@@ -183,3 +183,4 @@ CA-SL v1alpha5 的 when 已进入已合并的 ca-skills #88/#89 发布刷新；�
 | 2026-11-27 | 0.2.2 | GPT-6.2（ChatGPT） | §2～§4、§8、修订记录 | 恢复 `assurance/contract.yaml` 顶层 `when` 为唯一入口，修正 Create 示例为原版 OpenAPI 字符串枚举 | 撤销 Front Matter 旧方案，确保 EC01、CA-SL、Compiler 与 3GPP 输入契约一致 | IR-008/009；Issue #49；SR-013/031/032 |
 
 | 2026-11-27 | 0.2.3 | GPT-6.2（ChatGPT） | §4、修订记录 | 修正 3GPP Create `when` 示例，为可选 `input.requestType` 增加 has 守卫，并明确左到右短路约束 | 使 EC01 示例与 CA-SL §3.6 / §12.1、SR-013 Golden 一致，避免示例无法通过 Compiler 类型检查 | Issue #49；IR-009；SR-013/032；PR #52 |
+| 2026-11-28 | 0.2.5 | DeepSeek Harness / deepseek-v4.1-flash-1017 | §1、§5、修订记录 | 将 languageTarget 从“建议值/共同确认”改为 Next 中央已冻结 `connectionagent.io/v1.6.0`，发布者只负责正式 Schema/Golden/Release | 消除活动架构仍把已冻结机器身份当作待确认候选的冲突 | F05、SR-013/030；Issue #50；PR #115 |
