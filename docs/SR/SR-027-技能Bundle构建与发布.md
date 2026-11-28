@@ -1,7 +1,7 @@
 # SR-027：技能Bundle构建与发布
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.3.3\
+> SR 版本：0.3.4\
 > 状态：整项 DRAFT；中央作者源与 Bundle 构建机器契约已固定，DESIGN_REVIEW_REQUESTED；产品 AC 仍 NOT_RUN，ca-skills 1.6.0 作者 Schema/Golden、Compiler 3.0.0 Release 与五根作者源尚未发布。
 > 下一步：独立评审本轮五根作者源、Compiler pin、release/bundle-inputs.yaml、Bundle 目录与原子 ZIP 契约；达到 SR-027 READY 后再创建 ca-skills 实施 Issue。
 > 阶段依据：[独立评审 #89](https://github.com/odango-chan/ca-agent-next/issues/89#issuecomment-7209388846)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。
@@ -80,7 +80,7 @@ ZIP 复用仓库既有确定性归档规则：路径排序、统一 /、固定�
 | AC-027-01 | ca-skills 仓根使用新建的 **1.6.0 专用测试入口**（§2.1 固定命令、文件与必需用例），检验新版 Compiler Check/Build/Verify、Bundle 成功与错误拒绝；可继续运行文档检查，但 **v1alpha5 测试不得作为本 AC 的 PASS 证据**；记录命令、受测 SHA、发现数和日志 |
 | AC-027-02 | CI 在干净 checkout 生成候选。逐项查 SKILL.md、所声明的资源及可选 Assurance 对应产物；损坏 Artifact 使当批发布数为零。Development Artifact 不进入 Runtime Bundle |
 | AC-027-03 | 发布后从正式资产入口取得 AC-027-02 的同一批内容，在 Next 执行 SR-004 导入与 SR-008 Echo；原始作者 checkout 和 Compiler 从 Host 运行环境移除后依然可运行。分别记录构建、发布及消费状态 |
-| AC-027-05 | Source Bundle 原件 byte-compare、OAS3 引用闭包、Compiler Build/Verify snapshot、Request/Codec Result 阶段可用性及版本隔离均具备正反证据；Source Bundle-only PASS 不升级 Codec/MAS Bundle/系统 E2E | NOT_RUN / BLOCKED |
+| AC-027-05 | Source Bundle 原件 byte-compare、OAS3 引用闭包、Compiler Build/Verify snapshot、Request/Codec Result 阶段可用性及版本隔离均具备正反证据；Source Bundle-only PASS 不升级 Codec/MAS Bundle/系统 E2E；**当前 NOT_RUN / BLOCKED** |
 
 ## 4. 状态与非目标
 
@@ -152,3 +152,4 @@ ca-skills / SR-031 原样发布 OpenAMSM 实际支持版本的 OpenAPI 3.0 Sourc
 | 2026-11-28 | 0.3.1 | GPT-6（ChatGPT） | §2.1、§2.2、修订记录 | 将 Create/Modify/Release 三条 MAS 根统一标记正式 Codec READ 与未发布阻塞；将历史 Owner Parser grant 限定为待签认映射，明确唯一 T2 解码、Owner 22/22 或 24/24 二选一 | 消除 SR-027 与 SR-029 §3.1、SR-026 的跨仓依赖冲突，不允许 Create 跳过 Codec 或 Modify/Release 使用旧 Parser fallback | Issue #40/#47/#113；SR-026/027/029；PR #125 |
 | 2026-11-28 | 0.3.2 | GPT-6（ChatGPT） | §2.1、§2.2、§5.1、修订记录 | 将正式 Codec Package、消息 Profile、Output Schema 和 Source Bundle 纳入精确 Bundle pin；明确 MAS Owner/Codec/Host 生产者交接；新增缺 Codec、错 Profile、旧 Parser fallback 负例 | 避免 1.6.0 Bundle 只锁 Owner/Host 而遗漏 Codec 造成 T2 运行期动态扩权与错误解码 | Issue #40/#47/#113；SR-026/027/029/031；PR #125 |
 | 2026-11-28 | 0.3.3 | GPT-6（ChatGPT） | §6、文档头、修订记录 | 区分 Skill-owned requestSchema 本地 G.4 闭合根与纯单 $ref OAS3 根别名；仅本地节点按 G.4 校验，原件保留 OAS3 dialect | 与 SR-031/CA-SL 1.6.0 的原版标准引用设计一致，禁止 Publisher/Compiler 误加 G.4 闭合规则或改写 OAS3 | Issue #47/#40；SR-013/027/031；PR #125 |
+| 2026-11-28 | 0.3.4 | GPT-6（ChatGPT） | §3、文档头、修订记录 | 修复 AC-027-05 三列表格与两列表头不一致，保留 NOT_RUN / BLOCKED 原判定 | 确保 SR-027 验收矩阵可机器解析，不改变产品 AC 状态 | Issue #40/#47；SR-027；PR #125 |
