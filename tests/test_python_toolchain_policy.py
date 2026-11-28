@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import unittest
+from types import SimpleNamespace
+from unittest.mock import patch
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
 
@@ -304,6 +306,70 @@ index-strategy = "first-index"
 """
         changed = base.replace('index-strategy = "first-index"', 'index-strategy = "unsafe-first-match"')
         self.assertNotEqual(dependency_surface(base), dependency_surface(changed))
+
+    def test_pep751_root_lockfiles_trigger_scope_and_rejection(self) -> None:
+        for path in ("pylock.toml", "pylock.dev.toml", "pylock.dev.windows.toml"):
+            with self.subTest(path=path):
+                self.assertTrue(is_python_scope_path(path))
+                self.assertTrue(
+                    _policy_module.has_python_scope(Path("."), "a" * 40, "b" * 40, [path])
+                )
+                self.assertEqual(forbidden_root_lockfiles([path]), [path])
+        self.assertEqual(forbidden_root_lockfiles(["tests/fixtures/pylock.dev.toml"]), [])
+
+    def test_live_base_tip_matches_event_snapshot(self) -> None:
+        with patch.object(
+            _policy_module, "run_git",
+            return_value=SimpleNamespace(returncode=0, stdout="a" * 40 + "\n"),
+        ) as fake:
+            _policy_module.validate_base_tip(Path("."), "feature/sr028", "a" * 40)
+            fake.assert_called_once_with(
+                Path("."), "rev-parse", "--verify",
+                "refs/remotes/origin/feature/sr028", check=False,
+            )
+
+    def test_moved_or_unfetched_base_branch_is_rejected(self) -> None:
+        for return_code, remote_sha in ((0, "b" * 40 + "\n"), (128, "")):
+            with self.subTest(return_code=return_code):
+                with patch.object(
+                    _policy_module, "run_git",
+                    return_value=SimpleNamespace(returncode=return_code, stdout=remote_sha),
+                ):
+                    with self.assertRaisesRegex(PolicyError, "STALE_BASE"):
+                        _policy_module.validate_base_tip(Path("."), "feature/sr028", "a" * 40)
+
+    def test_windows_launcher_module_pip_is_rejected(self) -> None:
+        for command in (
+            "py -m " + "pip" + " install requests",
+            "py.exe -m " + "pip" + " install requests",
+        ):
+            with self.subTest(command=command):
+                self.assertTrue(any(
+                    "PIP_INSTALL" in violation
+                    for violation in command_violations([("scripts/setup.ps1", command)])
+                ))
+
+    def test_shell_continuation_cannot_hide_install(self) -> None:
+        lines = [
+            ("scripts/setup.sh", "pip" + " \\"),
+            ("scripts/setup.sh", "  install requests"),
+        ]
+        self.assertTrue(any("PIP_INSTALL" in item for item in command_violations(lines)))
+
+    def test_alternate_package_manager_mutations_are_rejected(self) -> None:
+        commands = (
+            "poetry" + " add requests",
+            "poetry" + " update",
+            "conda env" + " update -f env.yaml",
+            "mamba" + " update --all",
+            "micromamba env" + " create -f environment.yml",
+        )
+        for command in commands:
+            with self.subTest(command=command):
+                self.assertTrue(any(
+                    "ALTERNATE_PACKAGE_MANAGER" in violation
+                    for violation in command_violations([(".github/workflows/ci.yml", command)])
+                ))
 
     def test_bootstrap_pr_requires_exact_fixed_base(self) -> None:
         manifest = {
