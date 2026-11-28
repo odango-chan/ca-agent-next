@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.67
+> 文档版本：0.3.68
 > 状态：29 项 SR：4 VERIFIED（仅各自历史模块范围）、1 IMPLEMENTED（设计移交）、24 DRAFT（整项主状态）。SR-028 第七轮设计 Review #6084094037 仅批准固定 Head `93f1389e` / Base `3c7c4838` 的设计（0/0/2 非阻断 P2）；Issue #96 OPEN，PR #97 OPEN/未合并，PR #99 OPEN/未合并（基于 `93f1389`），PR #112 OPEN/Draft/未合并（堆叠于 #99）。当前 PR #46 第八轮 Review #6095143611 对 Base `c806def7` / Head `2604cc17` 给出 NEEDS_REVISION（0 P0 / 7 P1 / 3 P2）；候选分支证据不计入当前恢复分支 VERIFIED。
 > 修订日期：2026-11-28\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -152,7 +152,7 @@
 | [SR-021](../SR/SR-021-原生宿主设计移交.md) | 阶段 READY（中央只读核验） | AC-021-01/02/04 静态审计 | [报告](../issue-95-fixed-source-handoff/SR-021.md)：01/02/04 限定 PASS，03 NOT_RUN；Task/Artifact 2/2 原文与晋级边界已核对。 | [#83](https://github.com/odango-chan/ca-agent-next/issues/83#issuecomment-7210492778)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95) |
 | [SR-022](../SR/SR-022-执行内核设计移交.md) | 阶段 READY（中央只读核验） | AC-022-01/02/04 静态对照 | [报告](../issue-95-fixed-source-handoff/SR-022.md)：01/02/04 限定 PASS，03 NOT_RUN；10/10 原文与 SR-007 映射已核对。 | [#84](https://github.com/odango-chan/ca-agent-next/issues/84#issuecomment-7210514058)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95) |
 | [SR-023](../SR/SR-023-技能作者源与语言规范移交.md) | 阶段 READY（中央只读核验） | AC-023-01～03 静态移交 | [报告](../issue-95-fixed-source-handoff/SR-023.md)：01～03 静态 PASS，04 BLOCKED/NOT_RUN；10 份源文与两个 JSON 已核对。 | [#85](https://github.com/odango-chan/ca-agent-next/issues/85#issuecomment-7210543020)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95) |
-| [SR-025](../SR/SR-025-MAS%20Owner%20Interface%20Package%20Publisher.md) | 限定设计已认可，等待直接依赖 | 中央 Owner Publisher 设计已认可 | AC-025-01～08 的执行等待新 Owner 24/24 源、正式 Package Schema/CLI 与 Compiler 验证入口；发布另需授权。 | [#86](https://github.com/odango-chan/ca-agent-next/issues/86#issuecomment-7209318291) |
+| [SR-025](../SR/SR-025-MAS%20Owner%20Interface%20Package%20Publisher.md) | 限定设计已认可，等待直接依赖 | 中央 Owner Publisher 设计已认可 | AC-025-01～08 的执行等待 Owner 对两项 Parser 分别签认并发布最终成员清单（22/22、23/23、24/24 仅为条件候选）、正式 Package Schema/CLI 与 Compiler 验证入口；发布另需授权。 | [#86](https://github.com/odango-chan/ca-agent-next/issues/86#issuecomment-7209318291) |
 | [SR-026](../SR/SR-026-Codec公开工具发布.md) | BLOCKED_EXTERNAL_INPUT | BLOCKED_EXTERNAL_INPUT | Provider Owner 需交付 Codec 公开 Capability、唯一 Callable、输入输出 Schema、slot/mediaType、handler 和包版本。v1.2.0 与候选 PR #39 分别记录。 | [#87](https://github.com/odango-chan/ca-agent-next/issues/87#issuecomment-7209366603) |
 | [SR-027](../SR/SR-027-技能Bundle构建与发布.md) | BLOCKED_EXTERNAL_INPUT | BLOCKED_EXTERNAL_INPUT | ca-skills 需交付同提交五根作者源、Echo Interface、匹配 Compiler Release/argv/Verify 和 Bundle 发布授权。 | [#89](https://github.com/odango-chan/ca-agent-next/issues/89#issuecomment-7209388846) |
 | [SR-030](../SR/SR-030-Host%20Context%201.6.0%20Schema-only%20Interface%20Package%20Publisher.md) | 阶段 READY（中央只读核验） | AC-030-01 固定源，06/07 设计约束 | [报告](../issue-95-fixed-source-handoff/SR-030.md)：274 字节与独立 blob 相同，01/06/07 静态 PASS；02～05 与 Publisher 实现等待正式 Schema/languageTarget。 | [#91](https://github.com/odango-chan/ca-agent-next/issues/91#issuecomment-7209340753)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95) |
@@ -311,3 +311,4 @@
 | 2026-11-28 | restore-0.3.47（历史分支） | GPT-6（ChatGPT） | §3.2/Phase C | 同步 SR-004 v0.2.15、SR-029 v0.2.6、Provider Codec 3/3 与 Owner Parser 待决；保持 28 SR 阶段统计原样 | 保留设计/产品状态分离，登记第六轮 P1 的正式冻结依赖 | Issue #40/#113；PR #45；SR-026/029 |
 | 2026-11-28 | 0.3.66 | GPT-6（ChatGPT） | SR 数量、#45/#46 设计与第七轮时点回填、修订记录 | 三方整合后保持 29 个唯一 SR（新增 SR-030），明确 #46 历史第六轮失败已被第七轮设计评审取代；保留 #99 未合并的候选产品证据与 #45 1.6.0-only 决策 | 避免把历史时点状态冒充最新状态，防止 READY/VERIFIED 混同 | Issue #12；#40；#96；PR #45；#46；#97；#99 |
 | 2026-11-28 | 0.3.67 | GPT-6（ChatGPT） | 文档头、SR-025/028、§3.1～3.2、修订记录 | 同步 Owner Parser 条件基数、SR-028 第七轮设计批准与 #96/#97/#99/#112 状态；回填 PR #46 第八轮 NEEDS_REVISION | 防止将旧成员数、历史评审快照或未集成候选 PR 误作当前产品事实 | Issue #12；Issue #96；PR #46/#97/#99/#112；Review #6095143611 |
+| 2026-11-28 | 0.3.68 | GPT-6（ChatGPT） | SR-009/025、修订记录 | 清除 responseObligationId 接收边界的残留冲突，并移除 SR-025 执行门槛中的固定 24/24 表述 | 确保 SR 追踪行与规范性设计/验收矩阵保持一致 | Issue #12；PR #46；Review #6095143611 |
