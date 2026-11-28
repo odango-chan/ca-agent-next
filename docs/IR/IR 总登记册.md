@@ -1,10 +1,10 @@
 # IR 总登记册
 
-> 文档类型：需求项（IR）权威记录  
-> 文档版本：0.1.28\
-> 修订日期：2026-11-27\
-> 状态：8 项 IR；IR-008 登记 CA-SL 1.6.0 Capability-first 严格一对一与完全无旧版兼容，SR-029 设计待评审；IR-006 下 SR-030 Host Context Schema-only Publisher 设计待评审；SR-028 仍 DRAFT。\
-> 全局评审范围：继承根目录 Agent.md 的 review_scope  
+> 文档类型：需求项（IR）权威记录\
+> 文档版本：0.1.32\
+> 修订日期：2026-11-28
+> 状态：8 项 IR；IR-008 面向 CA-SL 1.6.0 Capability-first 双向一对一且无旧版兼容，SR-029 限设计复评；IR-006/008 包含 SR-030 Host Context 1.6.0 Schema-only Publisher。SR-028 第七轮设计认可不等于当前集成产品 VERIFIED，整项 DRAFT。
+> 全局评审范围：继承根目录 Agent.md 的 review_scope\
 > 本文局部非目标：生产级需求管理平台
 
 IR 编号稳定。GitHub Issue 用于讨论、分派和跟踪，一个 IR 可关联零个或多个 Issue，也可分解为多个 SR。实现和验收证据从 SR 回查。
@@ -30,7 +30,7 @@ IR 编号稳定。GitHub Issue 用于讨论、分派和跟踪，一个 IR 可关
 - 实施协作 Issue：[SR-002 实施 Issue #22](https://github.com/odango-chan/ca-agent-next/issues/22)（实施 PR #23 已 MERGED；证据回填 PR #25 负责关闭该 Issue）；[PR #23](https://github.com/odango-chan/ca-agent-next/pull/23) merge commit `49964464e19d13d219ea0b3513d2223fe81d2435`。SR-002 已 VERIFIED，AC-002-01～08 PASS；Issue #19 仅用于设计修订，Issue #21 仅用于治理修订。
 - 实施分解：[SR-002](../SR/SR-002-Python%20核心与宿主基础骨架.md)、[SR-003](../SR/SR-003-统一插件管理器与扩展通信.md)。
 - 架构、设计和规范：[CA Agent Next 架构设计](../架构设计/CA%20Agent%20Next%20架构设计.md)、[通用Agent核心与Host设计说明书](../设计说明书/F01-通用Agent核心与Host/通用Agent核心与Host设计说明书.md)、[Plugin平台设计说明书](../设计说明书/F03-Plugin平台/Plugin平台设计说明书.md)、[插件包与进程通信协议规范](../规范/插件包与进程通信协议规范.md)。
-- 完成依据：SR-002、SR-003 均已 VERIFIED（模块）。PR #34/#41 已合并，AC-003-01～04 通过，Ubuntu Python 3.12 与 Windows Python 3.14 CI 均 SUCCESS；系统 EX-02/03/04/18 仍 NOT_RUN。详见[实施状态总览](../治理/实施状态总览.md)。
+- 完成依据：SR-002 已 VERIFIED，AC-002-01～08 PASS；SR-003 v0.3.11 已 VERIFIED（仅模块 AC-003-01～04），PR #34/#41/#42 已合入恢复分支，双平台模块 CI #45815167442 / #45817800342 SUCCESS；系统 EX-02/03/04/18、Provider v2 wire DTO 与完整 Runtime E2E 仍 NOT_RUN，因此 IR-002 尚未整体完成。
 
 ## IR-003
 
@@ -38,7 +38,7 @@ IR 编号稳定。GitHub Issue 用于讨论、分派和跟踪，一个 IR 可关
 
 使用发布产物导入、选择及续跑，保留跨语言语义与代际一致性。
 
-- 协作 Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)（EC02 外部实现）；[Next #14](https://github.com/odango-chan/ca-agent-next/issues/14) 跟踪 SR-013 中央设计刷新；[Next #40](https://github.com/odango-chan/ca-agent-next/issues/40) 决定 CA-SL 1.6.0 唯一新目标、无任何旧版兼容/迁移；[Next #43](https://github.com/odango-chan/ca-agent-next/issues/43) 跟踪 SR-004 1.6.0-only 导入契约与 readiness 评审；[PR #16](https://github.com/odango-chan/ca-agent-next/pull/16) 为历史 Draft 文档评审，不代表实施。
+- 协作 Issue：[Compiler #62](https://github.com/odango-chan/ca-skill-compiler/issues/62)（CA-SL 1.6.0-only 新契约与 Runtime Artifact 实施）；旧 [Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) 仅保留 v1alpha5 历史范围，不作为 1.6.0 实施或验收依据；[Next #14](https://github.com/odango-chan/ca-agent-next/issues/14) 跟踪 SR-013 中央设计刷新；[Next #40](https://github.com/odango-chan/ca-agent-next/issues/40) 决定 CA-SL 1.6.0 唯一新目标、无任何旧版兼容/迁移；[Next #43](https://github.com/odango-chan/ca-agent-next/issues/43) 跟踪 SR-004 1.6.0-only 导入契约与 readiness 评审；[PR #16](https://github.com/odango-chan/ca-agent-next/pull/16) 为历史 Draft 文档评审，不代表实施。
 - 实施分解：[SR-004](../SR/SR-004-已发布技能包导入.md)、[SR-005](../SR/SR-005-技能目录与条件程序消费.md)、[SR-006](../SR/SR-006-技能解析器与续跑选择.md)。
 - 架构、设计和规范：[Skill管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md)、[技能与确定性保障格式规范](../规范/技能与确定性保障格式规范.md)、[Runtime执行设计说明书](../设计说明书/F04-Runtime执行/Runtime执行设计说明书.md)。
 - 完成依据：对应 SR 的必需验收全部 VERIFIED；当前均为 DRAFT，证据未执行。
@@ -84,7 +84,8 @@ Compiler 实施沿用 [SR-013](../SR/SR-013-Compiler已检查when与发布产物
 - 协作入口：[ca-skills #88](https://github.com/odango-chan/ca-skills/pull/88)、[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)。
 - 实施分解：[SR-023](../SR/SR-023-技能作者源与语言规范移交.md)、[SR-015](../SR/SR-015-工具契约设计移交.md)、[SR-016](../SR/SR-016-工作台设计移交与条件编辑.md)、[SR-017](../SR/SR-017-业务插件设计移交.md)、[SR-018](../SR/SR-018-业务所有者设计移交.md)、[SR-019](../SR/SR-019-仿真对端设计移交.md)、[SR-020](../SR/SR-020-参考宿主设计移交.md)、[SR-021](../SR/SR-021-原生宿主设计移交.md)、[SR-022](../SR/SR-022-执行内核设计移交.md)、[SR-024](../SR/SR-024-Host%20Context%20Interface%20Package%20Publisher.md)、[SR-025](../SR/SR-025-MAS%20Owner%20Interface%20Package%20Publisher.md)、[SR-026](../SR/SR-026-Codec公开工具发布.md)、[SR-027](../SR/SR-027-技能Bundle构建与发布.md)、[SR-030](../SR/SR-030-Host%20Context%201.6.0%20Schema-only%20Interface%20Package%20Publisher.md)。
 - 设计与验收：[跨仓设计资产迁移与一致性审计](../参考与审计/跨仓设计资产迁移与一致性审计.md)，逐仓检查文档迁移和行为符合性。
-- SR-024 完成依据：[ca-agent-demo PR #253](https://github.com/odango-chan/ca-agent-demo/pull/253) 已 MERGED，Issue #252 已关闭；AC-024-01～07 均有真实 PASS 证据，SR-024 VERIFIED。GitHub Review COMMENTED、4 个 PR checks SKIPPED 不计作 APPROVED/CI PASS；Studio #269 消费端仍归 SR-016。
+- SR-024 完成依据：[ca-agent-demo PR #253](https://github.com/odango-chan/ca-agent-demo/pull/253) 已 MERGED，Issue #252 已关闭；AC-024-01～07 PASS，SR-024 VERIFIED。Review COMMENTED、4 个 PR checks SKIPPED 不计作 APPROVED/CI PASS；Studio ZIP 导入/lock 消费仍归 SR-016。
+- SR-025 设计依据：[SR-025 v0.1.11](../SR/SR-025-MAS%20Owner%20Interface%20Package%20Publisher.md) 已 READY；目标仓实施 Issue [ca-client-tools #43](https://github.com/odango-chan/ca-client-tools/issues/43) OPEN；Owner Publisher 尚未实施。
 
 
 ## IR-007
@@ -107,9 +108,10 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 
 - 决策与协作：[Next Issue #40](https://github.com/odango-chan/ca-agent-next/issues/40)；对应 [SR-029](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) **设计待评审 / 实施未 READY**。
 - 版本边界：**CA-SL 1.6.0 是唯一新作者/产品版本**，没有旧解析器、兼容映射、迁移工具、双轨编译、旧 Build DTO、旧 Artifact / Bundle 或混合 Catalog。历史 v1alpha5 仅供只读审计，旧 Skill 必须按新格式重新编写/编译/发布。
-- 设计入口：F02、F03.05、F04、F06、F08、F09、EC02，以及 [CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md)和[版本基线](../规范/CA-SL语言基线与版本规范.md)；SR-004 导入只支持新 Assurance Bundle，SR-027 负责正式发布，SR-030 负责 Host Context Schema-only Package。
-- 外部发行依赖：ca-skills 1.6.0 规范/机器标识；Owner 24/24 Package、Provider 3/3（含 Codec）和 Host Context Schema-only Package；Compiler 新 BuildRequest / BuildResult / Binding / Runtime Artifact；Studio 与 Agent 的 1.6.0 产品回归与 MAS Create→Modify→Release E2E。
-- 验收与状态：SR-029 的完整语言规范与 Capability-first 设计 AC、SR-030 的 Host Context Schema-only Publisher 均需独立审查；代码实施 Issue / 受测 SHA / Golden / 正式 Release / E2E 尚无 1.6.0 证据，不能宣称 READY / VERIFIED。
+- 设计入口：F02、F03.05、F04、F06、F08、F09、EC02，以及 [CA-SL 1.6.0 完整语言设计](../规范/CA-SL%201.6.0完整语言规范.md)与[版本规范](../规范/CA-SL语言基线与版本规范.md)；SR-004 仅消费正式 1.6.0 Assurance Bundle，SR-027 负责发布，SR-030 负责 Host Context Schema-only Package。SR-029 目标 Provider **3/3（含 Codec READ）**；Owner 两项旧 N1 Parser 必须由 Publisher 分别签认，移除时候选 22/22、改成纯业务 READ 保留两项时候选 24/24，均不得视为已发布最终合同。F06 T1/T2 严格隔离；Codec 契约见 SR-026 与中央 [Issue #113](https://github.com/odango-chan/ca-agent-next/issues/113)。生产端代码仅在中央设计 READY 且有目标仓实施授权后进行。
+- 外部发行依赖：ca-skills 1.6.0 规范/机器标识；Owner/Provider 已正式签认的一对一 Package、Codec 3/3 与 Host Context Schema-only Package；Compiler 1.6.0-only 新 BuildRequest/BuildResult/Binding/Runtime Artifact 由 [Compiler #62](https://github.com/odango-chan/ca-skill-compiler/issues/62) 独立跟踪（#61 仅历史）；Studio、Agent 1.6.0 产品回归与 MAS Create→Modify→Release E2E。
+- 验收与状态：SR-029/030 的中央设计评审不能代替正式 Publisher、可执行 Compiler、Golden、Bundle、真实 Codec/Owner E2E；当前外部发布与新版产品 E2E 仍 BLOCKED/NOT_RUN，不宣称 RELEASED/VERIFIED。
+- 验收与状态：SR-029 的设计 AC 需独立审查；代码实施 Issue / 受测 SHA / Golden / 正式 Release / E2E 尚无 1.6.0 证据，不能宣称 READY / VERIFIED。
 
 ## 修订记录
 
@@ -139,10 +141,20 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 | 2026-11-26 | 0.1.20 | GPT-6.2（ChatGPT） | IR-007 | 将 G02/SR-028 引用升级到 v0.1.2，记录精确 Python 文件内容、setup-uv 配置和可复现边界 | 使需求登记册指向最新可执行设计基线 | Issue #35；G02 v0.1.2；SR-028 v0.1.2 |
 | 2026-11-26 | 0.1.21 | GPT-6.2（ChatGPT） | IR-001 | 根据 PR #32 合并、80 项测试及 AC 证据更新 SR-001 完成依据 | 此前 PR OPEN 的历史状态已过期 | Issue #27；PR #32；PR #36 |
 | 2026-11-26 | 0.1.22 | GPT-6.2（ChatGPT） | IR-002、IR-006 | 回填 SR-003 设计 READY / 实施 IN_PROGRESS 及 PR #34 本地模块 AC 证据；回填 SR-024 PR #253 合并、Issue #252 关闭和 VERIFIED 状态 | 修正需求登记册中 SR-003 DRAFT、SR-024 未记录实施结果的过期状态；不把未合并 PR 或 SKIPPED checks 误报为已集成/CI PASS | Issue #12、#28；SR-003；SR-024；PR #34；ca-agent-demo #252/#253 |
-| 2026-11-26 | 0.1.23 | GPT-6.2（ChatGPT） | IR-003 | 登记 SR-004 独立设计 readiness Issue #43 | 使 Skill 导入与 Compiler/Bundle 依赖有单独的设计审查入口 | Issue #43；SR-004；SR-013；SR-027 |
-| 2026-11-26 | 0.1.24 | GPT-6.2（ChatGPT） | IR-003、修订记录 | 登记 Issue #40 的 CA-SL 1.6.0 单版本无兼容/迁移裁决，要求 SR-004 只消费新 Bundle | 避免 IR-003 上游仍允许旧 Assurance 运行输入 | Issue #40/#43；SR-004；SR-029 |
-| 2026-11-26 | 0.1.25 | GPT-6（ChatGPT） | IR-008、文档状态、修订记录 | 新增 CA-SL 1.6.0 Capability-first / Callable 一对一需求，并登记 SR-029 设计待评审与全链路无兼容门槛 | 防止下游把历史 v1alpha5 当作新系统可执行输入 | Issue #40；SR-029；SR-004 |
+| 2026-11-26 | 0.1.23 | GPT-6.2（ChatGPT） | IR-002、IR-006 | 回填 PR #34 MERGED 到恢复分支及 merge-commit post-merge NOT_RUN；回填 SR-025 READY 和 ca-client-tools #43 OPEN；保持 3 VERIFIED / 2 READY / 1 IMPLEMENTED / 21 DRAFT | 使 IR→SR→Issue 链与当时分支快照一致；该统计不覆盖随后恢复分支合入的 SR-003 VERIFIED 状态 | Issue #12、#28；IR-002、IR-006；SR-003、SR-024、SR-025；PR #34；ca-client-tools #43 |
+| 2026-11-27 | 0.1.24 | GPT-6.2（ChatGPT） | IR-002、IR-006 | 按恢复分支最新 SR-003 v0.3.11 回填模块 VERIFIED 与双平台 CI；保留系统 EX NOT_RUN；确认 SR-025 READY / ca-client-tools #43 OPEN | 合并 refresh 分支状态时保留 PR #41/#42 后续证据，不把旧 SR-003 IN_PROGRESS 快照带入当前需求登记册 | Issue #53；Issue #12；SR-003、SR-024、SR-025；PR #34/#41/#42；ca-client-tools #43 |
+| 2026-11-27 | 0.1.25 | GPT-6.2（ChatGPT） | IR-006 | 将 SR-025 设计依据更新为 v0.1.9；保留其 READY 与 ca-client-tools #43 OPEN 边界 | 使 IR→SR→目标仓实施入口指向本轮修订后的权威 SR，不把 Publisher 设计 READY 误报为已实施 | Issue #53；IR-006；SR-025 v0.1.9；ca-client-tools #43 |
+| 2026-11-27 | 0.1.26 | GPT-6.2（ChatGPT） | IR-006 | 将 SR-025 当前权威版本入口更新为 v0.1.10 | 保证需求登记册指向最新 READY Publisher 设计版本，保留 ca-client-tools #43 OPEN 的实施边界 | Issue #53；IR-006；SR-025 v0.1.10；ca-client-tools #43 |
+| 2026-11-27 | 0.1.27 | GPT-6.2（ChatGPT） | IR-006 | 将 SR-025 当前权威版本入口更新为 v0.1.11 | 保持需求登记册与最新 READY Publisher 设计及 F09 v0.3.13 依据一致；ca-client-tools #43 仍 OPEN，Publisher 尚未实施 | Issue #53；IR-006；SR-025 v0.1.11；F09 v0.3.13；ca-client-tools #43 |
+| 2026-11-26 | 0.1.23-pr44 | GPT-6.2（ChatGPT） | IR-003 | 登记 SR-004 独立设计 readiness Issue #43 | 使 Skill 导入与 Compiler/Bundle 依赖有单独的设计审查入口 | Issue #43；SR-004；SR-013；SR-027 |
+| 2026-11-26 | 0.1.24-pr44 | GPT-6.2（ChatGPT） | IR-003、修订记录 | 登记 Issue #40 的 CA-SL 1.6.0 单版本无兼容/迁移裁决，要求 SR-004 只消费新 Bundle | 避免 IR-003 上游仍允许旧 Assurance 运行输入 | Issue #40/#43；SR-004；SR-029 |
+| 2026-11-27 | 0.1.28 | Codex | 整合 | IR-003 的 SR-004 设计与 IR-006 的 Publisher 记录 | 对齐 #54 恢复基线与 #44 导入设计 | Issue #40、#43；PR #44 |
+| 2026-11-27 | 0.1.29 | GPT-6.2（ChatGPT） | IR-008、修订记录 | 整合 1.6.0-only Capability-first 设计与最新恢复基线；设计待评审，实施/发布 NOT_RUN | 整合 PR #45 的 CA-SL 1.6.0 Capability-first 设计与恢复分支最新状态，避免回滚已合入的 #44 及后续基线。 | Issue #12/#40/#43；PR #44/#45 |
+| 2026-11-28 | 0.1.30 | GPT-6.2（ChatGPT） | IR-003、IR-008 | 将 1.6.0 Compiler 实施入口统一指向 Compiler #62，保留 #61 的 v1alpha5 历史范围。 | 避免将 v1alpha5 历史 Issue 误作 1.6.0-only 实施和验收依据。 | Issue #40/#62；SR-013；PR #45 |
+| 2026-11-28 | 0.1.31 | GPT-6（ChatGPT） | IR-008、修订记录 | 回链 SR-029 Provider Codec 3/3 与 Owner Parser 待签认、F06 T1/T2、Next #113 | 建立第六轮 R6-P1-01 的跨仓治理入口，设计授权不外溢为外仓实施 | Issue #40/#113；PR #45 |
 | 2026-11-27 | 0.1.28 | Codex / GPT-6 | IR-002/007 | 更新模块验证状态及 G02 入口 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
 
 | 2026-11-26 | 0.1.26 | GPT-6（ChatGPT） | 1.6.0 Host Context Publisher / 依赖边界 | 将 Host Context 1.6.0 Schema-only Publisher 纳入 IR-006/IR-008，区分 SR-024 历史 VERIFIED 与 SR-030 新需求 | 避免旧 Development Package 被误认为新版正式输入 | Issue #12/#40；IR-006/008；SR-030 |
 | 2026-11-26 | 0.1.27 | GPT-6（ChatGPT） | IR-006/IR-008、修订记录 | 同步 SR-030 新版 Host Context 1.6.0 Schema-only Publisher 需求与 SR-024 历史 v1alpha5 Publisher 边界 | 使 IR→SR 追踪明确区分旧版已验证证据和新版待评审需求 | Issue #12/#40；IR-006/008；SR-024、SR-030；PR #46 |
+| 2026-11-27 | PR46-0.1.28（历史分支） | Codex / GPT-6 | IR-002/007 | 第二维分支曾回填 SR-003/G02 模块与恢复状态，当前以本次合并快照为准 | 保留 #46 原修订溯源，不覆盖恢复分支旧结论 | Issue #12；PR #46 |
+| 2026-11-28 | 0.1.32 | GPT-6（ChatGPT） | IR-002/006/008、修订记录 | 三方整合 #45 与 #46：修复 1.6.0/Compiler #62、SR-030、Provider 3/3、Owner Parser 22/22 或 24/24 条件发布，核对 SR-028 第七轮设计/候选产品证据分层 | 保持 8 IR 的准确版本边界与三方历史 | Issue #12；#40；#113；PR #45；#46 |
