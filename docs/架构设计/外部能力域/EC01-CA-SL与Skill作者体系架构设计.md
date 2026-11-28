@@ -1,13 +1,13 @@
 # EC01 — CA-SL 与 Skill 作者体系架构设计
 
 > 文档类型：外部能力域架构设计（Next 中央权威设计）  
-> 文档版本：0.1.4\
-> 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 唯一新目标；作者规范/Compiler/Bundle 未发布）  
+> 文档版本：0.1.6\
+> 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 唯一新目标；作者规范/Compiler/Bundle 未发布）
 > 功能归属：EC01；关联 F02、F06、F08、F09  
 > 关联需求：IR-003、IR-006；SR-004～SR-006、SR-011、SR-023  
 > 修订日期：2026-11-28
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
-> 本文局部非目标：以本文第 §9 节为准；Demo 不引入生产级准入、签名或兼容层  
+> 本文局部非目标：Agent 运行时实现、生产准入与信任体系，详见 §9。
 > 来源：ca-skills main 780497a；CA-SL v1alpha5 发布规范 18d818436；PR #88/#89
 
 ## 1. 架构定位
@@ -17,7 +17,7 @@ EC01 负责 Skill 作者源格式、CA-SL 语言语义、Skill Package 内容组
 依赖关系：
 
 ~~~text
-CA-SL 1.6.0 complete author specification draft (not released; v1alpha5 archival only)
+Skill package (CA-SL 1.6.0 Assurance design target)
   ├─ SKILL.md metadata / package identity
   ├─ optional Assurance author source
   │    ├─ contract.yaml
@@ -76,18 +76,22 @@ Node 仍包含 Precondition、Operation、Observation、Postcondition 阶段；�
 
 ## 4. when 与执行期 Predicate 分离
 
-可选的 Skill 选择条件**唯一位于 `assurance/contract.yaml` 的顶层 `when`**；`SKILL.md` Front Matter 不允许声明 `when`，无 Assurance 的 Skill 不声明 `when`。Compiler 必须依正式 Request Schema 和 Publisher 冻结的 Event metadata 静态检查 CEL。该表达式只回答“当前 Event/Input 是否适用这个 Skill”，不替代 predicates.yaml，也不执行任何业务操作。
+Compiler **唯一从 `skills/<skill-id>/assurance/contract.yaml` 读取可选顶层 `when`**，依据正式 Request Schema 与 Publisher 已冻结 Event metadata 校验并编译；`SKILL.md` Front Matter 和无 Assurance Skill 都不得声明 `when`。`when` 只用于 Event/Input 的 T1 Skill 选择，不替代执行期 `predicates.yaml`。
 
 ~~~yaml
 when: 'event.type == "nsmf.create-sm-context" && has(input.requestType) && input.requestType == "INITIAL_REQUEST"'
 ~~~
 
+此例仅说明作者源位置和候选表达式形式。OpenAMSM 原版 OpenAPI 中 `SmContextCreateData.requestType` 为可选字段，读取前先以 `has(input.requestType)` 守卫，并依赖 `&&` 左到右短路。`has()` 与短路语义必须由 ca-skills Publisher 纳入并冻结于 CA-SL 1.6.0 CEL Profile；冻结前不得视为已发布契约。
+
+SBI JSON 直接采用 OpenAMSM 对应版本的 3GPP/OpenAMSM 正式 OpenAPI YAML，保留原件及其引用。NAS/NGAP 二进制经 Codec 解码，解码字段遵循 Codec 发布的结果 Schema。`format: binary` 只描述传输形式。选择期只读取当时已存在的输入，Request Schema 解析与 when 的静态类型检查遵循正式 CA-SL / Compiler 契约。
+
 约束：
 
 - when 只在新业务 Event 的 Skill 选择阶段评估。
-- 表达式使用 Event 与该 Skill requestSchema 所定义的输入类型；静态检查必须在发布阶段完成。
-- when 不得引用运行期 Evidence、Owner 状态、T2 Codec Result 或未声明字段；只能读取 T1 阶段已存在的 Event metadata 与按正式 Request Schema 校验的 input。
-- 对正式 OpenAPI 中的 optional 字段使用 `has()` 守卫；本例 `requestType` 为 optional，字符串值/枚举须与 OpenAMSM 实际支持的 3GPP 原版 YAML 严格匹配。`has()` 与短路语义需要 ca-skills Publisher/Compiler 正式资格化，示例不代表已发布合同。
+- 表达式使用 Publisher 已冻结的 Event metadata 与该 Skill requestSchema 所定义的输入类型；静态检查必须在发布阶段完成。当前 `event.type` 仅为候选字段，Event envelope、metadata 字段集/类型和规范化规则须由 Publisher 冻结。
+- `when` 只能引用 T1 已有的 Event metadata 与已按 Request Schema 验证的 `input`；不得引用 T2 Codec Result、运行期 Evidence、Owner 状态或未声明字段。`event.type` 仍须经 Publisher 正式冻结为规范化 metadata，不能凭候选示例假定机器字段已发布。
+- optional input 字段先用 `has(input.field)` 守卫，nullable 字段先判存在再与 `null` 比较；`has()` 和 `&&` 左到右短路语义属于 Publisher/Compiler 资格化门槛。`requestType` 的枚举和值按 OpenAMSM 对应正式 OpenAPI 原件校验，当前示例非已发布合同。
 - 无 when 的 Skill 仍可通过 Skill 元数据和语义选择进入候选；when 返回 false 的 Skill 不得被选择。
 - CEL 解析/类型/求值错误必须 fail closed，不得把错误或 UNKNOWN 变成 true。
 - Continuation 关联到原 Run/Skill，不重新进行新 Event 的 Skill 选择。
@@ -105,13 +109,13 @@ ca-skill-compiler 是唯一 CA-SL 编译器。EC01 不复制 Parser、Schema Res
 4. 发布记录固定作者源、Compiler Release、Artifact 契约和 Bundle 版本。
 5. Next Host 只导入发布 Bundle，不运行 Compiler。
 
-历史 CA-SL v1alpha5 的 when 已进入 ca-skills #88/#89 冻结发布记录；Compiler Issue #61 仅作 v1alpha5 历史范围跟踪，**新 1.6.0-only Compiler 实施由 [Issue #62](https://github.com/odango-chan/ca-skill-compiler/issues/62) 跟踪**。新 Contract.when CheckedExpr/DescriptorSet 与 Runtime Artifact 必须由新 Publisher/Compiler 正式发布、互操作验证；旧冻结 v1alpha5 Artifact 与 Development v1alpha1 不得原地修改、转换、兼容消费或混用。故“历史作者规范已发布”不等于“1.6.0 Compiler/Bundle/Runtime 已完成”。
+历史 v1alpha5 的 `when` 已在 ca-skills #88/#89 留下冻结发布记录，但 Compiler #61 仅属于该历史范围。**1.6.0-only Compiler 由 [#62](https://github.com/odango-chan/ca-skill-compiler/issues/62) 单独跟踪**：v2.1.0 尚无 1.6.0 Contract.when AST/可消费的 CheckedExpr/DescriptorSet，须由正式 Publisher/Compiler 冻结和互操作验证；旧 v1alpha5 Artifact 和 Development v1alpha1 不得转换、兼容消费或混用。历史规范已发布并不等于新版 Bundle/Runtime 已完成。
 
 ## 6. 版本、缓存与运行时消费
 
 - Skill Bundle 的发布版本和 CA-SL languageTarget 是两个独立维度。
 - Host 导入时检查 Bundle 支持版本、必需文件、路径、引用、Schema/类型材料和依赖身份；不调用 Compiler。
-- 成功导入形成不可变 SkillCatalog generation，解析后的 metadata、when 程序和选择所需类型环境驻留内存。
+- SR-004 返回经校验的 candidate；SR-005 据此构建并原子激活不可变 SkillCatalog generation，解析后的 metadata、when 程序和选择所需类型环境驻留内存。
 - 每个新 Event 在当前 Catalog generation 上进行候选过滤和 when 求值，不重复读取磁盘作者源或重新解析 CEL。
 - Skill 导入、更新、卸载才改变 Catalog generation；在途 Run 固定原 Skill 身份与 generation。
 - 不建设额外分布式缓存、包管理器、自动更新服务或生产准入系统。
@@ -131,7 +135,7 @@ ca-skill-compiler 是唯一 CA-SL 编译器。EC01 不复制 Parser、Schema Res
 | CA-SL v1alpha5 规范刷新 | ca-skills #88、#89 已合并；发布记录固定规范提交 18d818436 | IMPLEMENTED / RELEASED |
 | 作者模型与指南 | ca-skills main 有 authoring-model.md、authoring.zh-CN.md | IMPLEMENTED |
 | when 作者语义 | 已进入 CA-SL v1alpha5 正式发布记录；main 文档头部仍有 Proposed Refresh 字样，与 Release Record 状态冲突 | RELEASED；源仓文档状态不一致，需后续清理 |
-| 1.6.0 Compiler when CheckedExpr / DescriptorSet | ca-skill-compiler Issue #62 跟踪新 1.6.0-only 产物；历史 Issue #61 不算新版本发布 | NOT_IMPLEMENTED / NOT_RELEASED |
+| 1.6.0 Compiler when CheckedExpr / DescriptorSet | ca-skill-compiler #62 跟踪新 1.6.0-only 产物；历史 #61 仅只读审计，当前 v2.1.0 尚不具备新 AST/Runtime Artifact | NOT_IMPLEMENTED / NOT_RELEASED |
 | Next Bundle Importer / Catalog generation / when evaluator | 当前设计待完整实施验收 | NOT_VERIFIED |
 | Skill-first OpenAMSM 新 Event 选择 | 需 F02/F06 与 EC04 集成验收 | NOT_RUN |
 
@@ -152,8 +156,12 @@ ca-skill-compiler 是唯一 CA-SL 编译器。EC01 不复制 Parser、Schema Res
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
 |---|---|---|---|---|---|
 | 2026-11-25 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 从 CA-SL v1alpha5、作者模型和 Compiler #61 还原作者体系架构，分离规范发布与 Compiler/Host 实现状态 | Issue #12；SR-023 |
-| 2026-11-26 | 0.1.1 | GPT-6（ChatGPT） | §2～3、§10、修订记录 | 将 EC01 新作者体系统一到 1.6.0-only Capability-first、一对一绑定和无兼容；旧 v1alpha5 仅审计 | Issue #40；IR-008；SR-029；SR-027 |
-| 2026-11-26 | 0.1.2 | GPT-6（ChatGPT） | 文档头与修订记录 | 补齐 EC01 规范 review_scope 与非目标头部声明 | Issue #40；PR #45 |
+| 2026-11-27 | 0.1.1 | Codex | §1～6 | 校正新旧版本、选择条件示例、Schema 来源与导入职责 | Issue #40、#43；PR #44 |
+| 2026-11-27 | 0.1.2 | Codex | 文档头 | 补录全局评审范围及 §9 局部非目标，满足治理规范 §11.7 | Issue #43；PR #44 |
+| 2026-11-27 | 0.1.3 | GPT-6.2（ChatGPT） | §2～3、§10、修订记录 | 整合 #45 的 1.6.0-only 设计增量并保留恢复分支当前状态，避免回滚 #44 与后续修订。 | Issue #12/#40/#43；PR #44/#45 |
+| 2026-11-27 | 0.1.4 | GPT-6.2（ChatGPT） | §4、修订记录 | 为可选 requestType 增加 has() 守卫；将 Event metadata、has() 与短路规则明确为 Publisher 冻结前候选，避免可选字段误排除且不提前冻结 1.6.0 Event/CEL 契约 | Issue #40/#49；SR-013/029；PR #45/#52 |
+| 2026-11-27 | 0.1.5 | GPT-6.2（ChatGPT） | EC01 §5/§8 | 区分 v1alpha5 Issue #61 历史范围与 1.6.0-only Issue #62 的 Compiler when / Runtime Artifact 追踪。；原因：避免把历史 Compiler Issue 当作 1.6.0 目标实现。 | Issue #40/#62；PR #45 |
 
 | 2026-11-26 | 0.1.3 | GPT-6（ChatGPT） | 1.6.0 新目标与历史边界 | 将 EC01 完整规范入口切换至 CA-SL 1.6.0，固定 languageTarget 候选并明确 v1alpha5 只读 | Issue #12/#40；PR #46 |
-| 2026-11-28 | 0.1.4 | GPT-6（ChatGPT） | §4、§5、§8、修订记录 | 对齐已合并 #45：when 唯一 contract.yaml、optional requestType CEL Guard、T1/T2 分离；明确 #62 为 1.6.0-only Compiler 而 #61 历史只读 | 消除原 PR #46 与恢复分支 EC01 的架构冲突，保留未发布门槛 | Issue #40；#47；PR #45；#46 |
+| 2026-11-28 | PR46-0.1.4（历史分支标记） | GPT-6（ChatGPT） | §4、§5、§8、修订记录 | 合并前 #46 分支限定修订：when 唯一 contract.yaml、optional requestType CEL Guard、T1/T2 分离和 Compiler #62 | 历史分支原采用 0.1.4 版本号，区别于恢复分支已发布的同号修订 | Issue #40；#47；PR #45；#46 |
+| 2026-11-28 | 0.1.6 | GPT-6（ChatGPT） | §4、§5、§8、修订记录 | 合并恢复分支 0.1.5 的 Event/Request Schema、G.4 Guard 规则与 #46 的 1.6.0-only/T1-T2/Compiler #62 修订 | 保存双方有效设计与分支历史，保持新 Compiler/Product NOT_RELEASED | Issue #12；#40；PR #45；#46 |
