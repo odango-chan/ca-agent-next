@@ -1,8 +1,8 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.73
-> 状态：31 项 SR：4 VERIFIED（仅各自历史模块范围）、1 IMPLEMENTED（设计移交）、26 DRAFT（整项主状态，含 IR-009 / SR-031 与 IR-008 / SR-032 两项增量设计）。PR #46 第九轮独立 Review #6095601142 对 Base `c806def7` / Head `af8d1b85` 给出 `APPROVE_FOR_READY` 并已合入恢复设计基线 `92436348`；main 尚未更新。PR #115 是唯一 mainline 集成入口，当前 Head `84c66b743eca833539bc354b29ecef66512589d5`。PR #52 固定 Head `2dada9b` 第四轮复评 `APPROVE_WITH_NON_BLOCKING_FOLLOWUPS`（0 P0 / 0 P1 / 2 P2）；P2-03 / P2-04 已纳入 PR #115，集成后独立复评待完成。SR-031 / SR-032 产品实现仍 NOT_RUN。
+> 文档版本：0.3.76
+> 状态：31 项 SR：4 VERIFIED（仅各自历史模块范围）、1 IMPLEMENTED（设计移交）、25 DRAFT、1 READY（限定范围：SR-009，整项未完成）。PR #46 第九轮独立 Review #6095601142 对 Base `c806def7` / Head `af8d1b85` 给出 `APPROVE_FOR_READY` 并已合入恢复设计基线 `92436348`；main 尚未更新。PR #115 是唯一 mainline 集成入口，固定评审 Head `ba5354c575394295cfa7a790922e02422b0c96f4`（Base `b2ed5eb84114f9c2556a0cd06ed974887b1b70ad`），该 Head 的 CI 3/3 SUCCESS（2026-11-28T07:14–07:17Z）；此前 `84c66b7` / `0c8ec1f` 引用为历史快照。Issue #116 独立增量复评给出 `APPROVE_FOR_READY（限定范围）`（0 P0 / 0 P1 / 11 P2）。SR-009 生产 T0 classifier 绑定仍 BLOCKED_EXTERNAL_INPUT；SR-031 / SR-032 产品实现仍 NOT_RUN。
 > 修订日期：2026-11-28\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
@@ -31,7 +31,7 @@
 | [SR-006](../SR/SR-006-技能解析器与续跑选择.md) | [IR-003](../IR/IR%20总登记册.md#ir-003) | 技能解析器与 continuation 选择 | DRAFT |
 | [SR-007](../SR/SR-007-统一运行时动作边界与双执行模式.md) | [IR-004](../IR/IR%20总登记册.md#ir-004) | 统一运行时动作边界与双执行模式 | DRAFT |
 | [SR-008](../SR/SR-008-Echo%20垂直端到端示例.md) | [IR-004](../IR/IR%20总登记册.md#ir-004) | Echo 垂直端到端示例 | DRAFT |
-| [SR-009](../SR/SR-009-OpenAMSM%20SBI%20事件插件与二进制产物交接.md) | [IR-005](../IR/IR%20总登记册.md#ir-005) | OpenAMSM SBI 事件插件与二进制产物交接 | DRAFT |
+| [SR-009](../SR/SR-009-OpenAMSM%20SBI%20事件插件与二进制产物交接.md) | [IR-005](../IR/IR%20总登记册.md#ir-005) | OpenAMSM SBI 事件插件与二进制产物交接 | READY（限定：AC-009-01/02/03/05/06 + AC-009-04 映射/Schema/test-double；生产 classifier BLOCKED_EXTERNAL_INPUT；整项未完成） |
 | [SR-010](../SR/SR-010-OpenAMSM%20工具插件与按需编解码集成.md) | [IR-005](../IR/IR%20总登记册.md#ir-005) | OpenAMSM 工具插件与按需编解码集成（AC-010-03 no-hash Channel；AC-010-10 OAS3 multipart / N1-N2-N2 Ext1） | DRAFT |
 | [SR-011](../SR/SR-011-真实%20OpenAMSM%20创建修改释放端到端验证.md) | [IR-005](../IR/IR%20总登记册.md#ir-005) | 真实 OpenAMSM 创建修改释放端到端验证 | DRAFT |
 | [SR-012](../SR/SR-012-Compiler设计归档与跨仓收敛.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Compiler 设计归档与跨仓收敛 | DRAFT |
@@ -77,7 +77,7 @@
 | SR-006 | APPROVE_FOR_READY（限定） | 直接文本、when 三态、幂等冲突与原代际 Continuation | DRAFT |
 | SR-007 | CHANGES_REQUESTED | P1：AC-007-05 缺 Owner Proof 完整身份字段与同 ID Proof 负例 | DRAFT |
 | SR-008 | APPROVE_FOR_READY（限定） | 三场景静态设计；真实 Echo 运行仍阻塞 | DRAFT |
-| SR-009 | APPROVE_FOR_READY（仅旧快照 `ee73ad48`）/ 当前增量复评 PENDING | Issue #73 的旧快照 P1 已修订；当前 SR-009 v0.2.13 / F06 v0.3.7 / Plugin PR #1 新增 T0 classifier 依赖与 responseChannel 边界，等待 Issue #116 独立复评；生产 AC-009-04 classifier 依赖 ca-client-tools#44，BLOCKED_EXTERNAL_INPUT | DRAFT |
+| SR-009 | APPROVE_FOR_READY（限定范围，Issue #116；固定 Head `ba5354c`；0 P0 / 0 P1 / 11 P2 已逐项登记） | AC-009-01/02/03/05/06 + AC-009-04 Event mapping/Schema/test-double 子集；生产 AC-009-04 classifier 依赖 ca-client-tools#44，BLOCKED_EXTERNAL_INPUT；模块实施 Issue #2 / PR #3；整项 SR 未完成 | READY（限定） |
 | SR-010 | APPROVE_FOR_READY（限定） | Host ArtifactStore/Channel 与 06A；AC-010-03 因外部 ArtifactStore v1 强制 SHA-256 与 Demo no-hash 冲突而 BLOCKED；新增 AC-010-10 OAS3 requestBody / multipart / N1-N2-N2 Ext1 Content-ID 也 BLOCKED/NOT_RUN | DRAFT |
 | SR-011 | CHANGES_REQUESTED | P1：AC-011-04 缺 N1/N2 乱序、交错、多事务与旧代际断言 | DRAFT |
 | SR-012 | APPROVE_FOR_READY（限定） | 固定源 docs/design=12、docs=218；源仓正文替换仍等默认分支链接 | DRAFT |
@@ -145,7 +145,7 @@
 | [SR-005](../SR/SR-005-技能目录与条件程序消费.md) | 阶段 READY（本仓 Skill 链路） | AC-005-01/03/04/06 | 不可变 Catalog、原子激活和 generation。集成读取 A 批 SR-004 的 candidate；02/05 等正式 CheckedExpr/DescriptorSet。 | [#69](https://github.com/odango-chan/ca-agent-next/issues/69#issuecomment-7209428208) |
 | [SR-006](../SR/SR-006-技能解析器与续跑选择.md) | 阶段 READY（本仓 Skill 链路） | AC-006-01～04/06/07 | 以本地 fixture 检查选择与精确续跑，接入 A 批 SR-005 generation。05 的正式 typed-input 互操作另验。 | [#70](https://github.com/odango-chan/ca-agent-next/issues/70#issuecomment-7209449444) |
 | [SR-008](../SR/SR-008-Echo%20垂直端到端示例.md) | 限定设计已认可，等待直接依赖 | AC-008-01/04（SKILL.md-only） | 已获限定设计认可。接入 A 批真实 Importer、Catalog、Resolver 后验证 Fake Model、文本 Delivery、重放与越权拒绝；02/03/05 等 Echo Interface、Bundle 和组合环境。 | [#72](https://github.com/odango-chan/ca-agent-next/issues/72#issuecomment-7210341882) |
-| [SR-009](../SR/SR-009-OpenAMSM%20SBI%20事件插件与二进制产物交接.md) | 阶段 READY 候选（待 #116 独立增量复评） | AC-009-01/02/03/05/06；AC-009-04 Event mapping 可用 test double，生产 classifier BLOCKED | ca-openamsm-plugin PR #1 仅为已刷新的设计文档；按治理规则，当前不创建实施 Issue。ca-client-tools#44 发布 T0 classifier API 后才能完成 AC-009-04 生产绑定；SR-011 负责系统联调。 | [#73](https://github.com/odango-chan/ca-agent-next/issues/73#issuecomment-7210217168)（旧快照）；[#116](https://github.com/odango-chan/ca-agent-next/issues/116)（当前增量复评） |
+| [SR-009](../SR/SR-009-OpenAMSM%20SBI%20事件插件与二进制产物交接.md) | 阶段 READY（限定范围） | AC-009-01/02/03/05/06；AC-009-04 Event mapping/Schema/test-double | 模块实施 Issue #2 / PR #3（ca-openamsm-plugin），87 test functions / 123 cases，CI 46123776882 Linux+Windows SUCCESS；生产 classifier 待 ca-client-tools#44；SR-011 负责真实系统联调。 | [#116](https://github.com/odango-chan/ca-agent-next/issues/116#issuecomment-7235978519)（当前增量复评）；[#73](https://github.com/odango-chan/ca-agent-next/issues/73#issuecomment-7210217168)（旧快照） |
 | [SR-010](../SR/SR-010-OpenAMSM%20工具插件与按需编解码集成.md) | 阶段 READY（本仓 no-hash Host Channel 限定范围） | AC-010-01/02/04/05/09 | AC-010-03 因外部 v1 SHA-256 contract 不兼容而 BLOCKED；AC-010-10 OAS3 requestBody / multipart / N1-N2-N2 Ext1 Content-ID 映射 BLOCKED/NOT_RUN；依赖 SR-031 / SR-013 / SR-026。 | [#74](https://github.com/odango-chan/ca-agent-next/issues/74#issuecomment-7210244694) |
 | [SR-011](../SR/SR-011-真实%20OpenAMSM%20创建修改释放端到端验证.md) | 限定设计已认可，等待直接依赖 | AC-011-06 静态架构断言 | 已获限定设计认可。组合实现具备后检查 Core 零业务分支；01～05 等同批 Bundle、Compiler Verify、Provider/Owner Package 和隔离对端。 | [#75](https://github.com/odango-chan/ca-agent-next/issues/75#issuecomment-7210271472) |
 | [SR-012](../SR/SR-012-Compiler设计归档与跨仓收敛.md) | 阶段 READY（中央只读核验） | AC-012-01 的 Next→源仓静态部分、03 | [固定源报告](../issue-95-fixed-source-handoff/SR-012.md)已核对 218/12、blob 与正文差异；01 限定范围及 03 静态门槛 PASS；02 与源仓回链 NOT_RUN。 | [#76](https://github.com/odango-chan/ca-agent-next/issues/76#issuecomment-7210373026)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95) |
@@ -192,7 +192,7 @@
 - Phase D：SR-005、SR-006。
 - Phase E：SR-007。
 - Phase F：SR-008。
-- Phase G：SR-009 独立 Plugin 模块可在自身阶段 READY、独立实施 Issue 与目标仓授权后先行，不等待 Echo；当前 #116 增量复评完成前不创建实施 Issue。SR-009 AC-009-04 生产 classifier 另等 ca-client-tools#44；SR-010 逐子阶段核对实施依赖；系统 OM 组合仍待 Echo 与 Host/Owner 对端.
+- Phase G：SR-009 独立 Plugin 模块已按 Issue #116 限定范围进入 READY，模块实施 Issue #2 与 PR #3 已建立，不等待 Echo；AC-009-04 生产 classifier 另等 ca-client-tools#44；SR-010 逐子阶段核对实施依赖；系统 OM 组合仍待 Echo 与 Host/Owner 对端.
 - Phase H：SR-011。
 - Capability-first 新版本设计：[SR-029 v0.2.6](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) / [Issue #40](https://github.com/odango-chan/ca-agent-next/issues/40)：**CA-SL 1.6.0-only / 完全无旧版兼容**。Provider 目标由历史查询 2/2 扩展为含 Codec READ 的 **3/3**；Owner 两项历史 Parser 必须分别签认，双移除/一删一留/双保留为纯业务 READ 分别形成 **22/22、23/23、24/24** 条件候选；任一未签认则成员数未冻结、不得发布。T1 不读 T2 Codec Result；Modify 0xC9/NGAP 未资格化 BLOCKED。F02/F03.05/F04/F06/F08/F09/EC02 均按候选设计约束，Compiler/Publisher/Runtime/Studio/Bundle 新契约尚未发布，不启动代码实施；下游 PR #46/#48 冲突另设集成任务，不直接修改。
 - Compiler 外部发布依赖：SR-012、SR-013；SR-013 的 [PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)已核对 58 个文件与 SHA256SUMS；归档报告为 Go/Python 18/18，当前审计复跑 NOT_RUN，不代表 Compiler 产品发布或完整 SR VERIFIED。
@@ -209,7 +209,7 @@
 - 设计来源：ca-agent-next PR #1 的架构、设计、规范和 Acceptance 文档。
 - PR #1：已合并；只代表设计文档变更。
 - Next Runtime：README 声明尚无已验收 Runtime 实现。
-- 当前 31 项 SR 中 4 VERIFIED（SR-001/002/003/024）、1 IMPLEMENTED（SR-015）、26 DRAFT（其中 SR-029/SR-030 设计待评审）；SR-024 VERIFIED 仅覆盖旧 v1alpha5 Development Publisher；SR-013 归档 PoC 不改变 DRAFT；SR-009 只覆盖 Event/Delivery Plugin/staging，SR-010 覆盖 Host ArtifactStore、Channel、Provider v2 Driver/Codec。
+- 当前 31 项 SR 中 4 VERIFIED（SR-001/002/003/024）、1 IMPLEMENTED（SR-015）、25 DRAFT、1 READY（限定：SR-009；整项未完成）；SR-024 VERIFIED 仅覆盖旧 v1alpha5 Development Publisher；SR-013 归档 PoC 不改变 DRAFT；SR-009 只覆盖 Event/Delivery Plugin/staging（AC-009-04 生产 classifier BLOCKED），SR-010 覆盖 Host ArtifactStore、Channel、Provider v2 Driver/Codec。
 - Issue #12 追踪本轮中央设计资产恢复；PR #11/#13/#15/#16/#18 均在独立分支 OPEN/DRAFT，恢复分支已同步可复用的最新文档内容但尚未创建 PR；PR 状态不等于 SR 实施状态。
 - 恢复分支 docs/restore-original-designs-20261125 尚未创建指向 main 的总 PR；SR-002 设计 PR #20 与实施 PR #23 均已合并到恢复分支，SR-002 为 VERIFIED、AC-002-01～08 PASS；EX-01 仍 NOT_RUN。该恢复分支尚未合并 main。
 - ca-agent-demo、ca-client-tools、ca-skill-compiler、ca-skills 和 ca-openamsm-plugin 的现有代码/PR 只能作为外部复用或依赖证据，不能自动算作 Next SR 已实施。
@@ -324,4 +324,5 @@
 | 2026-11-28 | 0.3.72 | GPT-6.2（ChatGPT） | SR-010/013/026/027 状态与修订记录 | 将 AC-010-10、AC-013-07、AC-026-04～06、AC-027-05 的 OAS3 / Codec / Bundle 边界纳入 SR 追踪，明确各项 BLOCKED/NOT_RUN | 防止新增 IR-009 设计被误读为 Provider / Compiler / Bundle 产品验收通过 | Issue #47；IR-009；PR #115 |
 | 2026-11-28 | 0.3.73 | GPT-6.2（ChatGPT） | SR-010 AC-010-03 状态、修订记录 | 明确 Demo no-hash Artifact Channel；外部强制 SHA-256 的 ArtifactStore v1 不可直接复用，AC-010-03 保持 BLOCKED | 避免把摘要校验、内容寻址或旧契约兼容带入 Demo 范围 | Issue #50；PR #115；SR-001 AC-REV-08 |
 | 2026-11-28 | 0.3.74 | GPT-6.2（ChatGPT） | SR-009 评审矩阵、§2.4、Phase G、修订记录 | 更新旧 Review #73 的快照边界；登记 SR-009 v0.2.13 / F06 v0.3.7 / Plugin PR #1 当前增量复评 Issue #116；将 T0 classifier API 缺失列为 AC-009-04 生产绑定直接外部阻塞 | 防止将旧快照批准外推到新设计，并遵守 READY 前不创建目标仓实施 Issue 的治理规则 | Issue #116；SR-009；F06；ca-client-tools#44；PR #115 |
-| 2026-11-28 | 0.3.73 | GPT-6.2（ChatGPT） | 文档头、SR 清单、IR-008 / SR-032、修订记录 | 纳入 SR-032 作者规范与 Node 设计，更新 31 SR / 26 DRAFT 统计及 PR #52 / #115 最新复评状态 | 使 SR 索引反映作者规范已集成、两项非阻断 P2 已整改，但不误报 PR #115 独立复评或产品实施完成 | Issue #49；IR-008；SR-032；PR #52/#115；Review #6089893779 |
+| 2026-11-28 | 0.3.75 | GPT-6.2（ChatGPT） | 文档头、SR 清单、IR-008 / SR-032、修订记录 | 纳入 SR-032 作者规范与 Node 设计，更新 31 SR / 26 DRAFT 统计及 PR #52 / #115 最新复评状态（本行此前误标为 0.3.73，内容不变） | 使 SR 索引反映作者规范已集成、两项非阻断 P2 已整改，但不误报 PR #115 独立复评或产品实施完成 | Issue #49；IR-008；SR-032；PR #52/#115；Review #6089893779 |
+| 2026-11-28 | 0.3.76 | DeepSeek Harness（GLM-5.3） | 文档头、SR 清单、§2.3、§2.4、Phase G、修订记录 | 按 Issue #116 登记 SR-009 READY（限定范围）与 Issue #2 / PR #3；回填固定评审 Head `ba5354c` 与 CI 3/3；删除乱序的重复 0.3.73 修订行并修正版本单调；同步 4 VERIFIED / 1 IMPLEMENTED / 25 DRAFT / 1 READY 统计 | 关闭 P2-09/P2-11：消除索引版本非单调与 Head/CI 过期引用，同时保持 AC-009-04 生产 classifier BLOCKED、整项 SR 未完成 | Issue #116；SR-009；PR #115；ca-openamsm-plugin #2/#3；F05 v0.4.11；F06 v0.3.8 |

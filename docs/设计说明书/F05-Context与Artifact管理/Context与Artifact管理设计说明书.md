@@ -1,7 +1,7 @@
 # Context 与 Artifact 管理设计说明书
 
 > 文档类型：机制设计说明书  
-> 文档版本：0.4.10\
+> 文档版本：0.4.11\
 > 状态：目标设计已重建；ca-host.artifact-store/v1 已冻结并由 Provider v1.2.0 消费；ca-agent Go Host P1 已验收；Next Python Host / ArtifactStore / Channel NOT_IMPLEMENTED  
 > 功能归属：F05 — Context 与 Artifact 管理  
 > 关联 SR：SR-009；交叉 SR：SR-007、SR-010、SR-011、SR-015、SR-017、SR-030、SR-032\
@@ -278,12 +278,13 @@ Media Type：
 |---|---|---|
 | n1.request | 入站 | SBI 请求中的原始 N1 NAS 消息 |
 | n2.request | 入站 | SBI 请求中存在时的原始 N2 SM 信息 |
+| n2Ext1.request | 入站 | SBI 请求中存在时的原始 N2 SM 信息 Ext1（请求 JSON `n2SmInfoExt1.contentId`，multipart part `binaryDataN2SmInformationExt1`） |
 | n1.confirmation | 入站 | 后续 ingress 中的 N1 continuation / confirmation，例如 PDU Session Release Complete（0xD4） |
 | n2.confirmation | 入站 | 后续 ingress 中的 N2 continuation / confirmation，例如 PDU Session Resource Release Response |
 | n1.response | 出站 | Owner / Host 为当前响应义务生成的 N1 NAS 响应 |
 | n2.response | 出站 | Owner / Host 为当前响应义务生成的 N2 NGAP 响应 |
 
-具体 Event 决定 slot 必需或可选；Plugin 不得伪造缺失的 N1/N2 part。
+具体 Event 决定 slot 必需或可选；Plugin 不得伪造缺失的 N1/N2 part。Create 与 Update 的 `n2.request` / `n2Ext1.request` 均为可选，是否出现以实际请求 JSON 引用与 multipart part 为准；`n2Ext1.request` 的映射与 fail-closed 规则以 F06 §4.1 为唯一权威。continuation 未冻结 Ext1 slot，携带 Ext1 必须显式拒绝而不是静默丢弃。
 
 Codec 规则：
 
@@ -295,7 +296,7 @@ Codec 规则：
 - ca-client-tools PR #39 当前 OPEN；Phase B facade/worker 不等于 Phase C consumer integration。未发布 Callable 的纯 Go Codec library 不是 Agent 可调用 Tool。
 - 不宣称完整 NGAP 支持；只声明实际发布、测试和资格化的消息子集。
 
-Event Plugin 可以在 Skill 选择前提取共享 UpdateSMContext 所需的最小 NAS discriminator（例如区分 0xC9 Modify 与 0xD1 UE-requested Release），但这不是完整协议解码或业务决策，必须保留原始 bytes。
+Event Plugin 可以在 Skill 选择前提取共享 UpdateSMContext 所需的最小 NAS discriminator（`0xC9` Modify、`0xD1` UE-requested Release、`0xD4` Release Complete），但这不是完整协议解码或业务决策，必须保留原始 bytes。该分类只使用 ca-client-tools 正式发布的窄 5GSM classifier API（F06 §4.1/§14）；Plugin 不得自建 NAS parser、调用完整 DecodeNAS 或引入第二套 Codec。该 API 发布前生产分类器绑定保持 BLOCKED_EXTERNAL_INPUT，测试只可注入 test double 验证 Event mapping，不得计为生产 PASS。
 
 ## 11. Run、重试与 Artifact 生命周期
 
@@ -431,5 +432,5 @@ Demo 必须具备：本地 Host-owned ArtifactStore、精确 slot、相对路径
 | 2026-11-27 | 0.4.7 | GPT-6.2（ChatGPT） | §2、§4 | 将 Host Script Execution 的 LLM 暴露条件对齐为 `scriptExecution.llmEnabled` 与 Registry `llmInvocable` 双门禁 | 使 Package Resource Access 与脚本执行授权保持独立、明确 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.4.8 | GPT-6.2（ChatGPT） | §2、§4 | 移除 LLM 专属 Script 执行门禁，LLM 与 Assurance 共用 Script Registry / Runner | 使 Context 资源读取、脚本执行和 Package snapshot 的边界保持统一 | Issue #49；IR-008；SR-032 |
 | 2026-11-27 | 0.4.9 | GPT-6.2（ChatGPT） | §2、§4 | 定义 Host Resource Read system Action 的请求、响应、Package snapshot 绑定、路径 / 大小限制和拒绝诊断；明确 LLM 可调用全部登记 Script | 补齐 LLM 读取 Schema / Script 的实际接口，消除只写“按需读取”却无请求输出契约的问题 | Issue #49；IR-008；SR-032 |
-
 | 2026-11-27 | 0.4.10 | GPT-6.2（ChatGPT） | §2.1、修订记录 | 明确 Resource Read 使用 Host per-Run Runtime Action Budget，而非 Contract.limits.maxActions 业务动作预算 | 与 F04 Script Execution 预算规则统一，防止系统内建动作绕过 Host 资源上限 | Issue #49；IR-008；SR-007/032；PR #52 |
+| 2026-11-28 | 0.4.11 | DeepSeek Harness（GLM-5.3） | 文档头、§10、修订记录 | 按 Issue #116 P2-01/P2-10 补齐 `n2Ext1.request` slot（F06 §4.1 `n2SmInfoExt1` 映射）；明确 Create/Update 可选 N2/Ext1 与 continuation Ext1 fail-closed；§10 T0 说明引用 ca-client-tools 窄 API、`0xC9/0xD1/0xD4` 与禁止本地 parser/DecodeNAS | 关闭 slot 词汇缺口，避免实现者猜测 Ext1 staging 或复制 NAS parser；保持生产 classifier BLOCKED_EXTERNAL_INPUT | Issue #116；SR-009；F06 v0.3.8；ca-client-tools#44 |

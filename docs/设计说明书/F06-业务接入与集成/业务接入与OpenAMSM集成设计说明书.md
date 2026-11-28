@@ -1,7 +1,7 @@
 # 业务接入与 OpenAMSM 集成设计说明书
 
 > 文档类型：业务集成设计说明书  
-> 文档版本：0.3.7
+> 文档版本：0.3.8
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
 > 功能归属：F06 — 业务接入与集成；EC04、EC05、EC07  
 > 关联 IR：IR-004、IR-005、IR-006  
@@ -63,7 +63,7 @@ Plugin 不负责：
 - PFCP/QoS 计算或会话状态管理。
 - Runtime Wait/Resume 或 Reconcile。
 
-对于共享 UpdateSMContext，Plugin 只提取最小 5GSM discriminator：0xC9 表示 UE PDU Session Modification Request；0xD1 表示 UE-requested PDU Session Release Request。它不解析完整 NAS、不做业务状态判断；Host Resolver 根据规范化 Event 选择对应 Skill。畸形、未知或不支持消息必须 fail closed。
+对于共享 UpdateSMContext，Plugin 只提取最小 5GSM discriminator：`0xC9`（UE PDU Session Modification Request）、`0xD1`（UE-requested PDU Session Release Request）与 `0xD4`（PDU Session Release Complete continuation）。该分类只调用 ca-client-tools 正式发布的窄 5GSM classifier API（§4.1 / §14），返回最小分类或显式 malformed/unsupported；该 API 未发布前生产分类器绑定保持 BLOCKED_EXTERNAL_INPUT。Plugin 不得自建 NAS parser、不得调用完整 DecodeNAS、不得引入第二套 Codec。它不解析完整 NAS、不做业务状态判断；Host Resolver 根据规范化 Event 选择对应 Skill。畸形、未知或不支持消息必须 fail closed。
 
 ## 4. 协议与契约权威
 
@@ -96,7 +96,7 @@ Plugin 不负责：
 分类规则：
 1. N1 为 `0xC9` 或 `0xD1` 且无 continuation-only discriminator 时，Event type 为 `nsmf.update-sm-context`。
 2. N1 为 `0xD4`，或 N2 类型为上述三种 response 时，Event type 为 `nsmf.update-sm-context.continuation`；两路同时出现且都属于 continuation 时保留两路 Artifact/discriminator。
-3. 同一请求同时出现新操作 discriminator（0xC9/0xD1）与 continuation discriminator，或 discriminator 缺失、未知、与 Content-ID/part 不匹配时，拒绝整个 ingress，不发布 Event。
+3. 对 `UpdateSmContext` 分类时：同一请求同时出现新操作 discriminator（`0xC9`/`0xD1`）与 continuation discriminator，或 discriminator 缺失、未知、与 Content-ID/part 不匹配，拒绝整个 ingress，不发布 Event。Create 不要求 NAS operation discriminator，本规则的 discriminator 缺失条件不适用于 Create。
 4. `n2SmInfoExt1` 仅在选定 OAS3 operation/profile 显式声明 N2 Ext1 slot 时接收；引用缺失、重复 Content-ID、错 slot 或错 media type 必须 fail-closed，不得静默丢弃或误并入 `n2SmInfo`。未被 JSON 引用的 part 不得交给 Codec，额外 part 策略由 ingress profile 明确规定。
 
 `responseChannelId` 是 Plugin 为每个 HTTP/2 stream 生成的本地短期 handle，只用于把 Host 的 `delivery.dispatch` 送回该次 HTTP response；Plugin 只保留对应的内存 waiter。Host 为每个 ingress 创建 `responseObligationId`，并在 `delivery.dispatch` 中提供。Plugin 会在该帧中瞬时收到此 Host-owned opaque token，但不得生成、解释为 Run 身份、跨请求保存/持久化、转发或在 `delivery.result` 中回传；Plugin 只使用本地 `responseChannelId` 将当前 dispatch 写回对应 HTTP/2 stream，不得混同两种 ID。Plugin 不接收、不存储、不发送 Run ID、generation、releaseTxn 或 continuation state。
@@ -378,3 +378,4 @@ Create → Modify → Release 的顺序、Owner authoritative state、Receipt / 
 | 2026-11-28 | 0.3.5 | GPT-6.2（ChatGPT） | §4.1、§14 | 补齐 N2 Ext1 Content-ID / slot 映射，并明确原版 OAS3 Source Bundle、T0/T1/T2/T4 和 Codec Result 分阶段边界 | 与 IR-009 / SR-031 / SR-010 的三组 multipart 引用一致，避免错误丢弃或误交二进制 | Issue #47；IR-009；SR-010/031；PR #115 |
 | 2026-11-28 | 0.3.6 | GPT-6.2（ChatGPT） | §4.1、§14 | 补齐 N2 / N2 Ext1 类型字段与 Content-ID/slot 的联合校验，并固定 CEL `input` 为已验证的 `jsonData` Request 根 | 避免只验证二进制引用而遗漏类型配对，或把 Event envelope / multipart 误作 T1 Request | Issue #47/#101；IR-009；SR-010/013/026/031；PR #48/#101/#115 |
 | 2026-11-28 | 0.3.7 | GPT-6.2（ChatGPT） | §4.1、§13.7、§14 | 将最小 NAS discriminator 归入 T0 ingress；分离 ca-client-tools 共享 classifier library API 与 T2 Agent-callable Codec Tool；明确 classifier 未发布前 SR-009 AC-009-04 生产绑定 BLOCKED | 消除 T0/T1 阶段矛盾，防止 Plugin 复制 parser、调用完整解码器或猜测外部 API | Issue #12；SR-009；ca-client-tools #18/#39 |
+| 2026-11-28 | 0.3.8 | DeepSeek Harness（GLM-5.3） | 文档头、§2、§4.1 规则 3、修订记录 | 按 Issue #116 P2-06/P2-10：§2 补 `0xD4` 与 T0 classifier API 所有权（禁止本地 parser / 完整 DecodeNAS）；§4.1 规则 3 明确只适用于 `UpdateSmContext`，Create 不要求 discriminator | 防止实现者误拒合法 Create，或按 §2 写本地 header parser 并漏掉 `0xD4`；不改变已冻结的事件/槽位语义 | Issue #116；SR-009；F05 v0.4.11；ca-client-tools#44；PR #115 |
