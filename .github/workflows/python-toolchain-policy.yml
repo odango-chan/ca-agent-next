@@ -1,0 +1,100 @@
+name: Python Toolchain Policy Bootstrap
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, edited, ready_for_review]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: python-toolchain-bootstrap-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  bootstrap:
+    name: Bootstrap Policy Check
+    if: github.event.pull_request.number == 115
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+        with:
+          version: '0.13.10'
+
+      - name: Install policy interpreter
+        run: uv python install 3.14.6
+
+      - name: Validate candidate baseline files
+        shell: bash
+        run: |
+          set -euo pipefail
+          for path in \\
+            pyproject.toml uv.lock .python-version .gitignore \\
+            scripts/unittest_gate.py scripts/python_toolchain_policy.py \\
+            tests/test_python_toolchain_policy.py \\
+            .github/python-toolchain-baseline.json \\
+            .github/workflows/review-context.yml \\
+            .github/workflows/sr003-plugin-ci.yml \\
+            .github/workflows/python-toolchain-policy.yml \\
+            .github/workflows/python-toolchain-policy-trusted.yml; do
+            test -f "$path"
+          done
+          test "$(tr -d '\\r\\n' < .python-version)" = "3.14.6"
+          grep -Fq 'required-version = "==0.13.10"' pyproject.toml
+          for workflow in \\
+            .github/workflows/review-context.yml \\
+            .github/workflows/sr003-plugin-ci.yml \\
+            .github/workflows/python-toolchain-policy.yml \\
+            .github/workflows/python-toolchain-policy-trusted.yml; do
+            grep -Fq 'astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d' "$workflow"
+            grep -Fq "version: '0.13.10'" "$workflow"
+          done
+
+      - name: Test candidate policy positive and negative cases
+        run: |
+          uv run --no-project --python 3.14.6 python -m unittest discover -s tests -p test_python_toolchain_policy.py -v
+
+  lock-check:
+    name: Python Lock Consistency
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+
+      - name: Detect root Python project
+        id: scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f pyproject.toml ] || [ -f uv.lock ]; then
+            if [ ! -f pyproject.toml ] || [ ! -f uv.lock ]; then
+              echo "::error::Python project requires both pyproject.toml and uv.lock"
+              exit 1
+            fi
+            echo "python_project=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "python_project=false" >> "$GITHUB_OUTPUT"
+            echo "No root Python project in this PR head; lock check not applicable."
+          fi
+
+      - name: Set up uv
+        if: steps.scope.outputs.python_project == 'true'
+        uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+        with:
+          version: '0.13.10'
+
+      - name: Verify lock is synchronized
+        if: steps.scope.outputs.python_project == 'true'
+        run: uv lock --check
