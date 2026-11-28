@@ -1,7 +1,7 @@
 # Context 与 Artifact 管理设计说明书
 
 > 文档类型：机制设计说明书  
-> 文档版本：0.4.13\
+> 文档版本：0.4.14\
 > 状态：ca-host.artifact-store/v1 保留为历史冻结契约（要求 SHA-256，Provider v1.2.0 已消费）；新 1.6.0 Demo 目标为 ca-host.artifact-store/v2（无 hash，Next 中央设计已固定；独立复评和实现尚未完成）；Next Python Host / ArtifactStore / v2 Channel NOT_IMPLEMENTED。
 > 功能归属：F05 — Context 与 Artifact 管理  
 > 关联 SR：SR-009；交叉 SR：SR-007、SR-010、SR-011、SR-015、SR-017、SR-030、SR-032\
@@ -266,7 +266,7 @@ Host 必须读取真实文件长度；Plugin→Host 本地 staging 边界不计�
 
 1. Runtime 通过已授权 Action / Tool 获得输出 Artifact。
 2. Host 验证当前 responseObligation 是否允许该 slot，并将精确 bytes 写入 outboundDirectory。
-3. Host 发送 delivery.dispatch，包含 responseObligationId、slot、mediaType、Content-ID（如适用）、相对 stagingPath 和 byteLength。Host artifactRef 保持 Host 内部，不交给 Delivery Plugin。
+3. Host 发送 `delivery.dispatch` 前，先根据 Host 权威 Response 表原子核对 `deliveryId`（本次发放）、`responseObligationId`（本次 HTTP 响应义务）、`responseChannelId`（本次 live HTTP/2 waiter）与原 Event/Run/代际授权一致；有效后发送这三个身份、eventType、slot、mediaType、Content-ID（如适用）、相对 stagingPath 和 byteLength。Host artifactRef 保持 Host 内部，不交给 Delivery Plugin。Plugin 只验证自己能看到的 channel/eventType、deliveryId 回显和 opaque obligation **非空/不泄漏**，不得以本地缓存推测 Host 三元授权。
 4. Plugin 只读取本次交付声明的文件，按外部协议构造 SBI multipart / Content-ID 响应。
 5. Plugin 返回 delivery.result；Host 记录 delivered / failed / unknown 并清理出站 staging 文件。
 6. Delivery UNKNOWN 不改变 Owner 业务 outcome，也不得触发 mutation 重放。
@@ -313,7 +313,7 @@ Host 必须维护以下关联：
 - Event：eventId、ingressId、eventType、externalRequestId（若协议提供）；
 - Run：runId、原始 Event、Skill identity、Artifact identity、Catalog generation；
 - Invocation：invocationId、Tool Callable、授权的 artifactRefs；
-- Response：responseObligationId、responseChannelId、deliveryId；
+- Response：Host 权威的 `responseObligationId`、当前 live `responseChannelId`、本次 `deliveryId` 三元映射，附本次 Event/Run/请求 generation 授权及终态；Plugin 不维护第二套可查询的三元表。
 - Artifact：artifactRef、slot、mediaType、byteLength 和上述关联身份。
 
 规则：
@@ -323,6 +323,7 @@ Host 必须维护以下关联：
 - 不使用内容摘要替代字节相等证明。
 - Continuation 必须关联同一 Run、SUPI、PSI、Session generation 和原 response obligation；旧消息不得唤醒新 Run。
 - Artifact 在导入后归 Host 所有；Runtime 授权其被哪个 Invocation 读取/生成；Delivery 只读取本次 response obligation 的输出。
+- **Host 必须在 dispatch 前执行权威三元绑定负例**：采用一个格式正确、非空但属于另一 Event/Run/代际或另一 live channel 的 `responseObligationId`，与当前合法 `deliveryId`/`responseChannelId` 混合；交换两条并发 HTTP/2 waiter 的 obligation；使用已结清/过期 obligation 或重复 `deliveryId`。全部必须在 Host 侧 fail-closed，不发送成功 dispatch、不完成错误 waiter、不得把旧 Run/旧 generation 标成 delivered，也不得改变 Owner mutation outcome。只有完整匹配并未结清的三元身份允许派发。测试归 SR-011 AC-011-05；当前 Next Host 联测 **NOT_RUN**，绝不能用 ca-openamsm-plugin 的非空/不泄漏校验充当 Host 权威绑定 PASS。
 - 成功导入后 Host 清理入站 staging 文件；Delivery result 或 Plugin 关闭后清理出站 staging 文件。
 - Host 可在关闭/重启时清理自己 staging 根下的残留文件；不增加 Plugin 数据库或恢复协议。
 - Artifact 生命周期至少覆盖正在执行的 Run/Invocation 和未完成 response obligation；终态清理后，引用不可继续解析。
@@ -444,3 +445,4 @@ Demo 必须具备：本地 Host-owned ArtifactStore、精确 slot、相对路径
 
 | 2026-11-27 | 0.4.10 | GPT-6.2（ChatGPT） | §2.1、修订记录 | 明确 Resource Read 使用 Host per-Run Runtime Action Budget，而非 Contract.limits.maxActions 业务动作预算 | 与 F04 Script Execution 预算规则统一，防止系统内建动作绕过 Host 资源上限 | Issue #49；IR-008；SR-007/032；PR #52 |
 | 2026-11-28 | 0.4.13 | GPT-6（ChatGPT） | 文档头、§8、§10、修订记录 | 选择性吸收 #117 F05 v0.4.12 的 Ext1/T0 语义，新增独立 n2Ext1.request、Create/Update 可选 N2/Ext1、continuation Ext1 fail-closed 与 Create N1 必需性约束；同步 ingress.ack 严格身份白名单 | 关闭 #116 P2-01/02/10 的中央设计缺口，不把 #117 未通过复评的运行断言当作已验收 | Issue #50/#116；PR #115/#117 |
+| 2026-11-28 | 0.4.14 | GPT-6（ChatGPT） | 文档头、§9、§11、修订记录 | 明确 Host 在 dispatch 前核验 deliveryId/responseObligationId/responseChannelId 三元权威映射；补充非空但错误 obligation、跨 Run/代际/Channel、重复/过期负例与 Plugin 非空校验的区别 | 将 SR-009 P2-05 的身份合法性明确分配给 Host；SR-011 AC-011-05 的系统负例 NOT_RUN，不冒称模块 PASS | Issue #50/#74/#75/#116；PR #115 |

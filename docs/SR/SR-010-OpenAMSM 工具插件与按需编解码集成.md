@@ -1,7 +1,7 @@
 # SR-010：OpenAMSM 工具插件与按需编解码集成
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.8
+> SR 版本：0.2.9
 > 状态：整项 DRAFT；阶段 READY_CANDIDATE（仅限 Next Host no-hash Artifact Channel v2 设计，待本轮主线独立复评）；AC-010-03 模块设计可独立实施，产品 NOT_RUN；AC-010-09 等真实 Provider v2 互操作；AC-010-10 原版 OAS3 requestBody / multipart / N1/N2/N2 Ext1 Content-ID 验收 BLOCKED/NOT_RUN。
 > 下一步：推进 Next Python Host ArtifactStore/Channel v2 与 no-decode 路径；使用测试 Provider 完成模块验收。真实 Provider 2.0.0 互操作另由 ca-client-tools SR-026 交付；06a/06b/07/08/09 按各自依赖执行。
 > 阶段依据：[独立评审 #74](https://github.com/odango-chan/ca-agent-next/issues/74#issuecomment-7210244694)，评审 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
@@ -10,7 +10,7 @@
 > 修订日期：2026-11-28\
 > 所属阶段：Phase G  
 > 上游需求：[IR-005](../IR/IR%20总登记册.md#ir-005)  
-> 设计依据：[Plugin平台设计说明书](../设计说明书/F03-Plugin平台/Plugin平台设计说明书.md) v0.3.7 §8；[Tool Interface 与 Provider 集成设计](../设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) v0.4.12 §8.1～8.3；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.11 §5～6；[公共契约与所有权规范](../规范/公共契约与所有权规范.md) v0.2.7 §2、5、6、8、10\
+> 设计依据：[Plugin平台设计说明书](../设计说明书/F03-Plugin平台/Plugin平台设计说明书.md) v0.3.7 §8；[Tool Interface 与 Provider 集成设计](../设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) v0.4.12 §8.1～8.3；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.14 §5～6、§9～11；[公共契约与所有权规范](../规范/公共契约与所有权规范.md) v0.2.7 §2、5、6、8、10\
 > Acceptance：OM-04、OM-10、OM-13（见[演示验收基线](../验收与实施/演示验收基线.md)）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：见第 3 节
@@ -57,6 +57,8 @@
 | 系统 OM | OM-04/10/13 与真实 NF/Owner | 不作为 Host Channel 模块 READY 前置 |
 
 **设计评审与实施 READY 独立判定**：本 SR 的功能职责、已知目标契约、失败路径和下面每项模块 AC 足够完整即可请求设计评审；不得要求“全部前置 SR VERIFIED”作为统一前置。实际实施按本次 Scope 逐阶段检查所消费的已发布能力；缺失时仅相应 AC 标记 BLOCKED/NOT_RUN，系统 EX/OM 不倒灌模块门禁。Owner/Provider/Compiler 的未知机器标识、Schema 和 API 只能由对应 Owner 正式发布，Harness 不得推测。新 Skill/Artifact/Runtime 接口只接受 CA-SL 1.6.0 / Capability-first，不提供旧版兼容。
+
+**Host 响应义务阶段边界（SR-009 P2-05）：** 本 SR 的 Host Artifact Channel v2 AC-010-01～05/09 仅验证 Invocation/direction/slot/opaque artifactRef 授权；这**不是** Event/Delivery live HTTP/2 response obligation 的三元有效性证明。Host 依据 F05 v0.4.14 §9/§11 维护 `responseObligationId` / `responseChannelId` / `deliveryId` 权威关联；错误但非空 obligation、交叉 waiter、重复/过期 dispatch 的负例归 **SR-011 AC-011-05** 独立验收，当前 BLOCKED/NOT_RUN。Plugin 模块只检验 channel/eventType、deliveryId 与不泄漏，不能充当 Host 授权表测试；不得将该系统门槛倒灌成 AC-010-03 Host Channel 模块 READY 前置。
 
 ## 5. 独立模块验收条件（正例、反例与证据）
 
@@ -141,3 +143,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-27 | 0.2.4 | GPT-6（ChatGPT） | 文档头、AC-010-06、历史修订账本、修订记录 | 补齐 F03.05/F05/公共契约固定版本与章节；要求直接注入旧 Catalog/Run/Binding 分层验证；将历史 undefined 关联改为可审计说明 | 处理独立模型 Review #6082541121 的 R3-SR010-01/02/03，避免占位符和同一 Importer 错误冒充多层 fail-closed | Issue #12；PR #46；Review #6082541121 |
 | 2026-11-27 | 0.2.5 | Codex / GPT-6 | 文档头 | 登记阶段 READY（本仓 Host Channel）及 AC 范围与工作项 #94 | 按单项独立评审推进 | Issue #12、#74；PR #46 |
 | 2026-11-28 | 0.2.8 | GPT-6.2（ChatGPT） | §1～4、AC-010-03、修订记录 | 将 Next Host Artifact Channel 明确为 ca-host.artifact-store/v2 no-hash，隔离历史 v1 SHA-256 契约 | 消除 F05 v1 与 Demo no-hash 约束冲突，并将 Host 模块实施与 Provider v2 外部交付分离 | Issue #113；SR-010；F05；F03.05；SR-026；PR #115 |
+| 2026-11-28 | 0.2.9 | GPT-6（ChatGPT） | 文档头、设计依据、§4～5、修订记录 | 同步 F05 v0.4.14 与 P2-05 Host Response 三元关联的验收归属，区分本 SR 的 Artifact Channel v2（Invocation/slot）与 SR-011 AC-011-05（外部 HTTP/2 Delivery obligation 绑定） | 不将 SR-011 系统级身份验证或 Plugin 测试冒充本 SR 产品 PASS，保留 AC-010-01～05 模块阶段候选 | Issue #50/#74/#75/#116；PR #115 |

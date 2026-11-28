@@ -1,15 +1,15 @@
 # SR-011：真实 OpenAMSM 创建修改释放端到端验证
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.3.4\
+> SR 版本：0.3.5\
 > 状态：整项 DRAFT；限定设计已认可，等待直接依赖。AC-011-06 静态架构断言。  
 > 下一步：已获限定设计认可。组合实现具备后检查 Core 零业务分支；01～05 等同批 Bundle、Compiler Verify、Provider/Owner Package 和隔离对端。  
 > 阶段依据：[独立评审 #75](https://github.com/odango-chan/ca-agent-next/issues/75#issuecomment-7210271472)，评审 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。
 > 创建日期：2026-11-25  
-> 修订日期：2026-11-27\
+> 修订日期：2026-11-28\
 > 所属阶段：Phase H  
 > 上游需求：[IR-005](../IR/IR%20总登记册.md#ir-005)  
-> 设计依据：[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.3.1 §4.1、§5～10；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.5 §2～12；[演示验收基线](../验收与实施/演示验收基线.md) v0.3.24 §2～10\
+> 设计依据：[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.3.9 §4.1、§5～10；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.14 §2～12；[演示验收基线](../验收与实施/演示验收基线.md) v0.3.29 §2～10\
 > Acceptance：EX-20、OM-09、OM-11、OM-12（见[演示验收基线](../验收与实施/演示验收基线.md)）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：见第 3 节
@@ -58,7 +58,7 @@
 | AC-011-02 | 真实 Create，随后同 UE/PSI Modify（含 QoS）与 UE-requested Release | Owner 与 SMF 状态、N1/N2/PFCP、三次请求/响应身份及最终 Release 状态精确匹配 |
 | AC-011-03 | 同 ID 同内容重试、同 ID 不同内容冲突、同内容新 ID 独立 Invocation | 首项无重复 mutation；冲突不变更；新 ID 只按真实 Owner/Scope 规则执行，不串入旧 Run |
 | AC-011-04 | 响应丢失、Owner UNKNOWN；对同一 releaseTxn 分别执行 N1→N2、N2→N1 两种到达顺序；两笔并发事务 A/B 的 N1-A→N2-B→N1-B→N2-A 交错；重复、迟到 N1/N2；旧 generation、错 smContextRef、错 Session、互换两路 Receipt/Proof；执行精确 Reconcile | UNKNOWN 不提升 COMMITTED；只有同一 Run、同一 Owner generation/releaseTxn、正确 SUPI/PSI 且各自 originalInvocationId/Proof/Scope 全匹配的 N1 与 N2 两路确认都成立后才允许清理。单路、乱序、交错、重复、迟到、旧代际或错 Session 均不得误确认/触发清理，新增 mutation=0；旧代际明确返回 `STALE_SM_CONTEXT`，不污染新 generation。 |
-| AC-011-05 | 原始 N1/N2 Artifact bytes、Run/generation、continuation 与本次 callback responseObligation；重放旧 generation/context 的 N1 与 N2 回调 | 所有引用同一实际请求；跨 Run/旧 generation 被拒并返回 `STALE_SM_CONTEXT`，不清理、不新增 mutation；当前 callback 的 responseObligation 与原 Run 执行身份分离；最终 Delivery/SMF projection 一致 |
+| AC-011-05 | 原始 N1/N2 Artifact bytes、Run/generation、continuation 与本次 callback response obligation；Host 三元关联正反例：合法 `deliveryId` / live `responseChannelId` 搭配**非空但属于另一 Run/请求/generation 的 `responseObligationId`**，交换并发流的 obligation、使用已结清/过期 obligation、重复/错 `deliveryId`、迟到回调及旧 generation/context | 仅完整一致、未结清且获授权的 Host 三元映射可 dispatch 并完成正确 waiter；错 obligation 即使格式正常也必须在 Host 侧拒绝，错误 stream 不被写入，旧 generation 返回 `STALE_SM_CONTEXT`，不清理新 Run、不新增 mutation，Owner outcome 不因 Delivery 改变；Plugin 只能校验可见 channel/eventType/deliveryId，**不能验证 opaque obligation 的 Host 权威匹配**。本 Host/系统子例依赖 Next 真实实现，当前 BLOCKED / NOT_RUN |
 | AC-011-06 | 静态与运行追踪检查 Agent Core/Resolver/Plugin Manager 源码 | 无 OpenAMSM 业务条件分支；新增业务只改变 Plugin/Skill/Package/部署配置；系统 EX/OM 单独复验 |
 
 ### 5.1 实现落点、运行和取证
@@ -73,7 +73,7 @@
 | Peer，env-5gc-sim | `go build -o mock-amf ./cmd/mock-amf`；`./mock-amf run --config "${MOCK_AMF_CONFIG:?}" --scenario "${LIFECYCLE_SCENARIO:?}" --json`。配置必须走 SCP 指向本轮 Next 入口，使用同一 UE/PSI，保存回调、PFCP 和 Owner 证据。|
 | 清理/隔离 | 停止接收新请求，先排空旧 listener 的在途回调并轮换 listener（记录旧/新地址及排空完成），再对隔离测试 peer 使用 `curl --fail --http2-prior-knowledge -H 'Content-Type: application/json' -d '{"reuseKeys":true}' "${PEER_URL:?}/mock-amf/v1/reset"`，断言 generation 前进；使用旧 generation/context 的回调得到 STALE_SM_CONTEXT 且零 mutation，再以同一 SUPI/PSI 创建新会话。无法证明排空时使用全新进程、listener 和空状态；进程已退出时使用新监听地址/空状态启动下一轮。回收本轮 Host 和 peer，运行 `sudo ./bin/env-openamsm stop`。NF 停止或 peer reset 均不能充当 Owner 释放证据。|
 
-真实 Next 部署配置、同一批 1.6.0 资产及指向它们的 lifecycle scenario 尚缺；AC-011-01～06 保持 BLOCKED。禁止用旧快照重放或单元测试替代。
+真实 Next 部署配置、同一批 1.6.0 资产及指向它们的 lifecycle scenario 尚缺；AC-011-01～06 保持 BLOCKED / NOT_RUN。尤其 AC-011-05 必须由 Host 权威 Response 表注入**合法非空但错配的 obligation ID**并记录 dispatch=0、错误流收到响应=0、旧 Run mutation=0 以及原响应义务未被错误结清的独立断言。Plugin `Registry.Claim(channelID,eventType)` 的测试和模块 CI 不能替代 Host 三元有效性证据。禁止用旧快照重放或单元测试替代。
 
 - 目标实现：`examples/openamsm/ 与 Next 公开组合验收入口`；测试入口：`python -m unittest discover -s tests -p test_openamsm.py -v`。若实现前目标仓文件/命令尚未存在，由具体实施 PR 在模块范围内创建并登记，**不得以不存在的脚本退出 0 或 0 discovered tests 作为 PASS**。
 - 使用本 SR 明示的最小正负例与计数型测试 Provider/Mock；真实 Publisher、新 Compiler、Owner 收据、隔离环境等数据只从固定 SHA 的正式发布物读取。模拟输入能验证本地行为，但**不能替代**要求正式外部源的 AC。
@@ -125,3 +125,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-27 | 0.3.2 | GPT-6（ChatGPT） | 第三轮设计自评/历史修订表 | 隔离真实 NF、旧 listener 排空、新 generation/key reuse 与两路 Owner Proof 的场景及停止条件已写明；真实组合输入未齐；将第二轮结论保留为历史、登记第三轮独立复评候选并按版本整理记录 | 设计范围可供外部评审而不提前授权代码实施或夸大 AC 状态 | Issue #12；PR #46；SR-011 |
 | 2026-11-27 | 0.3.3 | GPT-6（ChatGPT） | AC-011-04/05、文档头、修订记录 | 增加 N1/N2 两种顺序、跨事务交错、迟到回调、旧 generation 和错 Session 的独立断言；将 STALE_SM_CONTEXT 映射到模块 AC | 处理独立模型 Review #6082541121 的 P1 R3-SR011-01，避免仅覆盖重复/迟到 N2 而漏掉乱序和交错清理 | Issue #12；PR #46；F06 v0.3.1；Review #6082541121 |
 | 2026-11-27 | 0.3.4 | Codex / GPT-6 | 文档头 | 登记限定设计已认可，等待直接依赖及 AC 范围 | 按单项独立评审推进 | Issue #12、#75；PR #46 |
+| 2026-11-28 | 0.3.5 | GPT-6（ChatGPT） | 文档头、AC-011-05、§5.1、修订记录 | 补齐 Host 权威 Response 三元映射、非空错误 obligation、跨 Run/Channel/代际、过期/重放 dispatch 的系统级负例并同步 F05/F06/EX 版本 | 回应 Next #115/#116 的 P2-05：Event Plugin 无法证明 Host 内部三元身份；该 AC 仍 BLOCKED/NOT_RUN，等待真实 Host/系统组合测试 | Issue #50/#75/#116；PR #115 |
