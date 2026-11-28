@@ -429,7 +429,11 @@ def command_violations(added_lines: Iterable[tuple[str, str]]) -> list[str]:
                     f"BARE_PYTHON_ENTRY: {path}: {line} — "
                     "项目测试/Smoke/脚本必须经 uv run 执行。"
                 )
-        if "--no-project" in line and not is_policy_gate_no_project(path, line):
+        invocations = _uv_run_invocations(line)
+        has_no_project_option = any(
+            "--no-project" in invocation["flags"] for invocation in invocations
+        )
+        if has_no_project_option and not is_policy_gate_no_project(path, line):
             violations.append(
                 f"UV_NO_PROJECT_BYPASS: {path}: {line} — "
                 "仅门禁自身的固定标准库检查器/自测命令可使用 --no-project；"
