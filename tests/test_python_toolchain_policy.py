@@ -259,6 +259,34 @@ class PythonToolchainPolicyTests(unittest.TestCase):
         )
         self.assertTrue(any("WORKFLOW_UV_VERSION" in item for item in found))
 
+    def test_setup_uv_lookalike_inside_env_block_does_not_satisfy_policy(self) -> None:
+        manifest = {
+            "uv_setup_action": "astral-sh/setup-uv@abc123",
+            "uv_version": "0.13.10",
+        }
+        content = (
+            "name: Python tests\n"
+            "env:\n"
+            "  NOTE: |\n"
+            "    jobs:\n"
+            "      fake:\n"
+            "        steps:\n"
+            "          - uses: astral-sh/setup-uv@abc123\n"
+            "            with:\n"
+            "              version: '0.13.10'\n"
+            "jobs: # actual workflow jobs\n"
+            "  test:\n"
+            "    steps: # actual job steps\n"
+            "      - name: Run tests\n"
+            "        run: echo 'no actual setup-uv step'\n"
+        )
+        found = workflow_toolchain_violations(
+            ".github/workflows/python-tests.yml", content, manifest
+        )
+        self.assertEqual(len(found), 2)
+        self.assertTrue(any("WORKFLOW_UV_ACTION" in item for item in found))
+        self.assertTrue(any("WORKFLOW_UV_VERSION" in item for item in found))
+
     def test_setup_uv_string_outside_step_does_not_satisfy_policy(self) -> None:
         manifest = {
             "uv_setup_action": "astral-sh/setup-uv@abc123",
@@ -438,6 +466,19 @@ index-strategy = "first-index"
                 ):
                     with self.assertRaisesRegex(PolicyError, "STALE_BASE"):
                         _policy_module.validate_base_tip(Path("."), "feature/sr028", "a" * 40)
+
+    def test_uv_pip_installation_entry_is_rejected(self) -> None:
+        for command in (
+            "uv " + "pip" + " install requests",
+            "uv " + "pip" + " sync requirements.txt",
+            "uv " + "pip" + " compile requirements.in",
+            "uv " + "pip" + " uninstall requests",
+        ):
+            with self.subTest(command=command):
+                self.assertTrue(any(
+                    "PIP_INSTALL" in violation
+                    for violation in command_violations([("scripts/setup.sh", command)])
+                ))
 
     def test_windows_launcher_module_pip_is_rejected(self) -> None:
         for command in (
