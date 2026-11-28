@@ -2,7 +2,7 @@
 
 > 文档类型：软件需求（SR）  
 > SR 版本：0.2.5\
-> 状态：整项 DRAFT；BLOCKED_EXTERNAL_INPUT。BLOCKED_EXTERNAL_INPUT。  
+> 状态：整项 DRAFT；BLOCKED_EXTERNAL_INPUT。  
 > 下一步：ca-skills 需交付同提交五根作者源、Echo Interface、匹配 Compiler Release/argv/Verify 和 Bundle 发布授权。  
 > 阶段依据：[独立评审 #89](https://github.com/odango-chan/ca-agent-next/issues/89#issuecomment-7209388846)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。
 > 创建日期：2026-11-26  
@@ -104,3 +104,4 @@ CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验�
 | 2026-11-27 | 0.2.3 | GPT-6（ChatGPT） | 修订记录 | 将历史记录统一为七列并保留原始文字及原始关联，修正非规范行的分隔符 | 确保修订表可由文档校验器完整解析；不影响设计语义及 READY 主状态 | Issue #12；PR #46；SR-027 |
 | 2026-11-27 | 0.2.4 | Codex / GPT-6 | 文档头 | 登记BLOCKED_EXTERNAL_INPUT及 AC 范围 | 按单项独立评审推进 | Issue #12、#89；PR #46 |
 | 2026-11-28 | 0.2.5 | GPT-6（ChatGPT） | 分支整合、设计依据与修订记录 | 合并恢复分支已批准的 F08 v0.3.19 引用与 #46 新版 Bundle 设计；保留 CA-SL 1.6.0-only、未发布 Compiler/Publisher 门槛 | 避免把历史 Bundle 误作新版成品，保持 SR-027 独立 Publisher/验收责任 | Issue #12；#40；#113；PR #45；#46 |
+| 2026-11-28 | 0.2.5-integration-fix | GPT-6（ChatGPT） | 文档头与修订记录 | 修正整合期间版本/验收时点一致性，不改变产品状态 | 保持历史证据与新 1.6.0 设计边界 | Issue #12；PR #45；#46 |

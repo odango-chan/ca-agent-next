@@ -2,7 +2,7 @@
 
 > 文档版本：0.2.28\
 > 状态：整项 DRAFT；阶段 READY（中央只读核验）。AC-013-01 归档完整性。  
-> 下一步：修复 PR #18 归档中 audit 登记不一致、绝对式校验路径及 vet 日志缺项后重新静态复核。复跑单列；02/04 NOT_RUN，03/05/06 等 Compiler Owner 与正式契约。\
+> 下一步：PR #18 在恢复分支的原始归档审计 FAIL 维持其历史快照，#110 已单独合入隔离证据分支而非当前恢复分支；先按固定 SHA 核查该修复能否合入并复核。AC-013-02～06 的 1.6.0-only 机器合同与 Compiler #62 仍待 Publisher 正式冻结、实测 NOT_RUN。\
 > 阶段依据：[独立评审 #77](https://github.com/odango-chan/ca-agent-next/issues/77#issuecomment-7209276846)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
 > 工作项：[阶段工作项 #95](https://github.com/odango-chan/ca-agent-next/issues/95)。[本轮固定归档核验报告](../issue-95-fixed-source-handoff/SR-013.md)。
 > 创建日期：2026-11-25  
@@ -449,3 +449,4 @@ AC-013-02/04 仍 NOT_RUN，03/05/06 仍 BLOCKED。整项 DRAFT 主状态不变�
 | 2026-11-28 | 0.2.28 | GPT-6（ChatGPT） | 头部、AC-013-01、实施前置 | 明确新版 Compiler #62，修正 cases.json 固定证据路径；历史 #110 已合独立证据分支但当前产品 AC 不升级 | 防止历史 #61/归档修复变成新 Compiler 产品资格 | Issue #12；#40；#102；PR #45；#46；#110 |
 | 2026-11-28 | 0.2.28-integration | GPT-6（ChatGPT） | §3.5、§5～6 | 整合 Publisher Event metadata、T1/T2 分层、OpenAPI 原始字节和 OAS3/G.4 解析边界；具体算法留给 SR-031/#48 | 拒绝旧 Adapter 或 Codec 输出在选择期前置 | Issue #40；#47；PR #45；#46；#48 |
 | 2026-11-28 | 0.2.28-integration-3 | GPT-6（ChatGPT） | §3.6、§4、§9、修订记录 | 反向检查恢复分支独有的 CEL 组合矩阵、Compiler #62 恢复条件与逐 AC 追踪；清除正文错误 #61、无条件 event.type 语义和重复小节编号 | 旧版 Issue 不再成为新版实施入口 | Issue #12；#40；#113；PR #45；#46 |
+| 2026-11-28 | 0.2.28-integration-fix | GPT-6（ChatGPT） | 文档头与修订记录 | 修正整合期间版本/验收时点一致性，不改变产品状态 | 保持历史证据与新 1.6.0 设计边界 | Issue #12；PR #45；#46 |

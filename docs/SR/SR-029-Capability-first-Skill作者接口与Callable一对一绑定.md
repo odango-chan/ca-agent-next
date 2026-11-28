@@ -4,7 +4,7 @@
 > SR 版本：0.2.10  
 > 状态：待评审 / DESIGN_READY_FOR_REVIEW；非实施 READY；新版规范/产品 NOT_RELEASED
 > 创建日期：2026-11-26  
-> 修订日期：2026-11-27\
+> 修订日期：2026-11-28\
 > 上游需求：[IR-008](../IR/IR%20总登记册.md#ir-008)；关联需求：[IR-003](../IR/IR%20总登记册.md#ir-003)  
 > 功能：F02、F03.05、F04、F06、F08、F09、EC02  
 > 设计 Issue：[ca-agent-next #40](https://github.com/odango-chan/ca-agent-next/issues/40)  
@@ -319,3 +319,4 @@ Owner 待决事项在 Next [Issue #40](https://github.com/odango-chan/ca-agent-n
 | 2026-11-27 | PR46-0.2.8（原分支） | GPT-6（ChatGPT） | 文档头、评审状态、修订记录 | 将第三轮独立模型 Review #6082541121 的限定结论替换第三轮自评状态 | 区分中央语言/作者模型设计认可与生产者正式机器契约发布 | Issue #12；PR #46；Review #6082541121 |
 | 2026-11-27 | PR46-0.2.9（原分支） | Codex / GPT-6 | 文档头、§10、AC-029-10 | 补全三个 Procedure 共 23 条 Owner 映射与集合核验规则，区分架构来源与评审入口 | 处理 R1-SR029-01/02 | Issue #12、#90；PR #46 |
 | 2026-11-28 | 0.2.10 | GPT-6（ChatGPT） | §3、§6、§10～13、修订记录 | #46 与 #45 三方整合：保存三份 MAS Procedure 13/2/8 独立复评依据与 #45 Owner Parser 待签认、Codec 3/3/T1-T2 资格化门槛；保持 1.6.0-only、原历史分支修订账本可追溯 | 防止 24/24 固定口径回退和历史批准冒充已发布产品 | Issue #12；#40；#113；PR #45；#46 |
+| 2026-11-28 | 0.2.10-integration-fix | GPT-6（ChatGPT） | 文档头与修订记录 | 修正整合期间版本/验收时点一致性，不改变产品状态 | 保持历史证据与新 1.6.0 设计边界 | Issue #12；PR #45；#46 |
