@@ -23,7 +23,7 @@ DeepSeek Harness 默认使用 Goal 模式。按[SR 管理规范](docs/规范/SR%
 ## 2. 仓库与语言边界
 
 - Agent Core、Host、Agent Model Loop、Skill Importer、Skill Resolver 和 Runtime 使用 Python。
-- Python 工程工具链入口见 [G02 Python 工程工具链与环境管理](docs/设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md)。SR-028 第七轮设计 Review #6084094037 已批准固定设计快照；实施 Issue #96 已存在。PR #99 @`83d23e8c04b1c05eb304c2a24a3392f6459ed0f1` 的 uv 工具链文件、锁文件、测试门禁和双平台 Workflow 已选择性整合到唯一 mainline PR #115；当前 SR-028 为 IN_PROGRESS（集成候选），尚未合入 main，当前 Head 的回归复验仍在进行。PR #112 共享基线的 P2-01/P2-02 尚待修复/复评；PR #97 READY 状态回填不作为当前实施状态权威，当前状态以 SR-028、SR 索引和 Issue #50 检查点为准。不得把候选分支证据误报为 main 已集成或 VERIFIED，也不得将 uv 迁移混入 SR-001 PR #32。
+- Python 工程工具链入口见 [G02 Python 工程工具链与环境管理](docs/设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md)。SR-028 第七轮设计 Review #6084094037 已批准固定设计快照；实施 Issue #96 已存在。PR #99 @`83d23e8c04b1c05eb304c2a24a3392f6459ed0f1` 的 uv 工具链文件、锁文件、测试门禁和双平台 Workflow 已选择性整合到唯一 mainline PR #115；当前 SR-028 为 IN_PROGRESS（集成候选），尚未合入 main。PR #112 已提交 P2-01/P2-02 整改，并补强 `uv pip` 绕过检测；当前 Head `a4fa6a92c88af236cde1ffd4803363d4dd3278e0` 等待最新 CI 与独立复评，仍保持 Draft。PR #97 READY 状态回填不作为当前实施状态权威，当前状态以 SR-028、SR 索引和 Issue #50 检查点为准。不得把候选分支证据误报为 main 已集成或 VERIFIED，也不得将 uv 迁移混入 SR-001 PR #32。
 - 独立 Plugin 可以使用 Go；Go Plugin 不代表 Go Host。
 - ca-agent-demo 是既有 Python 实现和测试证据来源，只能逐文件选择性复用，不得整体复制。
 - ca-skills、ca-skill-compiler、ca-client-tools、ca-openamsm-plugin、env-openamsm、env-5gc-sim、ca-skill-studio-demo 等保有独立实现和发布职责；ca-runtime 与 ca-agent 是参考/目标仓，不是 Next 运行时依赖。
