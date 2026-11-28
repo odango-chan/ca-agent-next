@@ -3,7 +3,7 @@
 > 文档类型：CA-SL 作者语言规范（中央规范性设计稿）
 > 文档版本：0.2.10
 > 语言版本：CA-SL 1.6.0
-languageTarget：connectionagent.io/v1.6.0（Next 中央设计已冻结；正式 ca-skills Schema / Golden / Release 尚未发布）
+> languageTarget：connectionagent.io/v1.6.0（Next 中央设计已冻结；正式 ca-skills Schema / Golden / Release 尚未发布）
 > 状态：**DRAFT / REVIEW_REQUESTED**；CA-SL 1.6.0 唯一正式语言设计，languageTarget 已由 Next 中央冻结为 connectionagent.io/v1.6.0；正式作者 Schema / Golden / Release 尚未发布。Assurance 可选；有 Assurance Skill 时 `assurance/contract.yaml` 可声明顶层 `when`；`SKILL.md` Front Matter 不声明 when；无 Assurance Skill 不声明 when。
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 修订日期：2026-11-28
