@@ -22,7 +22,7 @@
 
 - **本轮评审重点：**1.6.0 when、Request Schema、1:1 Capability Binding、Build/Verify、Runtime Artifact/Manifest 和 Golden 验收。
 - **阻塞/未验证：**旧 AC-013-01 PoC 不是新产品发布；正式 Schema/机器标识/DTO 未冻结，AC-013-02～06 NOT_RUN / BLOCKED（含 Schema-only Package 与零 Capability roots 规则）。
-- **通用架构约束：**新 CA-SL 作者源、Compiler API/Build DTO、Runtime Artifact、Bundle、Studio 与 Agent Importer/Runtime **只支持 1.6.0**；Skill 只选择 Capability ID，公开 Capability↔Callable 双向一对一。历史版本材料只读留档；不做别名、兼容、双轨、迁移或 fallback。机器字段/ID 必须等待发布者冻结，不猜测。
+- **通用架构约束：**新 CA-SL 作者源、Compiler API/Build DTO、Runtime Artifact、Bundle、Studio 与 Agent Importer/Runtime **只支持 1.6.0**；Skill 只选择 Capability ID，公开 Capability↔Callable 双向一对一。languageTarget、Compiler 3.0.0 与 BuildRequest / DependencyInspection / BuildResult / Artifact /2 机器身份已由 Next 中央固定；生产者负责发布 Schema / Golden / Release。历史版本材料只读留档；不做别名、兼容、双轨、迁移或 fallback。不得推测尚未发布的实际资产。
 - **评审输出：**逐项核对范围、非目标、外部 Owner、错误/状态语义、Acceptance 与证据路径。设计无独立结论写 `PENDING_REVIEW`；未发布依赖写 `BLOCKED`；未运行测试写 `NOT_RUN`。当前不得派发 DeepSeek Harness 实施任务。
 
 ## 1. 目标、范围与契约边界
@@ -60,7 +60,7 @@ SR-013 整体仍为 DRAFT。AC-013-01 的隔离 PoC 完成不自动把 SR-013 �
 |---|---|---|
 | AC-013-01 | PASS（已归档的隔离 PoC 报告）；本轮复跑 NOT_RUN | 固定归档 SHA；产品验收继续按 AC-013-02～06 取证 |
 | AC-013-02 | NOT_RUN | 正式 assurance/contract.yaml 顶层 when AST、G.4、Schema-aware Guard / Nullable lowering | 
-| AC-013-03 | BLOCKED（依赖 AC-013-02 和 Owner Gate） | Compiler Owner 确认新版 Artifact API 与 Manifest | 
+| AC-013-03 | NOT_RUN（机器身份已固定；等待 AC-013-02、正式 Schema / Golden 与 Compiler 实现） | Compiler Owner 按 §5.1 固定 API /2 契约发布 Manifest Schema / Golden | 
 | AC-013-04 | NOT_RUN | 新版 Build / Verify、Go/Python、Native/WASM/Chromium 与旧契约回归 | 
 | AC-013-05 | BLOCKED（依赖 AC-013-01～04、AC-013-06 和发布授权） | 经授权发布 Compiler Release 并记录资产和 smoke 证据 |
 | AC-013-06 | BLOCKED（依赖 1.6.0 Package Schema / DependencyInspection / Golden） | 验证 Schema-only Package、Schema closure 与零 Capability roots 的分离语义；与 SR-030 AC-030-03 联合验收 |
@@ -352,7 +352,7 @@ SR-013 达到 READY 且文档门禁通过后，实施使用一个连续 Goal，�
 - 顺序：AC-013-01 证据复核 → AC-013-02 → AC-013-03 → AC-013-04 → AC-013-06 → AC-013-05。
 - 允许在同一个 Goal 内按依赖连续处理多个 AC；不得并行执行有依赖关系的阶段，不得跳过失败阶段。
 - 每个 AC 仍需独立记录 Issue #62 关联、提交、测试、受测 SHA 和证据；不得把一个总的 PASS 替代逐 AC 验收。
-- AC-013-03 只有在 Compiler Owner 已确认 Artifact API 后才可继续；没有确认就停在 Owner Gate，不得自行更换版本名。
+- AC-013-03 使用 §5.1 已固定的 Artifact / BuildResult / BuildRequest / DependencyInspection API /2 与 languageTarget；待 AC-013-02 和正式 Schema / Golden 输入具备后实施。若生产实现证明目标不可行，先回到 Next 更新设计并复评，不得自行更换版本名。
 - AC-013-06 必须先有 Compiler Owner 正式 Schema/DTO/Golden 与 SR-030 对应 Package fixture；不支持 0 Capability / 0 Callable 时停止并修订中央 Package 契约，禁止生成合成 Tool/Callable。
 - AC-013-05 必须再次检查发布授权；没有明确授权时只完成 Release 前检查，不创建 Tag 或 Release。
 - 若无法读取固定的 PR #18 归档、EVIDENCE.md 或其 Artifact，必须标记证据不可访问并请求提供；不得假装已复核，也不得用聊天报告替代独立复核。
@@ -378,7 +378,7 @@ SR-013 达到 READY 前必须：
 2. AC-013-01 的本地证据已可访问并完成独立审查，或明确保留审查阻塞及授权阶段。
 3. Compiler #62 仍开放且范围一致；Compiler 目标 SHA 和 Go/Python 环境可运行。
 4. 目标仓写入授权、分支和实施 Issue 明确。
-5. AC-013-03 的 Artifact API Owner Gate 有明确执行方式。
+5. AC-013-03 的机器 API 身份已由 Next 固定；正式 Schema / Golden / Manifest 由 Compiler Owner 按该目标实现并发布。
 6. AC-013-06 的 Schema-only 正负例、零 Capability roots / Schema dependency closure 区分和跨宿主命令完整。
 7. 每项 AC 的 Acceptance、命令、退出条件、证据格式和停止/恢复条件完整。
 
