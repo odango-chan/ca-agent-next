@@ -1,22 +1,22 @@
 # SR-028：Python 工程工具链与 uv 环境管理
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.18\
+> SR 版本：0.2.19\
 > 修订日期：2026-11-28\
 > 状态：IMPLEMENTED（PR #115 已合入受保护 main（最终受审 Head `041e21ac8a4c99b509b09c809c156ed528455899`，merge `574ca51122b49e48be20fadedca225b5fad3137c`）；原作者/源 PR 的 CLOSED/superseded 不等于独立 MERGED。AC-028-01～10 原始证据见 Issue #96，合并后的 main SHA 产品独立复验仍待执行，不能升级 VERIFIED/RELEASED。）
 > 创建日期：2026-11-26  
 > 所属阶段：G02 工程治理支撑  
 > 上游需求：[IR-007](../IR/IR%20总登记册.md#ir-007)  
 > 设计依据：[G02 Python 工程工具链与环境管理设计说明书](../设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md) v0.2.12 §1～§9；[SR-002](SR-002-Python%20核心与宿主基础骨架.md) v0.2.10 §2.1；[SR 管理规范](../规范/SR%20管理规范.md) v0.8.1 §6.1、§8.3\
-> 设计/治理 Issue：[ca-agent-next #12](https://github.com/odango-chan/ca-agent-next/issues/12)（中央整改追踪）；原设计 Issue [#35](https://github.com/odango-chan/ca-agent-next/issues/35) 已 CLOSED，仅作历史来源；独立实施 Issue [#96](https://github.com/odango-chan/ca-agent-next/issues/96) OPEN；#12/#35 均不是实施 Issue。  
+> 设计/治理 Issue：[ca-agent-next #12](https://github.com/odango-chan/ca-agent-next/issues/12)（中央整改追踪）；原设计 Issue [#35](https://github.com/odango-chan/ca-agent-next/issues/35) 已 CLOSED，仅作历史来源；独立实施 Issue [#96](https://github.com/odango-chan/ca-agent-next/issues/96) 已 CLOSED / completed（仅实施交付）；后续主干固定 SHA 产品独立复验与 VERIFIED 评定由 [#127](https://github.com/odango-chan/ca-agent-next/issues/127) OPEN 负责；设计恢复父级 #12 已 CLOSED，#35 为历史设计 Issue。  
 > 目标仓：`odango-chan/ca-agent-next`  
-> 历史 SR-028 专项设计复评：PR #46 [Review 6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#issuecomment-6084094037) 固定 Head `93f1389e7c5968cd30e8a74137207094864ecca0` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`，模型结论 APPROVE_FOR_READY（0 P0 / 0 P1 / 2 非阻断 P2），平台事件 COMMENTED。此为**设计专项历史证据**；产品实现已通过 PR #115 合入 main，实际独立验收/VERIFIED 仍由 #96 追踪。
+> 历史 SR-028 专项设计复评：PR #46 [Review 6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#issuecomment-6084094037) 固定 Head `93f1389e7c5968cd30e8a74137207094864ecca0` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`，模型结论 APPROVE_FOR_READY（0 P0 / 0 P1 / 2 非阻断 P2），平台事件 COMMENTED。此为**设计专项历史证据**；产品实现已通过 PR #115 合入 main，实际独立验收/VERIFIED 现由 #127 追踪（原实施 #96 已关闭）。
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：其他仓库迁移、生产级供应链安全、运行时架构改造和完整 Python 版本矩阵资格认证
 
 ## 0. 第七轮设计评审结果与当前实施状态（2026-11-28）
 
-SR-028 第七轮设计复评 [#6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#issuecomment-6084094037) 为限定 APPROVE_FOR_READY。Issue #96 的 [AC-028-01～10 原始验收矩阵](https://github.com/odango-chan/ca-agent-next/issues/96#issuecomment-7213473388) 均已登记 PASS，源 PR #99 复核为 IMPLEMENTED。PR #115 最终 [Review 6098447365](https://github.com/odango-chan/ca-agent-next/pull/115#pullrequestreview-6098447365) APPROVE_WITH_NON_BLOCKING_FOLLOWUPS（平台 COMMENTED）、受审 Head 的 CI 全绿并合入 main `574ca51122b49e48be20fadedca225b5fad3137c`。主状态现为 IMPLEMENTED；固定 main SHA 的独立产品复验与 VERIFIED 判定仍待 #96 完成。
+SR-028 第七轮设计复评 [#6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#issuecomment-6084094037) 为限定 APPROVE_FOR_READY。Issue #96 的 [AC-028-01～10 原始验收矩阵](https://github.com/odango-chan/ca-agent-next/issues/96#issuecomment-7213473388) 均已登记 PASS，源 PR #99 复核为 IMPLEMENTED。PR #115 最终 [Review 6098447365](https://github.com/odango-chan/ca-agent-next/pull/115#pullrequestreview-6098447365) APPROVE_WITH_NON_BLOCKING_FOLLOWUPS（平台 COMMENTED）、受审 Head 的 CI 全绿并合入 main `574ca51122b49e48be20fadedca225b5fad3137c`。主状态现为 IMPLEMENTED；固定 main SHA 的独立产品复验与 VERIFIED 判定已移交 #127，仍待完成。
 
 - **评审范围：**核查 uv 版本/锁文件、worktree 虚拟环境隔离、与现有 setuptools 工程共存、CI 与回退/失败路径。
 - **外部依赖/证据状态：**源 PR #97/#99/#112 已在 #115 实际合入 main 后作为 superseded 关闭；其验收证据仍按来源 SHA 固定在 #96。其他产品 AC/系统验收不因主干合并而自动 PASS。
@@ -62,7 +62,7 @@ SR-028 第七轮设计复评 [#6084094037](https://github.com/odango-chan/ca-age
 
 - AC-028-01～AC-028-06：SR-028 达到 READY、独立实施 Issue 建立后即可执行，不依赖 Agent Runtime 产品阶段。
 - AC-028-07（CI 环境与测试入口）和 AC-028-08（SR-001 Workflow/Artifact 迁移）：所需 SR-001 Workflow 与脚本已随 PR #32 合入。独立实施 PR 核对目标分支仍含这些入口及 SR-003 回归工作流后，按 G02 §3.8 迁移与复验。既有成功结果不计为迁移 PASS。
-- SR-028 的实施 Issue 是 #96（OPEN，主干验收收尾）；源 PR #99 的 uv 实现与 #112 共享策略均已通过 PR #115 合入 main。主干状态 IMPLEMENTED，后续在固定 main SHA 独立复验并留证前不得升级 VERIFIED；#12/#35 仅为历史设计来源。
+- SR-028 的实施 Issue #96 已完成并 CLOSED；主干产品独立复验 Issue #127 仍 OPEN；源 PR #99 的 uv 实现与 #112 共享策略均已通过 PR #115 合入 main。主干状态 IMPLEMENTED，后续在固定 main SHA 独立复验并留证前不得升级 VERIFIED；#12/#35 仅为历史设计来源。
 
 ## 5. Acceptance
 
@@ -148,7 +148,7 @@ Go Echo 前置（在 `examples/echo/plugin/`，设置 `GOWORK=off`）：`go buil
 ### 8.3 尚未完成的门槛
 
 - **已完成：**PR #115 独立终审和最终 Head 三组 CI 全部 SUCCESS，merge `574ca51122b49e48be20fadedca225b5fad3137c`，uv 代码、锁文件与治理策略已进入 main。
-- **仍需执行：**在受保护 main 的固定合入 SHA 对适用 AC-028-01～10 做可复核产品复验和独立验收确认；Issue #96 在此之前保持 OPEN，SR-028 仅 IMPLEMENTED、不宣称 VERIFIED/RELEASED。
+- **仍需执行：**在受保护 main 的固定合入 SHA 对适用 AC-028-01～10 做可复核产品复验和独立验收确认；主干固定 SHA 复验由 Issue #127 保持 OPEN，已关闭的 #96 不代表 VERIFIED；SR-028 仍仅 IMPLEMENTED、不宣称 VERIFIED/RELEASED。
 - **历史：**源 PR #99/#112/#97 的证据、一次 Ubuntu IPC_TIMEOUT 与同 SHA 重跑已保留；不能把历史日志的旧状态当当前运行结果。
 
 ## 修订记录
@@ -180,3 +180,4 @@ Go Echo 前置（在 `examples/echo/plugin/`，设置 `GOWORK=off`）：`go buil
 | 2026-11-28 | 0.2.16 | GPT-6（ChatGPT） | 文档头、§0/§7/§8、修订记录 | 按 PR #115 已合入 main 的最终 Head、Merge 与 CI 证据改为 IMPLEMENTED；保留 main SHA 复验门槛 | 区分合并/候选验收与主干产品 VERIFIED | Issue #50/#96/#111；PR #115 |
 | 2026-11-28 | 0.2.17 | GPT-6（ChatGPT） | §4.2、修订记录 | 删除已合入 main 的实现仍只在 #115 候选内的旧依赖描述 | 维护主干实施入口与 #96 独立复验限制一致 | Issue #50/#96；PR #121 |
 | 2026-11-28 | 0.2.18 | GPT-6（ChatGPT） | 设计复评导航、修订记录 | 历史专项设计评审与现行 main 实施、#96 VERIFIED 门槛分开表述 | 不把旧 PR #46 的评审时点当现行未实施状态 | Issue #96；PR #121 |
+| 2026-11-29 | 0.2.19 | GPT-6（ChatGPT） | 文档头、§0/§4/§7、修订记录 | 回填实施 Issue #96 completed，固定 main SHA 产品独立复验/VERIFIED 门槛移交 #127；保持 SR-028 IMPLEMENTED | 避免已合并实施工作长期标 OPEN，且不以关闭原 Issue 代替真实产品复验 | Issue #96/#127；PR #115/#121 |
