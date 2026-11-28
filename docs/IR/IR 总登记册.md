@@ -1,7 +1,7 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录\
-> 文档版本：0.1.42\
+> 文档版本：0.1.43\
 > 修订日期：2026-11-28
 > 状态：9 项 IR（含 IR-009 3GPP 公共 Schema）；IR-008 为 CA-SL 1.6.0 Capability-first 严格一对一且无旧版兼容；IR-006/008 含 SR-030 Host Context Schema-only Publisher；IR-009 的 SR-031 原版 OpenAPI Source Bundle 设计待独立评审，产品仍 NOT_RUN / BLOCKED。
 > 全局评审范围：继承根目录 Agent.md 的 review_scope\
@@ -96,7 +96,7 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 
 - 协作 Issue：[Next #111](https://github.com/odango-chan/ca-agent-next/issues/111)（共享工具链策略治理）；[Issue #50](https://github.com/odango-chan/ca-agent-next/issues/50)（唯一 mainline 收敛）；历史设计 Issue #35 已 CLOSED。
 - 实施分解：[SR-028](../SR/SR-028-Python工程工具链与uv环境管理.md)（IN_PROGRESS；实施 Issue [#96](https://github.com/odango-chan/ca-agent-next/issues/96) OPEN；PR #99 的 IMPLEMENTED 候选已选择性整合到唯一 mainline PR #115，尚未 VERIFIED/RELEASED）。
-- 架构与设计：[G02 Python 工程工具链与环境管理设计说明书](../设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md) v0.2.12；[Python 工程工具链与实施基线规范](../规范/Python工程工具链与实施基线规范.md) v0.2.4（DRAFT，随 PR #115 候选集成）。
+- 架构与设计：[G02 Python 工程工具链与环境管理设计说明书](../设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md) v0.2.13；[Python 工程工具链与实施基线规范](../规范/Python工程工具链与实施基线规范.md) v0.2.4（DRAFT，随 PR #115 候选集成）。
 - 实施范围：首批仅覆盖 `ca-agent-next` 根 Python 项目；其他仓库采用 uv 或迁移依赖管理须各自登记目标仓、基线、Issue 和 SR。
 - 完成依据：SR-028 的全部必需验收在目标仓真实执行并 VERIFIED；设计评审或锁文件生成本身不代表实施完成。
 
@@ -182,3 +182,4 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 | 2026-11-28 | 0.1.40 | GPT-6.2（ChatGPT） | IR-008、修订记录 | 纳入 SR-032 作者规范与 Node 设计追踪，记录 PR #52 独立复评结论和 PR #115 集成边界 | 将共享 Package 资源、Script Registry、Host Resource Read / Script Runner 纳入 IR-008 需求追踪，同时区分设计评审与产品实施 | Issue #49；IR-008；SR-032；PR #52/#115；Review #6089893779 |
 | 2026-11-28 | 0.1.41 | GPT-6.2（ChatGPT） | IR-007、修订记录 | 将 IR-007 的 SR-028 状态更新为 IN_PROGRESS，绑定 Issue #96/#111/#50 和 PR #115 唯一集成候选，加入共享基线规范入口 | 消除 DRAFT/无实施 Issue 的过期记录，准确区分候选 IMPLEMENTED 与 mainline VERIFIED | Issue #50/#96/#111；SR-028；G02；PR #97/#99/#112/#115 |
 | 2026-11-28 | 0.1.42 | GPT-6.2（ChatGPT） | IR-007、修订记录 | 更新 G02 v0.2.12，并关联 #99 IMPLEMENTED 证据、#112 P2 独立复评、#97 READY 状态审计与 #115 双平台 271/271 重跑 | 将设计 READY、候选 IMPLEMENTED 与 mainline IN_PROGRESS 分层，避免回填状态代替实施证据 | Issue #50/#96/#111；IR-007；SR-028；G02；PR #97/#99/#112/#115 |
+| 2026-11-28 | 0.1.43 | GPT-6.2（ChatGPT） | IR-007、修订记录 | 将 IR-007 的 G02 版本指针更新至 v0.2.13，并与 SR-028 v0.2.15 当前状态保持一致 | 防止 IR 总登记册继续指向过期设计说明书版本 | Issue #50/#96/#111；IR-007；SR-028 v0.2.15；G02 v0.2.13 |
