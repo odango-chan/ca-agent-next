@@ -967,6 +967,21 @@ class TestACREV08DocHeaders(RepoTestBase):
         code, _, stderr = invoke(self.repo, self.base, head, self.out)
         self.assertEqual(code, rc.EXIT_OK, stderr)
 
+    def test_archived_issue_snapshot_with_fixed_update_time_is_exempt(self) -> None:
+        self.checkout_branch("feature/issue-snapshot")
+        source_copy = (
+            "> 迁移来源：ca-skill-compiler Issue #61\n"
+            "> 固定来源：Issue #61，最后更新时间 2026-11-25 07:41 UTC\n"
+            "> 原始状态：OPEN；设计交接，实施尚未完成\n"
+            "> 迁移追踪：ca-agent-next Issue #12。\n"
+            "\n---\n\n# Issue 正文快照\n"
+        )
+        self.repo.write("docs/设计说明书/外部能力域/EC02-Issue-61原文.md", source_copy)
+        head = self.repo.commit("add archived issue snapshot")
+
+        code, _, stderr = invoke(self.repo, self.base, head, self.out)
+        self.assertEqual(code, rc.EXIT_OK, stderr)
+
     def test_incomplete_archive_provenance_does_not_bypass_header_check(self) -> None:
         self.checkout_branch("feature/archive-incomplete")
         source_copy = (
