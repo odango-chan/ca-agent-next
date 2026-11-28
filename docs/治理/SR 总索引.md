@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.77
+> 文档版本：0.3.78
 > 状态：31 项 SR：4 VERIFIED（仅各自历史模块范围）、1 IMPLEMENTED（设计移交）、25 DRAFT、1 IN_PROGRESS（SR-028；设计 READY、候选实施 IMPLEMENTED、mainline 集成未完成）。PR #46 第九轮 Review #6095601142 已合入恢复设计基线 `92436348`，main 尚未更新。PR #115 是唯一 mainline 集成入口；PR #115 唯一 mainline 集成入口仍为 OPEN / Draft（Base main @ b2ed5eb84114f9c2556a0cd06ed974887b1b70ad），本次代码与策略核验快照 Head `609fb12612c8990a37ba0e174cfacadfd7a7c5d9`；Review Context #46130016832 SUCCESS，Python Toolchain Policy Bootstrap #46130016864 SUCCESS（48/48），SR-003 Regression #46130016833 SUCCESS（Ubuntu 重跑与 Windows 均为 Host 52/52、Plugin 87/87、Review Context 84/84、Total 271/271）。Ubuntu 首次执行在 `test_process_exit_clears_extensions` 出现一次 IPC_TIMEOUT；同一 SHA 的失败 Job 重跑后 271/271 通过，未修改测试或产品代码，作为时序风险保留。当前未合入 main，未标 VERIFIED/RELEASED；PR #115 全量独立复评仍待完成。 PR #99 源 Head `83d23e8c04b1c05eb304c2a24a3392f6459ed0f1` 的独立复核 #6094704264 记录 IMPLEMENTED，AC-028-01～10 候选证据已归档。13 个变更路径已逐项对照 PR #115：`.python-version`、`pyproject.toml`、`uv.lock`、`scripts/unittest_gate.py`、Review Context Workflow、SR-003 双平台 Workflow 六个核心实现 Blob 完全一致；其余 7 个治理/文档路径由 #115 更新版本承接，不以旧文档覆盖新设计。 PR #112 源 Head `dbc0bcbb3a125f143d3648d2cb0331f01368f379` 的 P2-01/P2-02 已关闭；独立 Review #6096938405 给出限定 APPROVE_FOR_READY（0 P0 / 0 P1 / 0 P2）。策略 Bootstrap 47/47、Review Context、SR-003 Ubuntu/Windows 266/266 均 SUCCESS。PR #112 仍保持 Draft，不合并，只作为 #115 的选择性策略来源。 PR #97 源 Head `66a82f09445d5fc32971e91d02b51b7ad6d4ece0` 的状态审计 Review #6096959653 确认 READY 只代表设计快照（依据 PR #46 Review #6084094037）；实际实施由 #99 的 IMPLEMENTED 证据证明。PR #97 六份治理文档已由 #115 更新版本承接，不原样覆盖；PR #97 不合并、不转 Ready。 PR #52 模型级结论 `APPROVE_WITH_NON_BLOCKING_FOLLOWUPS`，GitHub Review 仍为 COMMENTED。SR-031 / SR-032 产品实现仍 NOT_RUN。
 > 修订日期：2026-11-28\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -93,7 +93,7 @@
 | SR-025 | APPROVE_FOR_READY（限定） | 中央 MAS Owner Publisher 设计；两项旧 Parser 分别签认后按 22/22、23/23、24/24 条件候选推导，正式发布仍阻塞 | DRAFT |
 | SR-026 | BLOCKED_EXTERNAL_INPUT | AC-026-04～06：NAS/NGAP 原生源、正式 Codec READ 1:1 Capability/Callable/Output Schema 与 T2 Result 验收均 BLOCKED_EXTERNAL_INPUT | DRAFT |
 | SR-027 | BLOCKED_EXTERNAL_INPUT | 五根同批 1.6.0 作者提交、Echo Interface、新 Compiler Release/argv、Bundle 资产及授权缺失；新增 AC-027-05 Source Bundle / Build Verify snapshot NOT_RUN | DRAFT |
-| SR-028 | APPROVE_FOR_READY（第七轮限设计：Review #6084094037，固定 Head `93f1389e` / Base `3c7c4838`） | 0 P0 / 0 P1 / 2 非阻断 P2；Issue #96 OPEN；PR #97 READY 回填 OPEN/未合并；PR #99 实施候选 OPEN/未合并、基于 `93f1389`；PR #112 共享基线 OPEN/Draft、堆叠于 #99。当前恢复分支未集成，产品 AC 仍 NOT_RUN | DRAFT（实施主状态） |
+| SR-028 | APPROVE_FOR_READY（第七轮限设计：Review #6084094037，固定 Head `93f1389e` / Base `3c7c4838`） | 设计 READY；Issue #96 OPEN；PR #99 独立复核 #6094704264 记录 IMPLEMENTED，AC-028-01～10 候选证据已核验；13 路径逐文件对账后 6 个核心 Blob 与 #115 一致、其余 7 个文档由更新版本承接；PR #112 P2-01/P2-02 已由 Review #6096938405 关闭；PR #97 READY 仅代表设计状态（Review #6096959653）；唯一 mainline PR #115 OPEN/Draft，未合入 main | IN_PROGRESS（设计 READY / 候选 IMPLEMENTED / mainline 未 VERIFIED） |
 | SR-029 | APPROVE_FOR_READY（限定） | 中央 1.6.0 Capability-first 设计；生产者机器契约未发布 | DRAFT |
 | SR-030 | APPROVE_FOR_READY（限定） | Schema-only 设计与 AC-030-01 固定源审计；新版 Publisher 未发布 | DRAFT |
 
@@ -328,3 +328,4 @@
 | 2026-11-28 | 0.3.75 | GPT-6.2（ChatGPT） | 文档头、§2.4、IR-008 / SR-032、修订记录 | 更新唯一 mainline 集成快照与当前 CI；确认 #48/#52/#101 内容已在 #115 中吸收或由更新文档替代；回填 SR-004 v0.2.29 / SR-016 v0.3.38 活动引用修复 | 防止旧源分支重复合并或覆盖新设计，准确区分 PR #52 模型评审、PR #115 独立复评和产品 NOT_RUN | Issue #50；PR #115；PR #48/#52/#101；SR-004/016/032 |
 | 2026-11-28 | 0.3.76 | GPT-6.2（ChatGPT） | 文档头、SR 清单、G02 状态、修订记录 | 将 SR-028 从 DRAFT 更新为 IN_PROGRESS，回填 #99 产品证据、#112 P2 修复和 #115 唯一集成候选；调整整项 SR 统计 | 使 SR 总索引与 SR-028/G02 当前实施状态一致，避免把 #97 旧 READY 回填当作当前状态 | Issue #50/#96/#111；PR #97/#99/#112/#115 |
 | 2026-11-28 | 0.3.77 | GPT-6.2（ChatGPT） | 文档头、SR-028 状态、修订记录 | 对齐 #99 13 路径文件级收编、#112 P2 独立复评、#97 READY 设计状态审计和 #115 双平台回归重跑 | 使 SR-028 状态、主线集成候选与源 PR 的职责边界一致 | Issue #50/#96/#111；PR #97/#99/#112/#115 |
+| 2026-11-28 | 0.3.78 | GPT-6.2（ChatGPT） | SR-028 行、修订记录 | 修正 SR-028 当前表格仍标 DRAFT 的过期状态，回填 #99/#112/#97 独立核验结果 | 保证 SR 总索引主状态与 SR-028、IR-007、实施状态总览一致 | Issue #50/#96/#111；PR #97/#99/#112/#115 |
