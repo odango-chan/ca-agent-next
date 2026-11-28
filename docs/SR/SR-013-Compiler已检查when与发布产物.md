@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.30
+> 文档版本：0.2.31
 > 状态：整项 DRAFT；阶段 READY（中央只读核验）。AC-013-01 归档完整性仍按历史审计状态；AC-013-02～06 NOT_RUN/BLOCKED；新增 AC-013-07 原版 OAS3 直接引用与执行期 Codec Result，当前 BLOCKED/NOT_RUN（待 SR-031 dependency kind、Resolver/Validator、Build DTO/Lock 和 Golden 冻结）。
 > 下一步：PR #18 在恢复分支的原始归档审计 FAIL 维持其历史快照，#110 已单独合入隔离证据分支而非当前恢复分支；先按固定 SHA 核查该修复能否合入并复核。AC-013-02～06 的 1.6.0-only 机器合同与 Compiler #62 仍待 Publisher 正式冻结、实测 NOT_RUN。\
 > 阶段依据：[独立评审 #77](https://github.com/odango-chan/ca-agent-next/issues/77#issuecomment-7209276846)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
@@ -228,6 +228,7 @@ Skill-owned G.4 Request Schema 根与完整 dialect-aware `$ref` 闭包在 Contr
 - 校验 Skill-owned G.4 根、OAS3 引用资源按各自 dialect 完整解析并保留原生约束/source bytes/已声明 `$id`；未解析、越界、重复或静默丢失 OAS3 关键字必须拒绝。
 - 验证 Any type URL、CheckedExpr protobuf、bool 类型和 DescriptorSet。
 - 验证所有类型引用可解析，Request Schema identity 与该 Skill 一致。
+- Host Context Schema-only Package 仅在 Skill 的 `Contract.contexts` 显式引用其 Schema export 时进入闭包；3GPP Common Schema-only Package 仅在 Skill-owned `requestSchema` 通过显式依赖 alias 精确引用已发布 Schema ID 时进入闭包，requestSchema 根仍属于 Skill。两类 Package 均拒绝未声明依赖、未导出 Schema ID 或未闭合 `$ref`，且不生成 Capability / Callable Scope。
 - 验证 SourcePath、表达式位置、程序文件与 Manifest 一致。
 - 验证不存在跨 Skill Descriptor 引用。
 - 对相同固定输入执行两次全新 Build；逐个比较所有 `.pb` 文件的原始字节，验收记录必须列出每个路径及 `changed_between_runs=0`；任一 `.pb` 不同即 AC-013-04 FAIL，不得只凭 JCS/JSON 一致宣称 Build 确定。
