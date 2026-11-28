@@ -23,7 +23,7 @@ DeepSeek Harness 默认使用 Goal 模式。按[SR 管理规范](docs/规范/SR%
 ## 2. 仓库与语言边界
 
 - Agent Core、Host、Agent Model Loop、Skill Importer、Skill Resolver 和 Runtime 使用 Python。
-- Python 工程工具链设计入口见 [G02 Python 工程工具链与环境管理](docs/设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md)；SR-028 当前为 DRAFT，uv 尚未实施。只有 SR-028 经评审达到 READY 并建立独立实施 Issue 后，才按其要求迁移依赖、锁文件、worktree 环境和 CI；不得将 uv 迁移混入 SR-001 PR #32。
+- Python 工程工具链设计入口见 [G02 Python 工程工具链与环境管理](docs/设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md)；当前恢复分支 SR-028 仍为 DRAFT/READY=0。第七轮设计 Review #6084094037 仅对固定 Head `93f1389e` / Base `3c7c4838` 授予设计 APPROVE_FOR_READY；实施 Issue #96 已存在，PR #97（READY 状态回填）、PR #99（基于旧设计 SHA 的 uv 实施候选）和 PR #112（堆叠共享基线）均 OPEN、未合并到当前恢复分支。不得重复创建实施 Issue、从当前 PR #46 Head 启动 uv 迁移，或将候选分支证据记为当前分支 VERIFIED；现有 #96 必须遵守其固定基线、独立分支和不合并授权边界。不得将 uv 迁移混入 SR-001 PR #32。
 - 独立 Plugin 可以使用 Go；Go Plugin 不代表 Go Host。
 - ca-agent-demo 是既有 Python 实现和测试证据来源，只能逐文件选择性复用，不得整体复制。
 - ca-skills、ca-skill-compiler、ca-client-tools、ca-openamsm-plugin、env-openamsm、env-5gc-sim、ca-skill-studio-demo 等保有独立实现和发布职责；ca-runtime 与 ca-agent 是参考/目标仓，不是 Next 运行时依赖。
@@ -185,5 +185,5 @@ review_scope:
 | 2026-11-25 | GPT-6.2（ChatGPT） | 第 3、4、7 节 | 更正 ca-host.artifact-store/v1 已冻结、Provider/Go Host 外部实现已存在、Next Python Host 尚未实现的三层状态；明确 SHA-256 仅为既有协议传输校验 | 消除 F05、F03.05 与源仓实现状态冲突，避免把外部 PASS 计入 Next | F05、F03.05、SR-009、SR-010；Issue #12 |
 | 2026-11-26 | GPT-6.2（ChatGPT） | 第 1、2、5 节 | 明确设计/实施/AC/EX 分阶段门禁，分离设计与实施 Issue，并要求实施 Commit/Push 后核对远端 SHA | 防止独立 SR 被无关下游依赖或系统级 EX 阻塞，并确保交付可追溯 | Issue #21；SR 管理规范 §6.1；PR #20 |
 | 2026-11-26 | GPT-6（ChatGPT） | §3、修订记录 | 明确 CA-SL 1.6.0 Capability-first 双向一对一、Compiler Binding、全链路绝不兼容旧版和设计待评审与实施 READY 分离 | 避免 Harness 为历史 v1alpha5 擅自构建兼容适配或提前实施 | Issue #40；IR-008；SR-029 |
-| 2026-11-27 | DeepSeek Harness（Goal 执行） | §7、§8、修订记录 | 新增“证据默认自动归档规则”：实施/验收/评审/整改/复验证据默认自动归档到对应 Issue、AC 可追溯、敏感信息检查、EVIDENCE_PENDING 失败门禁、CI Artifact 优先且不新增证据平台；原修订记录章节由 §7 顺延为 §8 | 消除证据只留在本地或对话中的缺口，使独立评审可直接获取原始证据，无需负责人逐次提醒 | Issue #108；SR 管理规范 §12 |
+| 2026-11-28 | GPT-6（ChatGPT） | §2、修订记录 | 澄清 SR-028 第七轮设计批准、当前分支 DRAFT、Issue #96 与 PR #97/#99/#112 的真实状态和固定基线边界 | 防止重复开实施任务、从错误设计 Head 开始迁移，或把候选分支证据误报为当前分支 VERIFIED | Issue #12；Issue #96；PR #46/#97/#99/#112 |
 | 2026-11-28 | Codex | §7 | 增加归档命名、分卷及重试复用入口 | 避免重复上传并可追踪每轮产物 | Issue #108；PR #109 |
