@@ -22,7 +22,7 @@
 | SR-017 / AC-017-02 | **FAIL**（候选设计/契约缺项） | 补 payload.request、operationId、Update 可选 n2.request、三类 N2 continuation、同请求双路、冲突/未知/Content-ID/n2SmInfoExt1 负例；清除 ack 暴露 Host Run/responseObligation/artifactRef 的旧句 | [#103](https://github.com/odango-chan/ca-agent-next/issues/103) |
 | SR-018 / AC-018-01/02 | **FAIL**（固定 Owner source/step、Evidence、Schema、exact-original Reconcile） | 校准 source/step；修复 Evidence 参数引用；所有 resolved decision 满足 Schema；Reconcile 必须以原 Receipt/Invocation 身份重新绑定 generation/epoch/correlation/SEID/releaseTxn/UPF，不得按当前 SUPI/PSI Session 解除旧 UNKNOWN | [#104](https://github.com/odango-chan/ca-agent-next/issues/104) |
 | SR-019 / AC-019-02 | **FAIL**（联合 fixture 缺项） | 补同请求 N1+N2 双路、X-CA-Request-Id 重试、旧 generation 迟到 0xD4、冲突 discriminator/n2SmInfoExt1 和 Owner outcome 联合证据；Mock 不拥有 Host Run/Owner 状态 | [#105](https://github.com/odango-chan/ca-agent-next/issues/105) |
-| SR-016 / AC-016-01 | **NOT_RUN**（固定 SR 正文缺独立定义） | 澄清 MIG-016-01 与 AC-016-01 的关系；补 AC 输入/步骤/验收，或明确二者独立并修正旧评审回填 | [#106](https://github.com/odango-chan/ca-agent-next/issues/106) |
+| SR-016 / AC-016-01 | **NOT_RUN**（Issue #95 固定源缺独立定义；现行 SR-016 v0.3.27 已补正式 AC） | 保留历史缺项记录；现行 AC-016-01 与 MIG-016-01 已分离，验收尚未执行，不能沿用 MIG 的静态 PASS | [#106](https://github.com/odango-chan/ca-agent-next/issues/106) |
 | SR-016 / AC-016-02～08/10 | **BLOCKED / NOT_RUN** | 等正式 1.6.0 Package、Compiler、Provider/Owner 输入和同一发布批次六宿主证据；#272 合并不等于新版产品 PASS | [#106](https://github.com/odango-chan/ca-agent-next/issues/106) |
 | SR-030 / AC-030-02/03/05 | **BLOCKED** | 等正式 Package Schema、languageTarget、Compiler 验证入口和 Golden；不猜测机器契约 | [#106](https://github.com/odango-chan/ca-agent-next/issues/106) |
 | SR-030 / AC-030-04 | **NOT_RUN** | 中央设计补充 ZIP 元数据归一、entry/Manifest 稳定排序、两次构建逐字节比较和正式 Schema 校验判据 | [#106](https://github.com/odango-chan/ca-agent-next/issues/106) |
@@ -32,7 +32,7 @@
 | 评审 Issue | 既有设计结论 | Issue #95 后续核验 | 后续动作 |
 |---|---|---|---|
 | [SR-013 #77](https://github.com/odango-chan/ca-agent-next/issues/77) | 设计 APPROVE_FOR_READY（限定） | AC-013-01 归档完整性 FAIL；设计通过不抵销固定归档差异 | #102 |
-| [SR-016 #78](https://github.com/odango-chan/ca-agent-next/issues/78) | 设计 APPROVE_FOR_READY（限定） | AC-016-01 定义/编号映射冲突；六宿主仍 NOT_RUN | #106 |
+| [SR-016 #78](https://github.com/odango-chan/ca-agent-next/issues/78) | 设计 APPROVE_FOR_READY（限定） | 固定源时 AC-016-01 定义/编号映射冲突；现行正式 AC 已独立定义但仍 NOT_RUN，六宿主仍 NOT_RUN | #106 |
 | [SR-017 #79](https://github.com/odango-chan/ca-agent-next/issues/79) | 静态设计 APPROVE_FOR_READY（限定） | 固定候选缺现行 F06 payload/continuation/负例，AC-017-02 FAIL | #103 |
 | [SR-018 #80](https://github.com/odango-chan/ca-agent-next/issues/80) | 历史 Owner 静态移交 APPROVE_FOR_READY（限定） | 固定源码发现 source/step、Evidence、Reconcile 缺陷，AC-018-01/02 FAIL | #104 |
 | [SR-019 #81](https://github.com/odango-chan/ca-agent-next/issues/81) | Mock peer 静态设计 APPROVE_FOR_READY（限定） | 联合 fixture 不完整，AC-019-02 FAIL；AC-019-03 NOT_RUN | #105 |
@@ -44,7 +44,7 @@
 
 - SR-013 AC-013-01：FAIL，直到归档整改和独立复验完成。
 - SR-013 AC-013-02/04：NOT_RUN；AC-013-03/05/06：BLOCKED。
-- SR-016 AC-016-01：定义缺失，不能判 PASS；六宿主全部 NOT_RUN。
+- SR-016 AC-016-01：现行正式 AC 已定义并与历史 MIG-016-01 分离，但新 AC **NOT_RUN**、不能判 PASS；Issue #95 固定源的定义缺失结论保留为历史时点；六宿主全部 NOT_RUN。
 - SR-017 AC-017-02：FAIL；运行验收 NOT_RUN。
 - SR-018 AC-018-01/02：FAIL；AC-018-03 BLOCKED；Release 子项 BLOCKED/NOT_RUN。
 - SR-019 AC-019-02：FAIL；AC-019-03 NOT_RUN。
@@ -64,4 +64,10 @@
 
 - 不修改 ca-openamsm-plugin、env-openamsm、env-5gc-sim、ca-skill-compiler 等外部仓。
 - 不把历史 PoC、旧 CI、旧 Studio PR 或 Mock 通过记录升级为 1.6.0 产品证据。
-- 不合并 PR #98 或本整改 PR，不发布、不更改父级 SR 状态。
+- 本文件仅跟踪整改；不据本次文档更新推定 PR #98/本整改 PR 已合并、产品已发布或父级 SR 主状态改变。
+
+## 7. 修订记录
+
+| 日期 | 修订者/模型 | 章节 | 修改及原因 | 关联 |
+|---|---|---|---|---|
+| 2026-11-28 | GPT-6（ChatGPT） | §2、§3、§4、§6 | 分离 Issue #95 历史缺定义与现行 SR-016 正式 AC 已定义但 NOT_RUN；避免将历史固定源缺陷误写为当前状态 | Issue #106；PR #107；SR-016 |
