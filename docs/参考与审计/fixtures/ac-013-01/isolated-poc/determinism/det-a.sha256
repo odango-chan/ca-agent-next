@@ -1,0 +1,74 @@
+﻿# cases.json 8569
+721991006f5d4bb63b624db7d8cfd7ad6df80b1e13f8ac97f92d3b79dc375bbc  cases.json
+# verify-context-only-second_skill.checked.pb 392
+329bf1f151f6eaf9a5a24669cee7196e2cb04763c4954d565ecc74bd1fa9d769  verify-context-only-second_skill.checked.pb
+# verify-context-only-second_skill.types.pb 79
+cee03f2acef2759d42809e567495ee0f36e90f492402544805762ccdf83f3a70  verify-context-only-second_skill.types.pb
+# verify-ue-registration-and_chain.checked.pb 586
+3fce44c9badde8bee0859abf0e4c440a449a55db92f4dcbb39726cccf6e88555  verify-ue-registration-and_chain.checked.pb
+# verify-ue-registration-and_chain.types.pb 400
+cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215  verify-ue-registration-and_chain.types.pb
+# verify-ue-registration-both_absent.checked.pb 317
+33ad1ab884c33322890aea17aa91ce3030d965e068fd47d3e0e5222dd5ecccb6  verify-ue-registration-both_absent.checked.pb
+# verify-ue-registration-both_absent.types.pb 400
+cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215  verify-ue-registration-both_absent.types.pb
+# verify-ue-registration-both_value.checked.pb 555
+e8ff8c893bbe5269bb7acd3130947afa42addeba2281cd943c4f07fea0e50fc7  verify-ue-registration-both_value.checked.pb
+# verify-ue-registration-both_value.types.pb 400
+cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215  verify-ue-registration-both_value.types.pb
+# verify-ue-registration-double.checked.pb 207
+5ad104c8b50743aeb7660fdd2216fd4cf907867856fe85223c5ffcf49a887cac  verify-ue-registration-double.checked.pb
+# verify-ue-registration-double.types.pb 400
+cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215  verify-ue-registration-double.types.pb
+# verify-ue-registration-double_max.checked.pb 207
+500229a87227ee7da00473416ca20999e803b09e7ca56ab83cf145372441b772  verify-ue-registration-double_max.checked.pb
+# verify-ue-registration-double_max.types.pb 400
+cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215  verify-ue-registration-double_max.types.pb
+# verify-ue-registration-false.checked.pb 391
+d1782eb15e8b5842d390e9850577674e05224460153219b5a02baf404929af4e  verify-ue-registration-false.checked.pb
+# verify-ue-registration-false.types.pb 400
+cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215  verify-ue-registration-false.types.pb
+# verify-ue-registration-int64_max.checked.pb 208
+7c221abd4b643f8100589843afe6bb9c171c1586dcfda79024ec63c1e167b424  verify-ue-registration-int64_max.checked.pb
+# verify-ue-registration-int64_max.types.pb 400
+cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215  verify-ue-registration-int64_max.types.pb
+# verify-ue-registration-missing_kind.checked.pb 391
+d1782eb15e8b5842d390e9850577674e05224460153219b5a02baf404929af4e  verify-ue-registration-missing_kind.checked.pb
+# verify-ue-registration-missing_kind.types.pb 400
+cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215  verify-ue-registration-missing_kind.types.pb
+# verify-ue-registration-missing_optional.checked.pb 325
+cc1f2f71596109e9f62fd78eeb19fd55648b425024c4a6a21d78bd4ee9584e81  verify-ue-registration-missing_optional.checked.pb
+# verify-ue-registration-missing_optional.types.pb 400
+cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215  verify-ue-registration-missing_optional.types.pb
+# verify-ue-registration-nested.checked.pb 419
+31b0ff09ee1db55290eb51cdd98eef55fb94f2c93aa0013ccf435029eecdb266  verify-ue-registration-nested.checked.pb
+# verify-ue-registration-nested.types.pb 400
+cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215  verify-ue-registration-nested.types.pb
+# verify-ue-registration-not.checked.pb 243
+022fce70d4c2944aa6eded1d57e9933e4bf4b5a2a60adcab382a28eba776a996  verify-ue-registration-not.checked.pb
+# verify-ue-registration-not.types.pb 400
+cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215  verify-ue-registration-not.types.pb
+# verify-ue-registration-nullable_eq_null.checked.pb 317
+33ad1ab884c33322890aea17aa91ce3030d965e068fd47d3e0e5222dd5ecccb6  verify-ue-registration-nullable_eq_null.checked.pb
+# verify-ue-registration-nullable_eq_null.types.pb 400
+cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215  verify-ue-registration-nullable_eq_null.types.pb
+# verify-ue-registration-nullable_null.checked.pb 438
+32bb2c39b7fa1b248c3aa8db59642421a21be9d136869911ebae08707479a173  verify-ue-registration-nullable_null.checked.pb
+# verify-ue-registration-nullable_null.types.pb 400
+cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215  verify-ue-registration-nullable_null.types.pb
+# verify-ue-registration-nullable_value.checked.pb 438
+32bb2c39b7fa1b248c3aa8db59642421a21be9d136869911ebae08707479a173  verify-ue-registration-nullable_value.checked.pb
+# verify-ue-registration-nullable_value.types.pb 400
+cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215  verify-ue-registration-nullable_value.types.pb
+# verify-ue-registration-or_guarded.checked.pb 367
+1ef5287d1dc57c4df77b71fb38a9a08d43e51b21af0022e8a14475a436df9435  verify-ue-registration-or_guarded.checked.pb
+# verify-ue-registration-or_guarded.types.pb 400
+cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215  verify-ue-registration-or_guarded.types.pb
+# verify-ue-registration-present_optional.checked.pb 325
+cc1f2f71596109e9f62fd78eeb19fd55648b425024c4a6a21d78bd4ee9584e81  verify-ue-registration-present_optional.checked.pb
+# verify-ue-registration-present_optional.types.pb 400
+cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215  verify-ue-registration-present_optional.types.pb
+# verify-ue-registration-true.checked.pb 391
+d1782eb15e8b5842d390e9850577674e05224460153219b5a02baf404929af4e  verify-ue-registration-true.checked.pb
+# verify-ue-registration-true.types.pb 400
+cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215  verify-ue-registration-true.types.pb

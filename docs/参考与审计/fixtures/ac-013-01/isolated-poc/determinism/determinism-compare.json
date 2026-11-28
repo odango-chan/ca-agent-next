@@ -1,0 +1,8 @@
+﻿{
+    "compared_files":  37,
+    "byte_mismatches":  0,
+    "mismatched_files":  [
+
+                         ],
+    "method":  "same source, two clean output directories, per-file SHA-256 and byte compare"
+}

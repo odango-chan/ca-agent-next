@@ -1,0 +1,3 @@
+# Evidence bytes are covered by SHA256SUMS. Never rewrite line endings on
+# checkout, otherwise the recorded hashes stop matching across platforms.
+* -text
