@@ -8,7 +8,7 @@
 > 关联 SR：SR-003、SR-007、SR-010、SR-015、SR-025、SR-026
 > 全局评审范围：继承根目录 Agent.md 的 review_scope。
 > 本文局部非目标：不实施 Provider/Host 代码迁移，不修改外部仓库，不完成 Codec Phase C，不声明生产资格；Demo 不做 SHA-256 / checksum / digest 校验、签名、Trust Registry 或生产准入。上游 digest 字段如存在仅作元数据，不由 Next 重新计算、比对或作为加载门禁。
-> 修订日期：2026-11-27
+> 修订日期：2026-11-28
 
 本文定义 CA Agent Next 如何消费 Tool Interface Package、Owner Contract Package 和 Provider Runtime Bindings，并将 Provider 作为唯一 Plugin Manager 管理的 Tools Extension 接入。本文是 **Next 消费侧架构与集成行为的权威设计**；外部包的实际字段、发布物和实现仍由各自所有者维护，Next 不复制其完整 Catalog 或 Schema。
 
@@ -52,7 +52,7 @@
 | ca-client-tools | main 7bcb2614aa3615d8358df31eecefd0909e894e40；Release v1.2.0（2026-11-24） | Provider v2、Backend Binding Catalog v2、Interface Package、Runtime Bindings v1、Codec |
 | env-openamsm | main dc83ccbf5be54dcc7112dd43ba95ea6fa5975550 | OpenAMSM Owner v1alpha4 契约与 Receipt / Reconcile |
 | ca-agent-demo | main 57e277ff9094dad93543df46910a12a1dbbaf560 | Generic Host、Tool Action Boundary、Provider v2 Consumer、Capability Scope 和测试；main 不含 provider.yaml / Runtime Bindings package loader |
-| ca-agent | commit 2c0b07f2eaff3bc1020bfc6775ef9bf09e3052ae | `ca-host.artifact-store/v1` Host Artifact Store contract；Accepted for implementation，非 Next 已实现证据 |
+| ca-agent | commit 2c0b07f2eaff3bc1020bfc6775ef9bf09e3052ae | `ca-host.artifact-store/v1` 历史 Host Artifact Store contract（含 SHA-256）；与 Next 1.6.0 no-hash 目标不兼容，不作为新实施输入 |
 | ca-skills | main 780497a2918ad3e7bdff554ab64b0ba627e867e0 | CA-SL v1alpha5 MAS Skill 作者源：Owner dependency alias、Capability requirements、mas:: Callable 引用 |
 | ca-skill-compiler | main 255ab85fa5abb4b0bf36656bf64250cafebf45cb；产品 v2.1.0 | 冻结 v1alpha5 Build 的 ResolvedDependency / TrustedBuildContext Owner linking；Development v1alpha1 Interface Package/Lock 是独立 profile |
 | ca-client-tools PR #39 | OPEN，非 Draft；Phase B head eb1169f | Codec Phase B 候选证据；Phase C Consumer Migration 未开始 |
@@ -226,7 +226,7 @@ ProviderV2 Driver 必须按 ca-client-tools.provider/v2 的精确字段消费，
 | invoke | backendOperationId、arguments、invocation（invocationId、producerInvocationId、deadline）；仅 typed MAS 可选 hostInvocation | Provider result envelope；MUTATION 只能走 typed MAS handler，genericSBI MUTATION 在远端 I/O 前拒绝；不得把 Owner Outcome 映射成 COMMITTED |
 | cancel | targetRequestId | CANCEL_REQUESTED / ALREADY_COMPLETED / NOT_FOUND；取消不等于远端 mutation 回滚 |
 
-initialize 的 limits 至少约束 maxFrameBytes、maxInFlight 和 maxCallDurationMs。可选 artifactChannel 是关闭对象，字段为 baseUrl、processToken、requestTimeoutMs、maxArtifactBytes、maxAggregateBytes、maxAttachments；缺失 channel 时 artifact-bearing binding 为 NOT_CONFIGURED，且必须在远端 I/O 前拒绝。显式提供格式非法的 channel 则 initialize 返回 PROVIDER_CONFIGURATION_INVALID，不进入 READY，不发 catalog 或 invoke。原始二进制通过 ca-host.artifact-store/v1 channel 传输，不进入 NDJSON。
+initialize 的 limits 至少约束 maxFrameBytes、maxInFlight 和 maxCallDurationMs。可选 artifactChannel 是关闭对象，字段为 baseUrl、processToken、requestTimeoutMs、maxArtifactBytes、maxAggregateBytes、maxAttachments；缺失 channel 时 artifact-bearing binding 为 NOT_CONFIGURED，且必须在远端 I/O 前拒绝。显式提供格式非法的 channel 则 initialize 返回 PROVIDER_CONFIGURATION_INVALID，不进入 READY，不发 catalog 或 invoke。原始二进制通过 ca-host.artifact-store/v2 no-hash channel 传输，不进入 NDJSON；v1 仅为要求 SHA-256 的历史契约，不用于 1.6.0。
 
 catalog descriptor 只包含私有 backendOperationId、Effect、request/response media type、参数或 generic schema、source pin 和 Artifact slot 描述。不得包含服务 origin、URL、HTTP method、route template、header/token、公开 Callable ID、Capability ID、Owner Outcome 或 Evidence guarantee。catalog 是可用性核对，不是授权。
 
@@ -662,7 +662,7 @@ Runtime Action 以 Capability ID 为 Skill / Procedure 作者侧入口。Runtime
 - `provider.yaml` / sidecar / Owner publication / Provider initialize 中的 `interfaceSnapshotDigest`、`runtimeBindingsDigest`、`backendCatalogDigest`、`publicationDigest`、`manifestDigest`、`buildDigest` 等若由上游携带，仅作为声明或诊断元数据，不由 Next 重新计算、比较或作为加载条件。
 - Provider 包加载仍须检查路径在包根内、文件存在、YAML/schema 结构、Provider/Owner identity、版本、公开映射、Effect、Schema 闭包和显式 catalog 完整性；这些结构/语义校验不依赖 hash。
 - Provider 发布物按精确 Release tag 和平台归档选择；Demo 不校验 `SHA256SUMS`、归档 checksum 或 executable digest。该约束不等于允许动态 latest 或任意路径执行。
-- Host Artifact Channel 只管理 opaque reference、Invocation/direction/slot、原始 bytes、大小/数量配额、超时取消、过期清理和原子发布；不做 per-artifact SHA-256。外部 `ca-host.artifact-store/v1` 若强制 SHA-256，则与 Next Demo 不兼容，AC-010-03 保持 BLOCKED_EXTERNAL_INPUT，直至外部契约修订。
+- Host Artifact Channel v2 只管理 opaque reference、Invocation/direction/slot、原始 bytes、大小/数量配额、超时取消、过期清理和原子发布；不做 per-artifact SHA-256。外部 `ca-host.artifact-store/v1` 保持历史 SHA-256 契约，不兼容且不复用；Next 的 v2 由 F05 / SR-010 中央定义，不依赖外部 v1 修订。
 - 上游 Git blob ID 可作为 Source Bundle 原始 Git 对象身份；它不是 Next 计算的 digest，也不得转化为产品 Build / Verify hash 门禁。Source Bundle 的 byte-for-byte 比较是直接字节比较。
 ## 13. 修订记录
 
