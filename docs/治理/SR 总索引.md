@@ -1,8 +1,8 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.76
-> 状态：31 项 SR：4 VERIFIED（仅各自历史模块范围）、1 IMPLEMENTED（设计移交）、25 DRAFT、1 READY（限定范围：SR-009，整项未完成）。PR #46 第九轮独立 Review #6095601142 对 Base `c806def7` / Head `af8d1b85` 给出 `APPROVE_FOR_READY` 并已合入恢复设计基线 `92436348`；main 尚未更新。PR #115 是唯一 mainline 集成入口，固定评审 Head `ba5354c575394295cfa7a790922e02422b0c96f4`（Base `b2ed5eb84114f9c2556a0cd06ed974887b1b70ad`），该 Head 的 CI 3/3 SUCCESS（2026-11-28T07:14–07:17Z）；此前 `84c66b7` / `0c8ec1f` 引用为历史快照。Issue #116 独立增量复评给出 `APPROVE_FOR_READY（限定范围）`（0 P0 / 0 P1 / 11 P2）。SR-009 生产 T0 classifier 绑定仍 BLOCKED_EXTERNAL_INPUT；SR-031 / SR-032 产品实现仍 NOT_RUN。
+> 文档版本：0.3.77
+> 状态：31 项 SR：4 VERIFIED（仅各自历史模块范围）、1 IMPLEMENTED（设计移交）、25 DRAFT、1 READY（限定范围：SR-009，整项未完成）。PR #46 第九轮独立 Review #6095601142 已合入恢复设计基线 `92436348`，main 尚未更新。PR #115 是唯一 mainline 集成入口；SR-009 固定评审 Head `ba5354c575394295cfa7a790922e02422b0c96f4`（Base `b2ed5eb8`），其 CI 3/3 SUCCESS；当前内容核验快照 Head `ee7565f280d6bb06d2db8d61e41c8b6a4e67f9af`，SR-004/016 活动引用修订提交 `0cb430e7`；Review Context #46124435521 SUCCESS，SR-003 回归 #46124435581 IN_PROGRESS；PR #115 全量独立复评尚未完成。此前 `84c66b7` / `0c8ec1f` 引用为历史快照。Issue #116 独立增量复评 `APPROVE_FOR_READY（限定范围）`（0 P0 / 0 P1 / 11 P2）。SR-009 生产 T0 classifier 绑定仍 BLOCKED_EXTERNAL_INPUT；SR-031 / SR-032 产品实现仍 NOT_RUN。
 > 修订日期：2026-11-28\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
@@ -324,5 +324,6 @@
 | 2026-11-28 | 0.3.72 | GPT-6.2（ChatGPT） | SR-010/013/026/027 状态与修订记录 | 将 AC-010-10、AC-013-07、AC-026-04～06、AC-027-05 的 OAS3 / Codec / Bundle 边界纳入 SR 追踪，明确各项 BLOCKED/NOT_RUN | 防止新增 IR-009 设计被误读为 Provider / Compiler / Bundle 产品验收通过 | Issue #47；IR-009；PR #115 |
 | 2026-11-28 | 0.3.73 | GPT-6.2（ChatGPT） | SR-010 AC-010-03 状态、修订记录 | 明确 Demo no-hash Artifact Channel；外部强制 SHA-256 的 ArtifactStore v1 不可直接复用，AC-010-03 保持 BLOCKED | 避免把摘要校验、内容寻址或旧契约兼容带入 Demo 范围 | Issue #50；PR #115；SR-001 AC-REV-08 |
 | 2026-11-28 | 0.3.74 | GPT-6.2（ChatGPT） | SR-009 评审矩阵、§2.4、Phase G、修订记录 | 更新旧 Review #73 的快照边界；登记 SR-009 v0.2.13 / F06 v0.3.7 / Plugin PR #1 当前增量复评 Issue #116；将 T0 classifier API 缺失列为 AC-009-04 生产绑定直接外部阻塞 | 防止将旧快照批准外推到新设计，并遵守 READY 前不创建目标仓实施 Issue 的治理规则 | Issue #116；SR-009；F06；ca-client-tools#44；PR #115 |
-| 2026-11-28 | 0.3.75 | GPT-6.2（ChatGPT） | 文档头、SR 清单、IR-008 / SR-032、修订记录 | 纳入 SR-032 作者规范与 Node 设计，更新 31 SR / 26 DRAFT 统计及 PR #52 / #115 最新复评状态（本行此前误标为 0.3.73，内容不变） | 使 SR 索引反映作者规范已集成、两项非阻断 P2 已整改，但不误报 PR #115 独立复评或产品实施完成 | Issue #49；IR-008；SR-032；PR #52/#115；Review #6089893779 |
-| 2026-11-28 | 0.3.76 | DeepSeek Harness（GLM-5.3） | 文档头、SR 清单、§2.3、§2.4、Phase G、修订记录 | 按 Issue #116 登记 SR-009 READY（限定范围）与 Issue #2 / PR #3；回填固定评审 Head `ba5354c` 与 CI 3/3；删除乱序的重复 0.3.73 修订行并修正版本单调；同步 4 VERIFIED / 1 IMPLEMENTED / 25 DRAFT / 1 READY 统计 | 关闭 P2-09/P2-11：消除索引版本非单调与 Head/CI 过期引用，同时保持 AC-009-04 生产 classifier BLOCKED、整项 SR 未完成 | Issue #116；SR-009；PR #115；ca-openamsm-plugin #2/#3；F05 v0.4.12；F06 v0.3.8 |
+| 2026-11-28 | 0.3.75 | GPT-6.2（ChatGPT） | 文档头、§2.4、IR-008 / SR-032、修订记录 | 更新唯一 mainline 集成快照与当前 CI；确认 #48/#52/#101 内容已在 #115 中吸收或由更新文档替代；回填 SR-004 v0.2.29 / SR-016 v0.3.38 活动引用修复 | 防止旧源分支重复合并或覆盖新设计，准确区分 PR #52 模型评审、PR #115 独立复评和产品 NOT_RUN | Issue #50；PR #115；PR #48/#52/#101；SR-004/016/032 |
+| 2026-11-28 | 0.3.76 | GPT-6.2（ChatGPT） | 文档头、SR 清单、IR-008 / SR-032、修订记录 | 纳入 SR-032 作者规范与 Node 设计，更新 31 SR 统计及 PR #52 / #115 最新复评状态（本行此前误标为 0.3.73，内容不变） | 使 SR 索引反映作者规范已集成、两项非阻断 P2 已整改，但不误报 PR #115 独立复评或产品实施完成 | Issue #49；IR-008；SR-032；PR #52/#115；Review #6089893779 |
+| 2026-11-28 | 0.3.77 | DeepSeek Harness（GLM-5.3） | 文档头、SR 清单、§2.3、§2.4、Phase G、修订记录 | 按 Issue #116 登记 SR-009 READY（限定范围）与 Issue #2 / PR #3；回填固定评审 Head `ba5354c` 与 CI 3/3；删除乱序的重复 0.3.73 修订行并修正版本单调；同步 4 VERIFIED / 1 IMPLEMENTED / 25 DRAFT / 1 READY 统计 | 关闭 P2-09/P2-11：消除索引版本非单调与 Head/CI 过期引用，同时保持 AC-009-04 生产 classifier BLOCKED、整项 SR 未完成 | Issue #116；SR-009；PR #115；ca-openamsm-plugin #2/#3；F05 v0.4.12；F06 v0.3.8 |
