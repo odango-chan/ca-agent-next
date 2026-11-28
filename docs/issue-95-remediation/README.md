@@ -18,7 +18,7 @@
 
 | SR / AC | 当前审计结论 | 具体整改 | 追踪 |
 |---|---|---|---|
-| SR-013 / AC-013-01 | **PASS（归档完整性/历史 PoC 独立复验）**；`vet.log` 仍 NOT_ARCHIVED | PR #110 修复的五份归档文件已在专用证据分支独立 detached checkout 复验：58/58、SHA256SUMS、audit_evidence.py、Python 18/18；不代表 Compiler 产品验收 | [#102](https://github.com/odango-chan/ca-agent-next/issues/102)；[PR #110](https://github.com/odango-chan/ca-agent-next/pull/110) |
+| SR-013 / AC-013-01 | **PASS（归档完整性/历史 PoC 独立复验）**；`vet.log` 仍 NOT_ARCHIVED | PR #110 修复的完整 59 Blob 归档树（58 个清单覆盖文件 + SHA256SUMS）已在专用证据分支独立 detached checkout 复验：58/58、SHA256SUMS、audit_evidence.py、Python 18/18；不代表 Compiler 产品验收 | [#102](https://github.com/odango-chan/ca-agent-next/issues/102)；[PR #110](https://github.com/odango-chan/ca-agent-next/pull/110) |
 | SR-017 / AC-017-02 | **FAIL**（候选设计/契约缺项） | 补 payload.request、operationId、Update 可选 n2.request、三类 N2 continuation、同请求双路、冲突/未知/Content-ID/n2SmInfoExt1 负例；清除 ack 暴露 Host Run/responseObligation/artifactRef 的旧句 | [#103](https://github.com/odango-chan/ca-agent-next/issues/103) |
 | SR-018 / AC-018-01/02 | **FAIL**（固定 Owner source/step、Evidence、Schema、exact-original Reconcile） | 校准 source/step；修复 Evidence 参数引用；所有 resolved decision 满足 Schema；Reconcile 必须以原 Receipt/Invocation 身份重新绑定 generation/epoch/correlation/SEID/releaseTxn/UPF，不得按当前 SUPI/PSI Session 解除旧 UNKNOWN | [#104](https://github.com/odango-chan/ca-agent-next/issues/104) |
 | SR-019 / AC-019-02 | **FAIL**（联合 fixture 缺项） | 补同请求 N1+N2 双路、X-CA-Request-Id 重试、旧 generation 迟到 0xD4、冲突 discriminator/n2SmInfoExt1 和 Owner outcome 联合证据；Mock 不拥有 Host Run/Owner 状态 | [#105](https://github.com/odango-chan/ca-agent-next/issues/105) |
@@ -52,7 +52,7 @@
 
 ## 5. 执行顺序
 
-1. #102：归档修复与独立 detached checkout 复验已完成；PR #110 已合入专用证据分支 `docs/ac-013-01-poc-evidence` @ `39ccb00be8d14f7f1be7b02061454e9b927471b8`；本次 PR #115 选择性纳入五份修复文件。Compiler 产品验收仍 NOT_RUN。
+1. #102：归档修复与独立 detached checkout 复验已完成；PR #110 已合入专用证据分支 `docs/ac-013-01-poc-evidence` @ `39ccb00be8d14f7f1be7b02061454e9b927471b8`；本次 PR #115 选择性纳入完整 59 Blob 归档树。Compiler 产品验收仍 NOT_RUN。
 2. #106：修复中央 SR/AC 编号、固定路径、职责和确定性验收判据。
 3. #104：优先修复 Owner exact-original Reconcile 与 Evidence 闭包，避免跨代错误解除 UNKNOWN。
 4. #103：按固定 F06/3GPP OpenAPI 补齐 Plugin Event payload 与 continuation 契约。
@@ -72,3 +72,4 @@
 |---|---|---|---|---|
 | 2026-11-28 | GPT-6（ChatGPT） | §2、§3、§4、§6 | 分离 Issue #95 历史缺定义与现行 SR-016 正式 AC 已定义但 NOT_RUN；避免将历史固定源缺陷误写为当前状态 | Issue #106；PR #107；SR-016 |
 | 2026-11-28 | GPT-6.2（ChatGPT） | §2、§4～§6 | 回填 PR #110 后续归档独立复验 PASS、SR-018 历史 UE-requested Release 限定 PASS，并同步 SR-016 当前 AC-016-01 正式定义版本；保留 vet.log 未归档及产品 NOT_RUN 边界 | Issue #102/#104/#106；PR #107/#110/#114/#115 |
+| 2026-11-28 | GPT-6.2（ChatGPT） | §2、§4～§6 | 补记 PR #115 已按固定 Blob SHA 纳入完整 59 Blob 归档树（58 个清单覆盖文件 + SHA256SUMS），不再将五份修复元数据误写为完整归档 | Issue #102；PR #110；PR #115 |

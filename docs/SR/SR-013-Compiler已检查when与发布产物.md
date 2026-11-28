@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.41\
+> 文档版本：0.2.42\
 > 状态：整项 DRAFT；阶段 READY（中央只读核验，仅 AC-013-01 历史隔离 PoC/归档完整性范围）；AC-013-01 固定归档完整性与历史 PoC 独立复验 PASS（Issue #102；PR #110 修复快照 `39ccb00be8d14f7f1be7b02061454e9b927471b8`）；`vet.log` NOT_ARCHIVED / NOT_INDEPENDENTLY_VERIFIABLE；AC-013-02～06 产品仍 NOT_RUN/BLOCKED；AC-013-07 BLOCKED / NOT_RUN；when 唯一来自 assurance/contract.yaml。
 > 下一步：按本 SR 已冻结的 CA-SL 1.6.0 / Compiler 3.0.0 / API /2 契约推进 AC-013-02～07 的正式输入与独立评审；AC-013-01 仅为历史隔离 PoC/归档完整性 PASS，不授权 Compiler 产品实现、发布或 Next Runtime 验收。
 > 阶段依据：[独立评审 #77](https://github.com/odango-chan/ca-agent-next/issues/77#issuecomment-7209276846)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
@@ -58,7 +58,7 @@ SR-013 整体仍为 DRAFT。AC-013-01 的隔离 PoC 完成不自动把 SR-013 �
 
 | AC | 当前状态 | 下一步 |
 |---|---|---|
-| AC-013-01 | PASS（固定归档完整性及历史隔离 PoC 独立复验，2026-11-28） | #110 五份归档修复文件；专用证据分支 merge `39ccb00be8d14f7f1be7b02061454e9b927471b8`；58/58 清单、独立 checksum、audit_evidence.py、Python 18/18；`vet.log` NOT_ARCHIVED；不代表产品 Build/Verify |
+| AC-013-01 | PASS（固定归档完整性及历史隔离 PoC 独立复验，2026-11-28） | #110 完整 59 Blob 归档树（58 个清单覆盖文件 + SHA256SUMS）；专用证据分支 merge `39ccb00be8d14f7f1be7b02061454e9b927471b8`；58/58 清单、独立 checksum、audit_evidence.py、Python 18/18；`vet.log` NOT_ARCHIVED；不代表产品 Build/Verify |
 | AC-013-02 | NOT_RUN | 正式 assurance/contract.yaml 顶层 when AST、G.4、Schema-aware Guard / Nullable lowering | 
 | AC-013-03 | NOT_RUN（机器身份已固定；等待 AC-013-02、正式 Schema / Golden 与 Compiler 实现） | Compiler Owner 按 §5.1 固定 API /2 契约发布 Manifest Schema / Golden | 
 | AC-013-04 | NOT_RUN | 新版 Build / Verify、Go/Python、Native/WASM/Chromium 与旧契约回归 | 
@@ -474,4 +474,5 @@ OpenAPI operation / multipart ingress 验证由 SR-010 负责；Compiler 负责 
 | 2026-11-27 | 0.2.36 | GPT-6.2（ChatGPT） | 文档头、设计依据、修订记录 | 同步 SKILL 作者规范 v0.2.3 的完整正向 Procedure Node 结构 | 保持 Compiler / 作者规范示例与 Node 阶段文法一致 | Issue #49；IR-008；SR-032；PR #52 |
 | 2026-11-27 | 0.2.37 | ChatGPT（GPT-6） | 设计依据、修订记录 | 同步 CA-SL v0.2.7 与作者规范 v0.2.4 的 Node 示例与 Predicate 规则修正；不改变 Compiler Owner 的 AC-013-07 BLOCKED / NOT_RUN 状态 | 保持 Compiler 设计依赖和作者规范当前候选一致 | Issue #49；IR-008/009；SR-013/032；PR #52 |
 | 2026-11-27 | 0.2.38 | ChatGPT（GPT-6.2） | 文档头、§5.2～§5.4、§6、§13 | 将 Request Schema Manifest / Artifact 闭包改为 dialect-aware：本地 G.4 生成文件，外部 OAS3 保留 Source Bundle pin / source file / JSON Pointer 引用；新增 07j 验收，并统一 when 的 Schema 位置引用与 Verify dialect 检查 | 使 AC-013-07 从语言层 dialect 规则闭合到 Artifact、Bundle、Host 与 when 类型定位，同时保持 wire contract / Resolver / Golden 未发布时 BLOCKED / NOT_RUN | Issue #47/#49；IR-008/009；SR-031；PR #52 |
-| 2026-11-28 | 0.2.41 | GPT-6.2（ChatGPT） | 文档头、§3.2～§3.3、AC-013-01、修订记录 | 纳入 PR #110 修复后的五份固定归档文件与 Issue #102 独立 detached checkout 复验；将 58/58、checksum、audit_evidence.py、Python 18/18 记录为归档/历史 PoC 范围 PASS，并保留 vet.log 未归档 | 避免沿用 #107 的旧 FAIL 或 #115 的本地 .agent-tmp 路径；不将历史 PoC 扩大为 Compiler 1.6.0 产品验收 | Issue #102；PR #110；PR #115 |
+| 2026-11-28 | 0.2.41 | GPT-6.2（ChatGPT） | 文档头、§3.2～§3.3、AC-013-01、修订记录 | 纳入 PR #110 修复后的完整 59 Blob 归档树与 Issue #102 独立 detached checkout 复验；将 58/58、checksum、audit_evidence.py、Python 18/18 记录为归档/历史 PoC 范围 PASS，并保留 vet.log 未归档 | 避免沿用 #107 的旧 FAIL 或 #115 的本地 .agent-tmp 路径；不将历史 PoC 扩大为 Compiler 1.6.0 产品验收 | Issue #102；PR #110；PR #115 |
+| 2026-11-28 | 0.2.42 | GPT-6.2（ChatGPT） | §3.2～§3.3、AC-013-01、修订记录 | 将专用证据分支完整 59 Blob 归档树纳入 PR #115（58 个清单覆盖文件 + SHA256SUMS），不再仅登记五份修复元数据文件 | 确保 58/58 独立复验结论对应当前集成树中完整可搬移的归档材料 | Issue #102；PR #110；PR #115 |
