@@ -1,7 +1,7 @@
 # SR-002：Python 核心与宿主基础骨架
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.12  
+> SR 版本：0.2.13  
 > 修订日期：2026-11-26  
 > 状态：VERIFIED；实现已集成，AC-002-01～AC-002-08 全部 PASS；EX-01 NOT_RUN  
 > 创建日期：2026-11-25  
@@ -157,7 +157,7 @@ uv run --no-sync --locked --group dev --extra plugins python -m ca_agent_next --
 uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --suite host --output-dir artifacts/unittest-gate/host
 ```
 
-Host 范围仍要求 discovered>0、tests_run=discovered、failures/errors/skipped=0 且退出码 0 才计 PASS。该入口只替换当前命令执行方式，不改变 §5.1 Smoke 契约与 AC-002-01～08 的验收定义，也不改写上文历史 PASS 证据。
+Host 范围仍要求 discovered>0、tests_run=discovered、failures/errors/skipped=0 且退出码 0 才计 PASS。PR #115 代码与策略核验 Head `609fb12612c8990a37ba0e174cfacadfd7a7c5d9` 的 SR-003 双平台回归中，Host 在 Ubuntu / Windows 均为 52/52 PASS；该结果是当前候选分支复验，不改变本 SR 的历史 AC-002-01～08 证据边界。
 
 ## 6. 实施位置与复验入口
 
@@ -231,3 +231,4 @@ SR-002 的模块 AC-002-01～08 已全部通过，实施 PR #23 已集成。上�
 | 2026-11-26 | 0.2.10 | GPT-6.2（ChatGPT） | §7、修订记录 | 回填 PR #23 的集成 Commit、受测 SHA、CPython 3.14.6 环境、安装/Smoke/52 项测试与 AC-002-01～08 PASS；将实施状态更新为 IMPLEMENTED、SR 状态更新为 VERIFIED。 | 使 SR 状态由 READY 随实际实现、模块验收和证据集成推进；明确 EX-01、版本矩阵与 DeepSeek Harness 仍 NOT_RUN。 | Issue #22；PR #23；merge commit `49964464`；证据 comment `7183057195`；PR #25 |
 | 2026-11-27 | 0.2.11 | DeepSeek Harness（Goal 执行） | §5.2、修订记录 | 按 SR-028 新增迁移后当前 uv 复验入口（uv 0.13.10 + uv.lock + unittest gate --suite host），§5 原始 pip 验收命令、受测 SHA 与 52 项 PASS 记录保持原文 | 统一仓库当前工具链入口，同时不覆盖历史受测环境与 VERIFIED 证据 | Issue #96；PR #99；SR-028；G02 |
 | 2026-11-28 | 0.2.12 | GPT-6.2（ChatGPT） | §5.2、修订记录 | 将 uv 当前复验入口同步到 mainline 集成候选；历史 pip 安装、受测 SHA 与原始 52 项 PASS 记录保持不变 | 保持 SR-002 原始 VERIFIED 证据与 SR-028 迁移后当前工具链分离 | Issue #96；PR #99；PR #115；SR-028 |
+| 2026-11-28 | 0.2.13 | GPT-6.2（ChatGPT） | §5.2、修订记录 | 将 PR #115 当前候选的 Host 双平台 52/52 回归证据与历史 SR-002 VERIFIED 记录分开 | 避免把当前候选回归外推为历史受测 SHA 或扩展为系统 EX PASS | Issue #50/#96；PR #115；SR-028 v0.2.14 |
