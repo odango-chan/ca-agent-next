@@ -6,9 +6,9 @@
 > 下一步：独立评审本轮固定的 Codec Capability/Callable、Package 2.0.0、Runtime Bindings v2、Artifact Channel v2 和 Output Schema；达到 SR-026 READY 且 SR-029 依赖 READY 后，再创建 ca-client-tools 实施 Issue。
 > 阶段依据：[独立评审 #87](https://github.com/odango-chan/ca-agent-next/issues/87#issuecomment-7209366603)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。
 > 创建日期：2026-11-26  
-> 修订日期：2026-11-27\
+> 修订日期：2026-11-28\
 > 上游需求：IR-006  
-> 设计依据：F03.05 v0.4.4 §8.2、§11 与 EC03 外部生产端复验。\
+> 设计依据：F03.05 v0.4.12 §8.2.1 / §8.3、F05 v0.4.11、SR-010 v0.2.8 与 EC03 外部生产端复验。\
 > 关联 Issue：ca-agent-next#12（设计）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：见 §4；本批仅验收指定 NAS Decode。
