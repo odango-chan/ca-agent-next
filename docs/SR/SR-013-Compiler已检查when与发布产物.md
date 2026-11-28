@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.43\
+> 文档版本：0.2.44\
 > 状态：整项 DRAFT；阶段 READY（中央只读核验，仅 AC-013-01 历史隔离 PoC/归档完整性范围）；AC-013-01 固定归档完整性与历史 PoC 独立复验 PASS（Issue #102；PR #110 修复快照 `39ccb00be8d14f7f1be7b02061454e9b927471b8`）；`vet.log` NOT_ARCHIVED / NOT_INDEPENDENTLY_VERIFIABLE；AC-013-02～06 产品仍 NOT_RUN/BLOCKED；AC-013-07 BLOCKED / NOT_RUN；when 唯一来自 assurance/contract.yaml。
 > 下一步：按本 SR 已冻结的 CA-SL 1.6.0 / Compiler 3.0.0 / API /2 契约推进 AC-013-02～07 的正式输入与独立评审；AC-013-01 仅为历史隔离 PoC/归档完整性 PASS，不授权 Compiler 产品实现、发布或 Next Runtime 验收。
 > 阶段依据：[独立评审 #77](https://github.com/odango-chan/ca-agent-next/issues/77#issuecomment-7209276846)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
@@ -10,7 +10,7 @@
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：Next 消费端实现、生产准入、Owner Trust 治理、自动发布及真实 5GC/MAS 资格。
 
-上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。功能归属：EC02 Compiler、F08 技能编译与发布；消费端关联 F02。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.22、[F08 技能编译与发布设计说明书](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.34、[F02 Skill 管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md) v0.4.3、[CA-SL 1.6.0 中央语言设计](../规范/CA-SL%201.6.0完整语言规范.md) v0.2.10、[SKILL 作者规范](../规范/SKILL作者规范.md) v0.2.4。
+上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。功能归属：EC02 Compiler、F08 技能编译与发布；消费端关联 F02。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.22、[F08 技能编译与发布设计说明书](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.34、[F02 Skill 管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md) v0.4.4、[CA-SL 1.6.0 中央语言设计](../规范/CA-SL%201.6.0完整语言规范.md) v0.2.10、[SKILL 作者规范](../规范/SKILL作者规范.md) v0.2.4。
 
 目标仓：odango-chan/ca-skill-compiler。实施 Issue：[Compiler #62](https://github.com/odango-chan/ca-skill-compiler/issues/62)。文档刷新 Issue：[Next #14](https://github.com/odango-chan/ca-agent-next/issues/14)。目标代码基线：Compiler v2.1.0，commit 255ab85fa5abb4b0bf36656bf64250cafebf45cb。历史来源：[ca-skills #88](https://github.com/odango-chan/ca-skills/pull/88) 已合并，正式发布身份见 [ca-skills release record](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs/releases/ca-sl-v1alpha5.md)。
 
@@ -21,7 +21,7 @@
 本 SR 纳入 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12) 的中央设计评审批次。**SR 实施主状态依旧为 `DRAFT`；设计 `REVIEW_REQUESTED` 不等于独立 APPROVED、实施 READY 或产品 PASS。** 单版本决定见 [SR-029](SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) / [PR #45](https://github.com/odango-chan/ca-agent-next/pull/45)。
 
 - **本轮评审重点：**1.6.0 when、Request Schema、1:1 Capability Binding、Build/Verify、Runtime Artifact/Manifest 和 Golden 验收。
-- **阻塞/未验证：**旧 AC-013-01 PoC 不是新产品发布；正式 Schema/机器标识/DTO 未冻结，AC-013-02～06 NOT_RUN / BLOCKED（含 Schema-only Package 与零 Capability roots 规则）。
+- **阻塞/未验证：**旧 AC-013-01 PoC 不是新产品发布；`languageTarget=connectionagent.io/v1.6.0`、Compiler 3.0.0 与 API /2 机器身份已由 Next 冻结；正式 Schema / Golden / Manifest / Release 尚未发布，AC-013-02～06 NOT_RUN / BLOCKED（含 Schema-only Package 与零 Capability roots 规则）。
 - **通用架构约束：**新 CA-SL 作者源、Compiler API/Build DTO、Runtime Artifact、Bundle、Studio 与 Agent Importer/Runtime **只支持 1.6.0**；Skill 只选择 Capability ID，公开 Capability↔Callable 双向一对一。languageTarget、Compiler 3.0.0 与 BuildRequest / DependencyInspection / BuildResult / Artifact /2 机器身份已由 Next 中央固定；生产者负责发布 Schema / Golden / Release。历史版本材料只读留档；不做别名、兼容、双轨、迁移或 fallback。不得推测尚未发布的实际资产。
 - **评审输出：**逐项核对范围、非目标、外部 Owner、错误/状态语义、Acceptance 与证据路径。设计无独立结论写 `PENDING_REVIEW`；未发布依赖写 `BLOCKED`；未运行测试写 `NOT_RUN`。当前不得派发 DeepSeek Harness 实施任务。
 
@@ -31,7 +31,7 @@
 
 必须保持：
 
-- **唯一新 CA-SL 语言目标为 1.6.0**；准确 `languageTarget` 机器标识由 ca-skills / Compiler Owner 联合正式冻结；新版 Compiler/Agent 拒绝旧 v1alpha5 与未发布的候选语言。
+- **唯一新 CA-SL 语言目标为 1.6.0**；`languageTarget=connectionagent.io/v1.6.0` 已由 Next 中央设计冻结，ca-skills / Compiler Owner 负责按该值正式发布 Schema / Golden / Release；新版 Compiler/Agent 拒绝旧 v1alpha5 与未发布的候选语言。
 - 已发布 Artifact v1alpha5 完全冻结。
 - Development Artifact v1alpha1 完全冻结并继续 NOT_ADMITTED。
 - 单一 Go Compiler Core；Native CLI 与 WASM Worker 共用。
@@ -477,3 +477,4 @@ OpenAPI operation / multipart ingress 验证由 SR-010 负责；Compiler 负责 
 | 2026-11-28 | 0.2.41 | GPT-6.2（ChatGPT） | 文档头、§3.2～§3.3、AC-013-01、修订记录 | 纳入 PR #110 修复后的完整 59 Blob 归档树与 Issue #102 独立 detached checkout 复验；将 58/58、checksum、audit_evidence.py、Python 18/18 记录为归档/历史 PoC 范围 PASS，并保留 vet.log 未归档 | 避免沿用 #107 的旧 FAIL 或 #115 的本地 .agent-tmp 路径；不将历史 PoC 扩大为 Compiler 1.6.0 产品验收 | Issue #102；PR #110；PR #115 |
 | 2026-11-28 | 0.2.42 | GPT-6.2（ChatGPT） | §3.2～§3.3、AC-013-01、修订记录 | 将专用证据分支完整 59 Blob 归档树纳入 PR #115（58 个清单覆盖文件 + SHA256SUMS），不再仅登记五份修复元数据文件 | 确保 58/58 独立复验结论对应当前集成树中完整可搬移的归档材料 | Issue #102；PR #110；PR #115 |
 | 2026-11-28 | 0.2.43 | GPT-6.2（ChatGPT） | 文档头、§1、§3.2～§3.3、修订记录 | 同步 EC02/F08/CA-SL 当前版本；将修复后归档的唯一入口改为 PR #115 已纳入的完整 59 Blob 目录；区分 Python 18/18 复验与未重新运行的 Go 产品测试、未归档 vet.log | 消除旧 PR #18 修复前归档链接和“未复验”表述与 Issue #102 实际证据之间的矛盾 | Issue #102；PR #110/#115 |
+| 2026-11-28 | 0.2.44 | GPT-6（ChatGPT） | §0、§1 与修订记录 | 纠正旧“机器标识未冻结”口径；明确仅 Schema/Golden/Release 未发布，引用 F02 新基线 v0.4.4 | 与 CA-SL 1.6.0 / EC02/F08 的冻结机器身份保持一致 | Issue #50/#14；Compiler #62；PR #115 |
