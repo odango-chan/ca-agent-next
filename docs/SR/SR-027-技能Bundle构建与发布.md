@@ -1,7 +1,7 @@
 # SR-027：技能Bundle构建与发布
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.5\
+> SR 版本：0.2.6
 > 状态：整项 DRAFT；BLOCKED_EXTERNAL_INPUT。  
 > 下一步：ca-skills 需交付同提交五根作者源、Echo Interface、匹配 Compiler Release/argv/Verify 和 Bundle 发布授权。  
 > 阶段依据：[独立评审 #89](https://github.com/odango-chan/ca-agent-next/issues/89#issuecomment-7209388846)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。
@@ -55,6 +55,7 @@ CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验�
 | AC-027-01 | ca-skills 仓根使用新建的 **1.6.0 专用测试入口**（§2.1 固定命令、文件与必需用例），检验新版 Compiler Check/Build/Verify、Bundle 成功与错误拒绝；可继续运行文档检查，但 **v1alpha5 测试不得作为本 AC 的 PASS 证据**；记录命令、受测 SHA、发现数和日志 |
 | AC-027-02 | CI 在干净 checkout 生成候选。逐项查 SKILL.md、所声明的资源及可选 Assurance 对应产物；损坏 Artifact 使当批发布数为零。Development Artifact 不进入 Runtime Bundle |
 | AC-027-03 | 发布后从正式资产入口取得 AC-027-02 的同一批内容，在 Next 执行 SR-004 导入与 SR-008 Echo；原始作者 checkout 和 Compiler 从 Host 运行环境移除后依然可运行。分别记录构建、发布及消费状态 |
+| AC-027-05 | Source Bundle 原件 byte-compare、OAS3 引用闭包、Compiler Build/Verify snapshot、Request/Codec Result 阶段可用性及版本隔离均具备正反证据；Source Bundle-only PASS 不升级 Codec/MAS Bundle/系统 E2E | NOT_RUN / BLOCKED |
 
 ## 4. 状态与非目标
 
@@ -84,7 +85,21 @@ CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验�
 
 缺任何正式输入，禁止把候选目录、旧 v1alpha5 脚本、mock Compiler 或历史 1.0.0 包算作新版本发布。设计矩阵可以独立审查，但 SR-027 完整 READY 仍受外部生产者交付阻塞；不得传递性阻塞 SR-004 的独立 SKILL.md-only 子范围。
 
-## 6. 修订记录
+## 6. OpenAMSM OpenAPI Source Bundle 与 MAS 1.6.0 Bundle 的严格分层（IR-009）
+
+ca-skills / SR-031 原样发布 OpenAMSM 实际支持版本的 OpenAPI 3.0 Source Bundle；原始 YAML bytes、相对路径和 `$ref` 不变。Source Bundle 是不可变标准来源快照，不是 Schema-only Interface Package，不导出 Capability / Callable，也不需要 Adapter。
+
+- 新 CA-SL 1.6.0 Skill 的 Request 根始终自有、遵循 G.4，并且只描述 T1 已可用的 SBI / 归一化字段。若字段类型需要复用原版 3GPP 类型，Skill 显式声明并 pin Source Bundle dependency，Compiler 直接解析精确 `components/schemas`；外部目标使用 OAS 3.0 dialect，不做投影。
+- Bundle / Compiler Lock 必须固定 OpenAMSM source commit、Source Bundle identity、每个文件的原始相对路径 / Git blob ID / byte length、选定 operation surface、完整可达 `$ref` 闭包和标准版本取证；Publisher 直接 byte-compare 原件，不新增 per-file SHA-256 / digest 或 package hash。Build / Verify 不得动态下载 latest 或跨 commit 混源。
+- 当前 `PostSmContexts.requestBody` → `jsonData` → `SmContextCreateData` 的选定闭包是四份原版 YAML / 102 个 Schema Component；不要求复制 472 份 standard YAML，也不要求解析根文件中未选定 operation 的 refs。
+- Provider Codec Output Schema 与 OpenAPI Source Bundle 是不同依赖。NAS / NGAP 结果由 ca-client-tools SR-026 发布，必须固定 OpenAMSM 协议源版本和已资格化 Profile；0xD1 首批不能证明 Create / Modify / N2 支持。
+- Host Context SR-030 的 0/0 Schema-only Package 仍只经 `Contract.contexts` 使用；不得把 Source Bundle 当 Host Context 或 Capability Package。
+- 无 3GPP 依赖的 Echo 不强制下载 Source Bundle / Codec。Publisher CI 验证真实 Link / Build / Verify 与完整快照；缺正式 OAS3 Resolver / Source Lock / Provider Output Schema 时相应子项 BLOCKED / NOT_RUN。
+- 新增 **AC-027-05**：Source Bundle 原件 byte-compare、OAS3 引用闭包、Compiler Build / Verify snapshot、Request / Codec Result 阶段可用性及版本隔离均有正反向证据；Source Bundle-only PASS 不能升级为 Codec / MAS Bundle / 系统 E2E PASS。原 AC-027-01～04 不因新增跨包类型要求扩大范围。
+
+[权威公共设计](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。
+
+## 7. 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
 |---|---|---|---|---|---|---|
