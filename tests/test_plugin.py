@@ -801,6 +801,163 @@ class LifecycleIpcTests(_ManagerTestCase):
 
 
 # ---------------------------------------------------------------------------
+# #119：Echo fixture 的接收侧 IPC 负例（真实 Go 二进制）
+# ---------------------------------------------------------------------------
+
+
+class EchoReceiverProtocolTests(unittest.TestCase):
+    """向真实 Echo 进程注入 Host->Plugin 帧，不依赖 Manager 发送侧校验。"""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.binary = support.ensure_echo_binary()
+
+    @classmethod
+    def _run(cls, *frames: dict) -> subprocess.CompletedProcess[str]:
+        binary = cls.binary
+        payload = "".join(
+            json.dumps(frame, ensure_ascii=False, separators=(",", ":")) + "\n"
+            for frame in frames
+        )
+        return subprocess.run(
+            [str(binary), "serve"],
+            cwd=binary.parent,
+            input=payload,
+            text=True,
+            capture_output=True,
+            timeout=10,
+            check=False,
+        )
+
+    def assert_violation(self, frames: list[dict], code: str) -> None:
+        completed = self._run(*frames)
+        self.assertEqual(completed.returncode, 2, completed.stderr)
+        self.assertIn("PROTOCOL_VIOLATION", completed.stderr)
+        self.assertIn(f"code={code}", completed.stderr)
+        emitted = [
+            json.loads(line)
+            for line in completed.stdout.splitlines()
+            if line.strip()
+        ]
+        self.assertNotIn(
+            "delivery.result",
+            [frame["type"] for frame in emitted],
+            "invalid dispatch must not be acknowledged as delivered",
+        )
+
+    def test_ack_rejects_invalid_receiver_payload(self) -> None:
+        golden = support.load_golden()
+        for name, changes, code in [
+            ("accepted-error", {"error": {"code": "UNEXPECTED"}}, "ACK_UNEXPECTED_ERROR"),
+            ("duplicate-error", {"disposition": "duplicate_attached", "error": {}}, "ACK_UNEXPECTED_ERROR"),
+            ("nested-run", {"disposition": "conflict", "error": {"code": "CONFLICT", "details": {"runId": "secret"}}}, "ACK_ERROR_UNEXPECTED_FIELD"),
+            ("nested-channel", {"disposition": "rejected", "error": {"details": {"responseChannelId": "secret"}}}, "ACK_ERROR_UNEXPECTED_FIELD"),
+            ("error-skill-id", {"disposition": "rejected", "error": {"skillId": "secret"}}, "ACK_ERROR_UNEXPECTED_FIELD"),
+            ("error-wrong-shape", {"disposition": "conflict", "error": "oops"}, "ACK_ERROR_INVALID"),
+            ("error-code-nested", {"disposition": "rejected", "error": {"code": {"artifactRef": "secret"}}}, "ACK_ERROR_INVALID"),
+            ("error-retryable-type", {"disposition": "rejected", "error": {"retryable": "yes"}}, "ACK_ERROR_INVALID"),
+            ("correlation", {"_correlationId": "unknown-message"}, "ACK_CORRELATION_MISMATCH"),
+            ("event-id", {"eventId": "wrong-event"}, "ACK_CORRELATION_MISMATCH"),
+        ]:
+            with self.subTest(name=name):
+                ack = json.loads(json.dumps(golden[3]))
+                if "_correlationId" in changes:
+                    ack["correlationId"] = changes["_correlationId"]
+                else:
+                    ack["payload"].update(changes)
+                self.assert_violation([golden[0], ack], code)
+
+    def test_ack_accepts_safe_rejection_error_and_empty_event_id(self) -> None:
+        golden = support.load_golden()
+        safe = json.loads(json.dumps(golden[3]))
+        safe["payload"] = {
+            "eventId": "evt1",
+            "disposition": "rejected",
+            "error": {
+                "code": "EVENT_INVALID",
+                "message": "invalid input",
+                "retryable": False,
+            },
+        }
+        finished = self._run(golden[0], safe, golden[10])
+        self.assertEqual(finished.returncode, 0, finished.stderr)
+        self.assertIn("ACK disposition=rejected", finished.stderr)
+
+        # A malformed ingress still gets an ack for its original event ID.
+        custom = support.compact_json(
+            {
+                "eventId": "",
+                "ingressId": "example.echo",
+                "eventType": "echo.request",
+                "responseChannelId": "ch-custom",
+                "source": {"protocol": "echo", "peerId": "test-peer"},
+                "payload": {"text": "hello"},
+                "artifacts": [],
+            }
+        )
+        invalid_ack = json.loads(json.dumps(golden[3]))
+        invalid_ack["correlationId"] = "x1"
+        invalid_ack["payload"] = {
+            "eventId": "",
+            "disposition": "rejected",
+            "error": {"code": "FIELD_INVALID", "message": "invalid"},
+        }
+        finished = subprocess.run(
+            [str(self.binary), "serve", f"--ingress={custom}"],
+            cwd=self.binary.parent,
+            input="".join(
+                json.dumps(frame) + "\n"
+                for frame in (golden[0], invalid_ack, golden[10])
+            ),
+            text=True,
+            capture_output=True,
+            timeout=10,
+            check=False,
+        )
+        self.assertEqual(finished.returncode, 0, finished.stderr)
+
+    def test_delivery_rejects_missing_and_ill_typed_fields(self) -> None:
+        golden = support.load_golden()
+        for name, field, value, expected in [
+            ("missing-obligation", "responseObligationId", None, "DELIVERY_REQUIRED_FIELD"),
+            ("empty-obligation", "responseObligationId", "", "DELIVERY_REQUIRED_FIELD"),
+            ("missing-channel", "responseChannelId", None, "DELIVERY_REQUIRED_FIELD"),
+            ("empty-channel", "responseChannelId", "", "DELIVERY_REQUIRED_FIELD"),
+            ("missing-event-type", "eventType", None, "DELIVERY_REQUIRED_FIELD"),
+            ("missing-headers", "headers", None, "DELIVERY_REQUIRED_FIELD"),
+            ("headers-array", "headers", [], "DELIVERY_REQUIRED_FIELD"),
+            ("missing-body", "body", None, "DELIVERY_REQUIRED_FIELD"),
+            ("decimal-status", "statusCode", 201.5, "DELIVERY_STATUS_INVALID"),
+            ("negative-status", "statusCode", -1, "DELIVERY_STATUS_INVALID"),
+            ("missing-delivery", "deliveryId", None, "DELIVERY_IDENTITY_MISMATCH"),
+        ]:
+            with self.subTest(name=name):
+                dispatch = json.loads(json.dumps(golden[6]))
+                if value is None:
+                    dispatch["payload"].pop(field, None)
+                else:
+                    dispatch["payload"][field] = value
+                self.assert_violation([golden[0], golden[3], dispatch], expected)
+
+    def test_delivery_accepts_null_body_without_relaxing_fields(self) -> None:
+        golden = support.load_golden()
+        dispatch = json.loads(json.dumps(golden[6]))
+        dispatch["payload"]["body"] = None
+        completed = self._run(golden[0], golden[3], dispatch, golden[10])
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        messages = [
+            json.loads(line)
+            for line in completed.stdout.splitlines()
+            if line.strip()
+        ]
+        self.assertEqual(
+            sum(frame["type"] == "delivery.result" for frame in messages),
+            1,
+        )
+
+
+# ---------------------------------------------------------------------------
 # AC-003-03：Event ingress
 # ---------------------------------------------------------------------------
 
