@@ -456,6 +456,19 @@ index-strategy = "first-index"
                     with self.assertRaisesRegex(PolicyError, "STALE_BASE"):
                         _policy_module.validate_base_tip(Path("."), "feature/sr028", "a" * 40)
 
+    def test_uv_pip_installation_entry_is_rejected(self) -> None:
+        for command in (
+            "uv pip install requests",
+            "uv pip sync requirements.txt",
+            "uv pip compile requirements.in",
+            "uv pip uninstall requests",
+        ):
+            with self.subTest(command=command):
+                self.assertTrue(any(
+                    "PIP_INSTALL" in violation
+                    for violation in command_violations([("scripts/setup.sh", command)])
+                ))
+
     def test_windows_launcher_module_pip_is_rejected(self) -> None:
         for command in (
             "py -m " + "pip" + " install requests",
