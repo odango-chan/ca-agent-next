@@ -1,18 +1,18 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.25\
+> 文档版本：0.2.28\
 > 状态：整项 DRAFT；阶段 READY（中央只读核验）。AC-013-01 归档完整性。  
 > 下一步：修复 PR #18 归档中 audit 登记不一致、绝对式校验路径及 vet 日志缺项后重新静态复核。复跑单列；02/04 NOT_RUN，03/05/06 等 Compiler Owner 与正式契约。\
 > 阶段依据：[独立评审 #77](https://github.com/odango-chan/ca-agent-next/issues/77#issuecomment-7209276846)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
 > 工作项：[阶段工作项 #95](https://github.com/odango-chan/ca-agent-next/issues/95)。[本轮固定归档核验报告](../issue-95-fixed-source-handoff/SR-013.md)。
 > 创建日期：2026-11-25  
-> 修订日期：2026-11-27\
+> 修订日期：2026-11-28\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：Next 消费端实现、生产准入、Owner Trust 治理、自动发布及真实 5GC/MAS 资格。
 
 上游 [IR-003](../IR/IR%20总登记册.md#ir-003)。功能归属：EC02 Compiler、F08 技能编译与发布；消费端关联 F02。设计依据：[EC02 Compiler 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.13、[F08 技能编译与发布设计说明书](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.16、[F02 Skill 管理与选择设计说明书](../设计说明书/F02-Skill管理与选择/Skill管理与选择设计说明书.md) §7/§11、[CA-SL 1.6.0 中央语言设计](../规范/CA-SL%201.6.0完整语言规范.md)。
 
-目标仓：odango-chan/ca-skill-compiler。实施 Issue：[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)。文档刷新 Issue：[Next #14](https://github.com/odango-chan/ca-agent-next/issues/14)。目标代码基线：Compiler v2.1.0，commit 255ab85fa5abb4b0bf36656bf64250cafebf45cb。历史来源：[ca-skills #88](https://github.com/odango-chan/ca-skills/pull/88) 已合并，正式发布身份见 [ca-skills release record](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs/releases/ca-sl-v1alpha5.md)。
+目标仓：odango-chan/ca-skill-compiler。新 1.6.0-only 实施 Issue：[Compiler #62](https://github.com/odango-chan/ca-skill-compiler/issues/62)；旧 #61 仅 v1alpha5 历史审计，不是本 SR 的实施入口。文档刷新 Issue：[Next #14](https://github.com/odango-chan/ca-agent-next/issues/14)。目标代码基线：Compiler v2.1.0，commit 255ab85fa5abb4b0bf36656bf64250cafebf45cb。历史来源：[ca-skills #88](https://github.com/odango-chan/ca-skills/pull/88) 已合并，正式发布身份见 [ca-skills release record](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/docs/releases/ca-sl-v1alpha5.md)。
 
 ## 0. 本轮设计评审入口（2026-11-26）
 
@@ -98,7 +98,7 @@ SR-013 整体仍为 DRAFT。AC-013-01 的隔离 PoC 完成不自动把 SR-013 �
 ### 3.3 产物与回填位置
 
 - 证据单：.agent-tmp/ac-013-01-poc/EVIDENCE.md。
-- 产物目录：.agent-tmp/ac-013-01-poc/artifacts/，含 cases.json 及逐用例 .checked.pb / .types.pb。
+- 历史 PoC `artifacts/` 仅存 `.checked.pb` / `.types.pb`，`cases.json` 在归档根目录；历史审计结果与 #110 的独立证据分支修复按不同 SHA 分开，不代表 1.6.0 产品 PASS。
 - 隔离源码：compiler-255ab85/internal/compiler/ac013_poc_test.go。
 - [PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)已核对 58 个文件与 SHA256SUMS；归档报告为 Go/Python 18/18，当前审计复跑 NOT_RUN。原始提交 78dddd5 的追溯保留在 PR #18 的提交 trailer。
 - 已检查归档清单与 Git blob；PR #18 报告在干净 Compiler 基线独立复跑。当前审计未重新执行 Go/Python。
@@ -372,7 +372,7 @@ SR-013 达到 READY 前必须：
 
 1. 本设计经评审，EC02 / F08 / F02 / CA-SL 规范和本 SR 一致。
 2. AC-013-01 的本地证据已可访问并完成独立审查，或明确保留审查阻塞及授权阶段。
-3. Compiler #61 仍开放且范围一致；Compiler 目标 SHA 和 Go/Python 环境可运行。
+3. Compiler **#62** 是 1.6.0-only 的实施入口，须核对正式 Contract/Schema/Golden 与可运行环境；旧 #61 只用于历史版本审计。
 4. 目标仓写入授权、分支和实施 Issue 明确。
 5. AC-013-03 的 Artifact API Owner Gate 有明确执行方式。
 6. AC-013-06 的 Schema-only 正负例、零 Capability roots / Schema dependency closure 区分和跨宿主命令完整。
@@ -440,3 +440,4 @@ AC-013-02/04 仍 NOT_RUN，03/05/06 仍 BLOCKED。整项 DRAFT 主状态不变�
 | 2026-11-27 | 0.2.23 | GPT-6（ChatGPT） | §0、文档头、修订记录 | 将历史 fd80c74 评审登记替换为正式 Review #6082541121 的固定 Head/Base；明确 P2 修订发生在后续 Head，必须重新独立复评 | 防止把不可访问或不同 Head 的评审记录混为一谈 | Issue #12；PR #46；Review #6082541121 |
 | 2026-11-27 | 0.2.24 | Codex / GPT-6 | 文档头 | 登记阶段 READY（中央只读核验）及 AC 范围与工作项 #95 | 按单项独立评审推进 | Issue #12、#77；PR #46 |
 | 2026-11-27 | 0.2.25 | kimi-k3.1-pro | AC-013-01、§13、文档头 | 核对 58 项归档哈希与历史结果，发现 audit 登记不一致、绝对式校验路径及 vet 日志缺项；将本轮归档完整性记为 FAIL，复跑 NOT_RUN | 区分文件存在性、内部一致性和产品运行验收，避免过度判 PASS | Issue #95；PR #18 |
+| 2026-11-28 | 0.2.28 | GPT-6（ChatGPT） | 头部、AC-013-01、实施前置 | 明确新版 Compiler #62，修正 cases.json 固定证据路径；历史 #110 已合独立证据分支但当前产品 AC 不升级 | 防止历史 #61/归档修复变成新 Compiler 产品资格 | Issue #12；#40；#102；PR #45；#46；#110 |
