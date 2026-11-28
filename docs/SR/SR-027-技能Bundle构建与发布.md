@@ -1,9 +1,9 @@
 # SR-027：技能Bundle构建与发布
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.6
-> 状态：整项 DRAFT；BLOCKED_EXTERNAL_INPUT。  
-> 下一步：ca-skills 需交付同提交五根作者源、Echo Interface、匹配 Compiler Release/argv/Verify 和 Bundle 发布授权。  
+> SR 版本：0.3.0\
+> 状态：整项 DRAFT；中央作者源与 Bundle 构建机器契约已固定，DESIGN_REVIEW_REQUESTED；产品 AC 仍 NOT_RUN，ca-skills 1.6.0 作者 Schema/Golden、Compiler 3.0.0 Release 与五根作者源尚未发布。
+> 下一步：独立评审本轮五根作者源、Compiler pin、release/bundle-inputs.yaml、Bundle 目录与原子 ZIP 契约；达到 SR-027 READY 后再创建 ca-skills 实施 Issue。
 > 阶段依据：[独立评审 #89](https://github.com/odango-chan/ca-agent-next/issues/89#issuecomment-7209388846)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。
 > 创建日期：2026-11-26  
 > 修订日期：2026-11-27\
@@ -48,6 +48,31 @@ CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验�
 
 **目标仓测试入口（待实现）**为 `python -m unittest discover -s tests -p test_bundle_160.py -v`。最少 10 个必需用例：五包各一项成功、旧 languageTarget、缺依赖、歧义 Binding、缺 Artifact 文件、Verify 失败时全批零上传。必需失败/跳过均为零，记录实际发现数。正式 Compiler 可执行、Check/Build/Verify 的完整 argv 与 tag、Echo Interface 导出和新作者 SHA 由相应生产者登记；缺任一项则停止 AC-027-01/02，不能把本文候选名称、历史 CLI 或 mock 输出作为发布证据。
 
+## 2.2 中央固定的作者源与 Bundle 构建契约
+
+**语言与编译器版本：**唯一 languageTarget=connectionagent.io/v1.6.0；Compiler 目标 Release=3.0.0；BuildRequest=connectionagent.io/compiler-build-request/2；DependencyInspection=connectionagent.io/compiler-dependency-inspection/2；BuildResult=connectionagent.io/compiler-build-result/2；Runtime Artifact=connectionagent.io/compiler-artifact/2。这些是 Next 中央设计值，尚未发布。release/bundle-inputs.yaml 必须固定上述版本、Compiler commit SHA / Release asset，以及 Echo / Owner / Host Context Package 的准确 ID / SemVer；禁止运行时解析浮动 latest。
+
+**作者源与构建矩阵：**五个 Skill 根来自同一个 ca-skills commit。echo-guide 是 SKILL.md-only，不调用 Compiler；其余四个 Assurance 根分别使用同一 Compiler 3.0.0 执行 Check、DependencyInspection、Build、Verify。when 只允许写在 assurance/contract.yaml 顶层，不得写入 SKILL.md Front Matter。assurance/ 源文件不得进入发布包。
+
+**归属边界：**ca-skills 只负责作者源、CI 调度、Bundle 组装和发布；Compiler 负责单个 Assurance Skill 的 Runtime Artifact，不组装 Bundle；Next 负责 Runtime 导入与选择，不调用 Compiler。Echo Interface Package 由 Next / SR-008 产生；MAS Owner Capability 和 Host Context Schema-only Package 分别由 SR-025 / SR-030 产生。SR-026 的协议级 Codec Capability 不替代 MAS Owner 的 mas.ssm.n1.modify.parse / mas.ssm.n1.release.parse。
+
+**单个 Skill 发布目录：**
+
+~~~text
+published-skills/<skill-id>/
+  SKILL.md
+  resources/...
+  runtime-artifact/                 # 仅 Assurance Skill
+    manifest.json
+    skills/<skill-id>/compiled/...
+~~~
+
+SKILL.md-only 根不含 runtime-artifact/。Assurance 根必须包含单 Skill 的完整 Compiler Artifact 根，保留 manifest.json 与所有相对路径；不得缺 .pb、Schema 闭包或 Binding 文件，不得混入作者源或 Compiler 二进制。
+
+**唯一发布资产：**生成 skill-bundle-1.6.0.zip，顶层只含 published-skills/ 和五个 Skill 根。外层不另造 Bundle Manifest；Compiler Artifact Manifest 仍由 Compiler 拥有。bundle-build-report.json 作为 CI 证据附件，记录源 commit、Compiler 版本/commit/API、依赖 Package ID/版本、五个根、四个 Artifact、文件列表和 Verify 结果，不作为 Agent 导入输入。
+
+ZIP 复用仓库既有确定性归档规则：路径排序、统一 /、固定时间戳、拒绝 symlink 和非普通文件。同一固定输入重复构建必须逐字节一致。五根源检查全部通过、四个 Artifact 全部 Verify、依赖闭包唯一、目录无缺失/额外/碰撞后才允许进入单一发布步骤；任一失败，本批发布资产为零。发布授权是最终 Release 门槛，不是设计或本地 Build 的前置。
+
 ## 3. 验收与退出条件
 
 | ID | 入口与判据 |
@@ -67,12 +92,12 @@ CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验�
 |---|---|---|
 | CA-SL v1alpha5 | ca-skills PR #88 MERGED；normative SHA `18d8184367982ccbc835756136c4a53f9096c3a0`；PR #89 将该 SHA 固定在 release record | 仅覆盖历史语言；新版作者 Schema 和机器标识仍待 ca-skills 正式发布 |
 | Compiler v2.1.0 | [正式 Release](https://github.com/odango-chan/ca-skill-compiler/releases/tag/v2.1.0)；冻结 Artifact v1alpha5 和 Development Artifact v1alpha1；旧 Artifact 字节/语义不变 | 不能满足 F08 新 Runtime Artifact API 的 Request Schema/when 输出 |
-| Compiler when Artifact | [Compiler Issue #62](https://github.com/odango-chan/ca-skill-compiler/issues/62) OPEN（CA-SL 1.6.0-only）；旧 [Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) 仅为 v1alpha5 历史范围；SR-013 AC-013-02～04 未完成，AC-013-05 BLOCKED | 新 Runtime Artifact API 尚未发布；本 SR 不得选择或猜测候选 API/Manifest 字段 |
+| Compiler when Artifact | [Compiler Issue #62](https://github.com/odango-chan/ca-skill-compiler/issues/62) OPEN（CA-SL 1.6.0-only）；Next 已固定 Compiler 3.0.0 与 BuildRequest / DependencyInspection / BuildResult / Artifact /2；旧 [Issue #61](https://github.com/odango-chan/ca-skill-compiler/issues/61) 仅为 v1alpha5 历史范围 | 目标 API/Manifest 已由中央设计固定，但正式 Schema、Golden、Release 与产品验收仍 NOT_RUN；不得将设计值误报为已发布 |
 | ca-skills 作者源 | main `780497a2918ad3e7bdff554ab64b0ba627e867e0` 含 v1alpha5 MAS 作者源；`scripts/compile_mas_v1alpha5.py` 只对单 Skill 做 Check/Inspect/可选 Build | 现有脚本不是 Bundle assembler，也不证明正式 Bundle 已发布 |
 | ca-skills Release | 当前 Release 列表只有历史 v0.1.0；未发现与 **CA-SL 1.6.0** Runtime Artifact API 匹配的 Published Skill Bundle | 无可供 SR-004 使用的正式 Assurance 正例 |
 | ca-skills 仓库布局 | 当前 main 未发现 `published-skills/` / 新 Runtime Artifact Bundle 发布目录 | §2.1 固定候选根与关联规则；实际 Compiler Manifest 文件及生成结果随同版发行证据登记 |
 
-**阶段结论：** 本 SR 仍为 DRAFT。下一发布链只面向 **CA-SL 1.6.0**；先等 ca-skills / SR-029 规范及精确机器标识、Compiler #62 / SR-013 对 1.6.0 语言及 Capability Binding 冻结新 Runtime API，再组装 Bundle；不得猜测 Manifest，不得把本地旧 v1alpha5 编译目录或临时拼装包当作 AC-027-02/03 正例。SR-004 的 SKILL.md-only 路径可独立验证，但不提升 SR-027 或 Assurance Bundle 的状态。
+**阶段结论：** 本 SR 仍为 DRAFT / DESIGN_REVIEW_REQUESTED。Next 已固定 CA-SL 1.6.0 languageTarget、Compiler 3.0.0、BuildRequest / DependencyInspection / BuildResult / Artifact /2 与五根 Bundle 输入锁定规则；ca-skills 的正式 1.6.0 Schema/Golden、Compiler Release、五根新作者源和 Bundle 发布资产尚未存在，产品 AC 保持 NOT_RUN。不得将设计目标误报为产品发布，也不得把旧 v1alpha5 作者源/编译目录作为 AC-027-01/02 正例。SR-004 的 SKILL.md-only 路径可独立验证，不提升 SR-027 或 Assurance Bundle 状态。
 
 ### 5.1 五包发布的生产者交接表（尚未交付）
 
@@ -120,3 +145,4 @@ ca-skills / SR-031 原样发布 OpenAMSM 实际支持版本的 OpenAPI 3.0 Sourc
 | 2026-11-27 | 0.2.4 | Codex / GPT-6 | 文档头 | 登记BLOCKED_EXTERNAL_INPUT及 AC 范围 | 按单项独立评审推进 | Issue #12、#89；PR #46 |
 | 2026-11-28 | 0.2.5 | GPT-6（ChatGPT） | 分支整合、设计依据与修订记录 | 合并恢复分支已批准的 F08 v0.3.19 引用与 #46 新版 Bundle 设计；保留 CA-SL 1.6.0-only、未发布 Compiler/Publisher 门槛 | 避免把历史 Bundle 误作新版成品，保持 SR-027 独立 Publisher/验收责任 | Issue #12；#40；#113；PR #45；#46 |
 | 2026-11-28 | 0.2.5-integration-fix | GPT-6（ChatGPT） | 文档头与修订记录 | 修正整合期间版本/验收时点一致性，不改变产品状态 | 保持历史证据与新 1.6.0 设计边界 | Issue #12；PR #45；#46 |
+| 2026-11-28 | 0.3.0 | GPT-6.2（ChatGPT） | §0、§2.2、§3～6、修订记录 | 固定 CA-SL 1.6.0 languageTarget、Compiler 3.0.0 / API /2、五根作者源、Bundle 输入锁与原子 ZIP 契约 | 把生产端设计从等待外部命名推进为中央可评审的唯一目标，同时保留产品未发布状态 | Issue #113；F08；EC02；SR-013/027/029/030；PR #115 |
