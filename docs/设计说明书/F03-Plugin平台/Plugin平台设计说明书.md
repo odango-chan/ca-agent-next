@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
-> 文档版本：0.3.7
+> 文档版本：0.3.8
 > 功能归属：F03 — Plugin 平台  
 > 关联 SR：SR-003、SR-010    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -21,8 +21,8 @@
 
 1. 全系统只有一个 Plugin Manager。
 2. 一个 Plugin 进程可以导出一种或多种 Extension。
-3. Tool/Callable 是 Plugin Tools Extension 执行的内部调用身份，不是独立进程；**Operation/Observation 只表示 Procedure Node 阶段**，不是作者级 Operation ID。
-4. 一个 Plugin 可以导出多个 Capability，**一个 Skill-facing Capability 恰好映射一个公开 Callable，且该 Callable 仅归属一个 Capability**；一个公开 Callable 可以通过封闭 selector 在 Provider 内路由多个私有 backendOperationId，绝非多个公开 Operation。
+3. Tool 是 Owner / Provider Interface Package 发布的**公开 Callable 契约/调用入口**，由 Plugin tools Extension 执行且不是独立进程；Runtime 只按 Compiler 的唯一 Capability Binding 派发。**Operation/Observation 只表示 Procedure Node 阶段**，不产生作者级 Operation ID 或第二份公开操作注册表。
+4. 一个 Plugin 可以导出多个 Capability，**每个 Skill-facing Capability 恰好映射一个公开 Callable、每个公开 Callable 也只归属一个 Capability**；仅 Provider 内部可用封闭 Schema selector 在单个公开 Callable 下路由多个私有 `backendOperationId`，绝非多个公开 Operation 或作者可选后端。
 5. Plugin Manager 负责生命周期、握手、IPC 和 Extension 分发，不负责 Skill 选择、Action 授权或 Owner 结果判断。
 6. Provider Interface Package 负责 Provider 自身导出的 Callable 契约；业务 Owner Contract Package 负责 Owner Callable、Schema、Capability membership 和结果语义；Provider Runtime Bindings 只提供私有执行映射。当前 OpenAMSM MAS Skill 的 `mas::` Callable 来自 Owner Contract Package，不从 ca-client-tools 11-READ Interface Package 推导。Plugin Manifest 不复制 Tool 定义。
 7. ToolCatalog 只是可发现能力的只读视图，不管理生命周期，也不构成第二个 Registry。
@@ -170,3 +170,5 @@ Capability 是 Skill-facing Package API；Callable 是 Compiler / Runtime / Prov
 | 2026-11-26 | 0.3.5 | GPT-6（ChatGPT） | 历史修订表及修订记录 | 补齐历史缺失列为未记录，保留既有内容，不改历史业务断言 | 保证待审设计的表结构有效 | Issue #40；SR-029 |
 | 2026-11-26 | 0.3.6 | GPT-6（ChatGPT） | 规范性设计与验收门槛 | 修复一对多公开 Operation 误述，明确一个 Capability 仅一公开 Callable | 修复新旧语言/能力运行时冲突 | Issue #12/#40；SR-013/025/029；PR #46 |
 | 2026-11-27 | 0.3.7 | Codex / GPT-6 | §7、12.1 | 区分查询子集和含 Codec 的 Provider 全量 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
+| 2026-11-27 | restore-0.3.6（历史分支） | GPT-6.2（ChatGPT） | §2、§12、修订记录 | 恢复分支统一 Tool/Capability/Callable 概念、废止一对多 Operation | 与 #46 后续修订合并，保留历史来源 | Issue #40；SR-029；PR #45 |
+| 2026-11-28 | 0.3.8 | GPT-6（ChatGPT） | §2、§7、§12、修订记录 | 按 #45 的公开 Tool 契约定义与 #46 的 Provider Codec 2/2、3/3、Node 阶段语义完成合并 | 避免把 Tool 定义为内部分发身份，继续保证 1.6.0 Capability↔Callable 双向一对一 | Issue #12；#40；PR #45；#46 |
