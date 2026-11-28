@@ -208,17 +208,92 @@ class PythonToolchainPolicyTests(unittest.TestCase):
         }
         invalid = workflow_toolchain_violations(
             ".github/workflows/python-tests.yml",
-            "name: Python tests\n- run: uv " + "run " + "pytest",
+            "name: Python tests\n"
+            + "jobs:\n  test:\n    steps:\n"
+            + "      - name: Run tests\n        run: uv " + "run " + "pytest\n",
             manifest,
         )
         self.assertEqual(len(invalid), 2)
         valid = workflow_toolchain_violations(
             ".github/workflows/python-tests.yml",
-            "name: Python tests\nuses: astral-sh/setup-uv@abc123\nversion: '0.13.10'\n- run: uv " + "run " + "pytest",
+            "name: Python tests\n"
+            + "jobs:\n  test:\n    steps:\n"
+            + "      - name: Set up uv\n"
+            + "        uses: astral-sh/setup-uv@abc123\n"
+            + "        with:\n"
+            + "          version: '0.13.10'\n"
+            + "      - name: Run tests\n"
+            + "        run: uv " + "run --no-sync --locked pytest\n",
             manifest,
         )
         self.assertEqual(valid, [])
 
+    def test_setup_uv_version_must_be_in_the_matching_step(self) -> None:
+        manifest = {
+            "uv_setup_action": "astral-sh/setup-uv@abc123",
+            "uv_version": "0.13.10",
+        }
+        content = (
+            "jobs:\n  test:\n    steps:\n"
+            "      - name: Set up uv\n"
+            "        uses: astral-sh/setup-uv@abc123\n"
+            "      - name: Unrelated version\n"
+            "        with:\n"
+            "          version: '0.13.10'\n"
+        )
+        found = workflow_toolchain_violations(
+            ".github/workflows/python-tests.yml", content, manifest
+        )
+        self.assertTrue(any("WORKFLOW_UV_VERSION" in item for item in found))
+
+    def test_setup_uv_string_outside_step_does_not_satisfy_policy(self) -> None:
+        manifest = {
+            "uv_setup_action": "astral-sh/setup-uv@abc123",
+            "uv_version": "0.13.10",
+        }
+        content = (
+            "name: Python tests\n"
+            "env:\n"
+            "  NOTE: astral-sh/setup-uv@abc123\n"
+            "  version: '0.13.10'\n"
+            "jobs:\n  test:\n    steps:\n"
+            "      - name: Run tests\n"
+            "        run: echo 'version: 0.13.10'\n"
+        )
+        found = workflow_toolchain_violations(
+            ".github/workflows/python-tests.yml", content, manifest
+        )
+        self.assertEqual(len(found), 2)
+
+    def test_every_uv_run_tool_requires_locked_project_flags(self) -> None:
+        commands = (
+            "uv run ruff check .",
+            "uv run mypy src",
+            "uv run --no-project ruff check .",
+            "uv run ruff check --no-sync --locked",
+        )
+        for command in commands:
+            with self.subTest(command=command):
+                found = command_violations([("scripts/ci.sh", command)])
+                self.assertTrue(
+                    any(
+                        "UV_RUN_NOT_LOCKED" in item
+                        or "UV_NO_PROJECT_BYPASS" in item
+                        for item in found
+                    )
+                )
+        allowed = command_violations([
+            ("scripts/ci.sh", "uv run --no-sync --locked ruff check .")
+        ])
+        self.assertEqual(allowed, [])
+
+    def test_each_uv_run_in_a_chained_command_is_checked(self) -> None:
+        line = (
+            "uv run --no-sync --locked ruff check ."
+            " && uv run mypy src"
+        )
+        found = command_violations([("scripts/ci.sh", line)])
+        self.assertTrue(any("UV_RUN_NOT_LOCKED" in item for item in found))
     def test_bare_python_script_is_rejected(self) -> None:
         line = "python " + "scripts/custom_check.py"
         found = command_violations([(".github/workflows/ci.yml", line)])

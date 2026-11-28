@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shlex
 import subprocess
 import sys
 import tomllib
@@ -238,27 +239,162 @@ def forbidden_root_lockfiles(changed_paths: Iterable[str]) -> list[str]:
     return sorted(path for path in changed_paths if is_root_lockfile(path))
 
 
-def is_policy_gate_no_project(path: str, line: str) -> bool:
+UV_RUN_OPTIONS_WITH_VALUE = {
+    "--cache-dir",
+    "--config-file",
+    "--directory",
+    "--env-file",
+    "--extra",
+    "--group",
+    "--index",
+    "--index-url",
+    "--keyring-provider",
+    "--link-mode",
+    "--package",
+    "--prerelease",
+    "--project",
+    "--python",
+    "--python-platform",
+    "--resolution",
+    "--script",
+    "--with",
+    "--with-editable",
+    "--with-requirements",
+}
+
+
+def _shell_token_segments(line: str) -> list[list[str]]:
+    """Tokenize shell command segments without treating quoted separators as operators."""
+    normalized = line.strip()
+    if normalized.endswith("\\"):
+        normalized = normalized[:-1].rstrip()
+    try:
+        lexer = shlex.shlex(normalized, posix=True, punctuation_chars=";&|")
+        lexer.whitespace_split = True
+        lexer.commenters = "#"
+        tokens = list(lexer)
+    except ValueError:
+        # Malformed shell quoting must not silently bypass the policy.
+        tokens = normalized.split()
+
+    segments: list[list[str]] = []
+    current: list[str] = []
+    for token in tokens:
+        if re.fullmatch(r"[;&|]+", token):
+            if current:
+                segments.append(current)
+                current = []
+            continue
+        current.append(token)
+    if current:
+        segments.append(current)
+    return segments
+
+
+def _uv_run_invocations(line: str) -> list[dict[str, Any]]:
+    """Return each uv run invocation and its leading uv options."""
+    invocations: list[dict[str, Any]] = []
+    for segment in _shell_token_segments(line):
+        for index in range(len(segment) - 1):
+            if segment[index:index + 2] != ["uv", "run"]:
+                continue
+            flags: set[str] = set()
+            values: dict[str, str] = {}
+            cursor = index + 2
+            while cursor < len(segment):
+                token = segment[cursor]
+                if token == "--":
+                    cursor += 1
+                    break
+                if not token.startswith("-") or token == "-":
+                    break
+                option, equals, value = token.partition("=")
+                flags.add(option)
+                if equals:
+                    values[option] = value
+                    cursor += 1
+                elif option in UV_RUN_OPTIONS_WITH_VALUE:
+                    if cursor + 1 < len(segment):
+                        values[option] = segment[cursor + 1]
+                        cursor += 2
+                    else:
+                        cursor += 1
+                else:
+                    cursor += 1
+            invocations.append({
+                "flags": flags,
+                "values": values,
+                "command": segment[cursor:],
+                "segment": segment[index:],
+            })
+    return invocations
+
+
+def _is_allowed_policy_gate_invocation(path: str, invocation: dict[str, Any]) -> bool:
     if path not in {
         ".github/workflows/python-toolchain-policy.yml",
         ".github/workflows/python-toolchain-policy-trusted.yml",
     }:
         return False
-    normalized = line.strip()
-    prefix = "uv " + "run --no-project --python 3.14.6 "
-    allowed_commands = (
-        'python "$policy_dir/' + "python_toolchain_policy.py" + '" \\',
-        "python " + "scripts/" + "python_toolchain_policy.py" + " \\",
-        "python -m " + "unittest discover -s tests -p " + "test_python_toolchain_policy.py -v",
+    if invocation["flags"] != {"--no-project", "--python"}:
+        return False
+    if invocation["values"].get("--python") != "3.14.6":
+        return False
+    command = invocation["command"]
+    if len(command) < 2 or command[0] != "python":
+        return False
+    target = command[1]
+    if (
+        target == "scripts/python_toolchain_policy.py"
+        or target == "$policy_dir/python_toolchain_policy.py"
+    ):
+        return True
+    return command == [
+        "python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_python_toolchain_policy.py",
+        "-v",
+    ]
+
+
+def is_policy_gate_no_project(path: str, line: str) -> bool:
+    """Allow only the fixed stdlib policy checker and its dedicated self-test."""
+    segments = _shell_token_segments(line)
+    invocations = _uv_run_invocations(line)
+    return (
+        len(segments) == 1
+        and len(invocations) == 1
+        and _is_allowed_policy_gate_invocation(path, invocations[0])
     )
-    return any(
-        re.fullmatch(re.escape(prefix + command), normalized)
-        for command in allowed_commands
-    )
+
 
 def command_violations(added_lines: Iterable[tuple[str, str]]) -> list[str]:
     violations: list[str] = []
     added_lines = list(added_lines)
+
+    def check_uv_run(path: str, command_line: str) -> None:
+        for invocation in _uv_run_invocations(command_line):
+            flags = invocation["flags"]
+            rendered = " ".join(invocation["segment"])
+            if "--no-project" in flags:
+                if not _is_allowed_policy_gate_invocation(path, invocation):
+                    violations.append(
+                        f"UV_NO_PROJECT_BYPASS: {path}: {rendered} — "
+                        "仅门禁自身的固定标准库检查器/自测命令可使用 --no-project；"
+                        "其他项目命令必须使用项目锁定环境。"
+                    )
+            elif not {"--no-sync", "--locked"}.issubset(flags):
+                violations.append(
+                    f"UV_RUN_NOT_LOCKED: {path}: {rendered} — "
+                    "所有 uv run 项目命令（包括 ruff/mypy 等工具）必须在命令前同时使用 "
+                    "--no-sync --locked。"
+                )
+
     for path, raw_line in added_lines:
         candidate = Path(path)
         if candidate.suffix.lower() not in EXECUTABLE_SUFFIXES and candidate.name.lower() not in EXECUTABLE_NAMES:
@@ -287,33 +423,30 @@ def command_violations(added_lines: Iterable[tuple[str, str]]) -> list[str]:
             )
 
         has_uv_run = re.search(r"\buv\s+run\b", line) is not None
-        has_no_project = "--no-project" in line
-        if PROJECT_RUN_MARKERS.search(line):
-            if not has_uv_run:
-                if BARE_PYTHON_PROJECT_COMMAND.search(line) or BARE_TEST_RUNNER.search(line):
-                    violations.append(
-                        f"BARE_PYTHON_ENTRY: {path}: {line} — "
-                        "项目测试/Smoke/脚本必须经 uv run 执行。"
-                    )
-            elif has_no_project:
-                if not is_policy_gate_no_project(path, line):
-                    violations.append(
-                        f"UV_NO_PROJECT_BYPASS: {path}: {line} — "
-                        "仅门禁自身的固定标准库检查器/自测命令可使用 --no-project；"
-                        "其他项目命令必须使用项目锁定环境。"
-                    )
-            elif "--no-sync" not in line or "--locked" not in line:
+        if not has_uv_run and PROJECT_RUN_MARKERS.search(line):
+            if BARE_PYTHON_PROJECT_COMMAND.search(line) or BARE_TEST_RUNNER.search(line):
                 violations.append(
-                    f"UV_RUN_NOT_LOCKED: {path}: {line} — "
-                    "项目命令必须同时使用 uv run --no-sync --locked。"
+                    f"BARE_PYTHON_ENTRY: {path}: {line} — "
+                    "项目测试/Smoke/脚本必须经 uv run 执行。"
                 )
+        if "--no-project" in line and not is_policy_gate_no_project(path, line):
+            violations.append(
+                f"UV_NO_PROJECT_BYPASS: {path}: {line} — "
+                "仅门禁自身的固定标准库检查器/自测命令可使用 --no-project；"
+                "其他项目命令必须使用项目锁定环境。"
+            )
+        if not line.endswith("\\"):
+            check_uv_run(path, line)
+
+    # Reconstructed logical commands close the line-continuation bypass.
     for path, command in shell_continuation_commands(added_lines):
         for code, pattern, message in FORBIDDEN_COMMANDS:
             if pattern.search(command):
                 violations.append(f"{code}: {path}: {command} — {message}")
-    return violations
+        check_uv_run(path, command)
 
-
+    # A command can be seen both as a raw line and as a reconstructed line.
+    return list(dict.fromkeys(violations))
 def policy_control_file_violations(
     changed_paths: Iterable[str],
     pr_number: int,
@@ -332,6 +465,134 @@ def policy_control_file_violations(
     ]
 
 
+def _yaml_scalar(value: str) -> str:
+    """Read a simple YAML scalar while ignoring an unquoted trailing comment."""
+    value = value.strip()
+    quote: str | None = None
+    escaped = False
+    for index, character in enumerate(value):
+        if escaped:
+            escaped = False
+            continue
+        if character == "\\" and quote == '"':
+            escaped = True
+            continue
+        if quote:
+            if character == quote:
+                quote = None
+        elif character in {"'", '"'}:
+            quote = character
+        elif character == "#" and (index == 0 or value[index - 1].isspace()):
+            value = value[:index].rstrip()
+            break
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+        return value[1:-1]
+    return value
+
+
+def _yaml_key_value(text: str) -> tuple[str, str] | None:
+    match = re.match(r"^([A-Za-z_][A-Za-z0-9_-]*):(?:\s*(.*))?$", text.strip())
+    if not match:
+        return None
+    return match.group(1), match.group(2) or ""
+
+
+def _workflow_step_records(content: str) -> list[dict[str, str | None]]:
+    """Extract step-level uses and direct with.version values from workflow YAML."""
+    records: list[dict[str, str | None]] = []
+    in_steps = False
+    steps_indent: int | None = None
+    step_indent: int | None = None
+    with_indent: int | None = None
+    current: dict[str, str | None] | None = None
+
+    def finish_step() -> None:
+        if current is not None:
+            records.append(current.copy())
+
+    for raw_line in content.splitlines():
+        if not raw_line.strip() or raw_line.lstrip().startswith("#"):
+            continue
+        indent = len(raw_line) - len(raw_line.lstrip())
+        body = raw_line.lstrip()
+
+        if not in_steps:
+            if re.fullmatch(r"steps:\s*(?:#.*)?", body):
+                in_steps = True
+                steps_indent = indent
+                step_indent = None
+                current = None
+            continue
+
+        if steps_indent is not None and indent <= steps_indent:
+            finish_step()
+            in_steps = False
+            steps_indent = None
+            step_indent = None
+            with_indent = None
+            current = None
+            continue
+
+        if body.startswith("- "):
+            if step_indent is None:
+                step_indent = indent
+            elif indent == step_indent:
+                finish_step()
+                current = None
+            elif indent > step_indent:
+                # Nested sequences are not workflow steps.
+                continue
+            else:
+                finish_step()
+                step_indent = indent
+                current = None
+            current = {"uses": None, "version": None}
+            with_indent = None
+            first_field = _yaml_key_value(body[2:])
+            if first_field and first_field[0] == "uses":
+                current["uses"] = _yaml_scalar(first_field[1])
+            elif first_field and first_field[0] == "with":
+                with_indent = indent + 2
+                inline_version = re.search(
+                    r"(?:^|[,{]\s*)version\s*:\s*([^,}]+)",
+                    first_field[1],
+                )
+                if inline_version:
+                    current["version"] = _yaml_scalar(inline_version.group(1))
+            continue
+
+        if current is None or step_indent is None:
+            continue
+        if indent == step_indent + 2:
+            field = _yaml_key_value(body)
+            if not field:
+                with_indent = None
+                continue
+            key, value = field
+            if key == "uses":
+                current["uses"] = _yaml_scalar(value)
+                with_indent = None
+            elif key == "with":
+                with_indent = indent
+                inline_version = re.search(
+                    r"(?:^|[,{]\s*)version\s*:\s*([^,}]+)",
+                    value,
+                )
+                if inline_version:
+                    current["version"] = _yaml_scalar(inline_version.group(1))
+            else:
+                with_indent = None
+        elif with_indent is not None and indent == with_indent + 2:
+            field = _yaml_key_value(body)
+            if field and field[0] == "version":
+                current["version"] = _yaml_scalar(field[1])
+        elif with_indent is not None and indent <= with_indent:
+            with_indent = None
+
+    finish_step()
+    return records
+
+
 def workflow_toolchain_violations(
     path: str,
     content: str,
@@ -343,21 +604,30 @@ def workflow_toolchain_violations(
         return []
     violations: list[str] = []
     action = manifest.get("uv_setup_action")
-    if not isinstance(action, str) or action not in content:
-        violations.append(
-            f"WORKFLOW_UV_ACTION: {path} — Python Workflow 必须使用共享基线固定 SHA 的 setup-uv action。"
-        )
     version = manifest.get("uv_version")
-    if not isinstance(version, str) or not re.search(
-        rf"(?m)^\s*version:\s*['\"]?{re.escape(version)}['\"]?\s*$",
-        content,
+    setup_steps = [
+        step
+        for step in _workflow_step_records(content)
+        if isinstance(step.get("uses"), str)
+        and step["uses"].split("@", 1)[0] == "astral-sh/setup-uv"
+    ]
+    if (
+        not isinstance(action, str)
+        or not setup_steps
+        or any(step.get("uses") != action for step in setup_steps)
     ):
         violations.append(
-            f"WORKFLOW_UV_VERSION: {path} — Python Workflow 必须显式固定 uv {version}。"
+            f"WORKFLOW_UV_ACTION: {path} — Python Workflow 必须在真实 steps[].uses 中使用共享基线固定 SHA 的 setup-uv action。"
+        )
+    if (
+        not isinstance(version, str)
+        or not setup_steps
+        or any(step.get("version") != version for step in setup_steps)
+    ):
+        violations.append(
+            f"WORKFLOW_UV_VERSION: {path} — 每个 setup-uv step 都必须在自身 with.version 中显式固定 uv {version}。"
         )
     return violations
-
-
 def dependency_surface(pyproject_text: str) -> dict[str, Any]:
     data = tomllib.loads(pyproject_text)
     project = data.get("project", {})
