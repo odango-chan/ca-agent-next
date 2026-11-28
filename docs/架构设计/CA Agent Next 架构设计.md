@@ -2,7 +2,7 @@
 
 > 文档类型：总体架构设计  
 > 状态：**CA-SL 1.6.0 Capability-first 架构增量待评审**；已通过的 SR-002/003 模块历史验收独立保留，1.6.0 新 Runtime/Compiler/Bundle/Studio 尚未发布    
-> 文档版本：0.4.7
+> 文档版本：0.4.8
 > 修订日期：2026-11-27  
 > 适用范围：ca-agent-next 通用 Agent Core、Host、Runtime、Skill 与 Plugin 公共机制  
 > 权威边界：本文是本仓唯一总体架构文档；字段级契约见规范，机制细节见设计说明书  
@@ -143,7 +143,7 @@ SkillCatalog 由 Core/Host 拥有，是进程内不可变快照。启动或显�
 7. when=false 或运行期错误的 Skill 不得重新进入无条件语义候选。
 8. 无候选则澄清或拒绝，不允许无 Skill 绑定地回退到 Generic Agent。
 
-`when` 是纯 CEL Skill 选择表达式，作者源位置为有 Assurance Skill 的 SKILL.md YAML Front Matter（CA-Agent 扩展）；无 Assurance Skill 不声明 when，且 `assurance/contract.yaml` 不包含该字段。它只读取 Ingress/Host 生成的 `event.type` 和当前已验证 Request Schema 的 `input`，不得读取 Context、Tool Result、Observation、Evidence 或 Codec 执行期结果。`predicates.yaml` 只用于执行期业务判断。不新增 activation.yaml、constraint.yaml、独立 Package 或第二份 Contract。
+`when` 是纯 CEL Skill 选择表达式，**作者源唯一位置为 `assurance/contract.yaml`**，仅带 Assurance 的 Skill 可声明；`SKILL.md` YAML Front Matter 和无 Assurance Skill 都不得声明 `when`。它只读取 Ingress/Host 生成的 `event.type` 和当前已验证 Request Schema 的 `input`，不得读取 Context、Tool Result、Observation、Evidence 或 Codec 执行期结果。`predicates.yaml` 只用于执行期业务判断。不新增 activation.yaml、constraint.yaml、独立 Package 或第二份 Contract。
 
 ### 7.1 Request Schema 与契约来源
 
@@ -310,4 +310,5 @@ sequenceDiagram
 | 2026-11-26 | 0.4.4 | GPT-6（ChatGPT） | §3、§15、修订记录 | 加入 CA-SL 1.6.0-only Capability-first 总体约束与完整责任矩阵 | 避免语言旧版兼容、Runtime Tool 选择和 Compiler 内嵌回归 | Issue #40；IR-008；SR-029 |
 | 2026-11-26 | 0.4.5 | GPT-6（ChatGPT） | 文档头与修订记录 | 把 review_scope 继承语句改为 CI 规范的一次精确声明 | 解除 PR #45 当前 Head Review Context formal-doc 校验失败 | Issue #40；PR #45 |
 | 2026-11-27 | 0.4.6 | GPT-6.2（ChatGPT） | §3、§7.1、§8、§10 | 明确标准契约优先、业务 Owner 契约补位、Request 与 Owner Contract 分离、3GPP jsonData 输入根及 JSON/Binary/Codec 边界 | 将 3GPP 标准消费与 MAS 领域自有契约组合规则纳入总体架构，防止领域字段污染标准 Request | IR-009；Issue #47；PR #48 |
-| 2026-11-27 | 0.4.7 | GPT-6.2（ChatGPT） | §7.1、§7、§15 | 明确 when 位于有 Assurance Skill 的 SKILL.md Front Matter；无 Assurance Skill 不声明 when | 与用户确认的 SKILL 入口方案保持一致，避免与作者规范及 F02 冲突 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.4.7 | GPT-6.2（ChatGPT） | §7.1、§7、§15 | 历史错误方案：将 when 误置于 SKILL.md Front Matter（已由 0.4.8 明确废弃，不得实施） | 与已批准 #45 设计基线冲突；本条仅保留修订溯源，不构成有效规范 | Issue #49；IR-008；SR-032 |
+| 2026-11-28 | 0.4.8 | GPT-6（ChatGPT） | §7、修订记录 | 按已合并 PR #45 恢复 `when` 唯一来源 `assurance/contract.yaml`，明确 SKILL.md Front Matter 无权声明 when；保留标准优先与 Owner 契约补位 | 避免 #101 将旧入口逆向并入 CA-SL 1.6.0-only 基线，阻断 #48/#52 的上游契约冲突 | Issue #40；#47；#49；PR #45；#101 |
