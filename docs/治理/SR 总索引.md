@@ -1,8 +1,8 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.83
-> 状态：31 项 SR：4 VERIFIED（仅各自历史模块范围）、1 IMPLEMENTED（设计移交）、25 DRAFT、1 IN_PROGRESS（SR-028；设计 READY、候选实施 IMPLEMENTED、mainline 集成未完成）。PR #46 第九轮 Review #6095601142 已合入恢复设计基线 `92436348`，main 尚未更新。PR #115 OPEN / Draft / mergeable=true / 未合并；Base `main` @ `b2ed5eb84114f9c2556a0cd06ed974887b1b70ad`。最新文档 Head `7ffb84e9ddf419941f570004ceac714554719d96`：Review Context #46136575669 SUCCESS、Python Toolchain Policy Bootstrap #46136575656 SUCCESS。SR-003 Plugin Manager Regression #46135833372 在代码快照 `ce26156a7f6ca7aad29ab87ed59986e55e9a1482` 的 Ubuntu / Windows Job 均 SUCCESS，Artifact 上传成功；`7ffb84e` 与 `ce26156` 之间仅为文档修订，SR-003 Workflow 未在 docs-only Head 重跑，因此不把该测试标记为 `7ffb84e` 的同 SHA 结果。本轮指针/统计修订同样只改文档，将触发新的 Review Context / Policy Bootstrap。第三批选择性收编已推送；PR #115 全量独立复评仍待完成。 PR #99、#112、#97 均保持源 PR 状态，不作为第二个集成入口；其实现/策略/READY 证据只按已核验范围选择性收编。PR #52 两项 P2 已收编，PR #115 全量独立复评待完成。
+> 文档版本：0.3.84
+> 状态：共 31 项 SR：4 VERIFIED（各自限定历史模块范围）、1 IMPLEMENTED（设计移交）、25 DRAFT、1 IN_PROGRESS（SR-028；设计 READY、uv 实施候选 IMPLEMENTED，mainline 尚未 VERIFIED）。PR #115 是唯一面向 `main` 的集成入口，当前仍 OPEN / Draft / 未合并；PR #46 的恢复设计仅合入恢复分支，不等于 main。**当前 PR Head/CI 必须以 GitHub API 即时读取为准**，不在此状态行写入会随每次文档提交失效的自指 HEAD。最近已冻结的 SR-003 代码/测试快照 `92474dba8faca34a088c3adfa4c3a9a8663d078c`：双平台 Regression #46139810346 均 273/273 SUCCESS，Review Context #46139810415 SUCCESS、Python Toolchain Bootstrap #46139810321 SUCCESS；其原始 Artifact 和根因见 SR-003 v0.3.16 §6.2。此处只引用该特定代码 SHA 的证据，不代表随后 docs-only Head 的测试已完成。PR #115 全量独立设计/集成复评仍未完成，未授权 Ready/合并/删分支。
 > 修订日期：2026-11-28\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
@@ -334,3 +334,4 @@
 | 2026-11-28 | 0.3.81 | GPT-6.2（ChatGPT） | 文档头、SR-013/016/017/030 当前版本、修订记录 | 同步第三批收编后的 SR 版本和 ce26156 CI 快照；保留 AC-013-01 归档/历史 PoC PASS、AC-016-01 NOT_RUN、AC-017-02 FAIL、SR-018 历史 Release 限定 PASS 与当前候选阻塞 | 避免 SR 索引继续引用旧 CI 快照或旧 SR 版本 | Issue #50/#95/#102/#103/#106；PR #107/#110/#114/#115 |
 | 2026-11-28 | 0.3.82 | GPT-6.2（ChatGPT） | §2.4、§2.7、修订记录 | 将 AC-013-01 导航切换到 PR #115 已纳入的修复后完整归档；同步 SR-016/F09 当前版本与最新文档/代码测试 SHA 边界 | 清除 SR 索引中的 PR #18 修复前归档入口及过期版本引用 | Issue #50/#95/#102/#106；PR #107/#110/#114/#115 |
 | 2026-11-28 | 0.3.83 | GPT-6（ChatGPT） | 文档头、§2.4、Phase G、§4、修订记录 | 登记 #116 固定限定设计批准及 #117 后续 4 P1/9 P2；同步 SR-009 v0.2.15、F05 v0.4.13、F06 v0.3.9、IPC v0.2.8；修正“26 DRAFT”与“尚未创建 main PR”的旧现行表述，SR-028 继续 IN_PROGRESS | 防止旧 #117 文档覆盖 #115 当前第三批与 uv 状态，不拿外部 Plugin CI 当 Next 产品 PASS | Issue #50/#116；PR #115/#117；ca-openamsm-plugin#3 |
+| 2026-11-28 | 0.3.84 | GPT-6（ChatGPT） | 文档头、修订记录 | 删除“最新文档 Head 7ffb84e”的过期自指；固定 SR-003 代码快照 92474db 的双平台 273/273 / Review Context / Toolchain 原始 CI 与 SR-003 v0.3.16 的根因记录，并明确后续 docs-only Head 必须另行核验；31 项 SR 分类不变 | 关闭 #116 P2-11 的动态 Head/CI 伪最新风险，避免每次 bump 文档版本导致证据再次失效 | Issue #50/#116；PR #115；SR-003 v0.3.16 |
