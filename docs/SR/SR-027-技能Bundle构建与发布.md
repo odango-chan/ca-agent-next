@@ -1,7 +1,7 @@
 # SR-027：技能Bundle构建与发布
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.3.1\
+> SR 版本：0.3.2\
 > 状态：整项 DRAFT；中央作者源与 Bundle 构建机器契约已固定，DESIGN_REVIEW_REQUESTED；产品 AC 仍 NOT_RUN，ca-skills 1.6.0 作者 Schema/Golden、Compiler 3.0.0 Release 与五根作者源尚未发布。
 > 下一步：独立评审本轮五根作者源、Compiler pin、release/bundle-inputs.yaml、Bundle 目录与原子 ZIP 契约；达到 SR-027 READY 后再创建 ca-skills 实施 Issue。
 > 阶段依据：[独立评审 #89](https://github.com/odango-chan/ca-agent-next/issues/89#issuecomment-7209388846)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。
@@ -46,11 +46,11 @@ CI 对同一批次一次解析并固定 Compiler 发行版，逐包构建与验�
 
 每个根输出至 `published-skills/<skill-id>/`，根名等于 SKILL.md 的 name。原样包含一份 SKILL.md、按相对路径列明的资源；四个 Assurance 根另含同一次 Build/Verify 给出的完整 Runtime Artifact 文件集合，保留 Compiler 的相对布局，拒绝路径碰撞、遗漏、额外 Artifact 或作者 assurance/ 源混入。记录每包源路径、同批 revision、依赖版本、Capability 清单、实际输出相对路径和 Verify 日志。候选只上传一次；五包中任一失败则发布数为零。
 
-**目标仓测试入口（待实现）**为 `python -m unittest discover -s tests -p test_bundle_160.py -v`。最少 10 个必需用例：五包各一项成功、旧 languageTarget、缺依赖、歧义 Binding、缺 Artifact 文件、Verify 失败时全批零上传。必需失败/跳过均为零，记录实际发现数。正式 Compiler 可执行、Check/Build/Verify 的完整 argv 与 tag、Echo Interface 导出和新作者 SHA 由相应生产者登记；缺任一项则停止 AC-027-01/02，不能把本文候选名称、历史 CLI 或 mock 输出作为发布证据。
+**目标仓测试入口（待实现）**为 `python -m unittest discover -s tests -p test_bundle_160.py -v`。最少 13 个必需用例：五包各一项成功、旧 languageTarget、缺依赖、缺正式 Codec Package、Codec Profile/Output Schema 与当前 Skill 锁不一致、旧 Owner N1 Parser 作为 Codec fallback、歧义 Binding、缺 Artifact 文件、Verify 失败时全批零上传。必需失败/跳过均为零，记录实际发现数。正式 Compiler 可执行、Check/Build/Verify 的完整 argv 与 tag、Echo Interface 导出和新作者 SHA 由相应生产者登记；缺任一项则停止 AC-027-01/02，不能把本文候选名称、历史 CLI 或 mock 输出作为发布证据。
 
 ## 2.2 中央固定的作者源与 Bundle 构建契约
 
-**语言与编译器版本：**唯一 languageTarget=connectionagent.io/v1.6.0；Compiler 目标 Release=3.0.0；BuildRequest=connectionagent.io/compiler-build-request/2；DependencyInspection=connectionagent.io/compiler-dependency-inspection/2；BuildResult=connectionagent.io/compiler-build-result/2；Runtime Artifact=connectionagent.io/compiler-artifact/2。这些是 Next 中央设计值，尚未发布。release/bundle-inputs.yaml 必须固定上述版本、Compiler commit SHA / Release asset，以及 Echo / Owner / Host Context Package 的准确 ID / SemVer；禁止运行时解析浮动 latest。
+**语言与编译器版本：**唯一 languageTarget=connectionagent.io/v1.6.0；Compiler 目标 Release=3.0.0；BuildRequest=connectionagent.io/compiler-build-request/2；DependencyInspection=connectionagent.io/compiler-dependency-inspection/2；BuildResult=connectionagent.io/compiler-build-result/2；Runtime Artifact=connectionagent.io/compiler-artifact/2。这些是 Next 中央设计值，尚未发布。release/bundle-inputs.yaml 必须固定上述版本、Compiler commit SHA / Release asset，以及 Echo / Owner / Host Context / **SR-026 Codec Provider Interface Package** 的准确 ID / SemVer、Codec 公开 Capability/唯一 Callable 绑定和本批次所使用的资格化消息 Profile/Output Schema；适用时还须显式 pin SR-031 OpenAPI Source Bundle 的锁定身份与选定闭包。三项 MAS 根只引入当前 Procedure 实际声明的精确依赖，不能从 Provider 运行时动态发现；禁止运行时解析浮动 latest。
 
 **作者源与构建矩阵：**五个 Skill 根来自同一个 ca-skills commit。echo-guide 是 SKILL.md-only，不调用 Compiler；其余四个 Assurance 根分别使用同一 Compiler 3.0.0 执行 Check、DependencyInspection、Build、Verify。when 只允许写在 assurance/contract.yaml 顶层，不得写入 SKILL.md Front Matter。assurance/ 源文件不得进入发布包。
 
@@ -105,6 +105,9 @@ ZIP 复用仓库既有确定性归档规则：路径排序、统一 /、固定�
 |---|---|---|
 | ca-skills 语言与 Skill 作者 | 1.6.0 作者 Schema / Golden / languageTarget；包含 echo-guide、echo-assured 与三份 MAS 新作者源的**同一固定提交** | AC-027-01 真实作者正例 |
 | Echo Interface Package Owner | 正式 Echo READ Capability/唯一 Callable/Schema、Package ID/SemVer/导出与源 SHA | echo-assured 的唯一 Binding 正例 |
+| MAS Owner / SR-025 | 正式 Owner Package ID/SemVer、Capability/Callable 一对一、两项历史 N1 Parser 的 A/B 签认及对应新业务 READ 契约（如有）、Owner Receipt/Proof/Schema 与三份 Procedure/Grant 的逐项差集 | 三项 MAS 根不依赖旧 Parser、不臆造固定 Owner 22/22 或 24/24 |
+| Codec Provider Owner / SR-026 | 正式独立 READ Capability/唯一 Callable、Provider Interface Package ID/SemVer、Runtime Bindings、封闭 Input/Output Schema、Artifact slot、Create/Modify/Release 各已资格化 Profile 和正反向向量 | 三项 MAS 根 T2 合法解码、精确 pin 与缺 Codec/错 Profile/旧 Parser fallback 负例 |
+| Host Context / SR-030 与 OpenAPI Source Bundle / SR-031 发布者 | 0/0 Schema-only Package 导出及精确锁；适用时四文件原版 OAS3 selected-surface Source Lock 与原件闭包 | T1 Request/Context 不包含未来 Codec Result；Build/Verify 引用按各自 dialect 与精确来源解析 |
 | Compiler / SR-013 Owner | 正式 1.6.0 Compiler tag、可执行文件、完整 Check/Build/Verify argv、Runtime Artifact Schema/Manifest、Package Schema 与 Golden | AC-027-01/02 真实 Build/Verify、缺件和失败原子性 |
 | ca-skills 发布者 | 五包来源清单、各包准确 Artifact 相对文件列表、发布资产及授权、下载 URL 与 Verify 证据 | 先 AC-027-01/02 后授权上传；AC-027-03 是发布后的消费者联验 |
 
@@ -147,3 +150,4 @@ ca-skills / SR-031 原样发布 OpenAMSM 实际支持版本的 OpenAPI 3.0 Sourc
 | 2026-11-28 | 0.2.5-integration-fix | GPT-6（ChatGPT） | 文档头与修订记录 | 修正整合期间版本/验收时点一致性，不改变产品状态 | 保持历史证据与新 1.6.0 设计边界 | Issue #12；PR #45；#46 |
 | 2026-11-28 | 0.3.0 | GPT-6.2（ChatGPT） | §0、§2.2、§3～6、修订记录 | 固定 CA-SL 1.6.0 languageTarget、Compiler 3.0.0 / API /2、五根作者源、Bundle 输入锁与原子 ZIP 契约 | 把生产端设计从等待外部命名推进为中央可评审的唯一目标，同时保留产品未发布状态 | Issue #113；F08；EC02；SR-013/027/029/030；PR #115 |
 | 2026-11-28 | 0.3.1 | GPT-6（ChatGPT） | §2.1、§2.2、修订记录 | 将 Create/Modify/Release 三条 MAS 根统一标记正式 Codec READ 与未发布阻塞；将历史 Owner Parser grant 限定为待签认映射，明确唯一 T2 解码、Owner 22/22 或 24/24 二选一 | 消除 SR-027 与 SR-029 §3.1、SR-026 的跨仓依赖冲突，不允许 Create 跳过 Codec 或 Modify/Release 使用旧 Parser fallback | Issue #40/#47/#113；SR-026/027/029；PR #125 |
+| 2026-11-28 | 0.3.2 | GPT-6（ChatGPT） | §2.1、§2.2、§5.1、修订记录 | 将正式 Codec Package、消息 Profile、Output Schema 和 Source Bundle 纳入精确 Bundle pin；明确 MAS Owner/Codec/Host 生产者交接；新增缺 Codec、错 Profile、旧 Parser fallback 负例 | 避免 1.6.0 Bundle 只锁 Owner/Host 而遗漏 Codec 造成 T2 运行期动态扩权与错误解码 | Issue #40/#47/#113；SR-026/027/029/031；PR #125 |
