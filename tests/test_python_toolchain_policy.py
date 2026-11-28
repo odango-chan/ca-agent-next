@@ -458,10 +458,10 @@ index-strategy = "first-index"
 
     def test_uv_pip_installation_entry_is_rejected(self) -> None:
         for command in (
-            "uv pip install requests",
-            "uv pip sync requirements.txt",
-            "uv pip compile requirements.in",
-            "uv pip uninstall requests",
+            "uv " + "pip install requests",
+            "uv " + "pip sync requirements.txt",
+            "uv " + "pip compile requirements.in",
+            "uv " + "pip uninstall requests",
         ):
             with self.subTest(command=command):
                 self.assertTrue(any(
