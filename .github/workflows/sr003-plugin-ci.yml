@@ -44,13 +44,18 @@ jobs:
     steps:
       - name: Checkout PR code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Prepare evidence directory
         shell: bash
         run: |
           set -euo pipefail
+          actual_head_sha="$(git rev-parse HEAD)"
+          test "$actual_head_sha" = "${{ github.event.pull_request.head.sha }}"
           mkdir -p artifacts/sr028/unittest-gate
           {
+            printf 'actual_head_sha=%s\n' "$actual_head_sha"
             printf 'pr_number=%s\n' "${{ github.event.pull_request.number }}"
             printf 'base_sha=%s\n' "${{ github.event.pull_request.base.sha }}"
             printf 'head_sha=%s\n' "${{ github.event.pull_request.head.sha }}"

@@ -1,7 +1,7 @@
 # SR-011：真实 OpenAMSM 创建修改释放端到端验证
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.3.6\
+> SR 版本：0.3.7\
 > 状态：整项 DRAFT；限定设计已认可，等待直接依赖。AC-011-06 静态架构断言。  
 > 下一步：已获限定设计认可。组合实现具备后检查 Core 零业务分支；01～05 等同批 Bundle、Compiler Verify、Provider/Owner Package 和隔离对端。  
 > 阶段依据：[独立评审 #75](https://github.com/odango-chan/ca-agent-next/issues/75#issuecomment-7210271472)，评审 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。
@@ -84,7 +84,7 @@
 | 项目 | 当前值 |
 |---|---|
 | 实施仓库 | ca-agent-next（组合验收）。env-5gc-sim 为输入对端，读取已提供的请求/重放 fixture；需要修改对端时另按该仓 SR 登记 |
-| GitHub Issue | 未创建 |
+| GitHub Issue | [#118](https://github.com/odango-chan/ca-agent-next/issues/118) 仅追踪 AC-011-05 / P2-05 的 Host 三元身份系统负例待办；整项实施未启动，其余实施 Issue 未创建 |
 | 实施 PR | 未创建 |
 | Commit | 无 |
 | 实施状态 | NOT_STARTED |
@@ -127,3 +127,5 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-27 | 0.3.4 | Codex / GPT-6 | 文档头 | 登记限定设计已认可，等待直接依赖及 AC 范围 | 按单项独立评审推进 | Issue #12、#75；PR #46 |
 | 2026-11-28 | 0.3.5 | GPT-6（ChatGPT） | 文档头、AC-011-05、§5.1、修订记录 | 补齐 Host 权威 Response 三元映射、非空错误 obligation、跨 Run/Channel/代际、过期/重放 dispatch 的系统级负例并同步 F05/F06/EX 版本 | 回应 Next #115/#116 的 P2-05：Event Plugin 无法证明 Host 内部三元身份；该 AC 仍 BLOCKED/NOT_RUN，等待真实 Host/系统组合测试 | Issue #50/#75/#116；PR #115 |
 | 2026-11-28 | 0.3.6 | GPT-6（ChatGPT） | 文档头、设计依据、修订记录 | 同步 F06 v0.3.10（外部 Plugin 候选已存在但未合并）与 F05 v0.4.15（旧 v1 hash 仅历史）；保持 AC-011-05 Host 三元负例 BLOCKED/NOT_RUN | 防止真实 E2E 验收依赖旧模块状态与错误 hash 要求，模块 CI 不能代替系统 E2E | Issue #50/#75/#116；PR #115 |
+
+| 2026-11-28 | 0.3.7 | Codex / GPT-6 | §6 | 登记 #118 仅追踪 AC-011-05/P2-05 待办，保持整项实施未启动、其余实施 Issue 未创建 | 使专项待办与整项实施状态分开追踪 | Issue #118；Issue #50；PR #115 |
