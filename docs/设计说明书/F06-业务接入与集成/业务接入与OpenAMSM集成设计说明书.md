@@ -284,23 +284,17 @@ record-session-establishment-event:
 
 ### 13.2 Modify
 
-~~~yaml
-apply-qos-delta:
-  operation:
-    capability: mas.upn.up.qos.delta
-    arguments:
-      ue_identity: context.supi
-      psi: context.request.pduSessionId
-      qos_flows_delta: "1"
-      qfi: parse-n1.operation.output.qfi
-      five_qi: parse-n1.operation.output.five_qi
-      gfbr_ul: parse-n1.operation.output.gfbr_ul
-      gfbr_dl: parse-n1.operation.output.gfbr_dl
-      mfbr_ul: parse-n1.operation.output.mfbr_ul
-      mfbr_dl: parse-n1.operation.output.mfbr_dl
-~~~
+**数据流约束（不是可直接编译的 CA-SL 片段）：**
 
-Modify 的 Goal、Owner Receipt、QoS Delta 和 N1/N2 语义不变；仅把 Skill-facing Callable 引用改为 Capability。
+| 阶段 | 输入 | 产出与消费者 |
+|---|---|---|
+| T1 Resolve | 规范化 Event + 当前 SBI JSON + 0xC9 最小分类 | 选择 Modify Skill；不需要解码得到的 QFI/5QI/GBR |
+| T2 Codec READ Node | Host 授权的原始 N1 `artifactRef` + Publisher 冻结的 0xC9 profile/slot | ca-client-tools Codec Capability→唯一 Callable；按正式 Result Schema 返回 QFI、5QI、GFBR/MBR 等**在发布 Schema 中真实存在的字段** |
+| T2 Owner business-only READ（如需要） | **经过 Schema 校验的 Codec Result** 与 session identity | Owner 校验/业务决策，禁止重新解码 N1；具体 Callable/Schema 由 env-openamsm 后续冻结 |
+| T2 Owner Mutation | 经验证的业务参数/会话身份 | 现有 QoS Delta 的 Capability-only 调用；Effect/Receipt/Proof 仍由 Owner 合同决定 |
+| T3/T4 | Owner Receipt / correlated N1/N2 completion | commit 判定/原 Run 续跑；不触发第二次 mutation |
+
+`codec-n1` 之类的本地节点名、`codecResult.qfi` 等字段路径此处**不预先发明为正式 CA-SL 机器接口**；作者在实际 0xC9 Codec Result Schema、Callable.kind、Owner 业务参数 Schema 冻结后，再按正式语法将 Codec Node 输出绑定到后继 Node `arguments`。不得继续引用旧的 `parse-n1.operation.output` 作为 Owner 原始 NAS 解码结果。当前 0xC9 Profile、Codec 1.6.0 Release、Owner 冻结裁决均 NOT_RELEASED / BLOCKED。Modify 的 Goal、Receipt、QoS 和 N1/N2 业务语义不变。
 
 ### 13.3 UE-requested Release
 
@@ -341,6 +335,10 @@ Create → Modify → Release 的顺序、Owner authoritative state、Receipt / 
 
 ### 13.7 真实联测与模块证据分层
 
+- Create、Modify、UE-requested Release 必须分别具有 T1 规范化 Event/Skill 选择 fixture、T2 Codec→Owner 结构化路径及正式发布的 Schema/Codec profile 证据。0xC9/0xD1 的 T1 最小分类应覆盖 malformed/unknown/unsupported 正负样例，证明该分类**不构成完整协议解码**；T2 单独校验 Codec Profile/Result Schema，并拒绝不合格数据。缺正式 Codec/Owner 合同时维持 BLOCKED/NOT_RUN。
+- 本设计中的 typed Result 字段、Node 名、Codec 公开 Callable 以正式 Publisher/Compiler 契约为准，不能把示例标识误当成已发行机器接口。
+
+
 1.6.0 Create/Modify/Release Skill 必须由 ca-skills 作者重新编写、使用唯一新 Compiler Check/Build/Verify 并正式发布 Bundle；历史 v1alpha5 E2E/Owner v1alpha4 只是业务输出参考，不能证明新 Runtime Binding 或新系统资格。SR-009 单独验 Plugin ingress/delivery/staging，SR-010 单独验 Host Artifact Channel、Provider/Codec，SR-011 才在正式新发布物和隔离环境齐备后执行同 UE/PSI 的真实 E2E；OM/EX 不能倒灌模块设计 READY 门槛。
 
 ## 修订记录
@@ -362,3 +360,4 @@ Create → Modify → Release 的顺序、Owner authoritative state、Receipt / 
 | 2026-11-27 | 0.3.0 | Codex / GPT-6 | §5～7、§13.5 | 明确作者 Capability、两路收据、Schema 与 Provider 基数 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
 | 2026-11-27 | 0.3.1 | GPT-6（ChatGPT） | §4.1、§5～7、修订记录 | 冻结三个 OpenAMSM normalized Event type、operationId、payload.request、NAS/N2 discriminator、Content-ID/slot 与 Host-owned continuation/response obligation 边界；固定 3GPP OpenAPI 源 SHA | 处理独立模型 Review #6082541121 的 SR-009 P1，消除 Event type/schema/Run 所有权歧义，避免插件实现猜测 | Issue #12；PR #46；SR-009；Review #6082541121 |
 | 2026-11-28 | 0.3.2 | GPT-6（ChatGPT） | §4、§6～8、修订记录 | 保存 #46 原版 OpenAPI Event/Continuation 结构与 #45 Owner Parser 固定源审计；将旧 optional Codec + MAS.PARSE_N1 回退流程替换为 T2 必需的已资格化 Provider Codec READ，Owner 只做业务语义，确保发布合同仍 BLOCKED | 阻断旧 NAS Parser 冒充 Codec 或提前宣布 24/24 冻结 | Issue #12；#40；#113；PR #45；#46 |
+| 2026-11-28 | 0.3.2-integration-2 | GPT-6（ChatGPT） | §13.2、§13.7 | 修复整合稿遗留的旧 `parse-n1.operation.output` 编译示例，恢复正式数据流约束和 0xC9/0xD1 双阶段验收条件 | 原始 NAS 只由资格化 Codec 解码；避免示例与 Owner Parser 不得 fallback 的新架构冲突 | Issue #12；#40；#113；PR #45；#46 |
