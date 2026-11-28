@@ -263,9 +263,9 @@ class PythonToolchainPolicyTests(unittest.TestCase):
             "          - uses: astral-sh/setup-uv@abc123\\n"
             "            with:\\n"
             "              version: '0.13.10'\\n"
-            "jobs:\\n"
+            "jobs: # actual workflow jobs\\n"
             "  test:\\n"
-            "    steps:\\n"
+            "    steps: # actual job steps\\n"
             "      - name: Run tests\\n"
             "        run: echo 'no actual setup-uv step'\\n"
         )
