@@ -1,15 +1,14 @@
 # SR-009：OpenAMSM SBI 事件插件与二进制产物交接
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.12\
-> 状态：整项 DRAFT；模块设计已认可，待目标仓实施交接。AC-009-01～06（测试 Host/peer）。  
-> 下一步：独立 Go Plugin 模块已获设计认可。目标仓 ca-openamsm-plugin 的实施分支和 Issue 需登记；联调验证由 SR-011 跟踪。Create 断言须覆盖 eventType；responseObligationId 由 Host 分配。  
-> 阶段依据：[独立评审 #73](https://github.com/odango-chan/ca-agent-next/issues/73#issuecomment-7210217168)，评审 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。
+> SR 版本：0.2.13
+> 状态：整项主状态 DRAFT；模块实施阶段为 READY 候选（限定 AC-009-01/02/03/05/06）；AC-009-04 的生产 NAS classifier 绑定 BLOCKED_EXTERNAL_INPUT，待 ca-client-tools 发布精确 API。当前 F05/F06 对齐修订尚待独立增量复评；所有产品验收 NOT_RUN。  
+> 下一步：先完成本轮 SR-009 / F06 / ca-openamsm-plugin PR #1 的独立增量设计复评。只有复评批准后，才创建目标仓实施 Issue 并正式提升阶段 READY；系统联调由 SR-011 跟踪。
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-28\
 > 所属阶段：Phase G  
 > 上游需求：[IR-005](../IR/IR%20总登记册.md#ir-005)  
-> 设计依据：[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.5 §1～13、16；[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.3.3 §2～5、§4.1；[插件包与进程通信协议规范](../规范/插件包与进程通信协议规范.md) v0.2.7 §5～6\
+> 设计依据：[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.10 §1～13、16；[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.3.7 §2～5、§4.1、§13.7、§14；[插件包与进程通信协议规范](../规范/插件包与进程通信协议规范.md) v0.2.7 §5～6
 > Acceptance：OM-01～OM-03、OM-05～OM-08、OM-14、OM-15（见[演示验收基线](../验收与实施/演示验收基线.md)）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：见第 3 节
@@ -32,7 +31,7 @@
 - SBI HTTP/2 ingress、JSON/multipart/related 解析和 Content-ID 关联。
 - Plugin 仅通过 Host 提供的 inbound/outbound staging directory 写入/读取原始 N1/N2 文件描述符；不拥有 ArtifactStore，不生成 artifactRef。Host 导入/导出由 Next SR-010 承载。
 - 将规范化 Event 发布给 Host，并执行 SBI Delivery 编码。
-- 对共享 UpdateSMContext 仅提取最小 NAS discriminator，区分新 Modify、UE-requested Release 与既有事务的 N1/N2 completion；Host Resolver/Continuation 负责选择或恢复 Skill，Plugin 不识别原 Run。
+- 对共享 UpdateSMContext 通过 ca-client-tools 正式发布的窄 T0 5GSM classifier API 取得最小 NAS discriminator，区分新 Modify、UE-requested Release 与既有事务的 N1/N2 completion；Plugin 不实现/复制 parser、不调用完整 DecodeNAS；API 未发布前仅可用 test double 验证 Event mapping，生产分类保持 BLOCKED。Host Resolver/Continuation 负责选择或恢复 Skill，Plugin 不识别原 Run。
 - 仅保留协议/部署提供的 externalRequestId（缺失时为空）、Plugin 本地 responseChannelId、可信 source.peerId、Content-ID/slot 和当前 HTTP/2 stream 的内存 waiter。Plugin 不保存、不接收、不发送 Run ID 或 continuation state；responseObligationId 随 delivery.dispatch 到达时仅瞬时接收，不解释、不持久化、不转发、不回传。Host 创建该 ID，并依据 Host-owned pending continuation index 关联原 Run/generation。当前 HTTP callback 的 responseChannelId 与原 Run 的执行身份严格分离。
 
 ## 3. 非目标
@@ -46,8 +45,8 @@
 | 依赖类型 | 权威输入 | 适用门槛 |
 |---|---|---|
 | 设计 | F03 Plugin/IPC、F05 Artifact、F06 和 SR-017 源候选设计 | Plugin 只做 Event/Delivery/Staging；Skill 选择归 Core |
-| 实施 | Plugin Package/IPC v1alpha1 已冻结规范、Plugin 自身独立 Go 进程 | 可用测试 Host 单独实施/验收 Plugin，无需 Next Skill/Owner |
-| 模块验收 | SBI 原始 Create/Update/multipart/NAS 字节样本与测试 Host | 不依赖真实 Owner；固定 0xC9 Modify / 0xD1 Release discriminator |
+| 实施 | Plugin Package/IPC v1alpha1 已冻结规范、Plugin 自身独立 Go 进程 | 可用测试 Host 单独实施/验收 Plugin，无需 Next Skill/Owner；生产 UpdateSMContext 分类需消费 ca-client-tools#44 正式发布的 T0 classifier API |
+| 模块验收 | SBI 原始 Create/Update/multipart/NAS 字节样本与测试 Host | Event mapping 可用 test double 验证；生产 0xC9/0xD1/0xD4 classifier 仅在 ca-client-tools#44 API 发布后验收，不得复制 parser 或用完整 DecodeNAS 替代 |
 | 系统 OM | OM-01～03/05～08/14/15 与完整 Next Host + Mock AMF | 只能在组合环境验收；不代替 Plugin 单模块 AC |
 
 **设计评审与实施 READY 独立判定**：本 SR 的功能职责、已知目标契约、失败路径和下面每项模块 AC 足够完整即可请求设计评审；不得要求“全部前置 SR VERIFIED”作为统一前置。实际实施按本次 Scope 逐阶段检查所消费的已发布能力；缺失时仅相应 AC 标记 BLOCKED/NOT_RUN，系统 EX/OM 不倒灌模块门禁。Owner/Provider/Compiler 的未知机器标识、Schema 和 API 只能由对应 Owner 正式发布，Harness 不得推测。新 Skill/Artifact/Runtime 接口只接受 CA-SL 1.6.0 / Capability-first，不提供旧版兼容。
@@ -59,15 +58,15 @@
 | AC-009-01 | Plugin 启动，经 stdin/stdout IPC 版本握手与 capabilities discovery | Plugin Package/IPC v1alpha1 协议通过；非法版本与超帧明确拒绝 |
 | AC-009-02 | Create/Update JSON 与 multipart/related Content-ID、原始 N1/N2 bytes | 归一化 Event 包含正确 correlation/slot/mediaType/byteLength，原字节逐位相同 |
 | AC-009-03 | Staging 仅可提交相对路径、声明 slot；绝对路径、路径穿越、artifactRef 反例 | 非法描述拒绝；Plugin 不直接创建 Host artifactRef/ArtifactStore |
-| AC-009-04 | 按 F06 v0.3.3 §4.1 固定三个 normalized eventType、operationId、payload.request Schema 和 classification；N1 5GSM 头必须至少 4 字节、第 0 字节 EPD=`0x2e`、第 3 偏移（第 4 字节）为 Message Type；测试 `0xC9`/`0xD1`/`0xD4`，以及短于 4 字节、错误 EPD、未知消息；N2 测试 `PDU_RES_SETUP_RSP`/`PDU_RES_MOD_RSP`/`PDU_RES_REL_RSP`；覆盖分别到达、同一请求携带两路 confirmation、冲突 discriminator 和错误 Content-ID | 精确发布三个 eventType；request JSON 与固定 OpenAPI Schema 一致且不改写；discriminator 与原始字节/JSON enum 一致；截断/错误 EPD/冲突/未知输入 fail-closed；Plugin 不解码完整 NAS/NGAP、不持有 Run、不调用 Owner |
-| AC-009-05 | Host 创建的 `responseObligationId` 随 `delivery.dispatch` 到达 Plugin；Plugin 仅瞬时接收 opaque token，HTTP stream 写回使用 `responseChannelId`，`delivery.result` 不回传该 token；覆盖错 externalRequestId、过期/越权输出 | 仅本次授权 response 交付；Host-owned obligation 与 Plugin-local responseChannel 分离；串单/过期拒绝，不发出错误 2xx |
-| AC-009-06 | 重复请求与多并发回放，不同 correlation 的 raw fixtures | 原始 bytes/correlation 不混淆；本模块只证明 Plugin ingress/delivery，不宣称 Next 去重/Run 或 OM E2E |
+| AC-009-04 | 按 F06 v0.3.7 §4.1/§13.7/§14 固定三个 normalized eventType、operationId、payload.request Schema、N1/N2 discriminator 与 Content-ID/slot；Event mapping 单测可注入 classifier test double，覆盖 N1 `0xC9`/`0xD1`/`0xD4`、N2 三种 response、分别/双路到达、冲突与错配；生产 classifier 必须使用 ca-client-tools#44 发布的窄 T0 API | Schema/映射/负例逻辑可独立实现；生产分类器绑定在 API package/signature/version 固定并发布前 BLOCKED_EXTERNAL_INPUT；不得在 Plugin 复制 parser、调用完整 DecodeNAS 或宣称生产 classifier PASS |
+| AC-009-05 | Host 创建的 `responseObligationId` 随 `delivery.dispatch` 到达 Plugin；Plugin 仅瞬时接收 opaque token，使用 `responseChannelId` 写回对应 live HTTP/2 stream；`delivery.result` 只回传 `deliveryId` / disposition / 可选 statusCode 与安全诊断；覆盖未知/关闭的 responseChannel、错误 deliveryId、重复/迟到 dispatch、跨 stream 串单 | 仅当前 live stream 收到对应响应；opaque obligation 不持久化/转发/回传；Plugin 不生成或判断 Run/重试身份；Host owns externalRequestId dedupe、responseObligation 创建与过期/授权判定 |
+| AC-009-06 | 多个并发 HTTP/2 stream、不同 responseChannelId / deliveryId 与不同 raw fixtures 交错回放 | 原始 bytes、Content-ID、slot、correlation 与 response channel 不串线；Plugin 不承担 externalRequestId 去重或 Run 关联；本模块不宣称 Next 去重/Run 或 OM E2E |
 
-AC-009-01～06 仅依赖测试 Host、协议 fixture 和计数 peer。真实 Owner/Provider、Echo E2E 与隔离 NF 只影响系统组合验收。
+AC-009-01/02/03/05/06 仅依赖测试 Host、协议 fixture 和计数 peer。AC-009-04 的 Event mapping/Schema 子集可用 test double 独立实现；生产 classifier adapter 直接依赖 ca-client-tools#44。真实 Owner/Provider、Echo E2E 与隔离 NF 只影响系统组合验收。
 
 ### 5.1 AC-009-04 参数化分类用例与职责边界
 
-本节是 AC-009-04 的**模块测试子例**，不是新增系统 OM 或 Run/Owner 实现范围。规范化事件字段以 F06 v0.3.3 §4.1 为唯一集成语义合同，插件包的 plugin.yaml / schemas 必须逐项实现该合同；3GPP OpenAPI 原始 YAML 不得修改、手写投影或补字段。operationId、payload.request、discriminator、Content-ID/slot 和三个 eventType 均按 F06 固定值验收，不允许 Harness 猜测。
+本节是 AC-009-04 的**模块测试子例**，不是新增系统 OM 或 Run/Owner 实现范围。规范化事件字段以 F06 v0.3.7 §4.1 为唯一集成语义合同，插件包的 plugin.yaml / schemas 必须逐项实现该合同；3GPP OpenAPI 原始 YAML 不得修改、手写投影或补字段。operationId、payload.request、discriminator、Content-ID/slot 和三个 eventType 均按 F06 固定值验收，不允许 Harness 猜测。
 
 | 输入（各含规范化 JSON/Content-ID 与原始字节 fixture） | 固定 eventType / discriminator | Plugin 应证明的分类与禁止事项 |
 |---|---|---|
@@ -81,7 +80,7 @@ AC-009-01～06 仅依赖测试 Host、协议 fixture 和计数 peer。真实 Own
 | N1/N2 回调分别到达、交错到达；同 peer 多事务并发 | `nsmf.update-sm-context.continuation`；payload 保留 `smContextRef`、原始 UpdateSmContext JSON 和各自 discriminator；每次 ingress 有独立 responseChannelId | 保留可信 peer、externalRequestId（仅在协议/受信部署提供时）、Content-ID/slot 和原字节；Host 通过 Host-owned pending index 查找原 Run，Owner 再校验 generation/transaction；Plugin 不持有 Run/responseObligation |
 | 缺失或重复 Content-ID、part 错配、`n2SmInfoType` 与 N2 part 不符、截断/未知 5GSM、互相冲突的消息种类 | 拒绝错误输入，不发布新的可执行业务事件 | 不通过默补字段或业务解码修复输入 |
 
-测试 Host 仅验证 Plugin 的三个规范化 eventType、payload schema、discriminator 投影、staging 和 IPC。Plugin 只为当前 HTTP/2 stream 保留内存 waiter；Host 创建本次 ingress 的 responseObligationId，并用 Host-owned pending continuation index 按可信 peer、operationId、smContextRef 和分类定位候选原 Run；若无匹配或多重匹配则拒绝，不新建 Run。Owner/Runtime 再验证原 Run 的 generation、releaseTxn、SUPI/PSI 与本路 originalInvocationId/Proof。**原 Run/generation/releaseTxn 的匹配、回调独立响应义务以及零重复 mutation** 属 F02/F04/F05、SR-010/011 的组合验收，不由 SR-009 单模块声称 PASS。Plugin 不接收或发送 Run ID；`responseObligationId` 作为 Host-owned 字段随 `delivery.dispatch` 到达时仅瞬时接收，不解释、不持久化、不转发、不回传，Delivery 写回仍由 Plugin-local `responseChannelId` 完成。
+测试 Host 仅验证 Plugin 的三个规范化 eventType、payload schema、discriminator 投影、staging 和 IPC。N1 分类映射单测使用注入的 test double；生产实现必须在 ca-client-tools#44 发布精确 API 后绑定，不得自建 parser。Plugin 只为当前 HTTP/2 stream 保留内存 waiter；Host 创建本次 ingress 的 responseObligationId，并用 Host-owned pending continuation index 按可信 peer、operationId、smContextRef 和分类定位候选原 Run；若无匹配或多重匹配则拒绝，不新建 Run。Owner/Runtime 再验证原 Run 的 generation、releaseTxn、SUPI/PSI 与本路 originalInvocationId/Proof。**原 Run/generation/releaseTxn 的匹配、回调独立响应义务以及零重复 mutation** 属 F02/F04/F05、SR-010/011 的组合验收，不由 SR-009 单模块声称 PASS。Plugin 不接收或发送 Run ID；`responseObligationId` 作为 Host-owned 字段随 `delivery.dispatch` 到达时仅瞬时接收，不解释、不持久化、不转发、不回传，Delivery 写回仍由 Plugin-local `responseChannelId` 完成。
 
 ### 5.2 实现落点、运行和取证
 
@@ -94,19 +93,19 @@ AC-009-01～06 仅依赖测试 Host、协议 fixture 和计数 peer。真实 Own
 | 项目 | 当前值 |
 |---|---|
 | 实施仓库 | ca-openamsm-plugin |
-| GitHub Issue | 未创建 |
+| GitHub Issue | 待本轮独立增量复评通过并正式达到阶段 READY 后创建；不提前建立实施占位 Issue |
 | 实施 PR | 未创建 |
 | Commit | 无 |
 | 实施状态 | NOT_STARTED |
 | 验收证据 | NOT_RUN |
 
-ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在此标记实施完成。
+ca-openamsm-plugin PR #1 是设计文档候选，不是本 SR 的实现 PR；不得将其标记为产品实现或验收完成。
 
 ## 7. 变更与替代关系
 
 - supersedes：无
 - superseded by：无
-- 影响分析：初始分解；等待设计基线评审。
+- 影响分析：原模块设计已由独立 Review #73 在旧快照限定批准；本轮 F06 0.3.7 / SR-009 0.2.13 / Plugin PR #1 的增量修改待新的独立复评；生产 T0 classifier 依赖 ca-client-tools#44。
 - 本 SR 的范围和验收条件在进入 READY 后冻结。后续发生语义变化时创建新的 SR 并引用本 SR，不覆盖历史要求。
 
 ### EC04 源仓验收入口
@@ -141,3 +140,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-28 | 0.2.10 | GPT-6（ChatGPT） | §5.1、修订记录 | 清除 §5.1 对 responseObligationId“不得接收”的残留表述，与 dispatch Host-owned 瞬时接收规则统一 | 防止同一 SR 内一处允许接收、一处禁止接收，导致合法 Delivery 被实现拒绝 | Issue #12；PR #46；F06 v0.3.3；Review #6095143611 |
 | 2026-11-28 | 0.2.11 | GPT-6.2（ChatGPT） | §2、设计依据、修订记录 | 对齐 IPC v0.2.7，明确 responseObligationId 仅随 delivery.dispatch 瞬时接收，responseChannelId 负责本地 HTTP/2 stream 写回 | 将 SR-009 模块边界与公共 IPC 契约保持一致，避免将非所有权误解为不可接收 | Issue #12；PR #46；IPC v0.2.7；Review #6095143611 |
 | 2026-11-28 | 0.2.12 | GLM-5.3（DeepSeek Harness） | §5.1、修订记录 | 为 AC-009-04 §5.1 参数化用例表补 `nsmf.create-sm-context` Create 正例行 | 关闭首轮 R1-SR009-02 的 Create 用例缺口，使三个 eventType 均有正例 | Issue #12；PR #46；Review #6082541121 |
+| 2026-11-28 | 0.2.13 | GPT-6.2（ChatGPT） | 文档头、§2、§4～6、修订记录 | 刷新 F05/F06/IPC 权威版本；将 AC-009-05 收窄到 responseChannel/delivery 映射，externalRequestId 去重明确归 Host；将 AC-009-04 生产 classifier 绑定列为 ca-client-tools#44 直接外部依赖，并允许 test double 仅验证 Event mapping；等待当前快照独立增量复评后再创建实施 Issue | 消除 Plugin/Host 重试身份边界和 NAS classifier 所有权歧义，避免 Harness 猜测 API 或复制 parser | Issue #12；Review #73；F05 v0.4.10；F06 v0.3.7；IPC v0.2.7；ca-client-tools#44；PR #115 |
