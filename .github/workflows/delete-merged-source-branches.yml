@@ -1,0 +1,129 @@
+name: Report merged source branch candidates
+
+on:
+  pull_request:
+    types: [closed]
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: delete-merged-source-branches
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    if: github.event_name != 'pull_request' || (github.event.pull_request.merged == true && github.event.pull_request.base.ref == github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report explicitly listed candidates for operator audit
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const repoFullName = `${owner}/${repo}`;
+            const defaultBranch = context.payload.repository?.default_branch || "main";
+            // PR bodies are editable after merge: entries are hints, never deletion authorization.
+            const mainSha = (await github.rest.repos.getBranch({ owner, repo, branch: defaultBranch })).data.commit.sha;
+            await core.summary.addHeading("Read-only branch cleanup candidates").addRaw(
+              `Observed ${defaultBranch} SHA: ${mainSha}. No branches are deleted. ` +
+              "An explicitly authorized operator must audit each candidate under mainline policy §8, " +
+              "including merge SHA/CI/content, archived evidence and downstream branches/workspaces.\n\n"
+            ).write();
+            const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+
+            const closedPulls = await github.paginate(github.rest.pulls.list, {
+              owner, repo, state: "closed", base: defaultBranch,
+              sort: "updated", direction: "desc", per_page: 100
+            });
+            const openPulls = await github.paginate(github.rest.pulls.list, {
+              owner, repo, state: "open", per_page: 100
+            });
+
+            const merged = closedPulls.filter(pr =>
+              pr.merged_at &&
+              Date.parse(pr.merged_at) >= cutoff &&
+              pr.base?.ref === defaultBranch
+            );
+
+            const eligiblePrefix = /^(docs|feature|feat|fix|refactor|test|chore|governance|integration)\//;
+            const protectedName = /^(main|master|release\/|hotfix\/|evidence\/|review\/|verify\/)/i;
+            const auditName = /(^|[-/])(evidence|review|verify|archive)([-/]|$)/i;
+
+            for (const pr of merged) {
+              const body = pr.body || "";
+              const marker = body.match(/<!--\s*mainline-cleanup-branches\s*\r?\n([\s\S]*?)\r?\n\s*-->/i);
+              if (!marker) continue;
+
+              const entries = [...new Set(marker[1].split(/\r?\n/)
+                .map(line => line.trim())
+                .filter(line => line && !line.startsWith("#")))];
+
+              for (const entry of entries) {
+                const parsed = entry.match(/^([A-Za-z0-9._/-]+)@([0-9a-f]{40})$/i);
+                if (!parsed) {
+                  core.info(`SKIP malformed cleanup entry (expected branch@full-sha): ${entry}`);
+                  continue;
+                }
+                const branch = parsed[1];
+                const expectedSha = parsed[2].toLowerCase();
+                if (!/^[A-Za-z0-9._/-]+$/.test(branch) ||
+                    !eligiblePrefix.test(branch) ||
+                    protectedName.test(branch) ||
+                    auditName.test(branch) ||
+                    branch === defaultBranch) {
+                  core.info(`SKIP unsafe or reserved branch name: ${branch}`);
+                  continue;
+                }
+
+                const dependents = openPulls.filter(open =>
+                  (open.head?.repo?.full_name === repoFullName && open.head.ref === branch) ||
+                  (open.base?.repo?.full_name === repoFullName && open.base.ref === branch)
+                );
+                if (dependents.length) {
+                  core.info(`SKIP ${branch}: referenced by open PR(s) ${dependents.map(p => "#" + p.number).join(", ")}`);
+                  continue;
+                }
+
+                let branchInfo;
+                try {
+                  branchInfo = (await github.rest.repos.getBranch({ owner, repo, branch })).data;
+                } catch (error) {
+                  if (error.status === 404) {
+                    core.info(`ALREADY ABSENT: ${branch}`);
+                    continue;
+                  }
+                  throw error;
+                }
+
+                if (branchInfo.protected) {
+                  core.info(`SKIP protected branch: ${branch}`);
+                  continue;
+                }
+                if (branchInfo.commit.sha.toLowerCase() !== expectedSha) {
+                  core.info(`SKIP ${branch}: HEAD moved from reviewed SHA ${expectedSha} to ${branchInfo.commit.sha}`);
+                  continue;
+                }
+
+                const ancestry = await github.rest.repos.compareCommits({
+                  owner, repo, base: expectedSha, head: mainSha
+                });
+                if (ancestry.data.behind_by !== 0) {
+                  core.info(`SKIP ${branch}: ${ancestry.data.behind_by} branch commit(s) are not ancestors of ${defaultBranch}; verify squash/rebase integration manually`);
+                  continue;
+                }
+
+                const candidate = {
+                  branch, observedHeadSha: branchInfo.commit.sha,
+                  sourcePr: pr.number, sourcePrMergeSha: pr.merge_commit_sha,
+                  sourcePrMergedAt: pr.merged_at, observedMainSha: mainSha,
+                  status: "CANDIDATE_ONLY_REQUIRES_OPERATOR_AUDIT"
+                };
+                core.info(JSON.stringify(candidate));
+                await core.summary.addCodeBlock(JSON.stringify(candidate, null, 2), "json").write();
+              }
+            }

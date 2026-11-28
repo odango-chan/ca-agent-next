@@ -1,48 +1,92 @@
 # CA-SL 语言基线与版本规范
 
-> 文档类型：规范  
-> 文档版本：0.1.3  
-> 状态：待评审  
-> 修订日期：2026-11-25  
+> 文档类型：语言版本与运行时消费规范  
+> 文档版本：0.2.10\
+> 状态：历史 CA-SL v1alpha5 FROZEN / RELEASED；**下一正式目标 CA-SL 1.6.0 DESIGN / NOT_RELEASED**，设计待评审；Compiler/Bundle 产品门槛未完成
+> 修订日期：2026-11-28
+> 关联 IR：IR-003、IR-006；SR-023、SR-013  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
-> 本文局部非目标：生产级准入、签名、完整性体系和 Trust Registry  
+> 本文局部非目标：旧版兼容、Agent 内置 Compiler、Skill Admission、签名、Trust Registry 和额外 SHA-256
 
-关联 [IR-006](../IR/IR%20总登记册.md#ir-006)、IR-003。
+## 1. 当前正式语言基线
 
-## 1. 发布与候选
+**版本决策（Issue #40，2026-11-26）：新增作者与产品实现统一面向 CA-SL 1.6.0，不再创建 v1alpha6 版本。** 已发布的历史语言规范仍为 `connectionagent.io/v1alpha5`（冻结不可变），但它不再是新产品链的目标。Next 中央设计已唯一冻结新 `languageTarget=connectionagent.io/v1.6.0`（见《CA-SL 1.6.0完整语言规范》v0.2.10 与 Compiler 设计 §5.1.1）；**ca-skills 作者 Schema/Golden/Release 和 Compiler 新 Artifact/BuildRequest/BuildResult 的正式 Schema/Golden/Release 仍未发布**。生产者必须按同一中央设计值实现和发布，不得另造别名、把历史 Artifact 重命名或宣称现已发布。无旧版兼容解析与自动迁移。
 
-现行语言版本为 `connectionagent.io/v1alpha5`。2026-11-25 同版本刷新已冻结并发布；[规范正文](https://github.com/odango-chan/ca-skills/blob/18d8184367982ccbc835756136c4a53f9096c3a0/docs/skill-language-spec.v1alpha5.zh-CN.md)固定在提交 `18d8184367982ccbc835756136c4a53f9096c3a0`，见[发布记录](https://github.com/odango-chan/ca-skills/blob/main/docs/releases/ca-sl-v1alpha5.md)。IngressCatalog 与诊断注册沿用各自冻结版本，2026-11-17 基线按发布记录保留。
+完整规范正文已迁入 Next：[CA-SL v1alpha5 完整语言规范](CA-SL%20v1alpha5完整语言规范.md)。迁移来源是 ca-skills 发布规范提交 18d8184367982ccbc835756136c4a53f9096c3a0；ca-skills PR #88（规范刷新）和 PR #89（发布记录固定）均已合并。
 
-[ca-skills #88](https://github.com/odango-chan/ca-skills/pull/88) 已合入并成为正式发布来源。发布版 §11.3、§12.8、附录 M 对应 SA-001～SA-012。移交时保留完整发布规范、引用、原提交和修订历史。正式切换前由 SR-023 核验源文件完整性、章节引用、Schema、示例、规范锁及发布入口。本稿仅建立中央版本登记与变更边界。
+权威来源：
+- [ca-skills PR #88](https://github.com/odango-chan/ca-skills/pull/88) — 2026-11-25 09:08 UTC MERGED。
+- [ca-skills PR #89](https://github.com/odango-chan/ca-skills/pull/89) — 2026-11-25 09:10 UTC MERGED。
+- [固定发布规范提交](https://github.com/odango-chan/ca-skills/blob/18d8184367982ccbc835756136c4a53f9096c3a0/docs/skill-language-spec.v1alpha5.zh-CN.md)。
+- [发布记录](https://github.com/odango-chan/ca-skills/blob/main/docs/releases/ca-sl-v1alpha5.md)。
 
-## 2. Next 技能作者与执行边界
+源仓当前 main 的规范文件头部仍有 Proposed Refresh / Normative Candidate 表述，而 Release Record 已记录正式发布。为避免误用，本仓以 Release Record 指向的不可变提交作为规范发布身份；源仓头部状态不一致列为待清理项，不改变已合并 PR 和 Release Record 的事实。
 
-[技能与确定性保障格式规范](技能与确定性保障格式规范.md) 定义 Next 作者源及消费包边界。SKILL.md 必需；可选 Assurance 包含 contract、procedure 和 predicates。Contract 顶层可选 `when` 为已发布作者语义。存在 Assurance 时校验失败须拒绝。节点 Precondition、Operation、Observation、Postcondition 与执行期 Predicate 的冻结语义仍沿用语言发布基线。
+### 新发布物的数字版本
 
-发布版 §12.8 中的作者源导入与构建适用于作者工具；Next 运行时产品只导入正式发布包。中央语言刷新须明确这两个产品边界并验证对应入口。
+**历史 Compiler v2.1.0 的**两个 Development Interface Package 的 `package.json.version` 与各自 snapshot key 均为 `1.0.0`。新设计的 Runtime Artifact 与 BuildResult 候选版本段为 `2`，按 SR-013 的 Owner 契约确认及发布流程冻结。复核已有发行物时按固定 revision 读取原始路径、`apiVersion`、`languageTarget`、Schema `$id` 和字节；新 languageTarget 已由 Next 中央设计固定为 `connectionagent.io/v1.6.0`，其 Schema/Golden 与正式产品 Release 仍须由 ca-skills/Compiler Publisher 发布并按互操作契约核对；**不迁移旧版机器标识**，不实现旧标识别名或兼容输入。
 
-## 3. 候选规范评审与 DSH 恢复输入
+## 2. Next 作者与运行时消费边界
 
-对照 [ca-skills #88 的固定候选](https://github.com/odango-chan/ca-skills/blob/2eedf4231075b6c589212d7d25576c7abbe6a5d9/docs/skill-language-spec.v1alpha5.zh-CN.md#m4-skill-import-与编译边界) 评审以下改动。下表保留评审输入。最终条款与交接状态见 §3.1。
+- SKILL.md 必需。
+- Assurance 可选；不存在 Assurance 的 Skill 可用于 LLM-guided，不要求 Compiler。
+- Assurance 存在时必须整体有效；导入失败不得降级成 SKILL.md-only。
+- 有效发布 Assurance Artifact 可用于 Deterministic 和 LLM-guided。
+- Compiler 只从 `skills/<skill-id>/assurance/contract.yaml` 读取、校验并编译可选顶层 when。SKILL.md Front Matter 不声明 when。
+- SBI JSON 直接采用 OpenAMSM 对应版本的 3GPP/OpenAMSM 正式 OpenAPI YAML，保留原件及其引用。NAS/NGAP 二进制经 Codec 解码，解码字段遵循 Codec 发布的结果 Schema。`format: binary` 只描述传输形式。选择期只读取当时已存在的输入，Request Schema 解析与 when 的静态类型检查遵循正式 CA-SL / Compiler 契约。
+- predicates.yaml 只描述执行期 Predicate；when 只负责新 Event 的 Skill 选择。
+- 新 **1.6.0** Node 仍具有 Precondition、Operation、Observation、Postcondition 四阶段，Wait/Procedure Graph 的精确语义由 ca-skills 下一正式作者规范冻结；Operation/Observation 只是 Node 阶段，不新增 Skill-facing Operation ID。历史 v1alpha5 的 Node、Wait 与 Procedure Graph 只读留档，新实现只消费正式 1.6.0 契约。
+- Next Agent 只导入正式发布 Bundle，不读取作者源进行运行时编译，不内置或调用 Compiler。
 
-| 候选条款 | 拟澄清的行为 | 验收输入与可观察结果 |
-|---|---|---|
-| M.4、SA-002／003 | 作者工具校验完整 Assurance，调用外部 Compiler 构建和验证，再交由发布流程。Next 运行时接受 SKILL.md-only 或正式发布的 Assurance Bundle。 | 有效作者源生成可验证产物；缺失或无效 Assurance 失败。向 Next 导入作者源包应失败，不能降级成 SKILL.md-only。 |
-| M.4、SA-009 | Next Importer 对正式发布 Bundle 做受支持版本、结构、文件、引用和类型检查。Compiler 的构建与验证在发布流程完成。 | 有效 Bundle 导入成功且两个模式可选。损坏、路径无效或类型数据不可解码的 Bundle 导入失败。两组都验证 Host 无 Compiler 调用。 |
-| M.4、SA-011 | AI 编辑走与用户编辑相同的作者校验、编译和发布路径。已运行的 Catalog generation 直到显式导入成功后才切换。 | 只编辑未发布的 Assurance 源，当前 Run 和生效目录不变；导入新发布 Bundle 后，新事件使用新 generation。 |
-| M.2／M.3、SA-008 | 建议在新事件上，将声明了 requestSchema 但 payload 不匹配的 Assurance Skill 排除在两个候选集合之外。保留 Schema 不匹配诊断，区分 CEL 求值错误。 | A 无 when 且 requestSchema 要求整数 requestType，B 为 SKILL.md-only。输入 requestType 为字符串且无显式匹配，候选只含 B。把输入改为整数后，A、B 均进入语义候选。规范负责人需确认此预期。 |
+## 3. when 的发布与运行时依赖
 
-**DSH 恢复证据**包括正式语言规范 SHA 与发布记录、对上表各项的规范决议或采用的替代语义，以及 READY 的 SR-013。规范确认后，将对应正反例纳入 AC-013-01 的跨语言 fixture 或 SR-004～006 的 Host fixture，按职责分别取证。正式发布证据已核对。SR-013 的 READY 审查和环境、授权检查仍待完成。
+**历史事实：**`when` 曾进入 v1alpha5 发布，但不构成新产品入口。**1.6.0 唯一目标**中 `when` 仅在 `assurance/contract.yaml` 顶层；Compiler 以 Publisher 冻结的 Event metadata、当前 Skill 的 Request Schema 进行 CEL 解析、静态类型检查，并编译 CheckedExpr/DescriptorSet。`has()`、nullable、短路和 G.4 Guard 的新正式剖面由 ca-skills Publisher 与 Compiler #62 冻结，不把历史 Profile 直接视为 1.6.0 已发布语义；T1 不能读取 T2 Codec Result。
 
-### 3.1 正式发布复核
+但语言规范发布不等于 Compiler 发布物已完成：
+- ca-skill-compiler Issue #61 当前 OPEN，但仅对应 v1alpha5 历史范围；CA-SL 1.6.0-only 新 Compiler 实施由 Issue [#62](https://github.com/odango-chan/ca-skill-compiler/issues/62) 独立跟踪。
+- Compiler v2.1.0 当前 ContractAST 尚无 when 节点。
+- 冻结 Artifact v1alpha5 不得原地添加 when 字段/文件。
+- Development Artifact v1alpha1 保持 NOT_ADMITTED，不可作为 Next 可运行 Skill Bundle。
+- CA-SL 1.6.0 新版发布 Artifact、CheckedExpr、DescriptorSet 和 Python cel-expr-python 互操作必须由 Issue #62 的实现和正式 Release 证明；Issue #61 不作为 1.6.0 依据。
 
-[固定发布正文](https://github.com/odango-chan/ca-skills/blob/18d8184367982ccbc835756136c4a53f9096c3a0/docs/skill-language-spec.v1alpha5.zh-CN.md)的 M.4／SA-002、009、011 区分作者编译与 Agent Bundle 导入，运行时消费不调用 Compiler，也无需独立 Admission。M.3／SA-012 规定请求 Schema 失配时排除该 Skill、记录诊断且跳过 CEL。Go/Python 互操作与 Host fixture 验收仍为 NOT_RUN。
+Next 不得通过重新解析 CEL 原文、DynType 或自制 evaluator 绕过该依赖。Compiler 产物未发布前，带 when 的 Assurance Bundle 不得声称跨语言运行时互操作 PASS。
+
+## 4. 规范变更规则
+
+CA-SL 语义变化必须：
+1. 在 Next 的 EC01 中登记 IR/SR、语义变化与受影响的消费者，由 ca-skills 维护作者源、发布记录与可核对的规范版本。
+2. 按已冻结的唯一 `languageTarget=connectionagent.io/v1.6.0` 验证正式 Schema/Golden、示例、旧版破坏性边界与拒绝旧输入的行为；**不在实施阶段重新选定该机器标识**。
+3. 通过规范评审和正式发布记录。
+4. 更新 Next 完整规范副本、F02/F08/F09 设计、SR-023/SR-013 和文档索引。
+5. 对旧冻结 Artifact 采取新版本契约，不原地改变字节或语义。
+
+## 5. 非目标
+
+不引入旧版兼容、Agent 内置 Compiler、运行期编译、独立 Skill Admission、审批、签名、Trust Registry、额外 SHA-256 或第二套选择条件语言。
+
+## 6. 下一正式语言目标：CA-SL 1.6.0（未发布）
+
+本节依据 [Issue #40](https://github.com/odango-chan/ca-agent-next/issues/40) 的最新版本决策；独立 SR-029 负责 Capability-first 作者语义及跨模块闭环。**“1.6.0”是下一个正式发布目标，不是“v1alpha6”的别名，也不是已经发布的 Runtime 契约。**
+
+- Skill-facing Contract / Procedure 仅使用 Capability ID，不再用 `tool: alias::CALLABLE_ID`；Skill-facing Capability 与公开 Callable **一对一**。Callable ID 保留在内部 Package/Compiler/Provider/Runtime 绑定和诊断中。
+- Operation / Observation 仍为 Node 阶段而非外部 Operation ID，按 Callable kind、Effect、Schema 校验；Compiler 必须链接出唯一 Capability→Callable Binding。Provider 内部可用封闭枚举路由多个 backend handler，但不能扩大 Skill Scope。
+- 1.6.0 的作者示例、Schema、Compiler API、Runtime Artifact、Provider/Owner 发布身份、ca-skills Bundle、Studio 浏览及真实回归须按 SR-029、SR-013、SR-027 和相关模块分别冻结/验收；**Compiler #61 针对历史 v1alpha5 的 when 设计不自动等同 1.6.0 产品发布；1.6.0 Compiler 新实施由 #62 独立追踪**。
+- 当前未发布 1.6.0；只可规划新实现，不得把旧 `v1alpha5` Builder、Development v1alpha1 Artifact，或虽中央冻结但尚未正式发行 Schema/Golden/Release 的 `connectionagent.io/v1.6.0` 当作已发布可消费的 1.6.0 产品契约。
+- **全链路单版本约束：** 新 ca-skills 作者源、新 Compiler Check/Build/Verify 与 BuildRequest/BuildResult、新 Runtime Artifact、新 Agent Importer/Runtime、Skill Studio 只支持 **CA-SL 1.6.0**。不解析/编译/导入/执行历史 v1alpha5 或任何 v1alpha6 候选；不建立双语法、版本协商、兼容映射、fallback、自动转换或 Agent 内编译。旧 Skill 必须由作者按 1.6.0 重新编写、由新 Compiler 重新构建和发布，**不提供迁移工具**。旧包和旧 `languageTarget` 在新运行时均明确拒绝；历史 v1alpha5 规范、Release Record 与 Artifact 字节只读留档，仅供审计溯源。
 
 ## 修订记录
 
-| 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
-|---|---|---|---|---|---|
-| 2026-11-25 | 0.1.0 | Codex / GPT-6 | 全文 | 整合已核对的跨仓基线和候选变更，建立分仓验收入口。 | F02 · IR-003 / IR-006 · SR-023 |
-| 2026-11-25 | 0.1.1 | Codex / GPT-6 | §3 | 固定候选冲突、拟澄清语义与正反例，明确 DSH 恢复输入 | F02 · SR-013 · SR-023 |
-| 2026-11-25 | 0.1.2 | Codex / GPT-6 | §1、§3.1 | 固定已澄清候选与正式发布门槛 | SR-013、SR-023 |
-| 2026-11-25 | 0.1.3 | Codex | §1–3 | 固定已发布 SHA，复核导入和候选资格条款 | #5、SR-013、SR-023 |
+| 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
+|---|---|---|---|---|---|---|
+| 2026-11-25 | 0.1.3 | 原记录 | 全文 | 建立 CA-SL v1alpha5 发布登记 | 见修改内容列（历史合并记录） | IR-006 |
+| 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | §1–5 | 核对 #88/#89 合并状态，迁入完整规范正文，明确源仓状态差异与 Compiler #61 未完成边界 | 见修改内容列（历史合并记录） | Issue #12；SR-023；SR-013 |
+| 2026-11-25 | 0.2.1 | Codex / GPT-6 | 正文 | §4 对齐中央设计与语言发布责任 | 见修改内容列（历史合并记录） | Issue #12 |
+| 2026-11-26 | 0.2.2 | Codex / GPT-6 | 见本行变更 | 区分数字版本的新发布物和固定来源的实际机器标识 | 见修改内容列（历史合并记录） | Issue #12 |
+| 2026-11-26 | 0.2.3 | GPT-6.2（ChatGPT） | 文档头、§1、§6、修订记录 | 根据 Issue #40 明确下一正式目标改为 CA-SL 1.6.0（不使用 v1alpha6），定义 Capability-first 与历史冻结发布边界；避免反复 alpha 命名、静默重解释 v1alpha5 或提前宣称 1.6.0 已发布 | 见修改内容列（历史合并记录） | Issue #40；SR-029；SR-004；SR-013；SR-027 |
+| 2026-11-26 | 0.2.4 | GPT-6.2（ChatGPT） | §1、§4、§6、修订记录 | 将无兼容要求冻结为 1.6.0 全链路单版本强制规则：不接受旧语法、旧 Build DTO、旧 Bundle、旧 Artifact、迁移或 fallback；历史记录仅审计留档，不让旧产物成为新版合法输入 | 见修改内容列（历史合并记录） | Issue #40/#43；SR-029；SR-004 |
+| 2026-11-27 | 0.2.5 | Codex | §2 | 对齐 1.6.0 作者源、输入 Schema 与编译职责 | 见修改内容列（历史合并记录） | Issue #40、#43；PR #44 |
+| 2026-11-27 | 0.2.6 | GPT-6.2（ChatGPT） | 文档头、修订记录 | 合并 #45 的 1.6.0-only 设计增量并保留恢复分支当前状态，避免回滚 #44 与后续修订。 | 见修改内容列（历史合并记录） | Issue #12/#40/#43；PR #44/#45 |
+| 2026-11-27 | 0.2.7 | GPT-6.2（ChatGPT） | §3/§6 CA-SL 1.6.0 版本边界 | 将 1.6.0 新发布 Artifact 的实施追踪改为 Compiler #62，保留 #61 历史范围。；原因：让版本规范和跨仓实施追踪保持一致，避免版本目标错位。 | 见修改内容列（历史合并记录） | Issue #40/#62；PR #45 |
+| 2026-11-28 | 0.2.8 | GPT-6（ChatGPT） | §1～3、§6、修订记录 | 在 #46 整合分支中保留已合 #45 的 when 唯一来源、Compiler #62 与历史只读边界，同时合并 #46 的 Node/Guard/CheckedExpr 显式约束，状态仍 DESIGN / NOT_RELEASED | 防止分叉分支单侧覆盖 1.6.0-only 权威语义 | Issue #12；#40；PR #45；#46 |
+| 2026-11-28 | 0.2.9 | GLM-5.3（DeepSeek Harness） | 修订记录 | 将 6 列历史修订表统一为 7 列标准结构 | 关闭 R3-LEDGER-01 同族列宽失配 | Issue #12；PR #46；Review #6095143611 |
+| 2026-11-28 | 0.2.10 | GPT-6（ChatGPT） | 文档头、§1、§2、发布门槛、修订记录 | 与 CA-SL 1.6.0 v0.2.10 和 Compiler v0.2.22 §5.1.1 对齐：Next 已冻结唯一 languageTarget=connectionagent.io/v1.6.0；正式 Schema、Golden 与 Release 仍未发布，未实现产品接口 | 消除“机器标识需由生产者再次选择”与已冻结中央设计的矛盾，保留严格的生产者发布证据门槛 | Issue #40/#50；SR-029；PR #115 |

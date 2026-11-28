@@ -1,0 +1,382 @@
+{
+  "inventory": [
+    {
+      "file": "cases.json",
+      "bytes": 8569,
+      "sha256": "721991006f5d4bb63b624db7d8cfd7ad6df80b1e13f8ac97f92d3b79dc375bbc",
+      "type": "json",
+      "role": "case table"
+    },
+    {
+      "file": "py-results.json",
+      "bytes": 2333,
+      "sha256": "f6abbc68db58590de3d4d261f02412ea2bcdb3f38765723c02d2cf5b9b62930f",
+      "type": "json",
+      "role": "python results"
+    },
+    {
+      "file": "verify-context-only-second_skill.checked.pb",
+      "bytes": 392,
+      "sha256": "329bf1f151f6eaf9a5a24669cee7196e2cb04763c4954d565ecc74bd1fa9d769",
+      "type": "protobuf",
+      "role": "CheckedExpr Any"
+    },
+    {
+      "file": "verify-context-only-second_skill.types.pb",
+      "bytes": 79,
+      "sha256": "cee03f2acef2759d42809e567495ee0f36e90f492402544805762ccdf83f3a70",
+      "type": "protobuf",
+      "role": "FileDescriptorSet"
+    },
+    {
+      "file": "verify-ue-registration-and_chain.checked.pb",
+      "bytes": 586,
+      "sha256": "3fce44c9badde8bee0859abf0e4c440a449a55db92f4dcbb39726cccf6e88555",
+      "type": "protobuf",
+      "role": "CheckedExpr Any"
+    },
+    {
+      "file": "verify-ue-registration-and_chain.types.pb",
+      "bytes": 400,
+      "sha256": "cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215",
+      "type": "protobuf",
+      "role": "FileDescriptorSet"
+    },
+    {
+      "file": "verify-ue-registration-both_absent.checked.pb",
+      "bytes": 317,
+      "sha256": "33ad1ab884c33322890aea17aa91ce3030d965e068fd47d3e0e5222dd5ecccb6",
+      "type": "protobuf",
+      "role": "CheckedExpr Any"
+    },
+    {
+      "file": "verify-ue-registration-both_absent.types.pb",
+      "bytes": 400,
+      "sha256": "cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215",
+      "type": "protobuf",
+      "role": "FileDescriptorSet"
+    },
+    {
+      "file": "verify-ue-registration-both_value.checked.pb",
+      "bytes": 555,
+      "sha256": "e8ff8c893bbe5269bb7acd3130947afa42addeba2281cd943c4f07fea0e50fc7",
+      "type": "protobuf",
+      "role": "CheckedExpr Any"
+    },
+    {
+      "file": "verify-ue-registration-both_value.types.pb",
+      "bytes": 400,
+      "sha256": "cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215",
+      "type": "protobuf",
+      "role": "FileDescriptorSet"
+    },
+    {
+      "file": "verify-ue-registration-double.checked.pb",
+      "bytes": 207,
+      "sha256": "5ad104c8b50743aeb7660fdd2216fd4cf907867856fe85223c5ffcf49a887cac",
+      "type": "protobuf",
+      "role": "CheckedExpr Any"
+    },
+    {
+      "file": "verify-ue-registration-double.types.pb",
+      "bytes": 400,
+      "sha256": "cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215",
+      "type": "protobuf",
+      "role": "FileDescriptorSet"
+    },
+    {
+      "file": "verify-ue-registration-double_max.checked.pb",
+      "bytes": 207,
+      "sha256": "500229a87227ee7da00473416ca20999e803b09e7ca56ab83cf145372441b772",
+      "type": "protobuf",
+      "role": "CheckedExpr Any"
+    },
+    {
+      "file": "verify-ue-registration-double_max.types.pb",
+      "bytes": 400,
+      "sha256": "cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215",
+      "type": "protobuf",
+      "role": "FileDescriptorSet"
+    },
+    {
+      "file": "verify-ue-registration-false.checked.pb",
+      "bytes": 391,
+      "sha256": "d1782eb15e8b5842d390e9850577674e05224460153219b5a02baf404929af4e",
+      "type": "protobuf",
+      "role": "CheckedExpr Any"
+    },
+    {
+      "file": "verify-ue-registration-false.types.pb",
+      "bytes": 400,
+      "sha256": "cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215",
+      "type": "protobuf",
+      "role": "FileDescriptorSet"
+    },
+    {
+      "file": "verify-ue-registration-int64_max.checked.pb",
+      "bytes": 208,
+      "sha256": "7c221abd4b643f8100589843afe6bb9c171c1586dcfda79024ec63c1e167b424",
+      "type": "protobuf",
+      "role": "CheckedExpr Any"
+    },
+    {
+      "file": "verify-ue-registration-int64_max.types.pb",
+      "bytes": 400,
+      "sha256": "cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215",
+      "type": "protobuf",
+      "role": "FileDescriptorSet"
+    },
+    {
+      "file": "verify-ue-registration-missing_kind.checked.pb",
+      "bytes": 391,
+      "sha256": "d1782eb15e8b5842d390e9850577674e05224460153219b5a02baf404929af4e",
+      "type": "protobuf",
+      "role": "CheckedExpr Any"
+    },
+    {
+      "file": "verify-ue-registration-missing_kind.types.pb",
+      "bytes": 400,
+      "sha256": "cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215",
+      "type": "protobuf",
+      "role": "FileDescriptorSet"
+    },
+    {
+      "file": "verify-ue-registration-missing_optional.checked.pb",
+      "bytes": 325,
+      "sha256": "cc1f2f71596109e9f62fd78eeb19fd55648b425024c4a6a21d78bd4ee9584e81",
+      "type": "protobuf",
+      "role": "CheckedExpr Any"
+    },
+    {
+      "file": "verify-ue-registration-missing_optional.types.pb",
+      "bytes": 400,
+      "sha256": "cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215",
+      "type": "protobuf",
+      "role": "FileDescriptorSet"
+    },
+    {
+      "file": "verify-ue-registration-nested.checked.pb",
+      "bytes": 419,
+      "sha256": "31b0ff09ee1db55290eb51cdd98eef55fb94f2c93aa0013ccf435029eecdb266",
+      "type": "protobuf",
+      "role": "CheckedExpr Any"
+    },
+    {
+      "file": "verify-ue-registration-nested.types.pb",
+      "bytes": 400,
+      "sha256": "cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215",
+      "type": "protobuf",
+      "role": "FileDescriptorSet"
+    },
+    {
+      "file": "verify-ue-registration-not.checked.pb",
+      "bytes": 243,
+      "sha256": "022fce70d4c2944aa6eded1d57e9933e4bf4b5a2a60adcab382a28eba776a996",
+      "type": "protobuf",
+      "role": "CheckedExpr Any"
+    },
+    {
+      "file": "verify-ue-registration-not.types.pb",
+      "bytes": 400,
+      "sha256": "cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215",
+      "type": "protobuf",
+      "role": "FileDescriptorSet"
+    },
+    {
+      "file": "verify-ue-registration-nullable_eq_null.checked.pb",
+      "bytes": 317,
+      "sha256": "33ad1ab884c33322890aea17aa91ce3030d965e068fd47d3e0e5222dd5ecccb6",
+      "type": "protobuf",
+      "role": "CheckedExpr Any"
+    },
+    {
+      "file": "verify-ue-registration-nullable_eq_null.types.pb",
+      "bytes": 400,
+      "sha256": "cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215",
+      "type": "protobuf",
+      "role": "FileDescriptorSet"
+    },
+    {
+      "file": "verify-ue-registration-nullable_null.checked.pb",
+      "bytes": 438,
+      "sha256": "32bb2c39b7fa1b248c3aa8db59642421a21be9d136869911ebae08707479a173",
+      "type": "protobuf",
+      "role": "CheckedExpr Any"
+    },
+    {
+      "file": "verify-ue-registration-nullable_null.types.pb",
+      "bytes": 400,
+      "sha256": "cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215",
+      "type": "protobuf",
+      "role": "FileDescriptorSet"
+    },
+    {
+      "file": "verify-ue-registration-nullable_value.checked.pb",
+      "bytes": 438,
+      "sha256": "32bb2c39b7fa1b248c3aa8db59642421a21be9d136869911ebae08707479a173",
+      "type": "protobuf",
+      "role": "CheckedExpr Any"
+    },
+    {
+      "file": "verify-ue-registration-nullable_value.types.pb",
+      "bytes": 400,
+      "sha256": "cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215",
+      "type": "protobuf",
+      "role": "FileDescriptorSet"
+    },
+    {
+      "file": "verify-ue-registration-or_guarded.checked.pb",
+      "bytes": 367,
+      "sha256": "1ef5287d1dc57c4df77b71fb38a9a08d43e51b21af0022e8a14475a436df9435",
+      "type": "protobuf",
+      "role": "CheckedExpr Any"
+    },
+    {
+      "file": "verify-ue-registration-or_guarded.types.pb",
+      "bytes": 400,
+      "sha256": "cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215",
+      "type": "protobuf",
+      "role": "FileDescriptorSet"
+    },
+    {
+      "file": "verify-ue-registration-present_optional.checked.pb",
+      "bytes": 325,
+      "sha256": "cc1f2f71596109e9f62fd78eeb19fd55648b425024c4a6a21d78bd4ee9584e81",
+      "type": "protobuf",
+      "role": "CheckedExpr Any"
+    },
+    {
+      "file": "verify-ue-registration-present_optional.types.pb",
+      "bytes": 400,
+      "sha256": "cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215",
+      "type": "protobuf",
+      "role": "FileDescriptorSet"
+    },
+    {
+      "file": "verify-ue-registration-true.checked.pb",
+      "bytes": 391,
+      "sha256": "d1782eb15e8b5842d390e9850577674e05224460153219b5a02baf404929af4e",
+      "type": "protobuf",
+      "role": "CheckedExpr Any"
+    },
+    {
+      "file": "verify-ue-registration-true.types.pb",
+      "bytes": 400,
+      "sha256": "cdb47fa59989840a4ea58b14464e66ec0557c0f997c5a188fd788cecf49e8215",
+      "type": "protobuf",
+      "role": "FileDescriptorSet"
+    }
+  ],
+  "findings": {
+    "case_count": 18,
+    "case_ids": [
+      "true",
+      "false",
+      "missing_kind",
+      "missing_optional",
+      "present_optional",
+      "nullable_value",
+      "nullable_null",
+      "nullable_eq_null",
+      "both_absent",
+      "both_value",
+      "nested",
+      "int64_max",
+      "double",
+      "double_max",
+      "and_chain",
+      "or_guarded",
+      "not",
+      "second_skill"
+    ],
+    "checked_files": [
+      "verify-context-only-second_skill.checked.pb",
+      "verify-ue-registration-and_chain.checked.pb",
+      "verify-ue-registration-both_absent.checked.pb",
+      "verify-ue-registration-both_value.checked.pb",
+      "verify-ue-registration-double.checked.pb",
+      "verify-ue-registration-double_max.checked.pb",
+      "verify-ue-registration-false.checked.pb",
+      "verify-ue-registration-int64_max.checked.pb",
+      "verify-ue-registration-missing_kind.checked.pb",
+      "verify-ue-registration-missing_optional.checked.pb",
+      "verify-ue-registration-nested.checked.pb",
+      "verify-ue-registration-not.checked.pb",
+      "verify-ue-registration-nullable_eq_null.checked.pb",
+      "verify-ue-registration-nullable_null.checked.pb",
+      "verify-ue-registration-nullable_value.checked.pb",
+      "verify-ue-registration-or_guarded.checked.pb",
+      "verify-ue-registration-present_optional.checked.pb",
+      "verify-ue-registration-true.checked.pb"
+    ],
+    "types_files": [
+      "verify-context-only-second_skill.types.pb",
+      "verify-ue-registration-and_chain.types.pb",
+      "verify-ue-registration-both_absent.types.pb",
+      "verify-ue-registration-both_value.types.pb",
+      "verify-ue-registration-double.types.pb",
+      "verify-ue-registration-double_max.types.pb",
+      "verify-ue-registration-false.types.pb",
+      "verify-ue-registration-int64_max.types.pb",
+      "verify-ue-registration-missing_kind.types.pb",
+      "verify-ue-registration-missing_optional.types.pb",
+      "verify-ue-registration-nested.types.pb",
+      "verify-ue-registration-not.types.pb",
+      "verify-ue-registration-nullable_eq_null.types.pb",
+      "verify-ue-registration-nullable_null.types.pb",
+      "verify-ue-registration-nullable_value.types.pb",
+      "verify-ue-registration-or_guarded.types.pb",
+      "verify-ue-registration-present_optional.types.pb",
+      "verify-ue-registration-true.types.pb"
+    ],
+    "pairing_errors": [],
+    "pairing_ok": true,
+    "type_urls": {
+      "type.googleapis.com/cel.expr.CheckedExpr": 18
+    },
+    "type_url_ok": true,
+    "deserialize_failures": [],
+    "deserialize_ok": true,
+    "descriptor_messages": {
+      "verify-context-only": [
+        "Input",
+        "Event"
+      ],
+      "verify-ue-registration": [
+        "Input",
+        "Event"
+      ]
+    },
+    "descriptor_errors": [],
+    "descriptor_ok": true,
+    "python_uses_deserialize": true,
+    "python_recompiles": false,
+    "python_result_count": 18,
+    "python_all_ok": true,
+    "unknown_not_match": true,
+    "static_rejections": [
+      "cross_skill",
+      "int_double_mix",
+      "unguarded_nullable",
+      "unguarded_optional",
+      "unknown_field",
+      "unsafe_or"
+    ],
+    "static_rejection_count": 6,
+    "go_test_pass": true,
+    "coverage": {
+      "true": true,
+      "false": true,
+      "missing_optional": true,
+      "explicit_null": true,
+      "optional_nullable_missing_vs_null": true,
+      "and": true,
+      "or": true,
+      "not": true,
+      "nested": true,
+      "int64": true,
+      "double": true,
+      "multi_skill": true
+    }
+  }
+}

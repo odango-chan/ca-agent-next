@@ -1,0 +1,176 @@
+{
+  "pluginId": "example.echo",
+  "pid": 65924,
+  "state": "READY",
+  "extensions": [
+    "event.delivery",
+    "event.ingress",
+    "tools"
+  ],
+  "registeredExtensions": 3,
+  "ingress": {
+    "hostCalls": 1,
+    "disposition": "accepted",
+    "ack": {
+      "eventId": "evt1",
+      "disposition": "accepted"
+    }
+  },
+  "tools": {
+    "read": {
+      "status": "result",
+      "result": {
+        "text": "hello"
+      }
+    },
+    "describe": {
+      "status": "result",
+      "result": {
+        "callableId": "echo.describe",
+        "operations": [
+          "echo.read",
+          "echo.describe",
+          "echo.wait"
+        ],
+        "text": "hello"
+      }
+    },
+    "distinctCallables": true
+  },
+  "delivery": {
+    "status": "delivered",
+    "deliveryId": "del1",
+    "responseObligationId": "obl1"
+  },
+  "cancel": {
+    "disposition": "too_late",
+    "targetOperationId": "inv1",
+    "cancelMessageId": "h6"
+  },
+  "terminalReadStatus": "result",
+  "golden": {
+    "path": "tests\\fixtures\\echo-12-frames.jsonl",
+    "sha256": "221a1305188cae1d4bcda74f3b03dfa05366b7af5b0d4421a4a4287b4606aa49",
+    "provenanceSha256": "221a1305188cae1d4bcda74f3b03dfa05366b7af5b0d4421a4a4287b4606aa49",
+    "frames": 12
+  },
+  "frames": [
+    {
+      "direction": "host->plugin",
+      "type": "host.initialize",
+      "messageId": "h1",
+      "correlationId": null
+    },
+    {
+      "direction": "plugin->host",
+      "type": "plugin.ready",
+      "messageId": "m2",
+      "correlationId": "h1"
+    },
+    {
+      "direction": "plugin->host",
+      "type": "ingress.event",
+      "messageId": "m3",
+      "correlationId": null
+    },
+    {
+      "direction": "host->plugin",
+      "type": "ingress.ack",
+      "messageId": "h2",
+      "correlationId": "m3"
+    },
+    {
+      "direction": "host->plugin",
+      "type": "tools.invoke",
+      "messageId": "h3",
+      "correlationId": null
+    },
+    {
+      "direction": "plugin->host",
+      "type": "tools.result",
+      "messageId": "m6",
+      "correlationId": "h3"
+    },
+    {
+      "direction": "host->plugin",
+      "type": "tools.invoke",
+      "messageId": "h4",
+      "correlationId": null
+    },
+    {
+      "direction": "plugin->host",
+      "type": "tools.result",
+      "messageId": "r1",
+      "correlationId": "h4"
+    },
+    {
+      "direction": "host->plugin",
+      "type": "delivery.dispatch",
+      "messageId": "h5",
+      "correlationId": null
+    },
+    {
+      "direction": "plugin->host",
+      "type": "delivery.result",
+      "messageId": "m8",
+      "correlationId": "h5"
+    },
+    {
+      "direction": "host->plugin",
+      "type": "host.cancel",
+      "messageId": "h6",
+      "correlationId": null
+    },
+    {
+      "direction": "plugin->host",
+      "type": "plugin.cancelled",
+      "messageId": "m10",
+      "correlationId": "h6"
+    }
+  ],
+  "pendingAfterStop": 0,
+  "acceptance": {
+    "testedCodeSha": "504ec1b0a35fc761eba621149a94c83d1012626f",
+    "testedCodeShaHistory": [
+      "75195ef7c44b4c9d4988e4842f82d0c61ec8351f",
+      "136a9403d68ba8e5ab0c84ce7db0e08cfb1b5cb4",
+      "11df3825cb0e11809426d4411d885e6e3be0542a"
+    ],
+    "pluginTestCommand": "python -m unittest discover -s tests -p \"test_plugin.py\" -v",
+    "pluginTestCount": 87,
+    "pluginTestResult": "PASS",
+    "hostTestCommand": "python -m unittest discover -s tests -p \"test_host.py\" -v",
+    "hostTestCount": 52,
+    "hostTestResult": "PASS",
+    "hostTestScope": "SR-002 host suite, recorded separately from the SR-003 plugin suite",
+    "compileall": "PASS",
+    "cleanCheckout": {
+      "verified": true,
+      "method": "git clone --depth 1 --branch feature/issue-28-sr-003-plugin-manager -c core.autocrlf=true",
+      "python": "CPython 3.14.6 (venv)",
+      "os": "Windows 10.0.26200",
+      "go": "go1.26.6 windows/amd64 (GOWORK=off)",
+      "install": "python -m pip install -e \".[plugins]\"",
+      "exitCodes": {
+        "clone": 0,
+        "pipInstall": 0,
+        "goBuild": 0,
+        "pluginTests": 0,
+        "hostTests": 0,
+        "compileall": 0,
+        "capture": 0
+      },
+      "log": "docs/验收与实施/证据/SR-003/clean-checkout.log"
+    },
+    "goldenSha256": "221a1305188cae1d4bcda74f3b03dfa05366b7af5b0d4421a4a4287b4606aa49",
+    "goldenSha256Note": "sha256 over CRLF-normalized UTF-8 bytes; the previous value 34ba393a... was the Windows CRLF working-tree digest, not the committed LF blob",
+    "systemEx": {
+      "EX-02": "NOT_RUN",
+      "EX-03": "NOT_RUN",
+      "EX-04": "NOT_RUN",
+      "EX-18": "NOT_RUN"
+    },
+    "providerV2WireContract": "NOT_RUN (assigned to SR-010)",
+    "ci": "NOT_RUN"
+  }
+}

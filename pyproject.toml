@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ca-agent-next"
+version = "0.1.0"
+requires-python = ">=3.11"
+# SR-002 固定 Host 核心无强制运行时依赖。Plugin Manager 的 YAML 1.2 与
+# Draft 2020-12 校验依赖被隔离在可选 extra 中，安装入口（SR-028）：
+#   uv sync --locked --group dev --extra plugins
+dependencies = []
+
+[project.optional-dependencies]
+plugins = [
+    "ruamel.yaml>=0.18,<0.19",
+    "jsonschema>=4.23,<5",
+]
+
+[dependency-groups]
+dev = [
+    "PyYAML>=6.0,<7",
+]
+
+[tool.uv]
+required-version = "==0.13.10"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["ca_agent_next*"]

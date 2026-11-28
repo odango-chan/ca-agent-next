@@ -1,0 +1,19 @@
+﻿python verify-ue-registration/true: true (want true) OK
+python verify-ue-registration/false: false (want false) OK
+python verify-ue-registration/missing_kind: error (want error) OK
+python verify-ue-registration/missing_optional: false (want false) OK
+python verify-ue-registration/present_optional: true (want true) OK
+python verify-ue-registration/nullable_value: true (want true) OK
+python verify-ue-registration/nullable_null: false (want false) OK
+python verify-ue-registration/nullable_eq_null: true (want true) OK
+python verify-ue-registration/both_absent: false (want false) OK
+python verify-ue-registration/both_value: true (want true) OK
+python verify-ue-registration/nested: true (want true) OK
+python verify-ue-registration/int64_max: true (want true) OK
+python verify-ue-registration/double: true (want true) OK
+python verify-ue-registration/double_max: true (want true) OK
+python verify-ue-registration/and_chain: true (want true) OK
+python verify-ue-registration/or_guarded: true (want true) OK
+python verify-ue-registration/not: true (want true) OK
+python verify-context-only/second_skill: true (want true) OK
+total=18 failed=0

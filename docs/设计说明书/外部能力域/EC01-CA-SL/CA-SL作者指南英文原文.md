@@ -1,0 +1,85 @@
+> 迁移来源：docs/authoring.md  
+> 固定源提交：780497a2918ad3e7bdff554ab64b0ba627e867e0  
+> 固定源 Blob SHA：e19768a72ade5481637fb6253c4773c85cbed5b2  
+> 原始状态：历史 v1alpha5 英文作者指南；只读来源  
+> 迁移追踪：ca-agent-next Issue #49 / SR-032。本文保留原始内容供溯源；其 CA-SL v1alpha5 字段、目录和示例不构成 CA-SL 1.6.0 规范。  
+> 注意：原文相对链接按 ca-skills 原目录解析；当前权威规则以 Next 的《SKILL 作者规范》和 CA-SL 1.6.0 语言设计为准。
+> 全局评审范围：继承根目录 Agent.md 的 review_scope  
+> 本文局部非目标：只读历史源文归档；不作为 CA-SL 1.6.0 规范或产品验收证据，不改写原文及源相对链接。
+
+---
+
+# ConnectionAgent Skill Authoring Guide
+
+This guide follows the [CA-SL v1alpha5 Specification](skill-language-spec.v1alpha5.zh-CN.md), the sole normative language authority. v1alpha4 remains an immutable historical target. The author syntax and interoperability profile are frozen; product conformance and executable 5GC migration are separate §45.2 / §L.13.2 gates.
+
+## 1. Source examples
+
+Use the [v1alpha5 PDU Session examples](../examples/README.md) as authoring references for conventional 5GC and OpenAMSM MAS. They require trusted Owner contracts to link. The packages under `skills/` preserve the [legacy 5GC behavior baseline](current-5gc-skill-baseline.md).
+
+## 2. Canonical v1alpha5 Skill package
+
+~~~text
+skills/<name>/
+├── SKILL.md
+├── assurance/
+│   ├── contract.yaml
+│   ├── procedure.yaml
+│   └── predicates.yaml
+├── cases/<case>/case.yaml
+├── references/
+├── schemas/
+└── scripts/
+~~~
+
+The three assurance files have separate responsibilities:
+
+- `contract.yaml`: public Skill declaration — Goal, global Precondition references, public Request Schema, Host Invocation Context Schema, public dependency identities and Capability Grants.
+- `procedure.yaml`: the single execution graph — start and business Nodes with ordered optional phases. Precondition, Operation, Observation, and Postcondition run in that order when declared. An earlier stage's normal outcome advances within the Node. The current stage's `routes` maps each explicit branch to a Node or an Invocation terminal status.
+- `predicates.yaml`: reusable Predicate parameter signatures and CEL / Python evaluators.
+
+The Contract remains author-maintained source. Only redundant wrapper fields and values derivable elsewhere are removed; the public declarations it owns are not deleted. Compiler may derive a normalized Runtime contract from Contract, Procedure, Predicates and dependency snapshots, but that artifact does not replace the source Contract.
+
+### Node-entry Wait (v1alpha5)
+
+Node-entry Wait is optional control evaluated before a target Node's existing business stages. It is not a fifth stage and does not create a Wait-only Node. The accepted event supplies a typed normalized value through that Node's `wait.output` Producer path; it is available only on the accepted-event control-flow path. Timeout is routed through the Wait-scoped `TIMEOUT` route. A paired protocol response boundary is declared separately from the Invocation's terminal Goal proof.
+
+The selected Ingress Operation must come from the exact trusted IngressCatalog dependency. Authors do not declare raw HTTP envelopes, delivery identifiers, correlation handles, tombstones or private response-obligation state. CA-SL v1alpha4 remains unchanged and rejects the v1alpha5 `wait` syntax.
+
+## 3. Contract ownership
+
+| Field | Treatment |
+|---|---|
+| `goal` | Keep: business goal |
+| `requestSchema` | Skill-owned public Request Schema |
+| `contextSchema` | Exact Host-owned Invocation Context Schema |
+| `dependencies` | Alias → stable Package ID string |
+| `capabilities` | Requested Capability IDs |
+| `apiVersion`, `kind` | Omit from source; selected by Compiler Target / file structure |
+| `metadata.name` | Derive from Skill Package root |
+| `entryProcedure` | Omit: one Procedure entry per Skill |
+| `precondition` | Optional **single** `<node-id>.precondition` reference. Its stage may contain multiple `predicates`; only aggregate PASS satisfies the global gate |
+| `postconditions` / `postcondition.goal` | **Not supported**; final Postcondition aggregate `PASS` must route directly to `SUCCEEDED` to prove the Goal |
+| `planning.allowDynamicProcedure` | Omit: static DAG is a language invariant |
+| `planning.maxActions` | Superseded; optional `limits.maxActions` imposes a stricter Skill action bound. Host's positive budget is mandatory |
+| `failureSemantics.outcomeUnknown.requireReconcile` | General safety rule for Mutation UNKNOWN, not a per-Skill toggle |
+
+Dependencies and Capability Grants are different: dependencies make Owner contracts available for linking; grants express the Skill's authorization request. A dependency does not grant permission, and a grant does not provide the ToolCatalog / Schema contract needed to compile a reference.
+
+## 4. Skill Studio creation flow
+
+Studio should guide authors through selection rather than requiring manual entry of Owner IDs:
+
+1. Select public dependencies (Host Context, ToolCatalog, Observation and shared Schema packages).
+2. Select the Host-owned Invocation Context Schema.
+3. Select requested Capabilities from trusted CapabilityContracts.
+4. Create or select the Skill-owned Request Schema.
+5. Generate / update `contract.yaml`; bind exact callable exports while authoring Procedure.
+
+Selections remain editable later in Dependencies / Capabilities views. Studio fetches exact dependency snapshots and supplies them to Compiler. Compiler parses, links and validates only; it does not download dependencies or manage dependency versions.
+
+The Contract maps each dependency Alias to a stable Package ID. The build caller binds that identity and the allowed Owners to the existing snapshot alias and verified digest. Compiler links exact Owner exports. The Contract does not store download locations, version locks or digests. Preserve immutable version markers in Owner Schema IDs.
+
+## 5. Further reading
+
+Use the comprehensive specification for the concept model, Contract / Dependency / Capability ownership, four Procedure node types, Predicate parameters, ToolCatalog, Observation, Evidence, Schema ownership, Script roles, PDU Session examples, exceptional cases and FAQ.

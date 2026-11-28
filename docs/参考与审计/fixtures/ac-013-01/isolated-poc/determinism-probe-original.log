@@ -1,0 +1,10 @@
+﻿=== RUN   TestAC013DeterminismProbe
+checked_expr: reference_map=5 type_map=7
+iterations=200
+default_marshal_distinct=118
+deterministic_marshal_distinct=1
+anypb_new_distinct=107
+anypb_marshalfrom_deterministic_distinct=1
+--- PASS: TestAC013DeterminismProbe (0.01s)
+PASS
+ok  	github.com/odango-chan/ca-skill-compiler/internal/compiler	0.294s

@@ -1,0 +1,28 @@
+﻿=== RUN   TestAC013PocGenerate
+    ac013_poc_test.go:1002: rejected unknown_field: unknown field "unknown"
+    ac013_poc_test.go:1002: rejected unguarded_optional: missing presence guard for input.note
+    ac013_poc_test.go:1002: rejected unguarded_nullable: missing non-null guard for input.wrapped
+    ac013_poc_test.go:1002: rejected int_double_mix: int field compared with double
+    ac013_poc_test.go:1002: rejected unsafe_or: missing presence guard for input.note
+    ac013_poc_test.go:1002: rejected cross_skill: unknown field "token"
+    ac013_poc_test.go:1023: true: wire=((event.type == "create") && (input.count == 1)) go=true
+    ac013_poc_test.go:1023: false: wire=((event.type == "create") && (input.count == 1)) go=false
+    ac013_poc_test.go:1023: missing_kind: wire=((event.type == "create") && (input.count == 1)) go=error
+    ac013_poc_test.go:1023: missing_optional: wire=(has(input.note) && (input.note == "x")) go=false
+    ac013_poc_test.go:1023: present_optional: wire=(has(input.note) && (input.note == "x")) go=true
+    ac013_poc_test.go:1023: nullable_value: wire=(has(input.wrapped.value) && (input.wrapped.value == 5)) go=true
+    ac013_poc_test.go:1023: nullable_null: wire=(has(input.wrapped.value) && (input.wrapped.value == 5)) go=false
+    ac013_poc_test.go:1023: nullable_eq_null: wire=(has(input.both) && has(input.both.is_null)) go=true
+    ac013_poc_test.go:1023: both_absent: wire=(has(input.both) && has(input.both.is_null)) go=false
+    ac013_poc_test.go:1023: both_value: wire=((has(input.both) && has(input.both.value)) && (input.both.value == "ok")) go=true
+    ac013_poc_test.go:1023: nested: wire=(has(input.nested.inner) && (input.nested.inner == "y")) go=true
+    ac013_poc_test.go:1023: int64_max: wire=(input.count == 9223372036854775807) go=true
+    ac013_poc_test.go:1023: double: wire=(input.ratio == 2.5) go=true
+    ac013_poc_test.go:1023: double_max: wire=(input.ratio == 1.7976931348623157e+308) go=true
+    ac013_poc_test.go:1023: and_chain: wire=(((event.type == "create") && (input.count == 1)) && (input.ratio == 2.5)) go=true
+    ac013_poc_test.go:1023: or_guarded: wire=(!(has(input.note)) || (input.note == "x")) go=true
+    ac013_poc_test.go:1023: not: wire=!((input.count == 2)) go=true
+    ac013_poc_test.go:1023: second_skill: wire=((event.type == "create") && (input.token == "t")) go=true
+--- PASS: TestAC013PocGenerate (0.08s)
+PASS
+ok  	github.com/odango-chan/ca-skill-compiler/internal/compiler	0.470s

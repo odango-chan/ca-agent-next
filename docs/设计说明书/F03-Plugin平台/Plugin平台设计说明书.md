@@ -1,17 +1,17 @@
 # Plugin 平台设计说明书
 
 > 文档类型：机制设计说明书  
-> 状态：目标设计，待实现和验收  
-> 文档版本：0.2.2  
+> 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
+> 文档版本：0.3.11
 > 功能归属：F03 — Plugin 平台  
-> 关联 SR：SR-003、SR-010    
+> 关联 SR：SR-003、SR-010、SR-032    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
 > 本文局部非目标：以本文范围与非目标章节为准；无额外扩展  
-> 修订日期：2026-11-25  
+> 修订日期：2026-11-27\
 > 适用范围：Python Plugin Manager、独立进程 Plugin、Package、IPC 与 Extension 分发  
 > 对应规范：[插件包与进程通信协议规范](../../规范/插件包与进程通信协议规范.md)
 
-关联需求项见 [IR-002](../../IR/IR%20总登记册.md#ir-002)、[IR-005](../../IR/IR%20总登记册.md#ir-005)。
+关联需求项见 [IR-002](../../IR/IR%20总登记册.md#ir-002)、[IR-005](../../IR/IR%20总登记册.md#ir-005)、[IR-008](../../IR/IR%20总登记册.md#ir-008)。Host Script Execution 内建 Extension 设计增量由 Issue #49 / SR-032 追踪。
 
 ## 1. 背景与目标
 
@@ -21,10 +21,10 @@
 
 1. 全系统只有一个 Plugin Manager。
 2. 一个 Plugin 进程可以导出一种或多种 Extension。
-3. Tool 是 Plugin 导出的可调用 Operation，不是独立进程。
-4. 一个 Plugin 可以导出多个 Capability，一个 Capability 可以包含多个 Operation。
+3. Tool/Callable 是 Plugin Tools Extension 执行的内部调用身份，不是独立进程；**Operation/Observation 只表示 Procedure Node 阶段**，不是作者级 Operation ID。
+4. 一个 Plugin 可以导出多个 Capability，**一个 Skill-facing Capability 恰好映射一个公开 Callable，且该 Callable 仅归属一个 Capability**；一个公开 Callable 可以通过封闭 selector 在 Provider 内路由多个私有 backendOperationId，绝非多个公开 Operation。
 5. Plugin Manager 负责生命周期、握手、IPC 和 Extension 分发，不负责 Skill 选择、Action 授权或 Owner 结果判断。
-6. Tool Interface Package 是 Tool 契约权威源；Plugin Manifest 不复制 Tool 定义。
+6. Provider Interface Package 负责 Provider 自身导出的 Callable 契约；业务 Owner Contract Package 负责 Owner Callable、Schema、Capability membership 和结果语义；Provider Runtime Bindings 只提供私有执行映射。当前 OpenAMSM MAS Skill 的 `mas::` Callable 来自 Owner Contract Package，不从 ca-client-tools 11-READ Interface Package 推导。Plugin Manifest 不复制 Tool 定义。
 7. ToolCatalog 只是可发现能力的只读视图，不管理生命周期，也不构成第二个 Registry。
 
 ## 3. 组件职责
@@ -34,9 +34,14 @@
 | Plugin Manager | 加载包、校验 Manifest、启动/停止进程、握手、IPC、关联、Extension 分发 | Skill 选择、授权、Owner Commit 判断 |
 | Plugin Process | 实现声明的 Extension，访问自己拥有的资源 | 选择 Skill、扩大 Capability |
 | Event Extension | 解析外部协议并发布规范化 Event | 业务 Skill 映射、Owner Tool 调用 |
-| Tool Extension | 执行 Interface Package 定义的 Operation | 自行授权、声明业务提交 |
+| Tool Extension | 执行 Runtime 已放行的公开 Callable / Owner Operation | 自行授权、声明业务提交 |
+| Host Skill Resource Read Extension | 由 Host 提供的只读内建 Tools Extension；按 F05 契约读取当前 Run 固定 Package snapshot 中的 UTF-8 文本资源 | 读取其他 Skill / Run、宿主任意路径、Package 外资源或写入资源 |
+| Host Script Execution Extension | 由 Host 提供的内建 Tools Extension；执行当前 Skill Package Script Registry 中登记的全部 transform / predicate entrypoint；经统一 Runtime Action Boundary / Plugin Manager 分发 | 执行模型提交的代码、任意路径或命令；访问外部业务系统；扩大 Skill business Capability Scope |
 | Delivery Extension | 按 Host 指令向外部协议响应方交付 | 选择 Run、改变 Owner outcome |
-| Tool Interface Package | Callable ID、Schema、Effect、Capability 和 Owner 结果契约 | 进程生命周期 |
+| Tool Interface Package | Provider 自身导出的 Callable ID、输入/输出 Schema、Effect、Capability membership | Owner 业务 Callable、Owner 结果语义、Provider 私有 backend 映射 |
+| Owner Contract Package | Owner ToolCatalog Callable、Owner IO Schema、CapabilityContracts membership、Evidence Guarantee、Owner Outcomes、Receipt、Commit Proof、Reconcile | Provider 进程和私有 handler |
+| Provider Runtime Bindings | 公开/Owner Callable 到私有 backendOperationId 的映射、HostInvocation 和 privateArguments 来源 | 公开 Tool 契约、Capability 授权和 Owner 语义 |
+| Provider Backend Binding Catalog v2 | Provider 内部 backendOperationId 到 handler、serviceKey、source、Effect 和参数 Schema 的执行映射 | 不公开 Callable/Capability/Owner Outcome，不授权 Skill；Host 不解析或复制 |
 
 ## 4. 包与进程模型
 
@@ -59,10 +64,10 @@ plugins/<plugin-id>/
 1. 读取 plugin.yaml，使用安全 YAML 1.2 解析器，拒绝重复 YAML key。
 2. 校验 API 版本、Plugin 身份、Extension 结构和必填字段。
 3. 解析相对包根目录的可执行文件、Schema 和资源路径；拒绝绝对路径、路径穿越和逃逸包根的符号链接。
-4. 校验 Event Schema，并按引用加载 Tool Interface Package。
+4. 校验当前 Plugin 声明的 Event Schema 与部署选定的工具快照。Plugin 启动可独立于 Skill 导入，Skill 的 required exports 在导入/调用边界按各自声明检查。Provider v2 包由 ProviderV2 Driver 另外读取 Runtime Bindings sidecar；该 sidecar 是私有执行映射，不替代 Provider Interface Package 或 Owner Contract Package。
 5. 启动独立进程，发送 host.initialize。
 6. 接收 plugin.ready，核对 Plugin ID、版本、IPC 版本和实际 Extension 列表。
-7. 只有握手匹配的 Extension 才进入可用状态；失败时该 Plugin 不可用并提供可诊断错误。
+7. 只有整个 Plugin 握手成功才原子注册其声明的所有 Extension；失败时该 Plugin 不可用并提供可诊断错误。
 
 Demo 使用显式安装路径和操作员提供的进程参数。修改 Plugin 后重启 Host 即可，不要求 Marketplace、自动下载、通用安装器、文件监视器或热更新。
 
@@ -89,18 +94,20 @@ messageId、correlationId、eventId、invocationId、deliveryId、responseObliga
 
 ## 7. ca-client-tools 的迁移适配
 
-ca-client-tools 当前 Provider v2 进程协议可以由统一 Plugin Manager 内部的 tools Extension Driver 适配。该适配只是一段迁移桥接，不得演变为永久 Provider Manager、第二套 Tool Registry 或第二条授权路径。
+ca-client-tools v1.2.0 当前发布的是独立 Provider 包，进程协议为 ca-client-tools.provider/v2（长生命周期 NDJSON）。Next 由唯一 Plugin Manager 内部的 ProviderV2 Tools Extension Driver 消费现有 provider.yaml 和 runtime-bindings.yaml，并把 Provider v2 的 initialize/catalog/invoke/cancel 适配为统一 Tools Extension 调用。Driver 只负责进程与协议适配，不得演变为永久 Provider Manager、第二套 Tool Registry 或第二条授权路径。Native Plugin 仍使用本仓统一 Plugin IPC v1alpha1。
 
-Plugin Manager 只转发 Runtime 已检查的调用。Tool Plugin 返回的传输成功不等于 Owner 业务 COMMITTED；Owner Receipt、Commit Proof 和 outcome mapping 由其 Interface Package 与 Runtime 解释。
+Plugin Manager 只转发 Runtime 已检查的内部 Callable。**1.6.0 Provider 的查询子集为 2/2，加上 SR-026 的一个 Codec READ 后全量为 3/3。单包内验证双向唯一，合并部署包后再验证 3/3 且无冲突，Owner 为 24/24（不含 internal-only Reconcile）**。历史 Provider v1.2.0 11 READ 与 Owner v1alpha4 Callable/alias 仅用于源审计，不能作为新 Skill-facing Package 或 Runtime Binding。Provider Runtime Bindings 只提供 backendOperationId、HostInvocation/privateArguments 来源和 Provider observation 定位。三类跨组件契约不得合并成一份 Next 自维护 Catalog；Provider Backend Binding Catalog v2 只在 Provider 进程内部使用，Host 通过显式 catalog 请求核对映射，不解析或复制它。
 
-Codec Operation 如正式发布，也通过同一个 tools Extension 暴露，不建立独立 Codec Plugin/Manager。Codec 具体可调用范围由 Interface Package 和已验收消息子集决定。
+Tool Plugin 返回的传输成功不等于 Owner 业务 COMMITTED。Runtime 必须按 Owner Contract 验证 Receipt 与 Commit Proof；UNKNOWN 保持 UNKNOWN，并按原 Invocation 执行 exact-original Reconcile。
+
+Codec Operation 如正式发布，也通过同一个 tools Extension 暴露，不建立独立 Codec Plugin/Manager。Codec 只有在正式 Callable/Runtime Binding 发布后才可调用；当前 ca-client-tools PR #39 的 Phase C Consumer Migration 未开始。
 
 ## 8. 错误处理
 
 - Manifest、Schema、版本或路径无效：Plugin 加载失败。
 - 握手身份或 Extension 不匹配：Plugin 不可用。
 - IPC 关联不一致、未知消息类型或畸形 Payload：受影响操作失败关闭。
-- Tool 不匹配 Interface Package：调用失败。
+- Tool/Owner Callable 与其锁定 Interface/Owner Contract 不匹配：拒绝加载或调用。
 - Owner outcome UNKNOWN：保持 UNKNOWN，不得由 Plugin Manager 推断为 COMMITTED。
 - Plugin 传输成功：只代表 IPC 层成功，不代表业务 mutation 已提交。
 
@@ -117,19 +124,43 @@ Demo 不增加签名、Trust Registry、包完整性哈希或生产级密钥体�
 
 ## 10. 当前实现状态
 
-Plugin Package/IPC v1alpha1 是 PR #1 中的目标契约，不等于已完成实现。Provider v2 适配是迁移策略；何时切换 Native IPC 需由真实集成验收决定。
+Plugin Package/IPC v1alpha1 是 PR #1 中的目标契约，不等于已完成实现。ca-client-tools v1.2.0 已发布 Provider v2、Interface Package 与 Runtime Bindings；Next 侧 ProviderV2 Driver 仍是目标设计，尚未实现或验收。Native 包走 host.initialize，现有 Provider 平台包走 Provider v2 initialize。部署选择包入口后只进入对应 Driver；启动失败不可换协议重试。
 
 
 
 
 ## 11. 功能归属与外部能力
 
-本说明书属于 F03。SR-003 定义唯一 Plugin Manager 与 Extension IPC；SR-010 定义 OpenAMSM Tool Plugin 与按需 Codec 集成。Tool Interface Package、Provider 和 Codec 的内部契约以 EC03 ca-client-tools 为准；OpenAMSM Event/Delivery Plugin 的内部实现以 EC04 ca-openamsm-plugin 为准。Next 只维护 Manager 生命周期、Extension 分发和消费端边界。
+本说明书属于 F03。SR-003 定义唯一 Plugin Manager 与 Extension IPC；SR-010 定义 OpenAMSM Tool Plugin 与按需 Codec 集成；SR-015 负责将 EC03 的 Tool Interface / Provider / Codec 消费设计集中到 Next。OpenAMSM Event/Delivery Plugin 的内部实现以 EC04 ca-openamsm-plugin 为准。
 
 ### Tool Interface 与 Provider
 
-Tool Interface 绑定 callable ID、参数、结果和 Effect，Provider v2 在工具进程分发。Next 适配通过唯一 Plugin Manager 的 tools Extension；已有 Codec 的接口和发布证据先按 SR-015 固定版本。 详见[分仓证据](../../参考与审计/跨仓设计资产迁移与一致性审计.md)。
+F03.05 的详细设计见 [Tool Interface 与 Provider 集成设计说明书](Tool%20Interface%20与%20Provider%20集成设计说明书.md)。该子设计固定三类跨组件契约：公开 Tool Interface Package、Owner Contract Package、Provider Runtime Bindings，并界定 Provider Backend Binding Catalog v2 的内部边界；同时定义 ca-client-tools v1.2.0 的 ProviderV2 Driver 如何纳入唯一 Plugin Manager。EC03 的 Go 实现、发布物和运行说明仍由 ca-client-tools 维护；Next 不复制其机器契约或实现代码。详见[分仓证据](../../参考与审计/跨仓设计资产迁移与一致性审计.md)。
 
+
+## 12. Capability Package 与 Provider 分发
+
+Capability 是 Skill-facing Package API；Callable 是 Compiler / Runtime / Provider 使用的调用身份。Plugin Manager 仍是唯一 Manager，Provider 仍是 Tools Extension，不新增 Capability Manager、Tool Registry 或第二条授权路径。
+
+Host Skill Resource Read 是 Host-owned 只读 system Capability（逻辑 ID：`host.skill-resource.read`），由 Host 内建 Tools Extension 提供；请求仅含 Package-relative `path`，Host 从当前 Run 绑定 Skill 和不可变 Package snapshot，路径、大小、媒体类型和拒绝语义遵循 F05 §2.1。它不进入 Skill `contract.capabilities`，不生成外部 Capability Binding，也不改变业务 Capability Scope。
+
+Host Script Execution 是 Host-owned system Capability（逻辑 ID：`host.skill-script.execute`），由 Host 内建 Tools Extension 提供一个内部 Callable；它不是 Owner / Provider 业务 Capability，不进入 Skill `contract.capabilities`，也不生成外部 Capability Binding。当前 Skill 的 `scripts/manifest.yaml` 存在登记脚本时，Runtime 即向模型提供该系统 Action；所有登记脚本（包括 purpose=transform / predicate）均可由 LLM 按 Script ID 调用，不设置逐脚本标记或额外 Host 开关。该 Action 仍经统一 Runtime Action Boundary 和现有 Plugin Manager 分发；不新增 Manager、Registry 或 IPC。
+
+- Owner Contract Package 的 CapabilityContracts 与 Provider Interface Package 的 capabilities.json 发布 Capability→Callable membership；Skill-facing 每个 Capability 必须恰好一个 Callable，每个 Callable 也只归属一个 Capability。
+- Plugin Manager 负责 Provider Package 加载、生命周期、握手和 Tools Extension 分发，不授予 Skill Capability，也不把安装状态解释为 Grant。
+- Compiler 在 Build 时完成 Capability Link 并写入 Artifact Binding；Runtime 按该 Binding 派发 Callable。ProviderV2 Driver 只接收已声明的内部 Callable 身份，不让模型选择 Callable。
+- Provider Backend Binding Catalog 仍为 Provider 私有；一个公开 Callable 可根据封闭 Schema selector 路由多个 backendOperationId。Catalog 只做显式 binding availability 核对，不发现或扩张 Skill-facing Capability。
+- Reconcile 是 Runtime Coordinator 专用目标，不出现在 Skill-facing Package Explorer 或模型 Action 列表。
+- Host Skill Resource Read 只读取 F05 §2.1 允许的当前 Package 文本资源，不暴露宿主路径，不读取其他 Skill / Run。
+- Host Script Execution Extension 只解析当前 Run 绑定的不可变 Skill Package snapshot；scriptId 必须命中当前 Skill Registry，输入 / 输出分别按 CA-SL 1.6.0 §8 校验。LLM、Procedure 和 Predicate 共用同一 Runner；Predicate 的 LLM Action 结果不作为 Assurance Outcome / Evidence。模型不得提供 file、entrypoint、Python 源码、模块、命令或任意文件路径。该 Host system Capability 不授权外部副作用，也不改变 Owner / Provider Capability↔Callable 一对一规则。
+- Skill Studio 的能力导航见 F09；Provider 的一对一基数和 MAS 例外见 F03.05。
+
+**1.6.0-only 设计评审硬门槛：** 唯一 Plugin Manager 不增加兼容分发、动态授权或第二套能力管理器。 此章节仅描述目标设计，外部代码/Release/E2E 均 NOT_RUN。
+
+
+### 12.1 1.6.0 模块验收与历史隔离
+
+唯一业务能力路径：Skill 提出业务 Capability，Compiler Artifact 保有唯一 Callable Binding，经 Runtime Scope/kind/Effect/Schema 检查后再由 Plugin Manager Tools Extension 分发。Host Script Execution 是独立的 Host system Capability：Runtime 按当前 Skill 的 Script Registry 校验后，经同一 Plugin Manager 的内建 Tools Extension 执行精确包内 entrypoint；LLM 与 Assurance 共用同一 Script Runner。无业务绑定、重复、阶段不符、错误 Schema、越权 Script ID、任意代码/路径或 Reconcile 由普通 Skill 提出均在 dispatch 前拒绝。历史 11 READ/24:25/Development 1.0.0 仅为历史来源，不证明查询子集 2/2、含 Codec 的 Provider 全量 3/3 和 Owner 24/24 Package 已发布；Plugin IPC 宿主协议本身可继续使用现行冻结规范，不因语言版本更名而修改 IPC wire。
 
 ## 修订记录
 
@@ -137,5 +168,17 @@ Tool Interface 绑定 callable ID、参数、结果和 Effect，Provider v2 在�
 |---|---|---|---|---|---|---|
 | 2026-11-25 | 0.1.0 | 历史修订者/模型未记录 | 原始设计全文 | 既有功能机制设计基线；逐章历史记录未建立 | 原文档未记录历史作者，本轮不臆造 | PR #1 |
 | 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 第 1～10 章 | 归入对应 Feature 并补充外部能力边界 | 按 F03 归档，明确统一 Plugin Manager 与外部 Tool Interface 权威边界 | F03；SR-003/010；EC03/EC04；PR #1 |
-| 2026-11-25 | 0.2.1 | 刷新需求追踪、目录或证据引用 | 对齐最新分支与 IR/SR 基线 | 见关联 SR |
+| 2026-11-25 | 0.2.1 | 未记录（历史资料） | 历史治理刷新 | 刷新需求追踪、目录或证据引用 | 对齐最新分支与 IR/SR 基线 | 见关联 SR |
 | 2026-11-25 | 0.2.2 | Codex / GPT-6 | Tool Interface 与 Provider | 合并有效边界与分仓证据入口 | 跨仓设计移交 | IR-006 |
+| 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | 第 3、5、7、10、11 章 | 拆分 Interface Package、Owner Contract Package 与 Provider Runtime Bindings；固定 Provider v2 迁移 Driver 和 F03.05 子设计入口 | 消除 Owner 结果权威与 Provider 私有映射混淆，按 ca-client-tools v1.2.0 和 ca-agent-demo main 校准 | IR-006 · SR-015 · Issue #12 |
+| 2026-11-25 | 0.3.1 | GPT-6.2（ChatGPT） | 第 3、7、11 章 | 增加 Provider Backend Binding Catalog v2 的内部边界，并引用 11/25/31/44 库存闭合 | 防止将 Provider 私有目录误当作第二份公开 Tool Catalog | IR-006 · SR-015 · Issue #12 |
+| 2026-11-25 | 0.3.2 | GPT-6.2（ChatGPT） | 第 2、3、5、7 章 | 明确 Provider Interface 与 Owner Contract 分别提供不同 Skill-facing Callable；MAS `mas::` 依赖由 Owner snapshot 解析 | 对齐 ca-skills v1alpha5 作者源和 F03.05 契约依赖设计 | IR-006 · SR-015 · Issue #12 |
+| 2026-11-26 | 0.3.3 | Codex / GPT-6 | 见本行变更 | §5、10 明确启动顺序与整包注册，消除依赖当前 Skill 的装载循环 | 对齐跨仓实现与独立复验 | Issue #12 |
+| 2026-11-26 | 0.3.4 | GPT-6（ChatGPT） | 新增 1.6.0 目标章节、状态及修订记录 | 移植一对一 Binding / Selector / Action 设计并标为待评审 | 无旧版兼容或产品完成承诺 | Issue #40；SR-029 |
+| 2026-11-26 | 0.3.5 | GPT-6（ChatGPT） | 历史修订表及修订记录 | 补齐历史缺失列为未记录，保留既有内容，不改历史业务断言 | 保证待审设计的表结构有效 | Issue #40；SR-029 |
+| 2026-11-26 | 0.3.6 | GPT-6（ChatGPT） | 规范性设计与验收门槛 | 修复一对多公开 Operation 误述，明确一个 Capability 仅一公开 Callable | 修复新旧语言/能力运行时冲突 | Issue #12/#40；SR-013/025/029；PR #46 |
+| 2026-11-27 | 0.3.7 | Codex / GPT-6 | §7、12.1 | 区分查询子集和含 Codec 的 Provider 全量 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
+| 2026-11-27 | 0.3.8 | GPT-6.2（ChatGPT） | §3、§12、§12.1 | 增加 Host-owned Script Execution system Capability 与内建 Tools Extension；复用唯一 Plugin Manager / Runtime Action Boundary | 使 LLM 能调用包内共享 Script，同时不增加第二套 Manager 或业务授权 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.3.9 | GPT-6.2（ChatGPT） | §3、§12 | 明确 Host Script Execution 的 LLM Action 还必须受 `scriptExecution.llmEnabled` 配置控制，默认 false | 使 Host 配置与 Runtime / CA-SL 暴露条件完全一致 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.3.10 | GPT-6.2（ChatGPT） | §3、§12 | 移除逐脚本 LLM 标记与 Host LLM 开关；Host Script Execution 默认使用当前 Skill Registry 的全部登记脚本 | 保持 LLM 与 Assurance 的脚本能力一致，不增加第二套授权机制 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.3.11 | GPT-6.2（ChatGPT） | §3、§12 | 将 Host Script Execution 扩展为当前 Registry 全部 transform / predicate Script；新增 Host Skill Resource Read Extension 并引用 F05 精确契约 | 修复 F03 对 Predicate Script 的错误限制，补齐 Host 资源读取的 Plugin Manager 边界 | Issue #49；IR-008；SR-032 |

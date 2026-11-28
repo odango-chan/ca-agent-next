@@ -1,0 +1,151 @@
+name: SR-003 Plugin Manager regression
+
+# SR-028：SR-003 双平台回归矩阵。依赖由 uv 0.13.10 + uv.lock 统一安装，
+# Python 解释器按矩阵显式选择；Go Echo Plugin 由 setup-go 按 go.mod 的
+# go 1.24 directive 安装并原生构建，GOWORK 固定为 off。
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    paths:
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - '.python-version'
+      - '.gitignore'
+      - 'src/**'
+      - 'tests/**'
+      - 'examples/echo/**'
+      - 'scripts/review_context.py'
+      - 'scripts/unittest_gate.py'
+      - 'docs/SR/SR-003-*'
+      - '.github/workflows/review-context.yml'
+      - '.github/workflows/sr003-plugin-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  sr003-regression:
+    name: Module tests (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python-version: '3.12'
+          - os: windows-latest
+            python-version: '3.14.6'
+    env:
+      GOWORK: 'off'
+      PYTHONUTF8: '1'
+      PYTHON_VERSION: ${{ matrix.python-version }}
+    steps:
+      - name: Checkout PR code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Prepare evidence directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual_head_sha="$(git rev-parse HEAD)"
+          test "$actual_head_sha" = "${{ github.event.pull_request.head.sha }}"
+          mkdir -p artifacts/sr028/unittest-gate
+          {
+            printf 'actual_head_sha=%s\n' "$actual_head_sha"
+            printf 'pr_number=%s\n' "${{ github.event.pull_request.number }}"
+            printf 'base_sha=%s\n' "${{ github.event.pull_request.base.sha }}"
+            printf 'head_sha=%s\n' "${{ github.event.pull_request.head.sha }}"
+            printf 'runner_os=%s\n' "$RUNNER_OS"
+            printf 'python_version=%s\n' "$PYTHON_VERSION"
+            printf 'go_work=%s\n' "$GOWORK"
+            printf 'run_id=%s\n' "$GITHUB_RUN_ID"
+            printf 'run_attempt=%s\n' "$GITHUB_RUN_ATTEMPT"
+          } > artifacts/sr028/run-context.txt
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+        with:
+          version: '0.13.10'
+
+      - name: Set up Go from Echo module
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: examples/echo/plugin/go.mod
+          cache: false
+
+      - name: Record Go version
+        shell: bash
+        run: |
+          set -euo pipefail
+          go version | tee artifacts/sr028/go-version.txt
+          test "$(go env GOWORK)" = "off"
+
+      - name: Build native Go Echo Plugin
+        shell: bash
+        working-directory: examples/echo/plugin
+        run: |
+          set -euo pipefail
+          mkdir -p bin
+          rm -f bin/echo-plugin bin/echo-plugin.exe
+          if [ "$(go env GOOS)" = "windows" ]; then
+            go build -trimpath -o bin/echo-plugin.exe .
+            test -f bin/echo-plugin.exe
+          else
+            go build -trimpath -o bin/echo-plugin .
+            test -f bin/echo-plugin
+          fi
+
+      - name: Install and test Linux matrix Python
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv python install "$PYTHON_VERSION"
+          PY="$(uv python find "$PYTHON_VERSION")"
+          "$PY" --version | tee artifacts/sr028/python-version.txt
+          uv sync --python "$PY" --locked --group dev --extra plugins
+          uv lock --check
+          uv run --python "$PY" --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --output-dir artifacts/sr028/unittest-gate
+          uv run --python "$PY" --no-sync --locked --group dev --extra plugins python -m compileall -q src tests
+          uv run --python "$PY" --no-sync --locked --group dev --extra plugins python -m ca_agent_next --smoke > artifacts/sr028/smoke.stdout.log
+          uv run --python "$PY" --no-sync --locked --group dev --extra plugins python tests/capture_sr003_evidence.py > artifacts/sr028/sr003-evidence.json
+
+      - name: Install and test Windows matrix Python
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          uv python install $env:PYTHON_VERSION
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $PY = (uv python find $env:PYTHON_VERSION)
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $version = (& $PY --version)
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Write-Host $version
+          if ($version -ne 'Python 3.14.6') { throw "Expected Python 3.14.6, got $version" }
+          $version | Out-File -FilePath artifacts/sr028/python-version.txt -Encoding utf8
+          uv sync --python "$PY" --locked --group dev --extra plugins
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          uv lock --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          uv run --python "$PY" --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --output-dir artifacts/sr028/unittest-gate
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          uv run --python "$PY" --no-sync --locked --group dev --extra plugins python -m compileall -q src tests
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          uv run --python "$PY" --no-sync --locked --group dev --extra plugins python -m ca_agent_next --smoke > artifacts/sr028/smoke.stdout.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          uv run --python "$PY" --no-sync --locked --group dev --extra plugins python tests/capture_sr003_evidence.py > artifacts/sr028/sr003-evidence.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Upload SR-028 test and Plugin evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sr028-${{ matrix.os }}-${{ matrix.python-version }}
+          path: artifacts/sr028/
+          if-no-files-found: error
+          retention-days: 30

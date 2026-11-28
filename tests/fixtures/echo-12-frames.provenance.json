@@ -1,0 +1,28 @@
+{
+  "sourceDocument": "docs/规范/插件包与进程通信协议规范.md",
+  "sourceRepo": "odango-chan/ca-agent-next",
+  "designSha": "5b097e28e7197603cf3f00e103a0315c4bce0d79",
+  "section": "§5.1",
+  "lineRange": [
+    126,
+    137
+  ],
+  "frameCount": 12,
+  "frameTypes": [
+    "host.initialize",
+    "plugin.ready",
+    "ingress.event",
+    "ingress.ack",
+    "tools.invoke",
+    "tools.result",
+    "delivery.dispatch",
+    "delivery.result",
+    "host.cancel",
+    "plugin.cancelled",
+    "host.shutdown",
+    "plugin.stopped"
+  ],
+  "sha256": "221a1305188cae1d4bcda74f3b03dfa05366b7af5b0d4421a4a4287b4606aa49",
+  "sha256Normalization": "sha256 over the UTF-8 file bytes with CRLF folded to LF; canonical form is the committed LF blob",
+  "sha256Note": "第二轮评审修复轮发现旧值 34ba393a3e67c79cd2a9f36eeb3c38e085d75302a6ff159fc665c0069fb113e2 是 Windows CRLF 工作区字节的摘要，不等于提交 blob 的字节。帧内容（12 帧、messageId、方向）未变；此处改为规范化后摘要，并由 tests/fixtures/.gitattributes 固定 LF。"
+}

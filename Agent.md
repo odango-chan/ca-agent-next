@@ -2,17 +2,19 @@
 
 本文是 ca-agent-next 自动化与 AI 编码协作的入口规则，不是第二份架构文档。功能分类、需求、设计章节和外部能力导航以《功能树与需求追踪基线》为准。
 
-需求入口见[IR 总登记册](docs/IR/IR%20总登记册.md)和[SR 总索引](docs/治理/SR%20总索引.md)。实施批次先确认 IR、目标 SR、设计章节与 Acceptance ID。Next 仅启动 READY 且依赖满足的 SR。按 SR 回填实施 PR/Commit、受测 SHA、命令、环境及验收结果。
+需求入口见[IR 总登记册](docs/IR/IR%20总登记册.md)和[SR 总索引](docs/治理/SR%20总索引.md)。实施批次先确认 IR、目标 SR、设计章节与模块 Acceptance ID。Next 仅启动 READY 且当前实施阶段的实施依赖已满足的 SR。设计评审/READY 不得被下游实施依赖或系统级 EX 阻塞；依赖只阻塞实际消费它的阶段或 AC。模块 AC 与系统级 EX 分开管理，EX 不作为单个模块 SR 的默认实施前置条件。按 SR 回填实施 PR/Commit、受测 SHA、命令、环境及验收结果。
 
 ## 1. 任务开始流程
 
 0. 创建或引用覆盖本批变更的 Issue，并按[治理规范](docs/规范/文档编写与治理规范.md#14-分支命名与生命周期)命名新分支。
-1. 阅读 README.md、本文和 docs/治理/功能树与需求追踪基线.md。
+0.1 对多步骤、多 SR、多仓库或预计跨上下文的长时间运行 Goal，必须在实质性工作前按[SR 管理规范 §9.1](docs/规范/SR%20管理规范.md#91-长时间运行-goal-的启动检查点与进度持久化)建立 GitHub 检查点，记录任务范围、基线、工作清单、状态和唯一 Next Action，并重新读取核验；失败时停止并报告 `CHECKPOINT_NOT_ESTABLISHED`。
+0.2 执行期间每完成一个独立工作项即更新并核验检查点。Goal 中断时先从 GitHub 恢复进度：原 Goal 可恢复则继续原 Goal；不可恢复则创建关联原 Goal/Issue 的续跑 Goal，只处理未完成项，不重启整批、不重复已完成项。规则见[SR 管理规范 §9.2](docs/规范/SR%20管理规范.md#92-goal-中断后的恢复与续跑)。
+1. 阅读 README.md、本文和 docs/治理/功能树与需求追踪基线.md。涉及 mainline 同步/收敛时，还必须阅读 [主干同步与收敛规范](docs/规范/主干同步与收敛规范.md) 和 [主干收敛计划](docs/治理/主干收敛计划.md)。
 2. 根据用户任务、Issue 或 PR 变更识别仓库、Feature / IR / SR。
-3. 检查 SR 状态、依赖和 Acceptance；DRAFT / BLOCKED 不得直接实施。
+3. 检查 SR 状态、依赖类型（设计/实施/模块验收/系统集成）和本次要执行的阶段/Acceptance；只检查本阶段直接消费的依赖。DRAFT / BLOCKED 不得直接实施；READY 仍须通过当前阶段实施门禁。不得把功能阶段顺序、文档引用或系统级 EX 推断成未登记的前置依赖。
 4. 只读取对应功能设计说明书、相关规范、外部 EC 权威文档和验收要求。
-5. 实施前核对仓库、分支、HEAD、工作区和外部依赖当前状态。
-6. 实施后回填 SR、Issue、PR、Commit、Test 和验收证据。
+5. 实施前核对仓库、分支、HEAD、工作区和外部依赖当前状态；评审任务按[SR 管理规范 §9.3](docs/规范/SR%20管理规范.md#93-批量评审的快照与逐项推进)固定本轮最新 Review Snapshot，PR 正常前进不要求漂移快照。
+6. 实施后回填 SR、Issue、PR、Commit、Test 和验收证据。涉及 mainline 收敛时按主干同步规范执行；未获用户明确授权，不得合并 PR 或更新 main。最终合入 main 后按规范检查 OPEN PR / 下游依赖并清理已收编临时分支；evidence/review/verify 分支默认保留。
 
 不要要求每项任务阅读所有设计文档。跨功能任务才同时加载多个 Feature。
 
@@ -21,27 +23,50 @@ DeepSeek Harness 默认使用 Goal 模式。按[SR 管理规范](docs/规范/SR%
 ## 2. 仓库与语言边界
 
 - Agent Core、Host、Agent Model Loop、Skill Importer、Skill Resolver 和 Runtime 使用 Python。
+- Python 工程工具链入口见 [G02 Python 工程工具链与环境管理](docs/设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md)。SR-028 第七轮设计 Review #6084094037 已批准固定设计快照；实施 Issue #96 已存在。PR #99 源 Head `83d23e8c04b1c05eb304c2a24a3392f6459ed0f1` 的独立复核 #6094704264 记录 IMPLEMENTED，AC-028-01～10 候选证据已归档。13 个变更路径已逐项对照 PR #115：`.python-version`、`pyproject.toml`、`uv.lock`、`scripts/unittest_gate.py`、Review Context Workflow、SR-003 双平台 Workflow 六个核心实现 Blob 完全一致；其余 7 个治理/文档路径由 #115 更新版本承接，不以旧文档覆盖新设计。 PR #112 源 Head `dbc0bcbb3a125f143d3648d2cb0331f01368f379` 的 P2-01/P2-02 已关闭；独立 Review #6096938405 给出限定 APPROVE_FOR_READY（0 P0 / 0 P1 / 0 P2）。策略 Bootstrap 47/47、Review Context、SR-003 Ubuntu/Windows 266/266 均 SUCCESS。PR #112 仍保持 Draft，不合并，只作为 #115 的选择性策略来源。 PR #97 源 Head `66a82f09445d5fc32971e91d02b51b7ad6d4ece0` 的状态审计 Review #6096959653 确认 READY 只代表设计快照（依据 PR #46 Review #6084094037）；实际实施由 #99 的 IMPLEMENTED 证据证明。PR #97 六份治理文档已由 #115 更新版本承接，不原样覆盖；PR #97 不合并、不转 Ready。 PR #115 唯一 mainline 集成入口仍为 OPEN / Draft（Base main @ b2ed5eb84114f9c2556a0cd06ed974887b1b70ad），本次代码与策略核验快照 Head `609fb12612c8990a37ba0e174cfacadfd7a7c5d9`；Review Context #46130016832 SUCCESS，Python Toolchain Policy Bootstrap #46130016864 SUCCESS（48/48），SR-003 Regression #46130016833 SUCCESS（Ubuntu 重跑与 Windows 均为 Host 52/52、Plugin 87/87、Review Context 84/84、Total 271/271）。Ubuntu 首次执行在 `test_process_exit_clears_extensions` 出现一次 IPC_TIMEOUT；同一 SHA 的失败 Job 重跑后 271/271 通过，未修改测试或产品代码，作为时序风险保留。当前未合入 main，未标 VERIFIED/RELEASED；PR #115 全量独立复评仍待完成。 不得将候选分支证据误报为 main 已集成或 VERIFIED，也不得将 uv 迁移混入 SR-001 PR #32。
 - 独立 Plugin 可以使用 Go；Go Plugin 不代表 Go Host。
 - ca-agent-demo 是既有 Python 实现和测试证据来源，只能逐文件选择性复用，不得整体复制。
-- ca-skill-compiler、ca-skills、ca-client-tools、ca-openamsm-plugin、env-openamsm 等保有独立实现和发布职责。
-- 所有项目群任务从本仓进入。修改协作仓须获得当前任务的授权，并在本仓登记覆盖目标仓、变更范围和验收的 SR。SR 达到 READY 且依赖满足后方可实施，再回填目标仓 PR、Commit 和验收证据。READY 仅表示具备实施条件，不授予写入权限。合并 PR 和发布 Release 需要单独授权。
+- ca-skills、ca-skill-compiler、ca-client-tools、ca-openamsm-plugin、env-openamsm、env-5gc-sim、ca-skill-studio-demo 等保有独立实现和发布职责；ca-runtime 与 ca-agent 是参考/目标仓，不是 Next 运行时依赖。
+- 项目群所有仓的架构设计、功能设计、协议规范和 ADR 统一集中在 ca-agent-next；其他实现仓保留源码、测试、发布、部署、运行和故障排查文档，并链接回本仓对应 Feature/设计章节。迁移原文必须保留源仓、源路径、固定 SHA 和原始状态，不能把历史提案改写成当前规范。
+- 所有项目群任务从本仓进入。修改协作仓须获得当前任务的授权，并在本仓登记覆盖目标仓、变更范围和验收的 SR。SR 达到 READY 且当前实施阶段的实施依赖满足后方可实施，再回填目标仓 PR、Commit 和验收证据。设计/治理 Issue 与代码实施 Issue 分开；实施 Issue 必须在代码开始前创建。READY 仅表示具备实施条件，不授予写入权限。每批实现必须 Commit、Push 并核对远端 SHA；合并 PR 和发布 Release 需要单独授权。
 
 - 规范或设计尚在评审时，负责人可按 [SR 管理规范 §8.2](docs/规范/SR%20管理规范.md#82-使用评审中的固定提交开展受限实施)批准固定 PR SHA，供 READY 阶段实施和验收。按 SR 记录范围、授权和证据。正式发布、集成和主分支可达性按各阶段要求核对。
+
+### 2.1 当前 Python 工具链入口（SR-028）
+
+从仓库根目录执行，首次或依赖声明变化后先同步，其后测试/脚本一律禁止隐式同步：
+
+```bash
+uv python install
+uv sync --locked --group dev --extra plugins
+uv lock --check
+uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --output-dir artifacts/unittest-gate
+uv run --no-sync --locked --group dev --extra plugins python -m ca_agent_next --smoke
+uv run --no-sync --locked --group dev --extra plugins python scripts/review_context.py --help
+```
+
+Go Echo Plugin 前置：在 `examples/echo/plugin/` 下设置 `GOWORK=off` 后 `go build -trimpath -o bin/echo-plugin .`，Windows 目标为 `bin/echo-plugin.exe`。测试门禁 `scripts/unittest_gate.py` 对 Host、Plugin、Review Context 和完整总计分别要求 discovered>0、tests_run=discovered、skipped=0 且无失败/错误，任一范围失败整体非零。CI 矩阵与 Artifact 契约见 SR-028 AC-028-06～08；历史 pip 入口保留在 SR-002/SR-003/演示验收基线的原始受测记录中。
 
 ## 3. 不可违反的架构约束
 
 - 全系统只有一个 Plugin Manager；Plugin 是独立包/进程，可导出 Event ingress、Event delivery、Tools Extension。
 - Tool 是 Plugin 导出的 Callable Operation，不是独立进程、Manager 或 Registry。
 - 不建立第二 Provider Manager、Tool Registry、Codec Manager、Event Registry 或第二套 IPC。
-- 每个 Skill 必须有 SKILL.md；Assurance 可选。无 Assurance 仅 LLM-guided；有效发布 Artifact 支持 Deterministic 和 LLM-guided；无效发布 Artifact 导入失败。
-- when 是可选 Assurance Contract 的纯 CEL Skill 选择表达式；predicates.yaml 只用于执行期业务判断。
-- Agent 只消费外部已发布 Runtime Artifact，不调用 Compiler Check/Build/Inspect/Verify，不建立 Skill Admission，不导入作者源作为运行时 Artifact。
+- 每个 Skill 必须有 SKILL.md；schemas/、scripts/、references/、assets/ 是 Package 根目录共享资源，Assurance 可选且只含 contract.yaml / procedure.yaml / predicates.yaml。无 Assurance 仍可使用共享资源并仅 LLM-guided；有效发布 Assurance Artifact 支持 Deterministic 和 LLM-guided；无效 Assurance Artifact 导入失败。
+- `when` 是有 Assurance Skill 的 `assurance/contract.yaml` 可选顶层 CEL 选择表达式；Compiler 从 Contract 读取、校验并编译；SKILL.md Front Matter 不声明 when，出现时按未知字段拒绝；无 Assurance Skill 没有 Contract、不声明 when；predicates.yaml 只用于执行期业务判断。
+- Skill 源编写与评审必须遵循[中央 SKILL 作者规范](docs/规范/SKILL作者规范.md)；CA-SL 1.6.0 完整语言规范仍是机器语义的唯一权威。作者规范还规定 Package 根目录共享 Schema / Script、Script Registry、Host Resource Read / Script Execution、SourcePath / arguments、Contract.when、Evidence / UNKNOWN、原有 Node 四阶段与拆分 / 合并、注释原则及 AI Authoring 约束；Skill 层不定义 Wait / await / polling，异步由 Tool / Provider / SMF Operation 与 Host Runtime 负责；v1alpha5 原文只读留档，不提供兼容或自动迁移。
+- Agent 只消费外部已发布 Skill Bundle；存在 Assurance 时同时消费正式 Runtime Artifact。无 Assurance Bundle 可携带共享资源而不生成 Compiler Artifact；Agent 不调用 Compiler Check/Build/Inspect/Verify，不建立 Skill Admission，不把 Assurance 作者源作为运行时 Artifact。
 - Skill 选择先于模式选择；精确 Continuation 恢复原 Run，不重新选择 Skill。
 - SkillCatalog 由 Core/Host 拥有；更新原子切换 generation；在途 Invocation 固定 generation。
-- Deterministic 与 LLM-guided 共用 Runtime Action Boundary；LLM 不得直接调用 Plugin 或扩大 Callable Scope。
+- Deterministic 与 LLM-guided 共用 Runtime Action Boundary；LLM 不得直接调用 Plugin 或扩大业务 Capability Scope。Host 通过 `host.skill-resource.read` 按 F05 §2.1 只读访问当前 Run 的 Package snapshot；当前 Skill 有 `scripts/manifest.yaml` 登记脚本时，Host 即通过 host.skill-script.execute system Capability 向 LLM 提供全部登记 transform / predicate Script，与 Assurance 共用同一 Runner，不设置逐脚本标记或额外 Host 开关。Predicate Script 的直接 LLM 调用不产生 Evidence 或 Assurance Outcome。不得执行模型提交代码、任意路径、Evidence 或命令。
 - Owner Receipt / Commit Proof 是 mutation 结果权威；HTTP 200、IPC 成功或 Delivery 成功不能替代；UNKNOWN 不得变成 COMMITTED。
 - SBI 可携带 JSON、multipart 和二进制。Event Plugin 处理协议；Host 管理 ArtifactStore；Codec 按需作为现有 Tool Plugin 的 Operation 调用。
+- Event/Delivery Plugin 本地 staging 与 Host→Tool Artifact Channel 是两条不同路径。历史契约 `ca-host.artifact-store/v1` 已冻结，ca-client-tools Provider v1.2.0 已消费、ca-agent Go Host main 447d0cc 有 P1 外部参考证据；v1 的随机 opaque artifactRef、Invocation/direction/slot 绑定、loopback HTTP/1.1、大小/生命周期限制、逐 Artifact SHA-256 传输校验和原子发布只作历史外部契约，该 SHA-256 不是引用身份或内容寻址，也不是 Next 1.6.0 实施要求。Next 1.6.0 Demo 的唯一目标为 `ca-host.artifact-store/v2`（no-hash）：随机 opaque artifactRef、Invocation/direction/slot 绑定、loopback HTTP/1.1、mediaType/Content-Length/byteLength/配额和原子发布；不计算、不传输、不校验 SHA-256/checksum/digest，不提供 v1↔v2 Adapter、双轨或 fallback。Next Python Host 的 ArtifactStore / Channel 尚未实现，因此 Next 的 artifact-bearing Provider binding 仍必须 NOT_CONFIGURED，并在远端 I/O 前拒绝。不得把 Event stagingPath 传给 Provider，不得将原始 bytes/Base64 放入 NDJSON。
 - 不增加 activation.yaml、constraint.yaml、supportedModes、Domain/Task Contract Package、第二份 Skill Descriptor、旧版兼容、额外 SHA-256、签名或 Trust Registry。
+- **CA-SL 1.6.0 单版本、绝不兼容旧版（Issue #40 / IR-008 / SR-029）**：下一正式作者/Compiler/Runtime/Studio 语言目标只采用 1.6.0，不再使用 v1alpha6 命名。Skill 作者只引用 Capability ID，每个 Skill-facing Capability ↔ 唯一公开 Callable；Operation/Observation 是 Node 阶段，不创建独立 Operation ID。Compiler 将 Capability 静态链接为唯一 Callable Binding；Runtime 仅按已编译 Binding 的 Scope/kind/Effect/Schema 派发；Studio Package Explorer 只展示 Capability。
+- 新 Compiler 的 Parser、BuildRequest/BuildResult、Check/Build/Verify、Runtime Artifact，Agent Importer/Runtime、Studio 和 ca-skills Bundle **一律不接受旧 CA-SL v1alpha5、旧 Build DTO、旧 Artifact/Bundle、旧式 Callable 作者源**。无兼容层、版本协商、双轨、别名、fallback、自动迁移或转换器。历史 Release/Golden 仅只读留档，不得作为 1.6.0 产品 PASS；旧 Skill 必须重写、重新编译和发布。
+- CA-SL 1.6.0 的机器身份 `languageTarget=connectionagent.io/v1.6.0`、Compiler Release SemVer 3.0.0 及 BuildRequest / DependencyInspection / BuildResult / Artifact `/2` 已由 Next 中央设计冻结，实施时不得重新选择或引入别名；正式作者 Schema、Golden、Compiler 二进制/Release、Owner/Provider 一对一 Package、Compiler Artifact/Binding 与 Bundle 仍须各 Publisher 正式发布并有新 Golden/CI 实证，当前 **1.6.0 NOT_RELEASED**。设计文档标记为待评审并不等于 SR READY，更不等于代码实施授权。只读取本分支正式目标文档，不从历史参考原文构造新运行时兼容路径。
+
 
 ## 4. Demo DFX 边界
 
@@ -57,6 +82,8 @@ DeepSeek Harness 默认使用 Goal 模式。按[SR 管理规范](docs/规范/SR%
 - 不因每个 Issue 新建设计文档；SR 记录需求范围和验收，功能设计说明书记录完整机制设计。
 - 每份正式文档维护修订记录，记录日期、修订者/模型、章节、修改内容、原因和关联 Feature/SR/Issue/PR/Commit。历史未记录的信息不得猜测。
 - 项目群设计按功能集中到 Next；移交须核对发布版本、中央章节、历史和目标仓 SR。
+- 外部仓的架构、设计、规范、ADR 迁入 Next 后，外部仓只保留实现/测试/发布/运行资料及指向 Next 的链接；不得在兄弟仓维护第二份权威设计副本。迁移原文应放入参考/归档目录，附 source repository、source path、fixed SHA、source status；Next 目标设计必须从未实现视角独立写全，并另行核对当前代码/测试/PR/运行证据。
+- 任何文档刷新都同步更新功能树、文档总索引、SR 总索引、实施状态和跨仓迁移审计；静态链接通过不代表设计 READY，设计 READY 不代表代码 PASS。
 
 ## 6. 全局评审范围（机器可读）
 
@@ -148,14 +175,34 @@ review_scope:
 ~~~
 <!-- REVIEW_SCOPE:END -->
 
-## 7. 修订记录
+## 7. 证据默认自动归档规则（2026-11-27）
+
+所有实施、SR/AC 验收、独立评审、整改与复验产生的有效原始证据，**默认自动**归档到对应 GitHub Issue，不需要负责人逐次提醒或批准。完整规则与例外见 [SR 管理规范 §12](docs/规范/SR%20管理规范.md#12-证据默认自动归档与上传规则)。
+
+- **及时归档。** 任务阶段完成后即上传，不得等整个项目结束才集中归档；多轮复验保留每轮固定 SHA、Run ID 与证据，不覆盖旧证据。
+- **可追溯。** 沿用 [SR 管理规范 §12.2](docs/规范/SR%20管理规范.md#122-归档目标与格式) 的文件命名与分卷规则；同一源文件的重试复用既有可访问入口。每个 AC 对应一组明确证据；Issue 归档评论至少包含固定受测 SHA、可访问的下载入口、文件数量与大小、AC 映射、已归档/未归档项、脱敏说明和独立复核入口；PR 必须链接对应 Issue 的归档评论。
+- **原始证据优先。** 本地路径、终端截图和文字总结不能替代可访问的原始文件；CI Artifact 优先直接链接，必要时另行打包归档，避免重复上传大型文件。
+- **先检查后上传。** 上传前检查 Token、密码、Cookie、认证信息和个人路径等敏感信息，必要时脱敏并记录范围，且不得破坏证据间对比关系。
+- **失败即待归档。** 证据上传失败时任务状态标记为 `EVIDENCE_PENDING`（或相应未完成状态）；对应 AC 不得判 PASS，SR 不得推进 VERIFIED。
+- **不新增平台。** 不引入新的签名、Trust Registry、包完整性校验或生产级证据平台。
+
+## 8. 修订记录
 
 | 日期 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
 |---|---|---|---|---|---|
+| 2026-11-27 | GPT-6（ChatGPT） | §1 | 强制长时间运行 Goal 启动前建立并核验 GitHub 检查点；规定执行中增量更新、原 Goal 恢复/续跑，以及评审快照固定规则入口 | 防止 Goal 中断丢失进度、重复执行和因 PR 普通提交导致评审误暂停 | Issue #92；Issue #12；PR #46 |
 | 2026-11-25 | 历史修订者/模型未记录 | 原第 1～11 节及 review_scope | 既有协作约束和机器可读评审范围；逐章历史记录未建立 | 原始修订者未记录，本轮不臆造 | PR #1 |
 | 2026-11-25 | GPT-6.2（ChatGPT） | 第 1～6 节 | 将功能识别和按需阅读流程交给功能树，精简硬约束，保留 review_scope 原始区块 | Agent.md 过长且重复设计细节 | F01～F07、G01；SR-001～011；PR #1 |
+| 2026-11-25 | GPT-6.2（ChatGPT） | 第 2、3、5 节 | 明确外部架构/设计/规范/ADR 全部集中到 Next，兄弟仓只保留实现资料并链接回中央设计；增加未发布 Host→Tool Artifact Channel fail-closed 约束 | 防止设计分叉和 Provider 误用 Event staging | EC01～EC07、REF01～REF03；SR-015～SR-023；Issue #12 |
 | 2026-11-25 | Codex | 第 2 节 | 明确跨仓写入须获当前任务授权 | 区分实施就绪与写入授权 | PR #1 |
 | 2026-11-25 | Codex | 第 5 节 | EC02 Compiler 设计集中归档 | 明确设计与机器契约所有权 | SR-012、#2 |
 | 2026-11-25 | Codex / GPT-6 | §2、§5 | 明确中央设计归属 | 跨仓设计移交 | IR-006 |
 | 2026-11-25 | Codex | §1 | 加入 Issue、分支命名和 Goal 入口 | 统一交接门禁 | [Issue #5](https://github.com/odango-chan/ca-agent-next/issues/5) |
 | 2026-11-25 | Codex | 第 2 节 | 引用固定 PR SHA 的分阶段实施规则 | 支持先验证再定稿 | SR-013、PR #7 |
+| 2026-11-25 | GPT-6.2（ChatGPT） | 第 3、4、7 节 | 更正 ca-host.artifact-store/v1 已冻结、Provider/Go Host 外部实现已存在、Next Python Host 尚未实现的三层状态；明确 SHA-256 仅为既有协议传输校验 | 消除 F05、F03.05 与源仓实现状态冲突，避免把外部 PASS 计入 Next | F05、F03.05、SR-009、SR-010；Issue #12 |
+| 2026-11-26 | GPT-6.2（ChatGPT） | 第 1、2、5 节 | 明确设计/实施/AC/EX 分阶段门禁，分离设计与实施 Issue，并要求实施 Commit/Push 后核对远端 SHA | 防止独立 SR 被无关下游依赖或系统级 EX 阻塞，并确保交付可追溯 | Issue #21；SR 管理规范 §6.1；PR #20 |
+| 2026-11-26 | GPT-6（ChatGPT） | §3、修订记录 | 明确 CA-SL 1.6.0 Capability-first 双向一对一、Compiler Binding、全链路绝不兼容旧版和设计待评审与实施 READY 分离 | 避免 Harness 为历史 v1alpha5 擅自构建兼容适配或提前实施 | Issue #40；IR-008；SR-029 |
+| 2026-11-28 | GPT-6（ChatGPT） | §2、修订记录 | 澄清 SR-028 第七轮设计批准、当前分支 DRAFT、Issue #96 与 PR #97/#99/#112 的真实状态和固定基线边界 | 防止重复开实施任务、从错误设计 Head 开始迁移，或把候选分支证据误报为当前分支 VERIFIED | Issue #12；Issue #96；PR #46/#97/#99/#112 |
+| 2026-11-28 | GPT-6.2（ChatGPT） | §2、修订记录 | 核对 #99 全部 13 路径、#112 两项 P2 独立复评、#97 READY 设计状态与 #115 最新双平台回归 | 以文件 Blob、Review 和固定 SHA 区分设计 READY、候选 IMPLEMENTED 与 mainline IN_PROGRESS；记录 Ubuntu 首次时序异常及同 SHA 重跑通过 | Issue #50/#96/#111；PR #97/#99/#112/#115；Review #6094704264/#6096938405/#6096959653 |
+| 2026-11-28 | GPT-6（ChatGPT） | §7、§8 | 将 PR #109 的证据默认归档规则选择性收编到唯一 mainline #115，保留现行 CA-SL/uv 规则 | 补齐第四批治理源独有实现；不原样覆盖更新的 Agent.md | Issue #50/#108；PR #109/#115 |
+| 2026-11-28 | DeepSeek Harness / deepseek-v4.1-flash-1017 | §3、修订记录 | 将 Next Host→Tool Artifact Channel 目标校正为 `ca-host.artifact-store/v2`（no-hash），v1 仅历史外部契约；明确 `languageTarget=connectionagent.io/v1.6.0`、Compiler 3.0.0 与 API `/2` 已由 Next 中央冻结，Publisher 只负责正式 Schema/Golden/Release 发布 | 消除最高层作者指引与 F05 v0.4.15、SR-010、SR-013、CA-SL 1.6.0 v0.2.11 的 v1↔v2 与“中央冻结↔发布者冻结”冲突 | F05、SR-010、SR-013、SR-029；Issue #50；PR #115；Review #6097880794 |
