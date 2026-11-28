@@ -2,7 +2,7 @@
 
 > 文档类型：软件需求（SR）  
 > SR 版本：0.2.19\
-> 修订日期：2026-11-28\
+> 修订日期：2026-11-29\
 > 状态：IMPLEMENTED（PR #115 已合入受保护 main（最终受审 Head `041e21ac8a4c99b509b09c809c156ed528455899`，merge `574ca51122b49e48be20fadedca225b5fad3137c`）；原作者/源 PR 的 CLOSED/superseded 不等于独立 MERGED。AC-028-01～10 原始证据见 Issue #96，合并后的 main SHA 产品独立复验仍待执行，不能升级 VERIFIED/RELEASED。）
 > 创建日期：2026-11-26  
 > 所属阶段：G02 工程治理支撑  
