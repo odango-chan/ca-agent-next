@@ -1,8 +1,8 @@
 # SR-010：OpenAMSM 工具插件与按需编解码集成
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.5\
-> 状态：整项 DRAFT；阶段 READY（本仓 Host Channel）。AC-010-01～05（Next Host Channel）。  
+> SR 版本：0.2.6
+> 状态：整项 DRAFT；阶段 READY（本仓 Host Channel）；AC-010-01～05/09 为既有 Host Channel 范围；AC-010-10 原版 OAS3 requestBody / multipart / N1/N2/N2 Ext1 Content-ID 验收 BLOCKED/NOT_RUN（依赖 SR-031 Source Bundle、Compiler Resolver 与正式 Codec Provider）。
 > 下一步：仅实现 Next Python Host ArtifactStore/Channel 与 no-decode 路径。06a 等真实 Importer/Catalog/Runtime 三层入口，09 等固定共享 fixtures 和联测；06b/07/08 等正式包。  
 > 阶段依据：[独立评审 #74](https://github.com/odango-chan/ca-agent-next/issues/74#issuecomment-7210244694)，评审 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
 > 工作项：[阶段工作项 #94](https://github.com/odango-chan/ca-agent-next/issues/94)。
@@ -71,6 +71,7 @@
 | AC-010-07 | SR-026 正式发布的 DecodeNAS Capability 与单消息 0xD1、截断/错误类型 | 正常 Decode 输出结构化 JSON 且原 bytes 保留；负例 fail-closed；未发布时 BLOCKED |
 | AC-010-08 | 1.6.0 Bundle 对已导出 Codec READ Capability 做真实 Runtime Tool Action | 必须经统一 Action Boundary + Provider channel；所需 new Package/Runtime Artifact 缺失时 NOT_RUN |
 | AC-010-09 | 同一 conformance fixtures 的 Host Python / Provider Go 联合测试 | 准确记录受测 SHA、请求/响应、GET/POST 字节、Slot、配额与错误映射；另测只有 Provider ok=true、HTTP 2xx、IPC 成功或模型成功文本，及 Receipt 的 Scope/Invocation 不符：按 SR-007 AC-007-05/06 均不得记 COMMITTED，无重复 mutation；仅算 Host 子模块，不算 OM E2E |
+| AC-010-10 | 固定 TS 29.502 `PostSmContexts.requestBody` multipart fixture；验证 `n1SmMsg.contentId`→N1、`n2SmInfo.contentId`→N2、`n2SmInfoExt1.contentId`→N2 Ext1 | 正例覆盖三组引用与命名 part / Content-ID / media type 一一对应；负例覆盖引用目标缺失、重复 Content-ID、错 slot、Content-Type 不符、malformed multipart；未引用或未知 part 不得交给 Codec，其拒绝 / 忽略由 ingress profile 明确规定；选定闭包外 refs 不触发 eager resolve。失败不得把错误 bytes 交给 Codec 或触发 Owner mutation；缺正式 Source Bundle / Consumer 时 BLOCKED / NOT_RUN |
 
 ### 5.1 实现落点、运行和取证
 
@@ -97,6 +98,18 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 - superseded by：无
 - 影响分析：初始分解；等待设计基线评审。
 - 本 SR 的范围和验收条件在进入 READY 后冻结。后续发生语义变化时创建新的 SR 并引用本 SR，不覆盖历史要求。
+
+## 8. OpenAMSM 原版 OpenAPI 3.0 Ingress 与 Codec READ 消费（IR-009）
+
+- SR-031 发布 OpenAMSM 实际支持的原版 OpenAPI 3.0 Source Bundle；逐字节保留 YAML、路径和相对 `$ref`。它是标准源快照，不是 Interface Package，不导出 Capability / Callable，也不需要 Adapter。
+- **T0 Ingress**：Plugin 按 pin 后的 TS 29.502 OAS 3.0 operation 解析 method/path/operationId，并将当前选定 surface 固定为 `requestBody`；`PostSmContexts` 的 `multipart/related` `jsonData` 引用 `SmContextCreateData`。只 lazy resolve 该选定 surface 的可达 refs，不全文件 eager resolve 其他 operation；当前闭包为 TS 29.502 / 29.571 / 29.510 NFManagement / 29.518 Namf Communication 四份原版 YAML。N1 / N2 / N2 Ext1 binary bytes 通过 slot / Content-ID / media type 验证后原样写入 Host ArtifactStore。
+- Plugin 只负责协议入口验证、最小业务 discriminator 和原始 Artifact staging；不完整解码 NAS / NGAP，不在 Host 中维护第二套 SBI Schema。OpenAPI 3.0 Schema Object 按原生语义解释，禁止改写 YAML。
+- **Content-ID 关联**：依据 CommonData `RefToBinaryData.contentId`，`jsonData.n1SmMsg.contentId` 必须匹配 `binaryDataN1SmMessage` 的 `Content-ID`；`jsonData.n2SmInfo.contentId` 匹配 `binaryDataN2SmInformation`；`jsonData.n2SmInfoExt1.contentId` 匹配 `binaryDataN2SmInformationExt1`。每个出现的引用必须且只能命中对应 slot；parts 的 Content-ID 必须唯一；引用目标缺失、重复 ID、错槽或错 media type 均拒绝。未被 JSON 引用的 part 不得交给 Codec；额外 / 未引用 part 的拒绝或忽略由选定 ingress profile 明确规定。Content-ID 值按标准 MIME 解析结果精确比较，不做自定义字符串变换。任何失败发生在 Artifact 发布与 Owner mutation 之前。
+- **T1** 只按已收到的 SBI / 归一化 Event 字段选择 Skill；`when` 不调用 Codec。Skill-owned Request 根仍为 G.4，可经显式 pin 的 Source Bundle dependency 直接引用精确 OAS 3.0 `components/schemas`；Compiler 负责 dialect-aware Resolver（SR-013），Plugin 不做 Schema 投影。
+- **T2** 由已选 Skill Procedure 调用 ca-client-tools SR-026 正式 Codec READ；Provider Output Schema 必须匹配 OpenAMSM NAS / NGAP 支持版本和已资格化 Profile。原始 N1/N2 bytes 保留，Codec Result 不是 Owner Receipt / Commit Proof。
+- T4 的 0xD4 / N2 completion 只恢复原 Run，不创建新候选；核对 generation、PSI / PTI 和 N2 message type。
+- 原 AC-010-01～05/09 Host Channel 可独立验收；AC-010-07 的 0xD1 仅证明首批候选库向量，不代表公开 Provider。AC-010-10 验证 OAS 3.0 选定 requestBody / multipart / 三组 Content-ID 到 N1/N2/N2 Ext1 slot 的映射和负例；未引用或未知 part 不得交给 Codec，其拒绝 / 忽略策略由 ingress profile 明确规定。同时验证原始 byte staging、精确 Source Bundle pin、T1/T2 SourcePath、SBI/N1 冲突、越权 artifactRef 与错误 generation。缺正式 Source Bundle / Compiler Resolver / Provider 时对应子项 BLOCKED / NOT_RUN。
+- 无 Codec 依赖的 Skill 不得被强制解码；不能发明 Provider Machine ID / Output Schema、动态 latest 或旧版迁移。权威说明见 [EC01.3GPP 设计](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。
 
 ## 修订记录
 
