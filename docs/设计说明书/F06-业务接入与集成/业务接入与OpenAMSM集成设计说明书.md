@@ -1,7 +1,7 @@
 # 业务接入与 OpenAMSM 集成设计说明书
 
 > 文档类型：业务集成设计说明书  
-> 文档版本：0.3.7
+> 文档版本：0.3.9
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
 > 功能归属：F06 — 业务接入与集成；EC04、EC05、EC07  
 > 关联 IR：IR-004、IR-005、IR-006  
@@ -63,7 +63,7 @@ Plugin 不负责：
 - PFCP/QoS 计算或会话状态管理。
 - Runtime Wait/Resume 或 Reconcile。
 
-对于共享 UpdateSMContext，Plugin 只提取最小 5GSM discriminator：0xC9 表示 UE PDU Session Modification Request；0xD1 表示 UE-requested PDU Session Release Request。它不解析完整 NAS、不做业务状态判断；Host Resolver 根据规范化 Event 选择对应 Skill。畸形、未知或不支持消息必须 fail closed。
+对于共享 `UpdateSmContext`，Plugin 只调用 ca-client-tools#44 正式发布的 T0 窄 5GSM classifier 并映射规范化 Event：`0xC9` UE Modify、`0xD1` UE-requested Release、`0xD4` Release Complete continuation；N2 completion 使用正式 `n2SmInfoType`。不允许在 Plugin 自建 header parser、调用完整 DecodeNAS 作为分类捷径或将 T2 Codec Result 用于 T1。T0 仅提取最小分类，不做业务状态判断；保留原始 NAS bytes。API 未发布前生产绑定 BLOCKED_EXTERNAL_INPUT，test double 仅用于映射测试。详见 §4.1/§14。
 
 ## 4. 协议与契约权威
 
@@ -87,7 +87,7 @@ Plugin 不负责：
 
 | Event type | OpenAPI operation / path | payload 必需字段 | classification | binary Artifact slots |
 |---|---|---|---|---|
-| `nsmf.create-sm-context` | `PostSmContexts` / `POST /sm-contexts` | `operationId="PostSmContexts"`；`request` 为原样 `SmContextCreateData` JSON object | 无 NAS operation discriminator；保留原始 `requestType` 等 OpenAPI 字段，不补默认值 | `n1SmMsg.contentId → n1.request`；`n2SmInfo.contentId → n2.request`；`n2SmInfoExt1.contentId → n2Ext1.request` |
+| `nsmf.create-sm-context` | `PostSmContexts` / `POST /sm-contexts` | `operationId="PostSmContexts"`；`request` 为原样 `SmContextCreateData` JSON object | 无 NAS operation discriminator；保留原始 `requestType` 等 OpenAPI 字段，不补默认值 | 请求 JSON 实际引用时：`n1SmMsg.contentId → n1.request`、`n2SmInfo.contentId → n2.request`、`n2SmInfoExt1.contentId → n2Ext1.request`；不得推定三者全部必需 |
 | `nsmf.update-sm-context` | `UpdateSmContext` / `POST /sm-contexts/{smContextRef}/modify` | `operationId="UpdateSmContext"`；`smContextRef`；`request` 为原样 `SmContextUpdateData` JSON object | `discriminator.n1MessageType` 只允许 `0xC9`（UE Modify）或 `0xD1`（UE-requested Release） | `n1SmMsg.contentId → n1.request`；若请求实际含 N2 / N2 Ext1 part，则 `n2SmInfo.contentId → n2.request`；`n2SmInfoExt1.contentId → n2Ext1.request` |
 | `nsmf.update-sm-context.continuation` | 同一 `UpdateSmContext` / modify path | `operationId="UpdateSmContext"`；`smContextRef`；`request` 为原样 `SmContextUpdateData` JSON object | 至少包含 `discriminator.n1MessageType="0xD4"`，或 `discriminator.n2SmInfoType` 为 `PDU_RES_SETUP_RSP`、`PDU_RES_MOD_RSP`、`PDU_RES_REL_RSP`；两路可在同一请求中同时出现 | `n1SmMsg.contentId → n1.confirmation`；`n2SmInfo.contentId → n2.confirmation` |
 
@@ -96,8 +96,8 @@ Plugin 不负责：
 分类规则：
 1. N1 为 `0xC9` 或 `0xD1` 且无 continuation-only discriminator 时，Event type 为 `nsmf.update-sm-context`。
 2. N1 为 `0xD4`，或 N2 类型为上述三种 response 时，Event type 为 `nsmf.update-sm-context.continuation`；两路同时出现且都属于 continuation 时保留两路 Artifact/discriminator。
-3. 同一请求同时出现新操作 discriminator（0xC9/0xD1）与 continuation discriminator，或 discriminator 缺失、未知、与 Content-ID/part 不匹配时，拒绝整个 ingress，不发布 Event。
-4. `n2SmInfoExt1` 仅在选定 OAS3 operation/profile 显式声明 N2 Ext1 slot 时接收；引用缺失、重复 Content-ID、错 slot 或错 media type 必须 fail-closed，不得静默丢弃或误并入 `n2SmInfo`。未被 JSON 引用的 part 不得交给 Codec，额外 part 策略由 ingress profile 明确规定。
+3. **仅对 `UpdateSmContext`**：同时出现新操作 discriminator（`0xC9`/`0xD1`）与 continuation discriminator，或 Update 必需的分类信息缺失、未知、与 Content-ID/part 不匹配时，拒绝整个 ingress，不发布 Event。`PostSmContexts` Create **不要求 NAS operation discriminator**；其缺失不构成拒绝 Create 的依据，但仍须严格校验 OAS3 JSON 和实际 multipart 引用。
+4. `n2SmInfoExt1` 仅在选定 OAS3 operation/profile 显式声明 N2 Ext1 slot 时接收；Create/Update 的 `n2.request`、`n2Ext1.request` 按真实 JSON 引用选用，不能因 Plugin manifest 将 OAS3 可选输入升格为必需。引用缺失、重复 Content-ID、错 slot/media type 必须 fail-closed，不得静默丢弃或误并入 `n2SmInfo`。Continuation 未冻结 Ext1 slot；携带 `n2SmInfoExt1` 的 continuation 在当前 profile 显式拒绝，子项 NOT_RUN。未被 JSON 引用的 part 不得交给 Codec，额外 part 策略由 ingress profile 明确规定。
 
 `responseChannelId` 是 Plugin 为每个 HTTP/2 stream 生成的本地短期 handle，只用于把 Host 的 `delivery.dispatch` 送回该次 HTTP response；Plugin 只保留对应的内存 waiter。Host 为每个 ingress 创建 `responseObligationId`，并在 `delivery.dispatch` 中提供。Plugin 会在该帧中瞬时收到此 Host-owned opaque token，但不得生成、解释为 Run 身份、跨请求保存/持久化、转发或在 `delivery.result` 中回传；Plugin 只使用本地 `responseChannelId` 将当前 dispatch 写回对应 HTTP/2 stream，不得混同两种 ID。Plugin 不接收、不存储、不发送 Run ID、generation、releaseTxn 或 continuation state。
 
@@ -378,3 +378,4 @@ Create → Modify → Release 的顺序、Owner authoritative state、Receipt / 
 | 2026-11-28 | 0.3.5 | GPT-6.2（ChatGPT） | §4.1、§14 | 补齐 N2 Ext1 Content-ID / slot 映射，并明确原版 OAS3 Source Bundle、T0/T1/T2/T4 和 Codec Result 分阶段边界 | 与 IR-009 / SR-031 / SR-010 的三组 multipart 引用一致，避免错误丢弃或误交二进制 | Issue #47；IR-009；SR-010/031；PR #115 |
 | 2026-11-28 | 0.3.6 | GPT-6.2（ChatGPT） | §4.1、§14 | 补齐 N2 / N2 Ext1 类型字段与 Content-ID/slot 的联合校验，并固定 CEL `input` 为已验证的 `jsonData` Request 根 | 避免只验证二进制引用而遗漏类型配对，或把 Event envelope / multipart 误作 T1 Request | Issue #47/#101；IR-009；SR-010/013/026/031；PR #48/#101/#115 |
 | 2026-11-28 | 0.3.7 | GPT-6.2（ChatGPT） | §4.1、§13.7、§14 | 将最小 NAS discriminator 归入 T0 ingress；分离 ca-client-tools 共享 classifier library API 与 T2 Agent-callable Codec Tool；明确 classifier 未发布前 SR-009 AC-009-04 生产绑定 BLOCKED | 消除 T0/T1 阶段矛盾，防止 Plugin 复制 parser、调用完整解码器或猜测外部 API | Issue #12；SR-009；ca-client-tools #18/#39 |
+| 2026-11-28 | 0.3.9 | GPT-6（ChatGPT） | 文档头、§2、§4.1、修订记录 | 选择性吸收 #117 F06 v0.3.8 的 T0 0xD4 与 classifier 所有权、仅 Update 必需 discriminator 规则，并明确 Create N1/N2/Ext1 的原版 OAS3 可选引用及 continuation Ext1 fail-closed | 关闭 #116 P2-01/06/10 和 #117 新发现的 Create manifest required 设计缺口；不误报当前模块测试 | Issue #50/#116；PR #115/#117 |

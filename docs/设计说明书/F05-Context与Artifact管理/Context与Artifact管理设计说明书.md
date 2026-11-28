@@ -1,7 +1,7 @@
 # Context 与 Artifact 管理设计说明书
 
 > 文档类型：机制设计说明书  
-> 文档版本：0.4.11\
+> 文档版本：0.4.13\
 > 状态：ca-host.artifact-store/v1 保留为历史冻结契约（要求 SHA-256，Provider v1.2.0 已消费）；新 1.6.0 Demo 目标为 ca-host.artifact-store/v2（无 hash，Next 中央设计已固定；独立复评和实现尚未完成）；Next Python Host / ArtifactStore / v2 Channel NOT_IMPLEMENTED。
 > 功能归属：F05 — Context 与 Artifact 管理  
 > 关联 SR：SR-009；交叉 SR：SR-007、SR-010、SR-011、SR-015、SR-017、SR-030、SR-032\
@@ -258,7 +258,7 @@ Host 必须读取真实文件长度；Plugin→Host 本地 staging 边界不计�
 3. Plugin 发送 ingress.event，包含规范化 JSON payload 和 Artifact 描述符；不得发送原始 bytes 或 Base64。
 4. Host 校验 Event Schema、Manifest slot、media type、路径边界和真实 byteLength。
 5. Host 将 bytes 导入 ArtifactStore，生成 opaque artifactRef，并绑定 Event identity。
-6. Host 完成导入后才返回 ingress.ack；ack 只返回接受/重复/拒绝状态和安全诊断。Host artifactRef 留在 Host 内部，不向 Event Plugin 暴露。Plugin 不创建或选择 artifactRef。
+6. Host 完成导入后才返回 `ingress.ack`；payload 仅 `eventId` / `disposition` / 可选安全 `error`，不得夹带 `runId`、`skillId`、`artifactRef`、`responseObligationId`、`deliveryId`、`responseChannelId`（含嵌套 details）；IPC 帧顶层请求应答 `correlationId` 仍可匹配原 messageId，但不是 Event payload 身份。Host artifactRef 留在 Host 内部，Plugin 不创建或选择 artifactRef。
 7. 任一必需 part 缺失或校验失败时拒绝 Event，不创建业务 Run。
 8. Event 校验成功后，Host 创建/关联 Run，并按 Runtime 授权把所需 refs 交给对应 Tool；不得自动把全部入站 refs 交给模型。
 
@@ -285,13 +285,14 @@ Media Type：
 | Slot | 方向 | 含义 |
 |---|---|---|
 | n1.request | 入站 | SBI 请求中的原始 N1 NAS 消息 |
-| n2.request | 入站 | SBI 请求中存在时的原始 N2 SM 信息 |
+| n2.request | 入站 | SBI Create/Update 请求中实际存在且被 JSON 引用的原始 N2 SM 信息 |
+| n2Ext1.request | 入站 | SBI Create/Update 的 JSON `n2SmInfoExt1.contentId` 所引用的原始 N2 Ext1 字节，与 `n2.request` 独立 |
 | n1.confirmation | 入站 | 后续 ingress 中的 N1 continuation / confirmation，例如 PDU Session Release Complete（0xD4） |
 | n2.confirmation | 入站 | 后续 ingress 中的 N2 continuation / confirmation，例如 PDU Session Resource Release Response |
 | n1.response | 出站 | Owner / Host 为当前响应义务生成的 N1 NAS 响应 |
 | n2.response | 出站 | Owner / Host 为当前响应义务生成的 N2 NGAP 响应 |
 
-具体 Event 决定 slot 必需或可选；Plugin 不得伪造缺失的 N1/N2 part。
+具体 Event 决定 slot 必需或可选。Create/Update 的 `n2.request` / `n2Ext1.request` 均按正式 OAS3 request JSON 的引用选用；Ext1 严格按 F06 §4.1 的 Content-ID、media type 和 N2 类型校验，不能合并到 `n2.request` 或静默丢弃。Continuation 尚未冻结 `n2Ext1.confirmation`：收到 Ext1 时当前 profile 必须显式 fail-closed，运行子项记 NOT_RUN，不得猜测 slot。Create 的 N1 是否必需须由 OAS3 或正式发布的 Demo ingress profile 明确，不能仅凭 Plugin manifest 擅自将可选升格为必需。
 
 Codec 规则：
 
@@ -303,7 +304,7 @@ Codec 规则：
 - ca-client-tools PR #39 当前 OPEN；Phase B facade/worker 不等于 Phase C consumer integration。未发布 Callable 的纯 Go Codec library 不是 Agent 可调用 Tool。
 - 不宣称完整 NGAP 支持；只声明实际发布、测试和资格化的消息子集。
 
-Event Plugin 可以在 Skill 选择前提取共享 UpdateSMContext 所需的最小 NAS discriminator（例如区分 0xC9 Modify 与 0xD1 UE-requested Release），但这不是完整协议解码或业务决策，必须保留原始 bytes。
+共享 `UpdateSmContext` 在 Skill 选择前只使用 T0 最小 5GSM discriminator：`0xC9` Modify、`0xD1` UE-requested Release、`0xD4` Release Complete continuation；它不是完整业务解码。生产 T0 分类由 ca-client-tools#44 正式发布的窄 classifier API 提供（F06 §4.1/§14），Plugin 仅调用并映射 Event，不得自建 NAS parser 或以完整 DecodeNAS 代替。API 未发布前生产绑定 BLOCKED_EXTERNAL_INPUT；test double 仅证明 Event mapping，不证明生产分类器或系统 E2E。原始 bytes 必须保留。
 
 ## 11. Run、重试与 Artifact 生命周期
 
@@ -442,3 +443,4 @@ Demo 必须具备：本地 Host-owned ArtifactStore、精确 slot、相对路径
 | 2026-11-27 | 0.4.9 | GPT-6.2（ChatGPT） | §2、§4 | 定义 Host Resource Read system Action 的请求、响应、Package snapshot 绑定、路径 / 大小限制和拒绝诊断；明确 LLM 可调用全部登记 Script | 补齐 LLM 读取 Schema / Script 的实际接口，消除只写“按需读取”却无请求输出契约的问题 | Issue #49；IR-008；SR-032 |
 
 | 2026-11-27 | 0.4.10 | GPT-6.2（ChatGPT） | §2.1、修订记录 | 明确 Resource Read 使用 Host per-Run Runtime Action Budget，而非 Contract.limits.maxActions 业务动作预算 | 与 F04 Script Execution 预算规则统一，防止系统内建动作绕过 Host 资源上限 | Issue #49；IR-008；SR-007/032；PR #52 |
+| 2026-11-28 | 0.4.13 | GPT-6（ChatGPT） | 文档头、§8、§10、修订记录 | 选择性吸收 #117 F05 v0.4.12 的 Ext1/T0 语义，新增独立 n2Ext1.request、Create/Update 可选 N2/Ext1、continuation Ext1 fail-closed 与 Create N1 必需性约束；同步 ingress.ack 严格身份白名单 | 关闭 #116 P2-01/02/10 的中央设计缺口，不把 #117 未通过复评的运行断言当作已验收 | Issue #50/#116；PR #115/#117 |
