@@ -1,8 +1,8 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.40\
-> 状态：整项 DRAFT；阶段 READY（中央只读核验，仅 AC-013-01 归档完整性）；AC-013-02/04 NOT_RUN；CA-SL languageTarget 与 BuildRequest / DependencyInspection / BuildResult / Artifact 目标身份已由 Next 固定为 1.6.0 / /2，Compiler 3.0.0 尚未发布，AC-013-03/05/06 产品仍 NOT_RUN；AC-013-07 BLOCKED / NOT_RUN（待正式 OAS3 dependency wire contract、Resolver / Validator 和 Golden）；when 唯一来自 assurance/contract.yaml。
-> 下一步：复核 PR #18 归档和 Issue #95 证据；按本 SR 已冻结的 CA-SL 1.6.0 / Compiler 3.0.0 / API /2 契约完成独立增量复评。达到 SR-013 READY 后创建 ca-skill-compiler 新实施 Issue；#61 仅保留 v1alpha5 历史范围。
+> 文档版本：0.2.41\
+> 状态：整项 DRAFT；阶段 READY（中央只读核验，仅 AC-013-01 历史隔离 PoC/归档完整性范围）；AC-013-01 固定归档完整性与历史 PoC 独立复验 PASS（Issue #102；PR #110 修复快照 `39ccb00be8d14f7f1be7b02061454e9b927471b8`）；`vet.log` NOT_ARCHIVED / NOT_INDEPENDENTLY_VERIFIABLE；AC-013-02～06 产品仍 NOT_RUN/BLOCKED；AC-013-07 BLOCKED / NOT_RUN；when 唯一来自 assurance/contract.yaml。
+> 下一步：按本 SR 已冻结的 CA-SL 1.6.0 / Compiler 3.0.0 / API /2 契约推进 AC-013-02～07 的正式输入与独立评审；AC-013-01 仅为历史隔离 PoC/归档完整性 PASS，不授权 Compiler 产品实现、发布或 Next Runtime 验收。
 > 阶段依据：[独立评审 #77](https://github.com/odango-chan/ca-agent-next/issues/77#issuecomment-7209276846)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
 > 工作项：[阶段工作项 #95](https://github.com/odango-chan/ca-agent-next/issues/95)。
 > 创建日期：2026-11-25  
@@ -51,14 +51,14 @@
 | 目标仓写入授权 | 产品实现前须再次确认；本轮文档 PR 不授予 Compiler 写入权限 |
 | 合并 / 发布 | 必须单独授权；本轮不包含 |
 | 规范门槛 | **未满足**；CA-SL 1.6.0 规范/机器标识/Capability Binding 尚未正式发布；历史 v1alpha5 不能替代 |
-| PoC | [PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)已核对 58 个文件与 SHA256SUMS；归档报告为 Go/Python 18/18，当前审计复跑 NOT_RUN |
+| PoC | [修复后固定归档](../参考与审计/fixtures/ac-013-01/isolated-poc)；PR #110 合并至专用证据分支 `docs/ac-013-01-poc-evidence` @ `39ccb00be8d14f7f1be7b02061454e9b927471b8`；Issue #102 独立 detached checkout 复验 58/58、SHA256SUMS、audit_evidence.py、Python 18/18 PASS；`vet.log` NOT_ARCHIVED |
 | 产品实施 | AC-013-02/04 NOT_RUN；AC-013-03/05/06 BLOCKED（依赖正式 Schema / Package Schema / 发布授权） |
 
 SR-013 整体仍为 DRAFT。AC-013-01 的隔离 PoC 完成不自动把 SR-013 提升为 READY，也不授权修改 Compiler 主线、合并 PR 或发布 Release。
 
 | AC | 当前状态 | 下一步 |
 |---|---|---|
-| AC-013-01 | PASS（已归档的隔离 PoC 报告）；本轮复跑 NOT_RUN | 固定归档 SHA；产品验收继续按 AC-013-02～06 取证 |
+| AC-013-01 | PASS（固定归档完整性及历史隔离 PoC 独立复验，2026-11-28） | #110 五份归档修复文件；专用证据分支 merge `39ccb00be8d14f7f1be7b02061454e9b927471b8`；58/58 清单、独立 checksum、audit_evidence.py、Python 18/18；`vet.log` NOT_ARCHIVED；不代表产品 Build/Verify |
 | AC-013-02 | NOT_RUN | 正式 assurance/contract.yaml 顶层 when AST、G.4、Schema-aware Guard / Nullable lowering | 
 | AC-013-03 | NOT_RUN（机器身份已固定；等待 AC-013-02、正式 Schema / Golden 与 Compiler 实现） | Compiler Owner 按 §5.1 固定 API /2 契约发布 Manifest Schema / Golden | 
 | AC-013-04 | NOT_RUN | 新版 Build / Verify、Go/Python、Native/WASM/Chromium 与旧契约回归 | 
@@ -90,17 +90,17 @@ SR-013 整体仍为 DRAFT。AC-013-01 的隔离 PoC 完成不自动把 SR-013 �
 - Compiler 隔离源：255ab85fa5abb4b0bf36656bf64250cafebf45cb。
 - Go：Windows amd64，Go 1.26.6、cel-go 0.33.2、cel.dev/expr 0.25.1、Go protobuf 1.36.10。
 - Python：CPython 3.14.6、cel-expr-python 0.1.4、protobuf 7.36.2。
-- go vet ./internal/compiler：退出码 0。
+- 原始 EVIDENCE.md 记录 `go vet ./internal/compiler` 退出码 0，但固定归档不存在 `vet.log`；历史退出码不可独立复核，状态 `NOT_ARCHIVED / NOT_INDEPENDENTLY_VERIFIABLE`。
 - go test -run '^TestAC013PocGenerate$'：退出码 0。
 - Python 直接加载 Go 生成的同一组 protobuf 产物：18/18 一致。
-- 完整命令、退出码、版本、哈希和逐项结果见本地证据单 .agent-tmp/ac-013-01-poc/EVIDENCE.md。
+- 原始执行记录与归档完整性审计见固定归档 `EVIDENCE.md`；独立 detached checkout 复验命令、环境、退出码和完整 stdout 见 [Issue #102 复验记录](https://github.com/odango-chan/ca-agent-next/issues/102#issuecomment-7224448257)。
 
 ### 3.3 产物与回填位置
 
-- 证据单：.agent-tmp/ac-013-01-poc/EVIDENCE.md。
-- 产物目录：.agent-tmp/ac-013-01-poc/artifacts/，含 cases.json 及逐用例 .checked.pb / .types.pb。
+- 证据单：docs/参考与审计/fixtures/ac-013-01/isolated-poc/EVIDENCE.md。
+- 产物目录：docs/参考与审计/fixtures/ac-013-01/isolated-poc/artifacts/，含 cases.json 及逐用例 .checked.pb / .types.pb。
 - 隔离源码：compiler-255ab85/internal/compiler/ac013_poc_test.go。
-- [PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)已核对 58 个文件与 SHA256SUMS；归档报告为 Go/Python 18/18，当前审计复跑 NOT_RUN。原始提交 78dddd5 的追溯保留在 PR #18 的提交 trailer。
+- [PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)已核对 58 个文件与 SHA256SUMS；归档报告为 Go/Python 18/18，2026-11-28 独立 detached checkout 复验 PASS（58/58、SHA256SUMS、audit_evidence.py、Python 18/18）。原始提交 78dddd5 的追溯保留在 PR #18 的提交 trailer。
 - 已检查归档清单与 Git blob；PR #18 报告在干净 Compiler 基线独立复跑。当前审计未重新执行 Go/Python。
 
 ### 3.4 未覆盖边界
@@ -474,3 +474,4 @@ OpenAPI operation / multipart ingress 验证由 SR-010 负责；Compiler 负责 
 | 2026-11-27 | 0.2.36 | GPT-6.2（ChatGPT） | 文档头、设计依据、修订记录 | 同步 SKILL 作者规范 v0.2.3 的完整正向 Procedure Node 结构 | 保持 Compiler / 作者规范示例与 Node 阶段文法一致 | Issue #49；IR-008；SR-032；PR #52 |
 | 2026-11-27 | 0.2.37 | ChatGPT（GPT-6） | 设计依据、修订记录 | 同步 CA-SL v0.2.7 与作者规范 v0.2.4 的 Node 示例与 Predicate 规则修正；不改变 Compiler Owner 的 AC-013-07 BLOCKED / NOT_RUN 状态 | 保持 Compiler 设计依赖和作者规范当前候选一致 | Issue #49；IR-008/009；SR-013/032；PR #52 |
 | 2026-11-27 | 0.2.38 | ChatGPT（GPT-6.2） | 文档头、§5.2～§5.4、§6、§13 | 将 Request Schema Manifest / Artifact 闭包改为 dialect-aware：本地 G.4 生成文件，外部 OAS3 保留 Source Bundle pin / source file / JSON Pointer 引用；新增 07j 验收，并统一 when 的 Schema 位置引用与 Verify dialect 检查 | 使 AC-013-07 从语言层 dialect 规则闭合到 Artifact、Bundle、Host 与 when 类型定位，同时保持 wire contract / Resolver / Golden 未发布时 BLOCKED / NOT_RUN | Issue #47/#49；IR-008/009；SR-031；PR #52 |
+| 2026-11-28 | 0.2.41 | GPT-6.2（ChatGPT） | 文档头、§3.2～§3.3、AC-013-01、修订记录 | 纳入 PR #110 修复后的五份固定归档文件与 Issue #102 独立 detached checkout 复验；将 58/58、checksum、audit_evidence.py、Python 18/18 记录为归档/历史 PoC 范围 PASS，并保留 vet.log 未归档 | 避免沿用 #107 的旧 FAIL 或 #115 的本地 .agent-tmp 路径；不将历史 PoC 扩大为 Compiler 1.6.0 产品验收 | Issue #102；PR #110；PR #115 |

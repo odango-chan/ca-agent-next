@@ -1,7 +1,7 @@
-﻿# SR-030：Host Context 1.6.0 Schema-only Interface Package Publisher
+# SR-030：Host Context 1.6.0 Schema-only Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.9
+> SR 版本：0.1.10
 > 状态：整项 DRAFT；阶段 READY（中央只读核验）。AC-030-01 固定源，06/07 设计约束。  
 > 下一步：核对 Subject Schema 原始字节与来源、Provenance 归属和 Demo 排除项。02～05、Publisher 实现与发布等待正式 Schema/languageTarget。  
 > 阶段依据：[独立评审 #91](https://github.com/odango-chan/ca-agent-next/issues/91#issuecomment-7209340753)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
@@ -71,10 +71,19 @@ Publisher 必须从固定 Revision 读取原始 Schema 字节并核对 Git blob�
 | AC-030-01 | 固定源 Revision、路径、Git blob 与原始字节 | 精确匹配 SR-024 已验证来源；源文件缺失、blob 变化或从非固定 Revision 读取均拒绝 |
 | AC-030-02 | 新 Package identity 与 1.6.0 Language Target | Package ID / Publisher 稳定；languageTarget 使用正式批准值；新 SemVer 与旧 1.0.0 区分；Manifest 通过 Compiler 1.6.0 正式 Schema |
 | AC-030-03 | Schema-only Package | 恰好一个 Schema export；0 Capability / 0 Callable；无 ToolCatalog、Evidence 或 Runtime Binding；可作为 Contract.contexts 的 Context Schema closure root；不得替代 Skill 自有 requestSchema |
-| AC-030-04 | 原始字节与确定性发布 | subject.schema.json 原始字节不变；ZIP entries / Manifest 稳定排序；相同固定输入产生相同输出；无自定义来源字段 |
+| AC-030-04 | 原始字节与确定性发布 | subject.schema.json 原始字节不变；ZIP entries 按规范化相对路径排序；DOS 时间戳固定为 1980-01-01 00:00:00，不使用构建时钟；压缩方法/级别固定，清除 ZIP comment/extra fields 并归一外部属性；Manifest 按正式 Package 契约确定性序列化；同一固定输入在两个全新输出目录构建的 ZIP 必须逐字节相同；不得增加自定义来源字段 |
 | AC-030-05 | 负例与旧版拒绝 | 旧 v1alpha5 / Development v1alpha1 Package、旧 1.0.0 manifest、错误 languageTarget、额外 Callable、重复 Schema、未知文件、Schema ID 不匹配均 fail-closed；不转换、不 fallback |
 | AC-030-06 | Provenance 分层 | sourceRevision / Git blob 仅在 Publisher 证据；sourceStatus / upload metadata 仅在 Studio Lock；Package Manifest 不接收这些字段 |
 | AC-030-07 | 非目标机制约束 | 不增加包级 hash、签名、Trust Registry、Admission 或运行期 Context；只实现新 Package Schema 要求的必要字段 |
+
+### AC-030-04 确定性发布的可验收细则
+
+1. Publisher 必须从固定 Revision/path 读取原始 Schema 字节；ZIP 内该文件解压后的字节与源文件逐字节相同。
+2. ZIP entry 使用稳定的规范化相对路径排序；不允许绝对路径、父目录穿越、重复 entry、隐藏临时文件或依赖文件系统枚举顺序。
+3. ZIP 元数据固定：DOS 时间戳统一为 1980-01-01 00:00:00；压缩方法/级别固定；ZIP comment 与 extra fields 清空；外部文件属性按统一规则归一，不携带构建机差异。
+4. Manifest 必须通过 Compiler Owner 正式发布的 1.6.0 Package Schema；序列化字节必须确定，但具体字段与序列化规则只能来自正式契约，未发布时保持 BLOCKED，不由 Publisher 自行扩字段。
+5. 在两个独立空输出目录使用相同固定源和正式工具链各构建一次；比较完整 ZIP 字节（`cmp`）并计算 SHA-256，必须完全一致；同时比较解包后的 entry 集合和每个文件的字节。
+6. 不增加 package-level hash、签名、Trust Registry 或 Admission；若正式 Package Schema 要求必要字段，严格按该 Schema 实现。
 
 ### 5.1 验收证据
 
@@ -83,7 +92,7 @@ Publisher 必须从固定 Revision 读取原始 Schema 字节并核对 Git blob�
 ## 6. 依赖与阶段门槛
 
 **设计依赖：**
-- CA-SL 1.6.0 完整语言规范 v0.1.2 §5.2、§14～16；F08 v0.3.16；EC02 v0.2.13 §10～11；SR-013 v0.2.23 §5～6 明确 Schema-only Package / Context Schema closure 与零 Capability roots 的处理。
+- CA-SL 1.6.0 完整语言规范 v0.1.2 §5.2、§14～16；F08 v0.3.16；EC02 v0.2.13 §10～11；SR-013 v0.2.41 §8（AC-013-06）明确 Schema-only Package / Context Schema closure 与零 Capability roots 的处理。
 - SR-029 / CA-SL 1.6.0 规范明确 Contract.contexts 引用 Host Context Schema，requestSchema 则是 Skill 自有请求 Schema。
 - F09 v0.3.16 §5～9 / SR-016 明确 Package Manifest 与 Project Lock provenance 的边界。
 
@@ -118,5 +127,5 @@ Publisher 必须从固定 Revision 读取原始 Schema 字节并核对 Git blob�
 | 2026-11-27 | 0.1.6 | GPT-6（ChatGPT） | 文档头、§1、§6、修订记录 | 将第二轮不可访问的评审登记替换为正式 Review #6082541121 的限定结论；标记 SR-030 P2 依据修订位于后续 Head | 避免将固定旧 Head 的设计认可外推到新 Head 或 Publisher 实施 | Issue #12；PR #46；Review #6082541121 |
 | 2026-11-27 | 0.1.7 | Codex / GPT-6 | 文档头 | 登记阶段 READY（中央只读核验）及 AC 范围与工作项 #95 | 按单项独立评审推进 | Issue #12、#91；PR #46 |
 | 2026-11-27 | 0.1.8 | kimi-k3.1-pro | §7、文档头 | 独立复验 Subject Schema 274 字节/blob/SHA-256/$id，核对 Provenance 与 Demo 排除；01/06/07 静态 PASS，02～05 原状态不变 | 证明固定输入而不冒充 Publisher 或 Compiler 产品验收 | Issue #95；SR-030 |
-| 2026-11-28 | 0.1.8 | GLM-5.3（DeepSeek Harness） | §4、修订记录 | 将 §4 中 SR-013 引用版本统一为 v0.2.23，消除与设计依据行的内部不一致 | 关闭 R1-SR030-01 的同文档版本冲突 | Issue #12；PR #46；Review #6095143611 |
-| 2026-11-27 | 0.1.8 | kimi-k3.1-pro | §7、文档头 | 独立复验 Subject Schema 274 字节/blob/SHA-256/$id，核对 Provenance 与 Demo 排除；01/06/07 静态 PASS，02～05 原状态不变 | 证明固定输入而不冒充 Publisher 或 Compiler 产品验收 | Issue #95；SR-030 |
+| 2026-11-27 | 0.1.9 | GPT-6.2（ChatGPT） | §5、§6、修订记录 | 统一 SR-013 版本引用；细化 AC-030-04 ZIP 元数据归一、entry 顺序、双构建逐字节比较与正式 Schema 验证 | 处理既有评审 P2；不推测未发布的 Package Schema 字段 | Issue #95；#106；Review #91 |
+| 2026-11-27 | 0.1.10 | GPT-6.2（ChatGPT） | §6、修订记录 | 将 SR-013 互引从错误的 §5～6 更正为实际定义 Schema-only / 零 Capability roots 的 §8（AC-013-06） | 确保跨 SR 规则引用可定位且与实际章节一致 | Issue #106；Review #91 |
