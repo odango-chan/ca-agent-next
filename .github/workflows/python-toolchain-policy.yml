@@ -42,7 +42,7 @@ jobs:
           test "$(cat .python-version)" = "3.14.6"
           grep -Fq 'required-version = "==0.13.10"' pyproject.toml
           grep -Fq '"sha": "15dd7972d15c91b797b202f85189cde2b6ffe373"' .github/python-toolchain-baseline.json
-          grep -Fq '"allowed_base_refs": ["main"]' .github/python-toolchain-baseline.json
+          grep -A2 '"allowed_base_refs"' .github/python-toolchain-baseline.json | grep -Fxq '    "main"'
           grep -A2 '"policy_control_bootstrap_prs"' .github/python-toolchain-baseline.json | grep -Fxq '    115'
           baseline_sha='15dd7972d15c91b797b202f85189cde2b6ffe373'
           git cat-file -e "${baseline_sha}^{commit}" || { echo "::error::BASELINE_COMMIT_MISSING: $baseline_sha"; exit 1; }
