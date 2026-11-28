@@ -52,11 +52,18 @@ jobs:
               const marker = body.match(/<!--\s*mainline-cleanup-branches\s*\r?\n([\s\S]*?)\r?\n\s*-->/i);
               if (!marker) continue;
 
-              const branches = [...new Set(marker[1].split(/\r?\n/)
+              const entries = [...new Set(marker[1].split(/\r?\n/)
                 .map(line => line.trim())
                 .filter(line => line && !line.startsWith("#")))];
 
-              for (const branch of branches) {
+              for (const entry of entries) {
+                const parsed = entry.match(/^([A-Za-z0-9._/-]+)@([0-9a-f]{40})$/i);
+                if (!parsed) {
+                  core.info(`SKIP malformed cleanup entry (expected branch@full-sha): ${entry}`);
+                  continue;
+                }
+                const branch = parsed[1];
+                const expectedSha = parsed[2].toLowerCase();
                 if (!/^[A-Za-z0-9._/-]+$/.test(branch) ||
                     !eligiblePrefix.test(branch) ||
                     protectedName.test(branch) ||
@@ -88,6 +95,18 @@ jobs:
 
                 if (branchInfo.protected) {
                   core.info(`SKIP protected branch: ${branch}`);
+                  continue;
+                }
+                if (branchInfo.commit.sha.toLowerCase() !== expectedSha) {
+                  core.info(`SKIP ${branch}: HEAD moved from reviewed SHA ${expectedSha} to ${branchInfo.commit.sha}`);
+                  continue;
+                }
+
+                const ancestry = await github.rest.repos.compareCommits({
+                  owner, repo, base: branch, head: defaultBranch
+                });
+                if (ancestry.data.behind_by !== 0) {
+                  core.info(`SKIP ${branch}: ${ancestry.data.behind_by} branch commit(s) are not ancestors of ${defaultBranch}; verify squash/rebase integration manually`);
                   continue;
                 }
 
