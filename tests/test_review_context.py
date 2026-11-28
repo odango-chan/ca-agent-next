@@ -952,6 +952,47 @@ class TestACREV08DocHeaders(RepoTestBase):
             "docs/架构设计/F01-正向继承.md",
         )
         self.assertEqual(problems, [])
+    def test_archived_source_copy_with_complete_provenance_is_exempt(self) -> None:
+        self.checkout_branch("feature/archive")
+        source_copy = (
+            "> 迁移来源：example-repo/docs/legacy-design.md\n"
+            "> 固定源提交：0123456789abcdef0123456789abcdef01234567\n"
+            "> 原始状态：历史提案，仅保留原文\n"
+            "> 迁移追踪：ca-agent-next Issue #12。\n"
+            "\n---\n\n# 历史原文\n\n不得为迁移改写正文。\n"
+        )
+        self.repo.write("docs/设计说明书/外部能力域/EC01-历史原文.md", source_copy)
+        head = self.repo.commit("add archived source copy")
+
+        code, _, stderr = invoke(self.repo, self.base, head, self.out)
+        self.assertEqual(code, rc.EXIT_OK, stderr)
+
+    def test_incomplete_archive_provenance_does_not_bypass_header_check(self) -> None:
+        self.checkout_branch("feature/archive-incomplete")
+        source_copy = (
+            "> 迁移来源：example-repo/docs/legacy-design.md\n"
+            "> 原始状态：历史提案\n"
+            "> 迁移追踪：ca-agent-next Issue #12。\n"
+            "\n---\n\n# 缺少固定源提交的原文\n"
+        )
+        self.repo.write("docs/设计说明书/外部能力域/EC01-来源不完整.md", source_copy)
+        head = self.repo.commit("add source copy with incomplete provenance")
+
+        code, _, stderr = invoke(self.repo, self.base, head, self.out)
+        self.assertEqual(code, rc.EXIT_VALIDATION)
+        self.assertIn("EC01-来源不完整.md", stderr)
+
+    def test_reference_only_architecture_is_not_a_formal_target_doc(self) -> None:
+        self.checkout_branch("feature/reference-doc")
+        self.repo.write(
+            "docs/架构设计/目标参考/TARGET01-外部架构.md",
+            "# 外部参考架构\n\n只作为对照，不是 Next 权威设计。\n",
+        )
+        head = self.repo.commit("add reference-only architecture")
+
+        code, _, stderr = invoke(self.repo, self.base, head, self.out)
+        self.assertEqual(code, rc.EXIT_OK, stderr)
+
     def test_non_formal_path_is_ignored(self) -> None:
         self.checkout_branch("feature/docs")
         self.repo.write("docs/规范/示例规范.md", "# 规范\n\n无头部说明。\n")
