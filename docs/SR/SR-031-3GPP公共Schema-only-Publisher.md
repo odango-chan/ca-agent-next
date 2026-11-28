@@ -1,7 +1,7 @@
 # SR-031：OpenAMSM 3GPP OpenAPI 原版 Source Bundle 发布
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.3.3
+> SR 版本：0.3.4
 > 创建日期：2026-11-27
 > 修订日期：2026-11-27
 > 状态：DRAFT / REVIEW_REQUESTED；Publisher / Compiler / Plugin / Codec 产品均 NOT_RUN 或 BLOCKED_EXTERNAL_INPUT
@@ -17,7 +17,7 @@
 
 - Publisher：从固定 OpenAMSM commit 复制选定 OpenAPI 根文件及其可达外部 `$ref` 闭包，保持原路径，附 Source Lock / byte-compare 证据。
 - Plugin / SR-010：原生解析 SBI operation、requestBody、multipart、JSON / binary parts、media type、Content-ID；不完整解码 NAS/NGAP。
-- Compiler / SR-013：Skill-owned G.4 Request 根可引用 pin 后 Source Bundle 中精确 OAS 3.0 `components/schemas`；外部目标按 OAS 3.0 Schema Object dialect 解析。
+- Compiler / SR-013：Skill-owned `requestSchema` 入口文件可为本地 G.4 根，或仅含一个 `$ref` 的 OAS3 根引用别名；两者均可精确引用已 pin Source Bundle 的 OAS 3.0 `components/schemas`，外部目标按原生 OAS 3.0 Schema Object dialect 解析。
 - Provider / SR-026：独立发布 NAS/NGAP Decoder Result Schema 与 READ Capability；SBI `format: binary` 不是解码结果契约。
 
 Source Bundle 不是 Interface Package，不导出 Capability / Callable，不产生 Capability Scope。SR-030 Host Context Schema-only Package 仍只经 `Contract.contexts` 使用。当前不设计 Adapter；若未来有可复现的 OAS 3.0 语义阻断，另开 Issue 并以证据评审最小方案。
@@ -57,7 +57,7 @@ CommonData `RefToBinaryData.contentId` 是被引用 binary body part 的 `Conten
 
 Plugin 必须按原版 OAS 3.0 解释选定 operation / requestBody / content / multipart encoding / part Schema / media type / Content-ID，不得手写第二套 SBI Schema，也不得把 binary slot 当作已解码 NAS/NGAP 字段。只解析选定 surface 的可达 refs，不全局 eager resolve 根文件中其他 operation 的 refs。
 
-Skill-owned `requestSchema` 根仍是本地 G.4。显式声明并 pin Source Bundle 后，本地字段可直接引用原版 OAS 3.0 `#/components/schemas/...`，外部目标按 OAS 3.0 Schema Object 语义处理，保留 `nullable` / 组合 Schema / `format` 等，不做 Adapter / Projection。只允许精确 Schema Component；禁止任意 URL、动态 latest、Path Item / Operation / RequestBody / Response 或 Bundle 外文件。实际 dependency alias / path / pointer wire 表示由 ca-skills / Compiler Owner 在正式 1.6.0 Schema / Golden 冻结，本 SR 不伪造 DTO。
+Skill-owned `requestSchema` **入口路径**必须是当前 Skill Package 根目录下的 `schemas/*.schema.yaml` 文件；入口文件存在两种合法形式：本地 G.4 闭合对象根（可在本地字段引用已 pin 外部组件）或**内容恰好只有一个 `$ref`**、精确指向已 pin Source Bundle 原版 OAS3 `components/schemas` 的根引用别名。别名不含任何兄弟关键字，不加 G.4 wrapper / `additionalProperties: false`；仅本地 G.4 节点执行 G.4 Profile，外部目标及其可达闭包按原始 OAS 3.0 Schema Object dialect 解释，保留 `nullable` / 组合 Schema / `format` 等，不做 Adapter / Projection。只允许精确 Schema Component；禁止任意 URL、动态 latest、Path Item / Operation / RequestBody / Response 或 Bundle 外文件。实际 dependency alias / path / pointer wire 表示由 ca-skills / Compiler Owner 在正式 1.6.0 Schema / Golden 冻结，本 SR 不伪造 DTO。
 
 若 Compiler / Runtime 不支持可达闭包中的 OAS 3.0 语义，必须 fail-closed 并阻止 Build / Verify；不得静默丢关键字或生成部分 Artifact。此能力归 SR-013 / EC02，不归 Publisher。
 
@@ -78,7 +78,7 @@ Publisher CLI、Source Bundle identity 和正式 Golden 尚未由 ca-skills Owne
 ## 5. 责任与状态
 
 - SR-010 / Plugin：原生 OAS3 SBI ingress、multipart / Content-ID 校验、原始 N1/N2 staging；不完整解码。
-- SR-013 / Compiler：Skill-owned G.4 根对 pin 后 OAS3 Schema Component 的跨 dialect 引用、类型检查、运行期快照与 fail-closed。
+- SR-013 / Compiler：Skill-owned 本地 G.4 根或纯单 `$ref` OAS3 根别名对 pin 后 OAS3 Schema Component 的跨 dialect 引用、类型检查、运行期快照与 fail-closed。
 - SR-026 / Provider：NAS/NGAP Codec READ、唯一 Callable、Decoder Result Schema 和消息 Profile。
 - SR-027 / Bundle：固定实际使用的 Source Bundle、Compiler / Provider / Owner / Host snapshots；无关 Echo 不强制下载。
 - F09 / Studio：原版 YAML 只读展示和来源导航，不允许 AI Change Set 修改原件。
@@ -94,3 +94,4 @@ SR-031 主状态保持 DRAFT；本设计可独立评审，但 Publisher、Compil
 | 2026-11-27 | 0.3.0 | ChatGPT / GPT-6.2 | 全文 | 撤销强制 Adapter 假设；改为原生 OAS3 消费和精确组件引用；补齐源文件 / blob / 标准版本、Source Lock、NAS/NGAP 原生源 | G.4 与 OAS3 是不同 dialect，不应复制一套标准 | Issue #47；SR-010/013/026/027 |
 | 2026-11-27 | 0.3.1 | ChatGPT / GPT-6.2 | §1～4、AC-031-01～05 | 补齐 PostSmContexts requestBody 四文件 / 102 Component 闭包、选定面 lazy refs、Git blob + byte-compare Lock、RefToBinaryData Content-ID 对应 | 修复漏锁跨文件依赖、全文件 eager resolve 和 multipart part 错配风险 | Issue #47；SR-010/013/027；EC01/EC02 |
 | 2026-11-27 | 0.3.2 | ChatGPT / GPT-6.2 | §2～4 | 统一 Git blob 仅作来源定位、byte-for-byte 为唯一原件比较；未引用 multipart part 不交 Codec，拒绝策略归 ingress profile | 避免额外哈希机制和超出原版 Schema 的隐含拒绝 | Issue #47；SR-010/013；EC01/EC02 |
+| 2026-11-28 | 0.3.4 | GPT-6（ChatGPT） | §0、§4、消费者交接、修订记录 | 将 Skill-owned requestSchema 入口限定为本地路径，同时接受 G.4 对象根与纯单 $ref OAS3 根别名；保持外部 OAS3 原生 dialect | 与 CA-SL 1.6.0 §12.1、SR-027 v0.3.5 的 SchemaReference 规则一致，禁止强制 wrapper/Adapter | Issue #47/#40；SR-013/027/031；PR #125 |
