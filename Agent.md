@@ -23,7 +23,7 @@ DeepSeek Harness 默认使用 Goal 模式。按[SR 管理规范](docs/规范/SR%
 ## 2. 仓库与语言边界
 
 - Agent Core、Host、Agent Model Loop、Skill Importer、Skill Resolver 和 Runtime 使用 Python。
-- Python 工程工具链设计入口见 [G02 Python 工程工具链与环境管理](docs/设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md)；当前恢复分支 SR-028 仍为 DRAFT/READY=0。第七轮设计 Review #6084094037 仅对固定 Head `93f1389e` / Base `3c7c4838` 授予设计 APPROVE_FOR_READY；实施 Issue #96 已存在，PR #97（READY 状态回填）、PR #99（基于旧设计 SHA 的 uv 实施候选）和 PR #112（堆叠共享基线）均 OPEN、未合并到当前恢复分支。不得重复创建实施 Issue、从当前 PR #46 Head 启动 uv 迁移，或将候选分支证据记为当前分支 VERIFIED；现有 #96 必须遵守其固定基线、独立分支和不合并授权边界。不得将 uv 迁移混入 SR-001 PR #32。
+- Python 工程工具链入口见 [G02 Python 工程工具链与环境管理](docs/设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md)。SR-028 第七轮设计 Review #6084094037 已批准固定设计快照；实施 Issue #96 已存在。PR #99 @`83d23e8c04b1c05eb304c2a24a3392f6459ed0f1` 的 uv 工具链文件、锁文件、测试门禁和双平台 Workflow 已选择性整合到唯一 mainline PR #115；当前 SR-028 为 IN_PROGRESS（集成候选），尚未合入 main，当前 Head 的回归复验仍在进行。PR #112 共享基线的 P2-01/P2-02 尚待修复/复评；PR #97 READY 状态回填不作为当前实施状态权威，当前状态以 SR-028、SR 索引和 Issue #50 检查点为准。不得把候选分支证据误报为 main 已集成或 VERIFIED，也不得将 uv 迁移混入 SR-001 PR #32。
 - 独立 Plugin 可以使用 Go；Go Plugin 不代表 Go Host。
 - ca-agent-demo 是既有 Python 实现和测试证据来源，只能逐文件选择性复用，不得整体复制。
 - ca-skills、ca-skill-compiler、ca-client-tools、ca-openamsm-plugin、env-openamsm、env-5gc-sim、ca-skill-studio-demo 等保有独立实现和发布职责；ca-runtime 与 ca-agent 是参考/目标仓，不是 Next 运行时依赖。
@@ -31,6 +31,21 @@ DeepSeek Harness 默认使用 Goal 模式。按[SR 管理规范](docs/规范/SR%
 - 所有项目群任务从本仓进入。修改协作仓须获得当前任务的授权，并在本仓登记覆盖目标仓、变更范围和验收的 SR。SR 达到 READY 且当前实施阶段的实施依赖满足后方可实施，再回填目标仓 PR、Commit 和验收证据。设计/治理 Issue 与代码实施 Issue 分开；实施 Issue 必须在代码开始前创建。READY 仅表示具备实施条件，不授予写入权限。每批实现必须 Commit、Push 并核对远端 SHA；合并 PR 和发布 Release 需要单独授权。
 
 - 规范或设计尚在评审时，负责人可按 [SR 管理规范 §8.2](docs/规范/SR%20管理规范.md#82-使用评审中的固定提交开展受限实施)批准固定 PR SHA，供 READY 阶段实施和验收。按 SR 记录范围、授权和证据。正式发布、集成和主分支可达性按各阶段要求核对。
+
+### 2.1 当前 Python 工具链入口（SR-028）
+
+从仓库根目录执行，首次或依赖声明变化后先同步，其后测试/脚本一律禁止隐式同步：
+
+```bash
+uv python install
+uv sync --locked --group dev --extra plugins
+uv lock --check
+uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --output-dir artifacts/unittest-gate
+uv run --no-sync --locked --group dev --extra plugins python -m ca_agent_next --smoke
+uv run --no-sync --locked --group dev --extra plugins python scripts/review_context.py --help
+```
+
+Go Echo Plugin 前置：在 `examples/echo/plugin/` 下设置 `GOWORK=off` 后 `go build -trimpath -o bin/echo-plugin .`，Windows 目标为 `bin/echo-plugin.exe`。测试门禁 `scripts/unittest_gate.py` 对 Host、Plugin、Review Context 和完整总计分别要求 discovered>0、tests_run=discovered、skipped=0 且无失败/错误，任一范围失败整体非零。CI 矩阵与 Artifact 契约见 SR-028 AC-028-06～08；历史 pip 入口保留在 SR-002/SR-003/演示验收基线的原始受测记录中。
 
 ## 3. 不可违反的架构约束
 

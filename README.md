@@ -4,7 +4,7 @@ CA Agent Next 是下一代通用 Agent 的独立实现仓。目标是用尽可�
 
 **语言决策：Agent Core、Host、Agent Model Loop、Skill Importer、Skill Resolver 和 Runtime 固定使用 Python。** 独立 Plugin 可以使用 Go；Go Plugin 不意味着 Go Host。
 
-> 当前设计评审范围见[SR 总索引](docs/治理/SR%20总索引.md)。24 项 DRAFT SR 已请求独立设计评审。SR-001/002/003 模块已 VERIFIED，SR-024 的 VERIFIED 限于历史 Publisher，SR-015 已 IMPLEMENTED。新 1.6.0 产品链及系统 EX 仍待验收。
+> 当前设计与治理状态以 [SR 总索引](docs/治理/SR%20总索引.md) 和 [Issue #50](https://github.com/odango-chan/ca-agent-next/issues/50) 为准；唯一 mainline 集成入口为 PR #115（OPEN / Draft）。SR-028 设计已 READY，uv 工具链正在 PR #115 集成候选中；尚未合入 main，当前 Head 的回归复验仍在进行。
 
 ## 从这里开始
 
@@ -17,6 +17,31 @@ CA Agent Next 是下一代通用 Agent 的独立实现仓。目标是用尽可�
 7. [仓库协作指引](Agent.md) — 自动化协作入口和不可违反的约束。
 
 [IR 总登记册](docs/IR/IR%20总登记册.md)记录需求项、Issue 协作入口和 SR 分解。
+
+## 当前开发与复验入口（SR-028 迁移后）
+
+自 SR-028 起，本仓根 Python 工程统一使用 uv `0.13.10` 解析、锁定和运行依赖；`uv.lock` 是唯一锁文件，`.python-version` 精确为 `3.14.6`（`requires-python >=3.11` 仍只是包元数据下限，不代表 3.11～3.13 版本矩阵已通过）。历史 pip 命令只保留在各 SR 与验收记录的原始受测环境中（见 SR-002、SR-003、演示验收基线），不作为当前入口。
+
+```bash
+# 前置：Go 1.24+（满足 examples/echo/plugin/go.mod 的 go 1.24 directive）
+go version
+
+# 安装/同步（首次或依赖声明变化后；本地与 CI 一致使用 --locked）
+uv python install
+uv sync --locked --group dev --extra plugins
+uv lock --check
+
+# 本地测试门禁：Host / Plugin / Review Context / 完整总计，skipped=0，任一失败即非零
+uv run --no-sync --locked --group dev --extra plugins python scripts/unittest_gate.py --output-dir artifacts/unittest-gate
+
+# Host Smoke（stdout 固定单行 JSON，stderr 为空）
+uv run --no-sync --locked --group dev --extra plugins python -m ca_agent_next --smoke
+
+# Review Context 生成器
+uv run --no-sync --locked --group dev --extra plugins python scripts/review_context.py --help
+```
+
+Go Echo Plugin 构建（Plugin 测试前置）：在 `examples/echo/plugin/` 下设置 `GOWORK=off` 后执行 `go build -trimpath -o bin/echo-plugin .`；Windows 目标文件名为 `bin/echo-plugin.exe`。GitHub Actions 入口为 `.github/workflows/sr003-plugin-ci.yml`（Ubuntu Python 3.12 / Windows Python 3.14.6 矩阵）与 `.github/workflows/review-context.yml`（诊断与正式 Artifact 分离）。
 
 ## 文档体系
 
@@ -66,3 +91,9 @@ Next 是项目群架构、设计、规范和治理规则的唯一集中入口。
 ## Demo 范围
 
 本仓证明机制正确性和可扩展性，不做生产级资格认证。可靠性与安全 DFX 暂不展开生产方案；不增加 HA/DR/SLA、包签名、Trust Registry、生产密钥管理或复杂多租户治理。基本输入校验、明确错误、fail-closed、Owner 结果语义、最小可观测性和自动化验收仍必须具备。
+
+## 修订记录
+
+| 日期 | 修改内容 | 关联 |
+|---|---|---|
+| 2026-11-28 | 新增 SR-028 迁移后的 uv 安装、锁定、测试、Smoke、Go Echo 与 Review Context 当前复验入口；保留历史 pip 受测记录 | Issue #96；PR #99；PR #115；SR-028 |
