@@ -1,7 +1,7 @@
 # SR-011：真实 OpenAMSM 创建修改释放端到端验证
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.3.5\
+> SR 版本：0.3.6\
 > 状态：整项 DRAFT；限定设计已认可，等待直接依赖。AC-011-06 静态架构断言。  
 > 下一步：已获限定设计认可。组合实现具备后检查 Core 零业务分支；01～05 等同批 Bundle、Compiler Verify、Provider/Owner Package 和隔离对端。  
 > 阶段依据：[独立评审 #75](https://github.com/odango-chan/ca-agent-next/issues/75#issuecomment-7210271472)，评审 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。
@@ -9,7 +9,7 @@
 > 修订日期：2026-11-28\
 > 所属阶段：Phase H  
 > 上游需求：[IR-005](../IR/IR%20总登记册.md#ir-005)  
-> 设计依据：[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.3.9 §4.1、§5～10；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.14 §2～12；[演示验收基线](../验收与实施/演示验收基线.md) v0.3.29 §2～10\
+> 设计依据：[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.3.10 §4.1、§5～10；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.15 §2～12；[演示验收基线](../验收与实施/演示验收基线.md) v0.3.29 §2～10\
 > Acceptance：EX-20、OM-09、OM-11、OM-12（见[演示验收基线](../验收与实施/演示验收基线.md)）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：见第 3 节
@@ -126,3 +126,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-27 | 0.3.3 | GPT-6（ChatGPT） | AC-011-04/05、文档头、修订记录 | 增加 N1/N2 两种顺序、跨事务交错、迟到回调、旧 generation 和错 Session 的独立断言；将 STALE_SM_CONTEXT 映射到模块 AC | 处理独立模型 Review #6082541121 的 P1 R3-SR011-01，避免仅覆盖重复/迟到 N2 而漏掉乱序和交错清理 | Issue #12；PR #46；F06 v0.3.1；Review #6082541121 |
 | 2026-11-27 | 0.3.4 | Codex / GPT-6 | 文档头 | 登记限定设计已认可，等待直接依赖及 AC 范围 | 按单项独立评审推进 | Issue #12、#75；PR #46 |
 | 2026-11-28 | 0.3.5 | GPT-6（ChatGPT） | 文档头、AC-011-05、§5.1、修订记录 | 补齐 Host 权威 Response 三元映射、非空错误 obligation、跨 Run/Channel/代际、过期/重放 dispatch 的系统级负例并同步 F05/F06/EX 版本 | 回应 Next #115/#116 的 P2-05：Event Plugin 无法证明 Host 内部三元身份；该 AC 仍 BLOCKED/NOT_RUN，等待真实 Host/系统组合测试 | Issue #50/#75/#116；PR #115 |
+| 2026-11-28 | 0.3.6 | GPT-6（ChatGPT） | 文档头、设计依据、修订记录 | 同步 F06 v0.3.10（外部 Plugin 候选已存在但未合并）与 F05 v0.4.15（旧 v1 hash 仅历史）；保持 AC-011-05 Host 三元负例 BLOCKED/NOT_RUN | 防止真实 E2E 验收依赖旧模块状态与错误 hash 要求，模块 CI 不能代替系统 E2E | Issue #50/#75/#116；PR #115 |

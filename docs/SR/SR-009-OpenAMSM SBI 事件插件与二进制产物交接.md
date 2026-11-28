@@ -1,14 +1,14 @@
 # SR-009：OpenAMSM SBI 事件插件与二进制产物交接
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.15
-> 状态：整项 DRAFT；Issue #116 固定旧快照对 AC-009-01/02/03/05/06 的原批准子集与 AC-009-04 Event mapping/Schema/test-double 给出限定 `APPROVE_FOR_READY`（0 P0/0 P1/11 P2）；当前 v0.2.15 新增 Ext1/可选 N2、Host 三元义务和 IPC ack 规则尚需独立复评，相关产品测试 NOT_RUN，不自动扩大原批准。生产 T0 classifier 直接依赖 ca-client-tools#44，`BLOCKED_EXTERNAL_INPUT`；Next Host/系统 OM/E2E 及 Production 均 NOT_RUN。
-> 下一步：独立复核本版中央契约及 PR #117 的 4 P1，再决定阶段 READY；ca-openamsm-plugin Issue #2 / PR #3 是外部模块候选实现（尚未合并），其 CI 不能取代 Next 或新子项的验收；生产 classifier 等 ca-client-tools#44。
+> SR 版本：0.2.16
+> 状态：整项 DRAFT；Issue #116 固定旧快照对 AC-009-01/02/03/05/06 的原批准子集与 AC-009-04 Event mapping/Schema/test-double 给出限定 `APPROVE_FOR_READY`（0 P0/0 P1/11 P2）；当前 v0.2.16 的 Ext1/可选 N2、Host 三元义务和 IPC ack 规则仍需本次集成 Head 独立复评，相关产品测试 NOT_RUN，不自动扩大原批准。生产 T0 classifier 直接依赖 ca-client-tools#44，`BLOCKED_EXTERNAL_INPUT`；Next Host/系统 OM/E2E 及 Production 均 NOT_RUN。
+> 下一步：独立复核当前中央契约并逐项对账 PR #117 原 4 P1（旧分支不得覆盖 #115），再决定设计阶段 READY；ca-openamsm-plugin PR #1 `8fc1cd2`（设计）及 PR #3 `4232b20`（Go 模块候选）均未合并，但新 Head 双平台模块 CI #46141123128 SUCCESS；这不证明 Next Host 权威 obligation 三元身份、正式 T0 classifier 或系统 E2E PASS。生产 classifier 仍待 ca-client-tools#44。
 > 创建日期：2026-11-25  
 > 修订日期：2026-11-28\
 > 所属阶段：Phase G  
 > 上游需求：[IR-005](../IR/IR%20总登记册.md#ir-005)  
-> 设计依据：[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.13 §1～13、16；[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.3.9 §2～5、§4.1、§13.7、§14；[插件包与进程通信协议规范](../规范/插件包与进程通信协议规范.md) v0.2.8 §5～6
+> 设计依据：[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.15 §1～13、16；[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.3.10 §2～5、§4.1、§13.7、§14；[插件包与进程通信协议规范](../规范/插件包与进程通信协议规范.md) v0.2.8 §5～6
 > Acceptance：OM-01～OM-03、OM-05～OM-08、OM-14、OM-15（见[演示验收基线](../验收与实施/演示验收基线.md)）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：见第 3 节
@@ -79,7 +79,7 @@ AC-009-01/02/03/05/06 仅依赖测试 Host、协议 fixture 和计数 peer。AC-
 | 相同路径 + N2 `PDU_RES_REL_RSP` | `nsmf.update-sm-context.continuation`；payload.discriminator.n2SmInfoType=`PDU_RES_REL_RSP` | 既有 Release 事务的 N2 completion ingress；不重新触发 Release |
 | N1/N2 回调分别到达、交错到达；同 peer 多事务并发 | `nsmf.update-sm-context.continuation`；payload 保留 `smContextRef`、原始 UpdateSmContext JSON 和各自 discriminator；每次 ingress 有独立 responseChannelId | 保留可信 peer、externalRequestId（仅在协议/受信部署提供时）、Content-ID/slot 和原字节；Host 通过 Host-owned pending index 查找原 Run，Owner 再校验 generation/transaction；Plugin 不持有 Run/responseObligation |
 | Create/Update 的可选 `n2SmInfo` / `n2SmInfoExt1` JSON 引用和 multipart part 组合 | `n2.request` / `n2Ext1.request` 仅在 JSON 实际引用时分别 staging；Create 无 NAS operation discriminator 合法 | 新增 Ext1/可选 N2 子项为设计覆盖，**NOT_RUN / 待独立复评**；不追溯计入 #116 的限定批准 |
-| continuation 携带 `n2SmInfoExt1` | F06 v0.3.9 未冻结 continuation Ext1 slot，当前 profile 显式拒绝 | 子项 NOT_RUN；不能静默丢弃、猜测 `n2Ext1.confirmation` 或修改原版 YAML |
+| continuation 携带 `n2SmInfoExt1` | F06 v0.3.10 仍未冻结 continuation Ext1 slot，当前 profile 显式拒绝 | 子项 NOT_RUN；不能静默丢弃、猜测 `n2Ext1.confirmation` 或修改原版 YAML |
 | 缺失或重复 Content-ID、part 错配、`n2SmInfoType` 与 N2 part 不符、截断/未知 5GSM、互相冲突的消息种类 | 拒绝错误输入，不发布新的可执行业务事件 | 不通过默补字段或业务解码修复输入 |
 
 测试 Host 仅验证 Plugin 的三个规范化 eventType、payload schema、discriminator 投影、staging 和 IPC。N1 分类映射单测使用注入的 test double；生产实现必须在 ca-client-tools#44 发布精确 API 后绑定，不得自建 parser。Plugin 只为当前 HTTP/2 stream 保留内存 waiter；Host 创建本次 ingress 的 responseObligationId，并用 Host-owned pending continuation index 按可信 peer、operationId、smContextRef 和分类定位候选原 Run；若无匹配或多重匹配则拒绝，不新建 Run。Owner/Runtime 再验证原 Run 的 generation、releaseTxn、SUPI/PSI 与本路 originalInvocationId/Proof。**原 Run/generation/releaseTxn 的匹配、回调独立响应义务以及零重复 mutation** 属 F02/F04/F05、SR-010/011 的组合验收，不由 SR-009 单模块声称 PASS。Plugin 不接收或发送 Run ID；`responseObligationId` 作为 Host-owned 字段随 `delivery.dispatch` 到达时仅瞬时接收，不解释、不持久化、不转发、不回传，Delivery 写回仍由 Plugin-local `responseChannelId` 完成。
@@ -96,12 +96,12 @@ AC-009-01/02/03/05/06 仅依赖测试 Host、协议 fixture 和计数 peer。AC-
 |---|---|
 | 实施仓库 | ca-openamsm-plugin |
 | GitHub Issue | [ca-openamsm-plugin #2](https://github.com/odango-chan/ca-openamsm-plugin/issues/2) 已存在；只承接独立 Plugin 模块，不代表 Next/系统 E2E PASS |
-| 实施 PR | [ca-openamsm-plugin #3](https://github.com/odango-chan/ca-openamsm-plugin/pull/3) OPEN、非 Draft、未合并；Head `161ffe6344baa325f004899718392dfa49cce97e` |
-| Commit | 外部模块候选 `161ffe6344baa325f004899718392dfa49cce97e`，不在 Next 源码树 |
+| 实施 PR | [ca-openamsm-plugin #3](https://github.com/odango-chan/ca-openamsm-plugin/pull/3) OPEN、非 Draft、未合并；当前集成候选 Head `4232b20da09d54d88711523e02994c185573a963`，继承 PR #1 设计 `8fc1cd2`；Go/Schema/Test 40 Blob 与原受测源码保持不变 |
+| Commit | 外部源模块代码/固定历史受测 Head `161ffe6344baa325f004899718392dfa49cce97e`；后续 docs-only、双父设计对账 Head `4232b20da09d54d88711523e02994c185573a963`，不在 Next 源码树 |
 | 实施状态 | 外部模块候选已经提交，未合并；本版中央增量仍需复评；Next 集成 NOT_RUN |
-| 验收证据 | 外部 Plugin module CI #46123933375 SUCCESS（受测 `161ffe6`）；不等于新增 Ext1、Host 三元义务、生产 classifier、Next Host 或系统验收 PASS；逐 AC 仍须独立定界 |
+| 验收证据 | 外部 Plugin module CI [#46141123128](https://github.com/odango-chan/ca-openamsm-plugin/actions/runs/46141123128) 在 Head `4232b20` Ubuntu/Windows SUCCESS（Ubuntu `go test -race`）；受测 Go/Schema/Test 40 Blob 与 `161ffe6` 同一实现源，Ext1/内容路由的模块子集有限定证据；仍**不能证明** Host 非空错误 obligation 的权威三元判定、Next Host、生产 T0 classifier、continuation Ext1、正式系统 E2E PASS |
 
-ca-openamsm-plugin PR #1 仍是设计候选（Head `5bb987aec6a643d453e7d2f111c04c4f02dbcd2f`）；PR #3 堆叠于该设计分支，是模块实现候选而非 Next 产品。其设计 pin 及系统 OAP gates 分组仍要由各自源仓收敛，不得直接以 #117 的较旧设计覆盖 #115。
+ca-openamsm-plugin PR #1 仍是未合并设计候选（Head `8fc1cd2d2530f2fe792f6fe330d5a23c2fe98106`），已修正 Ext1 slots、Next 固定比较快照及 OAP 模块/系统门槛。PR #3 `4232b20` 以双父提交继承该设计且相对 #1 ahead 4/behind 0，无代码/Schema/测试 Blob 回退；仍仅为模块实现候选。旧 #117 原 4 P1 不得以整树 merge 覆盖 #115；其中 Host opaque obligation 权威错配验证固定归 F05 v0.4.15 / SR-011 AC-011-05，当前 NOT_RUN。
 
 ### 6.1 Issue #116 固定批准与本版增量边界
 
@@ -150,3 +150,4 @@ ca-openamsm-plugin PR #1 仍是设计候选（Head `5bb987aec6a643d453e7d2f111c0
 | 2026-11-28 | 0.2.12 | GLM-5.3（DeepSeek Harness） | §5.1、修订记录 | 为 AC-009-04 §5.1 参数化用例表补 `nsmf.create-sm-context` Create 正例行 | 关闭首轮 R1-SR009-02 的 Create 用例缺口，使三个 eventType 均有正例 | Issue #12；PR #46；Review #6082541121 |
 | 2026-11-28 | 0.2.13 | GPT-6.2（ChatGPT） | 文档头、§2、§4～6、修订记录 | 刷新 F05/F06/IPC 权威版本；将 AC-009-05 收窄到 responseChannel/delivery 映射，externalRequestId 去重明确归 Host；将 AC-009-04 生产 classifier 绑定列为 ca-client-tools#44 直接外部依赖，并允许 test double 仅验证 Event mapping；等待当前快照独立增量复评后再创建实施 Issue | 消除 Plugin/Host 重试身份边界和 NAS classifier 所有权歧义，避免 Harness 猜测 API 或复制 parser | Issue #12；Review #73；F05 v0.4.10；F06 v0.3.7；IPC v0.2.7；ca-client-tools#44；PR #115 |
 | 2026-11-28 | 0.2.15 | GPT-6（ChatGPT） | 文档头、§5～6、修订记录 | 只选择性吸收 #117 的明确设计修订，不采用其越权 READY/Ext1 PASS/Plugin 可验证 Host 三元身份的宣告；固定 #116 原批准范围、Host 三元所有权与外部 Plugin #3 候选证据 | 消除 #116 P2-01～06/09/10 及 #117 三类 P1 的中央语义冲突；P2-07/08 外部待复核，最终需独立全量复评 | Issue #50/#116；PR #115/#117；ca-openamsm-plugin#3 |
+| 2026-11-28 | 0.2.16 | GPT-6（ChatGPT） | 文档头、§5～6、版本引用、修订记录 | 固定新版 F05 v0.4.15/F06 v0.3.10，按实际 GitHub 修正 Plugin PR #1 `8fc1cd2` / PR #3 `4232b20` 实施与双平台 CI 证据，保留原模块受测源身份及 Host P2-05、T0、Next E2E 阻塞 | 避免中央 SR 继续宣称外部 Plugin 设计/实现整改未完成或把新 Go CI 偷换为 Host 三元关系 PASS；现行整项仍 DRAFT | Issue #50/#116；PR #115/#117；ca-openamsm-plugin#1/#3 |
