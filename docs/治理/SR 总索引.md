@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.91
+> 文档版本：0.3.92
 > 状态：31 项 SR：4 VERIFIED（SR-001/002/003/024 限定模块）、2 IMPLEMENTED（SR-015 设计移交 / SR-028 uv 主干实现）、25 DRAFT、0 IN_PROGRESS。PR #115 已合入受保护 main（最终受审 Head `041e21ac8a4c99b509b09c809c156ed528455899`，merge `574ca51122b49e48be20fadedca225b5fad3137c`）；原作者/源 PR 的 CLOSED/superseded 不等于独立 MERGED。AC-028-01～10 原始证据见 Issue #96，合并后的 main SHA 产品独立复验仍待执行，不能升级 VERIFIED/RELEASED。 CI 和后续 PR 的最新状态必须按 GitHub 实时查询。
 > 修订日期：2026-11-28\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -35,12 +35,12 @@
 | [SR-010](../SR/SR-010-OpenAMSM%20工具插件与按需编解码集成.md) | [IR-005](../IR/IR%20总登记册.md#ir-005) | OpenAMSM 工具插件与按需编解码集成（AC-010-03 no-hash Channel；AC-010-10 OAS3 multipart / N1-N2-N2 Ext1） | DRAFT |
 | [SR-011](../SR/SR-011-真实%20OpenAMSM%20创建修改释放端到端验证.md) | [IR-005](../IR/IR%20总登记册.md#ir-005) | 真实 OpenAMSM 创建修改释放端到端验证 | DRAFT |
 | [SR-012](../SR/SR-012-Compiler设计归档与跨仓收敛.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Compiler 设计归档与跨仓收敛 | DRAFT |
-| [SR-013](../SR/SR-013-Compiler已检查when与发布产物.md) | 阶段 READY（中央只读核验） | AC-013-01 固定归档完整性 | PR #110 修复已纳入完整 59 Blob 归档树；Issue #102 独立复验 58/58、SHA256SUMS、audit_evidence.py、Python 18/18 PASS；`vet.log` NOT_ARCHIVED；AC-013-02～06 产品未运行，AC-013-07 BLOCKED/NOT_RUN。 | [#77](https://github.com/odango-chan/ca-agent-next/issues/77#issuecomment-7209276846)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95)；[#102](https://github.com/odango-chan/ca-agent-next/issues/102) |
+| [SR-013](../SR/SR-013-Compiler已检查when与发布产物.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Compiler 已检查 when 与发布产物 | DRAFT（阶段状态及逐 AC 证据见下方专项表） |
 | [SR-015](../SR/SR-015-工具契约设计移交.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 工具契约设计移交 | IMPLEMENTED |
-| [SR-016](../SR/SR-016-工作台设计移交与条件编辑.md) | 阶段 READY（中央只读核验） | AC-016-01、AC-016-09 设计对照 | AC-016-01 v0.3.40 已正式定义；新定义下 14 组配对仍 NOT_RUN；MIG-016-01 仅历史台账；AC-016-09 仅设计对照，六宿主未实测。 | [#78](https://github.com/odango-chan/ca-agent-next/issues/78#issuecomment-7210318006)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95)；[#106](https://github.com/odango-chan/ca-agent-next/issues/106) |
-| [SR-017](../SR/SR-017-业务插件设计移交.md) | 阶段 READY（中央只读核验） | AC-017-01～04 静态移交 | Host-only artifactRef 解析、Tool Plugin 单次 Invocation grant、固定 Mock AMF 来源和 SR017-H 身份边界已补入；AC-017-02 仍 FAIL，运行验收 NOT_RUN。 | [#79](https://github.com/odango-chan/ca-agent-next/issues/79#issuecomment-7210443123)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95)；[#103](https://github.com/odango-chan/ca-agent-next/issues/103) |
-| [SR-018](../SR/SR-018-业务所有者设计移交.md) | 阶段 REVIEW_REQUESTED | AC-018-01～04、历史 UE-requested Release | 固定 main AC-018-01/02 FAIL、AC-018-03 BLOCKED、AC-018-04 静态 PASS；历史 Owner/隔离 UE-requested Release E2E 限定 PASS；当前候选 Reconcile、Network ReleaseSMContext、Next E2E NOT_RUN；#28 BLOCKED/NOT_STARTED。 | [#80](https://github.com/odango-chan/ca-agent-next/issues/80)；[#104](https://github.com/odango-chan/ca-agent-next/issues/104)；[env-openamsm#28](https://github.com/odango-chan/env-openamsm/issues/28) |
-| [SR-019](../SR/SR-019-仿真对端设计移交.md) | 阶段 READY（中央只读核验） | AC-019-01～04 固定源静态移交 | 固定 `env-5gc-sim@6ba1dc4`、Establish fixture 与 Next EC07 2+5+5 迁移清单；AC-019-02 FAIL、AC-019-03 NOT_RUN，真实 NF/E2E 未执行。 | [#81](https://github.com/odango-chan/ca-agent-next/issues/81#issuecomment-7210443123)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95)；[#105](https://github.com/odango-chan/ca-agent-next/issues/105) |
+| [SR-016](../SR/SR-016-工作台设计移交与条件编辑.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 工作台设计移交与条件编辑 | DRAFT（阶段状态及逐 AC 证据见下方专项表） |
+| [SR-017](../SR/SR-017-业务插件设计移交.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | OpenAMSM Event / Delivery Plugin 设计恢复 | DRAFT（阶段状态及逐 AC 证据见下方专项表） |
+| [SR-018](../SR/SR-018-业务所有者设计移交.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | OpenAMSM MAS Owner 契约与权威状态设计恢复 | DRAFT（阶段状态及逐 AC 证据见下方专项表） |
+| [SR-019](../SR/SR-019-仿真对端设计移交.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Mock AMF SBI Test Peer 与 5GC 仿真设计恢复 | DRAFT（阶段状态及逐 AC 证据见下方专项表） |
 | [SR-020](../SR/SR-020-参考宿主设计移交.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 参考宿主设计移交 | DRAFT |
 | [SR-021](../SR/SR-021-原生宿主设计移交.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 原生宿主设计移交 | DRAFT |
 | [SR-022](../SR/SR-022-执行内核设计移交.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 执行内核设计移交 | DRAFT |
@@ -54,6 +54,17 @@
 | [SR-030](../SR/SR-030-Host%20Context%201.6.0%20Schema-only%20Interface%20Package%20Publisher.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Host Context 1.6.0 Schema-only Interface Package Publisher | DRAFT |
 | [SR-031](../SR/SR-031-3GPP公共Schema-only-Publisher.md) | [IR-009](../IR/IR%20总登记册.md#ir-009) | OpenAMSM 3GPP OpenAPI 原版 Source Bundle 原样代发布（当前 PostSmContexts requestBody 选定闭包 4 文件 / 102 Schema Component） | **DRAFT（增量设计待评审、Publisher / Consumer 产品 NOT_RUN）** |
 | [SR-032](../SR/SR-032-SKILL作者规范与Node设计原则.md) | [IR-008](../IR/IR%20总登记册.md#ir-008) | CA-SL 1.6.0 SKILL 作者规范、Node 拆分与注释原则；共享 Package 资源、Script Registry 与 Host system Capability | **DRAFT（PR #115 集成独立终审已完成并合入 main；产品/发布验收仍 NOT_RUN）** |
+
+
+**五项 SR 的阶段专项记录（以下为阶段 READY/REVIEW_REQUESTED，不提升整项主状态）：**
+
+| SR | 阶段状态 | 阶段覆盖 AC | 已有证据与未完成事项 | 来源与跟踪 |
+|---|---|---|---|---|
+| [SR-013](../SR/SR-013-Compiler已检查when与发布产物.md) | 阶段 READY（中央只读核验） | AC-013-01 固定归档完整性 | PR #110 修复已纳入完整 59 Blob 归档树；Issue #102 独立复验 58/58、SHA256SUMS、audit_evidence.py、Python 18/18 PASS；`vet.log` NOT_ARCHIVED；AC-013-02～06 产品未运行，AC-013-07 BLOCKED/NOT_RUN。 | [#77](https://github.com/odango-chan/ca-agent-next/issues/77#issuecomment-7209276846)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95)；[#102](https://github.com/odango-chan/ca-agent-next/issues/102) |
+| [SR-016](../SR/SR-016-工作台设计移交与条件编辑.md) | 阶段 READY（中央只读核验） | AC-016-01、AC-016-09 设计对照 | AC-016-01 v0.3.40 已正式定义；新定义下 14 组配对仍 NOT_RUN；MIG-016-01 仅历史台账；AC-016-09 仅设计对照，六宿主未实测。 | [#78](https://github.com/odango-chan/ca-agent-next/issues/78#issuecomment-7210318006)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95)；[#106](https://github.com/odango-chan/ca-agent-next/issues/106) |
+| [SR-017](../SR/SR-017-业务插件设计移交.md) | 阶段 READY（中央只读核验） | AC-017-01～04 静态移交 | Host-only artifactRef 解析、Tool Plugin 单次 Invocation grant、固定 Mock AMF 来源和 SR017-H 身份边界已补入；AC-017-02 仍 FAIL，运行验收 NOT_RUN。 | [#79](https://github.com/odango-chan/ca-agent-next/issues/79#issuecomment-7210443123)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95)；[#103](https://github.com/odango-chan/ca-agent-next/issues/103) |
+| [SR-018](../SR/SR-018-业务所有者设计移交.md) | 阶段 REVIEW_REQUESTED | AC-018-01～04、历史 UE-requested Release | 固定 main AC-018-01/02 FAIL、AC-018-03 BLOCKED、AC-018-04 静态 PASS；历史 Owner/隔离 UE-requested Release E2E 限定 PASS；当前候选 Reconcile、Network ReleaseSMContext、Next E2E NOT_RUN；#28 BLOCKED/NOT_STARTED。 | [#80](https://github.com/odango-chan/ca-agent-next/issues/80)；[#104](https://github.com/odango-chan/ca-agent-next/issues/104)；[env-openamsm#28](https://github.com/odango-chan/env-openamsm/issues/28) |
+| [SR-019](../SR/SR-019-仿真对端设计移交.md) | 阶段 READY（中央只读核验） | AC-019-01～04 固定源静态移交 | 固定 `env-5gc-sim@6ba1dc4`、Establish fixture 与 Next EC07 2+5+5 迁移清单；AC-019-02 FAIL、AC-019-03 NOT_RUN，真实 NF/E2E 未执行。 | [#81](https://github.com/odango-chan/ca-agent-next/issues/81#issuecomment-7210443123)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95)；[#105](https://github.com/odango-chan/ca-agent-next/issues/105) |
 
 **IR-009 增量设计（独立于 PR #46 原 24 项评议）：**新增 [SR-031](../SR/SR-031-3GPP公共Schema-only-Publisher.md) 与 [EC01.3GPP 原版 OpenAPI 引用设计](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。当前 `PostSmContexts.requestBody` 选定闭包为四份原版 YAML / 102 个 Schema Component；原件 byte-for-byte 不变，Plugin 原生 OAS3 multipart，Compiler 直接引用 pin 后 `components/schemas`，NAS/NGAP Codec Output 独立发布。SR-031 产品 AC 全部 NOT_RUN；新增 AC 不继承 PR #46 原 24 项设计评议。
 
@@ -342,3 +353,4 @@
 
 | 2026-11-28 | 0.3.90 | GPT-6（ChatGPT） | 文档头、SR-028、§2/§4、修订记录 | 对齐 #115 已合并、主干 SR-028 IMPLEMENTED 和待复验状态 | 消除“OPEN/Draft/未合入”的现行假状态 | Issue #50/#96/#111；PR #115 |
 | 2026-11-28 | 0.3.91 | GPT-6（ChatGPT） | SR-032、§3.2、修订记录 | 清理主干已合并后在活动 SR-032 / SR-028 / Phase G 描述中残留的旧 OPEN/Draft/候选状态 | 使详细阶段与文档头主状态一致 | Issue #50/#96/#116；PR #121 |
+| 2026-11-28 | 0.3.92 | GPT-6（ChatGPT） | §2 主清单、阶段专项明细、修订记录 | 修复 SR-013/016/017/018/019 行比主表多 1 列的结构错误，主表固定四列，将原始五列阶段证据完整迁移至下方专项明细 | 确保 31 项 SR 主状态可机器统计，同时不丢失阶段 READY/FAIL/BLOCKED/历史证据及原 Issue 链 | Issue #96/#121；PR #115 |
