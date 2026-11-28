@@ -1,12 +1,12 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.65
-> 状态：29 项 SR：4 VERIFIED、1 IMPLEMENTED、24 DRAFT；PR #46 Review #6083872622 对 SR-028 的第六轮独立复评为 CHANGES_REQUESTED（固定 Head 2d20a128，0 P0 / 1 P1 / 2 P2）；R028-21～23 已按 Issue #12 完成文档整改并推送，等待新 Head 第七轮独立复评，SR-028 仍 DRAFT、AC-028-01～10 产品执行 NOT_RUN、READY=0。
-> 修订日期：2026-11-27\
+> 文档版本：0.3.66
+> 状态：29 项 SR：4 VERIFIED（仅各自历史模块范围）、1 IMPLEMENTED（设计移交）、24 DRAFT（整项主状态）。SR-028 第七轮设计独立复评 APPROVE_FOR_READY（限设计；Review #6084094037），#99 候选 uv 产品证据已归档但尚未合入当前恢复分支，必须逐 AC 另核验；本 SR 索引不将设计 READY 冒充实施/发布 VERIFIED。
+> 修订日期：2026-11-28\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
-> 本文局部非目标：以本文范围与非目标章节为准；无额外扩展  
+> 本文局部非目标：以本文范围与非目标章节为准；无额外扩展
 
 跨仓任务从 Next 发起。先在本仓登记覆盖目标仓和修改范围的 SR，达到 READY 后再切换到目标仓实施，目标仓结果回填本仓 SR。既有外部 Issue 可作为关联入口。详见《SR 管理规范》§8.1。
 
@@ -25,7 +25,7 @@
 |---|---|---|---|
 | [SR-001](../SR/SR-001-评审上下文自动生成.md) | [IR-001](../IR/IR%20总登记册.md#ir-001) | 评审上下文自动生成 | VERIFIED |
 | [SR-002](../SR/SR-002-Python%20核心与宿主基础骨架.md) | [IR-002](../IR/IR%20总登记册.md#ir-002) | Python 核心与宿主基础骨架 | VERIFIED |
-| [SR-003](../SR/SR-003-统一插件管理器与扩展通信.md) | [IR-002](../IR/IR%20总登记册.md#ir-002) | 统一插件管理器与扩展通信 | **VERIFIED（模块）** |
+| [SR-003](../SR/SR-003-统一插件管理器与扩展通信.md) | [IR-002](../IR/IR%20总登记册.md#ir-002) | 统一插件管理器与扩展通信 | VERIFIED（模块 AC-003-01～04 PASS；系统 EX NOT_RUN） |
 | [SR-004](../SR/SR-004-已发布技能包导入.md) | [IR-003](../IR/IR%20总登记册.md#ir-003) | 已发布技能包导入 | DRAFT |
 | [SR-005](../SR/SR-005-技能目录与条件程序消费.md) | [IR-003](../IR/IR%20总登记册.md#ir-003) | 技能目录与已检查 when 程序消费 | DRAFT |
 | [SR-006](../SR/SR-006-技能解析器与续跑选择.md) | [IR-003](../IR/IR%20总登记册.md#ir-003) | 技能解析器与 continuation 选择 | DRAFT |
@@ -87,7 +87,7 @@
 | SR-025 | APPROVE_FOR_READY（限定） | 中央 MAS Owner Publisher 设计；正式发布仍阻塞 | DRAFT |
 | SR-026 | BLOCKED_EXTERNAL_INPUT | Codec 公开 ID、Schema、slot/mediaType、handler、Package/SemVer、正式 SHA 与进程证据缺失 | DRAFT |
 | SR-027 | BLOCKED_EXTERNAL_INPUT | 五根同批 1.6.0 作者提交、Echo Interface、新 Compiler Release/argv、Bundle 资产及授权缺失 | DRAFT |
-| SR-028 | CHANGES_REQUESTED（最新 Review #6083872622） | 0 P0 / 1 P1 / 2 P2；R028-21 为 P1 阻断，R028-22/23 为 P2；第六轮问题已修订并推送、等待第七轮复评；AC-028-01～10 产品执行 NOT_RUN | DRAFT |
+| SR-028 | APPROVE_FOR_READY（第七轮限设计：Review #6084094037） | 0 P0 / 0 P1 / 2 非阻断 P2；旧第六轮问题已 CLOSED。#99 uv 实施分支和证据 ZIP 已独立审计但尚未集成；设计批准与正式产品 AC/Release 分开 | DRAFT（实施主状态） |
 | SR-029 | APPROVE_FOR_READY（限定） | 中央 1.6.0 Capability-first 设计；生产者机器契约未发布 | DRAFT |
 | SR-030 | APPROVE_FOR_READY（限定） | Schema-only 设计与 AC-030-01 固定源审计；新版 Publisher 未发布 | DRAFT |
 
@@ -100,7 +100,7 @@
 
 **最新第五轮正式评审：**[PR #46 Review #6083641266](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083641266)，平台事件 `COMMENTED`；固定 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`。模型结论 CHANGES_REQUESTED，0 P0 / 1 P1 / 3 P2；唯一 P1 R028-17 阻断 READY。
 
-**最新第六轮正式评审：**[PR #46 Review #6083872622](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083872622)，平台事件 `COMMENTED`；固定 Head `2d20a128a1574103d709d82f6c426580ecb47f48` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`。独立模型 `codearts/deepseek-v4.1-flash` / `reasoning_effort=low`，结论 CHANGES_REQUESTED（0 P0 / 1 P1 / 2 P2）。评审原任务 Head `07346aae` 曾漂移，经用户授权改以 `2d20a12` 固定快照；评审报告说明 G02/SR-028 在各中间快照逐字节一致。随后分支在本轮整改起点前推进至 `072248ff`，增量为其他 SR 与治理文档，不改 G02/SR-028。
+**历史第六轮正式评审：**[PR #46 Review #6083872622](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083872622)，平台事件 `COMMENTED`；固定 Head `2d20a128a1574103d709d82f6c426580ecb47f48` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`。独立模型 `codearts/deepseek-v4.1-flash` / `reasoning_effort=low`，结论 CHANGES_REQUESTED（0 P0 / 1 P1 / 2 P2）。评审原任务 Head `07346aae` 曾漂移，经用户授权改以 `2d20a12` 固定快照；评审报告说明 G02/SR-028 在各中间快照逐字节一致。随后分支在本轮整改起点前推进至 `072248ff`，增量为其他 SR 与治理文档，不改 G02/SR-028。
 
 - **R028-21（P1）：**AC-028-08 受控负例同时要求测试通过和 head `Agent.md` 的 `review_scope` 无效，但测试模块导入时直接从仓库根 `Agent.md` 派生 fixture；破坏该配置会先令 gate 失败，生成器步骤被跳过，无法产生生成器诊断证据。
 - **R028-22（P2）：**AC-028-08 证据列缺少负例 PR 不合并、恢复后重新执行成功路径的明确证据。
@@ -112,15 +112,15 @@
 - **R028-19（P2）：**SR-028 AC-028-07 的 `pull_request.paths` 枚举不完整，需与 G02 完整清单一致。
 - **R028-20（P2）：**SR §5.1 要求逐范围 `exit_code`，G02 仅定义整体 `exit_code`，需统一逐范围和整体定义。
 - 第五轮固定基线核验通过；G02 §4.1/§4.2 Bash 故障注入显示前轮 fail-fast/cleanup 规则 CLOSED，A-return 全部 `--no-sync`；该仿真不是 uv 0.13.10 产品运行证据。AC-028-01～10 产品执行仍全部 NOT_RUN。
-- 当前整改追踪使用 Issue #12；原 G02 设计 Issue #35 已 CLOSED。第六轮整改已按授权仅修改 SR-028/G02 与治理追踪文档，G02 v0.2.7、SR-028 v0.2.9 已推送，等待新 Head 第七轮独立复评；未创建实施 Issue/Goal，SR-028 保持 DRAFT，READY=0。
+- **历史第六轮快照：**该时点仅修订 G02 v0.2.7 / SR-028 v0.2.9，确实尚未创建实施 Issue/Goal；**之后**已建立 [Issue #96](https://github.com/odango-chan/ca-agent-next/issues/96)、PR #99 并归档候选产品证据，不能继续把旧“未创建实施”写成现行事实。第七轮设计 Review 仅授予设计 READY；当前恢复分支未合入 uv 实施。
 
 ### 2.2 第三轮发现的修订追踪与当前门槛
 
 - **P1（4 条）**：SR-007、SR-009、SR-011 的阻断问题已在本分支修订；各自新增 AC/契约断言仍须对最终 Head 独立复评。
 - **P2（25 条）**：覆盖 SR-004/005/006/007/008/010/013/017/020/030、SR 总索引证据说明，以及 SR-005/013/017/018/019/020/021/022/023/025 十份修订账本；修订完成不等于原 Review 自动重新批准。
 - **外部阻塞**：SR-026/027 仍缺生产者正式输入；不允许以文档补写替代外部发布。
-- **实施门槛**：24 项实施 SR 仍全部 DRAFT，READY=0；未创建实施 Issue/Goal，未运行 Compiler、uv 双平台、Host/Runtime/Codec、Echo、OpenAMSM 或真实 NF E2E。所有新 Head 结论须绑定完整 Head/Base SHA 和正式 GitHub Review。
-- **SR-028 专项门槛**：最新 Review #6083872622 对固定 Head `2d20a128a1574103d709d82f6c426580ecb47f48` 给出 1 P1 / 2 P2；已按 Issue #12 完成第六轮文档整改，G02 v0.2.7 / SR-028 v0.2.9 已推送，等待新 Head 第七轮独立复评，AC-028-01～10 产品执行仍 NOT_RUN。未取得新 Head 的 `APPROVE_FOR_READY` 前 READY=0。
+- **实施门槛（当前集成范围）：**除历史范围外的 24 项整项 SR 仍 DRAFT；但已经创建 SR-028 实施 Issue #96 和 #93/#94 实施入口，且 PR #99 已归档 uv 双平台候选证据。它们尚未在恢复分支集成/复验，不能把候选分支 PASS 自动计入当前产品 VERIFIED；Compiler、Host/Runtime/Codec、OpenAMSM 真实 E2E 仍单独待验。新 Head 结论须绑定完整 Base/Head SHA 和真实 GitHub Review。
+- **SR-028 专项门槛（当前）：**第七轮独立 Review [#6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6084094037) 固定 Head `93f1389e7c5968cd30e8a74137207094864ecca0` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`，设计结论 APPROVE_FOR_READY（0 P0 / 0 P1 / 2 非阻断 P2）；但该历史设计快照不自动批准后续合并后的全量 PR。#97 设计 READY 回填、#99 uv 产品 AC 证据、#112 治理基线须按依赖顺序另行合入并复验；在当前集成基线不据此提升 SR 产品状态为 VERIFIED/RELEASED。
 
 
 ### 2.3 23 项逐 SR 独立评审与复评入口
@@ -163,7 +163,7 @@
 
 | 顺序 | SR | 主要功能 | 目标仓 / 参考仓 | 依赖和产出 |
 |---|---|---|---|---|
-| 1 | SR-023 | CA-SL v1alpha5、作者源与发布基线恢复 | ca-skills | 先固定语言、Skill 作者源与版本边界；Compiler #61 仍是外部 OPEN 依赖 |
+| 1 | SR-023 | CA-SL v1alpha5、作者源与发布基线恢复 | ca-skills | 先固定语言、Skill 作者源与版本边界；Compiler #61 保留 v1alpha5 历史范围，不作为 1.6.0 依赖 |
 | 2 | SR-015 | Tool Interface / Provider / Codec 设计恢复 | ca-client-tools → Next F03.05 | IMPLEMENTED；SR-015 合并时 F03.05 v0.3.9（现行 v0.4.4）；SR-015 v0.3.8；PR #37 MERGED，产品代码未实现 |
 | 3 | SR-025 | MAS Owner 1.6.0 Capability-first Interface Package Publisher | ca-client-tools → Next F03.05 / F09 | 新 Owner 24/24 Capability↔Callable 发布；历史 24/25、Development v1alpha1 和 1.0.0 仅审计；具体新机器 Schema/版本待 Owner/Compiler 冻结 |
 | 4 | SR-030 | Host Context 1.6.0 Schema-only Interface Package Publisher | ca-agent-demo → Next F09 | DRAFT；固定原始 Schema 来源；0 Capability / 0 Callable；新 Package Schema、languageTarget 和 SemVer 待冻结，AC-030-01～07 NOT_RUN；SR-024 VERIFIED 仅作为旧 v1alpha5 Development Publisher 历史证据 |
@@ -179,7 +179,7 @@
 
 ### 3.2 Next 实施阶段
 
-- 治理自动化：SR-001 VERIFIED；[PR #32](https://github.com/odango-chan/ca-agent-next/pull/32) MERGED（`7a0fac41e573021207ab8201bbc718718c451e50`）；AC-REV-01～10 PASS、80 tests OK、Run [45793590532](https://github.com/odango-chan/ca-agent-next/actions/runs/45793590532) success。SR-028 仍为 DRAFT；最新专项 Review #6083872622 为 CHANGES_REQUESTED，第六轮设计整改已推送，等待第七轮独立复评，uv 尚未实施。
+- 治理自动化：SR-001 VERIFIED；[PR #32](https://github.com/odango-chan/ca-agent-next/pull/32) MERGED（`7a0fac41e573021207ab8201bbc718718c451e50`）；AC-REV-01～10 PASS、80 tests OK、Run [45793590532](https://github.com/odango-chan/ca-agent-next/actions/runs/45793590532) SUCCESS。SR-028 整项集成状态仍 DRAFT；第七轮设计已获限定 READY、PR #99 候选实施证据已有但未整合恢复分支，uv 不得在当前分支被宣布 VERIFIED/RELEASED。
 - Phase A：SR-002（VERIFIED；PR #23 已集成；AC-002-01～08 PASS；EX-01 仍 NOT_RUN）。
 - Phase B：**SR-003 VERIFIED（模块）**；[实施 PR #34](https://github.com/odango-chan/ca-agent-next/pull/34) 与 [治理回填 PR #41](https://github.com/odango-chan/ca-agent-next/pull/41) 均 MERGED。最终实施 Head `e8bcb1b` 与 Merge `32c7c1be` tree 一致；治理回填 Head `f3f59b54` 与 Merge `a899409` tree 一致。[CI #45815167442](https://github.com/odango-chan/ca-agent-next/actions/runs/45815167442)、[CI #45817800342](https://github.com/odango-chan/ca-agent-next/actions/runs/45817800342) 均 SUCCESS：Linux Python 3.12 + Windows Python 3.14 每平台 Plugin 87 / Host 52 / Review Context 80 tests PASS，Go Echo build、compileall 与证据采集 PASS；AC-003-01～04 均 PASS。系统 EX-02/03/04/18 仍 NOT_RUN；Provider v2 wire DTO 属 SR-010，不影响 SR-003 模块结论。
 - Phase C：SR-004 的 SKILL.md-only 子阶段范围见 §2.4；Assurance 消费等待正式 Compiler 契约与 Bundle。
@@ -188,7 +188,7 @@
 - Phase F：SR-008。
 - Phase G：SR-009 独立 Plugin 模块可按自身 READY/Issue/授权先行，不等待 Echo；SR-010 逐子阶段核对实施依赖；两者的系统 OM 组合仍待 Echo 与 Host/Owner 对端。
 - Phase H：SR-011。
-- Capability-first 新版本设计：[SR-029](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) / [Issue #40](https://github.com/odango-chan/ca-agent-next/issues/40)：**CA-SL 1.6.0-only / 完全无旧版兼容 / 设计待独立评审**。F02/F03.05/F04/F06/F08/F09/EC02 已加入待评审章节；Compiler/Publisher/Runtime/Studio/Bundle 新契约尚未发布，不启动代码实施。
+- Capability-first 新版本设计：[SR-029 v0.2.6](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) / [Issue #40](https://github.com/odango-chan/ca-agent-next/issues/40)：**CA-SL 1.6.0-only / 完全无旧版兼容 / 设计待独立评审**。Provider 目标由历史查询 2/2 扩展为含 Codec READ 的 **3/3**；Owner 历史 Parser 二选一重构/剔除，目标基数依发布者签认为 **22/22 或 24/24**。T1 不读 T2 Codec Result；Modify 0xC9/NGAP 未资格化 BLOCKED。F02/F03.05/F04/F06/F08/F09/EC02 均按候选设计约束，Compiler/Publisher/Runtime/Studio/Bundle 新契约尚未发布，不启动代码实施；下游 PR #46/#48 冲突另设集成任务，不直接修改。
 - Compiler 外部发布依赖：SR-012、SR-013；SR-013 的 [PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)已核对 58 个文件与 SHA256SUMS；归档报告为 Go/Python 18/18，当前审计复跑 NOT_RUN，不代表 Compiler 产品发布或完整 SR VERIFIED。
 
 阶段顺序仅约束实际实施依赖，不限制独立设计评审。每个 SR 达到 READY 后，只有当前实施阶段的直接实施依赖满足才可启动；未满足的依赖只阻塞其消费者，不得阻塞独立 SR/AC。Goal 模式可将同一依赖批次中的多个 READY SR 合并执行，但不得跨越未满足的实施依赖或把 DRAFT SR 当成可执行任务。
@@ -288,3 +288,25 @@
 | 2026-11-27 | 0.3.63 | kimi-k3.1-pro | §2.4、修订记录 | 回填 SR-018/019 静态 FAIL/PASS 分层及联合证据缺项 | 不用历史 Owner/peer 实现或场景替代当前静态正确性和运行验收 | Issue #95；SR-018/019 |
 | 2026-11-27 | 0.3.64 | kimi-k3.1-pro | §2.4、修订记录 | 回填 SR-016/030 限定静态 PASS 与产品 BLOCKED/NOT_RUN | 区分 Studio 状态模型、固定 Schema 字节与未实施产品验收 | Issue #95；SR-016/030 |
 | 2026-11-27 | 0.3.65 | kimi-k3.1-pro | §2.4、修订记录 | 回填 SR-023 历史规范 01～03 静态 PASS 与新版 04 BLOCKED | 区分历史语言移交与新版 Compiler/Bundle/Importer 验收 | Issue #95；SR-023 |
+| 2026-11-26 | restore-0.3.30-restore（历史分支） | GPT-6（ChatGPT） | §1～4 | SR-003 IMPLEMENTED，主状态统计更新为 3/2/22 | 满足实现合并后的 SR 状态回填 | Issue #28；PR #34；Merge `32c7c1be` |
+| 2026-11-26 | restore-0.3.30-refresh（历史分支） | GPT-6.2（ChatGPT） | 文档头、§2～§4 | SR-025 v0.1.7 设计 READY 并创建 ca-client-tools #43；更新 27 项 SR 统计为 3 VERIFIED / 2 READY / 1 IMPLEMENTED / 21 DRAFT；回填 PR #34 MERGED 到恢复分支 | 完成 SR READY → 目标仓 Issue 的交接，并纠正 PR #34、SR-025 和总统计的过期状态 | Issue #12、#28；IR-006；SR-003、SR-025；ca-client-tools #43；PR #34 |
+| 2026-11-26 | restore-0.3.31-restore（历史分支） | GPT-6（ChatGPT） | 文档头、§1～4、修订记录 | SR-003 模块 VERIFIED，27 项统计 4 VERIFIED / 1 IMPLEMENTED / 22 DRAFT；附双平台 CI、merge tree 证据 | 与权威 SR-003/Acceptance 最新状态一致，EX 保持 NOT_RUN | Issue #28；PR #34/#41；CI #45815167442/#45817800342 |
+| 2026-11-26 | restore-0.3.31-refresh（历史分支） | GPT-6.2（ChatGPT） | §1、§3 | 将 SR-025 版本同步为 v0.1.7；补齐 PR #34 MERGED 到恢复分支与 SR-025 READY/#43 OPEN 的索引摘要 | 保持 SR 清单、顶部摘要和目标仓 Issue 入口一致 | Issue #12、#28；IR-006；SR-003、SR-025；PR #34；ca-client-tools #43 |
+| 2026-11-27 | restore-0.3.32（历史分支） | GPT-6.2（ChatGPT） | 文档头、§1～§4 | 将 SR-003 从旧分支快照 READY/IN_PROGRESS 纠正为当前模块 VERIFIED；SR-025 保持 READY，统计更新为 4 VERIFIED / 1 READY / 1 IMPLEMENTED / 21 DRAFT | 保留恢复分支 PR #41/#42 后续模块验收证据，避免状态分叉导致 SR 索引倒退 | Issue #53；Issue #12；SR-003、SR-025；PR #34/#41/#42；ca-client-tools #43 |
+| 2026-11-27 | restore-0.3.33（历史分支） | GPT-6.2（ChatGPT） | §4、修订记录 | 明确 PR #13 CLOSED/superseded，回填 restore HEAD `34e99e0`、PR #34/#41/#42 合并链与 PR #54 仅进入 restore 的边界 | 修复 PR #13 OPEN/CLOSED 冲突，并确保 SR 状态索引不把恢复分支合并误报为 main 集成 | Issue #53；Issue #12；PR #13/#34/#41/#42/#54 |
+| 2026-11-27 | restore-0.3.34（历史分支） | GPT-6.2（ChatGPT） | §4、修订记录 | 保留 0.3.30/0.3.31 restore 与 refresh 两侧的原始修订记录并增加来源后缀 | 避免同号历史记录互相覆盖；不改变 27 项权威 SR 状态及 4/1/1/21 统计 | Issue #53；PR #54；SR-003、SR-025 |
+| 2026-11-27 | restore-0.3.35（历史分支） | GPT-6.2（ChatGPT） | 文档头、修订记录 | 删除元数据块末行多余反斜杠，避免 CommonMark 将其渲染为字面字符 | 保持文档头元数据渲染正确，不改变 SR 状态及 4/1/1/21 统计 | Issue #53；PR #54；R3-P3-01 |
+| 2026-11-26 | restore-0.3.32-pr44（历史分支） | GPT-6.2（ChatGPT） | §3.2、修订记录 | 记录 SR-004 v0.2.0 当前 DRAFT/NOT READY、模块 AC 和 SR-013/SR-027 的实际设计依赖 | 避免将外部发布依赖尚未完成的 Assurance 路径误判为可实施 | Issue #43；SR-004；SR-013；SR-027 |
+| 2026-11-26 | restore-0.3.33-pr44（历史分支） | GPT-6.2（ChatGPT） | §3.2、修订记录 | 将 SR-004 引用更新至 v0.2.1，确认新 Runtime Artifact 字段映射仍由 Compiler #61 冻结 | 防止 SR 索引引用过期 SR 版本 | Issue #43；SR-004；SR-013 |
+| 2026-11-26 | restore-0.3.34-pr44（历史分支） | GPT-6.2（ChatGPT） | §3.2、修订记录 | 将 SR-004 引用更新至 v0.2.3，并纳入 Agent Skills Front Matter 契约 | 保持 SR 索引与最新导入设计一致 | Issue #43；SR-004 |
+| 2026-11-26 | restore-0.3.35-pr44（历史分支） | GPT-6.2（ChatGPT） | Phase C、修订记录 | SR-004 指向 v0.2.4，新增 1.6.0/SR-029 Capability Binding 正式发布直接依赖 | 不提前把 Compiler v1alpha5 when 当成 1.6.0 完成；SR 仍 DRAFT | Issue #40/#43；SR-004；SR-029；SR-013 |
+| 2026-11-27 | restore-0.3.37（历史分支） | Codex | 整合 | Phase B 已验收证据与 Phase C 导入前置条件 | 对齐 #54 恢复基线与 #44 导入设计 | Issue #40、#43；PR #44 |
+| 2026-11-27 | restore-0.3.40（历史分支） | GPT-6.2（ChatGPT） | SR 清单、Phase C、修订记录 | 整合 Capability-first 设计及 SR-029/IR-008 追踪，实施和产品发布仍 NOT_RUN | 整合 #45 的 1.6.0-only 设计增量并保留恢复分支当前状态，避免回滚 #44 与后续修订。 | Issue #12/#40/#43；PR #44/#45 |
+| 2026-11-27 | restore-0.3.41（历史分支） | GPT-6.2（ChatGPT） | SR 清单、Phase C、修订记录 | 同步 1.6.0-only Compiler/Authoring 设计修订后的当前版本引用，保留 28 SR / 8 IR 状态与未发布门槛。 | 保证跨文档依赖指向同一组最新设计版本，避免评审与 Harness 使用过期契约。 | Issue #12/#40/#43；SR-004/013/027/029；PR #45 |
+| 2026-11-27 | restore-0.3.42（历史分支） | GPT-6.2（ChatGPT） | SR 清单、Phase C、修订记录 | 同步 Compiler 1.6.0-only 新契约的 M.3 / Request Schema Owner Gate 与跨文档当前版本引用；旧 v1alpha5 仅保留历史冻结语义。 | 避免将历史 v1alpha5 规范或 DTO 隐式复用为 CA-SL 1.6.0 的规范性输入。 | Issue #40；SR-004/013/027/029；EC02；F08；PR #45 |
+| 2026-11-27 | restore-0.3.43（历史分支） | GPT-6.2（ChatGPT） | 当前版本/依赖指针、修订记录 | 对齐 EC02 v0.2.12、F08 v0.3.16、F09 v0.3.16 和审计 v0.4.53；不改变历史证据与 SR 状态 | 避免评审与 Harness 误引用旧版；保持 1.6.0 NOT_RELEASED 与 DRAFT 边界。 | Issue #40/#43；PR #45；SR-004/013/027/029 |
+| 2026-11-27 | restore-0.3.44（历史分支） | GPT-6.2（ChatGPT） | §4 当前基线说明、修订记录 | 纠正正文当前 SR 总计 27/21 与顶部当前 28/22 不一致；保留历史评审统计 | 修复审阅时点与当前权威状态混写，不改变任何 SR 状态 | Issue #40/#12；PR #45；SR-029 |
+| 2026-11-27 | restore-0.3.45（历史分支） | GPT-6.2（ChatGPT） | Phase C、修订记录 | 将 SR-004 当前版本指针更新至 v0.2.13 | 保持 SR 索引与当前需求记录一致 | Issue #40/#43；PR #45；SR-004 |
+| 2026-11-27 | restore-0.3.46（历史分支） | GPT-6.2（ChatGPT） | SR 总索引 §3.2 | 将 SR-004 Assurance 路径的 Compiler 实施依赖统一指向 #62，并保留 SR-023 的 v1alpha5 历史记录。 | 让阶段索引反映实际的新实施追踪且不改变 SR-004 DRAFT 状态。 | Issue #40/#62；PR #45 |
+| 2026-11-28 | restore-0.3.47（历史分支） | GPT-6（ChatGPT） | §3.2/Phase C | 同步 SR-004 v0.2.15、SR-029 v0.2.6、Provider Codec 3/3 与 Owner Parser 待决；保持 28 SR 阶段统计原样 | 保留设计/产品状态分离，登记第六轮 P1 的正式冻结依赖 | Issue #40/#113；PR #45；SR-026/029 |
+| 2026-11-28 | 0.3.66 | GPT-6（ChatGPT） | SR 数量、#45/#46 设计与第七轮时点回填、修订记录 | 三方整合后保持 29 个唯一 SR（新增 SR-030），明确 #46 历史第六轮失败已被第七轮设计评审取代；保留 #99 未合并的候选产品证据与 #45 1.6.0-only 决策 | 避免把历史时点状态冒充最新状态，防止 READY/VERIFIED 混同 | Issue #12；#40；#96；PR #45；#46；#97；#99 |
