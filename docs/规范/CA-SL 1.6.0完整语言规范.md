@@ -1,7 +1,7 @@
 # CA-SL 1.6.0 完整语言规范（中央设计稿）
 
 > 文档类型：CA-SL 作者语言规范（中央规范性设计稿）
-> 文档版本：0.1.5
+> 文档版本：0.1.6
 > 语言版本：CA-SL 1.6.0
 > languageTarget 候选：connectionagent.io/v1.6.0（本设计建议值；发布前由 ca-skills 与 Compiler Owner 在正式 Schema / Golden 中确认）
 > 状态：**DRAFT / REVIEW_REQUESTED**；未发布、未冻结、不得作为已发布产品规范
@@ -96,7 +96,7 @@ contract.yaml 是唯一 Contract。它不需要 apiVersion / kind 包装；语�
 
 ~~~yaml
 # 仅在 Event Publisher 已冻结 event.type metadata 后可引用
-when: 'event.type == "nsmf.create-sm-context" && has(input.request.requestType) && input.request.requestType == "INITIAL_REQUEST"'
+when: 'event.type == "nsmf.create-sm-context" && has(input.requestType) && input.requestType == "INITIAL_REQUEST"'
 precondition: validate-request.precondition
 requestSchema: schemas/create-request.schema.json
 dependencies:
@@ -111,7 +111,7 @@ limits:
   maxActions: 12
 ~~~
 
-本例的 `input` 根是规范化 Event payload，`input.request` 才是原版 OpenAPI `SmContextCreateData` 对象。当前固定 OpenAMSM OAS3 源中 `requestType` 是可选字段，其 `RequestType` 组件通过 `anyOf` 给出两个 `type: string` 分支（其中一个带 enum）；因此必须用 `has(input.request.requestType)` 守卫并比较字符串 `"INITIAL_REQUEST"`，不能比较整数。`event.type` 仅在 Publisher 冻结其 metadata Schema/Descriptor 后才使该正例有效；否则该引用必须编译失败。`has()` 与 `&&` 左到右短路仍须由 ca-skills Publisher 纳入并冻结于 CA-SL 1.6.0 CEL Profile，当前仅是设计候选。
+本例的 `input` 根是经过 T0 规范化后从 Event payload 的 `request` 成员提取、并按本 Skill `requestSchema` 验证的 JSON Request 值；对 `PostSmContexts`，它就是原版 OpenAPI `jsonData` / `SmContextCreateData` 对象，而不是完整 Event envelope 或 multipart。当前固定 OpenAMSM OAS3 源中 `requestType` 是可选字段，其 `RequestType` 组件通过 `anyOf` 给出两个 `type: string` 分支（其中一个带 enum）；因此必须用 `has(input.requestType)` 守卫并比较字符串 `"INITIAL_REQUEST"`，不能比较整数，也不得再添加 `input.request` 层。`event.type` 仅在 Publisher 冻结其 metadata Schema/Descriptor 后才使该正例有效；否则该引用必须编译失败。 `has()` 与 `&&` 左到右短路仍须由 ca-skills Publisher 纳入并冻结于 CA-SL 1.6.0 CEL Profile，当前仅是设计候选。
 
 **不定义 goal 字段。** Skill 的目的由 SKILL.md 描述；Procedure 的最终业务成功证明由一个可达 Postcondition 阶段的聚合 PASS 直接路由 SUCCEEDED。不得在 Contract、Postcondition 阶段或 Predicate 成员增加 goal 字段。
 
@@ -214,7 +214,7 @@ when 是 contract.yaml 顶层可选 CEL 表达式；不属于 Procedure、Predic
 
 允许的变量只有：
 - event.type：只有当所选 Event Publisher 在正式发布的 Event metadata contract 中声明并冻结该字段为 string，且对应 Schema/Descriptor 被固定到当前依赖快照时才可引用；它不是全局默认字段。未冻结、未声明或无法解析时，引用必须在编译期拒绝。
-- input：当前规范化 Event payload，静态类型来自本 Skill 的 requestSchema；按 F06，OpenAMSM payload 的 `request` 属性承载原样 `SmContextCreateData` / `SmContextUpdateData`，因此请求字段通过 `input.request.*` 访问。
+- input：当前 Event 经 T0 规范化并通过适用 Request Schema 验证后的 Request 值，静态类型来自本 Skill 的 `requestSchema`；对 OpenAMSM SBI，Host 从规范化 Event payload 的 `request` 成员取出 JSON Data 作为 `input`。当 `requestSchema` 的根直接引用 `SmContextCreateData` / `SmContextUpdateData` 时，字段从 `input` 根访问（例如 `input.requestType`），不得额外添加 `request` 层；若 Skill 显式声明本地 G.4 包装根，则按该根本身的字段结构访问。
 
 when 不得读取 Context、Tool Result、Observation、Evidence、环境变量、时钟或可变 Host 状态；不得调用 Tool、查询网络或产生副作用。
 
@@ -395,6 +395,18 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 - SR-027 负责新 Bundle；SR-004～006 负责导入、Catalog、Resolver；F04 负责 Runtime Action Boundary；F09 / SR-016 负责 Studio。
 - 未正式发布前，所有产品实现和运行验收保持 NOT_RELEASED / NOT_RUN；本设计通过不代表实施 READY。
 
+## 19. OpenAMSM 原版 OpenAPI 直接引用与 Skill 分阶段输入（IR-009）
+
+**原版来源与选定闭包**：SR-031 逐字节代发布 OpenAMSM 实际支持的 OAS 3.0 YAML。当前核验入口为 TS 29.502 `PostSmContexts.requestBody` → `multipart/related` → `jsonData` → `#/components/schemas/SmContextCreateData`；在固定 OpenAMSM commit 上，该 Schema Component 的可达闭包为 4 份原版 YAML / 102 个 Schema Component，不复制全部 472 份 standard YAML。原始文件和相对 `$ref` 一字不改。Source Bundle 不是 Capability Package，也不是自动的 G.4 Schema-only Package。未选定 operation 的 refs 不要求 eager resolve；消费端只解析显式 pin 的选定闭包。
+
+**直接引用**：Skill-owned `requestSchema` 根仍由 Skill 自己声明；显式依赖并 pin Source Bundle 后，可直接引用原版文件的精确 `#/components/schemas/...`。Compiler 对外部目标按 OAS 3.0 Schema Object dialect 解析，保留 `allOf` / `anyOf` / `oneOf` / `nullable` / `pattern` / `additionalProperties` / `format` 等原语义；不生成 Adapter / Projection。缺少 Resolver、运行期 Validator 或 Golden 时相关 AC BLOCKED / NOT_RUN。
+
+**Ingress 与执行期分离**：Plugin T0 依据 TS 29.502 operation 的选定 `requestBody` 校验 SBI JSON / multipart / Content-ID / N1/N2/N2 Ext1 binary slots；T1 `when` 只读取已规范化且到场的 Event metadata 与 Request 值。对 `PostSmContexts`，`n1SmMsg.contentId`、`n2SmInfo.contentId`、`n2SmInfoExt1.contentId` 必须分别匹配 N1、N2、N2 Ext1 对应 binary part 的 `Content-ID`；引用目标缺失、重复 ID、错槽或媒体类型不符均拒绝。未被 JSON 引用的 part 不得交给 Codec；额外或未引用 part 的拒绝 / 忽略必须由选定 ingress profile 明确规定，不从 OpenAPI Schema 隐含推断。被选 Skill 的 Procedure 在 T2 才能调用授权 Codec READ，消费 Provider 正式 Output Schema。NAS-only PDU Session Type / SSC mode / PTI 不得在 T1 无来源时成为必填；Codec Result 不能替代 Owner Receipt / Commit Proof。
+
+**NAS / NGAP**：TS 29.502 binary slot 不定义 NAS IE / NGAP ASN.1 字段。Result Schema 由 SR-026 Provider 基于 OpenAMSM 实际支持的 TS 24.501 / TS 38.413 来源和已资格化消息 Profile 发布；未发布的消息类型保持 BLOCKED，不伪造官方 YAML。
+
+Host Context Schema-only Package 仍只经 `Contract.contexts` 引用，与 OpenAPI Source Bundle 不混同。CA-SL 1.6.0 唯一新语言，不提供旧版兼容。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
@@ -405,3 +417,4 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 | 2026-11-27 | 0.1.3 | kimi-k3.1-pro | §2、修订记录 | 将 schemas、scripts 移出 assurance，与 assurance、references 同列于 Skill 根目录 | 修正目录树与 EC01 作者源布局不一致，明确辅助资源不属于 assurance 子目录 | Issue #95；SR-023 |
 | 2026-11-28 | 0.1.4 | GPT-6（ChatGPT） | §4、§9、§12、§18、修订记录 | 修正 `when` 的规范化输入路径、可选字符串 Guard 与 Event metadata 冻结条件；分离 Skill-owned G.4 和原版 OAS3 3.0 的 dialect/fragment/anyOf 解析；统一 Compiler #62 新版入口 | 避免合法原版 OpenAPI 被 G.4 规则误拒、错误 CEL 类型或未冻结 Event 字段进入产品契约 | Issue #12；#40；PR #46；Review #6095143611 |
 | 2026-11-28 | 0.1.5 | GPT-6.2（ChatGPT） | §1、§12.2 | 将 Source Bundle 来源身份固定为原始 bytes + 上游 Git blob ID 元数据；明确 Demo 不计算/比较 SHA-256、checksum 或 digest，byte-for-byte 比较直接操作原始字节 | 避免“固定 SHA”被误读为引入产品哈希校验，与 Demo 排除项冲突 | Issue #47/#50；IR-009；SR-031；PR #115 |
+| 2026-11-28 | 0.1.6 | GPT-6.2（ChatGPT） | §9、§12、§19、修订记录 | 将 CEL `input` 绑定明确为已验证 Request 根，修正 PostSmContexts `input.requestType` 路径；补齐原版 OAS3 选定闭包与 T0/T1/T2 Codec 阶段边界 | 避免把 Event envelope / multipart 当作 Request 根，统一 CA-SL、F06 与标准契约消费边界 | Issue #47/#49；IR-009；SR-031/010/013/026/027；PR #48/#101/#115 |

@@ -2,8 +2,8 @@
 
 > 文档类型：总体架构设计\
 > 状态：目标架构基线；SR-002 Python Host/Model Loop 最小切片 VERIFIED；SR-003 v0.3.11 VERIFIED（模块 AC-003-01～04）；PR #34/#41/#42 已合入恢复分支，双平台 CI SUCCESS；系统 EX-02/03/04/18 未完成；CA-SL 1.6.0 Capability-first 架构增量待评审，产品未发布
-> 文档版本：0.4.13
-> 修订日期：2026-11-27
+> 文档版本：0.4.14
+> 修订日期：2026-11-28
 > 适用范围：ca-agent-next 通用 Agent Core、Host、Runtime、Skill 与 Plugin 公共机制\
 > 权威边界：本文是本仓唯一总体架构文档；字段级契约见规范，机制细节见设计说明书\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
@@ -142,6 +142,18 @@ SkillCatalog 由 Core/Host 拥有，是进程内不可变快照。启动或显�
 8. 无候选则澄清或拒绝，不允许无 Skill 绑定地回退到 Generic Agent。
 
 when 是纯 CEL Skill 选择表达式，作者源位置为可选 Assurance 的 contract.yaml；predicates.yaml 只用于执行期业务判断。不新增 activation.yaml、constraint.yaml、独立 Package 或第二份 Contract。
+
+### 7.1 标准 Request 与业务 Owner Contract 的分离
+
+CA-Agent 优先消费已有的权威标准契约；标准未覆盖的业务语义由对应业务 Owner 定义自己的契约（例如 MAS Owner Contract Package）。二者可以在同一 Skill 中组合，但必须保留各自来源、Schema、版本和所有权。标准定义的协议字段及其语义不得被业务契约覆盖；当 3GPP SBI Request 触发 MAS 业务操作时，Request 仍是 3GPP 契约，MAS Contract 约束 Owner Capability / Callable 及其结果，Procedure 显式映射二者，不把 MAS 字段注入 3GPP JSON。
+
+- 标准已定义的内容直接使用 OpenAMSM 实际支持版本对应的原版 OpenAPI 3.0 契约；不得复制、改写或投影原始 YAML。
+- `PostSmContexts` 的选定消费面为 `requestBody → multipart/related → jsonData → SmContextCreateData`。Host 从规范化 Event payload 的 `request` 成员提取 jsonData 对象作为 Skill Request；若 `requestSchema` 直接引用 `SmContextCreateData`，CEL `input` 就是该对象根，`requestType` 路径为 `input.requestType`，不是 `input.request.requestType`，也不是完整 multipart envelope。
+- N1/N2/N2 Ext1 bytes 保留为独立 Artifact slots。SBI JSON 直接按原版 OAS3 Schema 验证，不调用 Codec；只有 Skill 选定后，Procedure 确实需要 NAS/NGAP 内部字段时才调用已资格化 Codec READ。
+- 如果入站接口没有适用的标准契约，则使用对应业务 Owner / Event Plugin 正式发布的领域 Request Schema。Owner Callable IO Schema 不自动成为 Event Request Schema；Owner 必须明确发布该输入 Schema 才可作为来源。
+- 同一 Skill 同时引用标准 Request 与领域 Owner Contract 时，保持两套契约分离，并在 Procedure 中显式映射 Request 字段到 Capability arguments；不得扁平化、重命名或将领域字段伪装成标准字段。
+
+**when 唯一入口**：有 Assurance 的 Skill 才能在 `assurance/contract.yaml` 声明可选顶层 `when`；SKILL.md YAML Front Matter 不声明 `when`，无 Assurance Skill 没有 Contract，不声明 `when`。`when` 只读取 Publisher 冻结的 `event.type` 与当前已验证 Request Schema 根对应的 `input`，不得读取 Context、Tool Result、Observation、Evidence 或 T2 Codec Result；`predicates.yaml` 只用于执行期业务判断。
 
 ## 8. Plugin 与 Tool 统一机制
 
@@ -321,3 +333,4 @@ sequenceDiagram
 | 2026-11-27 | 0.4.11 | GPT-6.2（ChatGPT） | 文档头、外部依赖快照、§13～§14、修订记录 | 修正外部依赖快照日期与 restore HEAD 时态；修复元数据块末行反斜杠；将 PR #54 历史评审与第三轮 Run #319/Artifact 当前验证信息移入评审快照小节 | 消除历史时点混杂、元数据字面反斜杠和导航章节错置；让当前验证证据精确绑定最终 Head | Issue #53；PR #54；R3-P3-01/02/05；Run #319；Artifact `review-context-pr-54-45961614681-1` |
 | 2026-11-27 | 0.4.12 | GPT-6.2（ChatGPT） | 文档头、§15、修订记录 | 整合 1.6.0-only Capability-first 设计与最新恢复基线；设计待评审，实施/发布 NOT_RUN | 整合 PR #45 的 CA-SL 1.6.0 Capability-first 设计与恢复分支最新状态，避免回滚已合入的 #44 及后续基线。 | Issue #12/#40/#43；PR #44/#45 |
 | 2026-11-27 | 0.4.13 | GPT-6.2（ChatGPT） | 总体架构外部依赖状态 | 更新 Compiler 跨仓状态，明确 #61 历史范围和 #62 的 1.6.0 新目标追踪。 | 使总体架构的外部依赖快照与新建的 1.6.0 实施 Issue 一致。 | Issue #40/#62；PR #45 |
+| 2026-11-28 | 0.4.14 | GPT-6.2（ChatGPT） | §7.1、修订记录 | 加入标准契约优先与业务 Owner 契约补位；明确 3GPP Request 与 Owner Callable Contract 分离、jsonData Request 根和 `assurance/contract.yaml` 唯一 when 入口 | 防止领域字段污染标准请求、误把 Owner Callable IO 当 Event Request，或回退 Front Matter.when 旧方案 | Issue #47/#49；IR-009；SR-031/010/013/026；PR #48/#101/#115 |
