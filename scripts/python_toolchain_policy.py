@@ -91,6 +91,7 @@ FORBIDDEN_COMMANDS = (
         re.compile(
             r"\b(?:(?:python(?:\d+(?:\.\d+)?)?|py(?:\.exe)?)\s+-m\s+pip|pip(?:3(?:\.\d+)?)?)\s+"
             r"(?:install|sync|compile)\b"
+            r"|\buv\s+pip\s+(?:install|sync|compile|uninstall)\b"
             r"|\bpip-(?:compile|sync)\b"
             r"|\bpipenv\s+(?:install|sync|lock)\b",
             re.IGNORECASE,
