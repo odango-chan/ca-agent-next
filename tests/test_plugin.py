@@ -808,9 +808,14 @@ class LifecycleIpcTests(_ManagerTestCase):
 class EchoReceiverProtocolTests(unittest.TestCase):
     """向真实 Echo 进程注入 Host->Plugin 帧，不依赖 Manager 发送侧校验。"""
 
-    @staticmethod
-    def _run(*frames: dict) -> subprocess.CompletedProcess[str]:
-        binary = support.ensure_echo_binary()
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.binary = support.ensure_echo_binary()
+
+    @classmethod
+    def _run(cls, *frames: dict) -> subprocess.CompletedProcess[str]:
+        binary = cls.binary
         payload = "".join(
             json.dumps(frame, ensure_ascii=False, separators=(",", ":")) + "\n"
             for frame in frames
@@ -898,9 +903,8 @@ class EchoReceiverProtocolTests(unittest.TestCase):
             "disposition": "rejected",
             "error": {"code": "FIELD_INVALID", "message": "invalid"},
         }
-        binary = support.ensure_echo_binary()
         finished = subprocess.run(
-            [str(binary), "serve", f"--ingress={custom}"],
+            [str(self.binary), "serve", f"--ingress={custom}"],
             cwd=binary.parent,
             input="".join(
                 json.dumps(frame) + "\n"
