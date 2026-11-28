@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.26\
+> 文档版本：0.2.27\
 > 状态：整项 DRAFT；阶段 READY（中央只读核验）。AC-013-01 归档完整性。  
 > 下一步：修复 PR #18 归档中 audit 登记不一致、绝对式校验路径及 vet 日志缺项后重新静态复核。复跑单列；02/04 NOT_RUN，03/05/06 等 Compiler Owner 与正式契约。\
 > 阶段依据：[独立评审 #77](https://github.com/odango-chan/ca-agent-next/issues/77#issuecomment-7209276846)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
@@ -98,7 +98,7 @@ SR-013 整体仍为 DRAFT。AC-013-01 的隔离 PoC 完成不自动把 SR-013 �
 ### 3.3 产物与回填位置
 
 - 证据单：[PR #18 固定归档 EVIDENCE.md](https://github.com/odango-chan/ca-agent-next/blob/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc/EVIDENCE.md)；当前完整性 FAIL，复验前不可作为可搬移证据。
-- 产物目录：[PR #18 固定归档 artifacts/](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc/artifacts)，含 cases.json 及逐用例 .checked.pb / .types.pb。
+- 产物目录：[PR #18 固定归档 artifacts/](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc/artifacts)，仅含逐用例 .checked.pb / .types.pb；[cases.json 位于归档根目录](https://github.com/odango-chan/ca-agent-next/blob/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc/cases.json)，不在 artifacts/ 内。
 - 隔离源码：compiler-255ab85/internal/compiler/ac013_poc_test.go。
 - [PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)固定归档包含 58 个非清单文件；Issue #95 审计发现 audit.json、SHA256SUMS 和 vet.log 缺项，归档完整性 FAIL（详见 Issue #102）。历史 Go/Python 18/18 报告保留；本轮复跑 NOT_RUN。原始提交 78dddd5 的追溯保留在 PR #18 的提交 trailer。
 - 已检查归档清单与 Git blob；PR #18 报告在干净 Compiler 基线独立复跑。当前审计未重新执行 Go/Python。
@@ -441,3 +441,4 @@ AC-013-02/04 仍 NOT_RUN，03/05/06 仍 BLOCKED。整项 DRAFT 主状态不变�
 | 2026-11-27 | 0.2.24 | Codex / GPT-6 | 文档头 | 登记阶段 READY（中央只读核验）及 AC 范围与工作项 #95 | 按单项独立评审推进 | Issue #12、#77；PR #46 |
 | 2026-11-27 | 0.2.25 | kimi-k3.1-pro | AC-013-01、§13、文档头 | 核对 58 项归档哈希与历史结果，发现 audit 登记不一致、绝对式校验路径及 vet 日志缺项；将本轮归档完整性记为 FAIL，复跑 NOT_RUN | 区分文件存在性、内部一致性和产品运行验收，避免过度判 PASS | Issue #95；PR #18 |
 | 2026-11-27 | 0.2.26 | GPT-6.2（ChatGPT） | AC-013-01、AC-013-02/04、§13、修订记录 | 将证据指针固定到 PR #18 的不可变归档路径；为 AC-013-02/04 补直接外部前置；归档字节/清单整改单独跟踪 Issue #102，未将文档修订视为归档验收 PASS | 分离设计前置、固定源证据与归档修复，避免把未发布的外部输入或历史 PoC 当作产品完成 | Issue #95；#102；#106；PR #18；Review #77 |
+| 2026-11-28 | 0.2.27 | GPT-6（ChatGPT） | §3.3、修订记录 | 修正固定证据路径：artifacts/ 仅存 36 个 protobuf，cases.json 位于归档根；避免误导复验入口 | Issue #106；PR #107；Review 2026-11-28 |
