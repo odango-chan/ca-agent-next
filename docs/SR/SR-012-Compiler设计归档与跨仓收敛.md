@@ -1,6 +1,6 @@
 # SR-012 Compiler 设计归档与跨仓收敛
 
-> 文档版本：0.1.11\
+> 文档版本：0.1.12\
 > 状态：整项 DRAFT；阶段 READY（中央只读核验）。AC-012-01 的 Next→源仓静态部分、03。  
 > 下一步：固定 Compiler 源树清单 218/12 与历史边界；02 源仓链接替换等默认分支与源仓授权。  
 > 阶段依据：[独立评审 #76](https://github.com/odango-chan/ca-agent-next/issues/76#issuecomment-7210373026)，评审 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
@@ -16,13 +16,13 @@
 本 SR 纳入 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12) 的中央设计评审批次。**SR 实施主状态依旧为 `DRAFT`；设计 `REVIEW_REQUESTED` 不等于独立 APPROVED、实施 READY 或产品 PASS。** 单版本决定见 [SR-029](SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) / [PR #45](https://github.com/odango-chan/ca-agent-next/pull/45)。
 
 - **本轮评审重点：**Compiler 活动设计与中央 EC02 文档的权威映射、历史冻结发布只读归档、源仓重复正文迁移后的路径。
-- **阻塞/未验证：**Compiler #61 的 1.6.0 Artifact/API 与 Next main 尚未就绪；不能先替换源仓权威文档链接。
+- **阻塞/未验证：**Compiler #62 的 1.6.0 Artifact/API 与 Next main 尚未就绪（#61 仅保留 v1alpha5 历史范围）；不能先替换源仓权威文档链接。
 - **通用架构约束：**新 CA-SL 作者源、Compiler API/Build DTO、Runtime Artifact、Bundle、Studio 与 Agent Importer/Runtime **只支持 1.6.0**；Skill 只选择 Capability ID，公开 Capability↔Callable 双向一对一。历史版本材料只读留档；不做别名、兼容、双轨、迁移或 fallback。机器字段/ID 必须等待发布者冻结，不猜测。
 - **评审输出：**逐项核对范围、非目标、外部 Owner、错误/状态语义、Acceptance 与证据路径。设计无独立结论写 `PENDING_REVIEW`；未发布依赖写 `BLOCKED`；未运行测试写 `NOT_RUN`。当前不得派发 DeepSeek Harness 实施任务。
 
 目标是让 Next EC02 成为现行 Compiler 机制设计入口。设计依据为 [EC02 设计说明书](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.13 §1–4。
 
-本 SR 的唯一实施仓为 `odango-chan/ca-skill-compiler`。Next 上的 EC02、IR/SR 和审计属于中央设计输入与结果回填。以 Compiler `255ab85fa5abb4b0bf36656bf64250cafebf45cb` 的 README.md、README.zh-CN.md 为导航入口，对 `git ls-tree -r --name-only HEAD docs` 中的活动设计逐项比对 EC02。仅在可定位到已评审的中央章节时将重复正文改为链接；无法对应的条目列为差异并保留原文。用 `git diff --name-status` 检查变更仅落在已登记的文档，逐个验证新增的中央链接在 Next 默认分支可达。保留机器契约、实现、测试、示例、运行说明和发布证据。其他协作仓仅在发现重复 EC02 设计后，通过覆盖目标仓的 SR 处理。CA-SL 作者规范的**中央设计权威在 Next**，ca-skills 负责正式作者 Schema/Release 和作者源实现，不在 Compiler 目标仓复制一份新规范。Compiler #61 的实现及版本发布单独追踪。
+本 SR 的唯一实施仓为 `odango-chan/ca-skill-compiler`。Next 上的 EC02、IR/SR 和审计属于中央设计输入与结果回填。以 Compiler `255ab85fa5abb4b0bf36656bf64250cafebf45cb` 的 README.md、README.zh-CN.md 为导航入口，对 `git ls-tree -r --name-only HEAD docs` 中的活动设计逐项比对 EC02。仅在可定位到已评审的中央章节时将重复正文改为链接；无法对应的条目列为差异并保留原文。用 `git diff --name-status` 检查变更仅落在已登记的文档，逐个验证新增的中央链接在 Next 默认分支可达。保留机器契约、实现、测试、示例、运行说明和发布证据。其他协作仓仅在发现重复 EC02 设计后，通过覆盖目标仓的 SR 处理。CA-SL 作者规范的**中央设计权威在 Next**，ca-skills 负责正式作者 Schema/Release 和作者源实现，不在 Compiler 目标仓复制一份新规范。Compiler 的 1.6.0-only 实现及版本发布由 [Issue #62](https://github.com/odango-chan/ca-skill-compiler/issues/62) 单独追踪；#61 仅保留 v1alpha5 历史范围。
 
 **AC-012-02 文件处置清单**。中央接收位置分别见 [EC02 Compiler](../设计说明书/EC02-Compiler/Compiler设计说明书.md)、[工具链](../设计说明书/EC02-Compiler/工具链设计.md)、[Development Build](../设计说明书/EC02-Compiler/Development%20Build设计.md) 与 [Evidence 职责](../设计说明书/EC02-Compiler/Evidence职责设计.md)。以本节固定 Compiler SHA 为源。在目标仓中根 `README.md`、`README.zh-CN.md` 与 `docs/README.md`、`docs/README.zh-CN.md` 只更新设计导航。下表路径相对 `docs/design/`。指定为“链接”的部分只有在 Next 默认分支对应章节可达且保存固定历史来源后才可替换。
 
@@ -51,7 +51,7 @@
 | AC-012-02 | Compiler 默认分支的设计入口指向 Next；清理重复活动设计且保留冻结历史及机器契约，文档门禁通过 | NOT_RUN |
 | AC-012-03 | 审查每项冻结决策及候选 when 的状态，提供可复核的 Harness 门槛和证据路径 | DESIGN |
 
-Issue [Next #2](https://github.com/odango-chan/ca-agent-next/issues/2)；依赖工作 [Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)。实施 PR、Commit、受测 SHA 与测试证据待回填。替代关系：无。
+Issue [Next #2](https://github.com/odango-chan/ca-agent-next/issues/2)；依赖工作 [Compiler #62](https://github.com/odango-chan/ca-skill-compiler/issues/62)（1.6.0-only；旧 [#61](https://github.com/odango-chan/ca-skill-compiler/issues/61) 仅 v1alpha5 历史范围）。实施 PR、Commit、受测 SHA 与测试证据待回填。替代关系：无。
 
 ### 设计移交与模块验收的独立映射（2026-11-26）
 
@@ -61,7 +61,7 @@ Issue [Next #2](https://github.com/odango-chan/ca-agent-next/issues/2)；依赖�
 |---|---|---|
 | AC-012-01 | 固定 Compiler 源 SHA、Next EC02 入口、IR/SR/Issue 双向链接 | 引用全部可达；旧 Runtime API/Golden 不被覆写 |
 | AC-012-02 | 源仓活动 docs 与 Next EC02 对照；重复项/无法映射项分别归类 | 仅已批准重复正文变链接；无法映射保留原文；Git diff 文件范围明确 |
-| AC-012-03 | 记录每项 v1alpha5/Development v1alpha1 为历史、1.6.0 新目标与 Compiler #61 的产品 Release 状态 | 核对 EC02《工具链设计》§3.2.1 与主设计 §11，旧版仅进入历史清单；现行 Loader、Resolver、Runtime 遇旧 Artifact 均拒绝且 IPC=0。源仓入口收敛另按 AC-012-02 取证 |
+| AC-012-03 | 记录每项 v1alpha5/Development v1alpha1 为历史、1.6.0 新目标与 Compiler #62 的产品 Release 状态 | 核对 EC02《工具链设计》§3.2.1 与主设计 §11，旧版仅进入历史清单；现行 Loader、Resolver、Runtime 遇旧 Artifact 均拒绝且 IPC=0。源仓入口收敛另按 AC-012-02 取证 |
 
 **执行及证据**：设计 AC 以固定中央设计 HEAD、源仓 SHA、准确文件/符号/静态 diff 与逐项对照表取证；若此轮未实际读/跑某源代码或测试，则记录 `NOT_RUN` 而不是 PASS。跨仓源仓代码修改必须有独立实施 Issue/PR、授权并在相应产品 SR 留痕。已有的 SRxxx-A/B/... 原验收保留作细项追踪，不能据此把模块产品或 Next E2E 状态提升为 VERIFIED。
 
@@ -93,3 +93,4 @@ Issue [Next #2](https://github.com/odango-chan/ca-agent-next/issues/2)；依赖�
 | 2026-11-27 | 0.1.9 | GPT-6（ChatGPT） | 文档头、评审状态、修订记录 | 将第三轮独立模型 Review #6082541121 的限定结论替换第三轮自评状态；明确只认可固定源清单静态核对，源仓正文替换仍未闭合 | 以可访问 GitHub Review 为准，不把仓内自评或旧评审登记冒充独立审批 | Issue #12；PR #46；Review #6082541121 |
 | 2026-11-27 | 0.1.10 | Codex / GPT-6 | 文档头 | 登记阶段 READY（中央只读核验）及 AC 范围与工作项 #95 | 按单项独立评审推进 | Issue #12、#76；PR #46 |
 | 2026-11-27 | 0.1.11 | kimi-k3.1-pro | 本轮固定源静态核验、文档头 | 回填 218/12 文件集合、12 个 blob、三份正文实际差异与限定 AC 结果，链接完整报告 | 固定源中央移交可复核；不改变主状态或产品验收 | Issue #95；PR #46 |
+| 2026-11-28 | 0.1.12 | GLM-5.3（DeepSeek Harness） | §0、AC-012-03、修订记录 | 将 §0 阻塞项与 AC-012-03 中 1.6.0 Artifact/API 的实施归属由 #61 更正为 #62（#61 仅 v1alpha5 历史范围） | 关闭第八轮 R8-04 残留，保持唯一新版实施入口 | Issue #12；PR #46；Review #6095143611 |

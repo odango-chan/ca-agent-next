@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书\
 > 状态：**设计待评审**（唯一新目标 CA-SL 1.6.0；全链路不兼容任何旧作者语法、Build DTO、Artifact、Bundle；1.6.0 产品未发布）
-> 文档版本：0.3.2
+> 文档版本：0.3.3
 > 功能归属：F02 — Skill 管理与选择  
 > 关联 SR：SR-004、SR-005、SR-006    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -263,7 +263,6 @@ Next 在 Skill 导入时反序列化已检查程序和类型环境，建立运�
 | 2026-11-25 | 0.2.10 | Codex / GPT-6 | 正文 | §6、追踪 对齐语言发布与 Compiler/Bundle 职责 | 消除执行歧义并同步中央设计 | Issue #12 |
 | 2026-11-26 | 0.2.11 | GPT-6.2（ChatGPT） | §4、§9 | 明确冻结 v1alpha5 Artifact 不序列化 Skill Capability ID；Compiler Build-time 校验作者源 Capability，Runtime Scope 只从 operation/observation exports 建立 | 对齐 F03.05 与 Compiler v2.1.0 frozen artifact schema，避免实现者读取不存在字段 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-27 | 0.3.1 | Codex / GPT-6 | §6 | 对齐 Event 身份冲突和直接文本选择规则 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
-
 | 2026-11-26 | 0.2.12 | GPT-6.2（ChatGPT） | §1～5、§9～12、修订记录 | 区分 Importer candidate 与 SR-005 Catalog 激活；明确冻结 Artifact v1alpha5、Development v1alpha1、新 Runtime Artifact API 的消费矩阵；同步 CA-SL v1alpha5 固定 SHA、Compiler #61 / SR-013、SR-027 Bundle 和 Issue #40 v1alpha6 边界 | 防止把旧冻结 Artifact/Development Artifact 当作当前可运行 Bundle，避免在 Manifest/Bundle 契约未冻结时让 SR-004 或 Harness 猜测实现 | Issue #43；SR-004；SR-013；SR-027；Issue #40 |
 | 2026-11-26 | 0.2.13 | GPT-6.2（ChatGPT） | §9、修订记录 | 明确 F03.05 的 v1alpha5 依赖/Callable 语义是语言与构建语义，不代表冻结 Artifact API v1alpha5 可导入；新版 Runtime Artifact 的字段映射必须由 Compiler #61 正式冻结 | 避免把旧 Artifact 的 dependencyClosure 字段猜测为新 Runtime Artifact API 的字段 | Issue #43；SR-004；SR-013 |
 | 2026-11-26 | 0.2.14 | GPT-6.2（ChatGPT） | §2.1、§2.3、§9～10、修订记录 | 固定 SKILL.md Front Matter 使用 Agent Skills Specification（name/description 与可选字段）；明确它与 CA-SL v1alpha5 assurance/ 语法分离，allowed-tools 不授予运行权限 | 防止把 CA-SL Contract 误作 SKILL.md Front Matter，避免把实验性 allowed-tools 当作 Capability Grant | Issue #43；Agent Skills Specification；SR-004 |
@@ -284,3 +283,4 @@ Next 在 Skill 导入时反序列化已检查程序和类型环境，建立运�
 | 2026-11-27 | restore-0.2.20（历史分支） | GPT-6.2（ChatGPT） | §1/§2/§9/§10/§11 | 将 1.6.0 新 Compiler API / Runtime Artifact 依赖统一改为 Issue #62；#61 保留 v1alpha5 历史范围。 | 避免 F02 消费边界继续绑定错误的 v1alpha5 Compiler Issue。 | Issue #40/#62；PR #45 |
 | 2026-11-28 | restore-0.2.21（历史分支） | GPT-6（ChatGPT） | §6～7 | 将 when Event 类型环境由固定 event.type 改为 Publisher 冻结且实际引用的 metadata 字段；明确 event-only、requestSchema 独立校验及 T2 Codec 禁止进入选择期 | 关闭第六轮 P2-03，消除与 SR-013/EC02/F08 的类型闭包冲突 | Issue #40；PR #45；SR-013/029 |
 | 2026-11-28 | 0.3.2 | GPT-6（ChatGPT） | §2～12、修订记录 | 合并 Publisher Event metadata/T1-T2 与 #46 Catalog/Resolver、Schema-only/唯一 Binding；Compiler #62 为新实现，#61 历史只读 | Skill 只引用 Capability，Runtime 只消费 Compiler Binding | Issue #12；#40；#49；PR #45；#46 |
+| 2026-11-28 | 0.3.3 | GLM-5.3（DeepSeek Harness） | 修订记录 | 合并被空行拆断的孤儿修订表段为单一连续表格，不改变任何历史行内容 | 修复 R8-09 同类 Markdown 渲染断裂，保证修订数据完整可见 | Issue #12；PR #46；Review #6095143611 |

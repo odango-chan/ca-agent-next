@@ -1,7 +1,7 @@
 # Context 与 Artifact 管理设计说明书
 
 > 文档类型：机制设计说明书  
-> 文档版本：0.4.5\
+> 文档版本：0.4.6\
 > 状态：目标设计已重建；ca-host.artifact-store/v1 已冻结并由 Provider v1.2.0 消费；ca-agent Go Host P1 已验收；Next Python Host / ArtifactStore / Channel NOT_IMPLEMENTED  
 > 功能归属：F05 — Context 与 Artifact 管理  
 > 关联 SR：SR-009；交叉 SR：SR-007、SR-010、SR-011、SR-015、SR-017、SR-030\
@@ -327,7 +327,7 @@ Demo 必须具备：本地 Host-owned ArtifactStore、精确 slot、相对路径
 
 | 接口域 | 新 1.6.0 目标 | 旧发布物的定位 |
 |---|---|---|
-| Owner MAS | 24 Skill-facing Capability ↔ 24 公开 Callable；ToolCatalog 保留 25 contracts，MAS.RECONCILE internal-only | Owner v1alpha4 的 24/25 membership 仅作来源审计 |
+| Owner MAS | 最终成员数须由 Owner 对两项旧 N1 Parser 分别签认后推导（条件候选 22/22、23/23、24/24；MAS.RECONCILE 保持 internal-only，不计入 Skill-facing 成员） | Owner v1alpha4 的 24/25 membership（ToolCatalog 25 contracts）仅作来源审计 |
 | Provider READ | 两个通用 READ Capability 各映射一个公开 Callable，分别用封闭 contextKind / resourceKind 选择内部后端 | Provider v1.2.0 的 2 Capability / 11 READ Callable 仅作来源审计 |
 | Provider Codec | 新增一个 Codec Capability ↔ 一个公开 Callable；首批只覆盖 SR-026 冻结的 NAS Decode 子集 | 旧 Provider Interface 未导出该 Capability；PR #86 Mock AMF Codec 不构成 Provider 发布 |
 | Host Context | 由 SR-030 发布 Schema-only Package，0 Capability / 0 Callable；只供 Contract.contexts 的 Host Context Schema 闭包；requestSchema 始终指向 Skill 自有请求 Schema | SR-024 VERIFIED 仅证明旧 Development Package Publisher，不证明 1.6.0 Package |
@@ -381,7 +381,7 @@ Demo 必须具备：本地 Host-owned ArtifactStore、精确 slot、相对路径
 | 2026-11-25 | 0.4.0 | GPT-6.2（ChatGPT） | §5、§6.2、§7、§12～17 | 将 Host Artifact Store v1 从“未发布”纠正为已冻结契约；区分 Provider/Go Host 外部实现与 Next Python Host 未实现；明确随机 artifactRef 与逐字节 SHA-256 传输校验的不同语义，并把 SR-009/SR-010 的 Host/Plugin 责任拆清 | ca-agent contract pin 2c0b07f、ca-agent main 447d0cc P1 证据、ca-client-tools v1.2.0 源码/fixtures；避免沿用 ca-agent-demo 旧注释和内容寻址实现误判协议状态 | Issue #12；SR-009、SR-010、SR-015 |
 | 2026-11-25 | 0.4.1 | GPT-6.2（ChatGPT） | §14～15 | 补入 env-5gc-sim PR #86 的 Mock AMF Codec C1 状态，并明确它不等于 Agent Tool/Provider Codec Consumer；保持 Next Host ArtifactStore/Channel NOT_IMPLEMENTED | 防止把测试对端的 Codec API 迁移误报为 Next Tool/Provider 或 Host 二进制链路完成 | Issue #12；SR-009、SR-010、SR-011 |
 | 2026-11-26 | 0.4.2 | Codex / GPT-6 | 见本行变更 | §2～4 明确跨请求的响应义务及声明 Schema 的归属 | Issue #12 |
-
 | 2026-11-26 | 0.4.3 | GPT-6（ChatGPT） | 当前目标契约 | 新增 1.6.0 Capability / Codec / Host Context Schema-only Package 目标，修正模型可见 Callable 和旧 Provider v1.2.0 的证据定位 | Issue #12/#40；PR #46 |
 | 2026-11-26 | 0.4.4 | GPT-6（ChatGPT） | 文档头、F05/Host Context 责任映射 | 统一正式评审范围/局部非目标声明，并将 1.6.0 Host Context Schema-only Publisher 纳入 SR-030 交叉追踪 | 修复 review context CI 头部门禁；区分 Host Context Schema 发布与其他 Context/Artifact 职责 | Issue #12；SR-030；PR #46 |
 | 2026-11-26 | 0.4.5 | GPT-6（ChatGPT） | Host Context Package 消费边界、修订记录 | 明确 SR-030 Schema-only Package 只由 Contract.contexts 引用，不替代 Skill 自有 requestSchema | 与 CA-SL 1.6.0 §4 的 Request / Context Schema 分工一致，避免 Schema root 语义混淆 | Issue #12/#40；CA-SL 1.6.0；SR-030；PR #46 |
+| 2026-11-28 | 0.4.6 | GLM-5.3（DeepSeek Harness） | §14.2、修订记录 | 将 §14.2 Owner MAS 目标行同步为条件签认基数；合并修订表断裂孤儿段 | 关闭 R8-05 残留与 R8-09 同类渲染断裂 | Issue #12；PR #46；Review #6095143611 |

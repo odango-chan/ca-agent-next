@@ -1,7 +1,7 @@
 # SR-009：OpenAMSM SBI 事件插件与二进制产物交接
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.11\
+> SR 版本：0.2.12\
 > 状态：整项 DRAFT；模块设计已认可，待目标仓实施交接。AC-009-01～06（测试 Host/peer）。  
 > 下一步：独立 Go Plugin 模块已获设计认可。目标仓 ca-openamsm-plugin 的实施分支和 Issue 需登记；联调验证由 SR-011 跟踪。Create 断言须覆盖 eventType；responseObligationId 由 Host 分配。  
 > 阶段依据：[独立评审 #73](https://github.com/odango-chan/ca-agent-next/issues/73#issuecomment-7210217168)，评审 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。
@@ -71,6 +71,7 @@ AC-009-01～06 仅依赖测试 Host、协议 fixture 和计数 peer。真实 Own
 
 | 输入（各含规范化 JSON/Content-ID 与原始字节 fixture） | 固定 eventType / discriminator | Plugin 应证明的分类与禁止事项 |
 |---|---|---|
+| `POST /sm-contexts` / Create（`SmContextCreateData` 原样 JSON，无 NAS operation discriminator） | `nsmf.create-sm-context`；payload.operationId=`PostSmContexts`，payload.request 为原样 `SmContextCreateData` JSON object，无 discriminator | 新 Create ingress；不选择 Skill、不创建/关联 Run；N1/N2 原始 part 仅按 Content-ID/slot 交 Host staging，保留原始 `requestType` 等 OpenAPI 字段、不补默认值 |
 | `POST /sm-contexts/{smContextRef}/modify` + N1 5GSM `0xC9` | `nsmf.update-sm-context`；payload.operationId=`UpdateSmContext`，payload.discriminator.n1MessageType=`0xC9` | 新 UE Modify ingress；不选择 Modify Skill、不创建/关联 Run |
 | 相同路径 + N1 5GSM `0xD1` | `nsmf.update-sm-context`；payload.operationId=`UpdateSmContext`，payload.discriminator.n1MessageType=`0xD1` | 新 UE-requested Release ingress（非 network-initiated ReleaseSMContext）；不调用 Release Owner |
 | 相同路径 + N1 Release Complete `0xD4` | `nsmf.update-sm-context.continuation`；payload.discriminator.n1MessageType=`0xD4` | 既有 Release 的 N1 confirmation ingress；不把 `0xD4` 当作新的 Release 请求 |
@@ -139,3 +140,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-28 | 0.2.9 | GPT-6（ChatGPT） | §2、AC-009-04/05、§5.1、修订记录 | 修正 N1 5GSM EPD/Message Type 字节偏移与截断验收；对齐 Host-owned responseObligationId 的瞬时接收与不回传边界 | 防止合法 NAS 分类失败或因把“非所有权”误写为“不能接收”而拒绝合法 Delivery | Issue #12；PR #46；F06 v0.3.3；Review #6095143611 |
 | 2026-11-28 | 0.2.10 | GPT-6（ChatGPT） | §5.1、修订记录 | 清除 §5.1 对 responseObligationId“不得接收”的残留表述，与 dispatch Host-owned 瞬时接收规则统一 | 防止同一 SR 内一处允许接收、一处禁止接收，导致合法 Delivery 被实现拒绝 | Issue #12；PR #46；F06 v0.3.3；Review #6095143611 |
 | 2026-11-28 | 0.2.11 | GPT-6.2（ChatGPT） | §2、设计依据、修订记录 | 对齐 IPC v0.2.7，明确 responseObligationId 仅随 delivery.dispatch 瞬时接收，responseChannelId 负责本地 HTTP/2 stream 写回 | 将 SR-009 模块边界与公共 IPC 契约保持一致，避免将非所有权误解为不可接收 | Issue #12；PR #46；IPC v0.2.7；Review #6095143611 |
+| 2026-11-28 | 0.2.12 | GLM-5.3（DeepSeek Harness） | §5.1、修订记录 | 为 AC-009-04 §5.1 参数化用例表补 `nsmf.create-sm-context` Create 正例行 | 关闭首轮 R1-SR009-02 的 Create 用例缺口，使三个 eventType 均有正例 | Issue #12；PR #46；Review #6082541121 |

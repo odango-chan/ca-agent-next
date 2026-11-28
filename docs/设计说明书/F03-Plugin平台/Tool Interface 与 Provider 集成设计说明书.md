@@ -1,7 +1,7 @@
 # Tool Interface 与 Provider 集成设计说明书
 
 > 文档类型：功能子模块设计说明书
-> 文档版本：0.4.8
+> 文档版本：0.4.9
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 功能归属：F03.05 — Tool Plugin 集成
 > 交叉功能：F03.01～F03.04、F04.01、F04.05、F05.02、F06
@@ -598,7 +598,6 @@ Runtime Action 以 Capability ID 为 Skill / Procedure 作者侧入口。Runtime
 | 2026-11-25 | 0.3.3 | GPT-6.2（ChatGPT） | §4.2、§6.5～§7.4 | 校正 Receipt Query 与 Reconcile 两个 Owner evidence operation 的 Skill 可见边界；Receipt Query 是受 Scope 约束的 READ Callable，Reconcile 是专用 target | 对齐 Compiler v1alpha5 Owner Link 对 dedicated Reconcile 的实际限制，避免将两者错误地一概视为不可调用 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-25 | 0.3.4 | GPT-6.2（ChatGPT） | §11 | 增加 Next 侧逻辑模块分解、输入/输出边界和最小自动化验收矩阵 | 使后续代码 SR 可直接按 Loader、Driver、Resolver、Action Boundary、Outcome/Reconcile、Artifact Adapter 和单一 Manager 分解实施 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-27 | 0.4.4 | Codex / GPT-6 | §1、4、6、7、11 | 移除 Callable-only Resolver 的现行指令，统一按 1.6.0 编译绑定派发 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
-
 | 2026-11-25 | 0.3.5 | GPT-6.2（ChatGPT） | §4.4 | 区分冻结 v1alpha5 Runtime Owner Contract 与 Compiler v2.1.0 Development Interface Package；将 MAS Owner Publisher 实施责任链接到 SR-025，并记录 package/source version 的 SemVer 决策门槛 | 防止把 Owner Contract、Provider Interface Package 和 Development wrapper 混为同一发布面 | Issue #12；F09 v0.3.5；SR-015；SR-025 |
 | 2026-11-25 | 0.3.6 | Codex / GPT-6 | 正文 | 同步 Publisher 身份、版本和验收边界 | 消除执行歧义并同步中央设计 | Issue #12 |
 | 2026-11-26 | 0.3.7 | Codex / GPT-6 | §4、§6、§8、§12 | 校正装载顺序、catalog 分区与 initialize 失败语义；补齐 ca-client-tools 两端及 Codec 发布归属 | 对齐跨仓实现与独立复验 | Issue #12 |
@@ -611,11 +610,9 @@ Runtime Action 以 Capability ID 为 Skill / Procedure 作者侧入口。Runtime
 | 2026-11-27 | 0.4.4 | GPT-6.2（ChatGPT） | F03.05 §5 | 分列历史 v1alpha5 Compiler 职责与 CA-SL 1.6.0 Compiler 目标职责，消除组件表版本混用。 | 明确历史实现与新目标模型边界，避免将旧 resolved dependency snapshots / Owner bindings 误读为 1.6.0 职责。 | Issue #40/#62；PR #45 |
 | 2026-11-28 | 0.4.5 | GPT-6（ChatGPT） | §8.3 | 固定 3/3 Codec Provider 目标、READ 不等于纯业务 Parser 的源证据、Owner 两种条件基数与 T1/T2 限界 | 消除第六轮 P1-01 的 Provider/Owner 责任混合与隐式 fallback | Issue #40/#113；PR #45；SR-026/029；F06 |
 | 2026-11-28 | 0.4.6 | GPT-6（ChatGPT） | §12.2～12.3 | 将基数表和正文同步为 Codec Provider 3/3、Owner 22/22 或 24/24 的条件目标，明确发布者未冻结身份/Schema | 消除正文 §12 与新增 §8.3 口径冲突，避免第七轮再次出现 2/2 旧目标 | Issue #40/#113；PR #45；SR-026/029 |
-
 | 2026-11-26 | 0.4.1 | GPT-6（ChatGPT） | §1、§3～§4、§12 | 规范性目标限定 Capability-only；旧 Publisher 24:25/11 READ 降为审计，新增拒绝矩阵 | 解除新旧 Callable/Owner/Provider Published Package 混淆 | Issue #12/#40；SR-025/026/029；PR #46 |
-
 | 2026-11-26 | 0.4.2 | GPT-6（ChatGPT） | 1.6.0 Capability / Codec 目标 | 修正 Skill 仅声明 Capability，补齐 Codec 第三个 1:1 公开能力并区分历史 Provider 2/11 | 修正历史 Callable-only 描述和 Provider 能力基数遗漏 | Issue #12/#40；SR-025/026/030 |
 | 2026-11-27 | 0.4.3 | Codex / GPT-6 | Provider 一对一映射 | 区分查询 2/2 与包含 Codec 的 3/3 | 与 SR-029、F06 的发布范围对齐 | Issue #12，PR #46 |
-
 | 2026-11-28 | 0.4.7 | GPT-6（ChatGPT） | §2、§5、§12 与修订记录 | 整合 #45 公开 Callable 的唯一 Binding、Skill 作者源与编译 Artifact 分层、#46 Provider/Codec 封闭路由；保留历史发布只读 | 不将公开 Tool 误作内部分发身份，维持 1.6.0-only | Issue #12；#40；PR #45；#46 |
 | 2026-11-28 | 0.4.8 | GPT-6（ChatGPT） | §4.4、§8.3、§12.2、§12.8、修订记录 | 将 Owner Parser 数量从固定 24/24 改为逐项签认矩阵，补齐混合裁决与未签认阻断 | 避免合法 Owner Package 因固定成员数被误拒，并确保 Compiler 只接受 Owner 冻结的实际 1:1 成员 | Issue #12；SR-025；PR #46；Review #6095143611 |
+| 2026-11-28 | 0.4.9 | GLM-5.3（DeepSeek Harness） | 修订记录 | 合并被空行拆断的孤儿修订表段为单一连续表格，不改变任何历史行内容 | 修复 R8-09 同类 Markdown 渲染断裂，保证修订数据完整可见 | Issue #12；PR #46；Review #6095143611 |

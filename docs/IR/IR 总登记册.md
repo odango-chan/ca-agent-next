@@ -1,7 +1,7 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录\
-> 文档版本：0.1.32\
+> 文档版本：0.1.33\
 > 修订日期：2026-11-28
 > 状态：8 项 IR；IR-008 面向 CA-SL 1.6.0 Capability-first 双向一对一且无旧版兼容，SR-029 限设计复评；IR-006/008 包含 SR-030 Host Context 1.6.0 Schema-only Publisher。SR-028 第七轮设计认可不等于当前集成产品 VERIFIED，整项 DRAFT。
 > 全局评审范围：继承根目录 Agent.md 的 review_scope\
@@ -71,7 +71,7 @@ IR 编号稳定。GitHub Issue 用于讨论、分派和跟踪，一个 IR 可关
 
 集中维护 Compiler 机制与冻结决策，使 Harness 能依据已验证的依赖和验收门槛交接。
 
-- 协作 Issue：[Next #2](https://github.com/odango-chan/ca-agent-next/issues/2)、[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)（独立实现依赖）。
+- 协作 Issue：[Next #2](https://github.com/odango-chan/ca-agent-next/issues/2)、[Compiler #62](https://github.com/odango-chan/ca-skill-compiler/issues/62)（1.6.0-only 独立实施依赖；旧 [#61](https://github.com/odango-chan/ca-skill-compiler/issues/61) 仅保留 v1alpha5 历史范围）。
 - 实施分解：[SR-012](../SR/SR-012-Compiler设计归档与跨仓收敛.md)。设计：[EC02 Compiler 设计](../设计说明书/EC02-Compiler/Compiler设计说明书.md)。
 - 完成依据：AC-012-01～03。跨仓清理待 READY。
 
@@ -81,7 +81,7 @@ Compiler 实施沿用 [SR-013](../SR/SR-013-Compiler已检查when与发布产物
 
 以 Next 作为唯一设计中心。分仓移交现行与历史基线并补齐 Contract.when 链路，Next 消费验收沿用 IR-003。
 
-- 协作入口：[ca-skills #88](https://github.com/odango-chan/ca-skills/pull/88)、[Compiler #61](https://github.com/odango-chan/ca-skill-compiler/issues/61)。
+- 协作入口：[ca-skills #88](https://github.com/odango-chan/ca-skills/pull/88)（历史 v1alpha5）、[Compiler #62](https://github.com/odango-chan/ca-skill-compiler/issues/62)（1.6.0 实施入口；旧 [#61](https://github.com/odango-chan/ca-skill-compiler/issues/61) 仅历史）。
 - 实施分解：[SR-023](../SR/SR-023-技能作者源与语言规范移交.md)、[SR-015](../SR/SR-015-工具契约设计移交.md)、[SR-016](../SR/SR-016-工作台设计移交与条件编辑.md)、[SR-017](../SR/SR-017-业务插件设计移交.md)、[SR-018](../SR/SR-018-业务所有者设计移交.md)、[SR-019](../SR/SR-019-仿真对端设计移交.md)、[SR-020](../SR/SR-020-参考宿主设计移交.md)、[SR-021](../SR/SR-021-原生宿主设计移交.md)、[SR-022](../SR/SR-022-执行内核设计移交.md)、[SR-024](../SR/SR-024-Host%20Context%20Interface%20Package%20Publisher.md)、[SR-025](../SR/SR-025-MAS%20Owner%20Interface%20Package%20Publisher.md)、[SR-026](../SR/SR-026-Codec公开工具发布.md)、[SR-027](../SR/SR-027-技能Bundle构建与发布.md)、[SR-030](../SR/SR-030-Host%20Context%201.6.0%20Schema-only%20Interface%20Package%20Publisher.md)。
 - 设计与验收：[跨仓设计资产迁移与一致性审计](../参考与审计/跨仓设计资产迁移与一致性审计.md)，逐仓检查文档迁移和行为符合性。
 - SR-024 完成依据：[ca-agent-demo PR #253](https://github.com/odango-chan/ca-agent-demo/pull/253) 已 MERGED，Issue #252 已关闭；AC-024-01～07 PASS，SR-024 VERIFIED。Review COMMENTED、4 个 PR checks SKIPPED 不计作 APPROVED/CI PASS；Studio ZIP 导入/lock 消费仍归 SR-016。
@@ -153,8 +153,8 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 | 2026-11-28 | 0.1.30 | GPT-6.2（ChatGPT） | IR-003、IR-008 | 将 1.6.0 Compiler 实施入口统一指向 Compiler #62，保留 #61 的 v1alpha5 历史范围。 | 避免将 v1alpha5 历史 Issue 误作 1.6.0-only 实施和验收依据。 | Issue #40/#62；SR-013；PR #45 |
 | 2026-11-28 | 0.1.31 | GPT-6（ChatGPT） | IR-008、修订记录 | 回链 SR-029 Provider Codec 3/3 与 Owner Parser 待签认、F06 T1/T2、Next #113 | 建立第六轮 R6-P1-01 的跨仓治理入口，设计授权不外溢为外仓实施 | Issue #40/#113；PR #45 |
 | 2026-11-27 | 0.1.28 | Codex / GPT-6 | IR-002/007 | 更新模块验证状态及 G02 入口 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
-
 | 2026-11-26 | 0.1.26 | GPT-6（ChatGPT） | 1.6.0 Host Context Publisher / 依赖边界 | 将 Host Context 1.6.0 Schema-only Publisher 纳入 IR-006/IR-008，区分 SR-024 历史 VERIFIED 与 SR-030 新需求 | 避免旧 Development Package 被误认为新版正式输入 | Issue #12/#40；IR-006/008；SR-030 |
 | 2026-11-26 | 0.1.27 | GPT-6（ChatGPT） | IR-006/IR-008、修订记录 | 同步 SR-030 新版 Host Context 1.6.0 Schema-only Publisher 需求与 SR-024 历史 v1alpha5 Publisher 边界 | 使 IR→SR 追踪明确区分旧版已验证证据和新版待评审需求 | Issue #12/#40；IR-006/008；SR-024、SR-030；PR #46 |
 | 2026-11-27 | PR46-0.1.28（历史分支） | Codex / GPT-6 | IR-002/007 | 第二维分支曾回填 SR-003/G02 模块与恢复状态，当前以本次合并快照为准 | 保留 #46 原修订溯源，不覆盖恢复分支旧结论 | Issue #12；PR #46 |
 | 2026-11-28 | 0.1.32 | GPT-6（ChatGPT） | IR-002/006/008、修订记录 | 三方整合 #45 与 #46：修复 1.6.0/Compiler #62、SR-030、Provider 3/3、Owner Parser 22/22 或 24/24 条件发布，核对 SR-028 第七轮设计/候选产品证据分层 | 保持 8 IR 的准确版本边界与三方历史 | Issue #12；#40；#113；PR #45；#46 |
+| 2026-11-28 | 0.1.33 | GLM-5.3（DeepSeek Harness） | 修订记录 | 合并被空行拆断的孤儿修订表段为单一连续表格，不改变任何历史行内容 | 修复 R8-09 同类 Markdown 渲染断裂，保证修订数据完整可见 | Issue #12；PR #46；Review #6095143611 |

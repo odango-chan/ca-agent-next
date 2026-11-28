@@ -1,7 +1,7 @@
 # SR-024：Host Context Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.14
+> SR 版本：0.1.15
 > 状态：VERIFIED（AC-024-01～07 均有真实 PASS 证据；Publisher 已合并至 ca-agent-demo/main；GitHub Review 保持 COMMENTED、PR checks 为 SKIPPED，不将其冒记为 APPROVED/CI PASS；本地 AC-024-06 验收命令已 PASS）
 > 创建日期：2026-11-25
 > 所属阶段：跨仓设计移交
@@ -131,5 +131,5 @@ PR 检查记录（合并后审计）：
 | 2026-11-26 | 0.1.11 | GPT-6.2（ChatGPT） | 头部、§5.1、§5.3 | 回填独立技术评审 Review #6070722615、AC-024-01～07 全 PASS 及 2,359 样例零差异；纠正 GitHub Review 身份为 PR 作者账号且状态仅 COMMENTED；登记 combined status pending、4 个 skipped checks、无 PR-triggered Run 和 branch-protection 读取限制 | 区分技术结论与 GitHub 独立身份审批、CI 门禁；合并前保持 IN_PROGRESS，不把 COMMENTED/SKIPPED 提升为 APPROVED/PASS | Issue #12；ca-agent-demo #252/#253；Review #6070722615；Issue comment #7186684869 |
 | 2026-11-26 | 0.1.12 | GPT-6.2（ChatGPT） | 头部、§5、§5.3 | 回填 PR #253 正常合并、merge commit/main HEAD `25168db`、Issue #252 completed；确认 AC-024-01～07 全部满足并将 SR 转为 VERIFIED；保留 COMMENTED 与 SKIPPED 的真实记录，不宣称正式 APPROVE 或 CI PASS | 按 SR 状态机区分集成与验收；所有模块 AC 已有真实通过证据，PR 合并后达到 VERIFIED；不将非 AC 的 skipped workflow 误判为失败 | Issue #12；ca-agent-demo #252/#253；merge `25168db031e996bfa4de440c4156ae94f4e19bce`；AC-024-01～07 |
 | 2026-11-27 | 0.1.14 | Codex / GPT-6 | 当前设计依据 | 同步本轮修订后的权威设计版本 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
-
 | 2026-11-26 | 0.1.13 | GPT-6（ChatGPT） | 1.6.0 Host Context Publisher / 依赖边界 | 标明 VERIFIED 仅覆盖旧 v1alpha5 Development Publisher，并建立 SR-030 1.6.0 successor 边界 | 避免旧 Development Package 被误认为新版正式输入 | Issue #12/#40；IR-006/008；SR-030 |
+| 2026-11-28 | 0.1.15 | GLM-5.3（DeepSeek Harness） | 修订记录 | 合并被空行拆断的孤儿修订表段为单一连续表格，不改变任何历史行内容 | 修复 R8-09 同类 Markdown 渲染断裂，保证修订数据完整可见 | Issue #12；PR #46；Review #6095143611 |

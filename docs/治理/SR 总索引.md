@@ -1,8 +1,8 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.69
-> 状态：29 项 SR：4 VERIFIED（仅各自历史模块范围）、1 IMPLEMENTED（设计移交）、24 DRAFT（整项主状态）。SR-028 第七轮设计 Review #6084094037 仅批准固定 Head `93f1389e` / Base `3c7c4838` 的设计（0/0/2 非阻断 P2）；Issue #96 OPEN，PR #97 OPEN/mergeable=false，PR #99 OPEN/mergeable=false（候选分支 Review #6094704264 记录 IMPLEMENTED），PR #112 OPEN/Draft/mergeable=true、旧 Head Review #6086849161 有 P1。当前 PR #46 第八轮 Review #6095143611 绑定 Base `c806def7` / Head `2604cc17`；当前 Head `68162cdb` 已前进 19 commits，Review Context CI #46100503592 SUCCESS，但尚无新独立复评；候选分支证据不计入当前恢复分支 VERIFIED。
+> 文档版本：0.3.70
+> 状态：29 项 SR：4 VERIFIED（仅各自历史模块范围）、1 IMPLEMENTED（设计移交）、24 DRAFT（整项主状态）。SR-028 第七轮设计 Review #6084094037 仅批准固定 Head `93f1389e` / Base `3c7c4838` 的设计（0/0/2 非阻断 P2）；Issue #96 OPEN，PR #97 OPEN/mergeable=false，PR #99 OPEN/mergeable=false（候选分支 Review #6094704264 记录 IMPLEMENTED），PR #112 OPEN/Draft/mergeable=true、旧 Head Review #6086849161 有 P1。当前 PR #46 第八轮 Review #6095143611 绑定 Base `c806def7` / Head `2604cc17`；第九轮独立复评基线为 Head `2b66bded0bd3cab6fa503bfb751fb23e11f94805`，Review Context CI #46101070088 SUCCESS；第九轮整改后的最终 Head 以 Issue #12 第九轮检查点登记为准；候选分支证据不计入当前恢复分支 VERIFIED。
 > 修订日期：2026-11-28\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
@@ -313,3 +313,4 @@
 | 2026-11-28 | 0.3.67 | GPT-6（ChatGPT） | 文档头、SR-025/028、§3.1～3.2、修订记录 | 同步 Owner Parser 条件基数、SR-028 第七轮设计批准与 #96/#97/#99/#112 状态；回填 PR #46 第八轮 NEEDS_REVISION | 防止将旧成员数、历史评审快照或未集成候选 PR 误作当前产品事实 | Issue #12；Issue #96；PR #46/#97/#99/#112；Review #6095143611 |
 | 2026-11-28 | 0.3.68 | GPT-6（ChatGPT） | SR-009/025、修订记录 | 清除 responseObligationId 接收边界的残留冲突，并移除 SR-025 执行门槛中的固定 24/24 表述 | 确保 SR 追踪行与规范性设计/验收矩阵保持一致 | Issue #12；PR #46；Review #6095143611 |
 | 2026-11-28 | 0.3.69 | GPT-6.2（ChatGPT） | 文档头、SR-028 状态、修订记录 | 更新 PR #46 当前 Head 与 CI，回填 SR-028 候选实施 Review 和 #112 旧 Head P1 | 明确最新快照与历史 Review 的边界，防止候选产品证据误升级 | Issue #12/#96；PR #46/#97/#99/#112；Review #6095143611/#6094704264/#6086849161 |
+| 2026-11-28 | 0.3.70 | GLM-5.3（DeepSeek Harness） | 文档头、修订记录 | 将“当前 Head `68162cdb` / CI #46100503592”更正为第九轮复评基线 Head `2b66bded` 与 CI #46101070088；第九轮整改后最终 Head 以 Issue #12 检查点为准 | 消除增量提交对父提交 SHA 的过期自引用 | Issue #12；PR #46；Review #6095143611 |

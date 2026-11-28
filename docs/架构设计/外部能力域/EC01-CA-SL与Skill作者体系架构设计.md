@@ -1,7 +1,7 @@
 # EC01 — CA-SL 与 Skill 作者体系架构设计
 
 > 文档类型：外部能力域架构设计（Next 中央权威设计）  
-> 文档版本：0.1.7\
+> 文档版本：0.1.8\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 唯一新目标；作者规范/Compiler/Bundle 未发布）
 > 功能归属：EC01；关联 F02、F06、F08、F09  
 > 关联需求：IR-003、IR-006；SR-004～SR-006、SR-011、SR-023  
@@ -161,8 +161,8 @@ ca-skill-compiler 是唯一 CA-SL 编译器。EC01 不复制 Parser、Schema Res
 | 2026-11-27 | 0.1.3 | GPT-6.2（ChatGPT） | §2～3、§10、修订记录 | 整合 #45 的 1.6.0-only 设计增量并保留恢复分支当前状态，避免回滚 #44 与后续修订。 | 历史记录未单列原因 | Issue #12/#40/#43；PR #44/#45 |
 | 2026-11-27 | 0.1.4 | GPT-6.2（ChatGPT） | §4、修订记录 | 为可选 requestType 增加 has() 守卫；将 Event metadata、has() 与短路规则明确为 Publisher 冻结前候选，避免可选字段误排除且不提前冻结 1.6.0 Event/CEL 契约 | 历史记录未单列原因 | Issue #40/#49；SR-013/029；PR #45/#52 |
 | 2026-11-27 | 0.1.5 | GPT-6.2（ChatGPT） | EC01 §5/§8 | 区分 v1alpha5 Issue #61 历史范围与 1.6.0-only Issue #62 的 Compiler when / Runtime Artifact 追踪。 | 避免把历史 Compiler Issue 当作 1.6.0 目标实现。 | Issue #40/#62；PR #45 |
-
 | 2026-11-26 | 0.1.3 | GPT-6（ChatGPT） | 1.6.0 新目标与历史边界 | 将 EC01 完整规范入口切换至 CA-SL 1.6.0，固定 languageTarget 候选并明确 v1alpha5 只读 | 历史记录未单列原因 | Issue #12/#40；PR #46 |
 | 2026-11-28 | PR46-0.1.4（历史分支标记） | GPT-6（ChatGPT） | §4、§5、§8、修订记录 | 合并前 #46 分支限定修订：when 唯一 contract.yaml、optional requestType CEL Guard、T1/T2 分离和 Compiler #62 | 历史分支原采用 0.1.4 版本号，区别于恢复分支已发布的同号修订 | Issue #40；#47；PR #45；#46 |
 | 2026-11-28 | 0.1.6 | GPT-6（ChatGPT） | §4、§5、§8、修订记录 | 合并恢复分支 0.1.5 的 Event/Request Schema、G.4 Guard 规则与 #46 的 1.6.0-only/T1-T2/Compiler #62 修订 | 保存双方有效设计与分支历史，保持新 Compiler/Product NOT_RELEASED | Issue #12；#40；PR #45；#46 |
 | 2026-11-28 | 0.1.7 | GPT-6（ChatGPT） | §4、修订记录 | 修正 when 的规范化输入嵌套路径和 RequestType 字符串类型；统一修订表列结构 | 避免可选字段读取路径错误、数字比较及修订记录关联列错位 | Issue #12；#40；PR #46；Review #6095143611 |
+| 2026-11-28 | 0.1.8 | GLM-5.3（DeepSeek Harness） | 修订记录 | 合并被空行拆断的孤儿修订表段为单一连续表格，不改变任何历史行内容 | 修复 R8-09 同类 Markdown 渲染断裂，保证修订数据完整可见 | Issue #12；PR #46；Review #6095143611 |

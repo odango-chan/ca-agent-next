@@ -1,7 +1,7 @@
 # 业务接入与 OpenAMSM 集成设计说明书
 
 > 文档类型：业务集成设计说明书  
-> 文档版本：0.3.3\
+> 文档版本：0.3.4\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
 > 功能归属：F06 — 业务接入与集成；EC04、EC05、EC07  
 > 关联 IR：IR-004、IR-005、IR-006  
@@ -355,10 +355,10 @@ Create → Modify → Release 的顺序、Owner authoritative state、Receipt / 
 | 2026-11-26 | 0.2.5 | GPT-6.2（ChatGPT） | §4、§8 | 同步冻结 v1alpha5 Capability Build-time / Runtime 边界及 MAS.RECONCILE internal-only 保证 | 让 OpenAMSM 业务集成流程引用 F03.05 的唯一 Tool/Provider Runtime 设计 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-26 | 0.2.6 | GPT-6（ChatGPT） | 新增 Capability-first 1.6.0 章节与状态 | 移植旧分支设计并按无兼容最新基线校正 | 仅设计待评审，不将历史 E2E 视为新版本通过 | Issue #40；SR-029 |
 | 2026-11-26 | 0.2.7 | GPT-6（ChatGPT） | 规范性设计与验收门槛 | 纠正多 true 候选决策和 MAS 旧 Callable-only Runtime，区分模块/系统证据 | 修复新旧语言/能力运行时冲突 | Issue #12/#40；SR-013/025/029；PR #46 |
-
 | 2026-11-26 | 0.2.8 | GPT-6（ChatGPT） | 1.6.0 Capability / Codec 目标 | 补齐 Provider Codec 1:1 Capability 与 Host Context Schema-only Package 的业务集成边界 | 修正历史 Callable-only 描述和 Provider 能力基数遗漏 | Issue #12/#40；SR-025/026/030 |
 | 2026-11-27 | 0.3.0 | Codex / GPT-6 | §5～7、§13.5 | 明确作者 Capability、两路收据、Schema 与 Provider 基数 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
 | 2026-11-27 | 0.3.1 | GPT-6（ChatGPT） | §4.1、§5～7、修订记录 | 冻结三个 OpenAMSM normalized Event type、operationId、payload.request、NAS/N2 discriminator、Content-ID/slot 与 Host-owned continuation/response obligation 边界；固定 3GPP OpenAPI 源 SHA | 处理独立模型 Review #6082541121 的 SR-009 P1，消除 Event type/schema/Run 所有权歧义，避免插件实现猜测 | Issue #12；PR #46；SR-009；Review #6082541121 |
 | 2026-11-28 | 0.3.2 | GPT-6（ChatGPT） | §4、§6～8、修订记录 | 保存 #46 原版 OpenAPI Event/Continuation 结构与 #45 Owner Parser 固定源审计；将旧 optional Codec + MAS.PARSE_N1 回退流程替换为 T2 必需的已资格化 Provider Codec READ，Owner 只做业务语义，确保发布合同仍 BLOCKED | 阻断旧 NAS Parser 冒充 Codec 或提前宣布 24/24 冻结 | Issue #12；#40；#113；PR #45；#46 |
 | 2026-11-28 | 0.3.2-integration-2 | GPT-6（ChatGPT） | §13.2、§13.7 | 修复整合稿遗留的旧 `parse-n1.operation.output` 编译示例，恢复正式数据流约束和 0xC9/0xD1 双阶段验收条件 | 原始 NAS 只由资格化 Codec 解码；避免示例与 Owner Parser 不得 fallback 的新架构冲突 | Issue #12；#40；#113；PR #45；#46 |
 | 2026-11-28 | 0.3.3 | GPT-6（ChatGPT） | §4.1、修订记录 | 修正 5GSM EPD 与 Message Type 字节偏移；明确 responseObligationId 在 dispatch 中的瞬时接收边界；补齐 Owner Parser 混合签认基数 | 防止将 NAS EPD 当作消息类型、误拒合法 Delivery，或将未签认的固定 Owner 数量当作发布条件 | Issue #12；PR #46；Review #6095143611 |
+| 2026-11-28 | 0.3.4 | GLM-5.3（DeepSeek Harness） | 修订记录 | 合并被空行拆断的孤儿修订表段为单一连续表格，不改变任何历史行内容 | 修复 R8-09 同类 Markdown 渲染断裂，保证修订数据完整可见 | Issue #12；PR #46；Review #6095143611 |

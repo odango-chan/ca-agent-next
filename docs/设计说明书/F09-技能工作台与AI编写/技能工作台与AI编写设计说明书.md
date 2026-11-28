@@ -1,7 +1,7 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.19\
+> 文档版本：0.3.20\
 > 状态：**设计待评审**（CA-SL 1.6.0-only Capability-first；Studio 新 Package Explorer/LSP/AI Authoring 1.6.0 路径尚未实施；既有 #267/#270/#272 历史实现与新发布验收分离）
 > 修订日期：2026-11-28\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -228,7 +228,6 @@ AI Authoring 的 Change Set 只能新增或修改 Capability ID、Procedure argu
 | 2026-11-25 | 0.3.3 | GPT-6.2（ChatGPT） | §4.5、§5.2、§7 | 对照 Studio #267 合入代码，明确 `source.sourceStatus` 尚未写入 lock，并将其归入 SR-016/#269；区分项目来源元数据与 Compiler BuildResult.sourceStatus；避免把设计要求误报为当前持久化能力，防止两个 sourceStatus 语义混淆 | 历史记录未单列原因 | Issue #12；SR-016、SR-024；Studio #267/#269 |
 | 2026-11-25 | 0.3.4 | GPT-6.2（ChatGPT） | §8 | 将 EC06 ADR-0001/0002 与 Plugin-managed/C4 原文纳入中央仓，并将 F09 历史决策和原始设计引用切换为 Next 内部链接；关闭原始设计缺失与跨仓引用断链；不改变历史决策内容 | 历史记录未单列原因 | Issue #12；EC06-ADR-0001～0005；SR-016、SR-024 |
 | 2026-11-27 | 0.3.16 | Codex / GPT-6 | §5～6、设计依据 | 固定 Schema、候选、Compiler 联验与正式发布的先后关系 | 历史记录未单列原因 | Issue #12，PR #46 |
-
 | 2026-11-25 | 0.3.5 | GPT-6.2（ChatGPT） | §4.5、§6～7 | 将 MAS Owner Publisher 独立归入 SR-025、Host Publisher 归入 SR-024；按 Compiler v2.1.0 修正 MAS exports 为 25/24/25/53；发现 v1alpha4/v1 非 SemVer，提出 package/source version 分离决策门槛；防止发布无法被 Development Build 接受的版本，同时保持 Owner/Host 源身份与 Studio lock 边界 | 历史记录未单列原因 | IR-006 · SR-015 · SR-016 · SR-024 · SR-025 · Studio #269 |
 | 2026-11-25 | 0.3.6 | Codex / GPT-6 | 正文 | 同步两个 Publisher 的 1.0.0 身份与消费边界 | 历史记录未单列原因 | Issue #12 |
 | 2026-11-25 | 0.3.7 | Codex / GPT-6 | 正文 | §4.5 依据 v2.1.0 源函数实测修正 +build 与项目包身份限制 | 历史记录未单列原因 | Issue #12 |
@@ -237,7 +236,6 @@ AI Authoring 的 Change Set 只能新增或修改 Capability ID、Procedure argu
 | 2026-11-26 | 0.3.10 | GPT-6（ChatGPT） | 修订表/记录 | 合并历史修订行的内容与原因列，仅保留原文字义，不改历史断言 | 历史记录未单列原因 | Issue #40；SR-029 |
 | 2026-11-26 | 0.3.11 | GPT-6（ChatGPT） | 目标合同、实施 AC 和旧版留档 | §3～§9 重建 1.6.0-only Studio Package/Compiler/AI/zero-root 工作流和独立验收，旧 Development 只读留档 | 历史记录未单列原因 | Issue #12/#40；SR-016/025/029；PR #46 |
 | 2026-11-26 | 0.3.12 | GPT-6（ChatGPT） | 文档头与 1.6.0 当前设计依据 | 修复 PR #46 Review Context 文档头检查及旧 Development Build 设计依据，更新新 Compiler/SR-013 正式入口 | 历史记录未单列原因 | Issue #12/#40；PR #46；CI #45837224652 |
-
 | 2026-11-26 | 0.3.13 | GPT-6（ChatGPT） | 1.6.0 Host Context Publisher / 依赖边界 | 纠正 SR-024 仅为旧 Development Publisher，新增 SR-030 Schema-only 1.6.0 Host Context 发布链，并将来源 provenance 放回 Project Lock | 历史记录未单列原因 | Issue #12/#40；IR-006/008；SR-030 |
 | 2026-11-26 | 0.3.14 | GPT-6（ChatGPT） | §4.4～§6、§9.5、修订记录 | 明确零 Capability roots 不等于零 Package dependency closure；增加 Schema-only Host Context Package 的 Compiler gate、Studio 测试和 AC-016-04 映射 | 消除 F09 原“零根不调用 Compiler”与“无外部依赖 Assurance 可 Build”之间的矛盾，确保 Schema-only 依赖可被正确消费 | Issue #12/#40；SR-013 AC-013-06；SR-016 AC-016-04；SR-030；PR #46 |
 | 2026-11-26 | 0.3.15 | GPT-6（ChatGPT） | §5～§9、修订记录 | 同步 EC02 v0.2.12 与 SR-013 v0.2.18，保持 Schema-only Package / zero Capability roots 依赖契约一致 | 使 Studio Package Audit / AI Authoring 消费与 Compiler AC-013-06 使用同一 Schema-only 语义 | Issue #12/#40；EC02、SR-013、SR-016、SR-030；PR #46 |
@@ -259,3 +257,4 @@ AI Authoring 的 Change Set 只能新增或修改 Capability ID、Procedure argu
 | 2026-11-27 | restore-0.3.16（历史） | GPT-6.2（ChatGPT） | §9、修订记录表格结构 | 合并 0.3.11～0.3.13 三条记录的“修改内容/原因”列并完整保留原文 | 恢复六列表格结构，避免复审时修订记录错列。 | Issue #40/#12；PR #45；SR-013/SR-029 |
 | 2026-11-27 | restore-0.3.17（历史） | GPT-6.2（ChatGPT） | 文档头、§5.1～§7、修订记录 | 将新 Studio 的唯一执行门改为 Compiler Owner 正式发布的 1.6.0 Build/Verify + Owner/Provider Package Gate；把 VerifyDevelopment 与 no-root 规则明确限定为历史 Development profile；SKILL.md-only 改为 Agent Skills Specification 独立路径 | 消除新版 Gate 正文仍调用旧 VerifyDevelopment、并避免将 SKILL.md-only 误归入 CA-SL v1alpha5 的实施歧义 | Issue #40；SR-013；SR-029；PR #45 |
 | 2026-11-28 | 0.3.18-integration-2 | GPT-6（ChatGPT） | §4.4、§7、修订记录 | 恢复 Studio ca-client 1.2.0 历史来源、#276 DIRTY 状态与 Development 导入/根依赖证据，区分新 1.6.0 Build Gate | 避免旧 #272/#276 CI 和锁来源被推定为新版产品已验收 | Issue #12；#49；PR #45；#46 |
+| 2026-11-28 | 0.3.20 | GLM-5.3（DeepSeek Harness） | 修订记录 | 合并被空行拆断的孤儿修订表段为单一连续表格，不改变任何历史行内容 | 修复 R8-09 同类 Markdown 渲染断裂，保证修订数据完整可见 | Issue #12；PR #46；Review #6095143611 |

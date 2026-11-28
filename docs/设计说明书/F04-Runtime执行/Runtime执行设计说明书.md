@@ -2,7 +2,7 @@
 
 > 文档类型：机制设计说明书  
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
-> 文档版本：0.3.8
+> 文档版本：0.3.9
 > 功能归属：F04 — Runtime 执行  
 > 关联 SR：SR-007    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
@@ -154,5 +154,5 @@ MAS.RECONCILE 不是 Skill-facing Capability。普通 Skill / LLM Action 必须�
 | 2026-11-26 | 0.3.5 | GPT-6.2（ChatGPT） | §3、§6、§7 | 明确 frozen v1alpha5 Capability ID 不进入 Runtime Artifact/Scope，并补齐 sidecar Reconcile internal-only 的 Runtime 保证 | 对齐 F03.05 的 Callable allowlist、Owner membership/Effect 与 exact-original Reconcile 边界 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-26 | 0.3.6 | GPT-6（ChatGPT） | 新增 1.6.0 目标章节、状态及修订记录 | 移植一对一 Binding / Selector / Action 设计并标为待评审 | 无旧版兼容或产品完成承诺 | Issue #40；SR-029 |
 | 2026-11-26 | 0.3.7 | GPT-6（ChatGPT） | 核心规范与验收章节 | 以唯一 1.6.0 Capability Action Request 重写 §3，旧 Callable-only Runtime 降为历史审计 | 消除 §3 与 §10 规范相互否定，明确 dispatch 前 fail-closed 顺序 | Issue #12/#40；SR-007；SR-029 |
-
 | 2026-11-26 | 0.3.8 | GPT-6（ChatGPT） | 最终一致性复评 / 规范性描述 | 更新规范性 Capability Action Boundary 修订日期和 Release/SourcePath 责任追踪 | 消除 1.6.0 与历史 Development 的模糊措辞，修正后续评审的可执行门槛 | Issue #12/#40；PR #46 |
+| 2026-11-28 | 0.3.9 | GLM-5.3（DeepSeek Harness） | 修订记录 | 合并被空行拆断的孤儿修订表段为单一连续表格，不改变任何历史行内容 | 修复 R8-09 同类 Markdown 渲染断裂，保证修订数据完整可见 | Issue #12；PR #46；Review #6095143611 |

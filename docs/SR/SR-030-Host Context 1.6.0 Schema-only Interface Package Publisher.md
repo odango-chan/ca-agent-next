@@ -1,7 +1,7 @@
-# SR-030：Host Context 1.6.0 Schema-only Interface Package Publisher
+﻿# SR-030：Host Context 1.6.0 Schema-only Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.8
+> SR 版本：0.1.9
 > 状态：整项 DRAFT；阶段 READY（中央只读核验）。AC-030-01 固定源，06/07 设计约束。  
 > 下一步：核对 Subject Schema 原始字节与来源、Provenance 归属和 Demo 排除项。02～05、Publisher 实现与发布等待正式 Schema/languageTarget。  
 > 阶段依据：[独立评审 #91](https://github.com/odango-chan/ca-agent-next/issues/91#issuecomment-7209340753)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
@@ -83,7 +83,7 @@ Publisher 必须从固定 Revision 读取原始 Schema 字节并核对 Git blob�
 ## 6. 依赖与阶段门槛
 
 **设计依赖：**
-- CA-SL 1.6.0 完整语言规范 v0.1.2 §5.2、§14～16；F08 v0.3.16；EC02 v0.2.13 §10～11；SR-013 v0.2.22 §5～6 明确 Schema-only Package / Context Schema closure 与零 Capability roots 的处理。
+- CA-SL 1.6.0 完整语言规范 v0.1.2 §5.2、§14～16；F08 v0.3.16；EC02 v0.2.13 §10～11；SR-013 v0.2.23 §5～6 明确 Schema-only Package / Context Schema closure 与零 Capability roots 的处理。
 - SR-029 / CA-SL 1.6.0 规范明确 Contract.contexts 引用 Host Context Schema，requestSchema 则是 Skill 自有请求 Schema。
 - F09 v0.3.16 §5～9 / SR-016 明确 Package Manifest 与 Project Lock provenance 的边界。
 
@@ -117,4 +117,6 @@ Publisher 必须从固定 Revision 读取原始 Schema 字节并核对 Git blob�
 | 2026-11-27 | 0.1.5 | GPT-6（ChatGPT） | 文档头、§1、§6、修订记录 | 补齐 F09/F08/EC02/CA-SL 1.6.0/SR-013 的固定版本与章节；修复修订账本排序 | 处理独立模型 Review #6082541121 的 R3-SR030-01 与 R3-LEDGER-01，避免 Schema-only Publisher 的核心设计依据不可定位 | Issue #12；PR #46；Review #6082541121 |
 | 2026-11-27 | 0.1.6 | GPT-6（ChatGPT） | 文档头、§1、§6、修订记录 | 将第二轮不可访问的评审登记替换为正式 Review #6082541121 的限定结论；标记 SR-030 P2 依据修订位于后续 Head | 避免将固定旧 Head 的设计认可外推到新 Head 或 Publisher 实施 | Issue #12；PR #46；Review #6082541121 |
 | 2026-11-27 | 0.1.7 | Codex / GPT-6 | 文档头 | 登记阶段 READY（中央只读核验）及 AC 范围与工作项 #95 | 按单项独立评审推进 | Issue #12、#91；PR #46 |
+| 2026-11-27 | 0.1.8 | kimi-k3.1-pro | §7、文档头 | 独立复验 Subject Schema 274 字节/blob/SHA-256/$id，核对 Provenance 与 Demo 排除；01/06/07 静态 PASS，02～05 原状态不变 | 证明固定输入而不冒充 Publisher 或 Compiler 产品验收 | Issue #95；SR-030 |
+| 2026-11-28 | 0.1.8 | GLM-5.3（DeepSeek Harness） | §4、修订记录 | 将 §4 中 SR-013 引用版本统一为 v0.2.23，消除与设计依据行的内部不一致 | 关闭 R1-SR030-01 的同文档版本冲突 | Issue #12；PR #46；Review #6095143611 |
 | 2026-11-27 | 0.1.8 | kimi-k3.1-pro | §7、文档头 | 独立复验 Subject Schema 274 字节/blob/SHA-256/$id，核对 Provenance 与 Demo 排除；01/06/07 静态 PASS，02～05 原状态不变 | 证明固定输入而不冒充 Publisher 或 Compiler 产品验收 | Issue #95；SR-030 |
