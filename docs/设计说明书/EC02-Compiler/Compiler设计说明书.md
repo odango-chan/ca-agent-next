@@ -1,12 +1,12 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.2.18\
+> 文档版本：0.2.19
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 修订日期：2026-11-28\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产准入、Owner 信任运营、签名、Trust Registry、生产资格及真实 5GC/MAS 认证。
 
-关联 [IR-003](../../IR/IR%20总登记册.md#ir-003)、[IR-006](../../IR/IR%20总登记册.md#ir-006)、[SR-012](../../SR/SR-012-Compiler设计归档与跨仓收敛.md)、[SR-013](../../SR/SR-013-Compiler已检查when与发布产物.md)、[SR-030](../../SR/SR-030-Host%20Context%201.6.0%20Schema-only%20Interface%20Package%20Publisher.md)、[Next Issue #14](https://github.com/odango-chan/ca-agent-next/issues/14) 和 [Compiler Issue #62](https://github.com/odango-chan/ca-skill-compiler/issues/62)（新 1.6.0-only；#61 仅历史）。
+关联 [IR-003](../../IR/IR%20总登记册.md#ir-003)、[IR-006](../../IR/IR%20总登记册.md#ir-006)、[SR-012](../../SR/SR-012-Compiler设计归档与跨仓收敛.md)、[SR-013](../../SR/SR-013-Compiler已检查when与发布产物.md)、[SR-030](../../SR/SR-030-Host%20Context%201.6.0%20Schema-only%20Interface%20Package%20Publisher.md)、[SR-031](../../SR/SR-031-3GPP公共Schema-only-Publisher.md)、[Next Issue #14](https://github.com/odango-chan/ca-agent-next/issues/14) 和 [Compiler Issue #62](https://github.com/odango-chan/ca-skill-compiler/issues/62)（新 1.6.0-only；#61 仅历史）。
 
 ## 1. 权威与版本边界
 
@@ -366,6 +366,19 @@ Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId�
 
 上述目标规则已经可供设计评审；精确字段和可执行命令尚未发行，必须等正式发布后才能宣称对应产品验收 PASS。旧 v2.1.0 Development v1alpha1 和 v1alpha5 的历史设计/Golden 不在新二进制内实现兼容分支。
 
+## 12. OpenAMSM 原版 OpenAPI 3.0 引用与 Compiler dialect-aware Resolver（IR-009）
+
+- **SR-031 Source Bundle**：ca-skills 原样代发布 OpenAMSM 实际支持的 OpenAPI 3.0 YAML 与已选 operation / Schema Component 的完整可达 `$ref` 闭包。原文件 bytes、路径和相对 `$ref` 不改；Source Bundle 不是 Interface Package，不导出 Capability / Callable。
+- **本地 G.4 与外部 OAS 3.0 分离**：Skill-owned `requestSchema` 根及本地 Schema 节点继续使用 CA-SL 1.6.0 G.4。只有在 Skill 显式声明并 pin Source Bundle dependency 后，才能引用其中精确的 `#/components/schemas/...`；目标由 OAS 3.0 Schema Object validator 解释，不套用 G.4 白名单，不做 projection / Adapter。
+- **选定根与 lazy Resolver**：Compiler 的根是精确 Schema Component JSON Pointer；Plugin ingress 的根是固定 operation identity + `requestBody` surface（当前 `PostSmContexts` 的 `jsonData`）。先解析原版根 YAML，再仅递归解析该根可达的 refs；不得 eager resolve 根文件中未选定 operation 的全部 refs。相对 `$ref` 以引用所在文件为基准按 RFC 3986 解析；fragment 按 RFC 6901 解码。`../` 仅在规范化后的目标仍位于 pin 的 Source Root 内时允许；拒绝任意 scheme / authority / query、绝对路径、逃出 Source Root 的路径、非法 pointer escape、Bundle 外文件、unresolved in-scope ref、cross-commit mixing、non-schema pointer 和循环引用。未选定闭包外 refs 不构成当前消费失败。Build / Verify 必须离线使用锁定快照。
+- **真实来源闭包基线**：在 OpenAMSM commit `dc83ccbf5be54dcc7112dd43ba95ea6fa5975550` 上，`PostSmContexts.requestBody → jsonData → SmContextCreateData` 静态引用遍历得到 4 份原版 YAML、102 个可达 Schema Component，无未解析目标或循环。闭包为 TS 29.502、TS 29.571、TS 29.510 NFManagement、TS 29.518 Namf Communication；不是全目录 472 份 YAML。
+- **Dialect-aware 验证**：本地节点使用 G.4 validator；外部目标及其可达引用使用 OpenAPI 3.0.0 Schema Object semantics。当前固定闭包实际包含 `allOf` 1、`anyOf` 25、`oneOf` 3、`nullable` 2、`format` 4（实际值为 `uuid` / `date-time` / `byte`）、`pattern` 42、`additionalProperties` 3（本快照三处均为 Schema Object）、`items` 23、`enum` 27、`required` 26、`default` 21 个关键字出现项；这些计数是该 source commit 的审计证据，Golden 应覆盖各实际出现语义，不应当作未来版本的固定数量。组合语义为 `allOf` 交集、`anyOf` 至少一个分支、`oneOf` 恰好一个分支；`pattern`、schema-valued `additionalProperties`、`nullable`、`format` 等不得丢弃 / 改写。OAS3 允许 boolean-valued `additionalProperties`，当前快照没有该形式；实现遇到时须按 OAS3 处理或明确 fail-closed，不得静默忽略。`default` 仅为注解，不自动填充输入。若可达闭包含不支持语义，使用 `SCHEMA_INVALID` 拒绝并输出 source file / JSON Pointer / Skill SourcePath；不得生成部分 Artifact。
+- **CEL 类型环境**：对 `anyOf` / `oneOf`，只有在每个可满足分支中均声明、均列入 `required` 且类型一致的字段，才能作为无条件可访问字段；其他字段仅在 CEL 类型系统显式支持 optional 时按 optional 暴露，否则不允许无条件访问。`allOf` 按交集组合属性约束并合并 required 集合，类型冲突拒绝；`nullable` 的 Null 与 Missing 分开处理。无法证明可用性的字段不进入无条件类型环境，不猜测为某个类型。Plugin 的完整 operation / multipart 校验仍由 SR-010 原生 OAS consumer 负责，Compiler 不复制 operation 逻辑。
+- **Host Context**：SR-030 Schema-only Package 仍只由 `Contract.contexts` 引用；它与 OpenAPI Source Bundle 是不同依赖 kind。两者都不产生 Capability / Callable Scope。
+- **机器字段门禁**：Source Bundle dependency kind、alias / URI / JSON Pointer 编码、Manifest / Lock / Build DTO 字段、OAS 3.0 validator 版本与 Golden 必须由 ca-skills / Compiler Owner 在正式 1.6.0 Schema / Golden 中冻结。当前没有正式发布，不允许 Harness 猜字段或宣称 READY。
+
+SR-013 AC-013-07 需验证原版组件直接引用、跨文件 CommonData 闭包、OAS 3.0 语义保真、G.4 / OAS3 dialect 边界、CEL 类型可确定性和 fail-closed。Source Bundle 原件 byte-compare PASS 不能代替 Compiler 产品 AC。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
@@ -395,3 +408,4 @@ Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId�
 | 2026-11-27 | 0.2.13 | Codex / GPT-6 | Provider 一对一映射 | 区分查询 2/2 与包含 Codec 的 3/3 | 与 SR-029、F06 的发布范围对齐 | Issue #12，PR #46 |
 | 2026-11-28 | 0.2.17 | GPT-6（ChatGPT） | §1～11、修订记录 | 合并 #46 Capability-first/Schema-only/Build DTO 单版本约束与恢复分支 OAS3/G.4 dialect-aware 原件及 Publisher CEL metadata 边界；新 Compiler #62，历史 #61 | 保留 Provider/Owner 机器合同未冻结门槛，拒绝旧格式兼容与强制 OpenAPI Adapter | Issue #12；#40；#47；PR #45；#46；#48 |
 | 2026-11-28 | 0.2.18 | GLM-5.3（DeepSeek Harness） | §11、修订记录 | 将 §11 一对一 Link 行的 Owner 固定 24/24 改为条件签认候选并合并修订表断裂孤儿段 | 关闭 R8-05 残留与 R8-09 同类渲染断裂 | Issue #12；PR #46；Review #6095143611 |
+| 2026-11-28 | 0.2.19 | GPT-6.2（ChatGPT） | §12 | 明确 Source Bundle pin、OAS3 选定根/lazy refs、RFC 3986/6901 路径解析、闭包边界、OAS3 语义与 CEL 类型可用性规则；正式字段仍由 Owner 冻结 | 把 IR-009 / SR-031 设计增量纳入 Compiler 责任边界，避免 G.4 投影、eager resolve、hash/digest 扩张和猜测 Manifest 字段 | Issue #47；IR-009；SR-031/013/010；PR #115 |
