@@ -1,7 +1,7 @@
 # EC05 — OpenAMSM Owner 与权威状态架构设计
 
 > 文档类型：外部能力域架构设计（实现派生重建）  
-> 文档版本：0.1.6\
+> 文档版本：0.1.7\
 > 状态：依据当前 main 代码、Owner 声明、契约和验收材料重建；源仓没有独立总体架构文档  
 > 功能归属：EC05；关联 F04、F05、F06、F07  
 > 关联需求：IR-004、IR-005；SR-007、SR-010、SR-011、SR-018、SR-025\
@@ -141,6 +141,14 @@ UE-requested Release 的 NAS message type 是 0xD1，与 AMF/network-initiated R
 | Next Plugin / Runtime 端到端调用 | EC04 Plugin main 尚无代码，ca-agent-demo PR #246 未合并 | NOT_IMPLEMENTED / NOT_RUN |
 | Production Qualification | 本项目 Demo 非目标 | NOT_CLAIMED |
 
+### 固定 Owner main 与候选修复证据分界（PR #114 选择性收编）
+
+**历史固定源结论不随设计收编自动改变。** env-openamsm main `dc83ccbf5be54dcc7112dd43ba95ea6fa5975550` 的 SR-018 AC-018-01/02 静态审计仍为 **FAIL**（source/step、Evidence 参数、Receipt Schema、exact-original Reconcile 完整性问题）。不能因为上表存在历史 Owner 实现或 UE-requested Release 限定 PASS 就写成当前候选修复 VERIFIED。
+
+PR #114 记录的候选修复源为 `fix/sr-018-owner-evidence-exact-reconcile` @ `c83be9c803c1ffd3a04964f6c2d80787c3798190`，属于 **2026-11-27 固定审计时点**，不代表本次的实时远端 HEAD。当时对 source/step、Evidence 参数、Publisher fail-closed、PFCP DELETE UNKNOWN 条件 Receipt Schema 与原 Receipt/PFCP DELETE 身份重绑定仅有静态核验；Manifest 58 个 artifact 的 SHA-256 与 publicationDigest 一致，仅证明该固定候选的静态产物一致性，不是新 1.6.0 Runtime 额外哈希要求。
+
+该时点 `publish.py --check`、Python 全套测试、19 Patch 应用、C 侧回归/原生构建及真实 PFCP UNKNOWN → Receipt Query → Reconcile **均 NOT_RUN**，候选实现的缺字段 Receipt、operator/reason 审计和 generation 语义仍由 [env-openamsm #28](https://github.com/odango-chan/env-openamsm/issues/28) 实测关闭。本仓只登记中央设计与验收责任，不擅自将外部候选状态提升为 IMPLEMENTED/VERIFIED；SR-018 当前 Head 设计复评与 Owner 实施阶段另行判定。
+
 ## 9. 非目标
 
 不新增 Owner 数据库、独立业务状态机、通用 Saga 引擎、额外信任注册中心、生产级 HA/DR 或跨 Owner 全局事务。Owner 只声明并执行其实际支持的 Operation。
@@ -170,3 +178,4 @@ UE-requested Release 的 NAS message type 是 0xD1，与 AMF/network-initiated R
 | 2026-11-28 | 0.1.4 | GLM-5.3（DeepSeek Harness） | 修订记录 | 合并被空行拆断的孤儿修订表段为单一连续表格，不改变任何历史行内容 | 修复 R8-09 同类 Markdown 渲染断裂，保证修订数据完整可见 | Issue #12；PR #46；Review #6095143611 |
 | 2026-11-28 | 0.1.5 | GLM-5.3（DeepSeek Harness） | 修订记录 | 将 6 列历史修订表统一为 7 列标准结构 | 关闭 R3-LEDGER-01/R8-09 同族列宽失配，保证原因/关联列渲染可见 | Issue #12；PR #46；Review #6095143611 |
 | 2026-11-28 | 0.1.6 | GPT-6.2（ChatGPT） | 当前实现审计、Release 证据与修订记录 | 以固定 harness 成功谓词、PFCP 54/55、MAS Trace、UPF=0 和 SMF 时间线解释历史 UE-requested Release 限定 PASS；明确 `smf_pfcp_del=false` 为非门禁子检查，并保留候选 #28 BLOCKED/NOT_STARTED | 关闭历史证据误判，同时不将旧 E2E 外推到当前 Reconcile、Next 或 Production | env-openamsm#21/#28；env-5gc-sim@6ba1dc4；ca-agent-next#104/#114/#115 |
+| 2026-11-28 | 0.1.7 | GPT-6（ChatGPT） | §8、修订记录 | 从 PR #114 选择性补入固定 Owner main 审计 FAIL 与候选 Reconcile 静态修正/NOT_RUN 责任，保留现行 Parser 22/23/24 条件决策和 Release 历史限定 PASS | 避免把跨仓旧候选静态状态误报为当前产品验证，闭合第三批源文档独有信息 | Issue #50/#104；PR #107/#114/#115；env-openamsm#28 |
