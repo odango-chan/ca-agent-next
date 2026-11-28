@@ -3,7 +3,7 @@
 > 文档类型：软件需求（SR）
 > SR 版本：0.3.4
 > 创建日期：2026-11-27
-> 修订日期：2026-11-27
+> 修订日期：2026-11-28
 > 状态：DRAFT / REVIEW_REQUESTED；Publisher / Compiler / Plugin / Codec 产品均 NOT_RUN 或 BLOCKED_EXTERNAL_INPUT
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：修改原版 YAML、改写 3GPP 标准、伪造 NAS/NGAP YAML、实现消费端、全量协议资格、旧版兼容
