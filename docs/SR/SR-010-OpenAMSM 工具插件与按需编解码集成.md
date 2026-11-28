@@ -1,8 +1,8 @@
 # SR-010：OpenAMSM 工具插件与按需编解码集成
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.6
-> 状态：整项 DRAFT；阶段 READY（本仓 Host Channel）；AC-010-01～05/09 为既有 Host Channel 范围；AC-010-10 原版 OAS3 requestBody / multipart / N1/N2/N2 Ext1 Content-ID 验收 BLOCKED/NOT_RUN（依赖 SR-031 Source Bundle、Compiler Resolver 与正式 Codec Provider）。
+> SR 版本：0.2.7
+> 状态：整项 DRAFT；阶段 READY（仅限本仓 no-hash Host Channel 设计）；AC-010-03 因外部 v1 hash contract 不兼容而 BLOCKED_EXTERNAL_INPUT；AC-010-01/02/04/05/09 为既有范围；AC-010-10 原版 OAS3 requestBody / multipart / N1/N2/N2 Ext1 Content-ID 验收 BLOCKED/NOT_RUN（依赖 SR-031 Source Bundle、Compiler Resolver 与正式 Codec Provider）。
 > 下一步：仅实现 Next Python Host ArtifactStore/Channel 与 no-decode 路径。06a 等真实 Importer/Catalog/Runtime 三层入口，09 等固定共享 fixtures 和联测；06b/07/08 等正式包。  
 > 阶段依据：[独立评审 #74](https://github.com/odango-chan/ca-agent-next/issues/74#issuecomment-7210244694)，评审 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
 > 工作项：[阶段工作项 #94](https://github.com/odango-chan/ca-agent-next/issues/94)。
@@ -34,7 +34,7 @@
 - 在 Next Host 实现 Host-owned ArtifactStore 和 `ca-host.artifact-store/v1` loopback HTTP/1.1 channel；Host 在 Provider `initialize` 中传入闭合 `artifactChannel`，由 Provider 使用 GET 输入 / POST 输出交接原始 bytes。
 - Artifact reference 使用 Host 生成的随机 opaque token，并绑定 invocation、direction、slot；不包含路径、URL、mediaType、size 或 digest。
 - Provider `artifactSlots` 必须来自可信 Backend Catalog；原始 bytes 不进入 NDJSON、不使用 Base64、不暴露任意本地路径。
-- 按 v1 contract 完成逐 Artifact SHA-256 传输校验、大小/数量配额、超时/取消、过期清理和输出原子发布；该摘要不是引用身份、内容寻址或去重。
+- 按 Demo channel 完成原始 bytes 流交接、大小/数量配额、超时/取消、过期清理和输出原子发布；**不计算、不传输、不校验 SHA-256、checksum 或 digest**。Artifact reference 仅使用随机 opaque token，并绑定 invocation / direction / slot。
 - 缺少 `artifactChannel` 时 artifact-bearing binding 必须 `NOT_CONFIGURED`，并在远端 SBI I/O 前拒绝。
 - Codec Decode/Encode/最小分类操作必须先发布在权威 Tool Interface Package；Skill 需要结构化协议字段时才调用 Codec Tool。
 - Codec 输出 JSON 投影或新 Artifact Reference；原始 Artifact 不被替换。
@@ -64,7 +64,7 @@
 |---|---|---|
 | AC-010-01 | 通过唯一 Plugin Manager 初始化 Provider Tools Extension；配置缺失/非法 | 无第二 Manager；缺 channel 可初始化但 Artifact Binding NOT_CONFIGURED；非法配置 PROVIDER_CONFIGURATION_INVALID，远端 I/O=0 |
 | AC-010-02 | Host 生成 opaque artifactRef 与同一/跨 Invocation、direction、slot 的读取 | 合法引用通过，跨边界/过期/路径泄漏拒绝，token 不编码文件/URL |
-| AC-010-03 | Provider GET 输入/POST 输出正确二进制与 mediaType、Content-Length、逐 Artifact 传输校验 | 输出原子发布，字节一致；slot/schema/size/digest 不符不形成可读产物 |
+| AC-010-03 | Provider GET 输入/POST 输出正确二进制与 mediaType、Content-Length、大小/数量配额和原子发布；禁止 SHA-256 / checksum / digest | 不生成或校验摘要；slot/schema/size 不符不形成可读产物。现有 `ca-host.artifact-store/v1` 若强制 SHA-256，则视为不兼容并保持 BLOCKED_EXTERNAL_INPUT，不得绕过或双轨兼容 |
 | AC-010-04 | 取消、超时、Provider 退出、部分写入、配额超限 | 所有 staged outputs 清理；未完成 Artifact 不可读取；无重复 Owner mutation |
 | AC-010-05 | Codec 未发布、Host 不需要 Decode、Codec 必需但不存在 | no-decode 路径不触发 Codec；必需 Codec 未发布只阻塞对应 AC，不冒充已发布能力 |
 | AC-010-06 | 06a 本地旧包拒绝：先通过真实 Importer 测旧 Artifact 拒绝；再以测试专用 fixture **绕过 Importer**，直接构造含旧 Artifact 的 Catalog entry/Resolver input；再直接构造旧 Run/旧 Callable-only Binding 注入 Runtime Action Boundary。06b 在正式 1.6.0 Package 与 Bundle 上按已 Link 的 Capability 分发 | 06a 每一层单独记录输入和计数：Importer candidate=0；直注 Catalog/Resolver 不得产生可选 candidate；Runtime 不得建立 Scope/dispatch；每层 Provider IPC=0。Resolver 与 Runtime 子例不得复用“Importer 已拒绝”的同一结果冒充独立测试。非法 selector 在后端 I/O 前拒绝；06b 核对唯一公开映射、合法路由及 Scope；缺正式输入时 06b BLOCKED，单独 06a 不能使整项 PASS |
@@ -98,6 +98,12 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 - superseded by：无
 - 影响分析：初始分解；等待设计基线评审。
 - 本 SR 的范围和验收条件在进入 READY 后冻结。后续发生语义变化时创建新的 SR 并引用本 SR，不覆盖历史要求。
+
+### 7.1 Demo 完整性边界（强制）
+
+- Demo 的 Artifact reference 是 opaque token，不包含路径、URL、mediaType、size 或 digest；长度、数量、超时、取消、过期清理和原子发布属于交接正确性，不构成哈希完整性方案。
+- 不实现 content-addressed identity、去重、SHA-256 / checksum / digest 校验、签名、Trust Registry 或生产级 package integrity。
+- 外部 `ca-host.artifact-store/v1` 若仍要求逐 Artifact SHA-256，不得原样复用；AC-010-03 保持 BLOCKED_EXTERNAL_INPUT，直到外部契约修订为 no-hash Demo channel。不得由 Harness 自行兼容、移除校验或绕过契约。
 
 ## 8. OpenAMSM 原版 OpenAPI 3.0 Ingress 与 Codec READ 消费（IR-009）
 
