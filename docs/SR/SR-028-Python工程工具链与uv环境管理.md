@@ -1,7 +1,7 @@
 # SR-028：Python 工程工具链与 uv 环境管理
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.17\
+> SR 版本：0.2.18\
 > 修订日期：2026-11-28\
 > 状态：IMPLEMENTED（PR #115 已合入受保护 main（最终受审 Head `041e21ac8a4c99b509b09c809c156ed528455899`，merge `574ca51122b49e48be20fadedca225b5fad3137c`）；原作者/源 PR 的 CLOSED/superseded 不等于独立 MERGED。AC-028-01～10 原始证据见 Issue #96，合并后的 main SHA 产品独立复验仍待执行，不能升级 VERIFIED/RELEASED。）
 > 创建日期：2026-11-26  
@@ -10,7 +10,7 @@
 > 设计依据：[G02 Python 工程工具链与环境管理设计说明书](../设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md) v0.2.12 §1～§9；[SR-002](SR-002-Python%20核心与宿主基础骨架.md) v0.2.10 §2.1；[SR 管理规范](../规范/SR%20管理规范.md) v0.8.1 §6.1、§8.3\
 > 设计/治理 Issue：[ca-agent-next #12](https://github.com/odango-chan/ca-agent-next/issues/12)（中央整改追踪）；原设计 Issue [#35](https://github.com/odango-chan/ca-agent-next/issues/35) 已 CLOSED，仅作历史来源；独立实施 Issue [#96](https://github.com/odango-chan/ca-agent-next/issues/96) OPEN；#12/#35 均不是实施 Issue。  
 > 目标仓：`odango-chan/ca-agent-next`  
-> 最新 SR-028 专项设计复评：PR #46 Review [#6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#issuecomment-6084094037)，固定 Head `93f1389e7c5968cd30e8a74137207094864ecca0` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`；平台事件 COMMENTED，模型结论 APPROVE_FOR_READY（0 P0 / 0 P1 / 2 非阻断 P2）。它不是当前 PR #46 第八轮全量 Review，也不证明当前分支产品实施或发布。
+> 历史 SR-028 专项设计复评：PR #46 [Review 6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#issuecomment-6084094037) 固定 Head `93f1389e7c5968cd30e8a74137207094864ecca0` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`，模型结论 APPROVE_FOR_READY（0 P0 / 0 P1 / 2 非阻断 P2），平台事件 COMMENTED。此为**设计专项历史证据**；产品实现已通过 PR #115 合入 main，实际独立验收/VERIFIED 仍由 #96 追踪。
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：其他仓库迁移、生产级供应链安全、运行时架构改造和完整 Python 版本矩阵资格认证
 
@@ -179,3 +179,4 @@ Go Echo 前置（在 `examples/echo/plugin/`，设置 `GOWORK=off`）：`go buil
 | 2026-11-28 | 0.2.15 | GPT-6.2（ChatGPT） | §0、§2、修订记录 | 更新 #99 13 路径、#112 P2 独立复评、#97 READY 状态审计和 #115 最新 271/271 回归；修正 §0 旧 45/45 与恢复分支 DRAFT 描述 | 将设计 READY、候选 IMPLEMENTED、mainline IN_PROGRESS 分层，避免过期状态继续作为当前结论 | Issue #50/#96/#111；PR #97/#99/#112/#115 |
 | 2026-11-28 | 0.2.16 | GPT-6（ChatGPT） | 文档头、§0/§7/§8、修订记录 | 按 PR #115 已合入 main 的最终 Head、Merge 与 CI 证据改为 IMPLEMENTED；保留 main SHA 复验门槛 | 区分合并/候选验收与主干产品 VERIFIED | Issue #50/#96/#111；PR #115 |
 | 2026-11-28 | 0.2.17 | GPT-6（ChatGPT） | §4.2、修订记录 | 删除已合入 main 的实现仍只在 #115 候选内的旧依赖描述 | 维护主干实施入口与 #96 独立复验限制一致 | Issue #50/#96；PR #121 |
+| 2026-11-28 | 0.2.18 | GPT-6（ChatGPT） | 设计复评导航、修订记录 | 历史专项设计评审与现行 main 实施、#96 VERIFIED 门槛分开表述 | 不把旧 PR #46 的评审时点当现行未实施状态 | Issue #96；PR #121 |
