@@ -1,8 +1,8 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.78
-> 状态：31 项 SR：4 VERIFIED（仅各自历史模块范围）、1 IMPLEMENTED（设计移交）、25 DRAFT、1 IN_PROGRESS（SR-028；设计 READY、候选实施 IMPLEMENTED、mainline 集成未完成）。PR #46 第九轮 评审评论 #6095601142 已合入恢复设计基线 `92436348`，main 尚未更新。PR #115 是唯一 mainline 集成入口；PR #115 唯一 mainline 集成入口仍为 OPEN / Draft（Base main @ b2ed5eb84114f9c2556a0cd06ed974887b1b70ad），本次代码与策略核验快照 Head `609fb12612c8990a37ba0e174cfacadfd7a7c5d9`；Review Context #46130016832 SUCCESS，Python Toolchain Policy Bootstrap #46130016864 SUCCESS（48/48），SR-003 Regression #46130016833 SUCCESS（Ubuntu 重跑与 Windows 均为 Host 52/52、Plugin 87/87、Review Context 84/84、Total 271/271）。Ubuntu 首次执行在 `test_process_exit_clears_extensions` 出现一次 IPC_TIMEOUT；同一 SHA 的失败 Job 重跑后 271/271 通过，未修改测试或产品代码，作为时序风险保留。当前未合入 main，未标 VERIFIED/RELEASED；PR #115 全量独立复评仍待完成。 PR #99 源 Head `83d23e8c04b1c05eb304c2a24a3392f6459ed0f1` 的独立复核 #6094704264 记录 IMPLEMENTED，AC-028-01～10 候选证据已归档。13 个变更路径已逐项对照 PR #115：`.python-version`、`pyproject.toml`、`uv.lock`、`scripts/unittest_gate.py`、Review Context Workflow、SR-003 双平台 Workflow 六个核心实现 Blob 完全一致；其余 7 个治理/文档路径由 #115 更新版本承接，不以旧文档覆盖新设计。 PR #112 源 Head `dbc0bcbb3a125f143d3648d2cb0331f01368f379` 的 P2-01/P2-02 已关闭；独立 评审评论 #6096938405 给出限定 APPROVE_FOR_READY（0 P0 / 0 P1 / 0 P2）。策略 Bootstrap 47/47、Review Context、SR-003 Ubuntu/Windows 266/266 均 SUCCESS。PR #112 仍保持 Draft，不合并，只作为 #115 的选择性策略来源。 PR #97 源 Head `66a82f09445d5fc32971e91d02b51b7ad6d4ece0` 的状态审计 评审评论 #6096959653 确认 READY 只代表设计快照（依据 PR #46 评审评论 #6084094037）；实际实施由 #99 的 IMPLEMENTED 证据证明。PR #97 六份治理文档已由 #115 更新版本承接，不原样覆盖；PR #97 不合并、不转 Ready。 PR #52 模型级结论 `APPROVE_WITH_NON_BLOCKING_FOLLOWUPS`，GitHub Review 仍为 COMMENTED。SR-031 / SR-032 产品实现仍 NOT_RUN。
+> 文档版本：0.3.79
+> 状态：31 项 SR：4 VERIFIED（仅各自历史模块范围）、1 IMPLEMENTED（设计移交）、25 DRAFT、1 IN_PROGRESS（SR-028；设计 READY、候选实施 IMPLEMENTED、mainline 集成未完成）。PR #46 第九轮 评审评论 #6095601142 已合入恢复设计基线 `92436348`，main 尚未更新。PR #115 是唯一 mainline 集成入口；PR #115 唯一 mainline 集成入口仍为 OPEN / Draft（Base main @ b2ed5eb84114f9c2556a0cd06ed974887b1b70ad），本次代码与策略核验快照 Head `53a83222ae208b9536a793570e2f37157ee19800`；Review Context #46132352471 SUCCESS，Python Toolchain Policy Bootstrap #46132352497 SUCCESS（48/48），SR-003 Regression #46132128905 SUCCESS（Ubuntu 重跑与 Windows 均为 Host 52/52、Plugin 87/87、Review Context 84/84、Total 271/271）。Ubuntu 首次执行在 `test_process_exit_clears_extensions` 出现一次 IPC_TIMEOUT；同一 SHA 的失败 Job 重跑后 271/271 通过，未修改测试或产品代码，作为时序风险保留。第三批文档/归档已按固定源选择性收编；以上 CI 仅验证第三批前基线 53a8322，第三批新 Head 的 CI 待完成。当前未合入 main，未标 VERIFIED/RELEASED；PR #115 全量独立复评仍待完成。 PR #99 源 Head `83d23e8c04b1c05eb304c2a24a3392f6459ed0f1` 的独立复核 #6094704264 记录 IMPLEMENTED，AC-028-01～10 候选证据已归档。13 个变更路径已逐项对照 PR #115：`.python-version`、`pyproject.toml`、`uv.lock`、`scripts/unittest_gate.py`、Review Context Workflow、SR-003 双平台 Workflow 六个核心实现 Blob 完全一致；其余 7 个治理/文档路径由 #115 更新版本承接，不以旧文档覆盖新设计。 PR #112 源 Head `dbc0bcbb3a125f143d3648d2cb0331f01368f379` 的 P2-01/P2-02 已关闭；独立 评审评论 #6096938405 给出限定 APPROVE_FOR_READY（0 P0 / 0 P1 / 0 P2）。策略 Bootstrap 47/47、Review Context、SR-003 Ubuntu/Windows 266/266 均 SUCCESS。PR #112 仍保持 Draft，不合并，只作为 #115 的选择性策略来源。 PR #97 源 Head `66a82f09445d5fc32971e91d02b51b7ad6d4ece0` 的状态审计 评审评论 #6096959653 确认 READY 只代表设计快照（依据 PR #46 评审评论 #6084094037）；实际实施由 #99 的 IMPLEMENTED 证据证明。PR #97 六份治理文档已由 #115 更新版本承接，不原样覆盖；PR #97 不合并、不转 Ready。 PR #52 模型级结论 `APPROVE_WITH_NON_BLOCKING_FOLLOWUPS`，GitHub Review 仍为 COMMENTED。SR-031 / SR-032 产品实现仍 NOT_RUN。
 > 修订日期：2026-11-28\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
@@ -35,12 +35,12 @@
 | [SR-010](../SR/SR-010-OpenAMSM%20工具插件与按需编解码集成.md) | [IR-005](../IR/IR%20总登记册.md#ir-005) | OpenAMSM 工具插件与按需编解码集成（AC-010-03 no-hash Channel；AC-010-10 OAS3 multipart / N1-N2-N2 Ext1） | DRAFT |
 | [SR-011](../SR/SR-011-真实%20OpenAMSM%20创建修改释放端到端验证.md) | [IR-005](../IR/IR%20总登记册.md#ir-005) | 真实 OpenAMSM 创建修改释放端到端验证 | DRAFT |
 | [SR-012](../SR/SR-012-Compiler设计归档与跨仓收敛.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Compiler 设计归档与跨仓收敛 | DRAFT |
-| [SR-013](../SR/SR-013-Compiler已检查when与发布产物.md) | [IR-003](../IR/IR%20总登记册.md#ir-003) | Compiler 已检查 when 与发布产物（AC-013-07 OAS3 direct refs） | DRAFT |
+| [SR-013](../SR/SR-013-Compiler已检查when与发布产物.md) | 阶段 READY（中央只读核验） | AC-013-01 固定归档完整性 | PR #110 修复已纳入完整 59 Blob 归档树；Issue #102 独立复验 58/58、SHA256SUMS、audit_evidence.py、Python 18/18 PASS；`vet.log` NOT_ARCHIVED；AC-013-02～06 产品未运行，AC-013-07 BLOCKED/NOT_RUN。 | [#77](https://github.com/odango-chan/ca-agent-next/issues/77#issuecomment-7209276846)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95)；[#102](https://github.com/odango-chan/ca-agent-next/issues/102) |
 | [SR-015](../SR/SR-015-工具契约设计移交.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 工具契约设计移交 | IMPLEMENTED |
-| [SR-016](../SR/SR-016-工作台设计移交与条件编辑.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 工作台设计移交与条件编辑 | DRAFT |
-| [SR-017](../SR/SR-017-业务插件设计移交.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 业务插件设计移交 | DRAFT |
-| [SR-018](../SR/SR-018-业务所有者设计移交.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 业务所有者设计移交 | DRAFT |
-| [SR-019](../SR/SR-019-仿真对端设计移交.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 仿真对端设计移交 | DRAFT |
+| [SR-016](../SR/SR-016-工作台设计移交与条件编辑.md) | 阶段 READY（中央只读核验） | AC-016-01、AC-016-09 设计对照 | AC-016-01 v0.3.39 已正式定义；新定义下 14 组配对仍 NOT_RUN；MIG-016-01 仅历史台账；AC-016-09 仅设计对照，六宿主未实测。 | [#78](https://github.com/odango-chan/ca-agent-next/issues/78#issuecomment-7210318006)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95)；[#106](https://github.com/odango-chan/ca-agent-next/issues/106) |
+| [SR-017](../SR/SR-017-业务插件设计移交.md) | 阶段 READY（中央只读核验） | AC-017-01～04 静态移交 | Host-only artifactRef 解析、Tool Plugin 单次 Invocation grant、固定 Mock AMF 来源和 SR017-H 身份边界已补入；AC-017-02 仍 FAIL，运行验收 NOT_RUN。 | [#79](https://github.com/odango-chan/ca-agent-next/issues/79#issuecomment-7210443123)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95)；[#103](https://github.com/odango-chan/ca-agent-next/issues/103) |
+| [SR-018](../SR/SR-018-业务所有者设计移交.md) | 阶段 REVIEW_REQUESTED | AC-018-01～04、历史 UE-requested Release | 固定 main AC-018-01/02 FAIL、AC-018-03 BLOCKED、AC-018-04 静态 PASS；历史 Owner/隔离 UE-requested Release E2E 限定 PASS；当前候选 Reconcile、Network ReleaseSMContext、Next E2E NOT_RUN；#28 BLOCKED/NOT_STARTED。 | [#80](https://github.com/odango-chan/ca-agent-next/issues/80)；[#104](https://github.com/odango-chan/ca-agent-next/issues/104)；[env-openamsm#28](https://github.com/odango-chan/env-openamsm/issues/28) |
+| [SR-019](../SR/SR-019-仿真对端设计移交.md) | 阶段 READY（中央只读核验） | AC-019-01～04 固定源静态移交 | 固定 `env-5gc-sim@6ba1dc4`、Establish fixture 与 Next EC07 2+5+5 迁移清单；AC-019-02 FAIL、AC-019-03 NOT_RUN，真实 NF/E2E 未执行。 | [#81](https://github.com/odango-chan/ca-agent-next/issues/81#issuecomment-7210443123)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95)；[#105](https://github.com/odango-chan/ca-agent-next/issues/105) |
 | [SR-020](../SR/SR-020-参考宿主设计移交.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 参考宿主设计移交 | DRAFT |
 | [SR-021](../SR/SR-021-原生宿主设计移交.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 原生宿主设计移交 | DRAFT |
 | [SR-022](../SR/SR-022-执行内核设计移交.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 执行内核设计移交 | DRAFT |
@@ -81,11 +81,11 @@
 | SR-010 | APPROVE_FOR_READY（限定） | Host ArtifactStore/Channel 与 06A；AC-010-03 因外部 ArtifactStore v1 强制 SHA-256 与 Demo no-hash 冲突而 BLOCKED；新增 AC-010-10 OAS3 requestBody / multipart / N1-N2-N2 Ext1 Content-ID 也 BLOCKED/NOT_RUN | DRAFT |
 | SR-011 | CHANGES_REQUESTED | P1：AC-011-04 缺 N1/N2 乱序、交错、多事务与旧代际断言 | DRAFT |
 | SR-012 | APPROVE_FOR_READY（限定） | 固定源 docs/design=12、docs=218；源仓正文替换仍等默认分支链接 | DRAFT |
-| SR-013 | APPROVE_FOR_READY（限定） | Compiler/Schema-only 设计与历史 PoC 归档；新增 AC-013-07 原版 OAS3 direct refs / dialect-aware Resolver BLOCKED/NOT_RUN | DRAFT |
-| SR-016 | APPROVE_FOR_READY（限定） | Studio 同源与六宿主设计；正式发布和六宿主实测未完成 | DRAFT |
-| SR-017 | APPROVE_FOR_READY（限定） | 业务 Plugin 静态移交；需补 SR-009 completion 对照 | DRAFT |
-| SR-018 | APPROVE_FOR_READY（限定） | 仅历史 Owner AC-018-01/02/04；不代表新版包或 Next PASS | DRAFT |
-| SR-019 | APPROVE_FOR_READY（限定） | Mock peer 静态移交；运行和真实 NF/E2E 未执行 | DRAFT |
+| SR-013 | APPROVE_FOR_READY（限定历史快照）/ 当前增量复评 PENDING | AC-013-01 固定归档/历史 PoC 独立复验 PASS（58/58）；`vet.log` NOT_ARCHIVED；AC-013-02～06 产品 NOT_RUN/BLOCKED；AC-013-07 BLOCKED/NOT_RUN | DRAFT |
+| SR-016 | APPROVE_FOR_READY（限定历史快照）/ 当前增量复评 PENDING | AC-016-01 正式定义已补入 v0.3.39，但新定义下 14 组迁移配对 NOT_RUN；MIG-016-01 仅历史台账；AC-016-09 设计对照，六宿主未实测 | DRAFT |
+| SR-017 | APPROVE_FOR_READY（限定历史快照）/ 当前增量复评 PENDING | 业务 Plugin 静态移交；Host-only artifactRef 与单次 Invocation grant 边界已补充；AC-017-02 FAIL，运行验收 NOT_RUN | DRAFT |
+| SR-018 | APPROVE_FOR_READY（限定历史快照）/ 当前增量复评 PENDING | 固定 main AC-018-01/02 FAIL、AC-018-03 BLOCKED、AC-018-04 静态 PASS；历史 Owner/隔离 UE-requested Release E2E 限定 PASS；当前 Reconcile/Network Release/Next E2E NOT_RUN | DRAFT |
+| SR-019 | APPROVE_FOR_READY（限定历史快照）/ 当前增量复评 PENDING | 固定 Mock AMF 源、Establish fixture 与 EC07 迁移清单已补齐；AC-019-02 FAIL、AC-019-03 NOT_RUN，真实 NF/E2E 未执行 | DRAFT |
 | SR-020 | APPROVE_FOR_READY（限定） | Python Host 参考审计；AC-020-04 需补 SR-030 新 Publisher 边界 | DRAFT |
 | SR-021 | APPROVE_FOR_READY（限定） | Go Host 只读参考；不替换 Next Python Host | DRAFT |
 | SR-022 | APPROVE_FOR_READY（限定） | Runtime 语义对照；不倒灌 Next 产品验收 | DRAFT |
@@ -329,3 +329,4 @@
 | 2026-11-28 | 0.3.76 | GPT-6.2（ChatGPT） | 文档头、SR 清单、G02 状态、修订记录 | 将 SR-028 从 DRAFT 更新为 IN_PROGRESS，回填 #99 产品证据、#112 P2 修复和 #115 唯一集成候选；调整整项 SR 统计 | 使 SR 总索引与 SR-028/G02 当前实施状态一致，避免把 #97 旧 READY 回填当作当前状态 | Issue #50/#96/#111；PR #97/#99/#112/#115 |
 | 2026-11-28 | 0.3.77 | GPT-6.2（ChatGPT） | 文档头、SR-028 状态、修订记录 | 对齐 #99 13 路径文件级收编、#112 P2 独立复评、#97 READY 设计状态审计和 #115 双平台回归重跑 | 使 SR-028 状态、主线集成候选与源 PR 的职责边界一致 | Issue #50/#96/#111；PR #97/#99/#112/#115 |
 | 2026-11-28 | 0.3.78 | GPT-6.2（ChatGPT） | SR-028 行、修订记录 | 修正 SR-028 当前表格仍标 DRAFT 的过期状态，回填 #99/#112/#97 独立核验结果 | 保证 SR 总索引主状态与 SR-028、IR-007、实施状态总览一致 | Issue #50/#96/#111；PR #97/#99/#112/#115 |
+| 2026-11-28 | 0.3.79 | GPT-6.2（ChatGPT） | 文档头、SR-013/016/017/018/019 行、修订记录 | 同步第三批选择性收编：AC-013-01 完整归档复验、AC-016-01 新定义 NOT_RUN、Plugin/Mock 固定源、Owner 历史 Release 限定 PASS | 保留旧评审为历史快照，不将其升级为当前 Head 的独立批准，也不将 Release 历史证据外推到当前 Reconcile/Next | Issue #50/#95/#102/#104/#106；PR #107/#110/#114/#115 |
