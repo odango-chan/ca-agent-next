@@ -1,8 +1,8 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.89
-> 状态：共 31 项 SR：4 VERIFIED（各自限定历史模块范围）、1 IMPLEMENTED（设计移交）、25 DRAFT、1 IN_PROGRESS（SR-028；设计 READY、uv 实施候选 IMPLEMENTED，mainline 尚未 VERIFIED）。PR #115 是唯一面向 `main` 的集成入口，当前仍 OPEN / Draft / 未合并；PR #46 的恢复设计仅合入恢复分支，不等于 main。**当前 PR Head/CI 必须以 GitHub API 即时读取为准**，不在此状态行写入会随每次文档提交失效的自指 HEAD。最近已冻结的 SR-003 代码/测试快照 `92474dba8faca34a088c3adfa4c3a9a8663d078c`：双平台 Regression #46139810346 均 273/273 SUCCESS，Review Context #46139810415 SUCCESS、Python Toolchain Bootstrap #46139810321 SUCCESS；其原始 Artifact 和根因见 SR-003 v0.3.16 §6.2。此处只引用该特定代码 SHA 的证据，不代表随后 docs-only Head 的测试已完成。PR #115 全量独立设计/集成复评仍未完成，未授权 Ready/合并/删分支。
+> 文档版本：0.3.90
+> 状态：31 项 SR：4 VERIFIED（SR-001/002/003/024 限定模块）、2 IMPLEMENTED（SR-015 设计移交 / SR-028 uv 主干实现）、25 DRAFT、0 IN_PROGRESS。PR #115 已合入受保护 main（最终受审 Head `041e21ac8a4c99b509b09c809c156ed528455899`，merge `574ca51122b49e48be20fadedca225b5fad3137c`）；原作者/源 PR 的 CLOSED/superseded 不等于独立 MERGED。AC-028-01～10 原始证据见 Issue #96，合并后的 main SHA 产品独立复验仍待执行，不能升级 VERIFIED/RELEASED。 CI 和后续 PR 的最新状态必须按 GitHub 实时查询。
 > 修订日期：2026-11-28\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
@@ -17,7 +17,7 @@
 - 状态变化先更新 SR 文件，再更新本索引和[实施状态总览](实施状态总览.md)。
 - 正式独立评审必须在 GitHub PR Review/Issue comment 留存完整 SHA 和逐 SR/AC 结果；独立性由评审模型/上下文判定，同一 GitHub 账号不构成否定理由。模型结论与平台 Review event 分开记录，详见[SR 管理规范 §8.3](../规范/SR%20管理规范.md#83-正式评审结果必须持久化到-github)。
 - ca-agent-next PR #1 是文档/设计基线 PR，不是任何 SR 的实现 PR。
-- PR #1、#32、#34 已合并；SR-001/SR-002/SR-003/SR-024 VERIFIED，SR-015 IMPLEMENTED，其余 25 项 DRAFT（SR-028 IN_PROGRESS）（整项主状态；阶段 READY 见 §2.4）。
+- PR #1/#32/#34/#115 均已合并（各自独立范围）；31 项 SR 现为 4 VERIFIED、2 IMPLEMENTED、25 DRAFT，0 IN_PROGRESS；SR-028 的 VERIFIED 门槛见 #96。
 
 ## 2. SR 清单
 
@@ -49,7 +49,7 @@
 | [SR-025](../SR/SR-025-MAS%20Owner%20Interface%20Package%20Publisher.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | MAS Owner 1.6.0 Capability-first Interface Package Publisher | DRAFT |
 | [SR-026](../SR/SR-026-Codec公开工具发布.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Codec 公开工具发布（AC-026-04～06） | DRAFT |
 | [SR-027](../SR/SR-027-技能Bundle构建与发布.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 技能 Bundle 构建与发布（AC-027-05 Source Bundle 闭包） | DRAFT |
-| [SR-028](../SR/SR-028-Python工程工具链与uv环境管理.md) | [IR-007](../IR/IR%20总登记册.md#ir-007) | Python 工程工具链与 uv 环境管理 | IN_PROGRESS（PR #115 mainline candidate；未 VERIFIED/RELEASED） |
+| [SR-028](../SR/SR-028-Python工程工具链与uv环境管理.md) | [IR-007](../IR/IR%20总登记册.md#ir-007) | Python 工程工具链与 uv 环境管理 | IMPLEMENTED（PR #115 已合入 main；#96 AC 原始证据已归档，main SHA 复验待办） |
 | [SR-029](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) | [IR-008](../IR/IR%20总登记册.md#ir-008)（关联 IR-003） | CA-SL 1.6.0 Capability-first 作者模型与 Callable 双向一对一；完全无旧版兼容 | **DRAFT（设计待评审，非实施 READY）** |
 | [SR-030](../SR/SR-030-Host%20Context%201.6.0%20Schema-only%20Interface%20Package%20Publisher.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Host Context 1.6.0 Schema-only Interface Package Publisher | DRAFT |
 | [SR-031](../SR/SR-031-3GPP公共Schema-only-Publisher.md) | [IR-009](../IR/IR%20总登记册.md#ir-009) | OpenAMSM 3GPP OpenAPI 原版 Source Bundle 原样代发布（当前 PostSmContexts requestBody 选定闭包 4 文件 / 102 Schema Component） | **DRAFT（增量设计待评审、Publisher / Consumer 产品 NOT_RUN）** |
@@ -93,7 +93,7 @@
 | SR-025 | APPROVE_FOR_READY（限定） | 中央 MAS Owner Publisher 设计；两项旧 Parser 分别签认后按 22/22、23/23、24/24 条件候选推导，正式发布仍阻塞 | DRAFT |
 | SR-026 | BLOCKED_EXTERNAL_INPUT | AC-026-04～06：NAS/NGAP 原生源、正式 Codec READ 1:1 Capability/Callable/Output Schema 与 T2 Result 验收均 BLOCKED_EXTERNAL_INPUT | DRAFT |
 | SR-027 | BLOCKED_EXTERNAL_INPUT | 五根同批 1.6.0 作者提交、Echo Interface、新 Compiler Release/argv、Bundle 资产及授权缺失；新增 AC-027-05 Source Bundle / Build Verify snapshot NOT_RUN | DRAFT |
-| SR-028 | APPROVE_FOR_READY（第七轮限设计：评审评论 #6084094037，固定 Head `93f1389e` / Base `3c7c4838`） | 设计 READY；Issue #96 OPEN；PR #99 独立复核 #6094704264 记录 IMPLEMENTED，AC-028-01～10 候选证据已核验；13 路径逐文件对账后 6 个核心 Blob 与 #115 一致、其余 7 个文档由更新版本承接；PR #112 P2-01/P2-02 已由 评审评论 #6096938405 关闭；PR #97 READY 仅代表设计状态（评审评论 #6096959653）；唯一 mainline PR #115 OPEN/Draft，未合入 main | IN_PROGRESS（设计 READY / 候选 IMPLEMENTED / mainline 未 VERIFIED） |
+| SR-028 | APPROVE_FOR_READY（第七轮设计） | #96 AC-028-01～10 来源候选验收 PASS；uv 工具链随 PR #115 进入 main；主干固定 SHA 产品独立复验仍待执行 | IMPLEMENTED（非 VERIFIED） |
 | SR-029 | APPROVE_FOR_READY（限定） | 中央 1.6.0 Capability-first 设计；生产者机器契约未发布 | DRAFT |
 | SR-030 | APPROVE_FOR_READY（限定） | Schema-only 设计与 AC-030-01 固定源审计；新版 Publisher 未发布 | DRAFT |
 
@@ -125,8 +125,8 @@
 - **P1（4 条）**：SR-007、SR-009、SR-011 的阻断问题已在本分支修订；各自新增 AC/契约断言仍须对最终 Head 独立复评。
 - **P2（25 条）**：覆盖 SR-004/005/006/007/008/010/013/017/020/030、SR 总索引证据说明，以及 SR-005/013/017/018/019/020/021/022/023/025 十份修订账本；修订完成不等于原 Review 自动重新批准。
 - **外部阻塞**：SR-026/027 仍缺生产者正式输入；不允许以文档补写替代外部发布。
-- **实施门槛（当前集成范围）：**除历史范围外的 24 项整项 SR 仍 DRAFT；但已经创建 SR-028 实施 Issue #96 和 #93/#94 实施入口，且 PR #99 已归档 uv 双平台候选证据。其有效内容已选择性收编进唯一 mainline 分支 #115（尚未合入 main），不能把候选分支 PASS 自动计入当前产品 VERIFIED；Compiler、Host/Runtime/Codec、OpenAMSM 真实 E2E 仍单独待验。新 Head 结论须绑定完整 Base/Head SHA 和真实 GitHub Review。
-- **SR-028 专项门槛（当前）：**第七轮独立 Review [#6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#issuecomment-6084094037) 固定 Head `93f1389e7c5968cd30e8a74137207094864ecca0` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`，设计结论 APPROVE_FOR_READY（0 P0 / 0 P1 / 2 非阻断 P2）；该批准仅限 SR-028 设计。Issue #96 OPEN；#97（base `93f1389` / head `66a82f0`）OPEN/未合并；#99（base `93f1389` / head `83d23e8`）OPEN/未合并；#112（base `83d23e8` / head `dbc0bcb`）OPEN/Draft/未合并。三者的限定内容已选择性收编进 #115，源 PR 均未合并；必须按 #115 固定 Head 重新核对依赖与最新设计，不得将候选分支 AC/Artifact 计入当前分支 VERIFIED/RELEASED。
+- **实施门槛（已合入 main）：**#115 已完成设计与工具链收编；其余 Compiler、Host/Runtime、Codec、OpenAMSM E2E 等产品 AC 和外部发布仍按各自证据保持 NOT_RUN/BLOCKED；本条不授权未满足设计门槛的产品实施。
+- **SR-028 专项门槛（合入后）：**#96 原始 AC-028-01～10 证据及 #99 实施复核均在；#115 已合入 main，主状态 IMPLEMENTED。待固定 main SHA 复验与独立复核之后才可转 VERIFIED；#97/#99/#112 已 superseded。
 
 
 ### 2.3 23 项逐 SR 独立评审与复评入口
@@ -209,9 +209,9 @@
 - 设计来源：ca-agent-next PR #1 的架构、设计、规范和 Acceptance 文档。
 - PR #1：已合并；只代表设计文档变更。
 - Next Runtime：README 声明尚无已验收 Runtime 实现。
-- 当前 31 项 SR 中 4 VERIFIED（SR-001/002/003/024）、1 IMPLEMENTED（SR-015）、25 DRAFT、1 IN_PROGRESS（SR-028；设计 READY、候选实施 IMPLEMENTED，但 mainline 未 VERIFIED）；SR-024 VERIFIED 仅覆盖旧 v1alpha5 Development Publisher；SR-013 归档 PoC 不改变 DRAFT；SR-009 只覆盖 Event/Delivery Plugin/staging，SR-010 覆盖 Host ArtifactStore、Channel、Provider v2 Driver/Codec。
-- Issue #12 追踪本轮中央设计资产恢复；PR #11/#13/#15/#16/#18 均在独立分支 OPEN/DRAFT，恢复分支已同步可复用的最新文档内容但尚未创建 PR；PR 状态不等于 SR 实施状态。
-- 恢复设计分支已由 PR #115（唯一 mainline 集成入口，OPEN / Draft）选择性收编，当前仍未合入 main；SR-002 设计 PR #20 与实施 PR #23 均已合并到恢复分支，SR-002 为 VERIFIED、AC-002-01～08 PASS；EX-01 仍 NOT_RUN。该恢复分支尚未合并 main。
+- 当前 31 项 SR 中 4 VERIFIED（SR-001/002/003/024）、2 IMPLEMENTED（SR-015/SR-028）、25 DRAFT、0 IN_PROGRESS。SR-028 主干实现已落地但固定 main SHA 的独立复验未完成；SR-024 仅历史 v1alpha5 Publisher，SR-013 PoC 不改变 DRAFT。
+- Issue #12 是设计恢复历史追踪；有效基线已经由 #115 合入 main，剩余外部 SR 和真实产品 AC/EX/OM 必须独立验证并逐项追踪。
+- 恢复设计分支已由 PR #115 选择性收编并于 2026-11-28 合入 main（merge `574ca511`）；PR #46 先前仅合入恢复分支的历史事实保留，EX-01 仍 NOT_RUN。
 - ca-agent-demo、ca-client-tools、ca-skill-compiler、ca-skills 和 ca-openamsm-plugin 的现有代码/PR 只能作为外部复用或依赖证据，不能自动算作 Next SR 已实施。
 
 ## 修订记录
@@ -339,3 +339,5 @@
 | 2026-11-28 | 0.3.87 | GPT-6（ChatGPT） | §2.4 SR-009、Phase G、修订记录 | 对齐 F05 v0.4.15、F06 v0.3.10、SR-009 v0.2.16 的现行声明，更新外部 Plugin PR #3 `4232b20` 双平台 CI 证据；不提升 Host 三元系统验收 | 保留 31 SR 状态与 #115 唯一集成入口，历史 #116 原限定设计批准和 #117 阻塞独立呈现 | Issue #50/#116；PR #115；ca-openamsm-plugin#3 |
 | 2026-11-28 | 0.3.88 | DeepSeek Harness / deepseek-v4.1-flash-1017 | §2、§2.4、§3.2、修订记录 | 修正 AC-010-03 仍被 v1 SHA-256 误写为 BLOCKED 的过期状态；将 #97/#99/#112 的“未集成”改为已选择性收编进 #115（源 PR 未合并） | 消除状态索引与 SR-010 v2 设计、第三批收编事实不一致 | Issue #50；SR-010/028；PR #97/#99/#112/#115 |
 | 2026-11-28 | 0.3.89 | DeepSeek Harness / deepseek-v4.1-flash-1017 | §2.2、修订记录 | 修正 #112 当前 Head 为 `dbc0bcb`（旧 `da91ed8` 为其 base 线），与文档总目录/PR #112 实际快照一致 | 清理终审发现的快照 SHA 漂移 | Issue #50；PR #112/#115 |
+
+| 2026-11-28 | 0.3.90 | GPT-6（ChatGPT） | 文档头、SR-028、§2/§4、修订记录 | 对齐 #115 已合并、主干 SR-028 IMPLEMENTED 和待复验状态 | 消除“OPEN/Draft/未合入”的现行假状态 | Issue #50/#96/#111；PR #115 |
