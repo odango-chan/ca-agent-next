@@ -36,24 +36,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for path in \\
-            pyproject.toml uv.lock .python-version .gitignore \\
-            scripts/unittest_gate.py scripts/python_toolchain_policy.py \\
-            tests/test_python_toolchain_policy.py \\
-            .github/python-toolchain-baseline.json \\
-            .github/workflows/review-context.yml \\
-            .github/workflows/sr003-plugin-ci.yml \\
-            .github/workflows/python-toolchain-policy.yml \\
-            .github/workflows/python-toolchain-policy-trusted.yml; do
+          for path in pyproject.toml uv.lock .python-version .gitignore scripts/unittest_gate.py scripts/python_toolchain_policy.py tests/test_python_toolchain_policy.py .github/python-toolchain-baseline.json .github/workflows/review-context.yml .github/workflows/sr003-plugin-ci.yml .github/workflows/python-toolchain-policy.yml .github/workflows/python-toolchain-policy-trusted.yml; do
             test -f "$path"
           done
-          test "$(tr -d '\\r\\n' < .python-version)" = "3.14.6"
+          test "$(cat .python-version)" = "3.14.6"
           grep -Fq 'required-version = "==0.13.10"' pyproject.toml
-          for workflow in \\
-            .github/workflows/review-context.yml \\
-            .github/workflows/sr003-plugin-ci.yml \\
-            .github/workflows/python-toolchain-policy.yml \\
-            .github/workflows/python-toolchain-policy-trusted.yml; do
+          grep -Fq '"sha": "15dd7972d15c91b797b202f85189cde2b6ffe373"' .github/python-toolchain-baseline.json
+          grep -Fq '"allowed_base_refs": ["main"]' .github/python-toolchain-baseline.json
+          grep -A2 '"policy_control_bootstrap_prs"' .github/python-toolchain-baseline.json | grep -Fxq '    115'
+          git cat-file -e '15dd7972d15c91b797b202f85189cde2b6ffe373^{commit}'
+          git merge-base --is-ancestor 15dd7972d15c91b797b202f85189cde2b6ffe373 HEAD
+          for workflow in .github/workflows/review-context.yml .github/workflows/sr003-plugin-ci.yml .github/workflows/python-toolchain-policy.yml .github/workflows/python-toolchain-policy-trusted.yml; do
             grep -Fq 'astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d' "$workflow"
             grep -Fq "version: '0.13.10'" "$workflow"
           done
