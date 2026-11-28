@@ -1,7 +1,7 @@
 # SR-028：Python 工程工具链与 uv 环境管理
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.16\
+> SR 版本：0.2.17\
 > 修订日期：2026-11-28\
 > 状态：IMPLEMENTED（PR #115 已合入受保护 main（最终受审 Head `041e21ac8a4c99b509b09c809c156ed528455899`，merge `574ca51122b49e48be20fadedca225b5fad3137c`）；原作者/源 PR 的 CLOSED/superseded 不等于独立 MERGED。AC-028-01～10 原始证据见 Issue #96，合并后的 main SHA 产品独立复验仍待执行，不能升级 VERIFIED/RELEASED。）
 > 创建日期：2026-11-26  
@@ -62,7 +62,7 @@ SR-028 第七轮设计复评 [#6084094037](https://github.com/odango-chan/ca-age
 
 - AC-028-01～AC-028-06：SR-028 达到 READY、独立实施 Issue 建立后即可执行，不依赖 Agent Runtime 产品阶段。
 - AC-028-07（CI 环境与测试入口）和 AC-028-08（SR-001 Workflow/Artifact 迁移）：所需 SR-001 Workflow 与脚本已随 PR #32 合入。独立实施 PR 核对目标分支仍含这些入口及 SR-003 回归工作流后，按 G02 §3.8 迁移与复验。既有成功结果不计为迁移 PASS。
-- SR-028 的实施 Issue 是 #96（OPEN）；PR #99 的产品实现已由独立技术复核记录 IMPLEMENTED，并选择性进入唯一 mainline PR #115。Issue #12/#35 是设计治理来源，不是实施授权；实际实施和验收仍按 #96 与 AC-028-01～10 追踪。
+- SR-028 的实施 Issue 是 #96（OPEN，主干验收收尾）；源 PR #99 的 uv 实现与 #112 共享策略均已通过 PR #115 合入 main。主干状态 IMPLEMENTED，后续在固定 main SHA 独立复验并留证前不得升级 VERIFIED；#12/#35 仅为历史设计来源。
 
 ## 5. Acceptance
 
@@ -178,3 +178,4 @@ Go Echo 前置（在 `examples/echo/plugin/`，设置 `GOWORK=off`）：`go buil
 | 2026-11-28 | 0.2.14 | GPT-6.2（ChatGPT） | 文档头、§7、§8、修订记录 | 核验 #99 13 路径、#112 P2 独立复评、#97 READY 状态来源，并回填 PR #115 48/48 策略门禁与双平台 271/271 重跑结果 | 区分设计 READY、候选 IMPLEMENTED、mainline IN_PROGRESS 与 main VERIFIED；保留首次 Ubuntu 时序异常记录 | Issue #50/#96/#111；PR #97/#99/#112/#115 |
 | 2026-11-28 | 0.2.15 | GPT-6.2（ChatGPT） | §0、§2、修订记录 | 更新 #99 13 路径、#112 P2 独立复评、#97 READY 状态审计和 #115 最新 271/271 回归；修正 §0 旧 45/45 与恢复分支 DRAFT 描述 | 将设计 READY、候选 IMPLEMENTED、mainline IN_PROGRESS 分层，避免过期状态继续作为当前结论 | Issue #50/#96/#111；PR #97/#99/#112/#115 |
 | 2026-11-28 | 0.2.16 | GPT-6（ChatGPT） | 文档头、§0/§7/§8、修订记录 | 按 PR #115 已合入 main 的最终 Head、Merge 与 CI 证据改为 IMPLEMENTED；保留 main SHA 复验门槛 | 区分合并/候选验收与主干产品 VERIFIED | Issue #50/#96/#111；PR #115 |
+| 2026-11-28 | 0.2.17 | GPT-6（ChatGPT） | §4.2、修订记录 | 删除已合入 main 的实现仍只在 #115 候选内的旧依赖描述 | 维护主干实施入口与 #96 独立复验限制一致 | Issue #50/#96；PR #121 |

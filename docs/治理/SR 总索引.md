@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.90
+> 文档版本：0.3.91
 > 状态：31 项 SR：4 VERIFIED（SR-001/002/003/024 限定模块）、2 IMPLEMENTED（SR-015 设计移交 / SR-028 uv 主干实现）、25 DRAFT、0 IN_PROGRESS。PR #115 已合入受保护 main（最终受审 Head `041e21ac8a4c99b509b09c809c156ed528455899`，merge `574ca51122b49e48be20fadedca225b5fad3137c`）；原作者/源 PR 的 CLOSED/superseded 不等于独立 MERGED。AC-028-01～10 原始证据见 Issue #96，合并后的 main SHA 产品独立复验仍待执行，不能升级 VERIFIED/RELEASED。 CI 和后续 PR 的最新状态必须按 GitHub 实时查询。
 > 修订日期：2026-11-28\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -53,7 +53,7 @@
 | [SR-029](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) | [IR-008](../IR/IR%20总登记册.md#ir-008)（关联 IR-003） | CA-SL 1.6.0 Capability-first 作者模型与 Callable 双向一对一；完全无旧版兼容 | **DRAFT（设计待评审，非实施 READY）** |
 | [SR-030](../SR/SR-030-Host%20Context%201.6.0%20Schema-only%20Interface%20Package%20Publisher.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Host Context 1.6.0 Schema-only Interface Package Publisher | DRAFT |
 | [SR-031](../SR/SR-031-3GPP公共Schema-only-Publisher.md) | [IR-009](../IR/IR%20总登记册.md#ir-009) | OpenAMSM 3GPP OpenAPI 原版 Source Bundle 原样代发布（当前 PostSmContexts requestBody 选定闭包 4 文件 / 102 Schema Component） | **DRAFT（增量设计待评审、Publisher / Consumer 产品 NOT_RUN）** |
-| [SR-032](../SR/SR-032-SKILL作者规范与Node设计原则.md) | [IR-008](../IR/IR%20总登记册.md#ir-008) | CA-SL 1.6.0 SKILL 作者规范、Node 拆分与注释原则；共享 Package 资源、Script Registry 与 Host system Capability | **DRAFT（设计复评 APPROVE_WITH_NON_BLOCKING_FOLLOWUPS；PR #115 集成复评待完成）** |
+| [SR-032](../SR/SR-032-SKILL作者规范与Node设计原则.md) | [IR-008](../IR/IR%20总登记册.md#ir-008) | CA-SL 1.6.0 SKILL 作者规范、Node 拆分与注释原则；共享 Package 资源、Script Registry 与 Host system Capability | **DRAFT（PR #115 集成独立终审已完成并合入 main；产品/发布验收仍 NOT_RUN）** |
 
 **IR-009 增量设计（独立于 PR #46 原 24 项评议）：**新增 [SR-031](../SR/SR-031-3GPP公共Schema-only-Publisher.md) 与 [EC01.3GPP 原版 OpenAPI 引用设计](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。当前 `PostSmContexts.requestBody` 选定闭包为四份原版 YAML / 102 个 Schema Component；原件 byte-for-byte 不变，Plugin 原生 OAS3 multipart，Compiler 直接引用 pin 后 `components/schemas`，NAS/NGAP Codec Output 独立发布。SR-031 产品 AC 全部 NOT_RUN；新增 AC 不继承 PR #46 原 24 项设计评议。
 
@@ -185,14 +185,14 @@
 
 ### 3.2 Next 实施阶段
 
-- 治理自动化：SR-001 VERIFIED；[PR #32](https://github.com/odango-chan/ca-agent-next/pull/32) MERGED（`7a0fac41e573021207ab8201bbc718718c451e50`）；AC-REV-01～10 PASS、80 tests OK、Run [45793590532](https://github.com/odango-chan/ca-agent-next/actions/runs/45793590532) SUCCESS。SR-028 整项集成状态仍 DRAFT；第七轮设计已获限定 APPROVE_FOR_READY；Issue #96 OPEN，PR #97/#99/#112 的有效内容已选择性收编进 #115（源 PR 未合并），uv 候选实施证据不得在当前分支被宣布 VERIFIED/RELEASED。
+- 治理自动化：SR-001 VERIFIED、PR #32 MERGED（`7a0fac41e573021207ab8201bbc718c451e50`），AC-REV-01～10 PASS；SR-028 的 uv 实现和受信策略随 PR #115 合入 main，当前 IMPLEMENTED（#96 固定 main SHA 复验未完成，非 VERIFIED）。源 PR #97/#99/#112 superseded，其原始证据 SHA 保留。
 - Phase A：SR-002（VERIFIED；PR #23 已集成；AC-002-01～08 PASS；EX-01 仍 NOT_RUN）。
 - Phase B：**SR-003 VERIFIED（模块）**；[实施 PR #34](https://github.com/odango-chan/ca-agent-next/pull/34) 与 [治理回填 PR #41](https://github.com/odango-chan/ca-agent-next/pull/41) 均 MERGED。最终实施 Head `e8bcb1b` 与 Merge `32c7c1be` tree 一致；治理回填 Head `f3f59b54` 与 Merge `a899409` tree 一致。[CI #45815167442](https://github.com/odango-chan/ca-agent-next/actions/runs/45815167442)、[CI #45817800342](https://github.com/odango-chan/ca-agent-next/actions/runs/45817800342) 均 SUCCESS：Linux Python 3.12 + Windows Python 3.14 每平台 Plugin 87 / Host 52 / Review Context 80 tests PASS，Go Echo build、compileall 与证据采集 PASS；AC-003-01～04 均 PASS。系统 EX-02/03/04/18 仍 NOT_RUN；Provider v2 wire DTO 属 SR-010，不影响 SR-003 模块结论。
 - Phase C：SR-004 的 SKILL.md-only 子阶段范围见 §2.4；Assurance 消费等待正式 Compiler 契约与 Bundle。
 - Phase D：SR-005、SR-006。
 - Phase E：SR-007。
 - Phase F：SR-008。
-- Phase G：SR-009 旧固定快照已限定设计批准，但 #115 当前 v0.2.15 中新增 Ext1/Host 三元边界需再复评；外部 Plugin Issue #2 / PR #3 为模块候选，不以 Echo 或系统 E2E 作为模块门禁；AC-009-04 生产 classifier 仍等待 ca-client-tools#44；SR-010 逐子阶段核对实施依赖；系统 OM 组合仍待 Echo 与 Host/Owner 对端.
+- Phase G：SR-009 增量设计现已纳入 #115 完整主干集成终审，不得把该设计认可外推为 Host/Owner/Next 系统产品 PASS；#116 旧快照限定设计复评与生产 T0 classifier 的 ca-client-tools#44 阻塞仍按独立 AC 追踪；SR-010 模块限定阶段可推进，系统 OM 组合仍待真实 Host/Owner 对端。
 - Phase H：SR-011。
 - Capability-first 新版本设计：[SR-029 v0.2.6](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) / [Issue #40](https://github.com/odango-chan/ca-agent-next/issues/40)：**CA-SL 1.6.0-only / 完全无旧版兼容**。Provider 目标由历史查询 2/2 扩展为含 Codec READ 的 **3/3**；Owner 两项历史 Parser 必须分别签认，双移除/一删一留/双保留为纯业务 READ 分别形成 **22/22、23/23、24/24** 条件候选；任一未签认则成员数未冻结、不得发布。T1 不读 T2 Codec Result；Modify 0xC9/NGAP 未资格化 BLOCKED。F02/F03.05/F04/F06/F08/F09/EC02 均按候选设计约束，Compiler/Publisher/Runtime/Studio/Bundle 新契约尚未发布，不启动代码实施；下游 PR #46/#48 冲突另设集成任务，不直接修改。
 - Compiler 外部发布依赖：SR-012、SR-013；SR-013 AC-013-01 当前修复后固定归档以 [PR #115 固定证据目录](../参考与审计/fixtures/ac-013-01/isolated-poc/README.md) 为唯一入口，完整 59 Blob（58 个清单覆盖文件 + SHA256SUMS）；Issue #102 detached checkout 复验 58/58、SHA256SUMS、audit_evidence.py、Python 18/18 PASS；`vet.log` NOT_ARCHIVED；不代表 Compiler 产品发布或整项 SR VERIFIED。
@@ -341,3 +341,4 @@
 | 2026-11-28 | 0.3.89 | DeepSeek Harness / deepseek-v4.1-flash-1017 | §2.2、修订记录 | 修正 #112 当前 Head 为 `dbc0bcb`（旧 `da91ed8` 为其 base 线），与文档总目录/PR #112 实际快照一致 | 清理终审发现的快照 SHA 漂移 | Issue #50；PR #112/#115 |
 
 | 2026-11-28 | 0.3.90 | GPT-6（ChatGPT） | 文档头、SR-028、§2/§4、修订记录 | 对齐 #115 已合并、主干 SR-028 IMPLEMENTED 和待复验状态 | 消除“OPEN/Draft/未合入”的现行假状态 | Issue #50/#96/#111；PR #115 |
+| 2026-11-28 | 0.3.91 | GPT-6（ChatGPT） | SR-032、§3.2、修订记录 | 清理主干已合并后在活动 SR-032 / SR-028 / Phase G 描述中残留的旧 OPEN/Draft/候选状态 | 使详细阶段与文档头主状态一致 | Issue #50/#96/#116；PR #121 |
