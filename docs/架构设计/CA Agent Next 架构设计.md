@@ -2,7 +2,7 @@
 
 > 文档类型：总体架构设计\
 > 状态：目标架构基线；SR-002 Python Host/Model Loop 最小切片 VERIFIED；SR-003 v0.3.11 VERIFIED（模块 AC-003-01～04）；PR #34/#41/#42 已合入恢复分支，双平台 CI SUCCESS；系统 EX-02/03/04/18 未完成；CA-SL 1.6.0 Capability-first 架构增量待评审，产品未发布
-> 文档版本：0.4.14
+> 文档版本：0.4.15
 > 修订日期：2026-11-28
 > 适用范围：ca-agent-next 通用 Agent Core、Host、Runtime、Skill 与 Plugin 公共机制\
 > 权威边界：本文是本仓唯一总体架构文档；字段级契约见规范，机制细节见设计说明书\
@@ -154,6 +154,24 @@ CA-Agent 优先消费已有的权威标准契约；标准未覆盖的业务语�
 - 同一 Skill 同时引用标准 Request 与领域 Owner Contract 时，保持两套契约分离，并在 Procedure 中显式映射 Request 字段到 Capability arguments；不得扁平化、重命名或将领域字段伪装成标准字段。
 
 **when 唯一入口**：有 Assurance 的 Skill 才能在 `assurance/contract.yaml` 声明可选顶层 `when`；SKILL.md YAML Front Matter 不声明 `when`，无 Assurance Skill 没有 Contract，不声明 `when`。`when` 只读取 Publisher 冻结的 `event.type` 与当前已验证 Request Schema 根对应的 `input`，不得读取 Context、Tool Result、Observation、Evidence 或 T2 Codec Result；`predicates.yaml` 只用于执行期业务判断。
+
+### 7.2 Package 根目录共享资源与 Host-owned system Capability
+
+Skill Package 的共享资源位于 Package 根目录，与可选的 `assurance/` 并列：
+
+- `schemas/`：共享 YAML Schema 资源；
+- `scripts/manifest.yaml` 与 `scripts/`：Script Registry 和登记源码；
+- `references/`、`assets/`：参考资料与静态资源；
+- `assurance/`：仅包含 `contract.yaml`、`procedure.yaml`、`predicates.yaml`，整体可选。
+
+无 Assurance Package 仍可携带上述共享资源，按 LLM-guided Skill 导入，不调用 Compiler、不声明 Contract / `when`、不生成 Runtime Artifact。有 Assurance 时必须完整校验作者源并消费正式发布 Artifact；缺失或无效不得降级。根目录资源不得复制到 `assurance/`。
+
+Host 提供两个 Host-owned system Capability，均通过现有唯一 Plugin Manager / Tools Extension 路径，不创建第二 Manager、Registry 或 IPC：
+
+1. `host.skill-resource.read`：只读当前 Run 固定 Skill Package snapshot 中经登记的 UTF-8 文本资源，供 LLM / AI Authoring 按需读取 schemas、Script Registry、脚本源码和 references。必须校验相对包内路径与资源类型；不得读取其他 Skill / Run、宿主任意路径、包外资源或写入资源。读取不等于执行。
+2. `host.skill-script.execute`：Host 按当前 Run 固定 Package Registry，以精确 `scriptId` 和 JSON `input` 执行已登记的 transform / predicate Script；LLM 与 Assurance 共用同一 Script Runner，不设置逐脚本 `llmInvocable` 标记或第二套 allowlist。模型不得提交代码、路径、命令或自定义入口。Predicate Script 被 LLM 直接调用时，其返回值不产生 Evidence 或 Assurance Outcome。
+
+Script 只能进行纯本地计算，不访问网络、任意文件系统、子进程、环境秘密、时钟、随机数、动态加载、Tool / Capability 或外部副作用。Script 的 purpose 约束 Assurance 静态引用位置，不是 LLM 调用权限开关。具体 Registry、I/O Schema、Runner 与错误语义见 CA-SL 1.6.0、F03、F04、F05 和 SR-032。
 
 ## 8. Plugin 与 Tool 统一机制
 
@@ -334,3 +352,4 @@ sequenceDiagram
 | 2026-11-27 | 0.4.12 | GPT-6.2（ChatGPT） | 文档头、§15、修订记录 | 整合 1.6.0-only Capability-first 设计与最新恢复基线；设计待评审，实施/发布 NOT_RUN | 整合 PR #45 的 CA-SL 1.6.0 Capability-first 设计与恢复分支最新状态，避免回滚已合入的 #44 及后续基线。 | Issue #12/#40/#43；PR #44/#45 |
 | 2026-11-27 | 0.4.13 | GPT-6.2（ChatGPT） | 总体架构外部依赖状态 | 更新 Compiler 跨仓状态，明确 #61 历史范围和 #62 的 1.6.0 新目标追踪。 | 使总体架构的外部依赖快照与新建的 1.6.0 实施 Issue 一致。 | Issue #40/#62；PR #45 |
 | 2026-11-28 | 0.4.14 | GPT-6.2（ChatGPT） | §7.1、修订记录 | 加入标准契约优先与业务 Owner 契约补位；明确 3GPP Request 与 Owner Callable Contract 分离、jsonData Request 根和 `assurance/contract.yaml` 唯一 when 入口 | 防止领域字段污染标准请求、误把 Owner Callable IO 当 Event Request，或回退 Front Matter.when 旧方案 | Issue #47/#49；IR-009；SR-031/010/013/026；PR #48/#101/#115 |
+| 2026-11-28 | 0.4.15 | GPT-6.2（ChatGPT） | §7.2、修订记录 | 补齐 Package 根目录共享资源、无 Assurance Package 与 Host Resource Read / Script Runner 的总体架构边界 | 使总体架构与 SR-032、CA-SL 1.6.0、F01～F05、F08/F09 作者体系一致，不把共享资源误归入 Assurance | Issue #49；IR-008；SR-004/007/032；PR #52/#115 |

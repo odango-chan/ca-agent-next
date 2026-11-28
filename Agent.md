@@ -37,12 +37,13 @@ DeepSeek Harness 默认使用 Goal 模式。按[SR 管理规范](docs/规范/SR%
 - 全系统只有一个 Plugin Manager；Plugin 是独立包/进程，可导出 Event ingress、Event delivery、Tools Extension。
 - Tool 是 Plugin 导出的 Callable Operation，不是独立进程、Manager 或 Registry。
 - 不建立第二 Provider Manager、Tool Registry、Codec Manager、Event Registry 或第二套 IPC。
-- 每个 Skill 必须有 SKILL.md；Assurance 可选。无 Assurance 仅 LLM-guided；有效发布 Artifact 支持 Deterministic 和 LLM-guided；无效发布 Artifact 导入失败。
-- when 是可选 Assurance Contract 的纯 CEL Skill 选择表达式；predicates.yaml 只用于执行期业务判断。
-- Agent 只消费外部已发布 Runtime Artifact，不调用 Compiler Check/Build/Inspect/Verify，不建立 Skill Admission，不导入作者源作为运行时 Artifact。
+- 每个 Skill 必须有 SKILL.md；schemas/、scripts/、references/、assets/ 是 Package 根目录共享资源，Assurance 可选且只含 contract.yaml / procedure.yaml / predicates.yaml。无 Assurance 仍可使用共享资源并仅 LLM-guided；有效发布 Assurance Artifact 支持 Deterministic 和 LLM-guided；无效 Assurance Artifact 导入失败。
+- `when` 是有 Assurance Skill 的 `assurance/contract.yaml` 可选顶层 CEL 选择表达式；Compiler 从 Contract 读取、校验并编译；SKILL.md Front Matter 不声明 when，出现时按未知字段拒绝；无 Assurance Skill 没有 Contract、不声明 when；predicates.yaml 只用于执行期业务判断。
+- Skill 源编写与评审必须遵循[中央 SKILL 作者规范](docs/规范/SKILL作者规范.md)；CA-SL 1.6.0 完整语言规范仍是机器语义的唯一权威。作者规范还规定 Package 根目录共享 Schema / Script、Script Registry、Host Resource Read / Script Execution、SourcePath / arguments、Contract.when、Evidence / UNKNOWN、原有 Node 四阶段与拆分 / 合并、注释原则及 AI Authoring 约束；Skill 层不定义 Wait / await / polling，异步由 Tool / Provider / SMF Operation 与 Host Runtime 负责；v1alpha5 原文只读留档，不提供兼容或自动迁移。
+- Agent 只消费外部已发布 Skill Bundle；存在 Assurance 时同时消费正式 Runtime Artifact。无 Assurance Bundle 可携带共享资源而不生成 Compiler Artifact；Agent 不调用 Compiler Check/Build/Inspect/Verify，不建立 Skill Admission，不把 Assurance 作者源作为运行时 Artifact。
 - Skill 选择先于模式选择；精确 Continuation 恢复原 Run，不重新选择 Skill。
 - SkillCatalog 由 Core/Host 拥有；更新原子切换 generation；在途 Invocation 固定 generation。
-- Deterministic 与 LLM-guided 共用 Runtime Action Boundary；LLM 不得直接调用 Plugin 或扩大 Callable Scope。
+- Deterministic 与 LLM-guided 共用 Runtime Action Boundary；LLM 不得直接调用 Plugin 或扩大业务 Capability Scope。Host 通过 `host.skill-resource.read` 按 F05 §2.1 只读访问当前 Run 的 Package snapshot；当前 Skill 有 `scripts/manifest.yaml` 登记脚本时，Host 即通过 host.skill-script.execute system Capability 向 LLM 提供全部登记 transform / predicate Script，与 Assurance 共用同一 Runner，不设置逐脚本标记或额外 Host 开关。Predicate Script 的直接 LLM 调用不产生 Evidence 或 Assurance Outcome。不得执行模型提交代码、任意路径、Evidence 或命令。
 - Owner Receipt / Commit Proof 是 mutation 结果权威；HTTP 200、IPC 成功或 Delivery 成功不能替代；UNKNOWN 不得变成 COMMITTED。
 - SBI 可携带 JSON、multipart 和二进制。Event Plugin 处理协议；Host 管理 ArtifactStore；Codec 按需作为现有 Tool Plugin 的 Operation 调用。
 - Event/Delivery Plugin 本地 staging 与 Host→Tool Artifact Channel 是两条不同路径。ca-host.artifact-store/v1 已冻结；ca-client-tools Provider v1.2.0 已实现消费，ca-agent Go Host main 447d0cc 有 P1 验收证据。Next Python Host 的 ArtifactStore / Channel 尚未实现，因此 Next 的 artifact-bearing Provider binding 仍必须 NOT_CONFIGURED，并在远端 I/O 前拒绝。必须遵循 v1 的随机 opaque artifactRef、Invocation/direction/slot 绑定、loopback HTTP/1.1 通道、大小/生命周期限制、逐 Artifact SHA-256 传输校验和原子发布；该 SHA-256 不是引用身份或内容寻址。不得把 Event stagingPath 传给 Provider，不得将原始 bytes/Base64 放入 NDJSON。
@@ -50,6 +51,7 @@ DeepSeek Harness 默认使用 Goal 模式。按[SR 管理规范](docs/规范/SR%
 - **CA-SL 1.6.0 单版本、绝不兼容旧版（Issue #40 / IR-008 / SR-029）**：下一正式作者/Compiler/Runtime/Studio 语言目标只采用 1.6.0，不再使用 v1alpha6 命名。Skill 作者只引用 Capability ID，每个 Skill-facing Capability ↔ 唯一公开 Callable；Operation/Observation 是 Node 阶段，不创建独立 Operation ID。Compiler 将 Capability 静态链接为唯一 Callable Binding；Runtime 仅按已编译 Binding 的 Scope/kind/Effect/Schema 派发；Studio Package Explorer 只展示 Capability。
 - 新 Compiler 的 Parser、BuildRequest/BuildResult、Check/Build/Verify、Runtime Artifact，Agent Importer/Runtime、Studio 和 ca-skills Bundle **一律不接受旧 CA-SL v1alpha5、旧 Build DTO、旧 Artifact/Bundle、旧式 Callable 作者源**。无兼容层、版本协商、双轨、别名、fallback、自动迁移或转换器。历史 Release/Golden 仅只读留档，不得作为 1.6.0 产品 PASS；旧 Skill 必须重写、重新编译和发布。
 - CA-SL 1.6.0 机器 languageTarget、正式 Schema、Owner/Provider 一对一 Package、Compiler Artifact/Binding、Bundle 均须各 Publisher 冻结并有新 Golden/CI 实证；当前 **1.6.0 NOT_RELEASED**。设计文档标记为待评审并不等于 SR READY，更不等于代码实施授权。只读取本分支正式目标文档，不从历史参考原文构造新运行时兼容路径。
+
 
 ## 4. Demo DFX 边界
 

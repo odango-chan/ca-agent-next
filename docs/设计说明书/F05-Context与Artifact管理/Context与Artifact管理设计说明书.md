@@ -1,12 +1,12 @@
 # Context 与 Artifact 管理设计说明书
 
 > 文档类型：机制设计说明书  
-> 文档版本：0.4.7\
+> 文档版本：0.4.10\
 > 状态：目标设计已重建；ca-host.artifact-store/v1 已冻结并由 Provider v1.2.0 消费；ca-agent Go Host P1 已验收；Next Python Host / ArtifactStore / Channel NOT_IMPLEMENTED  
 > 功能归属：F05 — Context 与 Artifact 管理  
-> 关联 SR：SR-009；交叉 SR：SR-007、SR-010、SR-011、SR-015、SR-017、SR-030\
-> 关联 IR：IR-004、IR-005、IR-006  
-> 修订日期：2026-11-26  
+> 关联 SR：SR-009；交叉 SR：SR-007、SR-010、SR-011、SR-015、SR-017、SR-030、SR-032\
+> 关联 IR：IR-004、IR-005、IR-006、IR-008  
+> 修订日期：2026-11-27  
 > 适用范围：Event Context、Run Context、Observation/Evidence 投影、Host-owned ArtifactStore、SBI multipart、Plugin Handoff、Codec 输入输出
 
 > 全局评审范围：继承根目录 Agent.md 的 review_scope。
@@ -42,7 +42,7 @@ Host 按 Run 和当前 Action 组装 Context，不建设全局可变 Context Reg
 | 部分 | 来源 | 用途 |
 |---|---|---|
 | Event Input | 已通过 Event Schema 校验的 normalized Event | 当前业务请求和协议身份 |
-| Skill Context | 已绑定 Skill 的 SKILL.md；声明的 references 按需读取 | 模型指导和当前 Skill 范围 |
+| Skill Context | 已绑定 Skill 的 SKILL.md；schemas/、scripts/manifest.yaml、scripts/、references/、assets/ 按需读取 | 模型指导、Schema 理解、Script 源码读取和当前 Skill 范围 |
 | Run Context | Host 的 Run 记录、Skill identity、Artifact identity、当前执行位置和 response obligation | 续跑、关联和失败恢复 |
 | Read Facts / Observations | 当前 Run 允许的 READ Tool / Owner Observation | 当前业务事实 |
 | Evidence References | Owner/Tool Contract 声明的 Receipt、Commit Proof 或其他 typed Evidence | Runtime 结果解释 |
@@ -56,6 +56,47 @@ Host 按 Run 和当前 Action 组装 Context，不建设全局可变 Context Reg
 4. Continuation 恢复原 Run、原 Skill、原代际及该 Run 已有响应义务。新到达的 HTTP 回调若需要回包，单独记录其 responseChannelId 与响应义务；两者分别结清，不重新选择 Skill。
 5. Context 只读投影可以按需重建；不要求引入独立 Context DB 或全局快照服务。
 6. 原始二进制只通过 Artifact ref / 独立交接通道使用，不转换成模型可见文本。
+7. Skill Package 的 schemas/、scripts/、references/ 和 assets/ 是独立的只读 Package Resource，不进入 ArtifactStore；Host 按当前 Run 固定的 Package snapshot 提供精确相对路径读取，不暴露宿主文件系统路径。
+8. LLM 通过 F05 §2.1 的 host.skill-resource.read 按需读取当前 Package snapshot 的 schemas/、scripts/manifest.yaml、scripts/ 源码与 references；读取 Script 不等于执行。所有已登记 Script（transform / predicate）均可通过 F04 定义的 host.skill-script.execute 调用；LLM 与 Assurance 共用同一 Script Runner，不设置逐脚本标记或额外 Host 开关。Predicate Script 的 LLM 调用不产生 Evidence 或 Assurance 阶段 Outcome。
+
+### 2.1 Host Skill Resource Read
+
+Host 提供只读 system Capability `host.skill-resource.read`，通过统一 Runtime Action Boundary / Host Tools Extension 供当前 Run 的 LLM 按需读取当前 Skill Package snapshot 中的文本资源。它不是业务 Capability，不进入 `contract.capabilities`，不改变业务 Capability Scope。
+
+**请求：**
+
+~~~yaml
+path: schemas/qos-request.schema.yaml
+~~~
+
+请求只有一个字段 `path`，必须是当前 Skill Package 根目录相对路径。Host 从当前 Run 绑定 Skill ID 和不可变 Package snapshot；模型不得提交 `skillId`、Package generation、宿主绝对路径、URL 或其他 Skill 身份。
+
+允许读取的根路径为 `SKILL.md`、当前包存在时的 `assurance/`、`schemas/`、`scripts/`、`references/` 和 `assets/`。路径必须使用正斜杠、规范化相对路径；拒绝绝对路径、空路径段、`.` / `..`、反斜杠、符号链接逃逸、Package 清单之外的文件和跨 Skill 访问。
+
+仅支持 UTF-8 文本资源。单次读取上限为 1 MiB；超限完整拒绝，不截断、不返回部分内容。二进制资源不通过此文本 Action 返回；如需交付原始 bytes，必须使用已有 Host Artifact / Handoff 契约。
+
+**响应：**
+
+~~~yaml
+path: schemas/qos-request.schema.yaml
+mediaType: application/yaml
+content: "<原始 UTF-8 文本内容>"
+byteLength: 512
+~~~
+
+响应字段为精确相对路径、Host 推导的媒体类型、原始文本内容和 UTF-8 字节数。Host 不格式化、不改写或重序列化资源。
+
+**拒绝诊断：**
+
+| Code | 含义 | 处理 |
+|---|---|---|
+| RESOURCE_PATH_INVALID | 路径不合法、越界或逃逸 Package | 拒绝读取 |
+| RESOURCE_NOT_FOUND | 当前 snapshot 中不存在该文件 | 拒绝读取 |
+| RESOURCE_TOO_LARGE | 文件超过 1 MiB | 完整拒绝，不截断 |
+| RESOURCE_MEDIA_TYPE_UNSUPPORTED | 文件不是受支持 UTF-8 文本 | 拒绝文本读取 |
+| RESOURCE_SNAPSHOT_UNAVAILABLE | 当前 Run 的 Package snapshot 不可用或不匹配 | 拒绝读取，不回退到其他版本 |
+
+Resource Read 不暴露宿主文件系统路径，不读取其他 Skill / 其他 Run 的资源，不产生写入或业务副作用。每次读取消耗一个 Host-owned per-Run Runtime Action Budget 单位；该预算与 `Contract.limits.maxActions` 分离，后者只统计业务 Capability Actions。Host Script Execution 使用同一 Runtime Action Budget，详见 F04 §10.3。
 
 ## 3. Fact、Observation 与 Evidence
 
@@ -92,6 +133,7 @@ Context Fact 是带来源的结构化事实，不因进入 Context 就自动成�
 Host 是模型上下文的唯一组装者。模型只接收当前任务所需且被明确允许的内容：
 
 - 当前 Skill 的 SKILL.md；
+- 当前 Skill Package snapshot 中按需读取的 schemas/、scripts/manifest.yaml、scripts/、references/ 与 assets/；
 - 明确声明且由用户/Host 策略允许的 reference；
 - Event Schema 允许的业务输入字段；
 - 明确标记 MODEL_VISIBLE 的只读事实；
@@ -108,7 +150,7 @@ Host 是模型上下文的唯一组装者。模型只接收当前任务所需且
 
 如需向模型展示某个 Artifact 的存在，只能提供经授权的安全元数据（例如 slot / mediaType / byteLength），不能暴露文件路径或原始 bytes。模型不能自行构造 artifactRef、Evidence 或 Owner Outcome。
 
-Skill references 默认按需读取，不在 Skill 激活时预加载全部 references；只允许读取该 Skill 声明的精确相对路径。读取失败或文件已变化时返回明确诊断，不回退到未声明路径。
+Skill 的 schemas/、scripts/、references/ 和 assets/ 默认按需读取，不在 Skill 激活时预加载全部文件；所有读取必须相对当前 Run 固定的 Package snapshot，并限制在其文件清单内。Script 源码可见不代表可执行；执行只接受 Registry 中的 Script ID，不接受模型提供的文件路径或 Python 代码。读取失败、资源缺失或 Package snapshot 不匹配时返回明确诊断，不回退到未声明路径。
 
 ## 5. ArtifactStore 与引用模型
 
@@ -327,7 +369,7 @@ Demo 必须具备：本地 Host-owned ArtifactStore、精确 slot、相对路径
 
 | 接口域 | 新 1.6.0 目标 | 旧发布物的定位 |
 |---|---|---|
-| Owner MAS | 最终成员数须由 Owner 对两项旧 N1 Parser 分别签认后推导（条件候选 22/22、23/23、24/24；MAS.RECONCILE 保持 internal-only，不计入 Skill-facing 成员） | Owner v1alpha4 的 24/25 membership（ToolCatalog 25 contracts）仅作来源审计 |
+| Owner MAS | 24 Skill-facing Capability ↔ 24 公开 Callable；ToolCatalog 保留 25 contracts，MAS.RECONCILE internal-only | Owner v1alpha4 的 24/25 membership 仅作来源审计 |
 | Provider READ | 两个通用 READ Capability 各映射一个公开 Callable，分别用封闭 contextKind / resourceKind 选择内部后端 | Provider v1.2.0 的 2 Capability / 11 READ Callable 仅作来源审计 |
 | Provider Codec | 新增一个 Codec Capability ↔ 一个公开 Callable；首批只覆盖 SR-026 冻结的 NAS Decode 子集 | 旧 Provider Interface 未导出该 Capability；PR #86 Mock AMF Codec 不构成 Provider 发布 |
 | Host Context | 由 SR-030 发布 Schema-only Package，0 Capability / 0 Callable；只供 Contract.contexts 的 Host Context Schema 闭包；requestSchema 始终指向 Skill 自有请求 Schema | SR-024 VERIFIED 仅证明旧 Development Package Publisher，不证明 1.6.0 Package |
@@ -373,16 +415,21 @@ Demo 必须具备：本地 Host-owned ArtifactStore、精确 slot、相对路径
 
 ## 修订记录
 
-| 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
-|---|---|---|---|---|---|---|
-| 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 全文 | 归入 F05，明确 Context、ArtifactStore、Codec 与外部契约关系 | 见修改内容列（历史合并记录） | F05；SR-009；EC03/EC04；PR #1 |
-| 2026-11-25 | 0.2.1 | GPT-6.2（ChatGPT） | §1–12 | 补充 Event/Delivery staging、OpenAMSM slot、Run/Artifact 关联与失败处理 | 见修改内容列（历史合并记录） | IR-005；SR-009 |
-| 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | 全文 | 从未实现视角重建 Context/Artifact 目标；核对 ca-agent-demo Context/ArtifactStore 代码与测试；明确不移植 content-addressed SHA256，并冻结 Host→Tool Channel 未发布边界 | 见修改内容列（历史合并记录） | Issue #12；SR-009、SR-010、SR-015 |
+| 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
+|---|---|---|---|---|---|
+| 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 全文 | 归入 F05，明确 Context、ArtifactStore、Codec 与外部契约关系 | F05；SR-009；EC03/EC04；PR #1 |
+| 2026-11-25 | 0.2.1 | GPT-6.2（ChatGPT） | §1–12 | 补充 Event/Delivery staging、OpenAMSM slot、Run/Artifact 关联与失败处理 | IR-005；SR-009 |
+| 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | 全文 | 从未实现视角重建 Context/Artifact 目标；核对 ca-agent-demo Context/ArtifactStore 代码与测试；明确不移植 content-addressed SHA256，并冻结 Host→Tool Channel 未发布边界 | Issue #12；SR-009、SR-010、SR-015 |
 | 2026-11-25 | 0.4.0 | GPT-6.2（ChatGPT） | §5、§6.2、§7、§12～17 | 将 Host Artifact Store v1 从“未发布”纠正为已冻结契约；区分 Provider/Go Host 外部实现与 Next Python Host 未实现；明确随机 artifactRef 与逐字节 SHA-256 传输校验的不同语义，并把 SR-009/SR-010 的 Host/Plugin 责任拆清 | ca-agent contract pin 2c0b07f、ca-agent main 447d0cc P1 证据、ca-client-tools v1.2.0 源码/fixtures；避免沿用 ca-agent-demo 旧注释和内容寻址实现误判协议状态 | Issue #12；SR-009、SR-010、SR-015 |
 | 2026-11-25 | 0.4.1 | GPT-6.2（ChatGPT） | §14～15 | 补入 env-5gc-sim PR #86 的 Mock AMF Codec C1 状态，并明确它不等于 Agent Tool/Provider Codec Consumer；保持 Next Host ArtifactStore/Channel NOT_IMPLEMENTED | 防止把测试对端的 Codec API 迁移误报为 Next Tool/Provider 或 Host 二进制链路完成 | Issue #12；SR-009、SR-010、SR-011 |
-| 2026-11-26 | 0.4.2 | Codex / GPT-6 | 见本行变更 | §2～4 明确跨请求的响应义务及声明 Schema 的归属 | 见修改内容列（历史合并记录） | Issue #12 |
-| 2026-11-26 | 0.4.3 | GPT-6（ChatGPT） | 当前目标契约 | 新增 1.6.0 Capability / Codec / Host Context Schema-only Package 目标，修正模型可见 Callable 和旧 Provider v1.2.0 的证据定位 | 见修改内容列（历史合并记录） | Issue #12/#40；PR #46 |
+| 2026-11-26 | 0.4.2 | Codex / GPT-6 | 见本行变更 | §2～4 明确跨请求的响应义务及声明 Schema 的归属 | Issue #12 |
+
+| 2026-11-26 | 0.4.3 | GPT-6（ChatGPT） | 当前目标契约 | 新增 1.6.0 Capability / Codec / Host Context Schema-only Package 目标，修正模型可见 Callable 和旧 Provider v1.2.0 的证据定位 | Issue #12/#40；PR #46 |
 | 2026-11-26 | 0.4.4 | GPT-6（ChatGPT） | 文档头、F05/Host Context 责任映射 | 统一正式评审范围/局部非目标声明，并将 1.6.0 Host Context Schema-only Publisher 纳入 SR-030 交叉追踪 | 修复 review context CI 头部门禁；区分 Host Context Schema 发布与其他 Context/Artifact 职责 | Issue #12；SR-030；PR #46 |
 | 2026-11-26 | 0.4.5 | GPT-6（ChatGPT） | Host Context Package 消费边界、修订记录 | 明确 SR-030 Schema-only Package 只由 Contract.contexts 引用，不替代 Skill 自有 requestSchema | 与 CA-SL 1.6.0 §4 的 Request / Context Schema 分工一致，避免 Schema root 语义混淆 | Issue #12/#40；CA-SL 1.6.0；SR-030；PR #46 |
-| 2026-11-28 | 0.4.6 | GLM-5.3（DeepSeek Harness） | §14.2、修订记录 | 将 §14.2 Owner MAS 目标行同步为条件签认基数；合并修订表断裂孤儿段 | 关闭 R8-05 残留与 R8-09 同类渲染断裂 | Issue #12；PR #46；Review #6095143611 |
-| 2026-11-28 | 0.4.7 | GLM-5.3（DeepSeek Harness） | 修订记录 | 修订表 6 列统一 7 列（承接 0.4.6 的条件签认基数修正） | 关闭 R3-LEDGER-01 同族列宽失配 | Issue #12；PR #46；Review #6095143611 |
+| 2026-11-27 | 0.4.6 | GPT-6.2（ChatGPT） | §2、§4 | 将 Skill schemas/scripts 纳入 Host 只读 Package Resource Access；区分资源读取与 Host Script Execution Capability | 让 LLM 与 Assurance 共用同一资源快照，不把 Package 资源混入 ArtifactStore 或任意文件访问 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.4.7 | GPT-6.2（ChatGPT） | §2、§4 | 将 Host Script Execution 的 LLM 暴露条件对齐为 `scriptExecution.llmEnabled` 与 Registry `llmInvocable` 双门禁 | 使 Package Resource Access 与脚本执行授权保持独立、明确 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.4.8 | GPT-6.2（ChatGPT） | §2、§4 | 移除 LLM 专属 Script 执行门禁，LLM 与 Assurance 共用 Script Registry / Runner | 使 Context 资源读取、脚本执行和 Package snapshot 的边界保持统一 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.4.9 | GPT-6.2（ChatGPT） | §2、§4 | 定义 Host Resource Read system Action 的请求、响应、Package snapshot 绑定、路径 / 大小限制和拒绝诊断；明确 LLM 可调用全部登记 Script | 补齐 LLM 读取 Schema / Script 的实际接口，消除只写“按需读取”却无请求输出契约的问题 | Issue #49；IR-008；SR-032 |
+
+| 2026-11-27 | 0.4.10 | GPT-6.2（ChatGPT） | §2.1、修订记录 | 明确 Resource Read 使用 Host per-Run Runtime Action Budget，而非 Contract.limits.maxActions 业务动作预算 | 与 F04 Script Execution 预算规则统一，防止系统内建动作绕过 Host 资源上限 | Issue #49；IR-008；SR-007/032；PR #52 |

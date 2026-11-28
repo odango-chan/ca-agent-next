@@ -1,13 +1,13 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.21
-> 状态：**设计待评审**（CA-SL 1.6.0-only Capability-first；Studio 新 Package Explorer/LSP/AI Authoring 1.6.0 路径尚未实施；既有 #267/#270/#272 历史实现与新发布验收分离）
+> 文档版本：0.3.41\
+> 状态：**设计待评审**（CA-SL 1.6.0；有 Assurance Skill 才允许 assurance/contract.yaml 顶层 when；SKILL.md Front Matter 不声明 when；无 Assurance Skill 不声明 when；AI Authoring / Schema Explorer 实施与发布 NOT_RUN）
 > 修订日期：2026-11-28\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级准入、额外 package-level digest、签名和 Trust Registry；历史 Compiler v2.1.0 的 `files[].sha256` 要求仅归旧版审计，不转为新版 Schema 要求
 
-关联 IR-006、SR-015、SR-016、SR-020（参考宿主架构审计）、SR-024（旧 Development Host Publisher，仅历史）、SR-025（MAS Owner 1.6.0 Publisher）、SR-030（Host Context 1.6.0 Schema-only Publisher）；新 1.6.0 Compiler 接口以 [EC02 Compiler 设计说明书](../EC02-Compiler/Compiler设计说明书.md) v0.2.13 和 [SR-013](../../SR/SR-013-Compiler已检查when与发布产物.md) v0.2.21 为准；历史 EC02 Development Build 设计只保留源审计，不作为当前 Compiler DTO/Worker/Bundle 发布入口。基线为 [docs/architecture/studio-boundaries.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/architecture/studio-boundaries.md)、[docs/design/ai-procedure-authoring.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/design/ai-procedure-authoring.md)。
+关联 IR-006、IR-008、SR-015、SR-016、SR-020（参考宿主架构审计）、SR-024（旧 Development Host Publisher，仅历史）、SR-025（MAS Owner 1.6.0 Publisher）、SR-030（Host Context 1.6.0 Schema-only Publisher）、SR-032（中央 SKILL 作者规范）；新 1.6.0 Compiler 接口以 [EC02 Compiler 设计说明书](../EC02-Compiler/Compiler设计说明书.md) v0.2.20 和 [SR-013](../../SR/SR-013-Compiler已检查when与发布产物.md) v0.2.38 为准；历史 EC02 Development Build 设计只保留源审计，不作为当前 Compiler DTO/Worker/Bundle 发布入口。基线为 [docs/architecture/studio-boundaries.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/architecture/studio-boundaries.md)、[docs/design/ai-procedure-authoring.md](https://github.com/odango-chan/ca-skill-studio-demo/blob/5b666c0ef754ed32fa37c97ce2429f328c70477f/docs/design/ai-procedure-authoring.md)。
 
 ## 1. 编辑与语言服务
 
@@ -19,9 +19,7 @@ Theia 的 Package Explorer 以作者源码为工作区入口。可视化视图�
 
 ## 3. when 编写与验收
 
-正式语言刷新后，Contract 字段提示与诊断对齐中央规范。`when` 是 `assurance/contract.yaml` 中的可选顶层字段，不是 SKILL.md Front Matter 字段；其 Schema 类型、CEL 静态检查与错误定位必须对齐 **CA-SL 1.6.0 的唯一正式作者 Schema + 新 Compiler 契约**；历史 v1alpha5 仅用于只读测试差异审计。没有 `when` 的 Contract 保持原有行为。文本与 AI 编辑均保持可预览，不能把选择条件写入 Predicate。覆盖 Browser Worker、源码往返、已有包、有效与无效表达式、Compiler gate 与应用后再打开。
-
-**历史实现基线说明：** §4、§7 中现有 Studio 与 Compiler v2.1.0 Development profile 的包导入、项目快照和既有实施状态，以及 §5.2/§6 明确标记的 Development 结果与 no-root 历史规则，仅用于审计既有产品；这些旧 Profile/Package/Skill 不构成新 1.6.0 Studio 的合法输入，也不建立兼容、迁移或双轨路径。新 Studio 唯一执行入口见 §5.1。
+正式语言刷新后，`assurance/contract.yaml` 顶层 `when` 字段的提示与诊断对齐中央规范。`when` 是可选 CEL 字段，仅允许在存在 `assurance/` 的 Skill 中声明；SKILL.md Front Matter 不声明 when，出现时按未知字段拒绝；无 Assurance Skill 没有 Contract，不声明 `when`。表达式的 Schema 类型来自同一 Contract 的 requestSchema；CEL 静态检查与错误定位必须对齐 **CA-SL 1.6.0 的唯一正式作者 Schema + 新 Compiler 契约**；历史 v1alpha5 仅用于只读测试差异审计。没有 `when` 的 Assurance Skill 保持无条件语义候选。文本与 AI 编辑均保持可预览，不能把选择条件写入 Predicate。覆盖 Browser Worker、源码往返、已有包、有效与无效表达式、**无 Assurance + Front Matter.when** 与 **有效 Assurance + Front Matter.when** 两种负例（均按未知字段拒绝）、可选 input 字段缺少 `has` 守卫的 CEL_INVALID、Compiler gate 与应用后再打开。
 
 ## 4. 历史 Interface Package / Development Build 设计审计（非 1.6.0 规范）
 
@@ -63,12 +61,6 @@ Skill Studio 的依赖导入负责**获取、验证和固定原始包快照**，
 项目另预加载 `ca-client`，其 Package ID 为 `urn:wtlab:ca-client-tools:openamsm-sbi-interface`，来自已发布 `ca-client-tools_interface_1.1.0.zip`。它导出十一项 public READ Tools / 两个 Capabilities，用于只读 SBI Query IntelliSense；它**不是** `mas` Owner contract，也不是 `ca-context`，当前 Contract 未声明它为根。Studio/Compiler 不得推断替换。
 
 历史 v2.1.0 Development Build 使用的 Owner / Host Package 仅用于 SR-024 / SR-025 来源审计，不是 1.6.0 新入口。新 1.6.0 MAS Owner Package 由 [SR-025](../../SR/SR-025-MAS%20Owner%20Interface%20Package%20Publisher.md) 负责；Host Context Schema-only Package 由 [SR-030](../../SR/SR-030-Host%20Context%201.6.0%20Schema-only%20Interface%20Package%20Publisher.md) 负责。Studio 只导入正式新发布物，不代替 Publisher 组包。
-
-### 4.4.1 恢复分支 2026-11-27 的固定源差异（仅 Development 历史）
-
-项目另预加载 `ca-client`，其 Package ID 为 `urn:wtlab:ca-client-tools:openamsm-sbi-interface`，来自已发布 `ca-client-tools_interface_1.2.0.zip`。它导出十一项 public READ Tools / 两个 Capabilities，用于只读 SBI Query IntelliSense；它**不是** `mas` Owner contract，也不是 `ca-context`，当前 Contract 未声明它为根。Studio/Compiler 不得推断替换。
-
-`ca-client` 当前 Studio 示例清单/Lock 若与旧版 1.1.0 ZIP 不一致，须以**同一 Project Lock 与导入原始 ZIP**确定历史受测来源；1.2.0 不得直接替换已锁定 1.1.0，也不能作为新 1.6.0 Publisher Package 输入。两个 MAS/Host root 也只代表历史 `tool-catalog` 和 `schema-bundle`，**不可视作**已发布的 1.6.0 Interface Package。
 
 ### 4.5 两个 Contract root 的正式 Publisher 输出
 
@@ -124,13 +116,6 @@ Compiler v2.1.0 的 `validDevelopmentVersion` 接受 `major.minor.patch` 和合�
 5. Preview/Review 允许查看未经编译的候选 Change Set，但标记「尚未检查，不能 Apply」。只有**与当前候选字节和当前项目锁 revision 精确匹配**的 Build + Verify 成功，才可提供「应用候选」；Apply 必须由用户确认、保留未保存 Buffer、支持 Undo 恢复逐字原文；Save 仍由用户决定。候选、依赖快照或语言版本变化使旧结果立刻失效。
 6. Browser、Native、WASM 用同一构建输入与可追踪诊断，任一结果不能混用来自另一 HEAD、Lock revision 或旧语言的 PASS。Worker 不访问 Provider credentials、不执行 Runtime Tool、不赋予 Owner/Host 资格。
 
-### 5.1.1 Owner 与 Provider 的双合同 Gate（必须与 1.6.0 Build/Verify 同批）
-
-- **Owner Gate**：对当前 Skill 声明的每个 Owner dependency，必须解析到正式发布的 Owner Contract Package，并按 Owner Publisher 冻结的身份、版本和发布摘要核对实际包及 Binding 引用；验证作者可见 Capability 与唯一公开 Callable 的一对一关系，以及 kind、Effect、Input/Output Schema 等契约一致性。Coordinator 内部 Reconcile 不得作为 Skill-facing Callable 暴露。Owner Gate 是契约/发布身份核验，不是 Trust Registry、生产准入或额外授权机制。
-- **Provider Interface Gate**：Provider Interface Package 是与 Owner Contract Package 不同的发布对象，必须独立核对其包身份、版本和 interface snapshot；不得以 Provider 包替代 Owner Contract，也不得由模型或 Skill 选择 Provider 私有 backend operation。
-
-Package Audit/AI Authoring 的**同一候选源码字节 + 同一 Project Lock generation** 必须先由正式 1.6.0-only Compiler #62 Build→Verify，并经过两类不同 Publisher Package Gate；任一来源/版本/Schema/Binding 不可验证则 BLOCKED/FAILED，不显示 PASS 或可 Apply；禁止旧 VerifyDevelopment、旧 Worker/WASM、旧 Bundle 兼容路径。Worker 不读取 Provider 凭据、运行 Owner mutation 或发放部署资格。
-
 ### 5.2 UI 状态投影（非新 Compiler 机器字段）
 
 | 关注项 | 显示原则 |
@@ -145,7 +130,7 @@ Package Audit/AI Authoring 的**同一候选源码字节 + 同一 Project Lock g
 
 ## 6. 新 1.6.0 无 Assurance 与零外部依赖
 
-- **SKILL.md-only**：遵循 [Agent Skills Specification](https://agentskills.io/specification) 的独立 Front Matter/指导路径，不属于任何 CA-SL 语言版本，不声明 when、不调用 Compiler、只有 LLM-guided，不生成 Assurance Artifact/Callable Scope；双栏原生编辑器仍可预览文字、元数据与 references。
+- **无 Assurance Skill Package**：可包含 schemas/、scripts/、references/ 和 assets/；不调用 Compiler，不生成 Assurance Artifact，不拥有业务 Capability Scope，仅支持 LLM-guided；在双栏源编辑器中仍可预览指导文本、元数据与共享资源。
 - **存在 Assurance、没有外部 Capability / Schema 引用**：新 1.6.0 Compiler 必须允许零 Capability roots 与空 Package dependency closure；BuildRequest 仍包含 Skill/语言/Schema/源身份，Compiler 生成不含外部 Tool Effect 的确定性 Artifact。
 - **存在 Assurance、仅引用 Schema-only Package**：例如 Contract.contexts 引用 SR-030 Host Context Schema。此时 Capability roots 与 Callable bindings 仍为空，但 Package dependency closure 必须包含该显式依赖的 Schema export 和完整 $ref 闭包；不得把 Schema-only Package 当作 Capability root，也不得虚构 Tool / Callable。
 - **存在 Assurance 且使用 Capability 但未声明依赖**：Compiler 静态 Link 必须拒绝 `CAPABILITY_UNRESOLVED` / `CAPABILITY_NOT_GRANTED`；绝不能把它当成合法零根。旧 v2.1.0 只能接受非空 roots 的限制**不是 1.6.0 新设计**。
@@ -153,24 +138,22 @@ Package Audit/AI Authoring 的**同一候选源码字节 + 同一 Project Lock g
 
 ## 7. 历史实现状态与新版本待验证项
 
-本节历史 Development v1alpha1 的 `VerifyDevelopment`、no-root 限制、`NOT_ADMITTED` / `VALIDATED` 等字段只供旧版审计；**当前 Studio 1.6.0 Build/Verify 只能消费 Compiler Owner 新发布机器合同**，不能反向沿用历史 Worker/Lock。现行 1.6.0 产品 AC 仍 BLOCKED/NOT_RUN。
-
-截至历史审计固定来源时点（2026-11-27）：
+截至 2026-11-25：
 
 | 项目 | 状态 | 证据 / 未完成 |
 |---|---|---|
 | ZIP Import / immutable snapshot / Package Explorer | MERGED | [Studio #267](https://github.com/odango-chan/ca-skill-studio-demo/pull/267)，main merge `11b1246` |
 | Default Example dependency preload | MERGED | [Studio #270](https://github.com/odango-chan/ca-skill-studio-demo/pull/270)，main merge `d3b1d36` |
-| Compiler v2.1.0 request builder | MERGED（历史 Development） | [Studio #272](https://github.com/odango-chan/ca-skill-studio-demo/pull/272)，merge `a8633553615d786e360a62c2b0042a27ae92d9d3`；不代表 1.6.0 可用 |
-| Compiler v2.1.0 Node/Browser Worker | OPEN / DRAFT / DIRTY（历史固定源） | [Studio #276](https://github.com/odango-chan/ca-skill-studio-demo/pull/276)，当时 Head `7d6adeb`，Base SHA `3b3c4ac9d4b3a2f2e2380793d028d92f24c62c27`；当前真实状态须重查。旧 Worker 非新版 1.6.0 Gate |
+| Compiler v2.1.0 request builder | OPEN / DRAFT / STALE | [Studio #272](https://github.com/odango-chan/ca-skill-studio-demo/pull/272)，测试 HEAD `8abffc7`，当前落后 main 67 commits |
+| Compiler v2.1.0 Node/Browser Worker | OPEN / DRAFT / STALE | [Studio #276](https://github.com/odango-chan/ca-skill-studio-demo/pull/276)，测试 HEAD `7d6adeb`，落后 #272 base 9 commits |
 | Package Audit Development Build cutover | NOT_IMPLEMENTED | [Studio #269](https://github.com/odango-chan/ca-skill-studio-demo/issues/269) |
 | AI Authoring exact-candidate Development Build gate | NOT_IMPLEMENTED | [Studio #269](https://github.com/odango-chan/ca-skill-studio-demo/issues/269) |
 | MAS / Host Context 1.6.0 Package publication | BLOCKED | MAS Owner Capability-first Package 归 SR-025；Host Context Schema-only Package 归 SR-030；新 Package Schema / SemVer / languageTarget 尚未正式发布；旧 SR-024 的 1.0.0 不得作为新输入 |
-| Host fixture provenance in Studio lock | PARTIAL / 限定历史实现 | #267 ZIP source 已持久化；默认 Host Context Example 专用路径已固定 `sourceStatus=DEVELOPMENT_FIXTURE`，普通 ZIP importer 不全局产生该字段；1.6.0 项目锁仍待 Publisher Schema 与测试 |
+| Host fixture provenance in Studio lock | NOT_IMPLEMENTED | #267 已持久化 ZIP source metadata（upload/contentDigest/packageId/version/publisher），但尚未写入 `source.sourceStatus`；由 SR-016 / Studio #269 补齐 |
 | Real released ca-client-tools v1.1.0 as Compiler root | NOT_RUN | 需显式 `ca-client` synthetic Contract 正例 |
 | No-root UI state | NOT_IMPLEMENTED | 不调用 Compiler、无 Artifact、无 `NOT_ADMITTED` |
 
-#272 历史 request builder 已合并至 Studio main（merge `a863355`），#276 在历史固定源时 OPEN/DRAFT/DIRTY；两者的旧 Native Windows/IDE/Browser-only/Browser Host/Pages Chromium 或 PR Verify 成功只对应原受测 SHA，不等于当下 HEAD 的新 1.6.0 Package Audit/Build/Verify，正式六宿主必须针对同批新 Compiler #62 发行重新验证。
+#272 / #276 曾在各自历史 HEAD 通过 PR Verify、Native Windows、IDE Host、Theia Browser-Only、Theia Browser Host 和 Pages Chromium 等检查，但当前分支分别落后 main / base；历史 PASS 不满足当前合并门禁。必须在刷新分支后重跑完整 exact-head 验收。
 
 必要验收至少包括：原始发布 ZIP 导入/锁定字节一致性；Contract root closure 只包含可达 Interface Packages；无关项目依赖不进入 BuildRequest；声明为非 Interface Package 的 root fail-closed；缺失/损坏/摘要错/传递依赖环拒绝；无 Assurance 不调用 Compiler；Assurance 无外部 Capability / Schema 依赖时允许空闭包 Build；Assurance 仅引用 Schema-only Package 时保留非空 Schema closure 但零 Capability roots / Callable bindings；Node/WASM/Chromium 结果一致；AI 候选 stale invalidation、Apply/Undo 和磁盘未保存语义。所有结果只证明相应静态/编辑器层，不代表 Owner/Host Admission、Runtime、Production 或真实 5GC Qualification。
 
@@ -182,15 +165,23 @@ EC06 历史决策已统一归档于中央仓：[ADR-0001 Source-first Visual](..
 
 ### 9.1 唯一能力入口
 
-Skill Studio 的 Package Explorer 以 Capability 作为唯一 Skill-facing 能力导航入口。Package 依赖仍按 Package 分组；Package 内显示 Capability，不再并列展示 Tools / Operations / Callable 树。Capability 详情可显示描述、kind、Effect、Input/Output Schema、Evidence 和来源 Package；Callable ID 只允许出现在内部 Binding 详情或编译诊断，不作为可选择的作者节点。
+Skill Studio 的 Package Explorer 以 Capability 作为唯一 Skill-facing 业务能力导航入口。Package 依赖仍按 Package 分组；Package 内的业务能力区只显示 Capability，不再并列展示 Tools / Operations / Callable 树。共享资源区单独显示 Package 根目录的 schemas/、scripts/manifest.yaml、scripts/、references/ 和 assets/；这些资源不是 Capability，不出现在 Capability exports 列表。Capability 详情可显示描述、kind、Effect、Input/Output Schema、Evidence 和来源 Package；Callable ID 只允许出现在内部 Binding 详情或编译诊断，不作为可选择的作者节点。
 
 ### 9.2 语言服务
 
-1.6.0 LSP / Completion 对 Contract.capabilities、operation.capability、observation.capability 提供 Capability ID 补全、悬停、定义跳转和静态诊断。补全来源是已导入并固定的 Package Capability exports，不是运行时 Provider catalog。Compiler 仍是 Capability membership、唯一性、Schema、Evidence、Scope 的最终 Link 权威；LSP 不得把本地投影诊断显示为 Compiler Build PASS。
+1.6.0 LSP / Completion 对 Contract.capabilities、operation.capability、observation.capability 提供 Capability ID 补全、悬停、定义跳转和静态诊断。补全来源是已导入并固定的 Package Capability exports，不是运行时 Provider catalog。对根目录 schemas/*.schema.yaml 提供 YAML 语法高亮、JSON Schema Profile 字段补全、引用跳转和本地诊断；对 scripts/manifest.yaml 提供 Script ID / entrypoint / Schema 引用补全与校验，并允许跳转到 scripts/ 源码。上述资源路径都相对 Skill Package 根目录。对 `assurance/procedure.yaml` 的 `operation.script`、`assurance/predicates.yaml` 的 `evaluator` 提供 Script ID 补全、悬停、定义跳转和 Registry 引用诊断；脚本路径和入口函数名不作为作者可选值。Compiler 仍是 Capability membership、唯一性、Schema、Evidence、Scope、Script Registry 与 Procedure Link 的最终权威；LSP 不得把本地投影诊断显示为 Compiler Build PASS。
+
+**SchemaReference 字段级语言服务（R4-P2-04）**：
+
+- `requestSchema` 的引用类型为 `PackageSchemaPath`：只从当前 Skill Package 根目录下的 `schemas/**/*.schema.yaml` 补全；拒绝绝对路径、反斜杠穿越、`..`、包外路径和不存在的文件。
+- `Contract.contexts` 的引用类型为 `QualifiedSchemaId`：只从已导入且已 pin 的依赖 Package 导出 Schema ID 补全；不得用本地文件路径代替，也不得从未 pin 的 Provider / Registry 动态发现。
+- Predicate 参数的 `SchemaReference` 按字段允许的 union 分支提供上下文补全；悬停显示 Schema ID、来源 Package、版本、dialect 和精确来源；定义跳转分别进入本地 Schema 文件或依赖 Package 的导出定义。
+- 对本地 G.4 Schema 根执行 G.4 闭合规则诊断；对纯单 `$ref` OAS 3.0 根别名保留外部 dialect，不套用 G.4 `additionalProperties: false` 规则，并按已 pin Source Bundle 的选定闭包解析。
+- 未知、歧义、未 pin、跨包路径、错误 dialect 或引用类型不匹配必须给出稳定诊断；LSP 仅提供编辑期提示，Compiler Check / Build / Verify 仍是最终权威。
 
 ### 9.3 AI Authoring
 
-AI Authoring 的 Change Set 只能新增或修改 Capability ID、Procedure arguments 和其他 CA-SL 作者字段；不得生成 Callable ID、backendOperationId 或动态 Provider 选择。Apply 后使用同一语言服务和 Compiler BuildRequest / Verify 路径重新检查。
+AI Authoring 的 Change Set 必须遵守中央 [SKILL 作者规范](../../规范/SKILL作者规范.md)的全部适用规则：Skill / Capability 粒度、共享 Package 资源与 Schema 所有权、SourcePath / 显式 arguments、when、Evidence / UNKNOWN、无 Wait 的静态 DAG、四阶段顺序、Node 拆分 / 合并和注释非执行语义。AI Authoring 通过 F05 定义的 `host.skill-resource.read` 读取当前 Package snapshot 的 schemas/、scripts/manifest.yaml、scripts/ 源码与 references；读取不等于执行。当前 Procedure Authoring Change Set 只修改 `assurance/procedure.yaml`：允许新增 / 删除 / 修改 `start`、Node、四阶段、已发布 Capability / Predicate / Script ID 的引用、显式 arguments、阶段 routes 和解释性注释；引用只能来自已导入并 pin 的 Package exports / PredicateSet / Script Registry，不得自行创造 Capability / Predicate / Schema / Script 身份。该 Change Set 不修改 `SKILL.md`、`assurance/contract.yaml`、`schemas/`、`assurance/predicates.yaml`、`scripts/`、`scripts/manifest.yaml`、Package Manifest 或外部 Package exports；`assurance/contract.yaml` 顶层 `when` 的编辑仍走 §3 的独立 Contract 编辑与校验路径，且仅对存在 Assurance 的 Skill 开放，不混入 Procedure Change Set。若重命名 / 删除的 Node 被 `contract.precondition` 引用，或其他 Procedure 修改必须同步修改 Contract 字段，当前 Change Set 必须返回 OUT_OF_SCOPE；不得只改 `procedure.yaml` 留下悬空的跨文件引用。超出范围的提案必须明确返回 OUT_OF_SCOPE，不得静默扩大变更集。不得生成 Callable ID、backendOperationId 或动态 Provider 选择，不得通过注释补足缺失的 Schema、Predicate、Evidence 或 routes。AI Authoring 不在 Studio Worker 中执行脚本；需要运行脚本时使用正常 Agent Runtime，由 Host 通过 host.skill-script.execute 调用当前 Skill Registry 中登记的全部脚本（包括 transform / predicate），与 Assurance 共用同一 Script Runner；Predicate Script 的直接调用不产生 Evidence 或 Assurance Outcome。不能在 Studio Worker / AI Authoring 中创建第二套 Python 执行器。Apply 前仍须用户确认，随后对同一候选源码和项目锁使用同一 1.6.0 Compiler Build / Verify 路径重新检查；本设计不表示当前 Studio 已实现作者规范感知或 Compiler gate。
 
 ### 9.4 版本与导入
 
@@ -219,52 +210,57 @@ AI Authoring 的 Change Set 只能新增或修改 Capability ID、Procedure argu
 ## 10. 原版 3GPP OpenAPI 只读展示与直接 Schema Component 引用（IR-009）
 
 - 工作台可展示 SR-031 原样代发布的 OpenAMSM OpenAPI 3.0 Source Bundle，作为只读标准来源视图；保留原始 bytes、文件名 / 路径 / 相对 `$ref`，不提供自动格式化、重写、修补或保存原件修改。当前 `PostSmContexts.requestBody → jsonData → SmContextCreateData` 选定闭包为四份原版 YAML / 102 个 Schema Component；不要求展示或导入全部 472 份 YAML。任何 AI Change Set 试图修改原版 YAML 必须拒绝。
-- Schema Explorer / LSP 可沿已 pin Source Bundle 的精确 `components/schemas` 外部引用显示定义、来源文件、JSON Pointer、OpenAMSM commit 和标准版本；仅解析选定闭包可达 refs，不全局 eager resolve 未选定 operation。可展示 `RefToBinaryData.contentId` 与 N1/N2/N2 Ext1 multipart slot 的映射；未被 JSON 引用的 part 不得交给 Codec，额外 part 的拒绝 / 忽略策略由 ingress profile 定义。Compiler 才是跨 dialect Schema Link / Build / Verify 权威。不得把原版 OAS3 Schema Object 重写为 G.4 Adapter；本地 Skill-owned Request 根仍遵循 G.4。
+- Schema Explorer / LSP 可沿已 pin Source Bundle 的精确 `components/schemas` 外部引用显示定义、来源文件、JSON Pointer、OpenAMSM commit 和标准版本；仅解析选定闭包可达 refs，不全局 eager resolve 未选定 operation。可展示 `RefToBinaryData.contentId` 与 N1/N2/N2 Ext1 multipart slot 的映射；未被 JSON 引用的 part 不得交给 Codec，额外 part 的拒绝 / 忽略策略由 ingress profile 定义。Compiler 才是跨 dialect Schema Link / Build / Verify 权威。不得把原版 OAS3 Schema Object 重写为 G.4 Adapter。Skill-owned `requestSchema` 入口有两种形式：本地 G.4 Schema 根按 G.4 闭合规则校验；纯单 `$ref` 根引用别名不套用 G.4 闭合规则，其目标和可达外部闭包按 OAS 3.0 dialect 原样验证。
 - Studio / Project Lock 必须记录正式 Source Bundle dependency identity、选定 operation / requestBody / Schema Component roots 与对应可达文件快照；正式 Lock wire 字段由 Publisher / Compiler Owner 冻结，不新增自定义 per-file digest / package hash。不解析动态 latest、不从任意 URL 下载，也不让无 3GPP 依赖的项目被强制导入该 Bundle。
 - Procedure 可引用 ca-client-tools 正式 Codec READ Capability 与 Output Schema，但不能展示私有 Handler / Callable；当 T1 `when` 企图读取 T2 才解码的 NAS 字段，Compiler 应给稳定的 SourcePath / 可用性诊断，不能偷偷触发解码。
 - NAS / NGAP Output Schema 是 Provider 独立发布物，不从 SBI `format: binary` 推导。没有正式 Compiler OAS3 Resolver / Provider Golden 时，不生成假 Schema、不宣称产品 PASS；现行产品验收 NOT_RUN。
 
 [统一权威设计](../EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)与 [SR-031](../../SR/SR-031-3GPP公共Schema-only-Publisher.md)。唯一语言 1.6.0，不创建第二管理器。
-
 ## 修订记录
 
-| 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
-|---|---|---|---|---|---|---|
-| 2026-11-25 | 0.1.0 | Codex / GPT-6 | 全文 | 整合已核对的跨仓基线和候选变更，建立分仓验收入口。 | 历史记录未单列原因 | F09 · IR-006 · SR-016 |
-| 2026-11-25 | 0.2.0 | GPT-6 | §4–7 | 明确 Studio 项目锁与 Compiler Lock 的边界、当前 MAS roots 的 package-kind 不匹配、no-root 行为、统一 Development Build gate 和当前 PR 新鲜度门禁。 | 历史记录未单列原因 | Studio #261、#267、#269、#270、#272、#276；EC02 Development Build |
-| 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | §3–7 | 明确 when 位于 `assurance/contract.yaml`；补齐 MAS Owner / Host Context Interface Package 的 Publisher 字段、导出闭包、精确来源与 Development provenance 边界，并关联 SR-015 / SR-020。 | 历史记录未单列原因 | IR-006 · SR-015 · SR-016 · SR-020 · Studio #269 |
-| 2026-11-25 | 0.3.1 | GPT-6.2（ChatGPT） | §4.4～7 | 将 Host Context Interface Package Publisher 从 SR-020 拆分到新 SR-024；SR-020 保留参考宿主架构审计职责；明确仅使用 Compiler v2.1.0 schema 要求的 files[].sha256；避免一个 SR ID 承载两项不同工作，并区分既有 Interface Package 文件摘要与 CA-SL Skill Artifact 的非目标完整性体系 | 历史记录未单列原因 | IR-006；SR-015、SR-016、SR-020、SR-024；Studio #261/#269/#272/#276 |
-| 2026-11-25 | 0.3.2 | GPT-6.2（ChatGPT） | §1、§4.4～7 | 修复 SR-024 Publisher 文档链接并同步 F02/F08/SR-016/SR-024 版本；明确 SR-020 只承担参考宿主审计；解决 SR-020/SR-024 责任冲突，确保 Publisher 入口唯一 | 历史记录未单列原因 | IR-006；SR-015、SR-016、SR-020、SR-024 |
-| 2026-11-25 | 0.3.3 | GPT-6.2（ChatGPT） | §4.5、§5.2、§7 | 对照 Studio #267 合入代码，明确 `source.sourceStatus` 尚未写入 lock，并将其归入 SR-016/#269；区分项目来源元数据与 Compiler BuildResult.sourceStatus；避免把设计要求误报为当前持久化能力，防止两个 sourceStatus 语义混淆 | 历史记录未单列原因 | Issue #12；SR-016、SR-024；Studio #267/#269 |
-| 2026-11-25 | 0.3.4 | GPT-6.2（ChatGPT） | §8 | 将 EC06 ADR-0001/0002 与 Plugin-managed/C4 原文纳入中央仓，并将 F09 历史决策和原始设计引用切换为 Next 内部链接；关闭原始设计缺失与跨仓引用断链；不改变历史决策内容 | 历史记录未单列原因 | Issue #12；EC06-ADR-0001～0005；SR-016、SR-024 |
-| 2026-11-27 | 0.3.16 | Codex / GPT-6 | §5～6、设计依据 | 固定 Schema、候选、Compiler 联验与正式发布的先后关系 | 历史记录未单列原因 | Issue #12，PR #46 |
-| 2026-11-25 | 0.3.5 | GPT-6.2（ChatGPT） | §4.5、§6～7 | 将 MAS Owner Publisher 独立归入 SR-025、Host Publisher 归入 SR-024；按 Compiler v2.1.0 修正 MAS exports 为 25/24/25/53；发现 v1alpha4/v1 非 SemVer，提出 package/source version 分离决策门槛；防止发布无法被 Development Build 接受的版本，同时保持 Owner/Host 源身份与 Studio lock 边界 | 历史记录未单列原因 | IR-006 · SR-015 · SR-016 · SR-024 · SR-025 · Studio #269 |
-| 2026-11-25 | 0.3.6 | Codex / GPT-6 | 正文 | 同步两个 Publisher 的 1.0.0 身份与消费边界 | 历史记录未单列原因 | Issue #12 |
-| 2026-11-25 | 0.3.7 | Codex / GPT-6 | 正文 | §4.5 依据 v2.1.0 源函数实测修正 +build 与项目包身份限制 | 历史记录未单列原因 | Issue #12 |
-| 2026-11-26 | 0.3.8 | GPT-6（ChatGPT） | 新增 1.6.0 目标设计 | 仅支持新版本，无兼容或迁移 | 历史记录未单列原因 | Issue #40；SR-029 |
-| 2026-11-26 | 0.3.9 | GPT-6（ChatGPT） | 版本隔离与修订记录 | 隔离历史 Development Compiler 流程，1.6.0-only Studio 仅用新 Worker/Build DTO | 历史记录未单列原因 | Issue #40；SR-029 |
-| 2026-11-26 | 0.3.10 | GPT-6（ChatGPT） | 修订表/记录 | 合并历史修订行的内容与原因列，仅保留原文字义，不改历史断言 | 历史记录未单列原因 | Issue #40；SR-029 |
-| 2026-11-26 | 0.3.11 | GPT-6（ChatGPT） | 目标合同、实施 AC 和旧版留档 | §3～§9 重建 1.6.0-only Studio Package/Compiler/AI/zero-root 工作流和独立验收，旧 Development 只读留档 | 历史记录未单列原因 | Issue #12/#40；SR-016/025/029；PR #46 |
-| 2026-11-26 | 0.3.12 | GPT-6（ChatGPT） | 文档头与 1.6.0 当前设计依据 | 修复 PR #46 Review Context 文档头检查及旧 Development Build 设计依据，更新新 Compiler/SR-013 正式入口 | 历史记录未单列原因 | Issue #12/#40；PR #46；CI #45837224652 |
-| 2026-11-26 | 0.3.13 | GPT-6（ChatGPT） | 1.6.0 Host Context Publisher / 依赖边界 | 纠正 SR-024 仅为旧 Development Publisher，新增 SR-030 Schema-only 1.6.0 Host Context 发布链，并将来源 provenance 放回 Project Lock | 历史记录未单列原因 | Issue #12/#40；IR-006/008；SR-030 |
+| 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
+|---|---|---|---|---|---|
+| 2026-11-25 | 0.1.0 | Codex / GPT-6 | 全文 | 整合已核对的跨仓基线和候选变更，建立分仓验收入口。 | F09 · IR-006 · SR-016 |
+| 2026-11-25 | 0.2.0 | GPT-6 | §4–7 | 明确 Studio 项目锁与 Compiler Lock 的边界、当前 MAS roots 的 package-kind 不匹配、no-root 行为、统一 Development Build gate 和当前 PR 新鲜度门禁。 | Studio #261、#267、#269、#270、#272、#276；EC02 Development Build |
+| 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | §3–7 | 明确 when 位于 `assurance/contract.yaml`；补齐 MAS Owner / Host Context Interface Package 的 Publisher 字段、导出闭包、精确来源与 Development provenance 边界，并关联 SR-015 / SR-020。 | IR-006 · SR-015 · SR-016 · SR-020 · Studio #269 |
+| 2026-11-25 | 0.3.1 | GPT-6.2（ChatGPT） | §4.4～7 | 将 Host Context Interface Package Publisher 从 SR-020 拆分到新 SR-024；SR-020 保留参考宿主架构审计职责；明确仅使用 Compiler v2.1.0 schema 要求的 files[].sha256；避免一个 SR ID 承载两项不同工作，并区分既有 Interface Package 文件摘要与 CA-SL Skill Artifact 的非目标完整性体系 | IR-006；SR-015、SR-016、SR-020、SR-024；Studio #261/#269/#272/#276 |
+| 2026-11-25 | 0.3.2 | GPT-6.2（ChatGPT） | §1、§4.4～7 | 修复 SR-024 Publisher 文档链接并同步 F02/F08/SR-016/SR-024 版本；明确 SR-020 只承担参考宿主审计；解决 SR-020/SR-024 责任冲突，确保 Publisher 入口唯一 | IR-006；SR-015、SR-016、SR-020、SR-024 |
+| 2026-11-25 | 0.3.3 | GPT-6.2（ChatGPT） | §4.5、§5.2、§7 | 对照 Studio #267 合入代码，明确 `source.sourceStatus` 尚未写入 lock，并将其归入 SR-016/#269；区分项目来源元数据与 Compiler BuildResult.sourceStatus；避免把设计要求误报为当前持久化能力，防止两个 sourceStatus 语义混淆 | Issue #12；SR-016、SR-024；Studio #267/#269 |
+| 2026-11-25 | 0.3.4 | GPT-6.2（ChatGPT） | §8 | 将 EC06 ADR-0001/0002 与 Plugin-managed/C4 原文纳入中央仓，并将 F09 历史决策和原始设计引用切换为 Next 内部链接；关闭原始设计缺失与跨仓引用断链；不改变历史决策内容 | Issue #12；EC06-ADR-0001～0005；SR-016、SR-024 |
+| 2026-11-25 | 0.3.5 | GPT-6.2（ChatGPT） | §4.5、§6～7 | 将 MAS Owner Publisher 独立归入 SR-025、Host Publisher 归入 SR-024；按 Compiler v2.1.0 修正 MAS exports 为 25/24/25/53；发现 v1alpha4/v1 非 SemVer，提出 package/source version 分离决策门槛；防止发布无法被 Development Build 接受的版本，同时保持 Owner/Host 源身份与 Studio lock 边界 | IR-006 · SR-015 · SR-016 · SR-024 · SR-025 · Studio #269 |
+| 2026-11-25 | 0.3.6 | Codex / GPT-6 | 正文 | 同步两个 Publisher 的 1.0.0 身份与消费边界 | Issue #12 |
+| 2026-11-25 | 0.3.7 | Codex / GPT-6 | 正文 | §4.5 依据 v2.1.0 源函数实测修正 +build 与项目包身份限制 | Issue #12 |
+| 2026-11-26 | 0.3.8 | GPT-6（ChatGPT） | 新增 1.6.0 目标设计 | 仅支持新版本，无兼容或迁移 | Issue #40；SR-029 |
+| 2026-11-26 | 0.3.9 | GPT-6（ChatGPT） | 版本隔离与修订记录 | 隔离历史 Development Compiler 流程，1.6.0-only Studio 仅用新 Worker/Build DTO | Issue #40；SR-029 |
+| 2026-11-26 | 0.3.10 | GPT-6（ChatGPT） | 修订表/记录 | 合并历史修订行的内容与原因列，仅保留原文字义，不改历史断言 | Issue #40；SR-029 |
+| 2026-11-26 | 0.3.11 | GPT-6（ChatGPT） | 目标合同、实施 AC 和旧版留档 | §3～§9 重建 1.6.0-only Studio Package/Compiler/AI/zero-root 工作流和独立验收，旧 Development 只读留档 | Issue #12/#40；SR-016/025/029；PR #46 |
+| 2026-11-26 | 0.3.12 | GPT-6（ChatGPT） | 文档头与 1.6.0 当前设计依据 | 修复 PR #46 Review Context 文档头检查及旧 Development Build 设计依据，更新新 Compiler/SR-013 正式入口 | Issue #12/#40；PR #46；CI #45837224652 |
+| 2026-11-26 | 0.3.13 | GPT-6（ChatGPT） | 1.6.0 Host Context Publisher / 依赖边界 | 纠正 SR-024 仅为旧 Development Publisher，新增 SR-030 Schema-only 1.6.0 Host Context 发布链，并将来源 provenance 放回 Project Lock | Issue #12/#40；IR-006/008；SR-030 |
 | 2026-11-26 | 0.3.14 | GPT-6（ChatGPT） | §4.4～§6、§9.5、修订记录 | 明确零 Capability roots 不等于零 Package dependency closure；增加 Schema-only Host Context Package 的 Compiler gate、Studio 测试和 AC-016-04 映射 | 消除 F09 原“零根不调用 Compiler”与“无外部依赖 Assurance 可 Build”之间的矛盾，确保 Schema-only 依赖可被正确消费 | Issue #12/#40；SR-013 AC-013-06；SR-016 AC-016-04；SR-030；PR #46 |
 | 2026-11-26 | 0.3.15 | GPT-6（ChatGPT） | §5～§9、修订记录 | 同步 EC02 v0.2.12 与 SR-013 v0.2.18，保持 Schema-only Package / zero Capability roots 依赖契约一致 | 使 Studio Package Audit / AI Authoring 消费与 Compiler AC-013-06 使用同一 Schema-only 语义 | Issue #12/#40；EC02、SR-013、SR-016、SR-030；PR #46 |
-| 2026-11-28 | 0.3.18 | GPT-6（ChatGPT） | §3～7、修订记录 | 合并恢复分支 #45 的 1.6.0 Build/Verify+Owner/Provider 双 Gate 与 #46 F09 Package Audit/AI Authoring、Schema-only 零根与六宿主计划；修正 #272 已合并状态和 Host fixture 来源 | 防止旧 Worker/Development 结果混入新版 Gate，保留既有 Studio 历史实现 | Issue #12；#40；#49；PR #45；#46 |
-| 2026-11-28 | 0.3.19 | GPT-6（ChatGPT） | 修订记录 | 统一修订表为七列，分离修改内容、原因与关联；保留历史未拆分记录原文 | 避免新旧修订行列数不一致导致关联信息渲染错位或丢失 | Issue #12；PR #46；Review #6095143611 |
-| 2026-11-25 | restore-0.3.1（历史） | GPT-6.2（ChatGPT） | §4.4～7 | 将 Host Context Interface Package Publisher 从 SR-020 拆分到新 SR-024；SR-020 保留参考宿主架构审计职责；明确仅使用 Compiler v2.1.0 schema 要求的 files[].sha256 | 避免一个 SR ID 承载两项不同工作，并区分既有 Interface Package 文件摘要与 CA-SL Skill Artifact 的非目标完整性体系 | IR-006；SR-015、SR-016、SR-020、SR-024；Studio #261/#269/#272/#276 |
-| 2026-11-25 | restore-0.3.2（历史） | GPT-6.2（ChatGPT） | §1、§4.4～7 | 修复 SR-024 Publisher 文档链接并同步 F02/F08/SR-016/SR-024 版本；明确 SR-020 只承担参考宿主审计 | 解决 SR-020/SR-024 责任冲突，确保 Publisher 入口唯一 | IR-006；SR-015、SR-016、SR-020、SR-024 |
-| 2026-11-25 | restore-0.3.3（历史） | GPT-6.2（ChatGPT） | §4.5、§5.2、§7 | 对照 Studio #267 合入代码，明确 `source.sourceStatus` 尚未写入 lock，并将其归入 SR-016/#269；区分项目来源元数据与 Compiler BuildResult.sourceStatus | 避免把设计要求误报为当前持久化能力，防止两个 sourceStatus 语义混淆 | Issue #12；SR-016、SR-024；Studio #267/#269 |
-| 2026-11-25 | restore-0.3.4（历史） | GPT-6.2（ChatGPT） | §8 | 将 EC06 ADR-0001/0002 与 Plugin-managed/C4 原文纳入中央仓，并将 F09 历史决策和原始设计引用切换为 Next 内部链接 | 关闭原始设计缺失与跨仓引用断链；不改变历史决策内容 | Issue #12；EC06-ADR-0001～0005；SR-016、SR-024 |
-| 2026-11-25 | restore-0.3.5（历史） | GPT-6.2（ChatGPT） | §4.5、§6～7 | 将 MAS Owner Publisher 独立归入 SR-025、Host Publisher 归入 SR-024；按 Compiler v2.1.0 修正 MAS exports 为 25/24/25/53；发现 v1alpha4/v1 非 SemVer，提出 package/source version 分离决策门槛 | 防止发布无法被 Development Build 接受的版本，同时保持 Owner/Host 源身份与 Studio lock 边界 | IR-006 · SR-015 · SR-016 · SR-024 · SR-025 · Studio #269 |
-| 2026-11-26 | restore-0.3.8（历史） | GPT-6.2（ChatGPT） | 文档头、§4.5、§7 | 回填 Studio main `79bd2c3`、#272 MERGED、#276 OPEN/DRAFT/DIRTY、#269 OPEN；更新 SR-024 VERIFIED、SR-025 READY；登记 #279/#290/#295 当前审计与 OPFS 替换回归 | 区分 Publisher 完成与 Studio lock 消费、request builder 合并与 Worker/Verify 完成；避免旧 PR HEAD 的历史 PASS 被当作当前门禁 | Issue #12；IR-006；SR-016、SR-024、SR-025；Studio #269/#272/#276/#279/#290/#295 |
-| 2026-11-26 | restore-0.3.9（历史） | GPT-6.2（ChatGPT） | §4.5、文档头 | 将 SR-025 的目标仓实施追踪固定为 ca-client-tools #43 OPEN，明确 Publisher 尚未实施 | 补齐 READY → 目标仓 Issue 的可追踪关系，不将 Issue 创建误报为代码交付 | Issue #12；IR-006；SR-025；ca-client-tools #43 |
-| 2026-11-27 | restore-0.3.10（历史） | GPT-6.2（ChatGPT） | 文档头、§4.5、§7 | 将 Studio 当前 main 更新为 `79bd2c3`；确认 #272 MERGED、#276 OPEN/DRAFT/DIRTY、#269/#279/#290/#295 OPEN，以及 SR-024 VERIFIED / SR-025 READY | 使用本轮实际查询的 Studio main，继续区分 Publisher 完成、Studio lock 消费、Worker/Verify 和产品验收 | Issue #53；IR-006；SR-016、SR-024、SR-025；Studio #261/#269/#272/#276/#279/#290/#295；ca-client-tools #43 |
-| 2026-11-27 | restore-0.3.11（历史） | GPT-6.2（ChatGPT） | 文档头、§4.5、§7、修订记录 | 分开记录 #272 merge SHA 与当前 main；确认默认 Host Context Example provenance 已实现并持久化，普通 ZIP provenance/reload 与双根 Build/Verify 仍未完成；记录 #296 merge 与 #295 Issue 状态；规范化修订表 | 避免把默认 fixture 专用实现误报为未实现或扩大为普通 ZIP/产品验收；修复 Studio PR/main 身份混淆与静态表格列数错误 | Issue #53；IR-006；SR-016、SR-024、SR-025；Studio #261/#267/#269/#270/#272/#276/#279/#290/#295/#296 |
-| 2026-11-27 | restore-0.3.12（历史） | GPT-6.2（ChatGPT） | §7、修订记录 | 将当前产品审计补充日期更新至 2026-11-27，保持 #295 Issue OPEN 与 #296 已合并修复的边界 | 防止将历史回归现象误报为当前 main 仍未修复，同时不把 PR merge 扩大为完整 Product Acceptance | Issue #53；Studio #279/#290/#295/#296 |
-| 2026-11-27 | restore-0.3.13（历史） | GPT-6.2（ChatGPT） | §4.4～§4.6、修订记录 | 将 `ca-client` IntelliSense-only Interface Package 与 AC-016-06 统一至已发布 `ca-client-tools_interface_1.2.0.zip`，固定 Release asset SHA-256；保留 MAS Owner source 与 Owner Publisher 的独立边界；全局评审范围机器声明保持规范原文，以显式 `<br />` 保留原有渲染换行 | 消除 F09 与 SR-016 的版本冲突，区分 Provider v1.2.0 已发布的公共 READ Interface Package 和尚未实施的 MAS Owner Publisher | Issue #53；SR-016 v0.3.20；ca-client-tools Release v1.2.0；SR-025 |
-| 2026-11-27 | restore-0.3.14（历史） | GPT-6.2（ChatGPT） | 文档头、§5、§9、修订记录 | 合并 #45 的 1.6.0-only 设计增量并保留恢复分支当前状态，避免回滚 #44 与后续修订。 | 历史记录未单列原因 | Issue #12/#40/#43；PR #44/#45 |
-| 2026-11-27 | restore-0.3.15（历史） | GPT-6.2（ChatGPT） | §3～4、§9、修订记录 | 防止新 Studio 将旧 v1alpha5/Development profile 误作 1.6.0 项目输入。 | 历史记录未单列原因 | Issue #40；SR-029；SR-013；SR-004 |
-| 2026-11-27 | restore-0.3.16（历史） | GPT-6.2（ChatGPT） | §9、修订记录表格结构 | 合并 0.3.11～0.3.13 三条记录的“修改内容/原因”列并完整保留原文 | 恢复六列表格结构，避免复审时修订记录错列。 | Issue #40/#12；PR #45；SR-013/SR-029 |
-| 2026-11-27 | restore-0.3.17（历史） | GPT-6.2（ChatGPT） | 文档头、§5.1～§7、修订记录 | 将新 Studio 的唯一执行门改为 Compiler Owner 正式发布的 1.6.0 Build/Verify + Owner/Provider Package Gate；把 VerifyDevelopment 与 no-root 规则明确限定为历史 Development profile；SKILL.md-only 改为 Agent Skills Specification 独立路径 | 消除新版 Gate 正文仍调用旧 VerifyDevelopment、并避免将 SKILL.md-only 误归入 CA-SL v1alpha5 的实施歧义 | Issue #40；SR-013；SR-029；PR #45 |
-| 2026-11-28 | 0.3.18-integration-2 | GPT-6（ChatGPT） | §4.4、§7、修订记录 | 恢复 Studio ca-client 1.2.0 历史来源、#276 DIRTY 状态与 Development 导入/根依赖证据，区分新 1.6.0 Build Gate | 避免旧 #272/#276 CI 和锁来源被推定为新版产品已验收 | Issue #12；#49；PR #45；#46 |
-| 2026-11-28 | 0.3.20 | GLM-5.3（DeepSeek Harness） | 修订记录 | 合并被空行拆断的孤儿修订表段为单一连续表格，不改变任何历史行内容 | 修复 R8-09 同类 Markdown 渲染断裂，保证修订数据完整可见 | Issue #12；PR #46；Review #6095143611 |
+| 2026-11-27 | 0.3.16 | Codex / GPT-6 | §5～6、设计依据 | 固定 Schema、候选、Compiler 联验与正式发布的先后关系 | Issue #12，PR #46 |
+| 2026-11-27 | 0.3.17 | ChatGPT / GPT-6 | 3GPP Schema/Codec 分阶段消费 | 对齐 SR-031 公共类型、T1 Request 与 T2 Codec Result，新增分期拒绝/验收范围 | 修复标准输入来源与实现门禁的跨仓断点 | IR-009；Issue #47；SR-031/026 |
+| 2026-11-27 | 0.3.18 | ChatGPT / GPT-6 | 3GPP 原版发布裁决 | 版本随 OpenAMSM、原版 YAML 完全不改；将只读 Source Bundle 与可选 Adapter / Codec Output 分离 | 防止标准原件被类型适配误改 | Issue #47；SR-031/026 |
+| 2026-11-27 | 0.3.19 | ChatGPT / GPT-6.2 | §10 | 将 Studio 从 Adapter Schema Explorer 改为原版 OAS3 只读展示 / 精确组件导航；Project Lock 固定 Source Bundle | 遵循原版标准直接引用且不允许编辑 | IR-009；Issue #47；SR-031/013/026 |
+| 2026-11-27 | 0.3.20 | ChatGPT / GPT-6.2；GPT-6.2（ChatGPT） | §10；§9.3、修订记录 | 固定 PostSmContexts 四文件 / 102 Component 选定闭包、lazy Schema Explorer 与 Content-ID slot mapping；Project Lock 记录选定 requestBody surface；AI Authoring 明确消费统一 SKILL 作者规范，加入 Node 粒度与注释非执行语义约束 | 防止 Studio 对未选定 refs 全局解析或展示错误二进制关联；防止 AI 生成的 Procedure 违背中央作者规则或用注释代替机器契约 | IR-009；Issue #47；SR-031/010/013/026；EC01；IR-008；Issue #49；SR-032 |
+| 2026-11-27 | 0.3.21 | ChatGPT / GPT-6.2；GPT-6.2（ChatGPT） | §10；文档头、§9.3 | 补充未引用 part 的 Codec 隔离和 Project Lock 不增加自定义 digest 的边界；将 SR-032 纳入 F09 追踪；明确 Procedure Change Set 的允许字段、引用来源、非目标及 OUT_OF_SCOPE 行为，并区分 when 独立编辑路径 | 保持 Studio 只读导航与 Plugin 的实际 MIME 消费边界一致；防止 AI Authoring 以“正式作者字段”为由擅自修改 Contract / Schema / Package 或发明外部身份 | IR-009；Issue #47；SR-031/010/013；EC01；IR-008；Issue #49；SR-032 |
+| 2026-11-27 | 0.3.22 | ChatGPT / GPT-6.2；GPT-6.2（ChatGPT） | §10；§9.3 | Project Lock 明确记录选定 Schema Component roots 与可达文件快照，不引入自定义 digest；明确当 Procedure 修改需要同步 contract.precondition 时，Procedure-only Change Set 必须 OUT_OF_SCOPE | 让 Studio 锁定对象与 Compiler / Publisher 的选定消费面完全一致；防止 Node ID 变更导致跨文件引用悬空或部分应用 | IR-009；Issue #47；SR-031/010/013；EC01；Issue #49；SR-032 |
+| 2026-11-27 | 0.3.23 | GPT-6.2（ChatGPT） | §9.2～9.3 | 增加共享 Schema / Script 的 LSP 与 AI 上下文读取规则；Script 运行只由正常 Runtime Host capability 提供，Studio 不建第二执行器 | 统一 Schema / Script 的作者体验、资源身份和运行边界 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.3.24 | GPT-6.2（ChatGPT） | §9.1、§9.3 | Package Explorer 将共享资源与 Capability 导航分区；修正 Procedure-only Change Set 的 assurance/predicates.yaml 路径 | 保持 Capability-only 导航和共享资源可见性，同时避免 Studio 错写作者路径 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.3.25 | GPT-6.2（ChatGPT） | §9.2～§9.3、修订记录 | 增加 Script ID 的 Procedure / Predicate LSP 补全与跳转；明确 Studio 不执行脚本，Host 暴露仍受双门禁控制；清理重复修订行 | 保持作者体验、Host Script Execution 和文档版本历史一致 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.3.26 | GPT-6.2（ChatGPT） | §6 | 将 SKILL.md-only 子路径更正为可携带共享资源的无 Assurance Skill Package | 使 Studio 的资源视图与 Agent 的无 Assurance 导入语义一致 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.3.27 | GPT-6.2（ChatGPT） | §9.3 | AI Authoring 只禁止在 Studio Worker 自建执行器；正常 Agent Runtime 的 Script Action 使用完整 Registry 和共享 Script Runner，不增加双门禁 | 区分 Authoring 工作台与 Agent Runtime 的职责，不限制 LLM 在运行时使用 Package scripts/ | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.3.28 | GPT-6.2（ChatGPT） | §9.3 | 删除 Procedure Change Set 的 Node-entry Wait 字段；AI Authoring 通过 F05 Resource Read 读取共享资源，正常 Runtime 可调用全部登记 Script | 保持 Studio 作者体验与无 Wait CA-SL 语法、共享资源读取和统一 Script Runner 一致 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.3.29 | GPT-6.2（ChatGPT） | §3、§9.3 | 将 `when` 编辑与校验路径改为有 Assurance Skill 的 SKILL.md Front Matter；明确无 Assurance Skill 不声明 when | 对齐用户确认的 Skill 入口方案，避免 Studio 仍编辑已废弃的 Contract.when；历史错误入口判断，已由 0.3.32 撤销，不构成兼容方案| Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.3.30 | GPT-6.2（ChatGPT） | 文档头、设计依据 | 同步 SR-013 最新版本引用 | 确保 Studio 的 when / Compiler gate 设计引用当前 Front Matter.when 入口；历史错误入口判断，已由 0.3.32 撤销，不构成兼容方案| Issue #49；IR-008；SR-032；SR-013 |
+| 2026-11-27 | 0.3.31 | GPT-6.2（ChatGPT） | §3、§9、Schema Explorer、修订记录 | 合并 Front Matter.when 编辑与无 Assurance Skill 拒绝规则、AI Authoring Change Set 作者规范约束，以及 IR-009 原版 OpenAPI Schema Explorer / Codec 分阶段预览 | 确保 Studio 只编辑当前 1.6.0 作者源，不将选择条件混入 Contract 或 Procedure Change Set；历史错误入口判断，已由 0.3.32 撤销，不构成兼容方案| Issue #47/#49；IR-008/009；SR-013/031/032 |
+| 2026-11-27 | 0.3.32 | GPT-6.2（ChatGPT） | 文档头、§3、§9.3、修订记录 | 将 when 编辑与校验入口恢复为 assurance/contract.yaml 顶层；SKILL.md Front Matter 不声明 when；Procedure-only Change Set 不编辑 Contract | 纠正 Studio 作者入口和独立编辑路径，保持 Procedure Change Set 范围不变 | Issue #49；IR-008；SR-032；F02/F08/SR-013 |
+| 2026-11-27 | 0.3.33 | GPT-6.2（ChatGPT） | 文档头、§3、修订记录 | 同步 EC02 / SR-013 当前版本；增加有 Assurance 与无 Assurance 两种 Front Matter.when 均拒绝，以及可选 input 字段缺少 has 守卫的 Studio 诊断验收 | 防止编辑器对两种包采用不同入口容忍度，并确保 CEL 可选字段安全规则进入作者体验 | Issue #49；IR-008/009；SR-016/032；PR #52 |
+| 2026-11-27 | 0.3.34 | GPT-6.2（ChatGPT） | §10、修订记录 | 明确 Schema Explorer 对应的 Skill-owned requestSchema 根可为本地 G.4 根或纯 $ref OAS3 根引用别名；同步 SR-013 v0.2.32 | 避免 Studio 的 OAS3 只读导航设计被“Skill-owned 根遵循 G.4”表述误导为必须投影 / 闭合 | Issue #49；IR-009；SR-013/016；PR #52 |
+| 2026-11-27 | 0.3.35 | GPT-6.2（ChatGPT） | 文档头、修订记录 | 同步 SR-013 v0.2.33 最新 Compiler / OAS3 dialect 与 CEL guard 验收基线 | 确保 Studio 的 Schema Explorer / Compiler gate 引用当前唯一 Compiler 消费契约 | Issue #49；IR-009；SR-013/016；PR #52 |
+| 2026-11-27 | 0.3.36 | GPT-6.2（ChatGPT） | 文档头、修订记录 | 同步 SR-013 v0.2.34 与作者规范 v0.2.2 的当前 Node 粒度规则 | 确保 AI Authoring 的中央规范引用保持最新 | Issue #49；IR-008/009；SR-013/032；PR #52 |
+| 2026-11-27 | 0.3.37 | GPT-6.2（ChatGPT） | 文档头、修订记录 | 同步 SR-013 v0.2.35 / F08 v0.3.31 最新 OAS3 产品阻塞状态 | 确保 Studio Schema Explorer / Compiler gate 引用当前 OAS3 dependency / Resolver / Golden 门槛 | Issue #49；IR-009；SR-013/016；PR #52 |
+| 2026-11-27 | 0.3.38 | GPT-6.2（ChatGPT） | 文档头、修订记录 | 同步 SR-013 v0.2.36 与 SKILL 作者规范 v0.2.3 最新作者 / Compiler 基线 | 保持 AI Authoring / Schema Explorer 设计引用最新 | Issue #49；IR-008/009；SR-013/016/032；PR #52 |
+| 2026-11-27 | 0.3.39 | ChatGPT（GPT-6） | 设计依据、修订记录 | 同步 SR-013 v0.2.37 与 SKILL 作者规范 v0.2.4 的最终单 Predicate 例外及 Node 示例修正，不改变 Studio 实施状态 | AI Authoring 继续以中央最新版 Node 规则与 Compiler 门槛为准 | Issue #49；IR-008；SR-013/016/032；PR #52 |
+| 2026-11-27 | 0.3.40 | ChatGPT（GPT-6.2） | 文档头、设计依据、修订记录 | 同步 EC02 v0.2.20、SR-013 v0.2.38 与 CA-SL v0.2.8 的 dialect-aware Request Schema Artifact / SchemaReference 设计；按版本号升序整理完整修订历史 | 保持 Studio Schema Explorer / Compiler gate 与 CA-SL / Compiler 的 G.4、OAS3 和本地 Predicate Schema 引用规则一致，且不改变产品 NOT_RUN 状态 | Issue #49；IR-008/009；SR-013/016/032；PR #52 |
+| 2026-11-28 | 0.3.41 | GPT-6.2（ChatGPT） | §9.2、修订记录 | 补齐 SchemaReference 的上下文补全、悬停、定义跳转和静态诊断；关闭第四轮独立复评 R4-P2-04，区分 PackageSchemaPath 与 QualifiedSchemaId 并保持 OAS3/G.4 dialect 边界 | Issue #49；SR-032；PR #52/#115；Review #6089893779 |

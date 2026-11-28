@@ -1,7 +1,11 @@
 > 迁移来源：ca-skills/docs/authoring.zh-CN.md  
 > 固定源提交：780497a2918ad3e7bdff554ab64b0ba627e867e0  
-> 原始状态：CA-SL v1alpha5 作者指南  
-> 迁移追踪：ca-agent-next Issue #12。以下保留源文内容；规范正文的权威版本身份以对应 Release Record 和固定源提交为准。
+> 固定源 Blob SHA：9643747efa942f9402384457856a836ca6213ac2  
+> 原始状态：CA-SL v1alpha5 作者指南（只读历史资料）  
+> 迁移追踪：ca-agent-next Issue #12（初始迁移）；Issue #49 / SR-032（作者规范核对）。以下保留源文内容；规范正文的权威版本身份以对应 Release Record 和固定源提交为准。  
+> 注意：源文相对链接保持原样，按 ca-skills 原目录结构解释，不作为 Next 内部导航。
+> 全局评审范围：继承根目录 Agent.md 的 review_scope  
+> 本文局部非目标：只读历史源文归档；不作为 CA-SL 1.6.0 规范或产品验收证据，不改写原文及源相对链接。
 
 ---
 

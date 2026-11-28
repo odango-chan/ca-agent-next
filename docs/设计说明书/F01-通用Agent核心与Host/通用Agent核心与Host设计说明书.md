@@ -1,14 +1,14 @@
 # 通用 Agent Core 与 Host 设计说明书
 
 > 文档类型：功能设计说明书  
-> 文档版本：0.3.8\
+> 文档版本：0.3.12\
 > 状态：Next 目标设计；本仓实现状态需独立验收，不以参考仓 PASS 代替  
 > 功能归属：F01 — 通用 Agent Core 与 Host  
-> 关联 SR：SR-002、SR-020、SR-021  
-> 修订日期：2026-11-26  
+> 关联 SR：SR-002、SR-020、SR-021、SR-032  
+> 修订日期：2026-11-27  
 > 适用范围：Python Host、Agent Core、Model Loop、Event/Run 协调、Runtime/Plugin 边界
 
-关联 IR-002、IR-006。参考架构原文见 §12。
+关联 IR-002、IR-006、IR-008。共享资源与 Host Script Execution 的设计增量由 Issue #49 / SR-032 追踪。参考架构原文见 §12。
 > 全局评审范围：继承根目录 Agent.md 的 review_scope。  
 > 本文局部非目标：业务专用协议、Owner 状态机与生产级部署。
 
@@ -33,7 +33,7 @@
 | ModelClient | 通过稳定 Protocol 接收 ModelRequest 并返回 ModelProposal；由组合入口注入 | Host 内部创建 Provider、Plugin dispatch、Owner outcome |
 | Skill Importer / Catalog | 导入已发布 Skill Bundle、构建不可变 Catalog generation | 编译作者源、生产准入 |
 | Skill Resolver | 对新 Event 选择精确 Skill；Continuation 恢复原 Skill | 业务执行 |
-| Runtime | Run 状态、Action Boundary、Procedure、Wait/Resume、Outcome 解释 | Plugin 进程生命周期、模型推理 |
+| Runtime | Run 状态、Action Boundary、Procedure、异步 Operation Continuation / Reconcile、Outcome 解释 | Plugin 进程生命周期、模型推理、Skill 层 Wait / Resume Node |
 | Plugin Manager | Plugin 包/进程、IPC、Extension 分发 | Skill 选择、Owner outcome |
 | Host ArtifactStore | 原始字节、opaque refs、Run/Invocation 关联与访问控制 | 协议业务解码 |
 
@@ -82,11 +82,12 @@ Host 至少维护：
 Model Loop 不承担 Tool dispatch。每一轮模型输入由 Host 组装，至少包含：
 - 当前 Goal/Event 的规范化视图；
 - 已绑定 Skill 的 SKILL.md；
+- 当前 Skill Package 根目录的 schemas/ 与 scripts/manifest.yaml、按需读取的 Script 源码 / references / assets；资源读取通过 F05 定义的 `host.skill-resource.read`，只限当前不可变 Package snapshot；
 - 当前 Skill 已授权的 Capability 描述和公开 Input / Output Schema 摘要；模型不得看到 Callable ID 或 backendOperationId；
 - 已授权 Context / Observation；
 - 当前 Run 位置和剩余 response obligation。
 
-模型输出必须转换为结构化 Action Proposal。Host / Runtime 校验 Skill identity、Capability ID、参数 Schema、Artifact refs、Run state 和 invocation identity；再从已验证 Artifact 的唯一 capabilityBinding 解析内部 Callable，才允许调用 Plugin。模型不得提交或替换 Callable ID、backendOperationId、URL 或 Provider selector；未知 Capability、绑定歧义、参数不完整或越权时停止，不自动猜测修复。
+模型输出必须转换为结构化 Action Proposal。Host / Runtime 校验 Skill identity、Capability ID、参数 Schema、Artifact refs、Run state 和 invocation identity；业务 Capability 从已验证 Artifact 的唯一 capabilityBinding 解析内部 Callable，才允许调用 Plugin。Host 另提供只读 system Capability `host.skill-resource.read`，请求仅含当前 Package snapshot 内的相对 `path`，其响应与拒绝语义见 F05 §2.1。若 Action 为 Host Script Execution system Capability `host.skill-script.execute`，Runtime 则校验当前 Skill 的固定 Package snapshot、Script Registry ID 与输入/输出 Schema，再由 Host 内建 Tools Extension 调用精确 Script entrypoint；当前 Registry 中全部登记脚本（包括 transform / predicate）均可由 LLM 调用，LLM 与 Assurance 使用同一脚本集合，不设置逐脚本标记或额外 Host 开关。模型不得提交或替换 Callable ID、backendOperationId、URL、Provider selector、脚本路径、代码或命令；未知 Capability、绑定歧义、参数不完整或越权时停止，不自动猜测修复。
 
 Model Client 是可替换适配器；自动化测试必须支持 Fake Model Client。模型 Provider、Gateway URL、模型 ID 和凭据属于部署配置，不进入业务 Skill 契约。
 
@@ -262,7 +263,7 @@ Context 与 Artifact 的详细契约见 F05。Model Loop 不得将模型生成�
 
 ## 8. 配置与启动
 
-Host 启动时加载基础配置、Plugin manifests、Tool Interface Packages 和已发布 Skill Bundles；任何必需依赖加载失败时不得部分启用业务。配置包含 Plugin 安装位置、Model Client/Gateway、Skill Bundle 位置、Artifact staging/store 和日志级别。凭据通过部署安全配置提供，不接受业务 Event 注入 Provider Key。
+Host 启动时加载基础配置、Plugin manifests、Tool Interface Packages 和已发布 Skill Bundles；任何必需依赖加载失败时不得部分启用业务。配置包含 Plugin 安装位置、Model Client/Gateway、Skill Bundle 位置、Artifact staging/store 和日志级别；不新增 LLM 专用脚本开关；Host 为当前 Run 提供只读 `host.skill-resource.read`，并在当前 Skill Registry 非空时提供 `host.skill-script.execute`。两者均绑定当前 Package snapshot，不授予业务 Capability。凭据通过部署安全配置提供，不接受业务 Event 注入 Provider Key。
 
 Demo 以单 Host 进程和本机/内网 Plugin 进程为基线；不要求 HA、分布式调度或在线 Marketplace。
 
@@ -322,5 +323,11 @@ SR-002 的独立模块验收为 AC-002-01～AC-002-08，详见《演示验收基
 | 2026-11-26 | 0.3.4 | GPT-6.2（ChatGPT） | §5.1～§5.5 | 固定包元数据、公开导出、Event/Context/JSONValue 校验、HostError/CLI 错误语义和 Smoke 契约 | 形成可独立实施与复验的 Python Host 契约，并明确与后续模块的边界 | IR-002；SR-002；SR-003；AC-002-01～08；Issue #19；PR #20 |
 | 2026-11-26 | 0.3.5 | GPT-6.2（ChatGPT） | §5.1～5.4 | 固定 HostError 在 contracts.py 唯一定义、host.py 重导出，并将 CLI_USAGE_ERROR 明确为 CLI-only 诊断。 | 避免 ModelLoop/Host 循环导入及 CLI/Host 异常类型混淆。 | Issue #19；SR-002 v0.2.5；SR-003；PR #20 |
 | 2026-11-26 | 0.3.6 | GPT-6.2（ChatGPT） | §5.5 | 澄清默认 Smoke Fake 的成功输出与测试注入边界；注入型 ModelClient 只用于 CLI 失败路径测试，成功调用次数由 Fake 单元测试记录断言。 | 消除任意注入 Fake 的调用计数接口歧义，不新增生产 Protocol 或公共属性。 | Issue #19；Issue #21；SR-002 v0.2.7；AC-002-01～08；PR #20 |
+
 | 2026-11-26 | 0.3.7 | GPT-6（ChatGPT） | 当前目标契约 | 将 Model Loop 可见输入和 Action Proposal 从 Callable ID 改为 Capability ID，Callable 仅由 Host 从已验证 Binding 内部解析 | 切换到 1.6.0 Capability-first 单一作者入口 | Issue #12/#40；PR #46 |
-| 2026-11-28 | 0.3.8 | GLM-5.3（DeepSeek Harness） | 修订记录 | 合并被空行拆断的孤儿修订表段为单一连续表格，不改变任何历史行内容 | 修复 R8-09 同类 Markdown 渲染断裂，保证修订数据完整可见 | Issue #12；PR #46；Review #6095143611 |
+| 2026-11-27 | 0.3.8 | GPT-6.2（ChatGPT） | §5 | 将 Skill Package 根目录共享 Schema / Script 加入模型按需资源视图，并纳入 Host Script Execution system Capability 的 Action 校验 | 使 LLM 可以使用公共 Script，但不暴露宿主路径或任意代码执行 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.3.9 | GPT-6.2（ChatGPT） | §3、§5 | 将 LLM Script Action 的 Host 显式配置门禁固定为 `scriptExecution.llmEnabled`，默认关闭 | 防止仅凭 Script Registry 标记就向模型暴露脚本执行能力 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.3.10 | GPT-6.2（ChatGPT） | §3、§5 | 删除 Script Registry 的逐脚本 LLM 标记与 Host LLM 配置开关；模型和 Assurance 共用 Script Runner | 简化 Demo 执行模型，避免模型调用权限与确定性执行权限分裂 | Issue #49；IR-008；SR-032 |
+| 2026-11-27 | 0.3.11 | GPT-6.2（ChatGPT） | §3、§5、§8 | 将 Host Resource Read 的 system Action 纳入 Model Loop / Runtime 边界，引用 F05 的请求响应与路径限制；明确 LLM 可调用全部登记 Script | 使 Schema / Script 按需读取具备可实施接口，并保持 LLM 与 Assurance 的 Script 能力一致 | Issue #49；IR-008；SR-032 |
+
+| 2026-11-27 | 0.3.12 | GPT-6.2（ChatGPT） | §2 组件职责、修订记录 | 将 Runtime 的 Wait/Resume 表述改为异步 Operation Continuation / Reconcile，并明确不提供 Skill 层 Wait / Resume Node | 对齐 CA-SL 1.6.0 与 F04 的无 Skill Wait 设计，避免将协议异步恢复误读为作者级 Wait Node | Issue #49；IR-008；SR-032；PR #52 |

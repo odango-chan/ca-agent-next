@@ -1,7 +1,7 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录\
-> 文档版本：0.1.39\
+> 文档版本：0.1.40\
 > 修订日期：2026-11-28
 > 状态：9 项 IR（含 IR-009 3GPP 公共 Schema）；IR-008 为 CA-SL 1.6.0 Capability-first 严格一对一且无旧版兼容；IR-006/008 含 SR-030 Host Context Schema-only Publisher；IR-009 的 SR-031 原版 OpenAPI Source Bundle 设计待独立评审，产品仍 NOT_RUN / BLOCKED。
 > 全局评审范围：继承根目录 Agent.md 的 review_scope\
@@ -102,10 +102,12 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 
 ## IR-008
 
-**CA-SL 1.6.0 Capability-first Skill 作者模型与 Callable 一对一绑定（完全无兼容）**
+**CA-SL 1.6.0 Capability-first Skill 作者模型、共享资源与 Callable 一对一绑定（完全无兼容）**
 
 新 Skill 作者只描述 Capability；每个 Skill-facing Capability 与一个公开 Callable 必须严格双向一对一，编译器在固定 Package 身份下解析并绑定，Runtime 从已编译 Binding 取得精确 Callable，Skill Studio 只展示 Capability。Operation/Observation 只是 Node 阶段，不创建独立 Operation ID。
 
+- 作者规范与 Node 设计：[SR-032](../SR/SR-032-SKILL作者规范与Node设计原则.md) 追踪 Skill / Capability 粒度、Node 拆分与合并、四阶段、注释语义、Package 根目录共享资源、Script Registry、Host Resource Read / Script Runner 和 AI Authoring 边界；中央作者规范见 [SKILL 作者规范](../规范/SKILL作者规范.md) v0.2.4，历史 ca-skills 作者材料归档在 EC01-CA-SL 目录。无 Assurance Skill 仍可携带共享资源，不声明 Contract / `when`，不调用 Compiler。
+- 设计评审：PR #52 固定 Head `2dada9b1a5302e2e6fd7fbb36fb24c681ecc1d87` 的第四轮独立复评为 `APPROVE_WITH_NON_BLOCKING_FOLLOWUPS`（0 P0 / 0 P1 / 2 P2）；两项 P2 已在 PR #115 集成批次处理，PR #115 集成后独立复评仍待完成；CA-SL 1.6.0、Script Runner、Studio / Runtime 产品实现仍 NOT_RUN。
 - 决策与协作：[Next Issue #40](https://github.com/odango-chan/ca-agent-next/issues/40)；对应 [SR-029](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) **设计待评审 / 实施未 READY**。
 - 版本边界：**CA-SL 1.6.0 是唯一新作者/产品版本**，没有旧解析器、兼容映射、迁移工具、双轨编译、旧 Build DTO、旧 Artifact / Bundle 或混合 Catalog。历史 v1alpha5 仅供只读审计，旧 Skill 必须按新格式重新编写/编译/发布。
 - 设计入口：F02、F03.05、F04、F06、F08、F09、EC02，以及 [CA-SL 1.6.0 完整语言设计](../规范/CA-SL%201.6.0完整语言规范.md)与[版本规范](../规范/CA-SL语言基线与版本规范.md)；SR-004 仅消费正式 1.6.0 Assurance Bundle，SR-027 负责发布，SR-030 负责 Host Context Schema-only Package。SR-029 目标 Provider **3/3（含 Codec READ）**；Owner 两项旧 N1 Parser 必须由 Publisher 分别签认，移除时候选 22/22、改成纯业务 READ 保留两项时候选 24/24，均不得视为已发布最终合同。F06 T1/T2 严格隔离；Codec 契约见 SR-026 与中央 [Issue #113](https://github.com/odango-chan/ca-agent-next/issues/113)。生产端代码仅在中央设计 READY 且有目标仓实施授权后进行。
@@ -177,3 +179,4 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 | 2026-11-27 | 0.1.37 | ChatGPT / GPT-6.2 | IR-009 | 补齐 PostSmContexts 四文件 / 102 Component 选定闭包、lazy refs、Content-ID 与 N1/N2/N2 Ext1 slot 映射及不新增 digest 的 Source Lock | 按原版 OpenAMSM 源递归核查，关闭漏锁引用和 multipart 错配风险 | Issue #47；SR-031/010/013/027；EC01/EC02 |
 | 2026-11-27 | 0.1.38 | ChatGPT / GPT-6.2 | IR-009 | 明确未被 JSON 引用的 MIME part 不交 Codec，额外 part 策略归 ingress profile | 保持原版 OpenAPI Schema 语义，不把额外 part 一概判为非法 | Issue #47；SR-010/031；EC01/F06 |
 | 2026-11-27 | 0.1.39 | ChatGPT / GPT-6.2 | IR-009 | 在 Source Lock 验收摘要中加入 operation identity / selected Schema Component roots，并明确未引用 part 的 Codec 隔离 | 避免 Lock 只锁 requestBody 而未锁精确引用根，也避免额外 MIME part 被误判 | Issue #47；SR-010/031；EC01/F06/F09 |
+| 2026-11-28 | 0.1.40 | GPT-6.2（ChatGPT） | IR-008、修订记录 | 纳入 SR-032 作者规范与 Node 设计追踪，记录 PR #52 独立复评结论和 PR #115 集成边界 | 将共享 Package 资源、Script Registry、Host Resource Read / Script Runner 纳入 IR-008 需求追踪，同时区分设计评审与产品实施 | Issue #49；IR-008；SR-032；PR #52/#115；Review #6089893779 |
