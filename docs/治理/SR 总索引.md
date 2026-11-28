@@ -2,7 +2,7 @@
 
 > 文档类型：软件需求索引  
 > 文档版本：0.3.77
-> 状态：31 项 SR：4 VERIFIED（仅各自历史模块范围）、1 IMPLEMENTED（设计移交）、25 DRAFT、1 READY（限定范围：SR-009，整项未完成）。PR #46 第九轮独立 Review #6095601142 已合入恢复设计基线 `92436348`，main 尚未更新。PR #115 是唯一 mainline 集成入口；SR-009 固定评审 Head `ba5354c575394295cfa7a790922e02422b0c96f4`（Base `b2ed5eb8`），其 CI 3/3 SUCCESS；当前内容核验快照 Head `ee7565f280d6bb06d2db8d61e41c8b6a4e67f9af`，SR-004/016 活动引用修订提交 `0cb430e7`；Review Context #46124435521 SUCCESS，SR-003 回归 #46124435581 IN_PROGRESS；PR #115 全量独立复评尚未完成。此前 `84c66b7` / `0c8ec1f` 引用为历史快照。Issue #116 独立增量复评 `APPROVE_FOR_READY（限定范围）`（0 P0 / 0 P1 / 11 P2）。SR-009 生产 T0 classifier 绑定仍 BLOCKED_EXTERNAL_INPUT；SR-031 / SR-032 产品实现仍 NOT_RUN。
+> 状态：31 项 SR：4 VERIFIED（仅各自历史模块范围）、1 IMPLEMENTED（设计移交）、25 DRAFT、1 READY（限定范围：SR-009，整项未完成）。PR #46 第九轮独立 Review #6095601142 已合入恢复设计基线 `92436348`，main 尚未更新。PR #115 是唯一 mainline 集成入口；SR-009 固定评审 Head `ba5354c575394295cfa7a790922e02422b0c96f4`（Base `b2ed5eb8`），其 CI 3/3 SUCCESS；当前内容核验快照 Head `ee7565f280d6bb06d2db8d61e41c8b6a4e67f9af`，SR-004/016 活动引用修订提交 `0cb430e7`；Review Context #46124435521 SUCCESS，SR-003 回归 #46124435581 IN_PROGRESS；PR #115 全量独立复评尚未完成。PR #52 模型级结论 `APPROVE_WITH_NON_BLOCKING_FOLLOWUPS`，GitHub Review 仍为 COMMENTED。此前 `84c66b7` / `0c8ec1f` 引用为历史快照。Issue #116 独立增量复评 `APPROVE_FOR_READY（限定范围）`（0 P0 / 0 P1 / 11 P2）。SR-009 生产 T0 classifier 绑定仍 BLOCKED_EXTERNAL_INPUT；SR-031 / SR-032 产品实现仍 NOT_RUN。
 > 修订日期：2026-11-28\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
