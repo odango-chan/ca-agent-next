@@ -1,25 +1,25 @@
 # SR-028：Python 工程工具链与 uv 环境管理
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.9\
-> 修订日期：2026-11-27\
-> 状态：DRAFT（实施主状态）；第六轮独立模型 Review [#6083872622](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083872622)（固定 Head `2d20a128a1574103d709d82f6c426580ecb47f48` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`）：CHANGES_REQUESTED（0 P0 / 1 P1 / 2 P2）；R028-21～23 已按 Issue #12 完成设计整改并推送，等待新 Head 第七轮独立复评；产品 AC-028-01～10 全部 NOT_RUN，READY=0。
+> SR 版本：0.2.10\
+> 修订日期：2026-11-28\
+> 状态：DRAFT（当前恢复分支的实施主状态）；第七轮独立设计 Review [#6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6084094037)，固定 Head `93f1389e7c5968cd30e8a74137207094864ecca0` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`，结论 APPROVE_FOR_READY（0 P0 / 0 P1 / 2 非阻断 P2）。该结论只覆盖固定设计快照；当前分支仍 DRAFT/READY=0，PR #97 READY 回填 OPEN 未合并；Issue #96 OPEN；PR #99 实施候选 OPEN 未合并（基于 `93f1389`）；PR #112 共享 uv 基线 OPEN/Draft、堆叠于 #99。当前恢复分支 AC-028-01～10 仍 NOT_RUN，不将候选分支证据记为 VERIFIED。
 > 创建日期：2026-11-26  
 > 所属阶段：G02 工程治理支撑  
 > 上游需求：[IR-007](../IR/IR%20总登记册.md#ir-007)  
-> 设计依据：[G02 Python 工程工具链与环境管理设计说明书](../设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md) v0.2.7 §1～§8；[SR-002](SR-002-Python%20核心与宿主基础骨架.md) v0.2.10 §2.1；[SR 管理规范](../规范/SR%20管理规范.md) v0.8.1 §6.1、§8.3\
+> 设计依据：[G02 Python 工程工具链与环境管理设计说明书](../设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md) v0.2.8 §1～§8；[SR-002](SR-002-Python%20核心与宿主基础骨架.md) v0.2.10 §2.1；[SR 管理规范](../规范/SR%20管理规范.md) v0.8.1 §6.1、§8.3\
 > 设计/治理 Issue：[ca-agent-next #12](https://github.com/odango-chan/ca-agent-next/issues/12)（当前整改追踪）；原设计 Issue [#35](https://github.com/odango-chan/ca-agent-next/issues/35) 已 CLOSED，仅作历史来源；均不是实施 Issue  
 > 目标仓：`odango-chan/ca-agent-next`  
-> 最新独立复评：PR #46 Review [#6083872622](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083872622)，固定 Head `2d20a128a1574103d709d82f6c426580ecb47f48` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`；平台事件 COMMENTED，模型结论 CHANGES_REQUESTED（0 P0 / 1 P1 / 2 P2）。R028-21 为唯一 P1，R028-22/23 为 P2；第六轮问题已按 Issue #12 修订，必须针对新 Head 进行第七轮独立复评。
+> 最新 SR-028 专项设计复评：PR #46 Review [#6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6084094037)，固定 Head `93f1389e7c5968cd30e8a74137207094864ecca0` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`；平台事件 COMMENTED，模型结论 APPROVE_FOR_READY（0 P0 / 0 P1 / 2 非阻断 P2）。它不是当前 PR #46 第八轮全量 Review，也不证明当前分支产品实施或发布。
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：其他仓库迁移、生产级供应链安全、运行时架构改造和完整 Python 版本矩阵资格认证
 
-## 0. 本轮设计评审入口（2026-11-26）
+## 0. 第七轮设计评审结果与当前实施状态（2026-11-28）
 
-本 SR 的当前整改依据为 [PR #46 Review #6083872622](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083872622)，固定 Head `2d20a128a1574103d709d82f6c426580ecb47f48` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`。结论为 `CHANGES_REQUESTED`，共 0 P0 / 1 P1 / 2 P2；R028-21 阻断 READY，R028-22/23 为 P2。问题均可由 Next 自身修订，无外部输入阻塞。**SR 主状态仍为 `DRAFT`；本次仅授权 G02/SR-028 与治理追踪文档整改，不授权代码、配置、Workflow 或产品实施。**
+SR-028 的第七轮专项设计评审为 [PR #46 Review #6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6084094037)，固定 Head `93f1389e7c5968cd30e8a74137207094864ecca0` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`，结论 `APPROVE_FOR_READY`（0 P0 / 0 P1 / 2 非阻断 P2）。该批准仅限设计快照。当前恢复分支 SR-028 仍为 `DRAFT`、READY=0，尚未集成 #97/#99/#112；实施 Issue [#96](https://github.com/odango-chan/ca-agent-next/issues/96) OPEN，PR #97（READY 状态回填）OPEN/未合并，PR #99（uv 实施候选）OPEN/未合并且基于 `93f1389`，PR #112（共享 uv 基线）OPEN/Draft、堆叠在 #99。候选分支及 Artifact 不得升级为当前恢复分支产品 VERIFIED/RELEASED。
 
 - **评审范围：**核查 uv 版本/锁文件、worktree 虚拟环境隔离、与现有 setuptools 工程共存、CI 与回退/失败路径。
-- **外部依赖/证据状态：**设计可独立评审；SR-028 无实施 Issue，不应把 PR #32 的既有 CI 验收误作 uv 迁移 PASS。
+- **外部依赖/证据状态：**实施 Issue #96 已存在；PR #97/#99/#112 均未合并到当前恢复分支。PR #32 的既有 CI 仍不构成 uv 迁移验收，候选分支运行证据只按 #96 固定基线与各 AC 评估，不计入当前恢复分支 VERIFIED。
 - **评审必须确认：**明确每项 AC 的文件和命令、预期、依赖与非目标，记录不满足项；只有设计审查通过才可将 SR 送实施 READY 并另开实施 Issue。当前不执行依赖迁移，不改变 Python Runtime 架构。
 
 ## 1. 目标
@@ -119,7 +119,7 @@ Host Smoke 必须退出 0，成功 stdout 符合演示验收基线，stderr 为�
 
 ## 7. 当前状态与停止条件
 
-SR-028 当前仍为 DRAFT。最新第六轮独立复评 Review #6083872622 对固定 Head `2d20a128a1574103d709d82f6c426580ecb47f48` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2` 给出 CHANGES_REQUESTED（0 P0 / 1 P1 / 2 P2）。本轮按 Issue #12 仅整改 G02/SR-028 与治理文档；AC-028-01～10 的产品执行全部 NOT_RUN；不得创建实施 Issue、修改 `pyproject.toml`、生成 `uv.lock`、添加 `.python-version`、修改 Workflow 或向 DeepSeek Harness 发出产品实施提示词。第六轮整改已推送，必须对新 Head 进行第七轮独立复评。
+SR-028 当前恢复分支仍为 DRAFT。第七轮 Review #6084094037 已在固定旧候选设计快照授予设计 APPROVE_FOR_READY；实施 Issue #96 和候选 PR #97/#99/#112 已存在，但都尚未集成当前恢复分支。当前 PR #46 的设计整改任务不授权在本分支执行 uv 产品迁移；不得从当前 PR #46 Head 重新派生或复制 #96 的实施任务。产品 AC-028-01～10 在当前恢复分支仍全部 NOT_RUN。现有 #96 实施必须严格遵守其固定基线 `93f1389e7c5968cd30e8a74137207094864ecca0`、独立实施分支和不合并授权边界。
 
 若评审发现 G02 与 SR-002 的 setuptools/运行时依赖约束冲突，先修订设计，不允许实施者自行选择替代后端或把开发依赖升级为运行时依赖。
 
@@ -143,3 +143,4 @@ SR-028 当前仍为 DRAFT。最新第六轮独立复评 Review #6083872622 对�
 | 2026-11-27 | 0.2.7 | GPT-6.2（ChatGPT） | 文档头、§0、§2、§4、AC-028-04～07、§5.1～5.2 | 按 Review #6083225844 补齐锁漂移/Worktree fail-fast 与保码 cleanup、A 返回 `--no-sync`、显式 uv 项目解释器、标准库 unittest gate 自动断言 skipped=0 和 discovered>0、双平台 Artifact、A/B/A 完整 sys.prefix/direct_url/ignore 证据，以及 Go CWD/Windows `.exe` 规则；产品 AC 全部仍 NOT_RUN | 修复四项阻断 READY 的 P1 和三项 P2，不把设计整改当成产品实施或验收 | Issue #12；PR #46；Review #6083225844；G02 v0.2.5 |
 | 2026-11-27 | 0.2.8 | GPT-6.2（ChatGPT） | 文档头、§0、AC-028-07/08、§5.1～5.2、§7 | 按第五轮 Review #6083641266 分离 Review Context 诊断 Artifact 与三文件正式 Artifact；恢复完整 paths 枚举；定义 `loader_errors`/`loader_error_messages`/`discovery_exception`；统一逐范围与整体 `exit_code` | 关闭 R028-17 P1、R028-18/19/20 P2，避免诊断文件污染 AC-028-08 完成态交付；保持 DRAFT 与全部产品 AC NOT_RUN | Issue #12；PR #46；Review #6083641266；G02 v0.2.6 |
 | 2026-11-27 | 0.2.9 | GPT-6.2（ChatGPT） | 文档头、§0、AC-028-08、§5.1、修订记录 | 按第六轮 Review #6083872622 修复受控负例的 gate/生成器先后矛盾：改为有效 Agent.md + 测试 gate PASS + 临时 Workflow PR 注入无效 base SHA 触发生成器失败；补齐负例 PR 不合并、恢复后成功重跑的证据；明确 discovery_exception 成功时为 JSON null | 关闭 R028-21 P1 与 R028-22/23 P2；保留 invalid review_scope 单元测试覆盖，产品 AC 仍全部 NOT_RUN，SR 保持 DRAFT | Issue #12；PR #46；Review #6083872622；G02 v0.2.7 |
+| 2026-11-28 | 0.2.10 | GPT-6（ChatGPT） | 文档头、§0、§7、设计依据、修订记录 | 同步第七轮 SR-028 专项设计批准与当前 DRAFT/未集成状态；登记 #96/#97/#99/#112 的实际存在及依赖边界 | 防止把第六轮历史 CHANGES_REQUESTED 当作最新结论，或把旧快照候选实施误报为当前恢复分支已集成/VERIFIED | Issue #12；Issue #96；PR #46/#97/#99/#112；Review #6084094037 |
