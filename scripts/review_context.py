@@ -34,6 +34,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime
 import json
 import re
 import subprocess
@@ -118,6 +119,85 @@ REFERENCE_ONLY_DOC_PREFIXES = (
     "docs/架构设计/目标参考/",
     "docs/设计说明书/参考实现/",
 )
+
+# #120 / AC-REV-08: only these existing, reviewed immutable historical source
+# paths are eligible for the original-source header exception. Provenance must
+# ALSO pass the strict metadata check. A matching header alone is insufficient.
+# Adding another imported source requires an explicit reviewed code change.
+ARCHIVED_SOURCE_COPY_PATHS = frozenset((
+    "docs/决策记录/EC06-ADR-0001-Source-first-Visual.md",
+    "docs/决策记录/EC06-ADR-0002-IDE Host Spike.md",
+    "docs/决策记录/EC06-ADR-0003-Theia原生工作台与Markdown.md",
+    "docs/决策记录/EC06-ADR-0004-Package优先工作区.md",
+    "docs/决策记录/EC06-ADR-0005-固定源码与预览工作台.md",
+    "docs/架构设计/G01-AI Gateway架构原文.md",
+    "docs/架构设计/G01-DeepSeek Harness架构原文.md",
+    "docs/架构设计/外部能力域/EC02-Compiler工具链架构原文.md",
+    "docs/架构设计/外部能力域/EC03-Tool与Provider架构原文.md",
+    "docs/架构设计/外部能力域/EC04-OpenAMSM Go Event Plugin架构提案原文.md",
+    "docs/架构设计/外部能力域/EC06-Skill Studio所有权与源码边界原文.md",
+    "docs/架构设计/外部能力域/EC06-Theia工作台架构与迁移原文.md",
+    "docs/架构设计/外部能力域/EC07-5GC参考领域模型原文.md",
+    "docs/架构设计/外部能力域/EC07-5GC模拟器架构原文.md",
+    "docs/设计说明书/外部能力域/EC01-CA-SL/CA-SL Authoring Syntax 原文.md",
+    "docs/设计说明书/外部能力域/EC01-CA-SL/CA-SL Create Skill 工作流原文.md",
+    "docs/设计说明书/外部能力域/EC01-CA-SL/CA-SL Package Layout 原文.md",
+    "docs/设计说明书/外部能力域/EC01-CA-SL/CA-SL Schema Ownership 原文.md",
+    "docs/设计说明书/外部能力域/EC01-CA-SL/CA-SL Skill Granularity 原文.md",
+    "docs/设计说明书/外部能力域/EC01-CA-SL/CA-SL作者指南原文.md",
+    "docs/设计说明书/外部能力域/EC01-CA-SL/CA-SL作者指南英文原文.md",
+    "docs/设计说明书/外部能力域/EC01-CA-SL/CA-SL作者模型原文.md",
+    "docs/设计说明书/外部能力域/EC01-CA-SL/Ingress Operation契约设计原文.md",
+    "docs/设计说明书/外部能力域/EC01-CA-SL/MAS Lifecycle Acceptance Matrix原文.md",
+    "docs/设计说明书/外部能力域/EC01-CA-SL/MAS Lifecycle Owner Contract原文.md",
+    "docs/设计说明书/外部能力域/EC01-CA-SL/MAS Lifecycle Source Mapping原文.md",
+    "docs/设计说明书/外部能力域/EC01-CA-SL/MAS v1alpha5 Compiler Gate原文.md",
+    "docs/设计说明书/外部能力域/EC01-CA-SL/MAS v1alpha5 Source Contract Closure原文.md",
+    "docs/设计说明书/外部能力域/EC01-CA-SL/Schema闭包摘要设计原文.md",
+    "docs/设计说明书/外部能力域/EC02-Compiler/Checked CEL when与运行时Artifact发布设计原文.md",
+    "docs/设计说明书/外部能力域/EC02-Compiler/Compiler Core与公共API原文.md",
+    "docs/设计说明书/外部能力域/EC02-Compiler/Compiler v1alpha5 Artifact契约原文.md",
+    "docs/设计说明书/外部能力域/EC02-Compiler/Development Build Harness交接原文.md",
+    "docs/设计说明书/外部能力域/EC02-Compiler/Development Build试点设计原文.md",
+    "docs/设计说明书/外部能力域/EC02-Compiler/Evidence与Assurance职责审计原文.md",
+    "docs/设计说明书/外部能力域/EC03-Tool Provider/Generic SBI Executor设计原文.md",
+    "docs/设计说明书/外部能力域/EC03-Tool Provider/Host集成边界设计原文.md",
+    "docs/设计说明书/外部能力域/EC03-Tool Provider/MAS Scheme C Typed Callables设计原文.md",
+    "docs/设计说明书/外部能力域/EC03-Tool Provider/NAS 5GSM Codec设计原文.md",
+    "docs/设计说明书/外部能力域/EC03-Tool Provider/Provider Backend Binding Catalog v2设计原文.md",
+    "docs/设计说明书/外部能力域/EC03-Tool Provider/Provider Protocol v2契约原文.md",
+    "docs/设计说明书/外部能力域/EC03-Tool Provider/Runtime Bindings设计原文.md",
+    "docs/设计说明书/外部能力域/EC03-Tool Provider/SBI客户端与Payload Engine设计原文.md",
+    "docs/设计说明书/外部能力域/EC03-Tool Provider/Tool Provider发布包设计原文.md",
+    "docs/设计说明书/外部能力域/EC03-Tool Provider/Typed MAS Provider v2设计原文.md",
+    "docs/设计说明书/外部能力域/EC04-OpenAMSM Plugin验收设计提案原文.md",
+    "docs/设计说明书/外部能力域/EC05-OpenAMSM Owner/MAS Owner契约与Receipt设计原文.md",
+    "docs/设计说明书/外部能力域/EC05-OpenAMSM Owner/PFCP UNKNOWN Reconcile与重启恢复设计原文.md",
+    "docs/设计说明书/外部能力域/EC05-OpenAMSM Owner/Scheme C Modify与Release Owner设计原文.md",
+    "docs/设计说明书/外部能力域/EC06-Skill Studio/AI Procedure Authoring Workbench设计原文.md",
+    "docs/设计说明书/外部能力域/EC06-Skill Studio/Authoring Workbench设计原文.md",
+    "docs/设计说明书/外部能力域/EC06-Skill Studio/C4 Package Overview原文.md",
+    "docs/设计说明书/外部能力域/EC06-Skill Studio/LSP诊断设计原文.md",
+    "docs/设计说明书/外部能力域/EC06-Skill Studio/LSP语言导航与补全设计原文.md",
+    "docs/设计说明书/外部能力域/EC06-Skill Studio/Plugin-managed Configuration & Tool Integration v0.1原文.md",
+    "docs/设计说明书/外部能力域/EC06-Skill Studio/SKILL Project布局与Compiler集成原文.md",
+    "docs/设计说明书/外部能力域/EC07-5GC仿真与Mock AMF/5GC状态机设计原文.md",
+    "docs/设计说明书/外部能力域/EC07-5GC仿真与Mock AMF/Mock AMF SBI Test Peer完整设计原文.md",
+    "docs/设计说明书/外部能力域/EC07-5GC仿真与Mock AMF/Owner Local Core设计原文.md",
+    "docs/设计说明书/外部能力域/EC07-5GC仿真与Mock AMF/Simulator进程与Bindings设计原文.md",
+    "docs/设计说明书/外部能力域/EC07-5GC仿真与Mock AMF/模拟协议与Service Fabric边界设计原文.md",
+    "docs/设计说明书/目标参考/TARGET01-Go Agent Task Machine契约原文.md",
+    "docs/设计说明书/目标参考/TARGET01-Go Host Artifact Store契约原文.md",
+))
+
+# A fixed Issue snapshot that lacks the repo in "固定来源" derives it ONLY
+# from this reviewed source identity; no new Issue/repo identity is inferred
+# from user-authored header text.
+ARCHIVED_ISSUE_SOURCE_IDENTITIES = {
+    "docs/设计说明书/外部能力域/EC02-Compiler/Checked CEL when与运行时Artifact发布设计原文.md": (
+        "ca-skill-compiler", "61"
+    ),
+}
 
 # 治理规范 §11.3；上下文与提示词只陈述分类语义，不构成另一份项目范围配置。
 CLASS_DEFINITIONS = {
@@ -989,8 +1069,11 @@ def _is_formal_doc(path: str) -> bool:
     return any(path.startswith(prefix) for prefix in FORMAL_DOC_PREFIXES)
 
 
-def _is_archived_source_copy(text: str) -> bool:
+def _is_archived_source_copy(text: str, path: str) -> bool:
     """识别带完整来源链的只读历史原文副本，不把它误作当前正式设计文档。"""
+
+    if path not in ARCHIVED_SOURCE_COPY_PATHS:
+        return False
 
     lines = text.splitlines()
     separator = next(
@@ -1016,14 +1099,43 @@ def _is_archived_source_copy(text: str) -> bool:
         )
         for line in metadata
     )
-    has_fixed_issue_snapshot = any(
-        re.match(
-            r"^>\s*固定来源[：:]\s*Issue\s+#\d+.*最后更新时间\s+"
-            r"\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}\s+UTC\s*$",
+    # Existing source copies have one Issue snapshot with a source repo+Issue.
+    # Verify the identity against the reviewed path manifest and reject
+    # mismatched Issue IDs, arbitrary timestamps, and malformed calendar dates.
+    issue_sources = [
+        re.fullmatch(
+            r">\s*迁移来源[：:]\s*([A-Za-z0-9_.-]+)\s+Issue\s+#(\d+)\s*",
             line,
         )
         for line in metadata
-    )
+        if re.match(r"^>\s*迁移来源[：:].*\bIssue\b", line)
+    ]
+    issue_sources = [x for x in issue_sources if x is not None]
+    fixed_issue_lines = [
+        line for line in metadata if re.match(r"^>\s*固定来源[：:]", line)
+    ]
+    has_fixed_issue_snapshot = False
+    if len(fixed_issue_lines) == 1 and len(issue_sources) == 1:
+        fixed = re.fullmatch(
+            r">\s*固定来源[：:]\s*Issue\s+#(\d+)[，,]\s*"
+            r"最后更新时间\s+(\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC\s*",
+            fixed_issue_lines[0],
+        )
+        source_repo, source_issue = issue_sources[0].groups()
+        if fixed is not None:
+            issue_id, when = fixed.groups()
+            try:
+                valid_calendar = datetime.strptime(
+                    when, "%Y-%m-%d %H:%M"
+                ).strftime("%Y-%m-%d %H:%M") == when
+            except ValueError:
+                valid_calendar = False
+            has_fixed_issue_snapshot = (
+                valid_calendar
+                and issue_id == source_issue
+                and ARCHIVED_ISSUE_SOURCE_IDENTITIES.get(path)
+                == (source_repo, source_issue)
+            )
     has_source_state = any(
         re.match(r"^>\s*(?:原始状态|源文档定位)\s*[：:]\s*\S", line)
         for line in metadata
@@ -1160,7 +1272,7 @@ def check_changed_doc_headers(
             problems.append(f"{path}: 文档不是合法 UTF-8（{exc}）")
             continue
         # 原始来源副本保留原文，不强制注入 Next 当前设计头；只有完整来源链才可豁免。
-        if _is_archived_source_copy(text):
+        if _is_archived_source_copy(text, path):
             continue
         problems.extend(check_doc_header(text, path))
     return problems

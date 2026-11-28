@@ -961,7 +961,7 @@ class TestACREV08DocHeaders(RepoTestBase):
             "> 迁移追踪：ca-agent-next Issue #12。\n"
             "\n---\n\n# 历史原文\n\n不得为迁移改写正文。\n"
         )
-        self.repo.write("docs/设计说明书/外部能力域/EC01-历史原文.md", source_copy)
+        self.repo.write("docs/设计说明书/外部能力域/EC01-CA-SL/CA-SL Package Layout 原文.md", source_copy)
         head = self.repo.commit("add archived source copy")
 
         code, _, stderr = invoke(self.repo, self.base, head, self.out)
@@ -976,7 +976,7 @@ class TestACREV08DocHeaders(RepoTestBase):
             "> 迁移追踪：ca-agent-next Issue #12。\n"
             "\n---\n\n# Issue 正文快照\n"
         )
-        self.repo.write("docs/设计说明书/外部能力域/EC02-Issue-61原文.md", source_copy)
+        self.repo.write("docs/设计说明书/外部能力域/EC02-Compiler/Checked CEL when与运行时Artifact发布设计原文.md", source_copy)
         head = self.repo.commit("add archived issue snapshot")
 
         code, _, stderr = invoke(self.repo, self.base, head, self.out)
@@ -996,6 +996,48 @@ class TestACREV08DocHeaders(RepoTestBase):
         code, _, stderr = invoke(self.repo, self.base, head, self.out)
         self.assertEqual(code, rc.EXIT_VALIDATION)
         self.assertIn("EC01-来源不完整.md", stderr)
+
+    def test_complete_provenance_in_unlisted_active_path_cannot_bypass(self) -> None:
+        self.checkout_branch("feature/forged-active-provenance")
+        source_copy = (
+            "> 迁移来源：example-repo/docs/legacy-design.md\\n"
+            "> 固定源提交：0123456789abcdef0123456789abcdef01234567\\n"
+            "> 原始状态：伪装为历史原文\\n"
+            "> 迁移追踪：ca-agent-next Issue #12。\\n"
+            "\\n---\\n\\n# 当前活动设计（不得豁免）\\n"
+        )
+        target = "docs/设计说明书/F01-伪造历史原文.md"
+        self.repo.write(target, source_copy)
+        head = self.repo.commit("attempt archived source header bypass")
+        code, _, stderr = invoke(self.repo, self.base, head, self.out)
+        self.assertEqual(code, rc.EXIT_VALIDATION)
+        self.assertIn(target, stderr)
+        self.assertIn("全局评审范围", stderr)
+
+    def test_issue_snapshot_rejects_wrong_origin_repo_issue_and_date(self) -> None:
+        path = "docs/设计说明书/外部能力域/EC02-Compiler/Checked CEL when与运行时Artifact发布设计原文.md"
+        for name, origin, fixed in (
+            ("wrong-repo", "other-compiler Issue #61", "Issue #61，最后更新时间 2026-11-25 07:41 UTC"),
+            ("wrong-source-id", "ca-skill-compiler Issue #62", "Issue #62，最后更新时间 2026-11-25 07:41 UTC"),
+            ("mismatched-id", "ca-skill-compiler Issue #61", "Issue #62，最后更新时间 2026-11-25 07:41 UTC"),
+            ("impossible-date", "ca-skill-compiler Issue #61", "Issue #61，最后更新时间 2026-02-30 07:41 UTC"),
+            ("invalid-hour", "ca-skill-compiler Issue #61", "Issue #61，最后更新时间 2026-11-25 27:41 UTC"),
+            ("invalid-format", "ca-skill-compiler Issue #61", "Issue #61，最后更新时间 2026-11-25 7:41 UTC"),
+        ):
+            with self.subTest(name=name):
+                self.checkout_branch("feature/issue-provenance-" + name)
+                source_copy = (
+                    f"> 迁移来源：{origin}\\n"
+                    f"> 固定来源：{fixed}\\n"
+                    "> 原始状态：OPEN\\n"
+                    "> 迁移追踪：ca-agent-next Issue #12。\\n"
+                    "\\n---\\n\\n# 历史来源\\n"
+                )
+                self.repo.write(path, source_copy)
+                head = self.repo.commit("issue provenance negative " + name)
+                code, _, stderr = invoke(self.repo, self.base, head, self.out)
+                self.assertEqual(code, rc.EXIT_VALIDATION, name)
+                self.assertIn(path, stderr)
 
     def test_reference_only_architecture_is_not_a_formal_target_doc(self) -> None:
         self.checkout_branch("feature/reference-doc")
