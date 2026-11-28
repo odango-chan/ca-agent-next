@@ -2,12 +2,12 @@
 
 > 文档类型：机制设计说明书  
 > 状态：**设计待评审**（唯一新目标 CA-SL 1.6.0；全链路不兼容任何旧作者语法、Build DTO、Artifact、Bundle；1.6.0 产品未发布）
-> 文档版本：0.4.4
+> 文档版本：0.4.5
 > 功能归属：F02 — Skill 管理与选择  
 > 关联 SR：SR-004、SR-005、SR-006、SR-032    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
 > 本文局部非目标：以本文范围与非目标章节为准；无额外扩展  
-> 修订日期：2026-11-27\
+> 修订日期：2026-11-28\
 > 适用范围：Skill 包导入、SkillCatalog、Resolver、已发布 CA-SL Runtime Artifact 与 Python CEL Runtime
 
 关联需求项见 [IR-003](../../IR/IR%20总登记册.md#ir-003)、[IR-008](../../IR/IR%20总登记册.md#ir-008)。共享资源与 Host Script Execution 的设计增量由 Issue #49 / SR-032 追踪。
@@ -300,3 +300,4 @@ T2 的 Provider Codec Result 只在选定 Skill Procedure 的 READ 后可用，�
 
 | 2026-11-27 | 0.4.3 | GPT-6.2（ChatGPT） | §4、修订记录 | 将 Script Registry 导入校验改为按 purpose 区分 outputSchema：transform 必需，predicate 禁止并使用固定 PredicateEvaluationResult；补充 predicate Evidence projection 输入契约 | 对齐 CA-SL 1.6.0 §8，避免 Importer 错误要求 predicate outputSchema 或漏检其固定输出契约 | Issue #49；IR-008；SR-004/007/032；PR #52 |
 | 2026-11-28 | 0.4.4 | GPT-6（ChatGPT） | §2、§9、§12、修订记录 | 将活动契约的 Compiler #61 改为 1.6.0-only #62，明确 1.6.0 languageTarget / Compiler Artifact /2 已中央冻结、Publisher 正式 Schema 与 Release 未完成 | 避免 SR-004/F02 与 F08/EC02 的设计入口和机器身份发生冲突 | Issue #50/#43；SR-004/013/029；PR #115 |
+| 2026-11-28 | 0.4.5 | DeepSeek Harness / deepseek-v4.1-flash-1017 | §2、修订记录 | 将活动契约中的 `languageTarget` 从“待冻结”改为 Next 中央已冻结 `connectionagent.io/v1.6.0`，Manifest 字段/结构仍待 Compiler Owner 冻结 | 完成 P1-ARCH 同源残项，避免新 Runtime 重新选择机器语言身份 | Issue #50；SR-013/029；PR #115 |
