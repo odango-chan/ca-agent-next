@@ -21,8 +21,9 @@ jobs:
       - name: Preseed failure artifact
         shell: bash
         run: |
-          mkdir -p artifacts/sr003
-          printf '{"status":"NOT_RUN","reason":"TRUSTED_CHECK_DID_NOT_EXECUTE"}\n' > artifacts/sr003/trusted-provenance.json
+          # RUNNER_TEMP survives checkout clean/reset and pre-verifier failures.
+          mkdir -p "$RUNNER_TEMP/sr003"
+          printf '{"status":"NOT_RUN","reason":"TRUSTED_CHECK_DID_NOT_EXECUTE"}\n' > "$RUNNER_TEMP/sr003/trusted-provenance.json"
       - name: Checkout trusted default-branch code
         uses: actions/checkout@v4
         with:
@@ -42,12 +43,12 @@ jobs:
           uv sync --python 3.14.6 --locked --group dev --extra plugins
           uv run --python 3.14.6 --no-sync --locked --group dev --extra plugins python scripts/verify_sr003_provenance.py \
             --event-path "$GITHUB_EVENT_PATH" \
-            --out artifacts/sr003/trusted-provenance.json
+            --out "$RUNNER_TEMP/sr003/trusted-provenance.json"
       - name: Upload pass or fail-closed provenance
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: trusted-sr003-provenance-${{ github.run_id }}-${{ github.run_attempt }}
-          path: artifacts/sr003/trusted-provenance.json
+          path: ${{ runner.temp }}/sr003/trusted-provenance.json
           if-no-files-found: error
           retention-days: 30
