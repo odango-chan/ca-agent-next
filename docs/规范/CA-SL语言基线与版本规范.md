@@ -1,7 +1,7 @@
 # CA-SL 语言基线与版本规范
 
 > 文档类型：语言版本与运行时消费规范  
-> 文档版本：0.2.9\
+> 文档版本：0.2.10\
 > 状态：历史 CA-SL v1alpha5 FROZEN / RELEASED；**下一正式目标 CA-SL 1.6.0 DESIGN / NOT_RELEASED**，设计待评审；Compiler/Bundle 产品门槛未完成
 > 修订日期：2026-11-28
 > 关联 IR：IR-003、IR-006；SR-023、SR-013  
@@ -10,7 +10,7 @@
 
 ## 1. 当前正式语言基线
 
-**版本决策（Issue #40，2026-11-26）：新增作者与产品实现统一面向 CA-SL 1.6.0，不再创建 v1alpha6 版本。** 已发布的历史语言规范仍为 `connectionagent.io/v1alpha5`（冻结不可变），但它不再是新产品链的目标。1.6.0 的精确 `languageTarget` 机器标识必须由 ca-skills 正式规范与 Compiler 跨仓互操作契约共同冻结；在正式发布前不得自造标识、把历史 Artifact 重命名或宣称已发布。无旧版兼容解析与自动迁移。
+**版本决策（Issue #40，2026-11-26）：新增作者与产品实现统一面向 CA-SL 1.6.0，不再创建 v1alpha6 版本。** 已发布的历史语言规范仍为 `connectionagent.io/v1alpha5`（冻结不可变），但它不再是新产品链的目标。Next 中央设计已唯一冻结新 `languageTarget=connectionagent.io/v1.6.0`（见《CA-SL 1.6.0完整语言规范》v0.2.10 与 Compiler 设计 §5.1.1）；**ca-skills 作者 Schema/Golden/Release 和 Compiler 新 Artifact/BuildRequest/BuildResult 的正式 Schema/Golden/Release 仍未发布**。生产者必须按同一中央设计值实现和发布，不得另造别名、把历史 Artifact 重命名或宣称现已发布。无旧版兼容解析与自动迁移。
 
 完整规范正文已迁入 Next：[CA-SL v1alpha5 完整语言规范](CA-SL%20v1alpha5完整语言规范.md)。迁移来源是 ca-skills 发布规范提交 18d8184367982ccbc835756136c4a53f9096c3a0；ca-skills PR #88（规范刷新）和 PR #89（发布记录固定）均已合并。
 
@@ -24,7 +24,7 @@
 
 ### 新发布物的数字版本
 
-**历史 Compiler v2.1.0 的**两个 Development Interface Package 的 `package.json.version` 与各自 snapshot key 均为 `1.0.0`。新设计的 Runtime Artifact 与 BuildResult 候选版本段为 `2`，按 SR-013 的 Owner 契约确认及发布流程冻结。复核已有发行物时按固定 revision 读取原始路径、`apiVersion`、`languageTarget`、Schema `$id` 和字节；新版机器标识由 ca-skills / Compiler 全新冻结；**不迁移旧版机器标识**，不实现旧标识别名或兼容输入。
+**历史 Compiler v2.1.0 的**两个 Development Interface Package 的 `package.json.version` 与各自 snapshot key 均为 `1.0.0`。新设计的 Runtime Artifact 与 BuildResult 候选版本段为 `2`，按 SR-013 的 Owner 契约确认及发布流程冻结。复核已有发行物时按固定 revision 读取原始路径、`apiVersion`、`languageTarget`、Schema `$id` 和字节；新 languageTarget 已由 Next 中央设计固定为 `connectionagent.io/v1.6.0`，其 Schema/Golden 与正式产品 Release 仍须由 ca-skills/Compiler Publisher 发布并按互操作契约核对；**不迁移旧版机器标识**，不实现旧标识别名或兼容输入。
 
 ## 2. Next 作者与运行时消费边界
 
@@ -55,7 +55,7 @@ Next 不得通过重新解析 CEL 原文、DynType 或自制 evaluator 绕过该
 
 CA-SL 语义变化必须：
 1. 在 Next 的 EC01 中登记 IR/SR、语义变化与受影响的消费者，由 ca-skills 维护作者源、发布记录与可核对的规范版本。
-2. 明确 languageTarget、Schema/fixture、示例、与旧版的破坏性边界及拒绝旧输入的行为。
+2. 按已冻结的唯一 `languageTarget=connectionagent.io/v1.6.0` 验证正式 Schema/Golden、示例、旧版破坏性边界与拒绝旧输入的行为；**不在实施阶段重新选定该机器标识**。
 3. 通过规范评审和正式发布记录。
 4. 更新 Next 完整规范副本、F02/F08/F09 设计、SR-023/SR-013 和文档索引。
 5. 对旧冻结 Artifact 采取新版本契约，不原地改变字节或语义。
@@ -71,7 +71,7 @@ CA-SL 语义变化必须：
 - Skill-facing Contract / Procedure 仅使用 Capability ID，不再用 `tool: alias::CALLABLE_ID`；Skill-facing Capability 与公开 Callable **一对一**。Callable ID 保留在内部 Package/Compiler/Provider/Runtime 绑定和诊断中。
 - Operation / Observation 仍为 Node 阶段而非外部 Operation ID，按 Callable kind、Effect、Schema 校验；Compiler 必须链接出唯一 Capability→Callable Binding。Provider 内部可用封闭枚举路由多个 backend handler，但不能扩大 Skill Scope。
 - 1.6.0 的作者示例、Schema、Compiler API、Runtime Artifact、Provider/Owner 发布身份、ca-skills Bundle、Studio 浏览及真实回归须按 SR-029、SR-013、SR-027 和相关模块分别冻结/验收；**Compiler #61 针对历史 v1alpha5 的 when 设计不自动等同 1.6.0 产品发布；1.6.0 Compiler 新实施由 #62 独立追踪**。
-- 当前未发布 1.6.0；只可规划新实现，不得把旧 `v1alpha5` Builder、Development v1alpha1 Artifact 或候选机器标识当作 1.6.0 正式产物。
+- 当前未发布 1.6.0；只可规划新实现，不得把旧 `v1alpha5` Builder、Development v1alpha1 Artifact，或虽中央冻结但尚未正式发行 Schema/Golden/Release 的 `connectionagent.io/v1.6.0` 当作已发布可消费的 1.6.0 产品契约。
 - **全链路单版本约束：** 新 ca-skills 作者源、新 Compiler Check/Build/Verify 与 BuildRequest/BuildResult、新 Runtime Artifact、新 Agent Importer/Runtime、Skill Studio 只支持 **CA-SL 1.6.0**。不解析/编译/导入/执行历史 v1alpha5 或任何 v1alpha6 候选；不建立双语法、版本协商、兼容映射、fallback、自动转换或 Agent 内编译。旧 Skill 必须由作者按 1.6.0 重新编写、由新 Compiler 重新构建和发布，**不提供迁移工具**。旧包和旧 `languageTarget` 在新运行时均明确拒绝；历史 v1alpha5 规范、Release Record 与 Artifact 字节只读留档，仅供审计溯源。
 
 ## 修订记录
@@ -89,3 +89,4 @@ CA-SL 语义变化必须：
 | 2026-11-27 | 0.2.7 | GPT-6.2（ChatGPT） | §3/§6 CA-SL 1.6.0 版本边界 | 将 1.6.0 新发布 Artifact 的实施追踪改为 Compiler #62，保留 #61 历史范围。；原因：让版本规范和跨仓实施追踪保持一致，避免版本目标错位。 | 见修改内容列（历史合并记录） | Issue #40/#62；PR #45 |
 | 2026-11-28 | 0.2.8 | GPT-6（ChatGPT） | §1～3、§6、修订记录 | 在 #46 整合分支中保留已合 #45 的 when 唯一来源、Compiler #62 与历史只读边界，同时合并 #46 的 Node/Guard/CheckedExpr 显式约束，状态仍 DESIGN / NOT_RELEASED | 防止分叉分支单侧覆盖 1.6.0-only 权威语义 | Issue #12；#40；PR #45；#46 |
 | 2026-11-28 | 0.2.9 | GLM-5.3（DeepSeek Harness） | 修订记录 | 将 6 列历史修订表统一为 7 列标准结构 | 关闭 R3-LEDGER-01 同族列宽失配 | Issue #12；PR #46；Review #6095143611 |
+| 2026-11-28 | 0.2.10 | GPT-6（ChatGPT） | 文档头、§1、§2、发布门槛、修订记录 | 与 CA-SL 1.6.0 v0.2.10 和 Compiler v0.2.22 §5.1.1 对齐：Next 已冻结唯一 languageTarget=connectionagent.io/v1.6.0；正式 Schema、Golden 与 Release 仍未发布，未实现产品接口 | 消除“机器标识需由生产者再次选择”与已冻结中央设计的矛盾，保留严格的生产者发布证据门槛 | Issue #40/#50；SR-029；PR #115 |

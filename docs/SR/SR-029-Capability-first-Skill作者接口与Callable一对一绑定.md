@@ -1,7 +1,7 @@
 # SR-029：Capability-first Skill 作者接口与 Callable 一对一绑定
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.10  
+> SR 版本：0.2.11  
 > 状态：待评审 / DESIGN_READY_FOR_REVIEW；非实施 READY；新版规范/产品 NOT_RELEASED
 > 创建日期：2026-11-26  
 > 修订日期：2026-11-28\
@@ -18,7 +18,7 @@
 
 本 SR 仅是 CA-SL 1.6.0 Capability-first 的待评审设计。**无兼容**指：新作者规范、Compiler Parser/BuildRequest/BuildResult/Check/Build/Verify、Runtime Artifact、Agent Importer/Runtime、Studio 与 Bundle 全部只接受 1.6.0。没有旧包解析、别名、映射、双轨、版本协商、fallback、自动迁移或混合 Catalog。旧 Skill 必须人工重新编写、重新编译并发布，历史 v1alpha5 规范和 Golden 仅做只读审计。
 
-Skill-facing Capability 与公开 Callable 严格双向一对一；Operation / Observation 只是 Node 阶段，Callable 和 backendOperationId 只保留在 Package/Compiler/Provider/Runtime 内部。1.6.0 的机器标识、正式 Schema、新 Compiler API、Owner/Provider Package、发布 Bundle 和跨仓 Golden 尚待外部 Publisher 冻结，**不能据本设计启动产品实施**。
+Skill-facing Capability 与公开 Callable 严格双向一对一；Operation / Observation 只是 Node 阶段，Callable 和 backendOperationId 只保留在 Package/Compiler/Provider/Runtime 内部。1.6.0 的 **languageTarget 已由 Next 中央冻结为 `connectionagent.io/v1.6.0`**，Compiler 新 DTO/Artifact API 身份亦由中央 Compiler 设计 §5.1.1 固定；但正式作者/Compiler Schema、Golden、CLI/Release、Owner/Provider Package 和 Bundle 仍须对应 Publisher 正式发布并完成互操作验收。**中央设计值已确定不等于产品可用，也不能据此把本 SR 转成实施 READY。**
 
 ## 1. 目标与范围
 
@@ -108,7 +108,7 @@ MAS.RECEIPT_QUERY 继续是受 Capability / Scope 约束的普通 READ Callable�
 
 CA-SL v1alpha5 已正式发布并冻结：其 operation.tool / observation.tool 继续表示 Alias::Callable，不做重解释或自动迁移。
 
-Capability-first 直接使用 CA-SL 1.6.0 下一正式版本目标（尚未发布）。准确 languageTarget 机器标识由 ca-skills / Compiler 正式 Schema 与 Golden 冻结，禁止提前猜测。**可选 `when` 的唯一作者位置仍为 `skills/<skill-id>/assurance/contract.yaml` 的顶层字段**；SKILL.md Front Matter 不声明 when，`predicates.yaml` 只承载执行期 Predicate。1.6.0 的 CEL/G.4 语法、类型与诊断由 ca-skills 正式规范冻结；不得默认为 v1alpha5 自动兼容。下列 Contract 是示例候选而非已冻结语法：
+Capability-first 直接使用 CA-SL 1.6.0 下一正式版本目标（尚未发布）。准确 `languageTarget=connectionagent.io/v1.6.0` 已由 Next 中央设计冻结（CA-SL 1.6.0 v0.2.10、Compiler v0.2.22 §5.1.1）；ca-skills / Compiler 正式 Schema、Golden、Release **尚未发布**，不得将该目标值冒充已发行产品，也不得实施时发明第二个机器标识。**可选 `when` 的唯一作者位置仍为 `skills/<skill-id>/assurance/contract.yaml` 的顶层字段**；SKILL.md Front Matter 不声明 when，`predicates.yaml` 只承载执行期 Predicate。1.6.0 的 CEL/G.4 语法、类型与诊断由 ca-skills 正式规范冻结；不得默认为 v1alpha5 自动兼容。下列 Contract 是示例候选而非已冻结语法：
 
 ~~~yaml
 dependencies:
@@ -186,7 +186,7 @@ Compiler 必须对每个 Capability 使用点执行：
 
 稳定诊断至少包括：CAPABILITY_UNRESOLVED、CAPABILITY_AMBIGUOUS、CAPABILITY_NOT_GRANTED、CAPABILITY_GRANT_UNUSED、CAPABILITY_CALLABLE_CARDINALITY_INVALID、CALLABLE_CAPABILITY_CARDINALITY_INVALID、CAPABILITY_PHASE_KIND_MISMATCH、CAPABILITY_SCHEMA_MISMATCH、CAPABILITY_BINDING_MISSING。
 
-Compiler Artifact / BuildResult v2 候选只面向 languageTarget=（1.6.0 的机器标识待正式冻结）。每个 Skill 的 capabilityBindings[] 至少记录 capabilityId、dependencyId、stablePackageId、Owner / Publisher identity、callableId、kind、effect、inputSchemaRef 和 outputSchemaRef。Procedure 节点保留 capabilityId；Artifact dependencyClosure.exports[] 保留精确 Callable allowlist。Callable ID 是内部 Binding，不是模型 Action 参数。
+Compiler Artifact / BuildResult v2 候选只面向 `languageTarget=connectionagent.io/v1.6.0`（中央设计已冻结，正式 Publisher Schema/Golden/Release 仍 NOT_RELEASED）。每个 Skill 的 capabilityBindings[] 至少记录 capabilityId、dependencyId、stablePackageId、Owner / Publisher identity、callableId、kind、effect、inputSchemaRef 和 outputSchemaRef。Procedure 节点保留 capabilityId；Artifact dependencyClosure.exports[] 保留精确 Callable allowlist。Callable ID 是内部 Binding，不是模型 Action 参数。
 
 v1alpha5 已发布 Artifact、Compiler v2.1.0 历史行为和 Golden 不变；Development v1alpha1 保持冻结并 NOT_ADMITTED。Artifact v2 / BuildResult v2 API 名称仍须 Compiler Owner Gate 确认；新 Compiler/Agent 不提供任何旧版语法、旧 Build DTO/Artifact/Bundle、双轨或 fallback。
 
@@ -320,3 +320,4 @@ Owner 待决事项在 Next [Issue #40](https://github.com/odango-chan/ca-agent-n
 | 2026-11-27 | PR46-0.2.9（原分支） | Codex / GPT-6 | 文档头、§10、AC-029-10 | 补全三个 Procedure 共 23 条 Owner 映射与集合核验规则，区分架构来源与评审入口 | 处理 R1-SR029-01/02 | Issue #12、#90；PR #46 |
 | 2026-11-28 | 0.2.10 | GPT-6（ChatGPT） | §3、§6、§10～13、修订记录 | #46 与 #45 三方整合：保存三份 MAS Procedure 13/2/8 独立复评依据与 #45 Owner Parser 待签认、Codec 3/3/T1-T2 资格化门槛；保持 1.6.0-only、原历史分支修订账本可追溯 | 防止 24/24 固定口径回退和历史批准冒充已发布产品 | Issue #12；#40；#113；PR #45；#46 |
 | 2026-11-28 | 0.2.10-integration-fix | GPT-6（ChatGPT） | 文档头与修订记录 | 修正整合期间版本/验收时点一致性，不改变产品状态 | 保持历史证据与新 1.6.0 设计边界 | Issue #12；PR #45；#46 |
+| 2026-11-28 | 0.2.11 | GPT-6（ChatGPT） | §1、§5、§7、修订记录 | 与中央 CA-SL 1.6.0 v0.2.10、Compiler v0.2.22 §5.1.1 核对：唯一 languageTarget 已固定为 connectionagent.io/v1.6.0；正式作者/Compiler Schema、Golden、Publisher Release 与外部 API 仍未发布，Capability Binding 与实施资格不自动满足 | 关闭“languageTarget 尚待猜测/冻结”的现行设计歧义，避免重新开放已定版本决策或把设计冻结当作生产发布 | Issue #40/#50；PR #115 |
