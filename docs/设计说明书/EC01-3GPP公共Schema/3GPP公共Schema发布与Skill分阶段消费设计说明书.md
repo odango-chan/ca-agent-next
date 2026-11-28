@@ -1,8 +1,8 @@
 # 3GPP 公共 OpenAPI 原版引用与 Skill 分阶段消费设计说明书
 
 > 文档类型：功能设计说明书（EC01.3GPP；关联 EC03/F02/F06/F08/F09）
-> 文档版本：0.3.5
-> 修订日期：2026-11-27
+> 文档版本：0.3.6
+> 修订日期：2026-11-28
 > 状态：DRAFT / REVIEW_REQUESTED；原版 Source Bundle、OAS3 Consumer、Compiler 外部引用与 Codec 产品均未完成产品验收
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：生产级资格、全量 NAS/NGAP、修改上游 YAML、重定义 3GPP 标准、旧 CA-SL 兼容
@@ -14,7 +14,7 @@
 1. 唯一来源是 OpenAMSM 实际支持 / 构建使用的协议源快照；版本由文件规范标记和 OpenAMSM 构建 / 代码证据确认，不能自行选择 latest 或混合 commit。
 2. 原版 OpenAPI YAML 原样代发布：字段、类型、注释、key 顺序、空白、换行、编码、`$ref`、路径全部不改。Publisher 只在原件树外增加 Source Lock / manifest / 测试证据。
 3. 采用原生 OpenAPI 3.0 消费，不强制 Adapter / Projection。OAS 3.0 Schema Object 与 CA-SL 1.6.0 G.4 是不同 dialect；G.4 限制不能成为修改原件或另造影子标准的理由。
-4. Skill-owned `requestSchema` 根和本地 Schema 节点仍遵循 G.4；在显式声明并 pin OpenAMSM Source Bundle 后，可以直接引用原版 OAS 3.0 `components/schemas`。外部目标按 OAS3 Schema Object 语义解析，不能转换成 G.4 或静默丢弃关键字。wire 表示由 ca-skills / Compiler Owner 在正式 1.6.0 Schema / Golden 冻结。
+4. Skill-owned `requestSchema` 的入口文件始终位于本 Skill Package 下，可为本地 G.4 闭合根，也可为内容恰好只有一个 `$ref` 的 OAS3 根引用别名；在显式声明并 pin OpenAMSM Source Bundle 后，二者都可直接引用原版 OAS 3.0 `components/schemas`。只有本地 G.4 节点遵循 G.4，外部目标/可达闭包按 OAS3 Schema Object 语义解析，不能转换为 G.4、合成 wrapper 或静默丢弃关键字。wire 表示由 ca-skills / Compiler Owner 在正式 1.6.0 Schema / Golden 冻结。
 5. NAS / NGAP 不等于 SBI OpenAPI。TS 29.502 binary part 只定义原始 N1/N2 transport、MIME / Content-ID，不定义 NAS IE / NGAP ASN.1 解码字段。Result Schema 必须由 Codec Provider 按 OpenAMSM 协议源和已资格化消息 Profile 发布。
 6. 全系统仍为 CA-SL 1.6.0 ONLY、Capability↔Callable 双向一对一、唯一 Plugin Manager、Host-owned ArtifactStore、Owner 权威 Receipt / Commit Proof；不提供旧版兼容。
 
@@ -41,7 +41,7 @@ OpenAPI `info.version` 是 API 文档版本，不是 3GPP TS 版本。TS 29.571 
 |---|---|---|
 | OpenAPI Source Bundle | ca-skills / SR-031 | 原版 OAS3 YAML + 可达 refs，byte-for-byte 不变；无 Capability / Callable |
 | SBI Ingress Consumer | Plugin / SR-010 | 原生解析 method/path/operationId、requestBody、multipart、JSON / binary parts、media type、Content-ID；只做 ingress 验证，并原样 staging N1 / N2 / N2 Ext1 bytes |
-| Compiler OAS3 Resolver | Compiler / SR-013 | 对 Skill-owned G.4 Request 根中的精确外部 `components/schemas` 引用做 dialect-aware Link / Validate / Lock |
+| Compiler OAS3 Resolver | Compiler / SR-013 | 对 Skill-owned 本地 G.4 Request 根或纯单 `$ref` OAS3 根引用别名中的精确外部 `components/schemas` 引用做 dialect-aware Link / Validate / Lock |
 | Codec READ + Output Schema | ca-client-tools / SR-026 | 按授权 artifact slot 解码已资格化 NAS/NGAP Profile，发布 Provider Output Schema |
 | Skill Request / Host Context | ca-skills / SR-029、SR-030 | Request 根归 Skill；Host Context 只经 `Contract.contexts`；Codec Result 只在 Procedure 执行期可用 |
 
@@ -55,7 +55,7 @@ Plugin 按 OAS3 原件解析选定 operation / requestBody / content / multipart
 
 3GPP CommonData 的 `RefToBinaryData.contentId` 表示被引用 binary body part 的 `Content-ID` header 值。对 `PostSmContexts` 必须精确关联：`jsonData.n1SmMsg.contentId` ↔ `binaryDataN1SmMessage`；`jsonData.n2SmInfo.contentId` ↔ `binaryDataN2SmInformation`；`jsonData.n2SmInfoExt1.contentId` ↔ `binaryDataN2SmInformationExt1`。每个已声明引用必须且只能命中对应 slot；Content-ID 在 parts 间唯一；引用目标缺失、重复 ID、错槽或媒体类型不符均 fail-closed。未被 JSON 引用的 part 不得交给 Codec；额外或未引用 part 的拒绝 / 忽略由选定 ingress profile 明确规定，不能由 Schema 隐含推断。Header 名按 MIME 规则识别，Content-ID 值按标准 MIME 解析结果精确比较，不做自定义大小写转换或字符串裁剪。
 
-Skill-owned `requestSchema` 根仍是本地 G.4 闭合对象。它可以在显式 pin Source Bundle dependency 后直接引用原版 OAS3 `components/schemas`，并保留 `nullable`、`oneOf`、`anyOf`、`allOf`、`pattern`、`additionalProperties`、`format` 等 OAS3 语义；不做 Adapter / Projection。只允许 pin 后的 Schema Component，不允许任意 URL、dynamic latest、Path Item / Operation / RequestBody / Response 或 Bundle 外文件。Compiler / Host 不支持可达语义时必须 fail-closed，不得静默忽略或产生部分 Artifact。
+Skill-owned `requestSchema` 入口必须是 Skill Package 自有的 `schemas/*.schema.yaml` 路径，允许两种形式：本地 G.4 闭合对象根（可引用已 pin 外部组件）；或恰好只有单个 `$ref` 的原版 OAS3 Schema Component 根别名，禁止添加 G.4 兄弟字段/闭合 wrapper。显式 pin Source Bundle dependency 后，外部可达闭包按 OAS3 dialect 保留 `nullable`、`oneOf`、`anyOf`、`allOf`、`pattern`、`additionalProperties`、`format` 等原生语义；不做 Adapter / Projection。只允许 pin 后的 Schema Component，不允许任意 URL、dynamic latest、Path Item / Operation / RequestBody / Response 或 Bundle 外文件。Compiler / Host 不支持可达语义时必须 fail-closed，不得静默忽略或产生部分 Artifact。
 
 CEL 类型推导对 `anyOf` / `oneOf` 只无条件暴露在每个可满足分支中均声明、均列入 `required` 且类型一致的字段；其他字段仅在 CEL 类型系统显式支持 optional 时按 optional 暴露，否则不得无条件访问。`allOf` 按交集合并约束并合并 required 集合；nullable 的 Null 与 Missing 区分。dependency alias、relative path、JSON Pointer、Source Bundle identity 和 Lock wire 字段必须由 ca-skills / Compiler Owner 在正式 1.6.0 Schema / Golden 冻结；本设计不预造机器字段名。
 
@@ -109,3 +109,4 @@ SR-031、SR-010、SR-013、SR-026、SR-027 各自独立验收；任何一层 PAS
 | 2026-11-27 | 0.3.2 | ChatGPT / GPT-6.2 | §4、DS-3GPP-03～04 | 收紧 union 类型推导到 required 字段；明确未引用 multipart part 的消费隔离与 ingress profile 策略 | 不把可选字段误判为必有，也不超出原版 OpenAPI Schema 施加隐含拒绝 | Issue #47；SR-010/013；CA-SL 1.6.0 |
 | 2026-11-27 | 0.3.3 | ChatGPT / GPT-6.2 | DS-3GPP-03 | 将未引用 part 的处理收敛为 Codec 隔离，额外 part 策略交由 ingress profile | 避免把 OpenAPI Schema 未声明的额外 part 一概判为非法 | Issue #47；SR-010/031；F06 |
 | 2026-11-27 | 0.3.4 | ChatGPT / GPT-6.2 | §2、§4 | 将 SBI Ingress Consumer 摘要补齐 N2 Ext1 原始 bytes staging，与三组 Content-ID 映射对齐 | 避免汇总表遗漏第三个二进制槽 | Issue #47；SR-010/031；F03.05/F06 |
+| 2026-11-28 | 0.3.6 | GPT-6（ChatGPT） | §1、§2、§4、修订记录 | 统一 Skill-owned Request Schema 的本地 G.4 根与纯单 $ref OAS3 根别名，并向 Compiler Resolver 表明确两条合法路径 | 消除 EC01.3GPP 旧强制 G.4 根与 CA-SL 1.6.0/SR-031 的原版 OAS3 dialect 设计冲突 | Issue #47/#40；SR-013/027/031；PR #125 |
