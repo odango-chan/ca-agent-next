@@ -97,6 +97,14 @@ Owner `v1alpha4` source 的 `tool-catalog.yaml` 含 25 published contracts、旧
 
 恢复分支旧 SR-025 v0.1.11 及 [ca-client-tools #43](https://github.com/odango-chan/ca-client-tools/issues/43) 对应 **v1alpha5 / Development 1.0.0** Publisher 设计，历史阶段曾为 READY；其固定源 59 个文件、127 项 exports、`BuildDevelopment`/`VerifyDevelopment`、release.yml 资产校验和 v1.2.1 候选仅保留为审计，不是本 SR 1.6.0 的合法实施入口、发布物或验收。已确认旧源对象的 byte/manifest 信息可用于差异取证；新项目必须取得正式 Owner Parser 决策、Publisher 机器合同及 Compiler #62，不能因历史 #43 已创建而宣称新实施 READY。
 
+### 历史 Publisher 源清单和逐 export 身份审计（非新版产品接口）
+
+- 当前 main 与 v1.2.0 tag 的 Owner source 目录 59 个文件（manifest + 58 artifacts）逐个 blob 相同；`manifest.json` Git blob 固定为 `dff8136f7dc48b83bbc09d08ed0340f2c9a6ae72`，`buildIdentity` 固定为 `sha256:ac834080f31ff0fa91b9eb846fa47c889a94837fc1f37ec2034190e4e83085c0`。当前 main HEAD 晚于 source Revision，但 59 个 blob 无差异；Publisher 不得错误要求整个 checkout HEAD 等于 source Revision，而应固定校验 manifest blob/buildIdentity 与 58 个 artifact digest。
+
+`package.json.exports[]` 按每个身份逐项生成，不是每种 kind 只生成一个聚合记录：CallableCatalog 的 `id` 精确等于对应 `spec.contracts[].id`，CapabilityCatalog 的 `id` 等于 `capabilities[].id`，EvidenceDescriptor 的 `id` 等于顶层 fact ID，Schema 的 `id` 等于原始 JSON Schema `$id`；每项 `path` 指向其所在的原始或生成文件。相同 kind 下不得有重复 `id`，导出集合与来源集合必须双向相等。
+
+上述 export ID 的来源/生成原则属于当时的 Development Interface Package 静态取证。新 **CA-SL 1.6.0** 的 Package Schema、版本与签认成员数必须由 Owner Publisher/Compiler #62 重新冻结，不能把此历史映射作为新包的机器 Schema 或自动迁移规则。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
@@ -124,3 +132,4 @@ Owner `v1alpha4` source 的 `tool-catalog.yaml` 含 25 published contracts、旧
 | 2026-11-27 | restore-0.1.10（历史分支） | GPT-6.2（ChatGPT） | 文档头 | 将 F09 §4.5 权威设计引用更新至 v0.3.12 | 保证 Publisher 输入契约引用当时的 F09 版本，不改变 SR-025 READY 与当前 v1alpha5 + Owner v1alpha4 发布输入 | Issue #53；F09 v0.3.12；SR-025；ca-client-tools #43 |
 | 2026-11-27 | restore-0.1.11（历史分支） | GPT-6.2（ChatGPT） | 文档头 | 将 F09 §4.5 权威设计引用更新至 v0.3.13 | 保持 Publisher 与 F09 最新正式设计版本一致；SR-025 READY、当前 v1alpha5 + Owner v1alpha4 输入和 package version 1.0.0 均不变 | Issue #53；F09 v0.3.13；SR-025；ca-client-tools #43 |
 | 2026-11-28 | 0.1.16 | GPT-6（ChatGPT） | 文档头、§1～6、修订记录 | 合并 #46 新 1.6.0 Owner Publisher 架构与恢复分支历史 Development READY/固定源记录；Parser 22/22/24/24 仅条件候选，正式数量需 Owner 签认，保留 Codec 唯一解码与新 Compiler #62 门槛 | 避免把已合 #45 后的历史 Development Publisher 意外激活为 1.6.0 产品路径 | Issue #12；#40；#113；PR #45；#46 |
+| 2026-11-28 | 0.1.16-integration-2 | GPT-6（ChatGPT） | 历史固定源、修订记录 | 补齐恢复分支不可变 Owner manifest/blob/buildIdentity 与逐 export 身份规则；标明仅历史 Development Package 审计 | 保存 Owner 来源可追溯性且不绕过两个 N1 Parser 正式签认 | Issue #12；#40；#95；#113；PR #45；#46 |
