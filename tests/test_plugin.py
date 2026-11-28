@@ -445,11 +445,21 @@ class ManifestValidationTests(_ManagerTestCase):
         )
 
     def test_handshake_timeout_rejected(self) -> None:
-        package = self._new_package(args=["serve", "--fault=no-ready"])
+        # 真正超时：子进程保持存活但不发送 ready。测试超时和 EOF 互不混淆。
+        package = self._new_package(args=["serve", "--fault=stall-before-ready"])
         manager = self._fresh_manager(start=0.6)
         self.assert_rejected_without_registration(
             manager, package, PluginErrorCode.IPC_TIMEOUT
         )
+
+    def test_process_exit_before_ready_is_not_a_timeout(self) -> None:
+        # no-ready 立即退出应报告 PROCESS_EXITED，而非伪造等满超时。
+        package = self._new_package(args=["serve", "--fault=no-ready"])
+        manager = self._fresh_manager()
+        error = self.assert_rejected_without_registration(
+            manager, package, PluginErrorCode.PROCESS_EXITED
+        )
+        self.assertEqual(error.details.get("phase"), "before")
 
 
 # ---------------------------------------------------------------------------
@@ -725,8 +735,29 @@ class LifecycleIpcTests(_ManagerTestCase):
             self.manager.stop("example.echo")
 
     def test_process_exit_clears_extensions(self) -> None:
+        # 故障 peer 发送有效 ready 后立即退出。start 可能先观察 READY
+        # 并返回，也可能先观察 EOF 并以 PROCESS_EXITED 拒绝注册；
+        # 两种调度都必须释放所有 Extension，绝不返回假 READY。
         package = self._new_package(args=["serve", "--fault=crash-after-ready"])
-        process = self.manager.start(package)
+        captured: dict[str, PluginProcess] = {}
+        original_start = PluginProcess.start
+
+        def capture(process: PluginProcess) -> PluginProcess:
+            captured["process"] = process
+            return original_start(process)
+
+        with mock.patch.object(PluginProcess, "start", capture):
+            try:
+                process = self.manager.start(package)
+            except PluginError as error:
+                self.assertEqual(error.code, PluginErrorCode.PROCESS_EXITED)
+                self.assertEqual(error.details.get("phase"), "after")
+                process = captured["process"]
+                self.assertIsNone(self.manager.process("example.echo"))
+
+        self.assertTrue(
+            any(record.frame["type"] == "plugin.ready" for record in process.frames)
+        )
         self.assertTrue(process.wait_for_exit(5.0))
         self.assertNotEqual(process.state, PluginState.READY)
         self.assertEqual(process.extensions, frozenset())
@@ -734,6 +765,25 @@ class LifecycleIpcTests(_ManagerTestCase):
         self.assertEqual(process.pending_count, 0)
         with self.assertRaises(PluginError):
             self.manager.invoke_tool("example.echo", "echo.read", {"text": "x"})
+
+    def test_ready_then_eof_before_start_lock_reports_process_exited(self) -> None:
+        # 同步控制 Reader 的锁，强制实现此前 CI 偶发的 ready -> EOF
+        # 先于 start 状态检查顺序；无需 sleep、超时放宽或概率性压测。
+        package = self._new_package(args=["serve", "--fault=crash-after-ready"])
+        original_on_ready = PluginProcess._on_ready
+
+        def ready_then_eof(process: PluginProcess, frame: object) -> None:
+            with process._lock:
+                original_on_ready(process, frame)  # type: ignore[arg-type]
+                self.assertIs(process._state, PluginState.READY)
+                process._finalize_exit()
+
+        manager = self._fresh_manager()
+        with mock.patch.object(PluginProcess, "_on_ready", ready_then_eof):
+            error = self.assert_rejected_without_registration(
+                manager, package, PluginErrorCode.PROCESS_EXITED
+            )
+        self.assertEqual(error.details.get("phase"), "after")
 
     def test_shutdown_leaves_no_pending_requests(self) -> None:
         process = self._start()

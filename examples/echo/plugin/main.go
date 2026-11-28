@@ -204,6 +204,14 @@ func (p *plugin) handleInitialize(in frame) {
 		logf("FAULT no-ready")
 		os.Exit(1)
 	}
+	if p.fault == "stall-before-ready" {
+		// A live peer that withholds ready until the Host closes stdin.
+		// Unlike no-ready, this exercises a real startup deadline.
+		logf("FAULT stall-before-ready")
+		var ignored [1]byte
+		_, _ = os.Stdin.Read(ignored[:])
+		return
+	}
 
 	extensions := make([]any, 0, len(p.extensions))
 	for _, extension := range p.extensions {

@@ -393,15 +393,29 @@ class PluginProcess:
                 details={"pluginId": self.plugin_id},
             )
 
-        if self._handshake_error is not None:
+        # Reader 收到 plugin.ready 后会通知启动线程；然而故障注入的 peer
+        # 可以紧接着退出，Reader 的 EOF 清理会先将 READY -> NOT_READY。
+        # 必须在同一锁下采样握手结果和退出状态，不能把这种 *已收到*
+        # ready 的正常时序竞争误报为 IPC_TIMEOUT。
+        with self._lock:
             error = self._handshake_error
+            ready = self._state is PluginState.READY
+            exited = self._eof
+            handshake_accepted = self._handshake_done and error is None
+        if error is not None:
             self._abort_process("handshake mismatch")
             raise error
-        with self._lock:
-            ready = self._state is PluginState.READY
         if not ready:
-            # 进程在握手完成前退出（例如 startup fault）：不得视为已就绪。
-            self._abort_process("handshake incomplete")
+            self._abort_process(
+                "startup process exit" if exited else "handshake incomplete"
+            )
+            if exited:
+                phase = "after" if handshake_accepted else "before"
+                raise PluginError(
+                    PluginErrorCode.PROCESS_EXITED,
+                    f"plugin process exited {phase} the startup handshake",
+                    details={"pluginId": self.plugin_id, "phase": phase},
+                )
             raise PluginError(
                 PluginErrorCode.IPC_TIMEOUT,
                 "plugin did not complete the handshake before the startup timeout",
