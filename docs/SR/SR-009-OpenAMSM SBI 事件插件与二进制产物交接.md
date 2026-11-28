@@ -1,15 +1,15 @@
 # SR-009：OpenAMSM SBI 事件插件与二进制产物交接
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.10\
+> SR 版本：0.2.11\
 > 状态：整项 DRAFT；模块设计已认可，待目标仓实施交接。AC-009-01～06（测试 Host/peer）。  
 > 下一步：独立 Go Plugin 模块已获设计认可。目标仓 ca-openamsm-plugin 的实施分支和 Issue 需登记；联调验证由 SR-011 跟踪。Create 断言须覆盖 eventType；responseObligationId 由 Host 分配。  
 > 阶段依据：[独立评审 #73](https://github.com/odango-chan/ca-agent-next/issues/73#issuecomment-7210217168)，评审 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。
 > 创建日期：2026-11-25  
-> 修订日期：2026-11-27\
+> 修订日期：2026-11-28\
 > 所属阶段：Phase G  
 > 上游需求：[IR-005](../IR/IR%20总登记册.md#ir-005)  
-> 设计依据：[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.5 §1～13、16；[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.3.1 §2～5、§4.1；[插件包与进程通信协议规范](../规范/插件包与进程通信协议规范.md) v0.2.6 §6～8\
+> 设计依据：[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.5 §1～13、16；[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.3.3 §2～5、§4.1；[插件包与进程通信协议规范](../规范/插件包与进程通信协议规范.md) v0.2.7 §5～6\
 > Acceptance：OM-01～OM-03、OM-05～OM-08、OM-14、OM-15（见[演示验收基线](../验收与实施/演示验收基线.md)）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：见第 3 节
@@ -138,3 +138,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-27 | 0.2.8 | Codex / GPT-6 | 文档头 | 登记模块设计已认可，待目标仓实施交接及 AC 范围 | 按单项独立评审推进 | Issue #12、#73；PR #46 |
 | 2026-11-28 | 0.2.9 | GPT-6（ChatGPT） | §2、AC-009-04/05、§5.1、修订记录 | 修正 N1 5GSM EPD/Message Type 字节偏移与截断验收；对齐 Host-owned responseObligationId 的瞬时接收与不回传边界 | 防止合法 NAS 分类失败或因把“非所有权”误写为“不能接收”而拒绝合法 Delivery | Issue #12；PR #46；F06 v0.3.3；Review #6095143611 |
 | 2026-11-28 | 0.2.10 | GPT-6（ChatGPT） | §5.1、修订记录 | 清除 §5.1 对 responseObligationId“不得接收”的残留表述，与 dispatch Host-owned 瞬时接收规则统一 | 防止同一 SR 内一处允许接收、一处禁止接收，导致合法 Delivery 被实现拒绝 | Issue #12；PR #46；F06 v0.3.3；Review #6095143611 |
+| 2026-11-28 | 0.2.11 | GPT-6.2（ChatGPT） | §2、设计依据、修订记录 | 对齐 IPC v0.2.7，明确 responseObligationId 仅随 delivery.dispatch 瞬时接收，responseChannelId 负责本地 HTTP/2 stream 写回 | 将 SR-009 模块边界与公共 IPC 契约保持一致，避免将非所有权误解为不可接收 | Issue #12；PR #46；IPC v0.2.7；Review #6095143611 |
