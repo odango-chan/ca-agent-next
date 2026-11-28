@@ -1,7 +1,7 @@
 # SR-030：Host Context 1.6.0 Schema-only Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.10
+> SR 版本：0.1.11
 > 状态：整项 DRAFT；阶段 READY（中央只读核验）。AC-030-01 固定源，06/07 设计约束。  
 > 下一步：核对 Subject Schema 原始字节与来源、Provenance 归属和 Demo 排除项。02～05、Publisher 实现与发布等待正式 Schema/languageTarget。  
 > 阶段依据：[独立评审 #91](https://github.com/odango-chan/ca-agent-next/issues/91#issuecomment-7209340753)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
@@ -12,7 +12,7 @@
 > 功能：F09.06 — Host Context Interface Package Publisher
 > 目标仓：odango-chan/ca-agent-demo
 > 中央设计：F09、F08、EC02 Compiler、CA-SL 1.6.0 完整语言规范、SR-013、SR-016、SR-029
-> 设计依据：[F09 技能工作台与 AI 编写](../设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md) v0.3.16 §5～9；[F08 技能编译与发布](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.16；[EC02 Compiler](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.13 §10～11；[CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md) v0.1.2 §5.2、§14～16；[SR-013](SR-013-Compiler已检查when与发布产物.md) v0.2.23 §5～6
+> 设计依据：[F09 技能工作台与 AI 编写](../设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md) v0.3.16 §5～9；[F08 技能编译与发布](../设计说明书/F08-技能编译与发布/技能编译与发布设计说明书.md) v0.3.16；[EC02 Compiler](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.13 §10～11；[CA-SL 1.6.0 完整语言规范](../规范/CA-SL%201.6.0完整语言规范.md) v0.2.10 §5.2、§14～16；[SR-013](SR-013-Compiler已检查when与发布产物.md) v0.2.23 §5～6
 > 设计 Issue：[ca-agent-next #40](https://github.com/odango-chan/ca-agent-next/issues/40)
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：Host Trust / Admission、运行期 Context 实例、Capability / Callable、生产级资格、签名、额外摘要、Trust Registry、Agent 内置 Compiler
@@ -92,9 +92,9 @@ Publisher 必须从固定 Revision 读取原始 Schema 字节并核对 Git blob�
 ## 6. 依赖与阶段门槛
 
 **设计依赖：**
-- CA-SL 1.6.0 完整语言规范 v0.1.2 §5.2、§14～16；F08 v0.3.16；EC02 v0.2.13 §10～11；SR-013 v0.2.41 §8（AC-013-06）明确 Schema-only Package / Context Schema closure 与零 Capability roots 的处理。
+- CA-SL 1.6.0 完整语言规范 v0.1.2 §5.2、§14～16；F08 v0.3.33；EC02 v0.2.22 §10～11；SR-013 v0.2.42 §8（AC-013-06）明确 Schema-only Package / Context Schema closure 与零 Capability roots 的处理。
 - SR-029 / CA-SL 1.6.0 规范明确 Contract.contexts 引用 Host Context Schema，requestSchema 则是 Skill 自有请求 Schema。
-- F09 v0.3.16 §5～9 / SR-016 明确 Package Manifest 与 Project Lock provenance 的边界。
+- F09 v0.3.41 §5～9 / SR-016 明确 Package Manifest 与 Project Lock provenance 的边界。
 
 **实施依赖：**
 - 固定 Compiler Owner 正式公布的 1.6.0 Package Schema、BuildRequest / DependencyInspection 与 Schema-only Link 规则的版本、SHA、Golden 和来源。机器契约可独立于 Compiler 二进制发行；契约尚未公布时，不得生成候选。
@@ -129,3 +129,4 @@ Publisher 必须从固定 Revision 读取原始 Schema 字节并核对 Git blob�
 | 2026-11-27 | 0.1.8 | kimi-k3.1-pro | §7、文档头 | 独立复验 Subject Schema 274 字节/blob/SHA-256/$id，核对 Provenance 与 Demo 排除；01/06/07 静态 PASS，02～05 原状态不变 | 证明固定输入而不冒充 Publisher 或 Compiler 产品验收 | Issue #95；SR-030 |
 | 2026-11-27 | 0.1.9 | GPT-6.2（ChatGPT） | §5、§6、修订记录 | 统一 SR-013 版本引用；细化 AC-030-04 ZIP 元数据归一、entry 顺序、双构建逐字节比较与正式 Schema 验证 | 处理既有评审 P2；不推测未发布的 Package Schema 字段 | Issue #95；#106；Review #91 |
 | 2026-11-27 | 0.1.10 | GPT-6.2（ChatGPT） | §6、修订记录 | 将 SR-013 互引从错误的 §5～6 更正为实际定义 Schema-only / 零 Capability roots 的 §8（AC-013-06） | 确保跨 SR 规则引用可定位且与实际章节一致 | Issue #106；Review #91 |
+| 2026-11-28 | 0.1.11 | GPT-6.2（ChatGPT） | 文档头、§1、§6、修订记录 | 将活动依赖入口同步到 F09 v0.3.41、F08 v0.3.33、EC02 v0.2.22、CA-SL 1.6.0 v0.2.10 与 SR-013 v0.2.42 §8 | 避免 Host Context Publisher 继续引用旧版本或错误章节，保持 AC-013-06 / AC-030-03 联合验收入口一致 | Issue #95/#106；PR #107/#115 |
