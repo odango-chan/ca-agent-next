@@ -1,7 +1,7 @@
 # EC05 — OpenAMSM Owner 与权威状态架构设计
 
 > 文档类型：外部能力域架构设计（实现派生重建）  
-> 文档版本：0.1.5\
+> 文档版本：0.1.6\
 > 状态：依据当前 main 代码、Owner 声明、契约和验收材料重建；源仓没有独立总体架构文档  
 > 功能归属：EC05；关联 F04、F05、F06、F07  
 > 关联需求：IR-004、IR-005；SR-007、SR-010、SR-011、SR-018、SR-025\
@@ -137,7 +137,7 @@ UE-requested Release 的 NAS message type 是 0xD1，与 AMF/network-initiated R
 | Durable Receipt / Commit Proof | docs/mas-owner-contracts-and-receipt.md、patches/openamsm/0023-mas-durable-receipt.patch | IMPLEMENTED；源仓单测/构建有证据 |
 | Exact-original Reconcile | docs/scheme-c-pfcp-reconcile.md、Owner PR #21 的设计与证据记录 | IMPLEMENTED；源仓文档声明真实 ac 栈验收 |
 | Scheme C Modify | docs/scheme-c-owner-qos-delta.md、Owner patches 0006～0010 | IMPLEMENTED；源仓记录真实 PFCP 52/53 和 N1/N2 路径 |
-| UE-requested Release | Owner patches 0011～0017、N1 0xD1 / 0xD4 和 N2 response binding | IMPLEMENTED；源仓记录真实隔离 E2E |
+| UE-requested Release | Owner PR #21 MERGED（main commit `3201202b`，patches 0011～0014）；`env-5gc-sim@6ba1dc4` 固定 harness、PFCP、MAS Trace、UPF 与 SMF 时间线 | **历史 Owner / 隔离 UE-requested Release E2E 限定 PASS**：PFCP 54/55、MAS `DELETE_UP_SESSION`、UPF Active Session=0、SMF Session Removed；`smf_pfcp_del=false` 是非门禁日志关键词检查；不覆盖当前候选 Reconcile、Network-requested ReleaseSMContext、Next E2E 或 Production |
 | Next Plugin / Runtime 端到端调用 | EC04 Plugin main 尚无代码，ca-agent-demo PR #246 未合并 | NOT_IMPLEMENTED / NOT_RUN |
 | Production Qualification | 本项目 Demo 非目标 | NOT_CLAIMED |
 
@@ -151,6 +151,14 @@ UE-requested Release 的 NAS message type 是 0xD1，与 AMF/network-initiated R
 - [Scheme C Modify / Release 原文](../../设计说明书/外部能力域/EC05-OpenAMSM%20Owner/Scheme%20C%20Modify与Release%20Owner设计原文.md)
 - [PFCP UNKNOWN Reconcile 原文](../../设计说明书/外部能力域/EC05-OpenAMSM%20Owner/PFCP%20UNKNOWN%20Reconcile与重启恢复设计原文.md)
 
+### UE-requested Release 历史证据复核（2026-11-28）
+
+- 固定对端仓：`odango-chan/env-5gc-sim@6ba1dc47049013e19d93222fb308ffead7eb4c0e`；harness `run_scheme_c_release.py` blob `35b07522afe3275531b19313f2cb1d0d3eb10412`。
+- `smf_pfcp_del=false` 仅表示非门禁 SMF 日志关键词匹配；脚本四个成功 gates 的谓词不依赖该字段。不得把它解释为 PFCP DELETE 未执行。
+- 正常路径证据：`normal/pfcp-summary.tsv` 记录 PFCP 54/55；`normal/mas-trace.ndjson` 记录 `DELETE_UP_SESSION`；`normal/upf-metrics-after.txt` 记录 UPF Active Session=0；`normal/smf-window.log` 记录 Session Removed。21:41:53.913 的 `OES.Start adapt failed` 早于 Release 事件，属于 Establish plan，不得混作 Release 失败。
+- 结论仅为**历史 Owner / 隔离 UE-requested Release E2E 限定 PASS**。本结论不覆盖当前候选分支的 PFCP UNKNOWN exact-original Reconcile、Network-requested ReleaseSMContext、Next Runtime E2E 或 Production Qualification。
+
+**当前候选与实施门槛：**`env-openamsm` 候选分支 `fix/sr-018-owner-evidence-exact-reconcile` @ `c83be9c803c1ffd3a04964f6c2d80787c3798190` 仅为静态来源；[env-openamsm#28](https://github.com/odango-chan/env-openamsm/issues/28) 仍 OPEN / BLOCKED / NOT_STARTED。必须等待 SR-018 当前设计独立复评通过并达到对应阶段 READY，才可启动 Publisher、Python、Patch、C/native 与真实 PFCP UNKNOWN → Receipt Query → Reconcile 实施/验收。
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
@@ -161,3 +169,4 @@ UE-requested Release 的 NAS message type 是 0xD1，与 AMF/network-initiated R
 | 2026-11-28 | 0.1.3 | GPT-6（ChatGPT） | §2.1、修订记录 | 将 Owner 1.6.0 公开成员数改为两项历史 Parser 分别签认后推导，补齐混合与未签认情形 | 避免把历史 ToolCatalog 基数或固定 24/24 候选误当成新 Publisher 的强制契约 | Issue #12；SR-025；PR #46；Review #6095143611 |
 | 2026-11-28 | 0.1.4 | GLM-5.3（DeepSeek Harness） | 修订记录 | 合并被空行拆断的孤儿修订表段为单一连续表格，不改变任何历史行内容 | 修复 R8-09 同类 Markdown 渲染断裂，保证修订数据完整可见 | Issue #12；PR #46；Review #6095143611 |
 | 2026-11-28 | 0.1.5 | GLM-5.3（DeepSeek Harness） | 修订记录 | 将 6 列历史修订表统一为 7 列标准结构 | 关闭 R3-LEDGER-01/R8-09 同族列宽失配，保证原因/关联列渲染可见 | Issue #12；PR #46；Review #6095143611 |
+| 2026-11-28 | 0.1.6 | GPT-6.2（ChatGPT） | 当前实现审计、Release 证据与修订记录 | 以固定 harness 成功谓词、PFCP 54/55、MAS Trace、UPF=0 和 SMF 时间线解释历史 UE-requested Release 限定 PASS；明确 `smf_pfcp_del=false` 为非门禁子检查，并保留候选 #28 BLOCKED/NOT_STARTED | 关闭历史证据误判，同时不将旧 E2E 外推到当前 Reconcile、Next 或 Production | env-openamsm#21/#28；env-5gc-sim@6ba1dc4；ca-agent-next#104/#114/#115 |
