@@ -1,12 +1,12 @@
 # SR-031：OpenAMSM 3GPP OpenAPI 原版 Source Bundle 发布
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.3.2
+> SR 版本：0.3.3
 > 创建日期：2026-11-27
 > 修订日期：2026-11-27
 > 状态：DRAFT / REVIEW_REQUESTED；Publisher / Compiler / Plugin / Codec 产品均 NOT_RUN 或 BLOCKED_EXTERNAL_INPUT
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
-> 本文非目标：修改原版 YAML、改写 3GPP 标准、伪造 NAS/NGAP YAML、实现消费端、全量协议资格、旧版兼容
+> 本文局部非目标：修改原版 YAML、改写 3GPP 标准、伪造 NAS/NGAP YAML、实现消费端、全量协议资格、旧版兼容
 > 上游：[IR-009](../IR/IR%20总登记册.md#ir-009)、[Issue #47](https://github.com/odango-chan/ca-agent-next/issues/47)
 > 实施仓：ca-skills（Publisher）；消费端归 SR-010 / SR-013
 > 权威设计：[EC01.3GPP](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)
