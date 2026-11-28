@@ -88,7 +88,7 @@ FORBIDDEN_COMMANDS = (
     (
         "PIP_INSTALL",
         re.compile(
-            r"\b(?:python(?:\d+(?:\.\d+)?)?\s+-m\s+pip|pip(?:3(?:\.\d+)?)?)\s+"
+            r"\b(?:(?:python(?:\d+(?:\.\d+)?)?|py(?:\.exe)?)\s+-m\s+pip|pip(?:3(?:\.\d+)?)?)\s+"
             r"(?:install|sync|compile)\b"
             r"|\bpip-(?:compile|sync)\b"
             r"|\bpipenv\s+(?:install|sync|lock)\b",
@@ -99,8 +99,8 @@ FORBIDDEN_COMMANDS = (
     (
         "ALTERNATE_PACKAGE_MANAGER",
         re.compile(
-            r"\b(?:poetry\s+(?:install|lock)|conda\s+(?:install|env\s+create)|"
-            r"mamba\s+(?:install|env\s+create)|pdm\s+(?:install|sync|lock|add)|"
+            r"\b(?:poetry\s+(?:install|lock|add|remove|update|sync)|(?:conda|mamba|micromamba)\s+(?:install|create|update|remove|env\s+(?:create|update|remove))|"
+            r"pdm\s+(?:install|sync|lock|add)|"
             r"rye\s+(?:sync|lock|add|install)|pixi\s+(?:install|lock|add))\b",
             re.IGNORECASE,
         ),
@@ -157,7 +157,7 @@ def is_root_lockfile(path: str) -> bool:
     return (
         name.startswith(("requirements", "constraints"))
         and Path(name).suffix in {".txt", ".in"}
-    ) or name in ROOT_LOCKFILE_NAMES
+    ) or name in ROOT_LOCKFILE_NAMES or re.fullmatch(r"pylock(?:\.[a-z0-9_-]+)*\.toml", name) is not None
 
 
 def is_python_scope_path(path: str, workflow_content: str = "") -> bool:
@@ -258,6 +258,7 @@ def is_policy_gate_no_project(path: str, line: str) -> bool:
 
 def command_violations(added_lines: Iterable[tuple[str, str]]) -> list[str]:
     violations: list[str] = []
+    added_lines = list(added_lines)
     for path, raw_line in added_lines:
         candidate = Path(path)
         if candidate.suffix.lower() not in EXECUTABLE_SUFFIXES and candidate.name.lower() not in EXECUTABLE_NAMES:
@@ -306,6 +307,10 @@ def command_violations(added_lines: Iterable[tuple[str, str]]) -> list[str]:
                     f"UV_RUN_NOT_LOCKED: {path}: {line} — "
                     "项目命令必须同时使用 uv run --no-sync --locked。"
                 )
+    for path, command in shell_continuation_commands(added_lines):
+        for code, pattern, message in FORBIDDEN_COMMANDS:
+            if pattern.search(command):
+                violations.append(f"{code}: {path}: {command} — {message}")
     return violations
 
 
@@ -369,6 +374,38 @@ def dependency_surface(pyproject_text: str) -> dict[str, Any]:
             if key in uv
         },
     }
+
+
+def validate_base_tip(repo_root: Path, base_ref: str, base_sha: str) -> None:
+    """Fail closed if the fetched live Base tip differs from the PR event snapshot."""
+    remote_ref = f"refs/remotes/origin/{base_ref}"
+    actual = run_git(repo_root, "rev-parse", "--verify", remote_ref, check=False)
+    if actual.returncode != 0 or actual.stdout.strip() != base_sha:
+        raise PolicyError(
+            f"STALE_BASE: {remote_ref} is {actual.stdout.strip() or 'unavailable'}, "
+            f"but PR event Base SHA is {base_sha}; refresh the PR and rerun CI."
+        )
+
+
+def shell_continuation_commands(added_lines: Iterable[tuple[str, str]]) -> list[tuple[str, str]]:
+    """Reconstruct adjacent added shell lines ending in backslash for command checks."""
+    joined: list[tuple[str, str]] = []
+    pending_path: str | None = None
+    pending = ""
+    for path, raw in added_lines:
+        piece = raw.strip()
+        if pending_path is not None and path != pending_path:
+            pending_path, pending = None, ""
+        if pending_path is None:
+            if piece.endswith("\\"):
+                pending_path, pending = path, piece[:-1].rstrip()
+            continue
+        continued = piece.endswith("\\")
+        pending += " " + (piece[:-1].rstrip() if continued else piece)
+        if not continued:
+            joined.append((path, pending))
+            pending_path, pending = None, ""
+    return joined
 
 
 def validate_base_ref(
@@ -594,6 +631,7 @@ def evaluate(
     if not has_python_scope(repo_root, base_sha, head_sha, changed_paths):
         return True, [], sorted(changed_paths)
 
+    validate_base_tip(repo_root, base_ref, base_sha)
     validate_base_ref(manifest, base_ref, base_sha, pr_number)
     validate_base_contents(repo_root, base_sha, pr_number, manifest)
     validate_head_contents(repo_root, head_sha, manifest)
