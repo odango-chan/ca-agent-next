@@ -905,7 +905,7 @@ class EchoReceiverProtocolTests(unittest.TestCase):
         }
         finished = subprocess.run(
             [str(self.binary), "serve", f"--ingress={custom}"],
-            cwd=binary.parent,
+            cwd=self.binary.parent,
             input="".join(
                 json.dumps(frame) + "\n"
                 for frame in (golden[0], invalid_ack, golden[10])
