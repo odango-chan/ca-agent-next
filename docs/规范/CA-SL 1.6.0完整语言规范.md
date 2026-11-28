@@ -1,7 +1,7 @@
 # CA-SL 1.6.0 完整语言规范（中央设计稿）
 
 > 文档类型：CA-SL 作者语言规范（中央规范性设计稿）
-> 文档版本：0.2.10
+> 文档版本：0.2.11
 > 语言版本：CA-SL 1.6.0
 > languageTarget：connectionagent.io/v1.6.0（Next 中央设计已冻结；正式 ca-skills Schema / Golden / Release 尚未发布）
 > 状态：**DRAFT / REVIEW_REQUESTED**；CA-SL 1.6.0 唯一正式语言设计，languageTarget 已由 Next 中央冻结为 connectionagent.io/v1.6.0；正式作者 Schema / Golden / Release 尚未发布。Assurance 可选；有 Assurance Skill 时 `assurance/contract.yaml` 可声明顶层 `when`；`SKILL.md` Front Matter 不声明 when；无 Assurance Skill 不声明 when。
@@ -507,7 +507,7 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 ## 15. 安全、版本与不兼容
 
 1. 新 Compiler 必须先固定唯一语言目标再解析；只接受 CA-SL 1.6.0。
-2. languageTarget 的中央建议值为 connectionagent.io/v1.6.0；ca-skills 与 Compiler 正式发布必须采用经评审批准的同一值，不得分别发明别名。
+2. languageTarget 已由 Next 中央冻结为唯一值 `connectionagent.io/v1.6.0`；ca-skills 与 Compiler 的正式 Schema / Golden / Release 尚未发布，发布时必须使用该值，不得重新选择或引入别名。
 3. 1.6.0 与旧 v1alpha5 / v1alpha6 候选完全不兼容。新系统拒绝旧源、旧 DTO、旧 Artifact、旧 Bundle 和未知 languageTarget。
 4. 不提供转换器、迁移命令、旧语法分支、fallback 或混合 Catalog；旧 Skill 由作者按 1.6.0 重新编写、重新 Check / Build / Verify / Bundle。
 5. 不增加生产 Admission、签名、额外摘要、Trust Registry、复杂 IAM 或 Agent 内置 Compiler。
@@ -568,7 +568,7 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 
 - 当前是中央完整设计稿，必须经独立设计评审后才能冻结。
 - ca-skills 负责发布 1.6.0 作者 Schema、完整规范、机器 languageTarget、Golden 和正式 Release Record。
-- Compiler 负责新 Parser / AST / Check / Link / BuildRequest / BuildResult / Artifact / Verify；SR-013 / Compiler Issue #61 负责实现与产品证据。
+- Compiler 负责新 Parser / AST / Check / Link / BuildRequest / BuildResult / Artifact / Verify；SR-013 / Compiler Issue [#62](https://github.com/odango-chan/ca-skill-compiler/issues/62) 负责 1.6.0 实现与产品证据；旧 #61 仅保留 v1alpha5 历史范围。
 - Owner / Provider 分别发布满足一对一映射的 Package；Host Context Publisher 只发布 Schema-only Package。
 - SR-027 负责新 Bundle；SR-004～006 负责导入、Catalog、Resolver；F04 负责 Runtime Action Boundary；F09 / SR-016 负责 Studio。
 - 未正式发布前，所有产品实现和运行验收保持 NOT_RELEASED / NOT_RUN；本设计通过不代表实施 READY。
@@ -623,3 +623,4 @@ Host Context Schema-only Package 仍只经 `Contract.contexts` 引用，与 Open
 | 2026-11-27 | 0.2.6 | GPT-6.2（ChatGPT） | §5.1、修订记录 | 将“开放对象拒绝”限定为本地 G.4 对象根 / SourcePath 对象节点；明确 OAS3 根引用别名及外部闭包按 OAS 3.0 默认语义处理 | 消除一般性 G.4 闭合规则与 OAS3 未声明 additionalProperties 默认允许额外属性之间的规范冲突 | Issue #49；IR-009；SR-013；PR #52 |
 | 2026-11-27 | 0.2.7 | ChatGPT（GPT-6） | §5.3、文档头、修订记录 | 移除具有 start / nodes 但仅含中间 Precondition 的误导性伪完整 Procedure 示例，改为明确标注的 Procedure.inputs 片段，重申完整 Procedure 必须满足 §6 Node / routes / Goal Postcondition 规则 | 避免语言规范以非合规中间 Predicate-only Node 示例违反自身作者粒度原则 | Issue #49；IR-008；SR-032；PR #52 |
 | 2026-11-27 | 0.2.8 | ChatGPT（GPT-6.2） | §6.1、§8.1、修订记录 | 补齐 PackageSchemaPath / QualifiedSchemaId / SchemaReference 的规范文法与确定性解析规则；明确本地路径仅限 Package 根 schemas/，外部 Schema 必须经已声明依赖精确导出 | 修复 Predicate 参数正向示例使用本地路径但 EBNF 仅允许 QualifiedSchemaId 的冲突，不改变 1.6.0 既定 YAML 结构 | Issue #49；IR-008；SR-032；PR #52 |
+| 2026-11-28 | 0.2.11 | GPT-6（ChatGPT） | §15、§18、修订记录 | 将已冻结 languageTarget 与正式发布状态分开；将新版 Compiler 实施 Issue 纠为 #62、#61 仅历史 | 消除当前权威规范与 EC02/SR-013 的新旧实施入口冲突；不改变语言语义 | Issue #50；Compiler #62；PR #115 |

@@ -1,6 +1,6 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.44\
+> 文档版本：0.2.45\
 > 状态：整项 DRAFT；阶段 READY（中央只读核验，仅 AC-013-01 历史隔离 PoC/归档完整性范围）；AC-013-01 固定归档完整性与历史 PoC 独立复验 PASS（Issue #102；PR #110 修复快照 `39ccb00be8d14f7f1be7b02061454e9b927471b8`）；`vet.log` NOT_ARCHIVED / NOT_INDEPENDENTLY_VERIFIABLE；AC-013-02～06 产品仍 NOT_RUN/BLOCKED；AC-013-07 BLOCKED / NOT_RUN；when 唯一来自 assurance/contract.yaml。
 > 下一步：按本 SR 已冻结的 CA-SL 1.6.0 / Compiler 3.0.0 / API /2 契约推进 AC-013-02～07 的正式输入与独立评审；AC-013-01 仅为历史隔离 PoC/归档完整性 PASS，不授权 Compiler 产品实现、发布或 Next Runtime 验收。
 > 阶段依据：[独立评审 #77](https://github.com/odango-chan/ca-agent-next/issues/77#issuecomment-7209276846)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
@@ -44,7 +44,7 @@
 
 | 项目 | 固定值 / 状态 |
 |---|---|
-| CA-SL | **1.6.0 NOT_RELEASED**，精确机器标识与正式 Schema 待 ca-skills 发布；v1alpha5 SHA 18d8184367982ccbc835756136c4a53f9096c3a0 仅历史审计 |
+| CA-SL | **1.6.0 NOT_RELEASED**，Next 已冻结 `languageTarget=connectionagent.io/v1.6.0`；正式作者 Schema / Golden / Release 待 ca-skills 发布；v1alpha5 SHA 18d8184367982ccbc835756136c4a53f9096c3a0 仅历史审计 |
 | Compiler | v2.1.0；PoC 源基线 255ab85fa5abb4b0bf36656bf64250cafebf45cb |
 | Go PoC 环境 | Go 1.26.6、cel-go 0.33.2、cel.dev/expr 0.25.1、Go protobuf 1.36.10 |
 | Python PoC 环境 | CPython 3.14.6、cel-expr-python 0.1.4、protobuf 7.36.2 |
@@ -478,3 +478,4 @@ OpenAPI operation / multipart ingress 验证由 SR-010 负责；Compiler 负责 
 | 2026-11-28 | 0.2.42 | GPT-6.2（ChatGPT） | §3.2～§3.3、AC-013-01、修订记录 | 将专用证据分支完整 59 Blob 归档树纳入 PR #115（58 个清单覆盖文件 + SHA256SUMS），不再仅登记五份修复元数据文件 | 确保 58/58 独立复验结论对应当前集成树中完整可搬移的归档材料 | Issue #102；PR #110；PR #115 |
 | 2026-11-28 | 0.2.43 | GPT-6.2（ChatGPT） | 文档头、§1、§3.2～§3.3、修订记录 | 同步 EC02/F08/CA-SL 当前版本；将修复后归档的唯一入口改为 PR #115 已纳入的完整 59 Blob 目录；区分 Python 18/18 复验与未重新运行的 Go 产品测试、未归档 vet.log | 消除旧 PR #18 修复前归档链接和“未复验”表述与 Issue #102 实际证据之间的矛盾 | Issue #102；PR #110/#115 |
 | 2026-11-28 | 0.2.44 | GPT-6（ChatGPT） | §0、§1 与修订记录 | 纠正旧“机器标识未冻结”口径；明确仅 Schema/Golden/Release 未发布，引用 F02 新基线 v0.4.4 | 与 CA-SL 1.6.0 / EC02/F08 的冻结机器身份保持一致 | Issue #50/#14；Compiler #62；PR #115 |
+| 2026-11-28 | 0.2.45 | GPT-6（ChatGPT） | §2、修订记录 | 明示 languageTarget 已由 Next 冻结、生产者 Schema/Golden/Release 仍未发布 | 消除表格中“精确机器标识待发布”对已冻结设计身份的误导；产品状态不变 | Issue #50；Compiler #62；PR #115 |
