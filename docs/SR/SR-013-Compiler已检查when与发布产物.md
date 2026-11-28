@@ -127,7 +127,7 @@ AC-013-01 可记录为 **PASS（隔离 PoC 范围）**，但必须同时保留�
 
 PoC 中复用 Development Schema/Lock fixture 只证明共享 Schema 解析机制和序列化互操作，不允许正式产品路径依赖 Development Artifact 或改变 Development v1alpha1。
 
-### 3.5 Event metadata 与 T1/T2 输入边界（待正式资格化）
+### 3.6 Event metadata 与 T1/T2 输入边界（待正式资格化）
 
 `when` 只位于 `assurance/contract.yaml`。Publisher 冻结 Event metadata 字段/类型后 Compiler 才构建 CEL 类型环境；仅表达式实际引用的 metadata 进入 DescriptorSet，仅引用 `input` 时加入 Request Schema 类型闭包。不得预设所有 Skill 均有 `event.type`，也不能让 T1 选择依赖 T2 Codec Result。原版 OpenAPI 3.0 资源不属于 G.4 dialect，不得改写。
 
@@ -142,7 +142,7 @@ PoC 中复用 Development Schema/Lock fixture 只证明共享 Schema 解析机�
 ### 4.2 实施算法与结果
 
 1. 将 `assurance/contract.yaml.when` 和 `requestSchema` 接入唯一 1.6.0 Parser、AST 与 SourcePath，保留精确行列；旧 v1alpha5 Contract/Procedure 和旧 BuildRequest 一律拒绝。
-2. 每个 Skill 独立建立 `event.type` 类型环境；只有 when 引用 `input` 时，必须存在已声明 Request Schema，使用对应 Schema Registry/root/$ref 闭包加载输入字段类型。单纯 `event.type` 判断不强制声明 requestSchema；已声明的 Schema 无论 when 是否引用仍需完整校验和发布。
+2. 每个 Skill 仅基于 Publisher 正式冻结且被该 `when` 实际引用的 Event metadata 建立类型环境（`event.type` 须经 Publisher 冻结才可使用）；只有 when 引用 `input` 时，必须存在已声明 Request Schema，使用对应 Schema Registry/root/$ref 闭包加载输入字段类型。单纯 `event.type` 判断不强制声明 requestSchema；已声明的 Schema 无论 when 是否引用仍需完整校验和发布。
 3. 仅允许规范规定的 CEL 白名单：静态成员路径、bool 结果、显式 `has`、null/non-null guard 与左到右 AND/OR/NOT 的 path-sensitive short-circuit facts；所有 optional/nullable 祖先必须被证明安全，禁止 DynType、数组索引、动态构造、未声明函数、时钟、随机数、外部状态。
 4. 对 nullable 联合类型使用经 AC-013-01 隔离验证的 oneof wrapper **算法**重新按 1.6.0 类型 Schema 落地；CheckedExpr 为标准 protobuf `cel.expr.CheckedExpr`，Any type URL 为 `type.googleapis.com/cel.expr.CheckedExpr`；DescriptorSet 为标准 `google.protobuf.FileDescriptorSet`。
 5. CheckedExpr 与 FileDescriptorSet 按 Skill 独立输出，Only event-type when 不引入不必要的 input 类型闭包；Schema root/完整资源闭包、类型与 SourcePath 在 Manifest 里必须可相互定位。
@@ -150,6 +150,8 @@ PoC 中复用 Development Schema/Lock fixture 只证明共享 Schema 解析机�
 7. 输入顺序变化、并行 Skill、不同 Request Schema 同名字段和重复构建必须保持严格闭包隔离与确定性。任何失败没有部分 Artifact/BuildResult outputFiles。
 
 ### 4.3 AC-013-02 独立验收矩阵（新规范正负例）
+
+组合覆盖应至少区分：无 `requestSchema` / 无 `when`、仅 `requestSchema`、仅引用已冻结 Event metadata 的 `when`、`requestSchema` + metadata-only `when`、`requestSchema` + input `when`；input `when` 缺 Request Schema 必须 `CEL_INVALID`，不允许提供虚构的 `event.type` 默认类型或未验证的 T2 Codec Result。
 
 | 样例 | 预期 |
 |---|---|
@@ -340,7 +342,7 @@ AC-013-05  经授权 Compiler Release
 - Native/WASM/Chromium/Python 任一门禁失败：记录 FAIL，不发布。
 - 目标仓写入权限、PR 合并或 Release 授权缺失：只做只读检查或已授权范围内的工作，不越权。
 
-恢复时先重新核对规范 SHA、Compiler HEAD、Issue #61、目标分支、权限和最后一个已通过 Acceptance；从第一个未通过阶段继续，不重跑或覆盖已通过证据。
+恢复时先重新核对 CA-SL 1.6.0 Publisher 冻结规范 SHA、Compiler HEAD、新实施 Issue #62、目标分支、权限、最后一个已通过的 Acceptance 和证据归档入口；旧 #61 仅历史审计。从第一个未通过阶段继续，不重跑或覆盖已通过证据。
 
 ### 9.1 DeepSeek Harness Goal 执行约束
 
@@ -351,7 +353,7 @@ SR-013 达到 READY 且文档门禁通过后，实施使用一个连续 Goal，�
 - 推理强度：low。
 - 顺序：AC-013-01 证据复核 → AC-013-02 → AC-013-03 → AC-013-04 → AC-013-06 → AC-013-05。
 - 允许在同一个 Goal 内按依赖连续处理多个 AC；不得并行执行有依赖关系的阶段，不得跳过失败阶段。
-- 每个 AC 仍需独立记录 Issue #61 关联、提交、测试、受测 SHA 和证据；不得把一个总的 PASS 替代逐 AC 验收。
+- 每个 1.6.0 AC 仍须独立记录 Compiler Issue #62、Commit、测试、受测 SHA、环境、命令、预期/实际结果与可访问原始证据；不得把一个总 PASS 替代逐 AC 验收，历史 #61 不能充当新产品入口。
 - AC-013-03 只有在 Compiler Owner 已确认 Artifact API 后才可继续；没有确认就停在 Owner Gate，不得自行更换版本名。
 - AC-013-06 必须先有 Compiler Owner 正式 Schema/DTO/Golden 与 SR-030 对应 Package fixture；不支持 0 Capability / 0 Callable 时停止并修订中央 Package 契约，禁止生成合成 Tool/Callable。
 - AC-013-05 必须再次检查发布授权；没有明确授权时只完成 Release 前检查，不创建 Tag 或 Release。
@@ -446,3 +448,4 @@ AC-013-02/04 仍 NOT_RUN，03/05/06 仍 BLOCKED。整项 DRAFT 主状态不变�
 | 2026-11-27 | 0.2.25 | kimi-k3.1-pro | AC-013-01、§13、文档头 | 核对 58 项归档哈希与历史结果，发现 audit 登记不一致、绝对式校验路径及 vet 日志缺项；将本轮归档完整性记为 FAIL，复跑 NOT_RUN | 区分文件存在性、内部一致性和产品运行验收，避免过度判 PASS | Issue #95；PR #18 |
 | 2026-11-28 | 0.2.28 | GPT-6（ChatGPT） | 头部、AC-013-01、实施前置 | 明确新版 Compiler #62，修正 cases.json 固定证据路径；历史 #110 已合独立证据分支但当前产品 AC 不升级 | 防止历史 #61/归档修复变成新 Compiler 产品资格 | Issue #12；#40；#102；PR #45；#46；#110 |
 | 2026-11-28 | 0.2.28-integration | GPT-6（ChatGPT） | §3.5、§5～6 | 整合 Publisher Event metadata、T1/T2 分层、OpenAPI 原始字节和 OAS3/G.4 解析边界；具体算法留给 SR-031/#48 | 拒绝旧 Adapter 或 Codec 输出在选择期前置 | Issue #40；#47；PR #45；#46；#48 |
+| 2026-11-28 | 0.2.28-integration-3 | GPT-6（ChatGPT） | §3.6、§4、§9、修订记录 | 反向检查恢复分支独有的 CEL 组合矩阵、Compiler #62 恢复条件与逐 AC 追踪；清除正文错误 #61、无条件 event.type 语义和重复小节编号 | 旧版 Issue 不再成为新版实施入口 | Issue #12；#40；#113；PR #45；#46 |
