@@ -2,7 +2,7 @@
   "schema_version": 1,
   "scope": "ca-agent-next-root-python",
   "baseline": {
-    "sha": "4e8bbbab3c553285566f2e0952a35978e99d8148",
+    "sha": "15dd7972d15c91b797b202f85189cde2b6ffe373",
     "source_pr": 115,
     "source_branch": "integration/issue-50-mainline-convergence"
   },
