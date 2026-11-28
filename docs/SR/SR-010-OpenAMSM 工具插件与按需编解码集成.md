@@ -1,7 +1,7 @@
 # SR-010：OpenAMSM 工具插件与按需编解码集成
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.10
+> SR 版本：0.2.11
 > 状态：整项 DRAFT；阶段 READY_CANDIDATE（仅限 Next Host no-hash Artifact Channel v2 设计，待本轮主线独立复评）；AC-010-03 模块设计可独立实施，产品 NOT_RUN；AC-010-09 等真实 Provider v2 互操作；AC-010-10 原版 OAS3 requestBody / multipart / N1/N2/N2 Ext1 Content-ID 验收 BLOCKED/NOT_RUN。
 > 下一步：推进 Next Python Host ArtifactStore/Channel v2 与 no-decode 路径；使用测试 Provider 完成模块验收。真实 Provider 2.0.0 互操作另由 ca-client-tools SR-026 交付；06a/06b/07/08/09 按各自依赖执行。
 > 阶段依据：[独立评审 #74](https://github.com/odango-chan/ca-agent-next/issues/74#issuecomment-7210244694)，评审 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
@@ -87,12 +87,23 @@
 |---|---|
 | 实施仓库 | ca-agent-next |
 | GitHub Issue | [阶段工作项 #94](https://github.com/odango-chan/ca-agent-next/issues/94)（限定范围） |
-| 实施 PR | 未创建 |
-| Commit | 无 |
-| 实施状态 | NOT_STARTED |
-| 验收证据 | NOT_RUN |
+| 实施 PR | [#126](https://github.com/odango-chan/ca-agent-next/pull/126)（Draft，Base `main@bb5fcdb`，候选 Head `c90b29b`） |
+| Commit | `c90b29b734ba63026ed4f474c901eb5c5c4a0c14` |
+| 实施状态 | IMPLEMENTED_CANDIDATE（仅 AC-010-01～05 Host 模块；独立复核/合并前不改主状态） |
+| 验收证据 | 本仓 39 项 `test_artifact_channel.py`；全量 gate 326/326；AC-010-06a/06b/07/08/09/10 仍 NOT_RUN/BLOCKED |
 
 ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在此标记实施完成。
+
+### 6.1 本轮 Host ArtifactStore / Channel v2 实施证据（候选）
+
+- **设计基线：**`ca-agent-next main@bb5fcdb819481a89f6647eee51c23af896d6d7eb`；未改变 AC、接口或设计语义。
+- **实现：**`src/ca_agent_next/artifacts/`（Host-owned Store + `ca-host.artifact-store/v2` loopback channel）与 `src/ca_agent_next/plugins/provider_v2.py`（唯一 Manager 内的 Provider v2 stdio Driver）。
+- **AC-010-01：**通过唯一 `PluginManager.register_driver` 初始化；缺 channel 时 artifact-bearing binding 为 `NOT_CONFIGURED`，非 artifact binding 可派发；显式非法 limits 在进程启动前返回 `PROVIDER_CONFIGURATION_INVALID`（无 marker/远端 I/O）；catalog 必须完整分区请求 backend；identity/catalogVersion 不匹配 fail-closed。
+- **AC-010-02：**`artifactRef` 固定 `art_<43 base64url>` 随机 opaque token，不含 Invocation/slot/path/URL；跨 Invocation、错误 direction/slot、过期引用均拒绝；模型自造 `artifactRef` 在注入前递归移除，仅 Host 对当前 Invocation 已授权引用可写入私有 slot。
+- **AC-010-03：**v2 GET/POST 只校验引用绑定、mediaType、精确 `Content-Length` 与配额；响应不含 `X-CA-Artifact-Sha256`/checksum/digest；输出经临时文件 `os.replace` 原子发布，提交前不可读。
+- **AC-010-04：**cancel、调用超时、Provider 退出、部分上传、配额超限均清除 staged/已发布材料；Provider 进程终止后 pending 收敛为明确终态，无重复派发。
+- **AC-010-05：**无 channel 时 no-decode plain binding 正常派发且测试 Provider `codecCalls=0`；artifact-bearing binding 在写 invoke 帧前被拒绝；未发布 backend 为 `NOT_IMPLEMENTED`，不进入 invoke。
+- **明确未证明：**`tests/fixtures/provider_v2_fake.py` 是计数型测试 Provider，不是 ca-client-tools 正式 Provider 2.0.0；AC-010-09 互操作、AC-010-06a/06b、AC-010-07/08、AC-010-10 与系统 E2E 均保持 NOT_RUN/BLOCKED。
 
 ## 7. 变更与替代关系
 
@@ -145,3 +156,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-28 | 0.2.8 | GPT-6.2（ChatGPT） | §1～4、AC-010-03、修订记录 | 将 Next Host Artifact Channel 明确为 ca-host.artifact-store/v2 no-hash，隔离历史 v1 SHA-256 契约 | 消除 F05 v1 与 Demo no-hash 约束冲突，并将 Host 模块实施与 Provider v2 外部交付分离 | Issue #113；SR-010；F05；F03.05；SR-026；PR #115 |
 | 2026-11-28 | 0.2.9 | GPT-6（ChatGPT） | 文档头、设计依据、§4～5、修订记录 | 同步 F05 v0.4.14 与 P2-05 Host Response 三元关联的验收归属，区分本 SR 的 Artifact Channel v2（Invocation/slot）与 SR-011 AC-011-05（外部 HTTP/2 Delivery obligation 绑定） | 不将 SR-011 系统级身份验证或 Plugin 测试冒充本 SR 产品 PASS，保留 AC-010-01～05 模块阶段候选 | Issue #50/#74/#75/#116；PR #115 |
 | 2026-11-28 | 0.2.10 | GPT-6（ChatGPT） | 文档头、§4/§5 F05 依赖引用、修订记录 | 对齐 F05 v0.4.15 历史 v1 SHA-256 与新 v2 no-hash 的明确隔离；本 Host Channel 依然只消费 v2，SR-011 Host 回应义务测试独立 NOT_RUN | 防止旧 Provider v1 checksum 被作为 Next Demo 模块要求或把 Channel 测试误报为 Delivery 三元测试 | Issue #50/#113/#116；PR #115 |
+| 2026-11-29 | 0.2.11 | DeepSeek Harness（执行模型） | §6、§6.1、修订记录 | 登记 AC-010-01～05 Host Channel v2 实施候选、固定 Base/Head SHA、39 项模块证据及明确未证明项 | 落实 Issue #94 限定范围的可复核证据；不改 AC/设计语义，不提前提升整项状态 | Issue #94；PR #126 |
