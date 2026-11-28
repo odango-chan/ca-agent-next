@@ -1,9 +1,9 @@
 # G02：Python 工程工具链与环境管理设计说明书
 
 > 文档类型：工程治理功能设计说明书  
-> 文档版本：0.2.7\
-> 状态：第六轮独立 Review [#6083872622](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083872622) 对固定 Head `2d20a128a1574103d709d82f6c426580ecb47f48` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2` 给出 CHANGES_REQUESTED（0 P0 / 1 P1 / 2 P2）；R028-21～23 已按 Issue #12 完成设计整改并推送，等待新 Head 第七轮独立复评；当前分支修订前 Head 为 `072248ff6a5deac40437ab47c892aaa2064781da`；SR-028 仍 DRAFT、AC-028-01～10 产品验收 NOT_RUN、READY=0\
-> 修订日期：2026-11-27\
+> 文档版本：0.2.8\
+> 状态：第七轮 SR-028 专项独立 Review [#6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6084094037) 对固定 Head `93f1389e7c5968cd30e8a74137207094864ecca0` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2` 给出 APPROVE_FOR_READY（0 P0 / 0 P1 / 2 非阻断 P2）；该结论仅限设计快照。当前恢复分支 SR-028 仍 DRAFT/READY=0；Issue #96 OPEN，PR #97 OPEN/未合并，PR #99 OPEN/未合并（基于 `93f1389`），PR #112 OPEN/Draft、堆叠于 #99；产品 AC-028-01～10 在当前恢复分支仍 NOT_RUN。\
+> 修订日期：2026-11-28\
 > 功能节点：G02 Python 工程工具链与环境管理  
 > 关联需求：[IR-007](../../IR/IR%20总登记册.md#ir-007)、[SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md)  
 > 追踪 Issue：[ca-agent-next #12](https://github.com/odango-chan/ca-agent-next/issues/12)（当前整改）；原设计 Issue [#35](https://github.com/odango-chan/ca-agent-next/issues/35) 已 CLOSED，仅作历史来源  
@@ -12,9 +12,9 @@
 
 ## 0. 设计评审入口（2026-11-26）
 
-本设计与 [SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md) 由 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12) 统一追踪；原设计 Issue #35 已 CLOSED。最新第六轮独立复评为 [PR #46 Review #6083872622](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6083872622)，固定 Head `2d20a128a1574103d709d82f6c426580ecb47f48` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`，结论 CHANGES_REQUESTED（0 P0 / 1 P1 / 2 P2）。R028-21 为唯一 P1，R028-22/23 为 P2；本轮仅修订设计与验收定义，不授权产品实施。
+本设计与 [SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md) 由 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12) 统一追踪；原设计 Issue #35 已 CLOSED。第七轮专项独立复评为 [PR #46 Review #6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6084094037)，固定 Head `93f1389e7c5968cd30e8a74137207094864ecca0` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`，结论 APPROVE_FOR_READY（0 P0 / 0 P1 / 2 非阻断 P2）；该结论仅限设计快照。实施 Issue #96 已 OPEN；PR #97 为 READY 状态回填（OPEN/未合并），PR #99 为基于 `93f1389` 的 uv 实施候选（OPEN/未合并），PR #112 为堆叠于 #99 的共享基线 PR（OPEN/Draft）。当前恢复分支仍 DRAFT/READY=0，产品 AC-028-01～10 NOT_RUN；本设计不授权从当前 PR #46 Head 开始新的 uv 产品实施。
 
-**设计待评审与实施 READY 分离：**PR #32 的评审上下文 CI 已完成，不构成 uv 迁移验收；SR-028 保持 DRAFT。评审未通过不得生成实施提示词，不开展跨仓批量迁移或不必要的生产供应链 DFX。
+**设计待评审与实施 READY 分离：**第七轮设计 Review 仅批准固定旧快照的设计；当前恢复分支 SR-028 仍 DRAFT，#97 状态回填 PR 未合并。实施 Issue #96 已存在并有独立基线/分支授权，PR #99/#112 仅是候选实施/治理 PR，不能把它们视为当前分支集成或 VERIFIED。PR #32 的评审上下文 CI 不构成 uv 迁移验收。
 
 ## 1. 目标
 
@@ -787,3 +787,4 @@ I1 与 I3 可在 SR-028 实施 Issue 内按依赖顺序执行；I2 只在 SR-001
 | 2026-11-27 | 0.2.5 | GPT-6.2（ChatGPT） | §0、§3.6～3.8、§4.1～4.3、§6～§7 | 按 Review #6083225844 修复 Bash fail-open：锁漂移与 A→B→A 从块首 fail-fast 并使用保码 cleanup trap；A 返回阶段全部改用 `uv run --no-sync`；新增标准库 unittest gate 并在双平台 Workflow 自动断言 skipped=0/非空测试且上传报告；Python 检查使用显式 uv 项目环境；补齐 A/B/A sys.prefix、原始 direct_url、ignore 证据持久化；Go 构建子 shell 恢复 CWD，按 GOOS 生成 Windows `.exe`，澄清 Workflow shell 边界 | 消除 R028-10～16 的 fail-open、自动同步、CI skipped 假 PASS、隐式解释器及跨平台/证据歧义；保持产品 AC NOT_RUN 与 SR DRAFT | Issue #12；PR #46；Review #6083225844；SR-028 v0.2.7 |
 | 2026-11-27 | 0.2.6 | GPT-6.2（ChatGPT） | 文档头、§0、§3.6、§3.8、SR 引用 | 按第五轮 Review #6083641266 修复 Review Context 诊断 Artifact 与三文件正式 Artifact 的契约冲突；明确 `loader_errors` 来源/计数及 discovery 异常；统一逐范围与整体 `exit_code` | 关闭 R028-17 P1 与 R028-18 P2，确保失败诊断可留存且失败 Run 不产生完成态 Artifact；产品 AC 仍 NOT_RUN | Issue #12；PR #46；Review #6083641266；SR-028 v0.2.8 |
 | 2026-11-27 | 0.2.7 | GPT-6.2（ChatGPT） | 文档头、§0、§3.6、§3.8、§4.3、§7 | 按第六轮 Review #6083872622 修复 AC-028-08 受控负例：保留有效 Agent.md 与测试门禁，通过临时 Workflow PR 将生成器 `--base` 注入全零 SHA 形成可执行失败路径；run-context 记录实际/注入 SHA 与模式；补齐 AC 证据中的负例不合并、恢复后成功重跑；统一 gate 的 `discovery_exception=null` 断言 | 关闭 R028-21 P1 与 R028-22/23 P2；不修改测试代码或产品 Workflow，不将设计整改视为产品实施，SR-028 继续 DRAFT / NOT_RUN | Issue #12；PR #46；Review #6083872622；SR-028 v0.2.9 |
+| 2026-11-28 | 0.2.8 | GPT-6（ChatGPT） | 文档头、§0、修订记录 | 更新 SR-028 第七轮专项设计批准和 #96/#97/#99/#112 的当前状态/固定基线 | 避免把第六轮历史评审当作最新状态，或将旧快照候选实施混入当前恢复分支产品状态 | Issue #12；Issue #96；PR #46/#97/#99/#112；Review #6084094037 |
