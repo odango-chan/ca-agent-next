@@ -1,14 +1,14 @@
 # SR-026：Codec公开工具发布
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.1
+> SR 版本：0.2.2
 > 状态：整项 DRAFT；中央生产端契约已固定，DESIGN_REVIEW_REQUESTED；AC-026-01～03 按既有候选库/Provider 基线分别验收；AC-026-04～06 的产品执行仍 BLOCKED_EXTERNAL_INPUT / NOT_RUN，Provider 2.0.0 尚未发布。
 > 下一步：独立评审本轮固定的 Codec Capability/Callable、Package 2.0.0、Runtime Bindings v2、Artifact Channel v2 和 Output Schema；达到 SR-026 READY 且 SR-029 依赖 READY 后，再创建 ca-client-tools 实施 Issue。
 > 阶段依据：[独立评审 #87](https://github.com/odango-chan/ca-agent-next/issues/87#issuecomment-7209366603)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。
 > 创建日期：2026-11-26  
 > 修订日期：2026-11-28\
 > 上游需求：IR-006  
-> 设计依据：F03.05 v0.4.12 §8.2.1 / §8.3、F05 v0.4.11、SR-010 v0.2.8 与 EC03 外部生产端复验。\
+> 设计依据：F03.05 v0.4.12 §8.2.1 / §8.3、F05 v0.4.13、SR-010 v0.2.8 与 EC03 外部生产端复验。\
 > 关联 Issue：ca-agent-next#12（设计）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：见 §4；本批仅验收指定 NAS Decode。
@@ -130,3 +130,4 @@ Provider Interface Package 的公开闭包固定为 3 Capability / 3 Callable：
 | 2026-11-27 | 0.1.7 | GPT-6（ChatGPT） | 修订记录 | 将历史记录统一为七列并保留原始文字及原始关联，修正非规范行的分隔符 | 确保修订表可由文档校验器完整解析；不影响设计语义及 READY 主状态 | Issue #12；PR #46；SR-026 |
 | 2026-11-27 | 0.1.8 | Codex / GPT-6 | 文档头 | 登记BLOCKED_EXTERNAL_INPUT及 AC 范围 | 按单项独立评审推进 | Issue #12、#87；PR #46 |
 | 2026-11-28 | 0.2.1 | GPT-6.2（ChatGPT） | §0、§2.2、§3、§4.1、修订记录 | 固定 Codec Capability/Callable、Interface Package 2.0.0、Provider/Bindings v2、Host Artifact Channel v2 与 0xD1 首批输出契约 | 将生产端接口从待外部命名收敛为中央唯一目标，且不复用含 SHA-256 的历史 v1 channel | Issue #113；F03.05；SR-010；SR-029；PR #115 |
+| 2026-11-28 | 0.2.2 | GPT-6（ChatGPT） | 文档头、设计依据、修订记录 | 同步 F05 v0.4.13 的二进制 staging/Ext1 与 T0/T2 职责边界；正式 Codec Provider / Tool 发布仍 NOT_RUN | 不将 T0 classifier 的窄库 API 与 T2 Agent Tool 混用，不把中央规范升级当作产品验收 | Issue #50/#116；PR #115 |
