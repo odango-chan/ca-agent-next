@@ -1,8 +1,8 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.70
-> 状态：29 项 SR：4 VERIFIED（仅各自历史模块范围）、1 IMPLEMENTED（设计移交）、24 DRAFT（整项主状态）。SR-028 第七轮设计 Review #6084094037 仅批准固定 Head `93f1389e` / Base `3c7c4838` 的设计（0/0/2 非阻断 P2）；Issue #96 OPEN，PR #97 OPEN/mergeable=false，PR #99 OPEN/mergeable=false（候选分支 Review #6094704264 记录 IMPLEMENTED），PR #112 OPEN/Draft/mergeable=true、旧 Head Review #6086849161 有 P1。当前 PR #46 第八轮 Review #6095143611 绑定 Base `c806def7` / Head `2604cc17`；第九轮独立复评基线为 Head `2b66bded0bd3cab6fa503bfb751fb23e11f94805`，Review Context CI #46101070088 SUCCESS；第九轮整改后的最终 Head 以 Issue #12 第九轮检查点登记为准；候选分支证据不计入当前恢复分支 VERIFIED。
+> 文档版本：0.3.71
+> 状态：30 项 SR：4 VERIFIED（仅各自历史模块范围）、1 IMPLEMENTED（设计移交）、25 DRAFT（整项主状态，含 IR-009 / SR-031 增量设计候选）。SR-028 第七轮设计批准仅绑定其原 Review Snapshot；PR #46 第九轮独立 Review #6095601142 对 Base `c806def7ddc262b4b3c96574a78f360a679ac8d2` / Head `af8d1b85e65c346d6271ba5032b336b085075035` 给出 `APPROVE_FOR_READY`（设计门槛，0 P0 / 0 P1），PR #46 已合并到恢复设计基线 merge commit `9243634832d296acd6fae8cb324a6db3c2a2d3a8`，main 尚未更新；PR #115 是唯一 mainline 集成入口。SR-031 AC-031-01～07 仍 NOT_RUN / BLOCKED_EXTERNAL_INPUT。
 > 修订日期：2026-11-28\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
@@ -52,6 +52,9 @@
 | [SR-028](../SR/SR-028-Python工程工具链与uv环境管理.md) | [IR-007](../IR/IR%20总登记册.md#ir-007) | Python 工程工具链与 uv 环境管理 | DRAFT |
 | [SR-029](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) | [IR-008](../IR/IR%20总登记册.md#ir-008)（关联 IR-003） | CA-SL 1.6.0 Capability-first 作者模型与 Callable 双向一对一；完全无旧版兼容 | **DRAFT（设计待评审，非实施 READY）** |
 | [SR-030](../SR/SR-030-Host%20Context%201.6.0%20Schema-only%20Interface%20Package%20Publisher.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Host Context 1.6.0 Schema-only Interface Package Publisher | DRAFT |
+| [SR-031](../SR/SR-031-3GPP公共Schema-only-Publisher.md) | [IR-009](../IR/IR%20总登记册.md#ir-009) | OpenAMSM 3GPP OpenAPI 原版 Source Bundle 原样代发布（当前 PostSmContexts requestBody 选定闭包 4 文件 / 102 Schema Component） | **DRAFT（增量设计待评审、Publisher / Consumer 产品 NOT_RUN）** |
+
+**IR-009 增量设计（独立于 PR #46 原 24 项评议）：**新增 [SR-031](../SR/SR-031-3GPP公共Schema-only-Publisher.md) 与 [EC01.3GPP 原版 OpenAPI 引用设计](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。当前 `PostSmContexts.requestBody` 选定闭包为四份原版 YAML / 102 个 Schema Component；原件 byte-for-byte 不变，Plugin 原生 OAS3 multipart，Compiler 直接引用 pin 后 `components/schemas`，NAS/NGAP Codec Output 独立发布。SR-031 产品 AC 全部 NOT_RUN；新增 AC 不继承 PR #46 原 24 项设计评议。
 
 设计版本与章节、依赖、验收 ID、实施证据以各 SR 为准。逐项阻塞见[就绪审计](../参考与审计/跨仓设计资产迁移与一致性审计.md#8-设计就绪审计)。
 
@@ -203,7 +206,7 @@
 - 设计来源：ca-agent-next PR #1 的架构、设计、规范和 Acceptance 文档。
 - PR #1：已合并；只代表设计文档变更。
 - Next Runtime：README 声明尚无已验收 Runtime 实现。
-- 当前 29 项 SR 中 4 VERIFIED（SR-001/002/003/024）、1 IMPLEMENTED（SR-015）、24 DRAFT（其中 SR-029/SR-030 设计待评审）；SR-024 VERIFIED 仅覆盖旧 v1alpha5 Development Publisher；SR-013 归档 PoC 不改变 DRAFT；SR-009 只覆盖 Event/Delivery Plugin/staging，SR-010 覆盖 Host ArtifactStore、Channel、Provider v2 Driver/Codec。
+- 当前 30 项 SR 中 4 VERIFIED（SR-001/002/003/024）、1 IMPLEMENTED（SR-015）、25 DRAFT（其中 SR-029/SR-030 设计待评审）；SR-024 VERIFIED 仅覆盖旧 v1alpha5 Development Publisher；SR-013 归档 PoC 不改变 DRAFT；SR-009 只覆盖 Event/Delivery Plugin/staging，SR-010 覆盖 Host ArtifactStore、Channel、Provider v2 Driver/Codec。
 - Issue #12 追踪本轮中央设计资产恢复；PR #11/#13/#15/#16/#18 均在独立分支 OPEN/DRAFT，恢复分支已同步可复用的最新文档内容但尚未创建 PR；PR 状态不等于 SR 实施状态。
 - 恢复分支 docs/restore-original-designs-20261125 尚未创建指向 main 的总 PR；SR-002 设计 PR #20 与实施 PR #23 均已合并到恢复分支，SR-002 为 VERIFIED、AC-002-01～08 PASS；EX-01 仍 NOT_RUN。该恢复分支尚未合并 main。
 - ca-agent-demo、ca-client-tools、ca-skill-compiler、ca-skills 和 ca-openamsm-plugin 的现有代码/PR 只能作为外部复用或依赖证据，不能自动算作 Next SR 已实施。
@@ -314,3 +317,4 @@
 | 2026-11-28 | 0.3.68 | GPT-6（ChatGPT） | SR-009/025、修订记录 | 清除 responseObligationId 接收边界的残留冲突，并移除 SR-025 执行门槛中的固定 24/24 表述 | 确保 SR 追踪行与规范性设计/验收矩阵保持一致 | Issue #12；PR #46；Review #6095143611 |
 | 2026-11-28 | 0.3.69 | GPT-6.2（ChatGPT） | 文档头、SR-028 状态、修订记录 | 更新 PR #46 当前 Head 与 CI，回填 SR-028 候选实施 Review 和 #112 旧 Head P1 | 明确最新快照与历史 Review 的边界，防止候选产品证据误升级 | Issue #12/#96；PR #46/#97/#99/#112；Review #6095143611/#6094704264/#6086849161 |
 | 2026-11-28 | 0.3.70 | GLM-5.3（DeepSeek Harness） | 文档头、修订记录 | 将“当前 Head `68162cdb` / CI #46100503592”更正为第九轮复评基线 Head `2b66bded` 与 CI #46101070088；第九轮整改后最终 Head 以 Issue #12 检查点为准 | 消除增量提交对父提交 SHA 的过期自引用 | Issue #12；PR #46；Review #6095143611 |
+| 2026-11-28 | 0.3.71 | GPT-6.2（ChatGPT） | 文档头、SR-031 清单、IR-009 增量、修订记录 | 纳入 SR-031 原版 OAS3 Source Bundle 与 EC01.3GPP 权威设计，更新 30 项 SR / 9 项 IR 追踪，并刷新 PR #46 第九轮 APPROVE_FOR_READY 与恢复分支合并边界 | 使 SR 总索引与已导入的 IR-009、SR-031、EC01.3GPP 文档保持一致，不把新增设计评议升级为产品验收 | Issue #47；Issue #12；PR #46/#115；Review #6095601142 |
