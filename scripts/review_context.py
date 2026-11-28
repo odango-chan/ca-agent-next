@@ -112,6 +112,13 @@ FORMAL_DOC_PREFIXES = (
     "docs/决策记录/",
 )
 
+# 明确属于参考资料而非 Next 当前权威架构/设计的目录，不执行正式文档头部门禁。
+REFERENCE_ONLY_DOC_PREFIXES = (
+    "docs/架构设计/参考实现/",
+    "docs/架构设计/目标参考/",
+    "docs/设计说明书/参考实现/",
+)
+
 # 治理规范 §11.3；上下文与提示词只陈述分类语义，不构成另一份项目范围配置。
 CLASS_DEFINITIONS = {
     "BLOCKER": (
@@ -977,7 +984,57 @@ def render_scope_diff(comparison: dict[str, Any]) -> list[str]:
 def _is_formal_doc(path: str) -> bool:
     if not path.endswith(".md"):
         return False
+    if any(path.startswith(prefix) for prefix in REFERENCE_ONLY_DOC_PREFIXES):
+        return False
     return any(path.startswith(prefix) for prefix in FORMAL_DOC_PREFIXES)
+
+
+def _is_archived_source_copy(text: str) -> bool:
+    """识别带完整来源链的只读历史原文副本，不把它误作当前正式设计文档。"""
+
+    lines = text.splitlines()
+    separator = next(
+        (index for index, line in enumerate(lines[:24]) if line.strip() == "---"),
+        None,
+    )
+    if separator is None:
+        return False
+
+    metadata = lines[:separator]
+    has_origin = any(
+        re.match(r"^>\s*(?:迁移来源|源仓)\s*[：:]\s*\S", line)
+        for line in metadata
+    )
+    has_source_path = any(
+        re.match(r"^>\s*源路径\s*[：:]\s*\S", line)
+        for line in metadata
+    )
+    has_fixed_commit = any(
+        re.fullmatch(
+            r">\s*固定源提交[：:]\s*\x60?[0-9a-fA-F]{40}\x60?\s*",
+            line,
+        )
+        for line in metadata
+    )
+    has_source_state = any(
+        re.match(r"^>\s*(?:原始状态|源文档定位)\s*[：:]\s*\S", line)
+        for line in metadata
+    )
+    has_migration_trace = any(
+        re.match(r"^>\s*(?:迁移追踪|迁移记录)\s*[：:]\s*\S", line)
+        for line in metadata
+    )
+    # 两种已存在的迁移头格式：迁移来源（自带源路径），或源仓 + 源路径。
+    origin_is_complete = has_origin or (
+        any(re.match(r"^>\s*源仓\s*[：:]\s*\S", line) for line in metadata)
+        and has_source_path
+    )
+    return (
+        origin_is_complete
+        and has_fixed_commit
+        and has_source_state
+        and has_migration_trace
+    )
 
 
 def _normalize_header_declaration(line: str) -> str:
@@ -1093,6 +1150,9 @@ def check_changed_doc_headers(
             text = blob.decode("utf-8")
         except UnicodeDecodeError as exc:
             problems.append(f"{path}: 文档不是合法 UTF-8（{exc}）")
+            continue
+        # 原始来源副本保留原文，不强制注入 Next 当前设计头；只有完整来源链才可豁免。
+        if _is_archived_source_copy(text):
             continue
         problems.extend(check_doc_header(text, path))
     return problems
