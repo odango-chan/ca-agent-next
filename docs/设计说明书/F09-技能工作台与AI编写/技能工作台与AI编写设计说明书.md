@@ -1,9 +1,9 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.16\
-> 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
-> 修订日期：2026-11-27\
+> 文档版本：0.3.18\
+> 状态：**设计待评审**（CA-SL 1.6.0-only Capability-first；Studio 新 Package Explorer/LSP/AI Authoring 1.6.0 路径尚未实施；既有 #267/#270/#272 历史实现与新发布验收分离）
+> 修订日期：2026-11-28\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：生产级准入、额外 package-level digest、签名和 Trust Registry；历史 Compiler v2.1.0 的 `files[].sha256` 要求仅归旧版审计，不转为新版 Schema 要求
 
@@ -20,6 +20,8 @@ Theia 的 Package Explorer 以作者源码为工作区入口。可视化视图�
 ## 3. when 编写与验收
 
 正式语言刷新后，Contract 字段提示与诊断对齐中央规范。`when` 是 `assurance/contract.yaml` 中的可选顶层字段，不是 SKILL.md Front Matter 字段；其 Schema 类型、CEL 静态检查与错误定位必须对齐 **CA-SL 1.6.0 的唯一正式作者 Schema + 新 Compiler 契约**；历史 v1alpha5 仅用于只读测试差异审计。没有 `when` 的 Contract 保持原有行为。文本与 AI 编辑均保持可预览，不能把选择条件写入 Predicate。覆盖 Browser Worker、源码往返、已有包、有效与无效表达式、Compiler gate 与应用后再打开。
+
+**历史实现基线说明：** §4、§7 中现有 Studio 与 Compiler v2.1.0 Development profile 的包导入、项目快照和既有实施状态，以及 §5.2/§6 明确标记的 Development 结果与 no-root 历史规则，仅用于审计既有产品；这些旧 Profile/Package/Skill 不构成新 1.6.0 Studio 的合法输入，也不建立兼容、迁移或双轨路径。新 Studio 唯一执行入口见 §5.1。
 
 ## 4. 历史 Interface Package / Development Build 设计审计（非 1.6.0 规范）
 
@@ -116,6 +118,13 @@ Compiler v2.1.0 的 `validDevelopmentVersion` 接受 `major.minor.patch` 和合�
 5. Preview/Review 允许查看未经编译的候选 Change Set，但标记「尚未检查，不能 Apply」。只有**与当前候选字节和当前项目锁 revision 精确匹配**的 Build + Verify 成功，才可提供「应用候选」；Apply 必须由用户确认、保留未保存 Buffer、支持 Undo 恢复逐字原文；Save 仍由用户决定。候选、依赖快照或语言版本变化使旧结果立刻失效。
 6. Browser、Native、WASM 用同一构建输入与可追踪诊断，任一结果不能混用来自另一 HEAD、Lock revision 或旧语言的 PASS。Worker 不访问 Provider credentials、不执行 Runtime Tool、不赋予 Owner/Host 资格。
 
+### 5.1.1 Owner 与 Provider 的双合同 Gate（必须与 1.6.0 Build/Verify 同批）
+
+- **Owner Gate**：对当前 Skill 声明的每个 Owner dependency，必须解析到正式发布的 Owner Contract Package，并按 Owner Publisher 冻结的身份、版本和发布摘要核对实际包及 Binding 引用；验证作者可见 Capability 与唯一公开 Callable 的一对一关系，以及 kind、Effect、Input/Output Schema 等契约一致性。Coordinator 内部 Reconcile 不得作为 Skill-facing Callable 暴露。Owner Gate 是契约/发布身份核验，不是 Trust Registry、生产准入或额外授权机制。
+- **Provider Interface Gate**：Provider Interface Package 是与 Owner Contract Package 不同的发布对象，必须独立核对其包身份、版本和 interface snapshot；不得以 Provider 包替代 Owner Contract，也不得由模型或 Skill 选择 Provider 私有 backend operation。
+
+Package Audit/AI Authoring 的**同一候选源码字节 + 同一 Project Lock generation** 必须先由正式 1.6.0-only Compiler #62 Build→Verify，并经过两类不同 Publisher Package Gate；任一来源/版本/Schema/Binding 不可验证则 BLOCKED/FAILED，不显示 PASS 或可 Apply；禁止旧 VerifyDevelopment、旧 Worker/WASM、旧 Bundle 兼容路径。Worker 不读取 Provider 凭据、运行 Owner mutation 或发放部署资格。
+
 ### 5.2 UI 状态投影（非新 Compiler 机器字段）
 
 | 关注项 | 显示原则 |
@@ -130,7 +139,7 @@ Compiler v2.1.0 的 `validDevelopmentVersion` 接受 `major.minor.patch` 和合�
 
 ## 6. 新 1.6.0 无 Assurance 与零外部依赖
 
-- **SKILL.md-only**：不调用 Compiler，只有 LLM-guided，不生成 Assurance Artifact，不拥有 Callable Scope；在双栏源编辑器中仍可预览文字、元数据与 references。
+- **SKILL.md-only**：遵循 [Agent Skills Specification](https://agentskills.io/specification) 的独立 Front Matter/指导路径，不属于任何 CA-SL 语言版本，不声明 when、不调用 Compiler、只有 LLM-guided，不生成 Assurance Artifact/Callable Scope；双栏原生编辑器仍可预览文字、元数据与 references。
 - **存在 Assurance、没有外部 Capability / Schema 引用**：新 1.6.0 Compiler 必须允许零 Capability roots 与空 Package dependency closure；BuildRequest 仍包含 Skill/语言/Schema/源身份，Compiler 生成不含外部 Tool Effect 的确定性 Artifact。
 - **存在 Assurance、仅引用 Schema-only Package**：例如 Contract.contexts 引用 SR-030 Host Context Schema。此时 Capability roots 与 Callable bindings 仍为空，但 Package dependency closure 必须包含该显式依赖的 Schema export 和完整 $ref 闭包；不得把 Schema-only Package 当作 Capability root，也不得虚构 Tool / Callable。
 - **存在 Assurance 且使用 Capability 但未声明依赖**：Compiler 静态 Link 必须拒绝 `CAPABILITY_UNRESOLVED` / `CAPABILITY_NOT_GRANTED`；绝不能把它当成合法零根。旧 v2.1.0 只能接受非空 roots 的限制**不是 1.6.0 新设计**。
@@ -138,18 +147,20 @@ Compiler v2.1.0 的 `validDevelopmentVersion` 接受 `major.minor.patch` 和合�
 
 ## 7. 历史实现状态与新版本待验证项
 
-截至 2026-11-25：
+本节历史 Development v1alpha1 的 `VerifyDevelopment`、no-root 限制、`NOT_ADMITTED` / `VALIDATED` 等字段只供旧版审计；**当前 Studio 1.6.0 Build/Verify 只能消费 Compiler Owner 新发布机器合同**，不能反向沿用历史 Worker/Lock。现行 1.6.0 产品 AC 仍 BLOCKED/NOT_RUN。
+
+截至历史审计固定来源时点（2026-11-27）：
 
 | 项目 | 状态 | 证据 / 未完成 |
 |---|---|---|
 | ZIP Import / immutable snapshot / Package Explorer | MERGED | [Studio #267](https://github.com/odango-chan/ca-skill-studio-demo/pull/267)，main merge `11b1246` |
 | Default Example dependency preload | MERGED | [Studio #270](https://github.com/odango-chan/ca-skill-studio-demo/pull/270)，main merge `d3b1d36` |
-| Compiler v2.1.0 request builder | OPEN / DRAFT / STALE | [Studio #272](https://github.com/odango-chan/ca-skill-studio-demo/pull/272)，测试 HEAD `8abffc7`，当前落后 main 67 commits |
+| Compiler v2.1.0 request builder | MERGED（历史 Development） | [Studio #272](https://github.com/odango-chan/ca-skill-studio-demo/pull/272)，merge `a8633553615d786e360a62c2b0042a27ae92d9d3`；不代表 1.6.0 可用 |
 | Compiler v2.1.0 Node/Browser Worker | OPEN / DRAFT / STALE | [Studio #276](https://github.com/odango-chan/ca-skill-studio-demo/pull/276)，测试 HEAD `7d6adeb`，落后 #272 base 9 commits |
 | Package Audit Development Build cutover | NOT_IMPLEMENTED | [Studio #269](https://github.com/odango-chan/ca-skill-studio-demo/issues/269) |
 | AI Authoring exact-candidate Development Build gate | NOT_IMPLEMENTED | [Studio #269](https://github.com/odango-chan/ca-skill-studio-demo/issues/269) |
 | MAS / Host Context 1.6.0 Package publication | BLOCKED | MAS Owner Capability-first Package 归 SR-025；Host Context Schema-only Package 归 SR-030；新 Package Schema / SemVer / languageTarget 尚未正式发布；旧 SR-024 的 1.0.0 不得作为新输入 |
-| Host fixture provenance in Studio lock | NOT_IMPLEMENTED | #267 已持久化 ZIP source metadata（upload/contentDigest/packageId/version/publisher），但尚未写入 `source.sourceStatus`；由 SR-016 / Studio #269 补齐 |
+| Host fixture provenance in Studio lock | PARTIAL / 限定历史实现 | #267 ZIP source 已持久化；默认 Host Context Example 专用路径已固定 `sourceStatus=DEVELOPMENT_FIXTURE`，普通 ZIP importer 不全局产生该字段；1.6.0 项目锁仍待 Publisher Schema 与测试 |
 | Real released ca-client-tools v1.1.0 as Compiler root | NOT_RUN | 需显式 `ca-client` synthetic Contract 正例 |
 | No-root UI state | NOT_IMPLEMENTED | 不调用 Compiler、无 Artifact、无 `NOT_ADMITTED` |
 
@@ -224,3 +235,4 @@ AI Authoring 的 Change Set 只能新增或修改 Capability ID、Procedure argu
 | 2026-11-26 | 0.3.13 | GPT-6（ChatGPT） | 1.6.0 Host Context Publisher / 依赖边界 | 纠正 SR-024 仅为旧 Development Publisher，新增 SR-030 Schema-only 1.6.0 Host Context 发布链，并将来源 provenance 放回 Project Lock | Issue #12/#40；IR-006/008；SR-030 |
 | 2026-11-26 | 0.3.14 | GPT-6（ChatGPT） | §4.4～§6、§9.5、修订记录 | 明确零 Capability roots 不等于零 Package dependency closure；增加 Schema-only Host Context Package 的 Compiler gate、Studio 测试和 AC-016-04 映射 | 消除 F09 原“零根不调用 Compiler”与“无外部依赖 Assurance 可 Build”之间的矛盾，确保 Schema-only 依赖可被正确消费 | Issue #12/#40；SR-013 AC-013-06；SR-016 AC-016-04；SR-030；PR #46 |
 | 2026-11-26 | 0.3.15 | GPT-6（ChatGPT） | §5～§9、修订记录 | 同步 EC02 v0.2.12 与 SR-013 v0.2.18，保持 Schema-only Package / zero Capability roots 依赖契约一致 | 使 Studio Package Audit / AI Authoring 消费与 Compiler AC-013-06 使用同一 Schema-only 语义 | Issue #12/#40；EC02、SR-013、SR-016、SR-030；PR #46 |
+| 2026-11-28 | 0.3.18 | GPT-6（ChatGPT） | §3～7、修订记录 | 合并恢复分支 #45 的 1.6.0 Build/Verify+Owner/Provider 双 Gate 与 #46 F09 Package Audit/AI Authoring、Schema-only 零根与六宿主计划；修正 #272 已合并状态和 Host fixture 来源 | 防止旧 Worker/Development 结果混入新版 Gate，保留既有 Studio 历史实现 | Issue #12；#40；#49；PR #45；#46 |
