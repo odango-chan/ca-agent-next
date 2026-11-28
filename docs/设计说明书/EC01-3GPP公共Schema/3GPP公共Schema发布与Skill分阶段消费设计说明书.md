@@ -1,11 +1,11 @@
 # 3GPP 公共 OpenAPI 原版引用与 Skill 分阶段消费设计说明书
 
 > 文档类型：功能设计说明书（EC01.3GPP；关联 EC03/F02/F06/F08/F09）
-> 文档版本：0.3.4
+> 文档版本：0.3.5
 > 修订日期：2026-11-27
 > 状态：DRAFT / REVIEW_REQUESTED；原版 Source Bundle、OAS3 Consumer、Compiler 外部引用与 Codec 产品均未完成产品验收
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
-> 本文非目标：生产级资格、全量 NAS/NGAP、修改上游 YAML、重定义 3GPP 标准、旧 CA-SL 兼容
+> 本文局部非目标：生产级资格、全量 NAS/NGAP、修改上游 YAML、重定义 3GPP 标准、旧 CA-SL 兼容
 > 上游：[IR-009](../../IR/IR%20总登记册.md#ir-009)、[Issue #47](https://github.com/odango-chan/ca-agent-next/issues/47)
 > SR：[SR-031](../../SR/SR-031-3GPP公共Schema-only-Publisher.md)、[SR-010](../../SR/SR-010-OpenAMSM%20工具插件与按需编解码集成.md)、[SR-013](../../SR/SR-013-Compiler已检查when与发布产物.md)、[SR-026](../../SR/SR-026-Codec公开工具发布.md)
 
