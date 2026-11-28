@@ -94,7 +94,7 @@ Provider Interface Package 的公开闭包固定为 3 Capability / 3 Callable：
 | ca-client-tools / Provider Owner | 输入/输出 Schema、Artifact slot/方向/mediaType、Release Request 专属 JSON 结果 profile、错误码及截断/错误类型负例 | 正式 Codec Tool 的准确参数与结果验收 |
 | ca-client-tools / Provider Owner | 同一发行包 initialize/catalog/invoke 证据、零远端 SBI 请求、与原 Provider 查询 2/2 合成 3/3 的一对一对账 | 不得将 PR #39 库向量或私有 backend 名称冒充公开 Tool |
 
-这些字段由生产者在其签认 Issue/PR 和正式发布记录中提交。本 SR 现有 `2e 05 01 d1` 向量、`0xd4` 非目标负例可先供静态评议；任何字段尚缺时，禁止由 Harness 推断别名、Schema、版本或“兼容”路径，SR-026 整体仍 BLOCKED_EXTERNAL_INPUT。
+中央设计已固定 Capability / Callable / Interface Package ID、Provider / Runtime Bindings 版本、Input / Output Schema、slot / mediaType 和首批 0xD1 范围。生产者仍须在正式 Issue/PR/Release 提供实际 Schema、Golden、handler、二进制和测试证据；不得把中央设计目标误报为已发布资产，也不得由 Harness 推断实际实现或兼容路径。AC-026-04～06 的产品状态按表保持 BLOCKED_EXTERNAL_INPUT / NOT_RUN。
 
 ## 5. 3GPP SBI OpenAPI 与 NAS / NGAP Codec Result 的边界（IR-009）
 
