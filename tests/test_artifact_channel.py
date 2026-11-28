@@ -7,8 +7,7 @@ no-decode / 缺 Codec 的 fail-closed 路径。
 测试 Provider 是 ``tests/fixtures/provider_v2_fake.py`` 计数型进程；它不是
 正式 Provider，也不构成 AC-010-09 互操作证据。运行方式：
 
-    uv run --no-sync --locked --group dev --extra plugins \
-        python -m unittest discover -s tests -p test_artifact_channel.py -v
+    uv run --no-sync --locked --group dev --extra plugins python -m unittest discover -s tests -p test_artifact_channel.py -v
 """
 
 from __future__ import annotations
