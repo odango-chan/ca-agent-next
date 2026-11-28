@@ -1,7 +1,7 @@
 # SR-025：MAS Owner 1.6.0 Capability-first Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.17
+> SR 版本：0.1.18
 > 状态：整项 DRAFT；限定设计已认可，等待直接依赖。中央 Owner Publisher 设计已认可。  
 > 下一步：AC-025-01～08 等待 Owner Publisher 对 `SSM.PARSE_N1_MODIFY`/`SSM.PARSE_N1_RELEASE` 的正式处置签认、冻结公开 1:1 最终成员数、正式 Package Schema/CLI 与 Compiler #62 验证入口；发布另需授权。  
 > 阶段依据：[独立评审 #86](https://github.com/odango-chan/ca-agent-next/issues/86#issuecomment-7209318291)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。
@@ -10,7 +10,7 @@
 > 所属阶段：外部 Publisher 实施移交
 > 上游需求：[IR-006](../IR/IR%20总登记册.md#ir-006)
 > 功能：F03.05 / EC03（消费方关联 F09.07）
-> 设计依据：[F03.05 Tool Interface / Provider 设计](../设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) v0.4.8；[F09 新版 1.6.0 设计 §5～§9](../设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md) v0.3.19；[SR-015](SR-015-工具契约设计移交.md)；[EC02 新 1.6.0 Compiler 设计](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.13 与 [SR-013](SR-013-Compiler已检查when与发布产物.md)；历史 Compiler v2.1.0 Development BuildRequest 仅供审计
+> 设计依据：[F03.05 Tool Interface / Provider 设计](../设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) v0.4.12；[F09 新版 1.6.0 设计 §5～§9](../设计说明书/F09-技能工作台与AI编写/技能工作台与AI编写设计说明书.md) v0.3.42；[SR-015](SR-015-工具契约设计移交.md)；[EC02 新 1.6.0 Compiler 设计](../设计说明书/EC02-Compiler/Compiler设计说明书.md) v0.2.22 与 [SR-013](SR-013-Compiler已检查when与发布产物.md)；历史 Compiler v2.1.0 Development BuildRequest 仅供审计
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：Provider v2 重构、Host Runtime Binding 重构、生产级 Trust/Admission/签名或额外包完整性体系；历史 v1alpha4/v1alpha5 Development Bundle 仅供源审计
 
@@ -36,7 +36,7 @@
 
 ### 2.1 新发布契约（需 Owner/Compiler 正式冻结）
 
-- 唯一语言目标 **CA-SL 1.6.0**；准确 `languageTarget`、Interface Package `apiVersion`、Schema/文件名、Publisher package `version` 和 Builder CLI 由 ca-skills / Compiler / Owner 发布，不得假定旧 `connectionagent.io/v1alpha5`、`interface-package/v1alpha1`、旧 `1.0.0` 仍合法。
+- 唯一语言目标 **CA-SL 1.6.0**；Next 中央设计已固定唯一 `languageTarget=connectionagent.io/v1.6.0`（CA-SL 规范 v0.2.10、Compiler v0.2.22 §5.1.1），**不得再由 ca-skills/Compiler/Owner 实施时重新选择机器标识**。但正式 Interface Package `apiVersion`、Schema/文件名、Publisher package `version`、Builder CLI 和 Golden/Release 仍须由各自 Publisher 发布并实证互操作；不得假定旧 `connectionagent.io/v1alpha5`、`interface-package/v1alpha1`、旧 `1.0.0` 仍合法，也不能把中央设计值当成已发布接口。
 - 目标 Owner Skill-facing Capability ↔ 公开 Callable 严格双向一对一；**最终数量尚未由 Owner Publisher 冻结**：两项历史 N1 Parser `SSM.PARSE_N1_MODIFY`、`SSM.PARSE_N1_RELEASE` 必须分别签认。双移除候选 22/22；一项移除、一项重构为只接收已验证 Codec Result 的纯业务 READ 候选 23/23；两项均重构为纯业务 READ 候选 24/24；任一项未签认则不得冻结成员数或发布。其他导出变化重新计数。**历史 25 个 Owner ToolCatalog contracts / 24 Capability IDs 与 25 memberships 仅供只读审计**，不能当作 1.6.0 正式发布合同。`MAS.RECONCILE` 仅 Runtime Coordinator internal-only，不属于 Skill-facing Capability；不得作为 NAS/NGAP Codec fallback。详见 [SR-029 §3/§6](SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md)。
 - 原 `mas.se.events.emit` 一对二（`SE.EMIT_EVENTS`、`SE.EMIT_RELEASE_EVENT_C`）必须拆为 `mas.se.establishment-event.record` 和 `mas.se.release-event-marker.write`：Input Schema、Effect、Evidence Guarantee 分开保留，不能伪合并为一种动态 Callable。
 - `MAS.RECEIPT_QUERY` 是可对 Skill 授权的 READ Capability/Callable；`MAS.RECONCILE` 虽保留 Owner ToolCatalog/Runtime Bindings，但任何普通 Skill/LLM/Studio 补全不得将其当作公开 Capability。所有公开 Callable 都应恰好有一个 Capability，只有 Reconcile 这类明确 internal-only callable 被排除于公开双射。
@@ -135,3 +135,4 @@ Owner `v1alpha4` source 的 `tool-catalog.yaml` 含 25 published contracts、旧
 | 2026-11-28 | 0.1.16-integration-2 | GPT-6（ChatGPT） | 历史固定源、修订记录 | 补齐恢复分支不可变 Owner manifest/blob/buildIdentity 与逐 export 身份规则；标明仅历史 Development Package 审计 | 保存 Owner 来源可追溯性且不绕过两个 N1 Parser 正式签认 | Issue #12；#40；#95；#113；PR #45；#46 |
 | 2026-11-28 | 0.1.17 | GPT-6（ChatGPT） | §2.1、AC-025-01/04、修订记录 | 补齐 Owner 两项 Parser 分别签认的双移除、混合、双保留和未签认矩阵 | 让 Publisher 依据 Owner 实际冻结成员数验收，不强制不存在的固定 24/24 契约 | Issue #12；PR #46；Review #6095143611 |
 | 2026-11-28 | 0.1.17 | GLM-5.3（DeepSeek Harness） | 修订记录 | 将 6 列历史修订表统一为 7 列标准结构 | 关闭 R3-LEDGER-01 残留 | Issue #12；PR #46；Review #6082541121 |
+| 2026-11-28 | 0.1.18 | GPT-6（ChatGPT） | §1 设计引用、§3 languageTarget、修订记录 | 与 Next 已定 CA-SL v0.2.10 / Compiler v0.2.22 对齐 languageTarget=connectionagent.io/v1.6.0；更新 F03.05/F09/EC02 正式设计引用，不影响 MAS 两项 Parser 独立签认与 Publisher 正式 Schema/CLI/Release 阻塞 | 不让 Owner 实施环节重选已冻结版本，也不把语言值冻结虚报为新的 Interface Package 已发布 | Issue #40/#50/#86/#113；SR-025/029；PR #115 |

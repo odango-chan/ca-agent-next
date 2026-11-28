@@ -1,7 +1,7 @@
 # 业务接入与 OpenAMSM 集成设计说明书
 
 > 文档类型：业务集成设计说明书  
-> 文档版本：0.3.9
+> 文档版本：0.3.10
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
 > 功能归属：F06 — 业务接入与集成；EC04、EC05、EC07  
 > 关联 IR：IR-004、IR-005、IR-006  
@@ -215,7 +215,7 @@ EC07 Mock AMF SBI Test Peer 负责发送协议准确的 Create/Update/UE-request
 | ca-client-tools Provider v1.2.0 | main 7bcb261；Provider package/typed callables | IMPLEMENTED；Next adapter 未验收 |
 | ca-client-tools Codec Phase B | PR #39 OPEN（非 Draft）；Phase B FINAL_PASS / PHASE_C_READY，尚未合并 | NOT_MERGED |
 | env-5gc-sim Mock AMF Codec C1 | PR #86 OPEN；仅将 Mock AMF 测试对端迁移到统一 Codec Facade，不触及 ToolCatalog、Provider、Host 或 Next Runtime | NOT_MERGED |
-| ca-openamsm-plugin | main eb83c8f 仅 README；PR #1 OPEN/Draft | NOT_IMPLEMENTED |
+| ca-openamsm-plugin | main `eb83c8f` 仍仅历史 README；设计 PR #1 OPEN/Draft（已修订 Head `8fc1cd2`）；独立 Go 模块实现 PR #3 OPEN/未合并（Head `4232b20`，堆叠于 #1，源码/Schema/测试 40 Blob 与原受测树一致）；本 Head CI [#46141123128](https://github.com/odango-chan/ca-openamsm-plugin/actions/runs/46141123128) Ubuntu/Windows SUCCESS（Ubuntu `go test -race`） | **MODULE_IMPLEMENTED_CANDIDATE / NOT_MERGED**；Next Host ArtifactStore/Run/Delivery、生产 T0 classifier 和真实 NF E2E 均未由该模块 CI 验收 |
 | ca-agent-demo Provider runtime cutover | PR #246 OPEN；#248/#249 OPEN；#251 OPEN/Draft（Contract.when 设计提案，未进入 main） | NOT_MERGED |
 | Next OpenAMSM Skill-first E2E | 依赖 F02/F03/F04/F05/EC04/EC05 | NOT_RUN |
 
@@ -379,3 +379,4 @@ Create → Modify → Release 的顺序、Owner authoritative state、Receipt / 
 | 2026-11-28 | 0.3.6 | GPT-6.2（ChatGPT） | §4.1、§14 | 补齐 N2 / N2 Ext1 类型字段与 Content-ID/slot 的联合校验，并固定 CEL `input` 为已验证的 `jsonData` Request 根 | 避免只验证二进制引用而遗漏类型配对，或把 Event envelope / multipart 误作 T1 Request | Issue #47/#101；IR-009；SR-010/013/026/031；PR #48/#101/#115 |
 | 2026-11-28 | 0.3.7 | GPT-6.2（ChatGPT） | §4.1、§13.7、§14 | 将最小 NAS discriminator 归入 T0 ingress；分离 ca-client-tools 共享 classifier library API 与 T2 Agent-callable Codec Tool；明确 classifier 未发布前 SR-009 AC-009-04 生产绑定 BLOCKED | 消除 T0/T1 阶段矛盾，防止 Plugin 复制 parser、调用完整解码器或猜测外部 API | Issue #12；SR-009；ca-client-tools #18/#39 |
 | 2026-11-28 | 0.3.9 | GPT-6（ChatGPT） | 文档头、§2、§4.1、修订记录 | 选择性吸收 #117 F06 v0.3.8 的 T0 0xD4 与 classifier 所有权、仅 Update 必需 discriminator 规则，并明确 Create N1/N2/Ext1 的原版 OAS3 可选引用及 continuation Ext1 fail-closed | 关闭 #116 P2-01/06/10 和 #117 新发现的 Create manifest required 设计缺口；不误报当前模块测试 | Issue #50/#116；PR #115/#117 |
+| 2026-11-28 | 0.3.10 | GPT-6（ChatGPT） | §10 OpenAMSM Plugin 实现审计、文档头、修订记录 | 更新先前“未实现”过期状态：源仓 PR #1 `8fc1cd2` 已修订设计，PR #3 `4232b20` 已有实际 Go 候选及双平台 CI #46141123128 SUCCESS；保留 main 尚未合入、Host/系统/生产 T0 NOT_RUN/BLOCKED | 避免漏报既有独立模块进展，同时不拿未合并模块测试冒充 Next Runtime / OpenAMSM E2E PASS | Issue #50/#116；PR #115；ca-openamsm-plugin#1/#3 |

@@ -1,7 +1,7 @@
 # Context 与 Artifact 管理设计说明书
 
 > 文档类型：机制设计说明书  
-> 文档版本：0.4.14\
+> 文档版本：0.4.15\
 > 状态：ca-host.artifact-store/v1 保留为历史冻结契约（要求 SHA-256，Provider v1.2.0 已消费）；新 1.6.0 Demo 目标为 ca-host.artifact-store/v2（无 hash，Next 中央设计已固定；独立复评和实现尚未完成）；Next Python Host / ArtifactStore / v2 Channel NOT_IMPLEMENTED。
 > 功能归属：F05 — Context 与 Artifact 管理  
 > 关联 SR：SR-009；交叉 SR：SR-007、SR-010、SR-011、SR-015、SR-017、SR-030、SR-032\
@@ -208,7 +208,7 @@ Tool 只接收当前 Invocation 已授权的 artifactRef 和声明的 slot，不
 
 **发布与清理：** Provider 输出引用在 invoke result 通过 Host 的 slot/reference/result validation 之前只能处于 staging；只有整个结果有效时，Host 才一次性发布全部必需输出。任何超时、取消、Provider 退出、无效结果、重复 slot 或传输错误都必须丢弃本次 Invocation 的 staged outputs；不得部分发布。引用/字节按契约执行 per-artifact 1 MiB、per-invocation 4 MiB、最多 8 attachments、channel request timeout 3 s、发布后 10 min expiry（Host 可采用更严格的部署上限）。
 
-**摘要语义：** SHA-256 是 v1 wire contract 对精确字节的传输完整性校验：Host 在接收时计算、在 GET 时返回，Provider 验证收到的 bytes；它不进入 artifactRef，不用于公开内容寻址或去重。Next 只实现这一既有协议要求，不增加额外 package hash、签名、Trust Registry 或第二套完整性机制。
+**仅历史 v1 摘要语义（不作为 Next 实施要求）：** 旧 ca-host.artifact-store/v1 要求 SHA-256 对精确字节进行传输完整性校验：旧 Host 在接收时计算、GET 时返回，旧 Provider 验证 bytes；它不进入 artifactRef，也不用于公开内容寻址或去重。**Next 1.6.0 不实现此 v1 传输哈希契约**，仅实现下文 v2 无摘要 Channel；不得把旧 v1 的 SHA-256 header、计算、校验、fallback 或 Adapter 带入当前 Demo，也不增加签名、Trust Registry、包级摘要或第二套完整性机制。
 
 **v1 历史未配置行为：** 缺少 artifactChannel 时 Provider catalog 将 artifact-bearing binding 标记 NOT_CONFIGURED；该行为继续适用于历史 v1 Provider。新 1.6.0 v2 的配置与拒绝行为按下方 v2 契约执行。
 
@@ -446,3 +446,4 @@ Demo 必须具备：本地 Host-owned ArtifactStore、精确 slot、相对路径
 | 2026-11-27 | 0.4.10 | GPT-6.2（ChatGPT） | §2.1、修订记录 | 明确 Resource Read 使用 Host per-Run Runtime Action Budget，而非 Contract.limits.maxActions 业务动作预算 | 与 F04 Script Execution 预算规则统一，防止系统内建动作绕过 Host 资源上限 | Issue #49；IR-008；SR-007/032；PR #52 |
 | 2026-11-28 | 0.4.13 | GPT-6（ChatGPT） | 文档头、§8、§10、修订记录 | 选择性吸收 #117 F05 v0.4.12 的 Ext1/T0 语义，新增独立 n2Ext1.request、Create/Update 可选 N2/Ext1、continuation Ext1 fail-closed 与 Create N1 必需性约束；同步 ingress.ack 严格身份白名单 | 关闭 #116 P2-01/02/10 的中央设计缺口，不把 #117 未通过复评的运行断言当作已验收 | Issue #50/#116；PR #115/#117 |
 | 2026-11-28 | 0.4.14 | GPT-6（ChatGPT） | 文档头、§9、§11、修订记录 | 明确 Host 在 dispatch 前核验 deliveryId/responseObligationId/responseChannelId 三元权威映射；补充非空但错误 obligation、跨 Run/代际/Channel、重复/过期负例与 Plugin 非空校验的区别 | 将 SR-009 P2-05 的身份合法性明确分配给 Host；SR-011 AC-011-05 的系统负例 NOT_RUN，不冒称模块 PASS | Issue #50/#74/#75/#116；PR #115 |
+| 2026-11-28 | 0.4.15 | GPT-6（ChatGPT） | §6.2 历史 v1 摘要段、文档头、修订记录 | 明确旧 v1 SHA-256 只属外部 Provider v1.2.0 既有契约，撤销“Next 只实现这一旧校验协议”的活动误导；Next 1.6.0 唯一实施 v2 no-hash，无 v1 兼容/Adapter | 消除同一文档 v1 历史段与 v2 现行 Demo 限制互相矛盾的 P1 风险，保留原始历史契约仅供审计 | Issue #50/#113；SR-010；PR #115 |
