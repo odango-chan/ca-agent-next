@@ -1,12 +1,12 @@
 # SR-025：MAS Owner 1.6.0 Capability-first Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.15
+> SR 版本：0.1.16
 > 状态：整项 DRAFT；限定设计已认可，等待直接依赖。中央 Owner Publisher 设计已认可。  
-> 下一步：AC-025-01～08 的执行等待新 Owner 24/24 源、正式 Package Schema/CLI 与 Compiler 验证入口；发布另需授权。  
+> 下一步：AC-025-01～08 等待 Owner Publisher 对 `SSM.PARSE_N1_MODIFY`/`SSM.PARSE_N1_RELEASE` 的正式处置签认、冻结公开 1:1 最终成员数、正式 Package Schema/CLI 与 Compiler #62 验证入口；发布另需授权。  
 > 阶段依据：[独立评审 #86](https://github.com/odango-chan/ca-agent-next/issues/86#issuecomment-7209318291)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。
 > 创建日期：2026-11-25
-> 修订日期：2026-11-27\
+> 修订日期：2026-11-28\
 > 所属阶段：外部 Publisher 实施移交
 > 上游需求：[IR-006](../IR/IR%20总登记册.md#ir-006)
 > 功能：F03.05 / EC03（消费方关联 F09.07）
@@ -27,7 +27,7 @@
 
 - 目标仓：`odango-chan/ca-client-tools`，目标分支 `main`，审计基线 `7bcb2614aa3615d8358df31eecefd0909e894e40`。
 - Owner source：`contracts/owner/openamsm-mas/v1alpha4`；source tag `v1.2.0` 对应 Revision `fc44c3a745c68443fcfb12054c7eadf0ed7cc3f7`；source buildIdentity `sha256:ac834080f31ff0fa91b9eb846fa47c889a94837fc1f37ec2034190e4e83085c0`。
-- 当前 main 与 v1.2.0 tag 的 Owner source 目录 59 个文件（manifest + 58 artifacts）逐个 blob 相同。
+- 历史审计：此前 main 与 v1.2.0 tag 的 Owner source 目录 59 个文件（manifest + 58 artifacts）逐个 blob 相同；此结论固定于当时 SHA，不代表本轮已核验的新版 Owner 1.6.0 发布。
 - 当前 `manifest.json` 的 `operations` 有 25 个已发布 contracts，`notPublished` 另列 7 个旧 Callable；这与 Provider 内部 Catalog 的 8 个 legacy typed callables 是两套不同清单。
 
 ## 2. 目标与规范契约
@@ -37,7 +37,7 @@
 ### 2.1 新发布契约（需 Owner/Compiler 正式冻结）
 
 - 唯一语言目标 **CA-SL 1.6.0**；准确 `languageTarget`、Interface Package `apiVersion`、Schema/文件名、Publisher package `version` 和 Builder CLI 由 ca-skills / Compiler / Owner 发布，不得假定旧 `connectionagent.io/v1alpha5`、`interface-package/v1alpha1`、旧 `1.0.0` 仍合法。
-- 目标 Owner **24 个 Skill-facing Capability ↔ 24 个公开 Callable**，严格双向一对一；**25 个 Owner ToolCatalog contracts** 保持原业务语义，其中 `MAS.RECONCILE` 是 Runtime Coordinator internal-only target，不属于 Skill-facing Capability。详见 [SR-029 §3/§6](SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md)。
+- 目标 Owner Skill-facing Capability ↔ 公开 Callable 严格双向一对一；**最终数量尚未由 Owner Publisher 冻结**：两项历史 N1 Parser `SSM.PARSE_N1_MODIFY`、`SSM.PARSE_N1_RELEASE` 必须分别签认移除（候选 22/22）、或重构为只接收已验证 Codec Result 的纯业务 READ（保留两项时候选 24/24）；其他决策重新计数。**历史 25 个 Owner ToolCatalog contracts / 24 Capability IDs 与 25 memberships 仅供只读审计**，不能当作 1.6.0 正式发布合同。`MAS.RECONCILE` 仅 Runtime Coordinator internal-only，不属于 Skill-facing Capability；不得作为 NAS/NGAP Codec fallback。详见 [SR-029 §3/§6](SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md)。
 - 原 `mas.se.events.emit` 一对二（`SE.EMIT_EVENTS`、`SE.EMIT_RELEASE_EVENT_C`）必须拆为 `mas.se.establishment-event.record` 和 `mas.se.release-event-marker.write`：Input Schema、Effect、Evidence Guarantee 分开保留，不能伪合并为一种动态 Callable。
 - `MAS.RECEIPT_QUERY` 是可对 Skill 授权的 READ Capability/Callable；`MAS.RECONCILE` 虽保留 Owner ToolCatalog/Runtime Bindings，但任何普通 Skill/LLM/Studio 补全不得将其当作公开 Capability。所有公开 Callable 都应恰好有一个 Capability，只有 Reconcile 这类明确 internal-only callable 被排除于公开双射。
 - Owner 权威发布应明确每个 Capability 的全局 ID、唯一 Callable ID、kind、Effect、输入/输出 Schema、Evidence / Receipt/Commit Proof 描述和 Owner identity。Publisher 只验证并输出 Owner 已冻结的事实；不能由 ca-client-tools 根据旧数组猜测新 Identity/Schema、生成新业务语义或改变 Owner guarantee。
@@ -49,8 +49,8 @@ Owner `v1alpha4` source 的 `tool-catalog.yaml` 含 25 published contracts、旧
 
 ## 3. Owner/Publisher 交接与实现责任
 
-1. **Owner（env-openamsm）发布输入：**冻结 24/24 mapping、事件拆分的两个 Schema/Evidence identity、Receipt Query READ、Reconcile internal-only binding 及包来源身份；登记源仓 PR/SHA/正式契约版本。Owner 的业务语义与权威 Evidence 不允许由 Publisher 改写。
-2. **ca-client-tools Publisher 校验：**精确读取 Owner 正式输入，验证 24/24 双向一对一、无空/双成员、无重复 Callable、与 ToolCatalog export 一致；公开 Capability 不包含 Reconcile；Schema 所需 $ref 全部可解析，Effect/kind/Evidence identity 与 Owner 一致。输入不符必须拒绝整个发布候选，不能自动补一项或删字段继续发布。
+1. **Owner（env-openamsm）发布输入：**先对两项历史 N1 Parser 分别完成正式签认，再冻结最终一对一 mapping、事件拆分的两个 Schema/Evidence identity、Receipt Query READ、Reconcile internal-only binding 及包来源身份；登记源仓 PR/SHA/正式契约版本。Owner 的业务语义与权威 Evidence 不允许由 Publisher 改写，也不得把 Owner Parser 改成 Codec fallback。
+2. **ca-client-tools Publisher 校验：**精确读取 Owner 正式输入，按 Publisher 签认后的**实际成员数**验证 Capability↔Callable 双向一对一、无空/双成员、无重复 Callable、与公开 ToolCatalog export 一致；公开 Capability 不含 Reconcile，Owner Parser 不承担 Codec 解码；Schema 所需 $ref 可解析，Effect/kind/Evidence identity 与 Owner 一致。输入不符必须拒绝整个发布候选，不能自动补一项或删字段继续发布。
 3. **输出：**按 Compiler Owner 正式冻结的 1.6.0 Interface Package Schema 打包，仅包含声明允许导出的 Package identity、Capability/Callable/Schema/Evidence 和闭包，复用既有统一发布流水线；**Package 不能由 Studio 包装或转换**，不输出 Owner Trust/Runtime 权限。版本与机器标识以批准的 Publisher release record 为准。
 4. **消费：**Compiler 基于该 Package + Skill 显式依赖做 Capability→唯一 Callable 链接，并产出 1.6.0 Runtime Artifact；Skill Studio 通过新 ZIP Import/Lock 原样导入（SR-016）；Agent 只消费已发布 Bundle，不调用 Compiler。
 5. **失败原子性：**任何 Schema 失效、发布输入身份不匹配、旧 languageTarget、重复 membership 或不兼容 Parser 均不产出可发布 Bundle。Publisher 的 Release 必须明确记录源 SHA、Compiler tag/API、Package version、目标资产和 Verify 证据；发布授权仍独立。
@@ -60,7 +60,7 @@ Owner `v1alpha4` source 的 `tool-catalog.yaml` 含 25 published contracts、旧
 | 类别 | 依赖 | 阶段门禁 |
 |---|---|---|
 | 设计 | SR-029 Capability↔Callable 与本 SR 的包发布职责/验收 | 可先独立评审，不要求产品已有 Release |
-| 实施 | env-openamsm 新 24/24 Owner 规范；ca-skills 正式 1.6.0；Compiler 的新 Package/Link DTO | 真实 Publisher 实施时必须固定发布证据；否则 BLOCKED |
+| 实施 | env-openamsm Owner Parser 逐项签认后的最终一对一机器合同；ca-skills 正式 1.6.0；Compiler #62 新 Package/Link DTO | 真实 Publisher 实施时必须固定发布证据；否则 BLOCKED |
 | 模块验收 | 目标仓一份合法的 1.6.0 Package 候选和负例、对应新 Compiler 验证器 | 仅在完成该 AC 时依赖，不能拿旧 v2.1.0 BuildDevelopment 冒充 |
 | 系统集成 | SR-016 Studio MAS Example / Next E2E | 不作为本 Publisher 模块设计 READY 前置 |
 
@@ -70,10 +70,10 @@ Owner `v1alpha4` source 的 `tool-catalog.yaml` 含 25 published contracts、旧
 
 | AC | 正/负输入与操作 | 预期 |
 |---|---|---|
-| AC-025-01 | 固定 Owner 新发布源 SHA、24/24 mapping、25 ToolCatalog/历史差异 | 有可复核 Owner 权威来源；历史 24/25 仅审计 |
+| AC-025-01 | 固定 Owner 新发布源 SHA、两项 Parser 的正式去留/纯业务 READ 签认、最终 Capability↔Callable 一对一 mapping、与历史 24/25 清单差异 | 有可复核 Owner 权威发布来源与签认；22/22/24/24 只有条件候选，历史 24/25 仅审计 |
 | AC-025-02 | 合法 1.6.0 Package ID/版本/Publisher/languageTarget 与旧 v1alpha5 / v1alpha1 反例 | 仅正式新 Schema 验证通过；旧/未知版本拒绝 |
 | AC-025-03 | Schema/Evidence/Callable 闭包、引用完整性；缺 $ref、重复导出 | 合法闭包通过，丢失/重复任何成员 fail-closed |
-| AC-025-04 | 24/24 双向一对一；旧一对二 mas.se.events.emit、重复 Callable、Reconcile Skill-facing 反例 | 全部异常拒绝，正确拆分 + internal-only 保留 |
+| AC-025-04 | 按 Owner 正式冻结成员数做双向一对一；旧一对二 `mas.se.events.emit`、重复 Callable、Reconcile Skill-facing 与旧 Parser Codec fallback 反例 | 全部异常拒绝，正确拆分 + internal-only 保留，不依赖未签认的固定 24/24 |
 | AC-025-05 | 两个不同 Event Schema/Guarantee、Receipt Query/Receipt Proof、Reconcile 原始 invocation | 两种事件不能互换；READ 与内部 Reconcile 不混用 |
 | AC-025-06 | 同一 Owner 输入重复构建 + 来源包缺失或损坏 | 输出稳定可重验；失败零部分可发布资产 |
 | AC-025-07 | **正式新 1.6.0** Compiler Schema/Build/Verify 使用一个 Capability-first MAS synthetic Skill | 通过**唯一新 1.6.0 Compiler** 的正式 Check/Build/Verify 接口；历史 `build-development` / `verify-development` 不能算 PASS；记录精确命令、结果与诊断 |
@@ -92,6 +92,10 @@ Owner `v1alpha4` source 的 `tool-catalog.yaml` 含 25 published contracts、旧
 | 验收 | AC-025-01～08 全部 NOT_RUN / 依赖正式发布部分 BLOCKED |
 
 本 SR 的新规范性 §2～§6 已替换历史 v1alpha5 Development Publisher 方案。历史源输入可作为审计证据，不再构成新版本合法构建/消费路径；待正式设计评审通过、分类型依赖和对应 Publisher/Compiler 发布获得授权后，才提供针对可执行阶段的 Harness Goal。
+
+### 6.1 历史 READY Publisher 与新 1.6.0-only 范围的边界
+
+恢复分支旧 SR-025 v0.1.11 及 [ca-client-tools #43](https://github.com/odango-chan/ca-client-tools/issues/43) 对应 **v1alpha5 / Development 1.0.0** Publisher 设计，历史阶段曾为 READY；其固定源 59 个文件、127 项 exports、`BuildDevelopment`/`VerifyDevelopment`、release.yml 资产校验和 v1.2.1 候选仅保留为审计，不是本 SR 1.6.0 的合法实施入口、发布物或验收。已确认旧源对象的 byte/manifest 信息可用于差异取证；新项目必须取得正式 Owner Parser 决策、Publisher 机器合同及 Compiler #62，不能因历史 #43 已创建而宣称新实施 READY。
 
 ## 修订记录
 
@@ -113,3 +117,10 @@ Owner `v1alpha4` source 的 `tool-catalog.yaml` 含 25 published contracts、旧
 | 2026-11-27 | 0.1.13 | GPT-6（ChatGPT） | 修订记录 | 修复修订记录表空行与版本顺序，完整保留历史条目 | 处理 R3-LEDGER-01，确保历史修订可连续审计 | Issue #12；PR #46；Review #6082541121 |
 | 2026-11-27 | 0.1.14 | GPT-6（ChatGPT） | 文档头、评审状态、修订记录 | 将第三轮独立模型 Review #6082541121 的限定结论替换不可访问的第二轮评审登记 | 中央 Publisher 设计认可不代表 Owner 新机器契约、Package 或 Release 已发布 | Issue #12；PR #46；Review #6082541121 |
 | 2026-11-27 | 0.1.15 | Codex / GPT-6 | 文档头 | 登记限定设计已认可，等待直接依赖及 AC 范围 | 按单项独立评审推进 | Issue #12、#86；PR #46 |
+| 2026-11-26 | restore-0.1.6（历史分支） | GPT-6.2（ChatGPT） | §1～§7 | 独立评审并固定 Owner source manifest blob/buildIdentity 与 59 文件内容基线；明确 127 项 export ID 生成规则、v1alpha5 与未来 v1alpha6 边界、单根 MAS Receipt Query Build/Verify 正负 fixture、release.yml checksum/asset gate；状态提升 READY | 消除源 Revision 与目标 checkout HEAD 的歧义，补齐 Harness 所需的 export identity、最小正例和发布步骤；避免未来 Capability-first 设计静默改变当前 v1alpha5 Publisher 输出 | Issue #12、Next #40；IR-006；F03.05 v0.3.9；F09 v0.3.8；SR-015、SR-016、SR-024；Compiler v2.1.0 |
+| 2026-11-26 | restore-0.1.7（历史分支） | GPT-6.2（ChatGPT） | §7 | 创建并关联 ca-client-tools 实施 Issue #43；明确 SR-025 已 READY、目标仓实施尚未开始 | 完成 SR READY → 目标仓 Issue 的治理交接，不提前声称代码或发布已实施 | IR-006；SR-025；ca-client-tools #43 |
+| 2026-11-27 | restore-0.1.8（历史分支） | GPT-6.2（ChatGPT） | §1、§7 | 将 SR-025 v0.1.7 READY 设计基线及 ca-client-tools #43 OPEN 状态纳入恢复分支；重新核对目标仓 main `7bcb261` 与 Issue #43，未发现 Publisher 已实施证据 | 恢复此前未进入恢复分支的有效设计修订，同时明确本轮仅做文档整合，不宣称实施或发布完成 | Issue #53；Issue #12；IR-006；ca-client-tools #43；F03.05 v0.3.9；F09 v0.3.9 |
+| 2026-11-27 | restore-0.1.9（历史分支） | GPT-6.2（ChatGPT） | §1、§3、§7 | 将 F09 设计依据更新至 v0.3.11；将未来 Capability-first 方向统一表述为 CA-SL 1.6.0 NOT_RELEASED、准确 languageTarget 待正式冻结；保留当前 v1alpha5 + Owner v1alpha4 Publisher 输入 | 消除未冻结的 v1alpha6 机器版本猜测，避免未来设计污染当前 READY Publisher 契约 | Issue #53；Issue #40；PR #45；SR-029；F09 v0.3.11；ca-client-tools #43 |
+| 2026-11-27 | restore-0.1.10（历史分支） | GPT-6.2（ChatGPT） | 文档头 | 将 F09 §4.5 权威设计引用更新至 v0.3.12 | 保证 Publisher 输入契约引用当时的 F09 版本，不改变 SR-025 READY 与当前 v1alpha5 + Owner v1alpha4 发布输入 | Issue #53；F09 v0.3.12；SR-025；ca-client-tools #43 |
+| 2026-11-27 | restore-0.1.11（历史分支） | GPT-6.2（ChatGPT） | 文档头 | 将 F09 §4.5 权威设计引用更新至 v0.3.13 | 保持 Publisher 与 F09 最新正式设计版本一致；SR-025 READY、当前 v1alpha5 + Owner v1alpha4 输入和 package version 1.0.0 均不变 | Issue #53；F09 v0.3.13；SR-025；ca-client-tools #43 |
+| 2026-11-28 | 0.1.16 | GPT-6（ChatGPT） | 文档头、§1～6、修订记录 | 合并 #46 新 1.6.0 Owner Publisher 架构与恢复分支历史 Development READY/固定源记录；Parser 22/22/24/24 仅条件候选，正式数量需 Owner 签认，保留 Codec 唯一解码与新 Compiler #62 门槛 | 避免把已合 #45 后的历史 Development Publisher 意外激活为 1.6.0 产品路径 | Issue #12；#40；#113；PR #45；#46 |
