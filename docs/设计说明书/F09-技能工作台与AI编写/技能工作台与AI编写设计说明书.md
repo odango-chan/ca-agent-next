@@ -64,6 +64,12 @@ Skill Studio 的依赖导入负责**获取、验证和固定原始包快照**，
 
 历史 v2.1.0 Development Build 使用的 Owner / Host Package 仅用于 SR-024 / SR-025 来源审计，不是 1.6.0 新入口。新 1.6.0 MAS Owner Package 由 [SR-025](../../SR/SR-025-MAS%20Owner%20Interface%20Package%20Publisher.md) 负责；Host Context Schema-only Package 由 [SR-030](../../SR/SR-030-Host%20Context%201.6.0%20Schema-only%20Interface%20Package%20Publisher.md) 负责。Studio 只导入正式新发布物，不代替 Publisher 组包。
 
+### 4.4.1 恢复分支 2026-11-27 的固定源差异（仅 Development 历史）
+
+项目另预加载 `ca-client`，其 Package ID 为 `urn:wtlab:ca-client-tools:openamsm-sbi-interface`，来自已发布 `ca-client-tools_interface_1.2.0.zip`。它导出十一项 public READ Tools / 两个 Capabilities，用于只读 SBI Query IntelliSense；它**不是** `mas` Owner contract，也不是 `ca-context`，当前 Contract 未声明它为根。Studio/Compiler 不得推断替换。
+
+`ca-client` 当前 Studio 示例清单/Lock 若与旧版 1.1.0 ZIP 不一致，须以**同一 Project Lock 与导入原始 ZIP**确定历史受测来源；1.2.0 不得直接替换已锁定 1.1.0，也不能作为新 1.6.0 Publisher Package 输入。两个 MAS/Host root 也只代表历史 `tool-catalog` 和 `schema-bundle`，**不可视作**已发布的 1.6.0 Interface Package。
+
 ### 4.5 两个 Contract root 的正式 Publisher 输出
 
 历史 Compiler v2.1.0 Development Build 使用 connectionagent.io/interface-package/v1alpha1，仅作为 §4.5 的只读审计来源。新 1.6.0 Publisher 由 SR-025 / SR-030 分别负责；Studio 的 Import / Lock / Compiler 集成由 SR-016 负责。
@@ -156,7 +162,7 @@ Package Audit/AI Authoring 的**同一候选源码字节 + 同一 Project Lock g
 | ZIP Import / immutable snapshot / Package Explorer | MERGED | [Studio #267](https://github.com/odango-chan/ca-skill-studio-demo/pull/267)，main merge `11b1246` |
 | Default Example dependency preload | MERGED | [Studio #270](https://github.com/odango-chan/ca-skill-studio-demo/pull/270)，main merge `d3b1d36` |
 | Compiler v2.1.0 request builder | MERGED（历史 Development） | [Studio #272](https://github.com/odango-chan/ca-skill-studio-demo/pull/272)，merge `a8633553615d786e360a62c2b0042a27ae92d9d3`；不代表 1.6.0 可用 |
-| Compiler v2.1.0 Node/Browser Worker | OPEN / DRAFT / STALE | [Studio #276](https://github.com/odango-chan/ca-skill-studio-demo/pull/276)，测试 HEAD `7d6adeb`，落后 #272 base 9 commits |
+| Compiler v2.1.0 Node/Browser Worker | OPEN / DRAFT / DIRTY（历史固定源） | [Studio #276](https://github.com/odango-chan/ca-skill-studio-demo/pull/276)，当时 Head `7d6adeb`，Base SHA `3b3c4ac9d4b3a2f2e2380793d028d92f24c62c27`；当前真实状态须重查。旧 Worker 非新版 1.6.0 Gate |
 | Package Audit Development Build cutover | NOT_IMPLEMENTED | [Studio #269](https://github.com/odango-chan/ca-skill-studio-demo/issues/269) |
 | AI Authoring exact-candidate Development Build gate | NOT_IMPLEMENTED | [Studio #269](https://github.com/odango-chan/ca-skill-studio-demo/issues/269) |
 | MAS / Host Context 1.6.0 Package publication | BLOCKED | MAS Owner Capability-first Package 归 SR-025；Host Context Schema-only Package 归 SR-030；新 Package Schema / SemVer / languageTarget 尚未正式发布；旧 SR-024 的 1.0.0 不得作为新输入 |
@@ -164,7 +170,7 @@ Package Audit/AI Authoring 的**同一候选源码字节 + 同一 Project Lock g
 | Real released ca-client-tools v1.1.0 as Compiler root | NOT_RUN | 需显式 `ca-client` synthetic Contract 正例 |
 | No-root UI state | NOT_IMPLEMENTED | 不调用 Compiler、无 Artifact、无 `NOT_ADMITTED` |
 
-#272 / #276 曾在各自历史 HEAD 通过 PR Verify、Native Windows、IDE Host、Theia Browser-Only、Theia Browser Host 和 Pages Chromium 等检查，但当前分支分别落后 main / base；历史 PASS 不满足当前合并门禁。必须在刷新分支后重跑完整 exact-head 验收。
+#272 历史 request builder 已合并至 Studio main（merge `a863355`），#276 在历史固定源时 OPEN/DRAFT/DIRTY；两者的旧 Native Windows/IDE/Browser-only/Browser Host/Pages Chromium 或 PR Verify 成功只对应原受测 SHA，不等于当下 HEAD 的新 1.6.0 Package Audit/Build/Verify，正式六宿主必须针对同批新 Compiler #62 发行重新验证。
 
 必要验收至少包括：原始发布 ZIP 导入/锁定字节一致性；Contract root closure 只包含可达 Interface Packages；无关项目依赖不进入 BuildRequest；声明为非 Interface Package 的 root fail-closed；缺失/损坏/摘要错/传递依赖环拒绝；无 Assurance 不调用 Compiler；Assurance 无外部 Capability / Schema 依赖时允许空闭包 Build；Assurance 仅引用 Schema-only Package 时保留非空 Schema closure 但零 Capability roots / Callable bindings；Node/WASM/Chromium 结果一致；AI 候选 stale invalidation、Apply/Undo 和磁盘未保存语义。所有结果只证明相应静态/编辑器层，不代表 Owner/Host Admission、Runtime、Production 或真实 5GC Qualification。
 
@@ -236,3 +242,19 @@ AI Authoring 的 Change Set 只能新增或修改 Capability ID、Procedure argu
 | 2026-11-26 | 0.3.14 | GPT-6（ChatGPT） | §4.4～§6、§9.5、修订记录 | 明确零 Capability roots 不等于零 Package dependency closure；增加 Schema-only Host Context Package 的 Compiler gate、Studio 测试和 AC-016-04 映射 | 消除 F09 原“零根不调用 Compiler”与“无外部依赖 Assurance 可 Build”之间的矛盾，确保 Schema-only 依赖可被正确消费 | Issue #12/#40；SR-013 AC-013-06；SR-016 AC-016-04；SR-030；PR #46 |
 | 2026-11-26 | 0.3.15 | GPT-6（ChatGPT） | §5～§9、修订记录 | 同步 EC02 v0.2.12 与 SR-013 v0.2.18，保持 Schema-only Package / zero Capability roots 依赖契约一致 | 使 Studio Package Audit / AI Authoring 消费与 Compiler AC-013-06 使用同一 Schema-only 语义 | Issue #12/#40；EC02、SR-013、SR-016、SR-030；PR #46 |
 | 2026-11-28 | 0.3.18 | GPT-6（ChatGPT） | §3～7、修订记录 | 合并恢复分支 #45 的 1.6.0 Build/Verify+Owner/Provider 双 Gate 与 #46 F09 Package Audit/AI Authoring、Schema-only 零根与六宿主计划；修正 #272 已合并状态和 Host fixture 来源 | 防止旧 Worker/Development 结果混入新版 Gate，保留既有 Studio 历史实现 | Issue #12；#40；#49；PR #45；#46 |
+| 2026-11-25 | restore-0.3.1（历史） | GPT-6.2（ChatGPT） | §4.4～7 | 将 Host Context Interface Package Publisher 从 SR-020 拆分到新 SR-024；SR-020 保留参考宿主架构审计职责；明确仅使用 Compiler v2.1.0 schema 要求的 files[].sha256 ；原因： 避免一个 SR ID 承载两项不同工作，并区分既有 Interface Package 文件摘要与 CA-SL Skill Artifact 的非目标完整性体系 | IR-006；SR-015、SR-016、SR-020、SR-024；Studio #261/#269/#272/#276 |
+| 2026-11-25 | restore-0.3.2（历史） | GPT-6.2（ChatGPT） | §1、§4.4～7 | 修复 SR-024 Publisher 文档链接并同步 F02/F08/SR-016/SR-024 版本；明确 SR-020 只承担参考宿主审计 ；原因： 解决 SR-020/SR-024 责任冲突，确保 Publisher 入口唯一 | IR-006；SR-015、SR-016、SR-020、SR-024 |
+| 2026-11-25 | restore-0.3.3（历史） | GPT-6.2（ChatGPT） | §4.5、§5.2、§7 | 对照 Studio #267 合入代码，明确 `source.sourceStatus` 尚未写入 lock，并将其归入 SR-016/#269；区分项目来源元数据与 Compiler BuildResult.sourceStatus ；原因： 避免把设计要求误报为当前持久化能力，防止两个 sourceStatus 语义混淆 | Issue #12；SR-016、SR-024；Studio #267/#269 |
+| 2026-11-25 | restore-0.3.4（历史） | GPT-6.2（ChatGPT） | §8 | 将 EC06 ADR-0001/0002 与 Plugin-managed/C4 原文纳入中央仓，并将 F09 历史决策和原始设计引用切换为 Next 内部链接 ；原因： 关闭原始设计缺失与跨仓引用断链；不改变历史决策内容 | Issue #12；EC06-ADR-0001～0005；SR-016、SR-024 |
+| 2026-11-25 | restore-0.3.5（历史） | GPT-6.2（ChatGPT） | §4.5、§6～7 | 将 MAS Owner Publisher 独立归入 SR-025、Host Publisher 归入 SR-024；按 Compiler v2.1.0 修正 MAS exports 为 25/24/25/53；发现 v1alpha4/v1 非 SemVer，提出 package/source version 分离决策门槛 ；原因： 防止发布无法被 Development Build 接受的版本，同时保持 Owner/Host 源身份与 Studio lock 边界 | IR-006 · SR-015 · SR-016 · SR-024 · SR-025 · Studio #269 |
+| 2026-11-26 | restore-0.3.8（历史） | GPT-6.2（ChatGPT） | 文档头、§4.5、§7 | 回填 Studio main `79bd2c3`、#272 MERGED、#276 OPEN/DRAFT/DIRTY、#269 OPEN；更新 SR-024 VERIFIED、SR-025 READY；登记 #279/#290/#295 当前审计与 OPFS 替换回归 ；原因： 区分 Publisher 完成与 Studio lock 消费、request builder 合并与 Worker/Verify 完成；避免旧 PR HEAD 的历史 PASS 被当作当前门禁 | Issue #12；IR-006；SR-016、SR-024、SR-025；Studio #269/#272/#276/#279/#290/#295 |
+| 2026-11-26 | restore-0.3.9（历史） | GPT-6.2（ChatGPT） | §4.5、文档头 | 将 SR-025 的目标仓实施追踪固定为 ca-client-tools #43 OPEN，明确 Publisher 尚未实施 ；原因： 补齐 READY → 目标仓 Issue 的可追踪关系，不将 Issue 创建误报为代码交付 | Issue #12；IR-006；SR-025；ca-client-tools #43 |
+| 2026-11-27 | restore-0.3.10（历史） | GPT-6.2（ChatGPT） | 文档头、§4.5、§7 | 将 Studio 当前 main 更新为 `79bd2c3`；确认 #272 MERGED、#276 OPEN/DRAFT/DIRTY、#269/#279/#290/#295 OPEN，以及 SR-024 VERIFIED / SR-025 READY ；原因： 使用本轮实际查询的 Studio main，继续区分 Publisher 完成、Studio lock 消费、Worker/Verify 和产品验收 | Issue #53；IR-006；SR-016、SR-024、SR-025；Studio #261/#269/#272/#276/#279/#290/#295；ca-client-tools #43 |
+| 2026-11-27 | restore-0.3.11（历史） | GPT-6.2（ChatGPT） | 文档头、§4.5、§7、修订记录 | 分开记录 #272 merge SHA 与当前 main；确认默认 Host Context Example provenance 已实现并持久化，普通 ZIP provenance/reload 与双根 Build/Verify 仍未完成；记录 #296 merge 与 #295 Issue 状态；规范化修订表；原因：避免把默认 fixture 专用实现误报为未实现或扩大为普通 ZIP/产品验收；修复 Studio PR/main 身份混淆与静态表格列数错误 | Issue #53；IR-006；SR-016、SR-024、SR-025；Studio #261/#267/#269/#270/#272/#276/#279/#290/#295/#296 |
+| 2026-11-27 | restore-0.3.12（历史） | GPT-6.2（ChatGPT） | §7、修订记录 | 将当前产品审计补充日期更新至 2026-11-27，保持 #295 Issue OPEN 与 #296 已合并修复的边界；原因：防止将历史回归现象误报为当前 main 仍未修复，同时不把 PR merge 扩大为完整 Product Acceptance | Issue #53；Studio #279/#290/#295/#296 |
+| 2026-11-27 | restore-0.3.13（历史） | GPT-6.2（ChatGPT） | §4.4～§4.6、修订记录 | 将 `ca-client` IntelliSense-only Interface Package 与 AC-016-06 统一至已发布 `ca-client-tools_interface_1.2.0.zip`，固定 Release asset SHA-256；保留 MAS Owner source 与 Owner Publisher 的独立边界；全局评审范围机器声明保持规范原文，以显式 `<br />` 保留原有渲染换行；原因：消除 F09 与 SR-016 的版本冲突，区分 Provider v1.2.0 已发布的公共 READ Interface Package 和尚未实施的 MAS Owner Publisher | Issue #53；SR-016 v0.3.20；ca-client-tools Release v1.2.0；SR-025 |
+| 2026-11-27 | restore-0.3.14（历史） | GPT-6.2（ChatGPT） | 文档头、§5、§9、修订记录 | 合并 #45 的 1.6.0-only 设计增量并保留恢复分支当前状态，避免回滚 #44 与后续修订。 | Issue #12/#40/#43；PR #44/#45 |
+| 2026-11-27 | restore-0.3.15（历史） | GPT-6.2（ChatGPT） | §3～4、§9、修订记录 | 防止新 Studio 将旧 v1alpha5/Development profile 误作 1.6.0 项目输入。 | Issue #40；SR-029；SR-013；SR-004 |
+| 2026-11-27 | restore-0.3.16（历史） | GPT-6.2（ChatGPT） | §9、修订记录表格结构 | 合并 0.3.11～0.3.13 三条记录的“修改内容/原因”列并完整保留原文；原因：恢复六列表格结构，避免复审时修订记录错列。 | Issue #40/#12；PR #45；SR-013/SR-029 |
+| 2026-11-27 | restore-0.3.17（历史） | GPT-6.2（ChatGPT） | 文档头、§5.1～§7、修订记录 | 将新 Studio 的唯一执行门改为 Compiler Owner 正式发布的 1.6.0 Build/Verify + Owner/Provider Package Gate；把 VerifyDevelopment 与 no-root 规则明确限定为历史 Development profile；SKILL.md-only 改为 Agent Skills Specification 独立路径；原因：消除新版 Gate 正文仍调用旧 VerifyDevelopment、并避免将 SKILL.md-only 误归入 CA-SL v1alpha5 的实施歧义 | Issue #40；SR-013；SR-029；PR #45 |
+| 2026-11-28 | 0.3.18-integration-2 | GPT-6（ChatGPT） | §4.4、§7、修订记录 | 恢复 Studio ca-client 1.2.0 历史来源、#276 DIRTY 状态与 Development 导入/根依赖证据，区分新 1.6.0 Build Gate | 避免旧 #272/#276 CI 和锁来源被推定为新版产品已验收 | Issue #12；#49；PR #45；#46 |
