@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.85
+> 文档版本：0.3.86
 > 状态：共 31 项 SR：4 VERIFIED（各自限定历史模块范围）、1 IMPLEMENTED（设计移交）、25 DRAFT、1 IN_PROGRESS（SR-028；设计 READY、uv 实施候选 IMPLEMENTED，mainline 尚未 VERIFIED）。PR #115 是唯一面向 `main` 的集成入口，当前仍 OPEN / Draft / 未合并；PR #46 的恢复设计仅合入恢复分支，不等于 main。**当前 PR Head/CI 必须以 GitHub API 即时读取为准**，不在此状态行写入会随每次文档提交失效的自指 HEAD。最近已冻结的 SR-003 代码/测试快照 `92474dba8faca34a088c3adfa4c3a9a8663d078c`：双平台 Regression #46139810346 均 273/273 SUCCESS，Review Context #46139810415 SUCCESS、Python Toolchain Bootstrap #46139810321 SUCCESS；其原始 Artifact 和根因见 SR-003 v0.3.16 §6.2。此处只引用该特定代码 SHA 的证据，不代表随后 docs-only Head 的测试已完成。PR #115 全量独立设计/集成复评仍未完成，未授权 Ready/合并/删分支。
 > 修订日期：2026-11-28\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -172,7 +172,7 @@
 | 1 | SR-023 | CA-SL v1alpha5、作者源与发布基线恢复 | ca-skills | 先固定语言、Skill 作者源与版本边界；Compiler #61 保留 v1alpha5 历史范围，不作为 1.6.0 依赖 |
 | 2 | SR-015 | Tool Interface / Provider / Codec 设计恢复 | ca-client-tools → Next F03.05 | IMPLEMENTED；SR-015 合并时 F03.05 v0.3.9（现行 v0.4.4）；SR-015 v0.3.8；PR #37 MERGED，产品代码未实现 |
 | 3 | SR-025 | MAS Owner 1.6.0 Capability-first Interface Package Publisher | ca-client-tools → Next F03.05 / F09 | 新 Owner Capability↔Callable 数量由两项 Parser 分别签认推导（22/22、23/23、24/24 条件候选）；历史 24/25、Development v1alpha1 和 1.0.0 仅审计；具体新机器 Schema/版本待 Owner/Compiler 冻结 |
-| 4 | SR-030 | Host Context 1.6.0 Schema-only Interface Package Publisher | ca-agent-demo → Next F09 | DRAFT；固定原始 Schema 来源；0 Capability / 0 Callable；新 Package Schema、languageTarget 和 SemVer 待冻结，AC-030-01～07 NOT_RUN；SR-024 VERIFIED 仅作为旧 v1alpha5 Development Publisher 历史证据 |
+| 4 | SR-030 | Host Context 1.6.0 Schema-only Interface Package Publisher | ca-agent-demo → Next F09 | DRAFT；固定原始 Schema 来源；0 Capability / 0 Callable；Next languageTarget=connectionagent.io/v1.6.0 已冻结；正式 Package Schema/Golden/Release 与 Publisher 新 SemVer 待发布；AC-030-01/06/07 固定源/设计静态核验已有**限定 PASS**，02～05 产品仍 BLOCKED/NOT_RUN；SR-024 VERIFIED 仅为旧 v1alpha5 Development Publisher 历史证据 |
 | 5 | SR-018 | OpenAMSM Owner 权威状态恢复 | env-openamsm | 固定 Callable、Receipt、Commit Proof、Reconcile 和 Modify/Release 边界 |
 | 6 | SR-019 | Mock AMF / 5GC 仿真对端恢复 | env-5gc-sim | 固定协议对端、World、进程和真实测试边界 |
 | 7 | SR-017 | OpenAMSM Event/Delivery Plugin 恢复 | ca-openamsm-plugin | 依赖 F03/F05、EC05 Owner Contract；当前 PR #1 Draft |
@@ -335,3 +335,4 @@
 | 2026-11-28 | 0.3.83 | GPT-6（ChatGPT） | 文档头、§2.4、Phase G、§4、修订记录 | 登记 #116 固定限定设计批准及 #117 后续 4 P1/9 P2；同步 SR-009 v0.2.15、F05 v0.4.13、F06 v0.3.9、IPC v0.2.8；修正“26 DRAFT”与“尚未创建 main PR”的旧现行表述，SR-028 继续 IN_PROGRESS | 防止旧 #117 文档覆盖 #115 当前第三批与 uv 状态，不拿外部 Plugin CI 当 Next 产品 PASS | Issue #50/#116；PR #115/#117；ca-openamsm-plugin#3 |
 | 2026-11-28 | 0.3.84 | GPT-6（ChatGPT） | 文档头、修订记录 | 删除“最新文档 Head 7ffb84e”的过期自指；固定 SR-003 代码快照 92474db 的双平台 273/273 / Review Context / Toolchain 原始 CI 与 SR-003 v0.3.16 的根因记录，并明确后续 docs-only Head 必须另行核验；31 项 SR 分类不变 | 关闭 #116 P2-11 的动态 Head/CI 伪最新风险，避免每次 bump 文档版本导致证据再次失效 | Issue #50/#116；PR #115；SR-003 v0.3.16 |
 | 2026-11-28 | 0.3.85 | GPT-6（ChatGPT） | 修订记录 | 合并两条错误重复的历史 v0.3.73 修订行，同时保留两次改动的范围、动因与 Issue / PR / 评审来源；更早 v0.2.6 同号历史材料仍明确标为“历史资料未提供”，不伪造新版本 | 修复 #116 P2-11 特定历史重号而不破坏追踪证据；现行 SR 数量与状态均不变 | Issue #50/#116；PR #115 |
+| 2026-11-28 | 0.3.86 | GPT-6（ChatGPT） | §4 SR-030、修订记录 | 将 SR-030 唯一 languageTarget 从“待冻结”改为 Next 既有设计值 connectionagent.io/v1.6.0；分离 01/06/07 固定源/设计静态限定核验与 02～05 正式 Publisher 产品 NOT_RUN | 不让原 SR-030 设计值跨文档回退或将静态 PASS 冒充正式发布 | Issue #40/#50/#95；PR #115 |

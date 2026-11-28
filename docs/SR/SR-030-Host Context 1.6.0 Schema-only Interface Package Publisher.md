@@ -1,13 +1,13 @@
 # SR-030：Host Context 1.6.0 Schema-only Interface Package Publisher
 
 > 文档类型：软件需求（SR）
-> SR 版本：0.1.12
+> SR 版本：0.1.13
 > 状态：整项 DRAFT；阶段 READY（中央只读核验）。AC-030-01 固定源，06/07 设计约束。  
-> 下一步：核对 Subject Schema 原始字节与来源、Provenance 归属和 Demo 排除项。02～05、Publisher 实现与发布等待正式 Schema/languageTarget。  
+> 下一步：AC-030-01 固定源及 06/07 静态约束已有限定证据；02～05、Publisher 实现与发布等待 Compiler/ca-skills **正式 Schema/Golden/Release** 及 Package identity/SemVer 发布。Next 已冻结 `languageTarget=connectionagent.io/v1.6.0`，不再将机器标识选择列为未决问题。  
 > 阶段依据：[独立评审 #91](https://github.com/odango-chan/ca-agent-next/issues/91#issuecomment-7209340753)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
 > 工作项：[阶段工作项 #95](https://github.com/odango-chan/ca-agent-next/issues/95)。[本轮固定源静态核验报告](../issue-95-fixed-source-handoff/SR-030.md)；历史首批证据见 [Issue #95 评论](https://github.com/odango-chan/ca-agent-next/issues/95#issuecomment-7210746570)。
 > 创建日期：2026-11-26
-> 修订日期：2026-11-27
+> 修订日期：2026-11-28
 > 上游需求：[IR-006](../IR/IR%20总登记册.md#ir-006)；关联需求：[IR-008](../IR/IR%20总登记册.md#ir-008)、[IR-003](../IR/IR%20总登记册.md#ir-003)
 > 功能：F09.06 — Host Context Interface Package Publisher
 > 目标仓：odango-chan/ca-agent-demo
@@ -46,7 +46,7 @@ Publisher 必须从固定 Revision 读取原始 Schema 字节并核对 Git blob�
 
 ## 3. CA-SL 1.6.0 Package 合同
 
-1. 唯一目标语言为 CA-SL 1.6.0；languageTarget 建议值为 connectionagent.io/v1.6.0，由 ca-skills / Compiler 在正式 Schema / Golden 中共同确认。不得使用 connectionagent.io/v1alpha5。
+1. 唯一目标语言为 CA-SL 1.6.0；**Next 中央设计已冻结 `languageTarget=connectionagent.io/v1.6.0`**（CA-SL 1.6.0 v0.2.10、Compiler v0.2.22 §5.1.1），不得另行猜测或重选机器标识。ca-skills / Compiler 正式 Schema、Golden、可消费 Package API 和 Release 仍未发布，**中央设计值不等于生产者已发布的接口**；不得将旧 `connectionagent.io/v1alpha5` 带入新产物。
 2. Package ID 与 Publisher 沿用上述稳定逻辑身份；新 Package API 必须采用 Compiler 1.6.0 正式 Schema，不得使用旧 connectionagent.io/interface-package/v1alpha1 或 Development v1alpha1 DTO。
 3. Package version 必须使用一个新的 SemVer 版本；旧 1.0.0 是历史 Development Package 版本，不得复用为新发布版本。建议候选 2.0.0，最终由 Publisher 在实施 Issue / 正式 Package Schema 中冻结。
 4. Package 只包含根 Manifest 与原始 subject.schema.json；仅发布一个 Schema export，ID 精确等于源 $id，路径指向原始文件；dependencies 为空。
@@ -99,7 +99,7 @@ Publisher 必须从固定 Revision 读取原始 Schema 字节并核对 Git blob�
 **实施依赖：**
 - 固定 Compiler Owner 正式公布的 1.6.0 Package Schema、BuildRequest / DependencyInspection 与 Schema-only Link 规则的版本、SHA、Golden 和来源。机器契约可独立于 Compiler 二进制发行；契约尚未公布时，不得生成候选。
 - 按正式契约从固定源生成真实 Publisher 候选，记录生产者 SHA、命令、样本与输出。先验 AC-030-03 的包结构，再将同一份候选交给 AC-013-06 检查 Context Schema closure 和零 Capability roots。候选生成不等待 AC-013-05；Compiler Release、Publisher 正式发布和 Studio 导入分别记录。
-- ca-skills 1.6.0 languageTarget / Schema / Golden 发布；
+- ca-skills / Compiler 按已冻结的 `connectionagent.io/v1.6.0` 正式发布可消费的 Schema、Golden、Package API / Release；不得将机器标识重新作为实施待选择项；
 - ca-agent-demo 新实施 Issue 在本设计独立评审通过后创建，并固定设计 SHA。
 
 在上述机器契约未发布前，SR-030 可进行设计评审，但实现状态 BLOCKED / NOT_STARTED，所有产品 AC NOT_RUN。不得向 DeepSeek Harness 提供猜测 Package 字段的实施提示词。
@@ -131,3 +131,4 @@ Publisher 必须从固定 Revision 读取原始 Schema 字节并核对 Git blob�
 | 2026-11-27 | 0.1.10 | GPT-6.2（ChatGPT） | §6、修订记录 | 将 SR-013 互引从错误的 §5～6 更正为实际定义 Schema-only / 零 Capability roots 的 §8（AC-013-06） | 确保跨 SR 规则引用可定位且与实际章节一致 | Issue #106；Review #91 |
 | 2026-11-28 | 0.1.11 | GPT-6.2（ChatGPT） | 文档头、§1、§6、修订记录 | 将活动依赖入口同步到 F09 v0.3.41、F08 v0.3.33、EC02 v0.2.22、CA-SL 1.6.0 v0.2.10 与 SR-013 v0.2.42 §8 | 避免 Host Context Publisher 继续引用旧版本或错误章节，保持 AC-013-06 / AC-030-03 联合验收入口一致 | Issue #95/#106；PR #107/#115 |
 | 2026-11-28 | 0.1.12 | GPT-6.2（ChatGPT） | 文档头、§1、§6、修订记录 | 将当前依赖统一到 F09 v0.3.42、F08 v0.3.34、EC02 v0.2.22、CA-SL v0.2.10、SR-013 v0.2.43；修正 §6 中 CA-SL 旧版本号 | 避免 Host Context Publisher 设计依据与 Schema-only 联合验收引用过期规范版本 | Issue #95/#106；PR #107/#115 |
+| 2026-11-28 | 0.1.13 | GPT-6（ChatGPT） | 文档头、§3、§6、修订记录 | 统一 CA-SL 1.6.0 中央固定 languageTarget=connectionagent.io/v1.6.0；把 SR-030 真正外部阻塞限定为正式 Package Schema/Golden/API/Release 与 Publisher 的 Package identity/SemVer，固定源静态证据不变 | 防止已有中央语言标识被重新猜测，同时不把候选设计值当成可消费 Publisher Release | Issue #40/#50/#91/#95；PR #115；SR-029 |
