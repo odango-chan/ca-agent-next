@@ -124,7 +124,7 @@ F09 的 AI Authoring 必须使用同一作者规范和完整正向示例生成�
 
 ## 7. 当前状态与门禁
 
-- 中央作者规范和历史来源归档：本 PR 提交候选。
+- 中央作者规范和历史来源归档：已通过 PR #115 收编进入 main；当前仅更新评审记录口径，不改变设计是否正式获批的判定。
 - 独立设计评审（历史与当前分开）：PR #52 较早 Review #6089086623 对 Head `d39080091dc640eaf83eb2a338fc338abe8054e9` 的 NEEDS_REVISION（2 P1 / 3 P2）为**已被后续整改与复评取代的历史快照结论**；PR #52 第四轮独立 Review #6089893779 对 Head `2dada9b1a5302e2e6fd7fbb36fb24c681ecc1d87` 判定 APPROVE_WITH_NON_BLOCKING_FOLLOWUPS（P0/P1=0，P2=2），两项 P2 已有后续文档整改。PR #115 将其收编到 main（merge `574ca51122b49e48be20fadedca225b5fad3137c`），但对**当前主干整合版**的专项独立复评仍待执行；不得把源 PR #52 的 Review 冒充主干整合版全量批准，也不自动提升 SR 实施 READY。
 - CA-SL 1.6.0 正式作者 Schema / Golden / Release：NOT_RELEASED。
 - Compiler / Bundle / Studio / Runtime 产品验收：NOT_RUN。
@@ -161,6 +161,6 @@ F09 的 AI Authoring 必须使用同一作者规范和完整正向示例生成�
 | 2026-11-27 | 0.1.17 | GPT-6.2（ChatGPT） | 文档头、设计依据、修订记录 | 同步 SKILL 作者规范 v0.2.3 的最终单 Predicate 例外和 QoS 示例 Node 合并 | 保持 SR-032 粒度原则、作者正向示例和 CA-SL 阶段自动推进语义一致 | Issue #49；IR-008；PR #52 |
 | 2026-11-27 | 0.1.18 | ChatGPT（GPT-6） | §3.3、AC-032-03、设计依据、依赖版本、修订记录 | 以 CA-SL v0.2.7 / 作者规范 v0.2.4 为当前依据，明确中间 Predicate-only 负例、最终单 Predicate Postcondition-only 正例，以及 QoS 请求验证合并和异常路由不退化的验收项 | 将 Node 粒度争议转为可判定的 SR 验收条件，修复旧版本引用漂移 | Issue #49；IR-008；SR-032；PR #52 |
 | 2026-11-27 | 0.1.19 | ChatGPT（GPT-6.2） | 文档头、AC-032-08/12/13、§7 | 限定 AC-032-12 的 NOT_RUN 范围为本 SR 新增能力；将 Predicate Schema 参数引用与 CA-SL SchemaReference 文法绑定；回填固定 Head 独立复评 NEEDS_REVISION 状态 | 避免将其他 SR 的既有实现状态覆盖为 NOT_RUN，并消除作者正向示例与 CA-SL EBNF 的不一致 | Issue #49；IR-008；CA-SL 1.6.0 v0.2.8；PR #52 |
-| 2026-11-28 | 0.1.23 | GPT-6（ChatGPT） | §7、文档版本与修订记录 | 将旧 #6089086623 NEEDS_REVISION 明确限定为历史快照，回填第四轮 #6089893779 的限定通过和 #115 主干独立复评待执行 | 防止历史失败结论覆盖当前限定评审结论，同时避免把合入误报为产品验收 | Issue #49；SR-032；PR #52/#115 |
 | 2026-11-28 | 0.1.21 | GPT-6（ChatGPT） | 文档头、设计依据、修订记录 | 将 CA-SL 1.6.0 规范引用从 v0.2.9 对齐到现行 v0.2.10；增加追踪记录，保留 SR-032 整项 DRAFT 及产品 NOT_RUN | 避免已冻结 languageTarget、SchemaReference 与作者规范继续引用旧语言版号 | Issue #40/#49/#50；SR-029/032；PR #115 |
 | 2026-11-28 | 0.1.22 | DeepSeek Harness / deepseek-v4.1-flash-1017 | 设计依据、修订记录 | 同步 EC01 v0.2.5 与 CA-SL 1.6.0 v0.2.11 当前版本引用 | 清理终审发现的版本引用漂移，不改变 SR 状态 | Issue #50；EC01、SR-013；PR #115 |
+| 2026-11-28 | 0.1.23 | GPT-6（ChatGPT） | §7、文档版本与修订记录 | 将旧 #6089086623 NEEDS_REVISION 明确限定为历史快照，回填第四轮 #6089893779 的限定通过和 #115 主干独立复评待执行 | 防止历史失败结论覆盖当前限定评审结论，同时避免把合入误报为产品验收 | Issue #49；SR-032；PR #52/#115 |
