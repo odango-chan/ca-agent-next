@@ -1,8 +1,8 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.72
-> 状态：30 项 SR：4 VERIFIED（仅各自历史模块范围）、1 IMPLEMENTED（设计移交）、25 DRAFT（整项主状态，含 IR-009 / SR-031 增量设计候选）。SR-028 第七轮设计批准仅绑定其原 Review Snapshot；PR #46 第九轮独立 Review #6095601142 对 Base `c806def7ddc262b4b3c96574a78f360a679ac8d2` / Head `af8d1b85e65c346d6271ba5032b336b085075035` 给出 `APPROVE_FOR_READY`（设计门槛，0 P0 / 0 P1），PR #46 已合并到恢复设计基线 merge commit `9243634832d296acd6fae8cb324a6db3c2a2d3a8`，main 尚未更新；PR #115 是唯一 mainline 集成入口。SR-031 AC-031-01～07 仍 NOT_RUN / BLOCKED_EXTERNAL_INPUT。
+> 文档版本：0.3.73
+> 状态：31 项 SR：4 VERIFIED（仅各自历史模块范围）、1 IMPLEMENTED（设计移交）、26 DRAFT（整项主状态，含 IR-009 / SR-031 与 IR-008 / SR-032 两项增量设计）。PR #46 第九轮独立 Review #6095601142 对 Base `c806def7` / Head `af8d1b85` 给出 `APPROVE_FOR_READY` 并已合入恢复设计基线 `92436348`；main 尚未更新。PR #115 是唯一 mainline 集成入口，当前 Head `84c66b743eca833539bc354b29ecef66512589d5`。PR #52 固定 Head `2dada9b` 第四轮复评 `APPROVE_WITH_NON_BLOCKING_FOLLOWUPS`（0 P0 / 0 P1 / 2 P2）；P2-03 / P2-04 已纳入 PR #115，集成后独立复评待完成。SR-031 / SR-032 产品实现仍 NOT_RUN。
 > 修订日期：2026-11-28\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
@@ -53,8 +53,11 @@
 | [SR-029](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) | [IR-008](../IR/IR%20总登记册.md#ir-008)（关联 IR-003） | CA-SL 1.6.0 Capability-first 作者模型与 Callable 双向一对一；完全无旧版兼容 | **DRAFT（设计待评审，非实施 READY）** |
 | [SR-030](../SR/SR-030-Host%20Context%201.6.0%20Schema-only%20Interface%20Package%20Publisher.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Host Context 1.6.0 Schema-only Interface Package Publisher | DRAFT |
 | [SR-031](../SR/SR-031-3GPP公共Schema-only-Publisher.md) | [IR-009](../IR/IR%20总登记册.md#ir-009) | OpenAMSM 3GPP OpenAPI 原版 Source Bundle 原样代发布（当前 PostSmContexts requestBody 选定闭包 4 文件 / 102 Schema Component） | **DRAFT（增量设计待评审、Publisher / Consumer 产品 NOT_RUN）** |
+| [SR-032](../SR/SR-032-SKILL作者规范与Node设计原则.md) | [IR-008](../IR/IR%20总登记册.md#ir-008) | CA-SL 1.6.0 SKILL 作者规范、Node 拆分与注释原则；共享 Package 资源、Script Registry 与 Host system Capability | **DRAFT（设计复评 APPROVE_WITH_NON_BLOCKING_FOLLOWUPS；PR #115 集成复评待完成）** |
 
 **IR-009 增量设计（独立于 PR #46 原 24 项评议）：**新增 [SR-031](../SR/SR-031-3GPP公共Schema-only-Publisher.md) 与 [EC01.3GPP 原版 OpenAPI 引用设计](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。当前 `PostSmContexts.requestBody` 选定闭包为四份原版 YAML / 102 个 Schema Component；原件 byte-for-byte 不变，Plugin 原生 OAS3 multipart，Compiler 直接引用 pin 后 `components/schemas`，NAS/NGAP Codec Output 独立发布。SR-031 产品 AC 全部 NOT_RUN；新增 AC 不继承 PR #46 原 24 项设计评议。
+
+**IR-008 / SR-032 增量设计（独立于 PR #46 原 24 项评议）：**新增 [SR-032](../SR/SR-032-SKILL作者规范与Node设计原则.md)、[SKILL 作者规范](../规范/SKILL作者规范.md) 和 EC01 历史作者源归档。Skill Package 根目录共享 `schemas/`、`scripts/`、`references/`、`assets/` 与可选 `assurance/` 分离；Host Resource Read / Script Runner 复用唯一 Host / Plugin Manager 边界。PR #52 固定 Head `2dada9b` 第四轮复评 0 P0 / 0 P1 / 2 非阻断 P2；P2-03 活动引用和 P2-04 SchemaReference LSP 已由 PR #115 Head `84c66b7` 收编，PR #115 独立复评待完成；外部产品实施和 CA-SL 1.6.0 Release 仍 NOT_RUN。
 
 设计版本与章节、依赖、验收 ID、实施证据以各 SR 为准。逐项阻塞见[就绪审计](../参考与审计/跨仓设计资产迁移与一致性审计.md#8-设计就绪审计)。
 
@@ -206,7 +209,7 @@
 - 设计来源：ca-agent-next PR #1 的架构、设计、规范和 Acceptance 文档。
 - PR #1：已合并；只代表设计文档变更。
 - Next Runtime：README 声明尚无已验收 Runtime 实现。
-- 当前 30 项 SR 中 4 VERIFIED（SR-001/002/003/024）、1 IMPLEMENTED（SR-015）、25 DRAFT（其中 SR-029/SR-030 设计待评审）；SR-024 VERIFIED 仅覆盖旧 v1alpha5 Development Publisher；SR-013 归档 PoC 不改变 DRAFT；SR-009 只覆盖 Event/Delivery Plugin/staging，SR-010 覆盖 Host ArtifactStore、Channel、Provider v2 Driver/Codec。
+- 当前 31 项 SR 中 4 VERIFIED（SR-001/002/003/024）、1 IMPLEMENTED（SR-015）、26 DRAFT（其中 SR-029/SR-030 设计待评审）；SR-024 VERIFIED 仅覆盖旧 v1alpha5 Development Publisher；SR-013 归档 PoC 不改变 DRAFT；SR-009 只覆盖 Event/Delivery Plugin/staging，SR-010 覆盖 Host ArtifactStore、Channel、Provider v2 Driver/Codec。
 - Issue #12 追踪本轮中央设计资产恢复；PR #11/#13/#15/#16/#18 均在独立分支 OPEN/DRAFT，恢复分支已同步可复用的最新文档内容但尚未创建 PR；PR 状态不等于 SR 实施状态。
 - 恢复分支 docs/restore-original-designs-20261125 尚未创建指向 main 的总 PR；SR-002 设计 PR #20 与实施 PR #23 均已合并到恢复分支，SR-002 为 VERIFIED、AC-002-01～08 PASS；EX-01 仍 NOT_RUN。该恢复分支尚未合并 main。
 - ca-agent-demo、ca-client-tools、ca-skill-compiler、ca-skills 和 ca-openamsm-plugin 的现有代码/PR 只能作为外部复用或依赖证据，不能自动算作 Next SR 已实施。
@@ -320,3 +323,4 @@
 | 2026-11-28 | 0.3.71 | GPT-6.2（ChatGPT） | 文档头、SR-031 清单、IR-009 增量、修订记录 | 纳入 SR-031 原版 OAS3 Source Bundle 与 EC01.3GPP 权威设计，更新 30 项 SR / 9 项 IR 追踪，并刷新 PR #46 第九轮 APPROVE_FOR_READY 与恢复分支合并边界 | 使 SR 总索引与已导入的 IR-009、SR-031、EC01.3GPP 文档保持一致，不把新增设计评议升级为产品验收 | Issue #47；Issue #12；PR #46/#115；Review #6095601142 |
 | 2026-11-28 | 0.3.72 | GPT-6.2（ChatGPT） | SR-010/013/026/027 状态与修订记录 | 将 AC-010-10、AC-013-07、AC-026-04～06、AC-027-05 的 OAS3 / Codec / Bundle 边界纳入 SR 追踪，明确各项 BLOCKED/NOT_RUN | 防止新增 IR-009 设计被误读为 Provider / Compiler / Bundle 产品验收通过 | Issue #47；IR-009；PR #115 |
 | 2026-11-28 | 0.3.73 | GPT-6.2（ChatGPT） | SR-010 AC-010-03 状态、修订记录 | 明确 Demo no-hash Artifact Channel；外部强制 SHA-256 的 ArtifactStore v1 不可直接复用，AC-010-03 保持 BLOCKED | 避免把摘要校验、内容寻址或旧契约兼容带入 Demo 范围 | Issue #50；PR #115；SR-001 AC-REV-08 |
+| 2026-11-28 | 0.3.73 | GPT-6.2（ChatGPT） | 文档头、SR 清单、IR-008 / SR-032、修订记录 | 纳入 SR-032 作者规范与 Node 设计，更新 31 SR / 26 DRAFT 统计及 PR #52 / #115 最新复评状态 | 使 SR 索引反映作者规范已集成、两项非阻断 P2 已整改，但不误报 PR #115 独立复评或产品实施完成 | Issue #49；IR-008；SR-032；PR #52/#115；Review #6089893779 |
