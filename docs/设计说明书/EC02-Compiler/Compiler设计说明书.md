@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.2.19
+> 文档版本：0.2.20
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 修订日期：2026-11-28\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -206,7 +206,7 @@ requestSchema 与 when 是否存在无关；Host 只按 CA-SL 1.6.0 Publisher �
 
 仅为声明 when 的 Skill 增加 when 元数据对象，至少记录 checkedExprPath、descriptorSetPath、sourcePath 和 sourceRange（startLine/startColumn/endLine/endColumn）。当表达式引用 input 时，when 元数据还记录 requestSchemaRef 与 resolvedRequestSchemaPath，且必须与同一 Skill 的 requestSchema.rootSchemaId / sourceRef 一致；只访问 event.type 时可省略这两个引用字段。没有 when 时不输出 when 元数据。
 
-建议字段名和文件名是本设计的实现默认值；Compiler Owner 在 AC-013-03 冻结 JSON Schema 前确认。when.checked.pb 与 when.types.pb 必须同时进入 compiledFiles[] 和 Manifest outputFiles[]；Request Schema 根与资源闭包也必须进入相同清单。outputFiles[].sha256 复用既有逐文件字节校验，sourceDigest 复用现有字段。不得增加第二套哈希字段、独立 SHA-256 体系、签名、Trust Registry 或包准入机制。
+建议字段名和文件名是本设计的实现默认值；Compiler Owner 在 AC-013-03 冻结 JSON Schema 前确认。when.checked.pb 与 when.types.pb 必须同时进入 compiledFiles[] 和 Manifest outputFiles[]；Request Schema 根与资源闭包也必须进入相同清单。Manifest `outputFiles[]` 仅包含路径、角色等非摘要元数据，不包含 `sha256` / `sourceDigest` / `dependencyDigest` / `packageDigest`；Build / Verify 不计算或比较 SHA-256、checksum 或 digest。Source Bundle 的 Git blob ID 仅作为上游 Git 对象身份，不是 Compiler 生成的产品完整性校验。不得增加第二套哈希字段、独立摘要体系、签名、Trust Registry 或包准入机制。
 
 ## 6. Build / Verify 责任与行为
 
@@ -409,3 +409,4 @@ SR-013 AC-013-07 需验证原版组件直接引用、跨文件 CommonData 闭包
 | 2026-11-28 | 0.2.17 | GPT-6（ChatGPT） | §1～11、修订记录 | 合并 #46 Capability-first/Schema-only/Build DTO 单版本约束与恢复分支 OAS3/G.4 dialect-aware 原件及 Publisher CEL metadata 边界；新 Compiler #62，历史 #61 | 保留 Provider/Owner 机器合同未冻结门槛，拒绝旧格式兼容与强制 OpenAPI Adapter | Issue #12；#40；#47；PR #45；#46；#48 |
 | 2026-11-28 | 0.2.18 | GLM-5.3（DeepSeek Harness） | §11、修订记录 | 将 §11 一对一 Link 行的 Owner 固定 24/24 改为条件签认候选并合并修订表断裂孤儿段 | 关闭 R8-05 残留与 R8-09 同类渲染断裂 | Issue #12；PR #46；Review #6095143611 |
 | 2026-11-28 | 0.2.19 | GPT-6.2（ChatGPT） | §12 | 明确 Source Bundle pin、OAS3 选定根/lazy refs、RFC 3986/6901 路径解析、闭包边界、OAS3 语义与 CEL 类型可用性规则；正式字段仍由 Owner 冻结 | 把 IR-009 / SR-031 设计增量纳入 Compiler 责任边界，避免 G.4 投影、eager resolve、hash/digest 扩张和猜测 Manifest 字段 | Issue #47；IR-009；SR-031/013/010；PR #115 |
+| 2026-11-28 | 0.2.20 | GPT-6.2（ChatGPT） | §5.3、§12 | 将 Manifest outputFiles 收敛为非摘要元数据，禁止 sha256/sourceDigest/dependencyDigest/packageDigest；明确 Git blob ID 仅为源对象身份而非产品哈希校验 | 恢复 Demo no-hash 排除项，防止旧 ArtifactStore hash 契约进入 1.6.0 Compiler/Build/Verify | Issue #50；PR #115；SR-001 AC-REV-08 |
