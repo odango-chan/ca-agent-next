@@ -1,13 +1,13 @@
 # SR-028：Python 工程工具链与 uv 环境管理
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.13\
+> SR 版本：0.2.14\
 > 修订日期：2026-11-28\
- > 状态：IN_PROGRESS（SR-028 设计已 READY；uv 实施文件与 Workflow 已选择性整合至 PR #115 mainline candidate，尚未合入 main）。实施 Issue [#96](https://github.com/odango-chan/ca-agent-next/issues/96) 的候选 PR [#99](https://github.com/odango-chan/ca-agent-next/pull/99) @`83d23e8c04b1c05eb304c2a24a3392f6459ed0f1` 的独立技术复核 [#6094704264](https://github.com/odango-chan/ca-agent-next/pull/99#pullrequestreview-6094704264) 记录 IMPLEMENTED，AC-028-01～10 的候选证据已归档；代码已进入 PR #115（集成提交 `683c8708702ee5bf47b4188a86d29f752e544753`），但当前 #115 Head 的双平台回归仍待完成，故不标 VERIFIED/RELEASED。PR #112 源 Head bd5f390f1386cb57cce1f451426ed2d28f6ef7e9 已修复 P2-01/P2-02；Bootstrap Policy Check、Python Lock Consistency、Review Context 已 SUCCESS，策略单元测试 45/45 PASS；SR-003 Windows 已 SUCCESS，Ubuntu 回归仍待最终结果。共享策略已选择性纳入 PR #115，基线文件提交 15dd7972d15c91b797b202f85189cde2b6ffe373，baseline.sha 已锚定该提交；PR #97 READY 回填已被当前 IN_PROGRESS 状态取代。
+ > 状态：IN_PROGRESS（设计 READY；PR #99 源 Head `83d23e8c04b1c05eb304c2a24a3392f6459ed0f1` 的独立复核 #6094704264 记录 IMPLEMENTED，AC-028-01～10 候选证据已归档。13 个变更路径已逐项对照 PR #115：六个核心实现 Blob 完全一致，其余 7 个治理/文档路径由 #115 更新版本承接。 PR #112 源 Head `dbc0bcbb3a125f143d3648d2cb0331f01368f379` 的 P2-01/P2-02 已关闭；独立 Review #6096938405 给出限定 APPROVE_FOR_READY（0 P0 / 0 P1 / 0 P2）。策略 Bootstrap 47/47、Review Context、SR-003 Ubuntu/Windows 266/266 均 SUCCESS；PR #112 仍 Draft，不合并。 PR #97 源 Head `66a82f09445d5fc32971e91d02b51b7ad6d4ece0` 的状态审计 Review #6096959653 确认 READY 仅代表设计快照；实施证据来自 #99 的 IMPLEMENTED 复核。六份治理文档由 #115 更新版本承接，不原样覆盖；PR #97 不合并。 PR #115 唯一 mainline 集成入口仍为 OPEN / Draft（Base main @ b2ed5eb84114f9c2556a0cd06ed974887b1b70ad），本次代码与策略核验快照 Head `609fb12612c8990a37ba0e174cfacadfd7a7c5d9`；Review Context #46130016832 SUCCESS，Python Toolchain Policy Bootstrap #46130016864 SUCCESS（48/48），SR-003 Regression #46130016833 SUCCESS（Ubuntu 重跑与 Windows 均为 Host 52/52、Plugin 87/87、Review Context 84/84、Total 271/271）。Ubuntu 首次执行在 `test_process_exit_clears_extensions` 出现一次 IPC_TIMEOUT；同一 SHA 的失败 Job 重跑后 271/271 通过，未修改测试或产品代码，作为时序风险保留。当前未合入 main，未标 VERIFIED/RELEASED；PR #115 全量独立复评仍待完成。 不标 VERIFIED/RELEASED。）
 > 创建日期：2026-11-26  
 > 所属阶段：G02 工程治理支撑  
 > 上游需求：[IR-007](../IR/IR%20总登记册.md#ir-007)  
-> 设计依据：[G02 Python 工程工具链与环境管理设计说明书](../设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md) v0.2.11 §1～§9；[SR-002](SR-002-Python%20核心与宿主基础骨架.md) v0.2.10 §2.1；[SR 管理规范](../规范/SR%20管理规范.md) v0.8.1 §6.1、§8.3\
+> 设计依据：[G02 Python 工程工具链与环境管理设计说明书](../设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md) v0.2.12 §1～§9；[SR-002](SR-002-Python%20核心与宿主基础骨架.md) v0.2.10 §2.1；[SR 管理规范](../规范/SR%20管理规范.md) v0.8.1 §6.1、§8.3\
 > 设计/治理 Issue：[ca-agent-next #12](https://github.com/odango-chan/ca-agent-next/issues/12)（中央整改追踪）；原设计 Issue [#35](https://github.com/odango-chan/ca-agent-next/issues/35) 已 CLOSED，仅作历史来源；独立实施 Issue [#96](https://github.com/odango-chan/ca-agent-next/issues/96) OPEN；#12/#35 均不是实施 Issue。  
 > 目标仓：`odango-chan/ca-agent-next`  
 > 最新 SR-028 专项设计复评：PR #46 Review [#6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6084094037)，固定 Head `93f1389e7c5968cd30e8a74137207094864ecca0` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`；平台事件 COMMENTED，模型结论 APPROVE_FOR_READY（0 P0 / 0 P1 / 2 非阻断 P2）。它不是当前 PR #46 第八轮全量 Review，也不证明当前分支产品实施或发布。
@@ -119,7 +119,7 @@ Host Smoke 必须退出 0，成功 stdout 符合演示验收基线，stderr 为�
 
 ## 7. 当前状态与停止条件
 
-SR-028 当前恢复分支仍为 DRAFT。第七轮 Review #6084094037 已在固定旧候选设计快照授予设计 APPROVE_FOR_READY；实施 Issue #96 和候选 PR #97/#99/#112 已存在，但都尚未集成当前恢复分支。PR #99 候选实施分支最新 Review #6094704264 记录 IMPLEMENTED，仍不等于当前恢复分支 VERIFIED/RELEASED。PR #112 当前 Head `da91ed8fc40339f5fa64e29a29d7e51d2cdc482d` 尚未对旧 Head Review #6086849161 的 Base freshness 等 P1 完成独立复评。当前 PR #46 的设计整改任务不授权在本分支执行 uv 产品迁移；不得从当前 PR #46 Head 重新派生或复制 #96 的实施任务。产品 AC-028-01～10 在当前恢复分支仍全部 NOT_RUN。现有 #96 实施必须严格遵守其固定基线 `93f1389e7c5968cd30e8a74137207094864ecca0`、独立实施分支和不合并授权边界。
+截至 2026-11-28，SR-028 设计阶段 READY（依据 PR #46 Review #6084094037）；实施 Issue #96 OPEN。PR #99 源 Head `83d23e8c04b1c05eb304c2a24a3392f6459ed0f1` 的独立复核 #6094704264 记录 IMPLEMENTED，AC-028-01～10 候选证据已归档。13 个变更路径已逐项对照 PR #115：六个核心实现 Blob 完全一致，其余 7 个治理/文档路径由 #115 更新版本承接。 PR #112 源 Head `dbc0bcbb3a125f143d3648d2cb0331f01368f379` 的 P2-01/P2-02 已关闭；独立 Review #6096938405 给出限定 APPROVE_FOR_READY（0 P0 / 0 P1 / 0 P2）。策略 Bootstrap 47/47、Review Context、SR-003 Ubuntu/Windows 266/266 均 SUCCESS；PR #112 仍 Draft，不合并。 PR #97 源 Head `66a82f09445d5fc32971e91d02b51b7ad6d4ece0` 的状态审计 Review #6096959653 确认 READY 仅代表设计快照；实施证据来自 #99 的 IMPLEMENTED 复核。六份治理文档由 #115 更新版本承接，不原样覆盖；PR #97 不合并。 PR #115 唯一 mainline 集成入口仍为 OPEN / Draft（Base main @ b2ed5eb84114f9c2556a0cd06ed974887b1b70ad），本次代码与策略核验快照 Head `609fb12612c8990a37ba0e174cfacadfd7a7c5d9`；Review Context #46130016832 SUCCESS，Python Toolchain Policy Bootstrap #46130016864 SUCCESS（48/48），SR-003 Regression #46130016833 SUCCESS（Ubuntu 重跑与 Windows 均为 Host 52/52、Plugin 87/87、Review Context 84/84、Total 271/271）。Ubuntu 首次执行在 `test_process_exit_clears_extensions` 出现一次 IPC_TIMEOUT；同一 SHA 的失败 Job 重跑后 271/271 通过，未修改测试或产品代码，作为时序风险保留。当前未合入 main，未标 VERIFIED/RELEASED；PR #115 全量独立复评仍待完成。 因此当前主状态为 IN_PROGRESS，不是 DRAFT，也不是 VERIFIED/RELEASED。
 
 若评审发现 G02 与 SR-002 的 setuptools/运行时依赖约束冲突，先修订设计，不允许实施者自行选择替代后端或把开发依赖升级为运行时依赖。
 
@@ -127,9 +127,9 @@ SR-028 当前恢复分支仍为 DRAFT。第七轮 Review #6084094037 已在固�
 
 ### 8.1 已集成的实施内容与证据边界
 
-PR #99 @`83d23e8c04b1c05eb304c2a24a3392f6459ed0f1` 实现了根 `pyproject.toml`、`uv.lock`、`.python-version`（`3.14.6`）、`scripts/unittest_gate.py`、Review Context 与 SR-003 双平台 Workflow。其候选实施证据、锁漂移负例、A→B→A worktree 隔离、双平台 CI 和 Review Context 受控负例/恢复记录在 Issue #96 与 PR #99；独立技术复核 #6094704264 给出 `IMPLEMENTED` 结论。
+PR #99 @`83d23e8c04b1c05eb304c2a24a3392f6459ed0f1` 实现根 `pyproject.toml`、`uv.lock`、`.python-version`（`3.14.6`）、`scripts/unittest_gate.py`、Review Context 与 SR-003 双平台 Workflow；候选证据、锁漂移负例、A→B→A worktree 隔离和双平台 CI 在 Issue #96 / PR #99。独立技术复核 #6094704264 记录 IMPLEMENTED。
 
-上述 6 个工程文件已选择性整合进 PR #115，集成提交 `683c8708702ee5bf47b4188a86d29f752e544753`。PR #115 仍为 OPEN / Draft；该提交不等于已合入 main。PR #115 当前 Head 的 Review Context 与 SR-003 双平台复验必须完成后，才能把候选证据转为当前 mainline 验收证据。当前 SR-028 保持 `IN_PROGRESS`；不得提前标 `VERIFIED` 或 `RELEASED`。
+PR #99 的 13 个变更路径已逐项对照 PR #115：六个核心实现 Blob 完全一致，其余七个治理/文档路径由 #115 更新版本承接。它们已选择性整合进 PR #115；该提交不等于已合入 main。
 
 ### 8.2 当前复验命令
 
@@ -147,9 +147,9 @@ Go Echo 前置（在 `examples/echo/plugin/`，设置 `GOWORK=off`）：`go buil
 
 ### 8.3 尚未完成的门槛
 
-- PR #115 当前 Head 的 Review Context、Ubuntu Python 3.12 和 Windows Python 3.14.6 必须全部 SUCCESS。
-- PR #112 的共享工具链策略尚未进入本分支；其 P2-01（全部 `uv run` 必须锁定）与 P2-02（setup-uv Workflow 结构化识别）修复及独立复评完成后，方可作为后续治理增量纳入。
-- mainline PR #115 完成全量独立设计复评并合入 main 后，才可按 SR 管理规范把 SR-028 推进至 IMPLEMENTED；全部目标 AC 在合入后的固定 main SHA 复验通过后，再评估 VERIFIED。
+- PR #115 代码与策略核验 Head `609fb12612c8990a37ba0e174cfacadfd7a7c5d9` 的 Review Context #46130016832、Policy Bootstrap #46130016864（48/48）均 SUCCESS；SR-003 #46130016833 在 Ubuntu 失败 Job 同 SHA 重跑后，Ubuntu / Windows 各 271/271 SUCCESS。首次 Ubuntu 的 `test_process_exit_clears_extensions` IPC_TIMEOUT 已如实记录；重跑未改代码并通过，保留为时序风险。
+- PR #112 共享策略已选择性进入 PR #115；源 Head `dbc0bcbb3a125f143d3648d2cb0331f01368f379` 的 P2-01/P2-02 已由独立 Review #6096938405 关闭，47/47 策略测试、Review Context、SR-003 双平台 266/266 均 SUCCESS；PR #112 继续 Draft，不合并。
+- mainline PR #115 仍需完成全量独立设计复评；当前 PR #115 仍 OPEN / Draft，未合入 main。合并后才可将 SR-028 推进至 IMPLEMENTED；全部目标 AC 在合入后的固定 main SHA 复验通过后，再评估 VERIFIED。
 
 ## 修订记录
 
@@ -175,3 +175,4 @@ Go Echo 前置（在 `examples/echo/plugin/`，设置 `GOWORK=off`）：`go buil
 | 2026-11-28 | 0.2.11 | GPT-6.2（ChatGPT） | 文档头、§0、§7、修订记录 | 明确 #96 为现有实施 Issue，补充 #99 候选分支 IMPLEMENTED 与 #112 旧 Head P1/当前 Head 待复评状态，并更新 G02 版本引用 | 消除 SR-028 当前启动入口对实施 Issue 和候选实施证据的遗漏，防止将未合入候选分支升级为当前基线 VERIFIED | Issue #12/#96；PR #46/#97/#99/#112；Review #6084094037/#6094704264/#6086849161 |
 | 2026-11-28 | 0.2.12 | GPT-6.2（ChatGPT） | 文档头、§0、§7、§8、修订记录 | 将 PR #99 的 uv 工具链实现与证据选择性纳入 PR #115；明确 SR-028 IN_PROGRESS、候选证据与 mainline 复验的区别，并更新 G02/SR-002 版本引用 | 避免把候选分支 IMPLEMENTED 结论误报为 mainline VERIFIED，或继续沿用已过时的 pip 当前入口 | Issue #96；PR #99/#112/#115；Review #6094704264；G02 v0.2.10 |
 | 2026-11-28 | 0.2.13 | GPT-6.2（ChatGPT） | 文档头、§0、§4.2、修订记录 | 同步 PR #112 两项 P2 修复、45/45 策略测试与 PR #115 共享策略候选；明确 #96 实施 Issue 和 #97 READY 回填已被 IN_PROGRESS 取代 | 消除实施入口缺失和旧策略 P2 状态造成的误导，继续区分 IMPLEMENTED 候选证据与 mainline VERIFIED | Issue #50/#96/#111；PR #97/#99/#112/#115；SR-028 |
+| 2026-11-28 | 0.2.14 | GPT-6.2（ChatGPT） | 文档头、§7、§8、修订记录 | 核验 #99 13 路径、#112 P2 独立复评、#97 READY 状态来源，并回填 PR #115 48/48 策略门禁与双平台 271/271 重跑结果 | 区分设计 READY、候选 IMPLEMENTED、mainline IN_PROGRESS 与 main VERIFIED；保留首次 Ubuntu 时序异常记录 | Issue #50/#96/#111；PR #97/#99/#112/#115 |
