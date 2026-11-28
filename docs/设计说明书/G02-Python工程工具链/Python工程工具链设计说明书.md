@@ -1,7 +1,7 @@
 # G02：Python 工程工具链与环境管理设计说明书
 
 > 文档类型：工程治理功能设计说明书  
-> 文档版本：0.2.12\
+> 文档版本：0.2.13\
 > 状态：第七轮 SR-028 专项独立 Review [#6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6084094037) 对固定设计快照给出 APPROVE_FOR_READY（0 P0 / 0 P1 / 2 非阻断 P2）；设计阶段已 READY。PR #99 源 Head `83d23e8c04b1c05eb304c2a24a3392f6459ed0f1` 的独立复核 #6094704264 记录 IMPLEMENTED，AC-028-01～10 候选证据已归档。13 个变更路径已逐项对照 PR #115：六个核心实现 Blob 完全一致，其余 7 个治理/文档路径由 #115 更新版本承接。 PR #112 源 Head `dbc0bcbb3a125f143d3648d2cb0331f01368f379` 的 P2-01/P2-02 已关闭；独立 Review #6096938405 给出限定 APPROVE_FOR_READY（0 P0 / 0 P1 / 0 P2）。策略 Bootstrap 47/47、Review Context、SR-003 Ubuntu/Windows 266/266 均 SUCCESS；PR #112 仍 Draft，不合并。 PR #97 源 Head `66a82f09445d5fc32971e91d02b51b7ad6d4ece0` 的状态审计 Review #6096959653 确认 READY 仅代表设计快照；实施证据来自 #99 的 IMPLEMENTED 复核。六份治理文档由 #115 更新版本承接，不原样覆盖；PR #97 不合并。 PR #115 唯一 mainline 集成入口仍为 OPEN / Draft（Base main @ b2ed5eb84114f9c2556a0cd06ed974887b1b70ad），本次代码与策略核验快照 Head `609fb12612c8990a37ba0e174cfacadfd7a7c5d9`；Review Context #46130016832 SUCCESS，Python Toolchain Policy Bootstrap #46130016864 SUCCESS（48/48），SR-003 Regression #46130016833 SUCCESS（Ubuntu 重跑与 Windows 均为 Host 52/52、Plugin 87/87、Review Context 84/84、Total 271/271）。Ubuntu 首次执行在 `test_process_exit_clears_extensions` 出现一次 IPC_TIMEOUT；同一 SHA 的失败 Job 重跑后 271/271 通过，未修改测试或产品代码，作为时序风险保留。当前未合入 main，未标 VERIFIED/RELEASED；PR #115 全量独立复评仍待完成。
 > 修订日期：2026-11-28\
 > 功能节点：G02 Python 工程工具链与环境管理  
@@ -768,7 +768,7 @@ I1 与 I3 可在 SR-028 实施 Issue 内按依赖顺序执行；I2 只在 SR-001
 - [uv 0.13.10 Release](https://github.com/astral-sh/uv/releases/tag/0.13.10)
 - [setup-uv v10.4.0 Release](https://github.com/astral-sh/setup-uv/releases/tag/v10.4.0)
 
-## 9. 实施后当前复验入口（SR-028 v0.2.14，2026-11-28）
+## 9. 实施后当前复验入口（SR-028 v0.2.15，2026-11-28）
 
 本设计 §3.6/§3.7 的命令已由 Issue #96 / PR #99 落地并已选择性整合到 PR #115 mainline candidate。PR #99 源 Head `83d23e8c04b1c05eb304c2a24a3392f6459ed0f1` 的独立复核 #6094704264 记录 IMPLEMENTED，AC-028-01～10 候选证据已归档。13 个变更路径已逐项对照 PR #115：六个核心实现 Blob 完全一致，其余 7 个治理/文档路径由 #115 更新版本承接。 PR #112 源 Head `dbc0bcbb3a125f143d3648d2cb0331f01368f379` 的 P2-01/P2-02 已关闭；独立 Review #6096938405 给出限定 APPROVE_FOR_READY（0 P0 / 0 P1 / 0 P2）。策略 Bootstrap 47/47、Review Context、SR-003 Ubuntu/Windows 266/266 均 SUCCESS；PR #112 仍 Draft，不合并。 PR #97 源 Head `66a82f09445d5fc32971e91d02b51b7ad6d4ece0` 的状态审计 Review #6096959653 确认 READY 仅代表设计快照；实施证据来自 #99 的 IMPLEMENTED 复核。六份治理文档由 #115 更新版本承接，不原样覆盖；PR #97 不合并。 PR #115 唯一 mainline 集成入口仍为 OPEN / Draft（Base main @ b2ed5eb84114f9c2556a0cd06ed974887b1b70ad），本次代码与策略核验快照 Head `609fb12612c8990a37ba0e174cfacadfd7a7c5d9`；Review Context #46130016832 SUCCESS，Python Toolchain Policy Bootstrap #46130016864 SUCCESS（48/48），SR-003 Regression #46130016833 SUCCESS（Ubuntu 重跑与 Windows 均为 Host 52/52、Plugin 87/87、Review Context 84/84、Total 271/271）。Ubuntu 首次执行在 `test_process_exit_clears_extensions` 出现一次 IPC_TIMEOUT；同一 SHA 的失败 Job 重跑后 271/271 通过，未修改测试或产品代码，作为时序风险保留。当前未合入 main，未标 VERIFIED/RELEASED；PR #115 全量独立复评仍待完成。 当前复验入口：
 
@@ -804,3 +804,4 @@ Go Echo 前置（在 `examples/echo/plugin/`，`GOWORK=off`）：`go build -trim
 | 2026-11-28 | 0.2.10 | GPT-6.2（ChatGPT） | 文档头、§0、§7、§9、修订记录 | 将 SR-028 当前状态更新为 IN_PROGRESS，纳入 PR #99 已实现并进入 PR #115 候选的 uv 入口，补充当前复验命令与门槛 | 区分设计 READY、候选实现证据、mainline 集成和最终 VERIFIED 状态 | Issue #96；PR #99/#112/#115；SR-028 v0.2.12 |
 | 2026-11-28 | 0.2.11 | GPT-6.2（ChatGPT） | 文档头、§0、§9、修订记录 | 更新 PR #112 P2 修复与 45/45 策略测试，记录共享策略已选择性纳入 PR #115，区分一次性 Bootstrap 与 main 合入后的可信策略 | 使 G02 的工程基线状态与 SR-028、策略规范及唯一 mainline 收敛入口一致 | Issue #50/#96/#111；PR #99/#112/#115；SR-028 v0.2.13 |
 | 2026-11-28 | 0.2.12 | GPT-6.2（ChatGPT） | 文档头、§0、§9、修订记录 | 同步 #99 文件级收编、#112 P2 独立复评、#97 READY 状态来源与 PR #115 双平台重跑证据 | 使 G02 与 SR-028、SR 索引和唯一 mainline 集成入口保持一致 | Issue #50/#96/#111；PR #97/#99/#112/#115 |
+| 2026-11-28 | 0.2.13 | GPT-6.2（ChatGPT） | §0、§9、修订记录 | 跟随 SR-028 v0.2.15 修正当前实施状态与 P2 独立复评引用 | 避免 G02 入口继续引用过期 SR-028 版本 | Issue #50/#96/#111；SR-028 v0.2.15；PR #99/#112/#115 |
