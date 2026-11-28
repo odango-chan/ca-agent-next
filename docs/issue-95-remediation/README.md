@@ -22,7 +22,7 @@
 | SR-017 / AC-017-02 | **FAIL**（候选设计/契约缺项） | 补 payload.request、operationId、Update 可选 n2.request、三类 N2 continuation、同请求双路、冲突/未知/Content-ID/n2SmInfoExt1 负例；清除 ack 暴露 Host Run/responseObligation/artifactRef 的旧句 | [#103](https://github.com/odango-chan/ca-agent-next/issues/103) |
 | SR-018 / AC-018-01/02 | **FAIL**（固定 Owner source/step、Evidence、Schema、exact-original Reconcile） | 校准 source/step；修复 Evidence 参数引用；所有 resolved decision 满足 Schema；Reconcile 必须以原 Receipt/Invocation 身份重新绑定 generation/epoch/correlation/SEID/releaseTxn/UPF，不得按当前 SUPI/PSI Session 解除旧 UNKNOWN | [#104](https://github.com/odango-chan/ca-agent-next/issues/104) |
 | SR-019 / AC-019-02 | **FAIL**（联合 fixture 缺项） | 补同请求 N1+N2 双路、X-CA-Request-Id 重试、旧 generation 迟到 0xD4、冲突 discriminator/n2SmInfoExt1 和 Owner outcome 联合证据；Mock 不拥有 Host Run/Owner 状态 | [#105](https://github.com/odango-chan/ca-agent-next/issues/105) |
-| SR-016 / AC-016-01 | **NOT_RUN**（Issue #95 固定源缺独立定义；现行 SR-016 v0.3.39 已补正式 AC） | 保留历史缺项记录；现行 AC-016-01 与 MIG-016-01 已分离，验收尚未执行，不能沿用 MIG 的静态 PASS | [#106](https://github.com/odango-chan/ca-agent-next/issues/106) |
+| SR-016 / AC-016-01 | **NOT_RUN**（Issue #95 固定源缺独立定义；现行 SR-016 v0.3.41 已补正式 AC） | 保留历史缺项记录；现行 AC-016-01 与 MIG-016-01 已分离，验收尚未执行，不能沿用 MIG 的静态 PASS | [#106](https://github.com/odango-chan/ca-agent-next/issues/106) |
 | SR-016 / AC-016-02～08/10 | **BLOCKED / NOT_RUN** | 等正式 1.6.0 Package、Compiler、Provider/Owner 输入和同一发布批次六宿主证据；#272 合并不等于新版产品 PASS | [#106](https://github.com/odango-chan/ca-agent-next/issues/106) |
 | SR-030 / AC-030-02/03/05 | **BLOCKED** | 等正式 Package Schema、languageTarget、Compiler 验证入口和 Golden；不猜测机器契约 | [#106](https://github.com/odango-chan/ca-agent-next/issues/106) |
 | SR-030 / AC-030-04 | **NOT_RUN** | 中央设计补充 ZIP 元数据归一、entry/Manifest 稳定排序、两次构建逐字节比较和正式 Schema 校验判据 | [#106](https://github.com/odango-chan/ca-agent-next/issues/106) |
@@ -73,3 +73,4 @@
 | 2026-11-28 | GPT-6（ChatGPT） | §2、§3、§4、§6 | 分离 Issue #95 历史缺定义与现行 SR-016 正式 AC 已定义但 NOT_RUN；避免将历史固定源缺陷误写为当前状态 | Issue #106；PR #107；SR-016 |
 | 2026-11-28 | GPT-6.2（ChatGPT） | §2、§4～§6 | 回填 PR #110 后续归档独立复验 PASS、SR-018 历史 UE-requested Release 限定 PASS，并同步 SR-016 当前 AC-016-01 正式定义版本；保留 vet.log 未归档及产品 NOT_RUN 边界 | Issue #102/#104/#106；PR #107/#110/#114/#115 |
 | 2026-11-28 | GPT-6.2（ChatGPT） | §2、§4～§6 | 补记 PR #115 已按固定 Blob SHA 纳入完整 59 Blob 归档树（58 个清单覆盖文件 + SHA256SUMS），不再将五份修复元数据误写为完整归档 | Issue #102；PR #110；PR #115 |
+| 2026-11-28 | GPT-6.2（ChatGPT） | §2、修订记录 | 同步 SR-016 当前版本 v0.3.41；维持 AC-016-01 新定义 NOT_RUN 与历史固定源缺项结论的时点隔离 | Issue #106；PR #107/#115 |

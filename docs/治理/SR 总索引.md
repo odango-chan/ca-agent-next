@@ -1,8 +1,8 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.81
-> 状态：31 项 SR：4 VERIFIED（仅各自历史模块范围）、1 IMPLEMENTED（设计移交）、25 DRAFT、1 IN_PROGRESS（SR-028；设计 READY、候选实施 IMPLEMENTED、mainline 集成未完成）。PR #46 第九轮 Review #6095601142 已合入恢复设计基线 `92436348`，main 尚未更新。PR #115 OPEN / Draft / mergeable=true / 未合并；Base `main` @ `b2ed5eb84114f9c2556a0cd06ed974887b1b70ad`；第三批后 CI 固定快照 `ce26156a7f6ca7aad29ab87ed59986e55e9a1482`：Review Context #46135833349 SUCCESS，Python Toolchain Policy Bootstrap #46135833351 SUCCESS，SR-003 Plugin Manager Regression #46135833372 的 Ubuntu Job SUCCESS、Windows Job IN_PROGRESS。以上状态只属于 `ce26156`，不得外推到其后的文档修订提交；本次文档修订将触发新 Head CI。第三批选择性收编已推送；PR #115 全量独立复评仍待完成。 PR #99、#112、#97 均保持源 PR 状态，不作为第二个集成入口；其实现/策略/READY 证据只按已核验范围选择性收编。PR #52 两项 P2 已收编，PR #115 全量独立复评待完成。
+> 文档版本：0.3.82
+> 状态：31 项 SR：4 VERIFIED（仅各自历史模块范围）、1 IMPLEMENTED（设计移交）、25 DRAFT、1 IN_PROGRESS（SR-028；设计 READY、候选实施 IMPLEMENTED、mainline 集成未完成）。PR #46 第九轮 Review #6095601142 已合入恢复设计基线 `92436348`，main 尚未更新。PR #115 OPEN / Draft / mergeable=true / 未合并；Base `main` @ `b2ed5eb84114f9c2556a0cd06ed974887b1b70ad`。最新文档 Head `7ffb84e9ddf419941f570004ceac714554719d96`：Review Context #46136575669 SUCCESS、Python Toolchain Policy Bootstrap #46136575656 SUCCESS。SR-003 Plugin Manager Regression #46135833372 在代码快照 `ce26156a7f6ca7aad29ab87ed59986e55e9a1482` 的 Ubuntu / Windows Job 均 SUCCESS，Artifact 上传成功；`7ffb84e` 与 `ce26156` 之间仅为文档修订，SR-003 Workflow 未在 docs-only Head 重跑，因此不把该测试标记为 `7ffb84e` 的同 SHA 结果。本轮指针/统计修订同样只改文档，将触发新的 Review Context / Policy Bootstrap。第三批选择性收编已推送；PR #115 全量独立复评仍待完成。 PR #99、#112、#97 均保持源 PR 状态，不作为第二个集成入口；其实现/策略/READY 证据只按已核验范围选择性收编。PR #52 两项 P2 已收编，PR #115 全量独立复评待完成。
 > 修订日期：2026-11-28\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
@@ -195,7 +195,7 @@
 - Phase G：SR-009 独立 Plugin 模块可在自身阶段 READY、独立实施 Issue 与目标仓授权后先行，不等待 Echo；当前 #116 增量复评完成前不创建实施 Issue。SR-009 AC-009-04 生产 classifier 另等 ca-client-tools#44；SR-010 逐子阶段核对实施依赖；系统 OM 组合仍待 Echo 与 Host/Owner 对端.
 - Phase H：SR-011。
 - Capability-first 新版本设计：[SR-029 v0.2.6](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) / [Issue #40](https://github.com/odango-chan/ca-agent-next/issues/40)：**CA-SL 1.6.0-only / 完全无旧版兼容**。Provider 目标由历史查询 2/2 扩展为含 Codec READ 的 **3/3**；Owner 两项历史 Parser 必须分别签认，双移除/一删一留/双保留为纯业务 READ 分别形成 **22/22、23/23、24/24** 条件候选；任一未签认则成员数未冻结、不得发布。T1 不读 T2 Codec Result；Modify 0xC9/NGAP 未资格化 BLOCKED。F02/F03.05/F04/F06/F08/F09/EC02 均按候选设计约束，Compiler/Publisher/Runtime/Studio/Bundle 新契约尚未发布，不启动代码实施；下游 PR #46/#48 冲突另设集成任务，不直接修改。
-- Compiler 外部发布依赖：SR-012、SR-013；SR-013 的 [PR #18 固定证据归档](https://github.com/odango-chan/ca-agent-next/tree/c3e5bb78ff49306329bcbc2387da6108280903bc/docs/参考与审计/fixtures/ac-013-01/isolated-poc)已核对 58 个文件与 SHA256SUMS；归档报告为 Go/Python 18/18，当前审计复跑 NOT_RUN，不代表 Compiler 产品发布或完整 SR VERIFIED。
+- Compiler 外部发布依赖：SR-012、SR-013；SR-013 AC-013-01 当前修复后固定归档以 [PR #115 固定证据目录](../参考与审计/fixtures/ac-013-01/isolated-poc/README.md) 为唯一入口，完整 59 Blob（58 个清单覆盖文件 + SHA256SUMS）；Issue #102 detached checkout 复验 58/58、SHA256SUMS、audit_evidence.py、Python 18/18 PASS；`vet.log` NOT_ARCHIVED；不代表 Compiler 产品发布或整项 SR VERIFIED。
 
 阶段顺序仅约束实际实施依赖，不限制独立设计评审。每个 SR 达到 READY 后，只有当前实施阶段的直接实施依赖满足才可启动；未满足的依赖只阻塞其消费者，不得阻塞独立 SR/AC。Goal 模式可将同一依赖批次中的多个 READY SR 合并执行，但不得跨越未满足的实施依赖或把 DRAFT SR 当成可执行任务。
 
@@ -332,3 +332,4 @@
 | 2026-11-28 | 0.3.79 | GPT-6.2（ChatGPT） | 文档头、SR-013/016/017/018/019 行、修订记录 | 同步第三批选择性收编：AC-013-01 完整归档复验、AC-016-01 新定义 NOT_RUN、Plugin/Mock 固定源、Owner 历史 Release 限定 PASS | 保留旧评审为历史快照，不将其升级为当前 Head 的独立批准，也不将 Release 历史证据外推到当前 Reconcile/Next | Issue #50/#95/#102/#104/#106；PR #107/#110/#114/#115 |
 | 2026-11-28 | 0.3.80 | GPT-6.2（ChatGPT） | SR-013/016/017/018/019 详细行、修订记录 | 清除第二张详细状态表中的旧 SR-013 归档 FAIL / rerun NOT_RUN；同步 AC-016-01、Host artifactRef、Owner Release 限定 PASS 与 Mock 固定源状态 | 防止同一 SR 在索引不同章节出现互相矛盾的状态 | Issue #50/#95/#102/#104/#106；PR #107/#110/#114/#115 |
 | 2026-11-28 | 0.3.81 | GPT-6.2（ChatGPT） | 文档头、SR-013/016/017/030 当前版本、修订记录 | 同步第三批收编后的 SR 版本和 ce26156 CI 快照；保留 AC-013-01 归档/历史 PoC PASS、AC-016-01 NOT_RUN、AC-017-02 FAIL、SR-018 历史 Release 限定 PASS 与当前候选阻塞 | 避免 SR 索引继续引用旧 CI 快照或旧 SR 版本 | Issue #50/#95/#102/#103/#106；PR #107/#110/#114/#115 |
+| 2026-11-28 | 0.3.82 | GPT-6.2（ChatGPT） | §2.4、§2.7、修订记录 | 将 AC-013-01 导航切换到 PR #115 已纳入的修复后完整归档；同步 SR-016/F09 当前版本与最新文档/代码测试 SHA 边界 | 清除 SR 索引中的 PR #18 修复前归档入口及过期版本引用 | Issue #50/#95/#102/#106；PR #107/#110/#114/#115 |
