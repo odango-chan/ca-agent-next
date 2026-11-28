@@ -1,7 +1,7 @@
 # Tool Interface 与 Provider 集成设计说明书
 
 > 文档类型：功能子模块设计说明书
-> 文档版本：0.4.11
+> 文档版本：0.4.12
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 功能归属：F03.05 — Tool Plugin 集成
 > 交叉功能：F03.01～F03.04、F04.01、F04.05、F05.02、F06
@@ -394,7 +394,7 @@ Next Runtime 必须从已验证 sidecar 中所有 Mutation 的 `commitProof.reco
 - 原始二进制不放进 Plugin NDJSON，也不使用 Base64 搬运；按已发布的 Host Artifact Store contract 通过独立 channel 传输。
 - Provider 侧没有配置 artifactChannel 时，artifact-bearing binding 必须是 NOT_CONFIGURED，并在任何远端 I/O 前拒绝。
 - 原始输入字节保留为 Owner/Protocol 证据；Codec 解码出的语义投影不能替代原始字节，也不能自动授权重新编码后发送。
-- Host Artifact Store 通过独立 loopback channel 管理 opaque reference、Invocation/direction/slot 绑定、原始 bytes、长度/数量配额、超时取消、过期清理和原子发布；不计算或校验 per-artifact SHA-256。已存在的 `odango-chan/ca-agent` `ca-host.artifact-store/v1` 文档（commit `2c0b07f2eaff3bc1020bfc6775ef9bf09e3052ae`）仍要求 SHA-256，**与 Next Demo 不兼容，不得原样复用**；外部契约 Owner 必须先按 no-hash 设计修订后，SR-010 才能进入实施。
+Host Artifact Store 通过独立 loopback channel 管理 opaque reference、Invocation/direction/slot 绑定、原始 bytes、长度/数量配额、超时取消、过期清理和原子发布；新 1.6.0 Demo 目标为 ca-host.artifact-store/v2，不计算或校验 SHA-256 / checksum / digest。历史 ca-host.artifact-store/v1（commit 2c0b07f2eaff3bc1020bfc6775ef9bf09e3052ae）仍要求 SHA-256，仅作历史审计，不得复用；SR-010/F05 负责 v2 no-hash 设计与 Host 实现。
 
 ### 8.2 Codec
 
@@ -402,6 +402,66 @@ Next Runtime 必须从已验证 sidecar 中所有 Mutation 的 `commitProof.reco
 - Codec 不拥有 Skill 选择、网络传输、Owner 状态或 Runtime；不建立独立 Codec Plugin/Manager。
 - 只能使用发布契约明确标记并有证据支持的消息子集。reencodeVerified 不等于 qualified；不合格消息不得因 round-trip 相等而升级。
 - ca-client-tools PR #39 当前为 OPEN，Phase B facade/worker 证据已记录，Phase C Consumer Migration 未开始。本 SR 不依赖 PR #39 合并，不声明 Next 已消费该 Codec。
+
+### 8.2.1 Codec 公开 READ Operation（SR-026）
+
+Codec 的公开入口是现有 ca-client-tools Provider Interface Package 中的一个本地 READ Callable Operation；它不是第二个 Plugin、Manager 或远程网络 Tool。Skill 只声明 Capability，Runtime 仍通过现有 Provider / Tool Action Boundary 派发；Codec 不执行 SBI 请求、不产生 Owner Mutation，也不替代 Owner 的业务解析能力。
+
+**固定身份（中央设计目标，尚未发布）：**
+
+| 项目 | 唯一目标值 |
+|---|---|
+| Capability ID | protocol.nas.5gsm.release-request.decode |
+| Callable ID | ca-client-tools.codec.nas.5gsm.release-request.decode |
+| Interface Package ID | urn:wtlab:ca-client-tools:openamsm-sbi-interface |
+| Interface Package / Provider 目标版本 | 2.0.0（11→3 的破坏性公开接口收敛；纯数字 SemVer） |
+| Runtime Bindings Sidecar | ca.tool-provider-runtime-bindings/v2 |
+| Provider Wire Protocol | ca-client-tools.provider/v2（不升级线协议） |
+| Host Artifact Channel | ca-host.artifact-store/v2（新 1.6.0 no-hash Demo Channel；v1 SHA-256 历史契约不复用） |
+| 首批消息 | NAS 5GSM PDU Session Release Request，消息类型 0xD1 / PDUSessRelReq |
+
+Provider Interface Package 的公开闭包固定为 3 Capability / 3 Callable：
+
+| Capability | Callable |
+|---|---|
+| openamsm.smf.mas.context.read | ca-client-tools.openamsm.smf.mas.context.read |
+| openamsm.nf.metrics.read | ca-client-tools.openamsm.nf.metrics.read |
+| protocol.nas.5gsm.release-request.decode | ca-client-tools.codec.nas.5gsm.release-request.decode |
+
+前两项分别用封闭的 contextKind、resourceKind selector 收敛历史私有 backend 路由；第三项是本 SR 新增的协议级 Codec 能力。每个 Capability 只能绑定一个 Callable；Callable 内部可使用私有 backend 选择，但 backend ID 不进入 Skill 作者源或公开 Capability 集合。
+
+**输入契约：**公开 inputSchema 是 type: object、properties: {}、additionalProperties: false 的空闭合对象。原始 NAS 字节不是 Skill / LLM 参数，不接受 Base64、文件路径或任意 URL。Host 在完成 Capability 授权和公开 Schema 校验后，通过 Provider Runtime Bindings 私有参数注入当前 Invocation 的材料：
+
+~~~yaml
+apiVersion: ca.tool-provider-runtime-bindings/v2
+privateArguments:
+  - name: n1_sm
+    source: PRIVATE_MATERIAL
+    artifact:
+      direction: INPUT
+      slot: n1Message
+      mediaType: application/vnd.3gpp.5gnas
+      required: true
+~~~
+
+Provider catalog 对应 descriptor 必须声明 artifactSlots.inputs，pointer 为 /n1_sm、slot 为 n1Message、mediaType 为 application/vnd.3gpp.5gnas。Host 只注入绑定到当前 Invocation 的 artifactRef；该字段不进入公开 Input Schema，也不允许 Skill 自行构造。未配置 v2 Artifact Channel、slot 不匹配或引用不属于当前 Invocation 时，在派发前 fail-closed。
+
+**输出契约：**Provider Interface Package 导出闭合的 schemas/codec/nas-pdu-session-release-request-output.schema.json。字段采用 3GPP 语义命名，不直接暴露 Free5GC Go struct 字段名或 ProjectToJSON 的反射字段名：
+
+- protocol 固定 NAS；messageType 固定 PDU_SESSION_RELEASE_REQUEST；messageTypeCode 固定 209。
+- header 必含 extendedProtocolDiscriminator（46）、pduSessionIdentity（1～15）和 procedureTransactionIdentity（0～254）。
+- message 只暴露首批已资格化的结构字段；首批 Golden 未覆盖的 IE（包括当前 Codec 标记为 lossy / NOT_QUALIFIED 的 ePCO）不得作为可用业务字段返回。
+- qualification 必含 complete、qualified、rawPreserved、structuralParse、projectionValid、reencodeEligible、reencodeVerified、consumedBits、totalBits 和 ieToDo。
+- status 使用 SUCCESS、PARTIAL、UNSUPPORTED_MESSAGE、UNSUPPORTED_IE、DUPLICATE_IE、INVALID、NOT_QUALIFIED；diagnostics 使用稳定 code/message，并可带 IEI / offset。
+- 不返回原始字节或 Base64；只返回 rawLength 和保留/往返验证标志。原始 Artifact 仍由 Host Artifact Store 持有。
+
+只有 status=SUCCESS 且 complete=true、qualified=true、rawPreserved=true、projectionValid=true、reencodeVerified=true 时，Runtime 才能把解码结构作为有效 Observation。其他状态是显式结果，不得提升为 PASS；传输、Artifact 引用或 Provider 失败仍按 Provider READ 错误处理。
+
+**执行路径：**Host 注入 invocation-scoped artifact reference → Provider Artifact Channel v2 读取原字节 → Provider 进程内直接调用 Go protocol/codec NAS Facade → 显式映射到上述 3GPP Output Schema → 返回 READ Observation。Provider 不启动 Python codec-worker 子进程，不向远端 SBI 转发，不修改原始 Artifact。Python Worker 仅是独立开发/消费入口，不是 Agent Runtime 依赖。
+
+**首批范围与反例：**有效向量 2e 05 01 d1（PSI=5、PTI=1、Release Request）必须完整解析、字节往返一致并满足资格标志；截断输入 2e 05 01 必须 INVALID；Release Complete 向量 2e 05 07 d4 对本 Capability 必须 UNSUPPORTED_MESSAGE / MESSAGE_TYPE_OUT_OF_SCOPE，即使底层库能识别该消息也不得越过本次公开范围。其他 NAS / NGAP 类型不属于本次发布范围，扩展必须新增中央设计与 Golden，不得从底层库支持列表自动扩展公开 Schema。
+
+该 Codec Capability 与 Owner 的 mas.ssm.n1.modify.parse、mas.ssm.n1.release.parse 是不同层次：后两者仍是 Owner 业务能力；本 Codec 只提供协议级 READ 解码，不替代 Owner Receipt、Reconcile、状态判定或提交证明。
 
 ### 8.3 1.6.0 Codec Provider 与 Owner N1 Parser 的唯一性审计
 
@@ -634,3 +694,4 @@ Runtime Action 以 Capability ID 为 Skill / Procedure 作者侧入口。Runtime
 | 2026-11-28 | 0.4.7 | GPT-6（ChatGPT） | §2、§5、§12 与修订记录 | 整合 #45 公开 Callable 的唯一 Binding、Skill 作者源与编译 Artifact 分层、#46 Provider/Codec 封闭路由；保留历史发布只读 | 不将公开 Tool 误作内部分发身份，维持 1.6.0-only | Issue #12；#40；PR #45；#46 |
 | 2026-11-28 | 0.4.8 | GPT-6（ChatGPT） | §4.4、§8.3、§12.2、§12.8、修订记录 | 将 Owner Parser 数量从固定 24/24 改为逐项签认矩阵，补齐混合裁决与未签认阻断 | 避免合法 Owner Package 因固定成员数被误拒，并确保 Compiler 只接受 Owner 冻结的实际 1:1 成员 | Issue #12；SR-025；PR #46；Review #6095143611 |
 | 2026-11-28 | 0.4.9 | GLM-5.3（DeepSeek Harness） | 修订记录 | 合并被空行拆断的孤儿修订表段为单一连续表格，不改变任何历史行内容 | 修复 R8-09 同类 Markdown 渲染断裂，保证修订数据完整可见 | Issue #12；PR #46；Review #6095143611 |
+| 2026-11-28 | 0.4.12 | GPT-6.2（ChatGPT） | §8.1～8.3、修订记录 | 收编 SR-026 Codec 公开 READ 的固定 Capability/Callable/Package 2.0.0 契约，并改用 no-hash Artifact Channel v2 | 将 Codec 生产接口从候选转为中央固定设计，同时消除 v1 SHA-256 与 Demo 限制冲突 | Issue #113；SR-026；SR-010；F05；SR-029；PR #115 |
