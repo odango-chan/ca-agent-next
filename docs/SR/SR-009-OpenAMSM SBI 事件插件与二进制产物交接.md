@@ -8,7 +8,7 @@
 > 修订日期：2026-11-28\
 > 所属阶段：Phase G  
 > 上游需求：[IR-005](../IR/IR%20总登记册.md#ir-005)  
-> 设计依据：[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.11 §1～13、16；[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.3.8 §2～5、§4.1、§13.7、§14；[插件包与进程通信协议规范](../规范/插件包与进程通信协议规范.md) v0.2.7 §5～6
+> 设计依据：[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.12 §1～13、16；[业务接入与OpenAMSM集成设计说明书](../设计说明书/F06-业务接入与集成/业务接入与OpenAMSM集成设计说明书.md) v0.3.8 §2～5、§4.1、§13.7、§14；[插件包与进程通信协议规范](../规范/插件包与进程通信协议规范.md) v0.2.7 §5～6
 > Acceptance：OM-01～OM-03、OM-05～OM-08、OM-14、OM-15（见[演示验收基线](../验收与实施/演示验收基线.md)）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：见第 3 节
@@ -163,4 +163,4 @@ ca-openamsm-plugin PR #1 是设计文档候选，不是本 SR 的实现 PR。Tes
 | 2026-11-28 | 0.2.11 | GPT-6.2（ChatGPT） | §2、设计依据、修订记录 | 对齐 IPC v0.2.7，明确 responseObligationId 仅随 delivery.dispatch 瞬时接收，responseChannelId 负责本地 HTTP/2 stream 写回 | 将 SR-009 模块边界与公共 IPC 契约保持一致，避免将非所有权误解为不可接收 | Issue #12；PR #46；IPC v0.2.7；Review #6095143611 |
 | 2026-11-28 | 0.2.12 | GLM-5.3（DeepSeek Harness） | §5.1、修订记录 | 为 AC-009-04 §5.1 参数化用例表补 `nsmf.create-sm-context` Create 正例行 | 关闭首轮 R1-SR009-02 的 Create 用例缺口，使三个 eventType 均有正例 | Issue #12；PR #46；Review #6082541121 |
 | 2026-11-28 | 0.2.13 | GPT-6.2（ChatGPT） | 文档头、§2、§4～6、修订记录 | 刷新 F05/F06/IPC 权威版本；将 AC-009-05 收窄到 responseChannel/delivery 映射，externalRequestId 去重明确归 Host；将 AC-009-04 生产 classifier 绑定列为 ca-client-tools#44 直接外部依赖，并允许 test double 仅验证 Event mapping；等待当前快照独立增量复评后再创建实施 Issue | 消除 Plugin/Host 重试身份边界和 NAS classifier 所有权歧义，避免 Harness 猜测 API 或复制 parser | Issue #12；Review #73；F05 v0.4.10；F06 v0.3.7；IPC v0.2.7；ca-client-tools#44；PR #115 |
-| 2026-11-28 | 0.2.14 | DeepSeek Harness（GLM-5.3） | 文档头、§0、AC-009-01/02/05/06、§5.1、§5.3、§6、§7、修订记录 | 按 Issue #116 限定批准登记 READY（限定范围）：补 AC-009-01 extension 核对、AC-009-02 Content-ID/slot 与 Ext1、AC-009-05 三元绑定与 ack allowlist；§5.1 补 Ext1/Update 可选 N2/continuation Ext1 NOT_RUN 用例；新增 §5.3 逐项登记 11 项 P2；§6 回填 Issue #2 / PR #3 / commit 与模块证据；同步 F05 v0.4.11 / F06 v0.3.8 | 将独立评审结论与 P2 整改落地到 SR 正文，同时保持 AC-009-04 生产绑定 BLOCKED、整项未完成、产品与系统验收 NOT_RUN | Issue #116；SR-009；PR #115；F05 v0.4.11；F06 v0.3.8；ca-openamsm-plugin #2/#3；ca-client-tools#44 |
+| 2026-11-28 | 0.2.14 | DeepSeek Harness（GLM-5.3） | 文档头、§0、AC-009-01/02/05/06、§5.1、§5.3、§6、§7、修订记录 | 按 Issue #116 限定批准登记 READY（限定范围）：补 AC-009-01 extension 核对、AC-009-02 Content-ID/slot 与 Ext1、AC-009-05 三元绑定与 ack allowlist；§5.1 补 Ext1/Update 可选 N2/continuation Ext1 NOT_RUN 用例；新增 §5.3 逐项登记 11 项 P2；§6 回填 Issue #2 / PR #3 / commit 与模块证据；同步 F05 v0.4.12 / F06 v0.3.8 | 将独立评审结论与 P2 整改落地到 SR 正文，同时保持 AC-009-04 生产绑定 BLOCKED、整项未完成、产品与系统验收 NOT_RUN | Issue #116；SR-009；PR #115；F05 v0.4.12；F06 v0.3.8；ca-openamsm-plugin #2/#3；ca-client-tools#44 |

@@ -1,14 +1,14 @@
 # SR-026：Codec公开工具发布
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.0
-> 状态：整项 DRAFT；BLOCKED_EXTERNAL_INPUT。AC-026-01～03 维持既有候选库/Provider 门槛；新增 AC-026-04～06（原生协议源、公开 Codec READ 1:1、T2 Result 校验）全部 BLOCKED_EXTERNAL_INPUT / NOT_RUN。
-> 下一步：Provider Owner 需交付 Codec 公开 Capability、唯一 Callable、输入输出 Schema、slot/mediaType、handler 和包版本。v1.2.0 与候选 PR #39 分别记录。  
+> SR 版本：0.2.1
+> 状态：整项 DRAFT；中央生产端契约已固定，DESIGN_REVIEW_REQUESTED；AC-026-01～03 按既有候选库/Provider 基线分别验收；AC-026-04～06 的产品执行仍 BLOCKED_EXTERNAL_INPUT / NOT_RUN，Provider 2.0.0 尚未发布。
+> 下一步：独立评审本轮固定的 Codec Capability/Callable、Package 2.0.0、Runtime Bindings v2、Artifact Channel v2 和 Output Schema；达到 SR-026 READY 且 SR-029 依赖 READY 后，再创建 ca-client-tools 实施 Issue。
 > 阶段依据：[独立评审 #87](https://github.com/odango-chan/ca-agent-next/issues/87#issuecomment-7209366603)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。
 > 创建日期：2026-11-26  
-> 修订日期：2026-11-27\
+> 修订日期：2026-11-28\
 > 上游需求：IR-006  
-> 设计依据：F03.05 v0.4.4 §8.2、§11 与 EC03 外部生产端复验。\
+> 设计依据：F03.05 v0.4.12 §8.2.1 / §8.3、F05 v0.4.12、SR-010 v0.2.8 与 EC03 外部生产端复验。\
 > 关联 Issue：ca-agent-next#12（设计）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：见 §4；本批仅验收指定 NAS Decode。
@@ -32,13 +32,46 @@
 2. 在 `internal/provider/` 接入进程内本地 handler，通过 Host artifact channel 取原字节；结果不经过远端 SBI，拒绝错误 slot、非法消息与超限。以现有 v2 schema 实测能否合法表示本地结果；若必须改变冻结 envelope，先给出版本化契约、Driver 选择和兼容测试，再启动该部分。
 3. 同步 Provider 发布包生成器、公开 Interface、bindings 和私有 backend catalog；真实进程只在声明的 ID 上响应。将构建所得包交给 Next，禁止直接从分支代码导入 Go 库作为 Tool。包的新增版本使用纯数字 SemVer。
 
+## 2.2 中央固定的生产端接口契约（设计目标，尚未发布）
+
+本 SR 不再把公开机器身份留给 Provider Owner 在实施时临时选择。以下值是 Next 中央设计目标；生产仓负责实现、测试和发布，不得自行改名或扩大首批消息范围。
+
+| 项目 | 唯一目标值 |
+|---|---|
+| Capability ID | protocol.nas.5gsm.release-request.decode |
+| Callable ID | ca-client-tools.codec.nas.5gsm.release-request.decode |
+| Interface Package ID | urn:wtlab:ca-client-tools:openamsm-sbi-interface |
+| Interface Package / Provider 目标 SemVer | 2.0.0 |
+| Runtime Bindings Sidecar | ca.tool-provider-runtime-bindings/v2 |
+| Provider Wire Protocol | ca-client-tools.provider/v2 |
+| Host Artifact Channel | ca-host.artifact-store/v2（no-hash Demo Channel；v1 SHA-256 仅为历史契约，不复用） |
+| 首批消息 | NAS 5GSM PDU Session Release Request 0xD1 / PDUSessRelReq |
+
+Provider Interface Package 的公开闭包固定为 3 Capability / 3 Callable：
+
+| Capability | 唯一 Callable |
+|---|---|
+| openamsm.smf.mas.context.read | ca-client-tools.openamsm.smf.mas.context.read |
+| openamsm.nf.metrics.read | ca-client-tools.openamsm.nf.metrics.read |
+| protocol.nas.5gsm.release-request.decode | ca-client-tools.codec.nas.5gsm.release-request.decode |
+
+前两项分别使用封闭 contextKind、resourceKind selector；第三项是协议级 Codec READ。Capability↔Callable 严格双向一对一，私有 backendOperationId 不进入公开 Package 或 Skill 作者源。
+
+**Input：**公开 Input Schema 为 type: object、空 properties、additionalProperties: false。原始 NAS bytes 不作为 Skill / LLM 参数，不接受 Base64、文件路径或 URL。Host 通过 Runtime Bindings 私有参数 n1_sm（source PRIVATE_MATERIAL）注入当前 Invocation 的 n1Message Artifact，mediaType=application/vnd.3gpp.5gnas；Provider catalog descriptor 固定 artifactSlots.inputs.pointer=/n1_sm。Host 只注入当前 Invocation 授权的 opaque reference。
+
+**Output：**闭合 Output Schema 固定 NAS / Release Request 语义字段：protocol=NAS、messageType=PDU_SESSION_RELEASE_REQUEST、messageTypeCode=209、header（EPD=46、PSI、PTI）、首批已资格化的 message projection、qualification 和 diagnostics。qualification 至少包含 complete、qualified、rawPreserved、structuralParse、projectionValid、reencodeEligible、reencodeVerified、consumedBits、totalBits、ieToDo。状态枚举为 SUCCESS、PARTIAL、UNSUPPORTED_MESSAGE、UNSUPPORTED_IE、DUPLICATE_IE、INVALID、NOT_QUALIFIED。只有 SUCCESS 且 complete/qualified/rawPreserved/projectionValid/reencodeVerified 均为 true 才能作为有效 Observation；原始 bytes 不返回、不 Base64 化，继续由 Host ArtifactStore 持有。
+
+**执行：**Provider 进程内直接调用 Go protocol/codec NAS Facade；不启动 Python Worker 子进程、不发远程 SBI、不修改 Owner 状态。首批正例 2e 05 01 d1；截断 2e 05 01 必须 INVALID；2e 05 07 d4 对该 Capability 必须 UNSUPPORTED_MESSAGE。其他 NAS / NGAP 消息不因底层库可解码而自动进入公开范围。
+
+**发布边界：**以上是中央设计目标，不表示 Package、Schema、Golden、handler 或 Release 已存在。Provider 2.0.0 必须实现并发布该契约；v1.2.0 / PR #39 仅作为历史 Provider / Codec 库来源。v1 Artifact Channel 的 SHA-256 规则不得被静默忽略；Provider 2.0.0 只消费 v2 no-hash Channel.
+
 ## 3. 验收与退出条件
 
 | ID | 入口与判据 |
 |---|---|
 | AC-026-01 | 在选定候选根运行 `go test ./protocol/codec/...`，记录受测 SHA、支持子集、具体 fixture 和测试数；截断/不支持的消息失败 |
-| AC-026-02 | 在生产端运行 `go test ./internal/provider ./internal/runtimebindings ./internal/interfacepkg`，再用发行包的 `provider serve` 完成 initialize/catalog/invoke；断言精确投影、零远端 SBI 请求、原字节不变，缺通道时该绑定 unavailable |
-| AC-026-03 | 用同一发行包和同一 fixture 执行 SR-010。先无 decode 声明验证零调用，再在有授权的 Skill 上验证一次调用；越权在派发前拒绝 |
+| AC-026-02 | 按中央固定契约实现 Provider Interface Package 2.0.0、Runtime Bindings v2 与 Host Artifact Channel v2；运行 go test ./internal/provider ./internal/runtimebindings ./internal/interfacepkg，再用正式包的 provider serve 完成 initialize/catalog/invoke；断言 3/3 Capability↔Callable、私有 Artifact slot、闭合 Output Schema、零远端 SBI 请求、原字节不变、无 SHA-256 / digest |
+| AC-026-03 | 用同一正式 Provider 2.0.0 包和同一 NAS fixture 执行 SR-010；未声明 protocol.nas.5gsm.release-request.decode 时验证零调用，声明并授权后验证一次 READ Observation；越权在派发前拒绝，非 SUCCESS / 未资格化结果不得提升为 PASS |
 | AC-026-04 | 固定 OpenAMSM source commit、NAS/NGAP 原生协议源版本、消息 Profile、原始 bytes 与字段来源；不得把 SBI binary part 当解码 Result 或伪造官方 YAML | BLOCKED_EXTERNAL_INPUT |
 | AC-026-05 | Provider Owner 发布正式 Codec READ Capability↔唯一 Callable、封闭 selector、Artifact slot、Output Schema、版本、handler 与 Golden；多 Profile 必须证明单一封闭 Schema 可表达，否则另提设计 | BLOCKED_EXTERNAL_INPUT |
 | AC-026-06 | MAS 1.6.0 Skill 仅在 T2 调用 Codec READ 并校验 Result；T1 不读 NAS-only 字段；0xD4≠0xD1；截断/越权/错 Profile/Schema 不符 fail-closed，Owner mutation=0 | NOT_RUN / BLOCKED_EXTERNAL_INPUT |
@@ -47,7 +80,7 @@
 
 源仓实施 Issue、PR、commit、正式包未登记，测试 NOT_RUN。前述公开 ID/Schema、版本与本地结果 profile 未冻结，维持 DRAFT。第一批不含 Encode、全量 NGAP、ext=1 或其他未经资格化消息。SR-015 的设计移交和 SR-010 已发布 Provider 部分可单独验收。无替代 SR。
 
-**外部契约决定（D14，OPEN）**。已核对 ca-client-tools main `7bcb2614aa3615d8358df31eecefd0909e894e40` 与 [PR #39](https://github.com/odango-chan/ca-client-tools/pull/39) 的候选库 `eb1169fe1d0e2e691d101908aad08ee8801da754`。生产者需提供同一固定源中的 Package ID/纯数字版本、公开 Capability 与唯一 Callable、入出参 Schema 及 slot/mediaType、handler 路径/符号与本地结果 profile，并记录正式发布或签认的 PR/commit。AC-026-01 仅复核库向量。此记录为空时 02/03、AC-010-06b 的全量 3/3 及 07/08 均不得使用候选别名或推测 Schema。
+**中央设计裁决（D14，CLOSED；Issue #113）：**Package ID、Capability ID、Callable ID、Input/Output Schema、Artifact slot/mediaType、首批消息范围和 Provider 执行路径已在 Next / F03.05 / SR-026 固定。生产仓只负责实现和发布，不得把这些设计空白留给 Harness 或临时决定。ca-client-tools#18 只覆盖历史 protocol/nas5gsm helper；PR #39 是 protocol/codec Phase B 候选库，不是公开 Provider Package。Provider 2.0.0 的正式发布与 v2 Artifact Channel 消费仍未完成，产品验收保持 NOT_RUN / BLOCKED。
 
 ### 首批 NAS 向量
 
@@ -61,7 +94,7 @@
 | ca-client-tools / Provider Owner | 输入/输出 Schema、Artifact slot/方向/mediaType、Release Request 专属 JSON 结果 profile、错误码及截断/错误类型负例 | 正式 Codec Tool 的准确参数与结果验收 |
 | ca-client-tools / Provider Owner | 同一发行包 initialize/catalog/invoke 证据、零远端 SBI 请求、与原 Provider 查询 2/2 合成 3/3 的一对一对账 | 不得将 PR #39 库向量或私有 backend 名称冒充公开 Tool |
 
-这些字段由生产者在其签认 Issue/PR 和正式发布记录中提交。本 SR 现有 `2e 05 01 d1` 向量、`0xd4` 非目标负例可先供静态评议；任何字段尚缺时，禁止由 Harness 推断别名、Schema、版本或“兼容”路径，SR-026 整体仍 BLOCKED_EXTERNAL_INPUT。
+中央设计已固定 Capability / Callable / Interface Package ID、Provider / Runtime Bindings 版本、Input / Output Schema、slot / mediaType 和首批 0xD1 范围。生产者仍须在正式 Issue/PR/Release 提供实际 Schema、Golden、handler、二进制和测试证据；不得把中央设计目标误报为已发布资产，也不得由 Harness 推断实际实现或兼容路径。AC-026-04～06 的产品状态按表保持 BLOCKED_EXTERNAL_INPUT / NOT_RUN。
 
 ## 5. 3GPP SBI OpenAPI 与 NAS / NGAP Codec Result 的边界（IR-009）
 
@@ -96,3 +129,4 @@
 | 2026-11-27 | 0.1.6 | GPT-6（ChatGPT） | §4.1、修订表 | 固定 Codec 公开契约缺件及唯一生产者，保留现有库向量独立可审查范围，整理历史六列修订记录 | 将外部输入阻塞与静态候选审查隔离，杜绝猜测公开机器 ID | Issue #12；PR #46；SR-026 |
 | 2026-11-27 | 0.1.7 | GPT-6（ChatGPT） | 修订记录 | 将历史记录统一为七列并保留原始文字及原始关联，修正非规范行的分隔符 | 确保修订表可由文档校验器完整解析；不影响设计语义及 READY 主状态 | Issue #12；PR #46；SR-026 |
 | 2026-11-27 | 0.1.8 | Codex / GPT-6 | 文档头 | 登记BLOCKED_EXTERNAL_INPUT及 AC 范围 | 按单项独立评审推进 | Issue #12、#87；PR #46 |
+| 2026-11-28 | 0.2.1 | GPT-6.2（ChatGPT） | §0、§2.2、§3、§4.1、修订记录 | 固定 Codec Capability/Callable、Interface Package 2.0.0、Provider/Bindings v2、Host Artifact Channel v2 与 0xD1 首批输出契约 | 将生产端接口从待外部命名收敛为中央唯一目标，且不复用含 SHA-256 的历史 v1 channel | Issue #113；F03.05；SR-010；SR-029；PR #115 |

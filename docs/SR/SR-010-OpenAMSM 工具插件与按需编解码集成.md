@@ -1,16 +1,16 @@
 # SR-010：OpenAMSM 工具插件与按需编解码集成
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.7
-> 状态：整项 DRAFT；阶段 READY（仅限本仓 no-hash Host Channel 设计）；AC-010-03 因外部 v1 hash contract 不兼容而 BLOCKED_EXTERNAL_INPUT；AC-010-01/02/04/05/09 为既有范围；AC-010-10 原版 OAS3 requestBody / multipart / N1/N2/N2 Ext1 Content-ID 验收 BLOCKED/NOT_RUN（依赖 SR-031 Source Bundle、Compiler Resolver 与正式 Codec Provider）。
-> 下一步：仅实现 Next Python Host ArtifactStore/Channel 与 no-decode 路径。06a 等真实 Importer/Catalog/Runtime 三层入口，09 等固定共享 fixtures 和联测；06b/07/08 等正式包。  
+> SR 版本：0.2.8
+> 状态：整项 DRAFT；阶段 READY_CANDIDATE（仅限 Next Host no-hash Artifact Channel v2 设计，待本轮主线独立复评）；AC-010-03 模块设计可独立实施，产品 NOT_RUN；AC-010-09 等真实 Provider v2 互操作；AC-010-10 原版 OAS3 requestBody / multipart / N1/N2/N2 Ext1 Content-ID 验收 BLOCKED/NOT_RUN。
+> 下一步：推进 Next Python Host ArtifactStore/Channel v2 与 no-decode 路径；使用测试 Provider 完成模块验收。真实 Provider 2.0.0 互操作另由 ca-client-tools SR-026 交付；06a/06b/07/08/09 按各自依赖执行。
 > 阶段依据：[独立评审 #74](https://github.com/odango-chan/ca-agent-next/issues/74#issuecomment-7210244694)，评审 Head `ee73ad48f9cf4132561f7a72065086ef00bb3606`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
 > 工作项：[阶段工作项 #94](https://github.com/odango-chan/ca-agent-next/issues/94)。
 > 创建日期：2026-11-25  
-> 修订日期：2026-11-27\
+> 修订日期：2026-11-28\
 > 所属阶段：Phase G  
 > 上游需求：[IR-005](../IR/IR%20总登记册.md#ir-005)  
-> 设计依据：[Plugin平台设计说明书](../设计说明书/F03-Plugin平台/Plugin平台设计说明书.md) v0.3.7 §8；[Tool Interface 与 Provider 集成设计](../设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) v0.4.4 §6.2/§6.5/§8.1；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.5 §5～6；[公共契约与所有权规范](../规范/公共契约与所有权规范.md) v0.2.7 §2、5、6、8、10\
+> 设计依据：[Plugin平台设计说明书](../设计说明书/F03-Plugin平台/Plugin平台设计说明书.md) v0.3.7 §8；[Tool Interface 与 Provider 集成设计](../设计说明书/F03-Plugin平台/Tool%20Interface%20与%20Provider%20集成设计说明书.md) v0.4.12 §8.1～8.3；[Context与Artifact管理设计说明书](../设计说明书/F05-Context与Artifact管理/Context与Artifact管理设计说明书.md) v0.4.12 §5～6；[公共契约与所有权规范](../规范/公共契约与所有权规范.md) v0.2.7 §2、5、6、8、10\
 > Acceptance：OM-04、OM-10、OM-13（见[演示验收基线](../验收与实施/演示验收基线.md)）  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：见第 3 节
@@ -26,12 +26,12 @@
 
 ## 1. 目标
 
-通过唯一 Plugin Manager 接入 ca-client-tools，并在 Next Python Host 实现 Host-owned ArtifactStore 与冻结的 ca-host.artifact-store/v1 channel，使 Skill 能通过普通 Tool Action 按需调用 Provider/Codec Operation。
+通过唯一 Plugin Manager 接入 ca-client-tools，并在 Next Python Host 实现 Host-owned ArtifactStore 与 no-hash ca-host.artifact-store/v2 channel，使 Skill 能通过普通 Tool Action 按需调用 Provider/Codec Operation。v1 仅为历史 SHA-256 契约，不作为新 1.6.0 实施目标。
 
 ## 2. 实施范围
 
 - 将 ca-client-tools provider/v2 适配在统一 Plugin Manager 的 tools Extension 内，不增加第二个 Provider Manager。
-- 在 Next Host 实现 Host-owned ArtifactStore 和 `ca-host.artifact-store/v1` loopback HTTP/1.1 channel；Host 在 Provider `initialize` 中传入闭合 `artifactChannel`，由 Provider 使用 GET 输入 / POST 输出交接原始 bytes。
+- 在 Next Host 实现 Host-owned ArtifactStore 和 `ca-host.artifact-store/v2` loopback HTTP/1.1 channel；Host 在 Provider `initialize` 中传入闭合 `artifactChannel`，由 Provider 使用 GET 输入 / POST 输出交接原始 bytes，不传输或校验 hash/digest。
 - Artifact reference 使用 Host 生成的随机 opaque token，并绑定 invocation、direction、slot；不包含路径、URL、mediaType、size 或 digest。
 - Provider `artifactSlots` 必须来自可信 Backend Catalog；原始 bytes 不进入 NDJSON、不使用 Base64、不暴露任意本地路径。
 - 按 Demo channel 完成原始 bytes 流交接、大小/数量配额、超时/取消、过期清理和输出原子发布；**不计算、不传输、不校验 SHA-256、checksum 或 digest**。Artifact reference 仅使用随机 opaque token，并绑定 invocation / direction / slot。
@@ -44,16 +44,16 @@
 - 不把当前纯 Go codec library 误报为已发布 Agent-callable Tool。
 - 不创建独立 Codec Plugin/Manager，不在 Host/Event Plugin 复制编解码实现。
 - 不宣称未验收的全量 NGAP 支持。
-- 不实现新的 content-addressed artifact identity、去重、额外 package hash、签名或 Trust Registry；仅实现 v1 channel 已规定的逐 Artifact 传输校验。
+- 不实现 content-addressed artifact identity、去重、SHA-256 / checksum / digest、签名或 Trust Registry。v1 的逐 Artifact SHA-256 只作历史契约审计，不复用；新目标 v2 不包含摘要字段。
 - 不允许 Provider 自行选择文件路径、远端 URL 或凭据。
 
 ## 4. 依赖与分阶段门槛（遵循 SR 管理规范 §6.1）
 
 | 依赖类型 | 权威输入 | 适用门槛 |
 |---|---|---|
-| 设计 | F03.05/ F05 正式 ca-host.artifact-store/v1、SR-029 1.6.0 Capability Binding | Host Artifact Channel 与 Provider Tool/Codec 不能混成双 Provider Manager |
+| 设计 | F03.05 / F05 中央定义的 ca-host.artifact-store/v2 no-hash Demo Channel、SR-029 1.6.0 Capability Binding | v1 SHA-256 历史契约不复用；Host Artifact Channel 与 Provider Tool/Codec 不能混成双 Provider Manager |
 | 实施 | SR-003 单 Plugin Manager、SR-007 Action Boundary、SR-009 Plugin staging；Provider v1.2.0 旧 API 只作 Host channel 历史互操作参考 | Host ArtifactStore / Channel 可独立实现，外部新 1.6.0 Capability 导出不阻塞本 Host 子阶段 |
-| 模块验收 | Host channel v1 已冻结 conformance fixtures；SR-026 新 Codec Capability 发布包 | AC-010-01～05 用测试 Host/Provider；09 使用真实 Go Provider 与 Python Host，无需真实 NF；06a 本地拒绝，06b/07/08 依赖正式 1.6.0 资产 |
+| 模块验收 | Host channel v2 no-hash fixtures（本仓测试 Host/Provider）；SR-026 Provider Package 2.0.0 | AC-010-01～05 可独立使用测试 Provider；09 使用正式 Provider v2 与 Python Host，无需真实 NF；06a 本地拒绝，06b/07/08 依赖正式 1.6.0 资产 |
 | 系统 OM | OM-04/10/13 与真实 NF/Owner | 不作为 Host Channel 模块 READY 前置 |
 
 **设计评审与实施 READY 独立判定**：本 SR 的功能职责、已知目标契约、失败路径和下面每项模块 AC 足够完整即可请求设计评审；不得要求“全部前置 SR VERIFIED”作为统一前置。实际实施按本次 Scope 逐阶段检查所消费的已发布能力；缺失时仅相应 AC 标记 BLOCKED/NOT_RUN，系统 EX/OM 不倒灌模块门禁。Owner/Provider/Compiler 的未知机器标识、Schema 和 API 只能由对应 Owner 正式发布，Harness 不得推测。新 Skill/Artifact/Runtime 接口只接受 CA-SL 1.6.0 / Capability-first，不提供旧版兼容。
@@ -64,7 +64,7 @@
 |---|---|---|
 | AC-010-01 | 通过唯一 Plugin Manager 初始化 Provider Tools Extension；配置缺失/非法 | 无第二 Manager；缺 channel 可初始化但 Artifact Binding NOT_CONFIGURED；非法配置 PROVIDER_CONFIGURATION_INVALID，远端 I/O=0 |
 | AC-010-02 | Host 生成 opaque artifactRef 与同一/跨 Invocation、direction、slot 的读取 | 合法引用通过，跨边界/过期/路径泄漏拒绝，token 不编码文件/URL |
-| AC-010-03 | Provider GET 输入/POST 输出正确二进制与 mediaType、Content-Length、大小/数量配额和原子发布；禁止 SHA-256 / checksum / digest | 不生成或校验摘要；slot/schema/size 不符不形成可读产物。现有 `ca-host.artifact-store/v1` 若强制 SHA-256，则视为不兼容并保持 BLOCKED_EXTERNAL_INPUT，不得绕过或双轨兼容 |
+| AC-010-03 | Provider GET 输入/POST 输出使用 ca-host.artifact-store/v2：opaque reference、Invocation/direction/slot、mediaType、Content-Length、大小/数量配额、超时/取消、过期清理和原子发布；禁止 SHA-256 / checksum / digest | v2 不计算、不传输、不校验摘要；引用/slot/schema/size 不符不形成可读产物。v1 的 SHA-256 只属历史契约，不能通过忽略 header 或 Adapter 兼容 |
 | AC-010-04 | 取消、超时、Provider 退出、部分写入、配额超限 | 所有 staged outputs 清理；未完成 Artifact 不可读取；无重复 Owner mutation |
 | AC-010-05 | Codec 未发布、Host 不需要 Decode、Codec 必需但不存在 | no-decode 路径不触发 Codec；必需 Codec 未发布只阻塞对应 AC，不冒充已发布能力 |
 | AC-010-06 | 06a 本地旧包拒绝：先通过真实 Importer 测旧 Artifact 拒绝；再以测试专用 fixture **绕过 Importer**，直接构造含旧 Artifact 的 Catalog entry/Resolver input；再直接构造旧 Run/旧 Callable-only Binding 注入 Runtime Action Boundary。06b 在正式 1.6.0 Package 与 Bundle 上按已 Link 的 Capability 分发 | 06a 每一层单独记录输入和计数：Importer candidate=0；直注 Catalog/Resolver 不得产生可选 candidate；Runtime 不得建立 Scope/dispatch；每层 Provider IPC=0。Resolver 与 Runtime 子例不得复用“Importer 已拒绝”的同一结果冒充独立测试。非法 selector 在后端 I/O 前拒绝；06b 核对唯一公开映射、合法路由及 Scope；缺正式输入时 06b BLOCKED，单独 06a 不能使整项 PASS |
@@ -103,7 +103,7 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 
 - Demo 的 Artifact reference 是 opaque token，不包含路径、URL、mediaType、size 或 digest；长度、数量、超时、取消、过期清理和原子发布属于交接正确性，不构成哈希完整性方案。
 - 不实现 content-addressed identity、去重、SHA-256 / checksum / digest 校验、签名、Trust Registry 或生产级 package integrity。
-- 外部 `ca-host.artifact-store/v1` 若仍要求逐 Artifact SHA-256，不得原样复用；AC-010-03 保持 BLOCKED_EXTERNAL_INPUT，直到外部契约修订为 no-hash Demo channel。不得由 Harness 自行兼容、移除校验或绕过契约。
+- 外部 ca-host.artifact-store/v1 仍是 SHA-256 历史契约，不得原样复用、移除其校验或通过 Adapter 兼容。Next 1.6.0 由本仓 F05 / SR-010 定义独立 ca-host.artifact-store/v2 no-hash channel；该设计不依赖外部 v1 修改。Provider 2.0.0 对 v2 的消费仍须由 ca-client-tools 按 SR-026 实现和发布。
 
 ## 8. OpenAMSM 原版 OpenAPI 3.0 Ingress 与 Codec READ 消费（IR-009）
 
@@ -140,3 +140,4 @@ ca-agent-next PR #1 是设计基线 PR，不是本 SR 的实现 PR，不得在�
 | 2026-11-27 | 0.2.3 | GPT-6（ChatGPT） | 修订记录 | 将历史记录统一为七列并保留原始文字及原始关联，修正非规范行的分隔符 | 确保修订表可由文档校验器完整解析；不影响设计语义及 READY 主状态 | Issue #12；PR #46；SR-010 |
 | 2026-11-27 | 0.2.4 | GPT-6（ChatGPT） | 文档头、AC-010-06、历史修订账本、修订记录 | 补齐 F03.05/F05/公共契约固定版本与章节；要求直接注入旧 Catalog/Run/Binding 分层验证；将历史 undefined 关联改为可审计说明 | 处理独立模型 Review #6082541121 的 R3-SR010-01/02/03，避免占位符和同一 Importer 错误冒充多层 fail-closed | Issue #12；PR #46；Review #6082541121 |
 | 2026-11-27 | 0.2.5 | Codex / GPT-6 | 文档头 | 登记阶段 READY（本仓 Host Channel）及 AC 范围与工作项 #94 | 按单项独立评审推进 | Issue #12、#74；PR #46 |
+| 2026-11-28 | 0.2.8 | GPT-6.2（ChatGPT） | §1～4、AC-010-03、修订记录 | 将 Next Host Artifact Channel 明确为 ca-host.artifact-store/v2 no-hash，隔离历史 v1 SHA-256 契约 | 消除 F05 v1 与 Demo no-hash 约束冲突，并将 Host 模块实施与 Provider v2 外部交付分离 | Issue #113；SR-010；F05；F03.05；SR-026；PR #115 |

@@ -1,10 +1,10 @@
 # CA-SL 1.6.0 完整语言规范（中央设计稿）
 
 > 文档类型：CA-SL 作者语言规范（中央规范性设计稿）
-> 文档版本：0.2.9
+> 文档版本：0.2.10
 > 语言版本：CA-SL 1.6.0
-> languageTarget 候选：connectionagent.io/v1.6.0（本设计建议值；发布前由 ca-skills 与 Compiler Owner 在正式 Schema / Golden 中确认）
-> 状态：**DRAFT / REVIEW_REQUESTED**；CA-SL 1.6.0 唯一正式语言设计，Assurance 可选；有 Assurance Skill 时 `assurance/contract.yaml` 可声明顶层 `when`；`SKILL.md` Front Matter 不声明 when；无 Assurance Skill 不声明 when；未发布、未冻结。
+> languageTarget：connectionagent.io/v1.6.0（Next 中央设计已冻结；正式 ca-skills Schema / Golden / Release 尚未发布）
+> 状态：**DRAFT / REVIEW_REQUESTED**；CA-SL 1.6.0 唯一正式语言设计，languageTarget 已由 Next 中央冻结为 connectionagent.io/v1.6.0；正式作者 Schema / Golden / Release 尚未发布。Assurance 可选；有 Assurance Skill 时 `assurance/contract.yaml` 可声明顶层 `when`；`SKILL.md` Front Matter 不声明 when；无 Assurance Skill 不声明 when。
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 修订日期：2026-11-28
 > 规范所有者：ca-agent-next（中央设计）；正式作者 Schema / Golden / Release 由 ca-skills 发布
@@ -616,6 +616,7 @@ Host Context Schema-only Package 仍只经 `Contract.contexts` 引用，与 Open
 | 2026-11-27 | 0.2.3 | GPT-6.2（ChatGPT） | §1～§5、§9、§12、§19、修订记录 | 合并 CA-Agent Assurance-only SKILL.md Front Matter.when / 无 Assurance 禁用 when 规则与原版 3GPP OpenAPI 3.0 外部 Schema dialect、直接引用和闭包验证 | 保持选择期字段不进入 Contract YAML，同时确保 Compiler 可消费未投影的原版 OpenAPI schema；历史错误入口判断，已由 0.2.4 撤销，不构成兼容方案| Issue #47/#49；IR-008/009；SR-013/031/032 |
 | 2026-11-27 | 0.2.4 | GPT-6.2（ChatGPT） | §1～§5、§6.1、§9、§12.1、§17、修订记录 | 恢复 `assurance/contract.yaml` 顶层 `when` 为唯一作者入口；SKILL.md Front Matter 不声明 when；补入 PostSmContexts / SmContextCreateData / RequestType 的固定原版 OpenAPI 字段与字符串枚举证据 | 撤销误引入的 Front Matter 入口，确保 Compiler、作者规范和 3GPP 原版契约一致 | Issue #49；IR-008/009；SR-013/031/032；F02/F08/F09 |
 | 2026-11-28 | 0.2.9 | GPT-6.2（ChatGPT） | §20、修订记录 | 明确标准 Request 优先、业务 Owner Contract 补位，以及 PostSmContexts jsonData Request 根与 T1/T2 输入边界 | 避免领域 Owner 字段污染标准协议契约，或将 Owner Callable IO Schema 误作 Event Request Schema | Issue #47/#49；IR-009；SR-010/013/026/031/032；PR #48/#52/#101/#115 |
+| 2026-11-28 | 0.2.10 | GPT-6.2（ChatGPT） | 文档头、§1、修订记录 | 将 languageTarget 从候选提升为 Next 中央唯一设计值 connectionagent.io/v1.6.0，保留正式发布未完成状态 | 为 Compiler 3.0.0 / API /2 与五包 Bundle 构建提供一致的语言机器身份 | Issue #113；SR-013；SR-027；EC02；F08；PR #115 |
 
 | 2026-11-27 | 0.2.5 | GPT-6.2（ChatGPT） | §4、§5.1、§12.1、§13、§19、修订记录 | 为 3GPP 可选 requestType 增加 has 守卫；定义 Skill-owned 纯 $ref OAS3 根引用别名，明确 G.4 闭合对象与外部 OAS3 dialect 的边界、默认 additionalProperties 语义、Resolver 方向和 Golden 正负例 | 避免可选字段 CEL 访问与原版 OAS3 直接引用被 G.4 根闭合规则迫使投影/复制字段；保持上游原件不变 | Issue #49；IR-008/009；SR-013/031；F08；PR #52 |
 

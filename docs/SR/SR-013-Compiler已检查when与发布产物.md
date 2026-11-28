@@ -1,8 +1,8 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.39\
-> 状态：整项 DRAFT；阶段 READY（中央只读核验，仅 AC-013-01 归档完整性）；AC-013-02/04 NOT_RUN，AC-013-03/05/06 依正式 Compiler Owner 契约，AC-013-07 BLOCKED / NOT_RUN（待正式 OAS3 dependency wire contract、Resolver / Validator 和 Golden）；Compiler 仅从有 Assurance Skill 的 assurance/contract.yaml 读取可选顶层 when；SKILL.md Front Matter 不声明 when；无 Assurance Skill 没有 Contract、不声明 when、不调用 Compiler。
-> 下一步：核对 PR #18 归档、58 项校验清单及原始报告。复跑单列；02/04 NOT_RUN，03/05/06 等 Compiler Owner 与正式契约；07 等待正式 OAS3 dependency wire contract、Resolver / Validator 和 Golden。  
+> 文档版本：0.2.40\
+> 状态：整项 DRAFT；阶段 READY（中央只读核验，仅 AC-013-01 归档完整性）；AC-013-02/04 NOT_RUN；CA-SL languageTarget 与 BuildRequest / DependencyInspection / BuildResult / Artifact 目标身份已由 Next 固定为 1.6.0 / /2，Compiler 3.0.0 尚未发布，AC-013-03/05/06 产品仍 NOT_RUN；AC-013-07 BLOCKED / NOT_RUN（待正式 OAS3 dependency wire contract、Resolver / Validator 和 Golden）；when 唯一来自 assurance/contract.yaml。
+> 下一步：复核 PR #18 归档和 Issue #95 证据；按本 SR 已冻结的 CA-SL 1.6.0 / Compiler 3.0.0 / API /2 契约完成独立增量复评。达到 SR-013 READY 后创建 ca-skill-compiler 新实施 Issue；#61 仅保留 v1alpha5 历史范围。
 > 阶段依据：[独立评审 #77](https://github.com/odango-chan/ca-agent-next/issues/77#issuecomment-7209276846)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
 > 工作项：[阶段工作项 #95](https://github.com/odango-chan/ca-agent-next/issues/95)。
 > 创建日期：2026-11-25  
@@ -22,7 +22,7 @@
 
 - **本轮评审重点：**1.6.0 when、Request Schema、1:1 Capability Binding、Build/Verify、Runtime Artifact/Manifest 和 Golden 验收。
 - **阻塞/未验证：**旧 AC-013-01 PoC 不是新产品发布；正式 Schema/机器标识/DTO 未冻结，AC-013-02～06 NOT_RUN / BLOCKED（含 Schema-only Package 与零 Capability roots 规则）。
-- **通用架构约束：**新 CA-SL 作者源、Compiler API/Build DTO、Runtime Artifact、Bundle、Studio 与 Agent Importer/Runtime **只支持 1.6.0**；Skill 只选择 Capability ID，公开 Capability↔Callable 双向一对一。历史版本材料只读留档；不做别名、兼容、双轨、迁移或 fallback。机器字段/ID 必须等待发布者冻结，不猜测。
+- **通用架构约束：**新 CA-SL 作者源、Compiler API/Build DTO、Runtime Artifact、Bundle、Studio 与 Agent Importer/Runtime **只支持 1.6.0**；Skill 只选择 Capability ID，公开 Capability↔Callable 双向一对一。languageTarget、Compiler 3.0.0 与 BuildRequest / DependencyInspection / BuildResult / Artifact /2 机器身份已由 Next 中央固定；生产者负责发布 Schema / Golden / Release。历史版本材料只读留档；不做别名、兼容、双轨、迁移或 fallback。不得推测尚未发布的实际资产。
 - **评审输出：**逐项核对范围、非目标、外部 Owner、错误/状态语义、Acceptance 与证据路径。设计无独立结论写 `PENDING_REVIEW`；未发布依赖写 `BLOCKED`；未运行测试写 `NOT_RUN`。当前不得派发 DeepSeek Harness 实施任务。
 
 ## 1. 目标、范围与契约边界
@@ -60,7 +60,7 @@ SR-013 整体仍为 DRAFT。AC-013-01 的隔离 PoC 完成不自动把 SR-013 �
 |---|---|---|
 | AC-013-01 | PASS（已归档的隔离 PoC 报告）；本轮复跑 NOT_RUN | 固定归档 SHA；产品验收继续按 AC-013-02～06 取证 |
 | AC-013-02 | NOT_RUN | 正式 assurance/contract.yaml 顶层 when AST、G.4、Schema-aware Guard / Nullable lowering | 
-| AC-013-03 | BLOCKED（依赖 AC-013-02 和 Owner Gate） | Compiler Owner 确认新版 Artifact API 与 Manifest | 
+| AC-013-03 | NOT_RUN（机器身份已固定；等待 AC-013-02、正式 Schema / Golden 与 Compiler 实现） | Compiler Owner 按 §5.1 固定 API /2 契约发布 Manifest Schema / Golden | 
 | AC-013-04 | NOT_RUN | 新版 Build / Verify、Go/Python、Native/WASM/Chromium 与旧契约回归 | 
 | AC-013-05 | BLOCKED（依赖 AC-013-01～04、AC-013-06 和发布授权） | 经授权发布 Compiler Release 并记录资产和 smoke 证据 |
 | AC-013-06 | BLOCKED（依赖 1.6.0 Package Schema / DependencyInspection / Golden） | 验证 Schema-only Package、Schema closure 与零 Capability roots 的分离语义；与 SR-030 AC-030-03 联合验收 |
@@ -168,11 +168,11 @@ PoC 中复用 Development Schema/Lock fixture 只证明共享 Schema 解析机�
 
 ### 5.1 版本决策
 
-设计推荐候选 API：Artifact 为 connectionagent.io/compiler-artifact/2，BuildResult 为 connectionagent.io/compiler-build-result/2。新 Runtime Build/DependencyInspection/BuildRequest 均必须提供 **仅支持 CA-SL 1.6.0** 的唯一新 DTO；不复用旧 v1alpha5 机器 API。精确 Schema、Artifact/BuildResult 版本与机器 languageTarget 均由 Compiler Owner Gate 冻结，不能预先把候选值当成已发布契约。
+中央冻结唯一机器契约目标（尚未发布）：CA-SL languageTarget=connectionagent.io/v1.6.0；BuildRequest=connectionagent.io/compiler-build-request/2；DependencyInspection=connectionagent.io/compiler-dependency-inspection/2；BuildResult=connectionagent.io/compiler-build-result/2；Runtime Artifact=connectionagent.io/compiler-artifact/2；Compiler Release SemVer=3.0.0（从 v2.1.0 进行不兼容主版本升级，不发布 alpha/rc）。这些是 Next 中央设计目标，不表示 Schema、Golden、二进制或 Release 已存在。
 
 新 Compiler Runtime Build 只产生 2 BuildResult / Artifact，VerifyBuildResult 只接受该新结果契约；不在同一二进制中双轨支持旧/新 Runtime BuildResult，不增加版本 dispatch、fallback 或兼容路由。旧 v2.1.0 Release 保留冻结 Artifact/BuildResult v1alpha5 历史行为；历史 Compiler v2.1.0 的 Development Build 及 v1alpha1 API/Artifact 只留在**旧版发布物**中作审计，不作为新 Compiler 的输入/备用实现。
 
-**Owner Gate：** Compiler Owner 必须在 AC-013-03 代码实施前确认 Artifact 与 BuildResult 两个 API 名称。若拒绝，先在 EC02 / SR-013 中更新决策及理由；Harness 不得自行改用 v1alpha6、Development v1alpha2 或其他临时名字。
+**发布边界：**Compiler Owner 按以上固定标识实现并发布正式 Schema、Golden、CLI 与 Release；若实现证明目标不可行，必须先回到 Next 更新 EC02 / SR-013 并完成设计复评，Harness 不得自行改名、引入 alpha/rc、兼容 API 或 fallback。
 
 ### 5.2 候选文件
 
@@ -352,7 +352,7 @@ SR-013 达到 READY 且文档门禁通过后，实施使用一个连续 Goal，�
 - 顺序：AC-013-01 证据复核 → AC-013-02 → AC-013-03 → AC-013-04 → AC-013-06 → AC-013-05。
 - 允许在同一个 Goal 内按依赖连续处理多个 AC；不得并行执行有依赖关系的阶段，不得跳过失败阶段。
 - 每个 AC 仍需独立记录 Issue #62 关联、提交、测试、受测 SHA 和证据；不得把一个总的 PASS 替代逐 AC 验收。
-- AC-013-03 只有在 Compiler Owner 已确认 Artifact API 后才可继续；没有确认就停在 Owner Gate，不得自行更换版本名。
+- AC-013-03 使用 §5.1 已固定的 Artifact / BuildResult / BuildRequest / DependencyInspection API /2 与 languageTarget；待 AC-013-02 和正式 Schema / Golden 输入具备后实施。若生产实现证明目标不可行，先回到 Next 更新设计并复评，不得自行更换版本名。
 - AC-013-06 必须先有 Compiler Owner 正式 Schema/DTO/Golden 与 SR-030 对应 Package fixture；不支持 0 Capability / 0 Callable 时停止并修订中央 Package 契约，禁止生成合成 Tool/Callable。
 - AC-013-05 必须再次检查发布授权；没有明确授权时只完成 Release 前检查，不创建 Tag 或 Release。
 - 若无法读取固定的 PR #18 归档、EVIDENCE.md 或其 Artifact，必须标记证据不可访问并请求提供；不得假装已复核，也不得用聊天报告替代独立复核。
@@ -378,7 +378,7 @@ SR-013 达到 READY 前必须：
 2. AC-013-01 的本地证据已可访问并完成独立审查，或明确保留审查阻塞及授权阶段。
 3. Compiler #62 仍开放且范围一致；Compiler 目标 SHA 和 Go/Python 环境可运行。
 4. 目标仓写入授权、分支和实施 Issue 明确。
-5. AC-013-03 的 Artifact API Owner Gate 有明确执行方式。
+5. AC-013-03 的机器 API 身份已由 Next 固定；正式 Schema / Golden / Manifest 由 Compiler Owner 按该目标实现并发布。
 6. AC-013-06 的 Schema-only 正负例、零 Capability roots / Schema dependency closure 区分和跨宿主命令完整。
 7. 每项 AC 的 Acceptance、命令、退出条件、证据格式和停止/恢复条件完整。
 
@@ -389,7 +389,7 @@ SR-013 只有 AC-013-01～06 均达到各自通过条件，Compiler Release 有�
 - 本 SR 的 **设计待评审** 不意味着 Compiler 已实现或 READY；AC-013-02～06 的新产品 Build/Verify/Golden / Release 必须独立通过。
 - 新版 Compiler 只处理 CA-SL 1.6.0 Capability-first 源码。Contract/Procedure 的 Capability ID 经 SR-029 定义的一对一约束绑定到唯一 Callable；严格校验 kind、Effect、Input/Output Schema、Owner/Provider Package identity，Artifact 保存已编译的 Binding。
 - 与 when/Request Schema 相关的 CheckedExpr、DescriptorSet、Schema 根与 $ref 闭包和 Binding 使用同一个正式 1.6.0 Runtime Artifact。其 BuildRequest、BuildResult、DependencyInspection 和 Verify 使用唯一 1.6.0 DTO；不兼容历史 v1alpha5 和 Development v1alpha1 运行输入。
-- 精确 machine languageTarget、API 名称、字段、Schema 与 Golden 必须由 ca-skills / Compiler Owner 在正式 Issue/PR/Release 冻结；历史 Go/Python CEL PoC 可作为算法审计，但不能宣称 1.6.0 产品 PASS。
+- 中央机器身份已固定为 languageTarget connectionagent.io/v1.6.0、Compiler 3.0.0 与 BuildRequest / DependencyInspection / BuildResult / Artifact /2；ca-skills / Compiler Owner 负责按该目标发布 Schema、Golden、CLI 和 Release。历史 Go/Python CEL PoC 可作为算法审计，但不能宣称 1.6.0 产品 PASS。
 - 相关设计门禁为 [SR-029](SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md)、[SR-004](SR-004-已发布技能包导入.md)、[SR-027](SR-027-技能Bundle构建与发布.md)。按 §9、§11 评审各阶段 READY。Compiler Release 是 AC-013-05 的交付结果；禁止把它列为 AC-013-02～04 或 AC-013-06 的启动条件。AC-013-06 使用按正式 Schema 生成的真实 Publisher 候选做联合验证，记录候选来源和受测 Compiler 提交；AC-013-05 另验发行资产。当前设计仍待独立评审。
 
 ## 13. AC-013-07：原版 OpenAPI 3.0 直接引用与执行期 Codec Result
@@ -459,6 +459,7 @@ OpenAPI operation / multipart ingress 验证由 SR-010 负责；Compiler 负责 
 | 2026-11-27 | 0.2.29 | GPT-6.2（ChatGPT） | 文档头、AC-013-01、AC-013-07、修订记录 | 合并 AC-013-01 中央只读核验阶段 READY 与有 Assurance Skill 的 Front Matter.when、无 Assurance 不编译规则；保留 3GPP OAS3 直接引用及无 hash Build/Verify | 同步 PR #46 阶段门槛与 Issue #49 作者入口，避免把 Contract.when 作为 Compiler 输入；历史错误入口判断，已由 0.2.30 撤销，不构成兼容方案| Issue #47/#49/#77；IR-008/009；SR-013/031/032 |
 | 2026-11-27 | 0.2.30 | GPT-6.2（ChatGPT） | 文档头、§1、§4、AC-013-02、修订记录 | 将 Compiler 唯一输入源恢复为 assurance/contract.yaml 顶层 when；SKILL.md Front Matter 不声明 when；补入 PostSmContexts requestType 字符串枚举的真实类型正负例 | 撤销 Front Matter 回归，固定 Compiler 对 3GPP 原版 OpenAPI 输入字段的类型检查要求 | Issue #49；IR-008/009；SR-031/032；F02/F08/F09 |
 | 2026-11-28 | 0.2.39 | GPT-6.2（ChatGPT） | 文档头、§1、§4～§7、修订记录 | 同步 F08 v0.3.33、EC02 v0.2.21、CA-SL v0.2.9 与 Compiler #62 的 1.6.0-only 实施入口 | 避免 SR-013 继续指向历史 #61；保持 OAS3 Resolver / Validator / Golden 仍 BLOCKED / NOT_RUN | Issue #40/#47/#62；IR-008/009；SR-013/031/032；PR #52/#115 |
+| 2026-11-28 | 0.2.40 | GPT-6.2（ChatGPT） | 文档头、§5.1、§12、修订记录 | 固定 CA-SL languageTarget 及 Compiler 3.0.0 / BuildRequest / DependencyInspection / BuildResult / Artifact /2 机器契约 | 消除 Compiler Owner 实施期临时命名空间，明确中央设计冻结与正式产品发布的状态边界 | Issue #113；EC02；F08；SR-027；Compiler #62；PR #115 |
 
 | 2026-11-27 | 0.2.31 | GPT-6.2（ChatGPT） | §4.2、AC-013-07、设计依据、修订记录 | 将 3GPP 可选 requestType 的 has 守卫纳入正负 Golden；明确纯 $ref OAS3 根引用别名与 G.4 本地闭合根的两种 requestSchema 入口及 dialect-aware 验收 | 消除可选字段 CEL 访问与 G.4 根闭合 / OAS3 原版直接引用冲突，不投影或改写标准 | Issue #49；IR-009；SR-031；F08；PR #52 |
 
