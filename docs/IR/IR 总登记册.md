@@ -1,9 +1,9 @@
 # IR 总登记册
 
 > 文档类型：需求项（IR）权威记录\
-> 文档版本：0.1.33\
+> 文档版本：0.1.34\
 > 修订日期：2026-11-28
-> 状态：8 项 IR；IR-008 面向 CA-SL 1.6.0 Capability-first 双向一对一且无旧版兼容，SR-029 限设计复评；IR-006/008 包含 SR-030 Host Context 1.6.0 Schema-only Publisher。SR-028 第七轮设计认可不等于当前集成产品 VERIFIED，整项 DRAFT。
+> 状态：9 项 IR（含 IR-009 3GPP 公共 Schema）；IR-008 为 CA-SL 1.6.0 Capability-first 严格一对一且无旧版兼容；IR-006/008 含 SR-030 Host Context Schema-only Publisher；IR-009 的 SR-031 原版 OpenAPI Source Bundle 设计待独立评审，产品仍 NOT_RUN / BLOCKED。
 > 全局评审范围：继承根目录 Agent.md 的 review_scope\
 > 本文局部非目标：生产级需求管理平台
 
@@ -113,6 +113,19 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 - 验收与状态：SR-029/030 的中央设计评审不能代替正式 Publisher、可执行 Compiler、Golden、Bundle、真实 Codec/Owner E2E；当前外部发布与新版产品 E2E 仍 BLOCKED/NOT_RUN，不宣称 RELEASED/VERIFIED。
 - 验收与状态：SR-029 的设计 AC 需独立审查；代码实施 Issue / 受测 SHA / Golden / 正式 Release / E2E 尚无 1.6.0 证据，不能宣称 READY / VERIFIED。
 
+## IR-009
+
+**OpenAMSM 3GPP OpenAPI 原版 Source Bundle、原生 OAS3 引用与 Skill 分阶段 Codec 消费**
+
+3GPP SBI 标准来源只取 OpenAMSM 实际支持 / 构建使用的 OpenAPI 3.0 YAML 与明确选定消费根的完整可达 `$ref` 闭包。当前 `PostSmContexts.requestBody` → `jsonData` → `SmContextCreateData` 的选定闭包为四份原版 YAML / 102 个 Schema Component；只 lazy resolve 选定根，不要求复制全部 472 份 YAML 或 eager resolve 未选定 operation。ca-skills / SR-031 只做 byte-for-byte 原样代发布，不修改任何 YAML。**不要求 G.4 Adapter**：Plugin 原生消费 OpenAPI 3.0 operation / multipart；Compiler 对显式 pin 的 Source Bundle 中精确 `components/schemas` 直接引用并按 OAS3 Schema Object dialect 处理。Skill-owned `requestSchema` 根和本地 Schema 节点仍遵循 G.4；外部 OAS3 Schema 不投影、不重写。Plugin 必须将 `RefToBinaryData.contentId` 精确关联到 N1/N2/N2 Ext1 对应 multipart part 的 `Content-ID`；引用目标缺失、重复 ID、错槽和媒体类型不符时拒绝。未被 JSON 引用的 part 不得交给 Codec；额外 part 的拒绝 / 忽略由 ingress profile 明确规定。NAS / NGAP Codec Output Schema 由 ca-client-tools Provider 独立发布，不能由 SBI binary slot 推导。
+
+- 协作设计 Issue：[Next #47](https://github.com/odango-chan/ca-agent-next/issues/47)；仅中央设计，不授权外仓实施。
+- 权威设计：[3GPP OpenAPI 原版引用与 Skill 分阶段消费](../设计说明书/EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)；关联 F02/F03.05/F06/F08/F09/EC02 与 CA-SL 1.6.0。
+- 分解：[SR-031](../SR/SR-031-3GPP公共Schema-only-Publisher.md)（ca-skills 原版 Source Bundle）、[SR-010](../SR/SR-010-OpenAMSM%20工具插件与按需编解码集成.md)（Plugin 原生 OAS3 ingress）、[SR-013](../SR/SR-013-Compiler已检查when与发布产物.md)（Compiler OAS3 直接引用）、[SR-026](../SR/SR-026-Codec公开工具发布.md)（Provider NAS/NGAP Result）、[SR-027](../SR/SR-027-技能Bundle构建与发布.md)（固定依赖快照）。
+- 已核实样本：OpenAMSM `dc83ccbf5be54dcc7112dd43ba95ea6fa5975550`；当前 `SmContextCreateData` 选定闭包包含 TS 29.502 V19.5.0 / info.version 1.4.0 / blob `3572be0315a782691ce8b5546b7bc1d5b22fcd64`、TS 29.571 V19.6.0 / info.version 1.6.1 / blob `e09e9bb4aef0cf24aee008da06b1ef0023475efb`、TS 29.510 V19.6.0 / info.version 1.4.1 / blob `59d115ee6c7f4854aa123ad0c4ff7112fa879d73`、TS 29.518 V19.6.0 / info.version 1.4.1 / blob `b695453dad07d1dd7b0d9a5ee28a80a71fee805d`；四个文件固定在同一 commit。静态遍历为 102 个 Schema Component，无未解析目标或循环。`info.version` 不等于 3GPP TS 版本。正式发行仍需 Owner 确认 source baseline。
+- Skill 选择 T1 只能校验已到场 SBI / 归一化字段；NAS-only PDU Session Type / SSC mode 在已选 Procedure 的 Codec READ T2 才获得；0xD4 / N2 completion 只续跑原 Run，Codec Result 不能当 Owner Commit Proof。
+- 验收：Source Lock 固定 commit / 四文件 Git blob / operation identity / 选定 requestBody 与 Schema Component roots / 引用闭包；原版逐字节匹配，不增加额外 per-file digest / package hash；OAS3 direct component refs 保留 dialect semantics，未选定 refs 不 eager resolve；Content-ID 与 N1/N2/N2 Ext1 part 精确匹配；未引用 part 不得交给 Codec，额外 part 拒绝 / 忽略策略由 ingress profile 明确规定；未支持语义 fail-closed。正式 Source Bundle / Compiler Resolver / Codec / 1.6.0 Bundle 缺失时相应产品 AC 保持 BLOCKED / NOT_RUN，不将原版代发布算作全系统 READY / VERIFIED。
+
 ## 修订记录
 
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
@@ -158,3 +171,10 @@ Next 的 Python 项目需要统一依赖声明、版本锁定、解释器选择�
 | 2026-11-27 | PR46-0.1.28（历史分支） | Codex / GPT-6 | IR-002/007 | 第二维分支曾回填 SR-003/G02 模块与恢复状态，当前以本次合并快照为准 | 保留 #46 原修订溯源，不覆盖恢复分支旧结论 | Issue #12；PR #46 |
 | 2026-11-28 | 0.1.32 | GPT-6（ChatGPT） | IR-002/006/008、修订记录 | 三方整合 #45 与 #46：修复 1.6.0/Compiler #62、SR-030、Provider 3/3、Owner Parser 22/22 或 24/24 条件发布，核对 SR-028 第七轮设计/候选产品证据分层 | 保持 8 IR 的准确版本边界与三方历史 | Issue #12；#40；#113；PR #45；#46 |
 | 2026-11-28 | 0.1.33 | GLM-5.3（DeepSeek Harness） | 修订记录 | 合并被空行拆断的孤儿修订表段为单一连续表格，不改变任何历史行内容 | 修复 R8-09 同类 Markdown 渲染断裂，保证修订数据完整可见 | Issue #12；PR #46；Review #6095143611 |
+
+| 2026-11-27 | 0.1.29 | ChatGPT / GPT-6 | IR-009 | 登记公共 3GPP Schema-only、选择期与执行期 Codec 输入来源并分解 SR-031 等跨仓任务 | 关闭 Create 选择前解码的架构与追踪断点 | Issue #47；SR-031/026/010/013/027 |
+| 2026-11-27 | 0.1.30 | ChatGPT / GPT-6 | IR-009 | 冻结 OpenAMSM 版本作为唯一来源与 YAML 字节原样代发布；将可选 G.4 Adapter 和 Codec Output 分离 | 明确仅代为发布、不改 3GPP YAML 的最新要求 | Issue #47；SR-031 |
+| 2026-11-27 | 0.1.31 | ChatGPT / GPT-6.2 | IR-009 | 撤销强制 G.4 Adapter；登记 OAS3 原生 operation / Schema Component 消费、OpenAMSM 标准版本与 blob 样本、NAS/NGAP 原生来源及 Compiler dialect-aware Resolver | 依据实际源文件核查，避免投影和标准影子副本 | Issue #47；SR-031/010/013/026/027 |
+| 2026-11-27 | 0.1.32 | ChatGPT / GPT-6.2 | IR-009 | 补齐 PostSmContexts 四文件 / 102 Component 选定闭包、lazy refs、Content-ID 与 N1/N2/N2 Ext1 slot 映射及不新增 digest 的 Source Lock | 按原版 OpenAMSM 源递归核查，关闭漏锁引用和 multipart 错配风险 | Issue #47；SR-031/010/013/027；EC01/EC02 |
+| 2026-11-27 | 0.1.33 | ChatGPT / GPT-6.2 | IR-009 | 明确未被 JSON 引用的 MIME part 不交 Codec，额外 part 策略归 ingress profile | 保持原版 OpenAPI Schema 语义，不把额外 part 一概判为非法 | Issue #47；SR-010/031；EC01/F06 |
+| 2026-11-27 | 0.1.34 | ChatGPT / GPT-6.2 | IR-009 | 在 Source Lock 验收摘要中加入 operation identity / selected Schema Component roots，并明确未引用 part 的 Codec 隔离 | 避免 Lock 只锁 requestBody 而未锁精确引用根，也避免额外 MIME part 被误判 | Issue #47；SR-010/031；EC01/F06/F09 |
