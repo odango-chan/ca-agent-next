@@ -266,6 +266,15 @@ UV_RUN_OPTIONS_WITH_VALUE = {
 def _shell_token_segments(line: str) -> list[list[str]]:
     """Tokenize shell command segments without treating quoted separators as operators."""
     normalized = line.strip()
+    run_field = re.match(r"^(?:-\s*)?run:\s*(.*)$", normalized)
+    if run_field:
+        normalized = run_field.group(1).strip()
+        if (
+            len(normalized) >= 2
+            and normalized[0] == normalized[-1]
+            and normalized[0] in {"'", '"'}
+        ):
+            normalized = normalized[1:-1]
     if normalized.endswith("\\"):
         normalized = normalized[:-1].rstrip()
     try:

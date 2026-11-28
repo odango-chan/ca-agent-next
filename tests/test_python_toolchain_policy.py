@@ -296,6 +296,19 @@ class PythonToolchainPolicyTests(unittest.TestCase):
         )
         found = command_violations([("scripts/ci.sh", line)])
         self.assertTrue(any("UV_RUN_NOT_LOCKED" in item for item in found))
+
+    def test_quoted_workflow_run_commands_require_locked_flags(self) -> None:
+        invalid = command_violations([
+            (".github/workflows/python-tests.yml", 'run: "uv run ruff check ."')
+        ])
+        self.assertTrue(any("UV_RUN_NOT_LOCKED" in item for item in invalid))
+        valid = command_violations([
+            (
+                ".github/workflows/python-tests.yml",
+                'run: "uv run --no-sync --locked ruff check ."',
+            )
+        ])
+        self.assertEqual(valid, [])
     def test_bare_python_script_is_rejected(self) -> None:
         line = "python " + "scripts/custom_check.py"
         found = command_violations([(".github/workflows/ci.yml", line)])
