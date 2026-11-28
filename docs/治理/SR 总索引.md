@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.75
+> 文档版本：0.3.76
 > 状态：31 项 SR：4 VERIFIED（仅各自历史模块范围）、1 IMPLEMENTED（设计移交）、26 DRAFT（整项主状态，含 IR-009 / SR-031 与 IR-008 / SR-032 两项增量设计）。PR #46 第九轮独立 Review #6095601142 已合入恢复设计基线 `92436348`，main 尚未更新。PR #115 是唯一 mainline 集成入口；内容对照快照为 Head `ee7565f280d6bb06d2db8d61e41c8b6a4e67f9af`，SR-004/016 活动引用修订提交为 `0cb430e7`。Review Context #46124435521 SUCCESS；SR-003 回归 #46124435581 IN_PROGRESS；PR #115 全量独立复评尚未完成。PR #52 模型级结论 `APPROVE_WITH_NON_BLOCKING_FOLLOWUPS`，GitHub Review 仍为 COMMENTED。SR-031 / SR-032 产品实现仍 NOT_RUN。
 > 修订日期：2026-11-28\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -17,7 +17,7 @@
 - 状态变化先更新 SR 文件，再更新本索引和[实施状态总览](实施状态总览.md)。
 - 正式独立评审必须在 GitHub PR Review/Issue comment 留存完整 SHA 和逐 SR/AC 结果；独立性由评审模型/上下文判定，同一 GitHub 账号不构成否定理由。模型结论与平台 Review event 分开记录，详见[SR 管理规范 §8.3](../规范/SR%20管理规范.md#83-正式评审结果必须持久化到-github)。
 - ca-agent-next PR #1 是文档/设计基线 PR，不是任何 SR 的实现 PR。
-- PR #1、#32、#34 已合并；SR-001/SR-002/SR-003/SR-024 VERIFIED，SR-015 IMPLEMENTED，其余 24 项 DRAFT（整项主状态；阶段 READY 见 §2.4）。
+- PR #1、#32、#34 已合并；SR-001/SR-002/SR-003/SR-024 VERIFIED，SR-015 IMPLEMENTED，其余 25 项 DRAFT（SR-028 IN_PROGRESS）（整项主状态；阶段 READY 见 §2.4）。
 
 ## 2. SR 清单
 
@@ -49,7 +49,7 @@
 | [SR-025](../SR/SR-025-MAS%20Owner%20Interface%20Package%20Publisher.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | MAS Owner 1.6.0 Capability-first Interface Package Publisher | DRAFT |
 | [SR-026](../SR/SR-026-Codec公开工具发布.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Codec 公开工具发布（AC-026-04～06） | DRAFT |
 | [SR-027](../SR/SR-027-技能Bundle构建与发布.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | 技能 Bundle 构建与发布（AC-027-05 Source Bundle 闭包） | DRAFT |
-| [SR-028](../SR/SR-028-Python工程工具链与uv环境管理.md) | [IR-007](../IR/IR%20总登记册.md#ir-007) | Python 工程工具链与 uv 环境管理 | DRAFT |
+| [SR-028](../SR/SR-028-Python工程工具链与uv环境管理.md) | [IR-007](../IR/IR%20总登记册.md#ir-007) | Python 工程工具链与 uv 环境管理 | IN_PROGRESS（PR #115 mainline candidate；未 VERIFIED/RELEASED） |
 | [SR-029](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) | [IR-008](../IR/IR%20总登记册.md#ir-008)（关联 IR-003） | CA-SL 1.6.0 Capability-first 作者模型与 Callable 双向一对一；完全无旧版兼容 | **DRAFT（设计待评审，非实施 READY）** |
 | [SR-030](../SR/SR-030-Host%20Context%201.6.0%20Schema-only%20Interface%20Package%20Publisher.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Host Context 1.6.0 Schema-only Interface Package Publisher | DRAFT |
 | [SR-031](../SR/SR-031-3GPP公共Schema-only-Publisher.md) | [IR-009](../IR/IR%20总登记册.md#ir-009) | OpenAMSM 3GPP OpenAPI 原版 Source Bundle 原样代发布（当前 PostSmContexts requestBody 选定闭包 4 文件 / 102 Schema Component） | **DRAFT（增量设计待评审、Publisher / Consumer 产品 NOT_RUN）** |
@@ -326,3 +326,4 @@
 | 2026-11-28 | 0.3.73 | GPT-6.2（ChatGPT） | 文档头、SR 清单、IR-008 / SR-032、修订记录 | 纳入 SR-032 作者规范与 Node 设计，更新 31 SR / 26 DRAFT 统计及 PR #52 / #115 最新复评状态 | 使 SR 索引反映作者规范已集成、两项非阻断 P2 已整改，但不误报 PR #115 独立复评或产品实施完成 | Issue #49；IR-008；SR-032；PR #52/#115；Review #6089893779 |
 | 2026-11-28 | 0.3.74 | GPT-6.2（ChatGPT） | SR-009 评审矩阵、§2.4、Phase G、修订记录 | 更新旧 Review #73 的快照边界；登记 SR-009 v0.2.13 / F06 v0.3.7 / Plugin PR #1 当前增量复评 Issue #116；将 T0 classifier API 缺失列为 AC-009-04 生产绑定直接外部阻塞 | 防止将旧快照批准外推到新设计，并遵守 READY 前不创建目标仓实施 Issue 的治理规则 | Issue #116；SR-009；F06；ca-client-tools#44；PR #115 |
 | 2026-11-28 | 0.3.75 | GPT-6.2（ChatGPT） | 文档头、§2.4、IR-008 / SR-032、修订记录 | 更新唯一 mainline 集成快照与当前 CI；确认 #48/#52/#101 内容已在 #115 中吸收或由更新文档替代；回填 SR-004 v0.2.29 / SR-016 v0.3.38 活动引用修复 | 防止旧源分支重复合并或覆盖新设计，准确区分 PR #52 模型评审、PR #115 独立复评和产品 NOT_RUN | Issue #50；PR #115；PR #48/#52/#101；SR-004/016/032 |
+| 2026-11-28 | 0.3.76 | GPT-6.2（ChatGPT） | 文档头、SR 清单、G02 状态、修订记录 | 将 SR-028 从 DRAFT 更新为 IN_PROGRESS，回填 #99 产品证据、#112 P2 修复和 #115 唯一集成候选；调整整项 SR 统计 | 使 SR 总索引与 SR-028/G02 当前实施状态一致，避免把 #97 旧 READY 回填当作当前状态 | Issue #50/#96/#111；PR #97/#99/#112/#115 |

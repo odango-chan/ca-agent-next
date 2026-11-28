@@ -1,8 +1,8 @@
 # G02：Python 工程工具链与环境管理设计说明书
 
 > 文档类型：工程治理功能设计说明书  
-> 文档版本：0.2.10\
-> 状态：第七轮 SR-028 专项独立 Review [#6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6084094037) 对固定设计快照给出 APPROVE_FOR_READY（0 P0 / 0 P1 / 2 非阻断 P2）；设计阶段已 READY。PR #99 的 uv 工具链实施已选择性整合至 PR #115（集成提交 `683c8708702ee5bf47b4188a86d29f752e544753`），SR-028 当前为 IN_PROGRESS（mainline candidate），尚未合入 main；候选 AC-028-01～10 证据保留在 Issue #96 / PR #99，当前 PR #115 Head 的双平台复验待完成。PR #112 的共享工具链策略 P2-01/P2-02 尚待修复与独立复评。
+> 文档版本：0.2.11\
+> 状态：第七轮 SR-028 专项独立 Review [#6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6084094037) 对固定设计快照给出 APPROVE_FOR_READY（0 P0 / 0 P1 / 2 非阻断 P2）；设计阶段已 READY。PR #99 的 uv 工具链实施已选择性整合至 PR #115（集成提交 `683c8708702ee5bf47b4188a86d29f752e544753`），SR-028 当前为 IN_PROGRESS（mainline candidate），尚未合入 main；候选 AC-028-01～10 证据保留在 Issue #96 / PR #99，当前 PR #115 Head 的双平台复验待完成。PR #112 源 Head bd5f390f1386cb57cce1f451426ed2d28f6ef7e9 已修复 P2-01/P2-02；Bootstrap Policy Check、Python Lock Consistency、Review Context 已 SUCCESS，策略单元测试 45/45 PASS；SR-003 Windows 已 SUCCESS，Ubuntu 回归仍待最终结果。共享策略已选择性纳入 PR #115，基线文件提交 15dd7972d15c91b797b202f85189cde2b6ffe373，baseline.sha 已锚定该提交；PR #97 READY 回填已被当前 IN_PROGRESS 状态取代。
 > 修订日期：2026-11-28\
 > 功能节点：G02 Python 工程工具链与环境管理  
 > 关联需求：[IR-007](../../IR/IR%20总登记册.md#ir-007)、[SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md)  
@@ -12,7 +12,7 @@
 
 ## 0. 第七轮设计批准与当前实施状态（2026-11-28）
 
-本设计与 [SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md) 由 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12) 统一追踪；原设计 Issue #35 已 CLOSED。第七轮专项独立复评为 [PR #46 Review #6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6084094037)，固定 Head `93f1389e7c5968cd30e8a74137207094864ecca0` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`，结论 APPROVE_FOR_READY（0 P0 / 0 P1 / 2 非阻断 P2）；该结论仅限设计快照。实施 Issue #96 的 PR #99 已完成 uv 工具链实现并选择性整合到 PR #115（提交 `683c8708702ee5bf47b4188a86d29f752e544753`）；SR-028 当前为 IN_PROGRESS，尚未合入 main。PR #99 候选证据由 Review #6094704264 复核，当前 PR #115 Head 的双平台复验仍待完成。PR #112 共享基线 P2-01/P2-02 尚待修复和独立复评；PR #97 的 READY 状态回填不覆盖当前实施状态。
+本设计与 [SR-028](../../SR/SR-028-Python工程工具链与uv环境管理.md) 由 [Issue #12](https://github.com/odango-chan/ca-agent-next/issues/12) 统一追踪；原设计 Issue #35 已 CLOSED。第七轮专项独立复评为 [PR #46 Review #6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6084094037)，固定 Head `93f1389e7c5968cd30e8a74137207094864ecca0` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`，结论 APPROVE_FOR_READY（0 P0 / 0 P1 / 2 非阻断 P2）；该结论仅限设计快照。实施 Issue #96 的 PR #99 已完成 uv 工具链实现并选择性整合到 PR #115（提交 `683c8708702ee5bf47b4188a86d29f752e544753`）；SR-028 当前为 IN_PROGRESS，尚未合入 main。PR #99 候选证据由 Review #6094704264 复核，当前 PR #115 Head 的双平台复验仍待完成。PR #112 源 Head bd5f390f1386cb57cce1f451426ed2d28f6ef7e9 已修复 P2-01/P2-02；Bootstrap Policy Check、Python Lock Consistency、Review Context 已 SUCCESS，策略单元测试 45/45 PASS；SR-003 Windows 已 SUCCESS，Ubuntu 回归仍待最终结果。共享策略已选择性纳入 PR #115，基线文件提交 15dd7972d15c91b797b202f85189cde2b6ffe373，baseline.sha 已锚定该提交；PR #97 READY 回填已被当前 IN_PROGRESS 状态取代。
 
 ## 1. 目标
 
@@ -802,3 +802,4 @@ Go Echo 前置（在 `examples/echo/plugin/`，`GOWORK=off`）：`go build -trim
 | 2026-11-28 | 0.2.8 | GPT-6（ChatGPT） | 文档头、§0、修订记录 | 更新 SR-028 第七轮专项设计批准和 #96/#97/#99/#112 的当前状态/固定基线 | 避免把第六轮历史评审当作最新状态，或将旧快照候选实施混入当前恢复分支产品状态 | Issue #12；Issue #96；PR #46/#97/#99/#112；Review #6084094037 |
 | 2026-11-28 | 0.2.9 | GPT-6.2（ChatGPT） | 文档头、§0、§7、修订记录 | 将 SR-028 当前版本、#96/#97/#99/#112 状态和候选实施证据边界同步到 G02 | 防止旧版本指针及历史第六轮门槛继续误导实施者 | Issue #12/#96；PR #46/#97/#99/#112；Review #6084094037/#6094704264/#6086849161 |
 | 2026-11-28 | 0.2.10 | GPT-6.2（ChatGPT） | 文档头、§0、§7、§9、修订记录 | 将 SR-028 当前状态更新为 IN_PROGRESS，纳入 PR #99 已实现并进入 PR #115 候选的 uv 入口，补充当前复验命令与门槛 | 区分设计 READY、候选实现证据、mainline 集成和最终 VERIFIED 状态 | Issue #96；PR #99/#112/#115；SR-028 v0.2.12 |
+| 2026-11-28 | 0.2.11 | GPT-6.2（ChatGPT） | 文档头、§0、§9、修订记录 | 更新 PR #112 P2 修复与 45/45 策略测试，记录共享策略已选择性纳入 PR #115，区分一次性 Bootstrap 与 main 合入后的可信策略 | 使 G02 的工程基线状态与 SR-028、策略规范及唯一 mainline 收敛入口一致 | Issue #50/#96/#111；PR #99/#112/#115；SR-028 v0.2.13 |

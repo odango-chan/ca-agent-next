@@ -1,13 +1,13 @@
 # SR-028：Python 工程工具链与 uv 环境管理
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.12\
+> SR 版本：0.2.13\
 > 修订日期：2026-11-28\
- > 状态：IN_PROGRESS（SR-028 设计已 READY；uv 实施文件与 Workflow 已选择性整合至 PR #115 mainline candidate，尚未合入 main）。实施 Issue [#96](https://github.com/odango-chan/ca-agent-next/issues/96) 的候选 PR [#99](https://github.com/odango-chan/ca-agent-next/pull/99) @`83d23e8c04b1c05eb304c2a24a3392f6459ed0f1` 的独立技术复核 [#6094704264](https://github.com/odango-chan/ca-agent-next/pull/99#pullrequestreview-6094704264) 记录 IMPLEMENTED，AC-028-01～10 的候选证据已归档；代码已进入 PR #115（集成提交 `683c8708702ee5bf47b4188a86d29f752e544753`），但当前 #115 Head 的双平台回归仍待完成，故不标 VERIFIED/RELEASED。PR #112 共享基线仍待修复 P2-01/P2-02 并独立复评；PR #97 的 READY 回填分支不再作为当前状态权威。
+ > 状态：IN_PROGRESS（SR-028 设计已 READY；uv 实施文件与 Workflow 已选择性整合至 PR #115 mainline candidate，尚未合入 main）。实施 Issue [#96](https://github.com/odango-chan/ca-agent-next/issues/96) 的候选 PR [#99](https://github.com/odango-chan/ca-agent-next/pull/99) @`83d23e8c04b1c05eb304c2a24a3392f6459ed0f1` 的独立技术复核 [#6094704264](https://github.com/odango-chan/ca-agent-next/pull/99#pullrequestreview-6094704264) 记录 IMPLEMENTED，AC-028-01～10 的候选证据已归档；代码已进入 PR #115（集成提交 `683c8708702ee5bf47b4188a86d29f752e544753`），但当前 #115 Head 的双平台回归仍待完成，故不标 VERIFIED/RELEASED。PR #112 源 Head bd5f390f1386cb57cce1f451426ed2d28f6ef7e9 已修复 P2-01/P2-02；Bootstrap Policy Check、Python Lock Consistency、Review Context 已 SUCCESS，策略单元测试 45/45 PASS；SR-003 Windows 已 SUCCESS，Ubuntu 回归仍待最终结果。共享策略已选择性纳入 PR #115，基线文件提交 15dd7972d15c91b797b202f85189cde2b6ffe373，baseline.sha 已锚定该提交；PR #97 READY 回填已被当前 IN_PROGRESS 状态取代。
 > 创建日期：2026-11-26  
 > 所属阶段：G02 工程治理支撑  
 > 上游需求：[IR-007](../IR/IR%20总登记册.md#ir-007)  
-> 设计依据：[G02 Python 工程工具链与环境管理设计说明书](../设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md) v0.2.12 §1～§9；[SR-002](SR-002-Python%20核心与宿主基础骨架.md) v0.2.10 §2.1；[SR 管理规范](../规范/SR%20管理规范.md) v0.8.1 §6.1、§8.3\
+> 设计依据：[G02 Python 工程工具链与环境管理设计说明书](../设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md) v0.2.11 §1～§9；[SR-002](SR-002-Python%20核心与宿主基础骨架.md) v0.2.10 §2.1；[SR 管理规范](../规范/SR%20管理规范.md) v0.8.1 §6.1、§8.3\
 > 设计/治理 Issue：[ca-agent-next #12](https://github.com/odango-chan/ca-agent-next/issues/12)（中央整改追踪）；原设计 Issue [#35](https://github.com/odango-chan/ca-agent-next/issues/35) 已 CLOSED，仅作历史来源；独立实施 Issue [#96](https://github.com/odango-chan/ca-agent-next/issues/96) OPEN；#12/#35 均不是实施 Issue。  
 > 目标仓：`odango-chan/ca-agent-next`  
 > 最新 SR-028 专项设计复评：PR #46 Review [#6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6084094037)，固定 Head `93f1389e7c5968cd30e8a74137207094864ecca0` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`；平台事件 COMMENTED，模型结论 APPROVE_FOR_READY（0 P0 / 0 P1 / 2 非阻断 P2）。它不是当前 PR #46 第八轮全量 Review，也不证明当前分支产品实施或发布。
@@ -16,7 +16,7 @@
 
 ## 0. 第七轮设计评审结果与当前实施状态（2026-11-28）
 
-SR-028 的第七轮专项设计评审为 [PR #46 Review #6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6084094037)，固定 Head `93f1389e7c5968cd30e8a74137207094864ecca0` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`，结论 `APPROVE_FOR_READY`（0 P0 / 0 P1 / 2 非阻断 P2），设计阶段已 READY。实施 Issue [#96](https://github.com/odango-chan/ca-agent-next/issues/96) 的 PR [#99](https://github.com/odango-chan/ca-agent-next/pull/99) @`83d23e8c04b1c05eb304c2a24a3392f6459ed0f1` 已完成 uv 工具链、锁文件、门禁脚本和双平台 Workflow；独立技术复核 [#6094704264](https://github.com/odango-chan/ca-agent-next/pull/99#pullrequestreview-6094704264) 记录 IMPLEMENTED，并核验 AC-028-01～10 候选证据。上述代码已选择性整合到唯一 mainline PR #115，集成提交 `683c8708702ee5bf47b4188a86d29f752e544753`；当前 SR-028 因尚未合入 main 且 #115 新 Head 的复验未完成，状态为 `IN_PROGRESS`，不得标 VERIFIED/RELEASED。PR #112 共享 uv 策略的 P2-01/P2-02 尚待修复和独立复评；PR #97 READY 状态回填分支不覆盖本节当前状态。
+SR-028 的第七轮专项设计评审为 [PR #46 Review #6084094037](https://github.com/odango-chan/ca-agent-next/pull/46#pullrequestreview-6084094037)，固定 Head `93f1389e7c5968cd30e8a74137207094864ecca0` / Base `3c7c48383c52504a4861900bc1f8b731442f16c2`，结论 `APPROVE_FOR_READY`（0 P0 / 0 P1 / 2 非阻断 P2），设计阶段已 READY。实施 Issue [#96](https://github.com/odango-chan/ca-agent-next/issues/96) 的 PR [#99](https://github.com/odango-chan/ca-agent-next/pull/99) @`83d23e8c04b1c05eb304c2a24a3392f6459ed0f1` 已完成 uv 工具链、锁文件、门禁脚本和双平台 Workflow；独立技术复核 [#6094704264](https://github.com/odango-chan/ca-agent-next/pull/99#pullrequestreview-6094704264) 记录 IMPLEMENTED，并核验 AC-028-01～10 候选证据。上述代码已选择性整合到唯一 mainline PR #115，集成提交 `683c8708702ee5bf47b4188a86d29f752e544753`；当前 SR-028 因尚未合入 main 且 #115 新 Head 的复验未完成，状态为 `IN_PROGRESS`，不得标 VERIFIED/RELEASED。PR #112 源 Head bd5f390f1386cb57cce1f451426ed2d28f6ef7e9 已修复 P2-01/P2-02；Bootstrap Policy Check、Python Lock Consistency、Review Context 已 SUCCESS，策略单元测试 45/45 PASS；SR-003 Windows 已 SUCCESS，Ubuntu 回归仍待最终结果。共享策略已选择性纳入 PR #115，基线文件提交 15dd7972d15c91b797b202f85189cde2b6ffe373，baseline.sha 已锚定该提交；PR #97 READY 回填已被当前 IN_PROGRESS 状态取代。
 
 - **评审范围：**核查 uv 版本/锁文件、worktree 虚拟环境隔离、与现有 setuptools 工程共存、CI 与回退/失败路径。
 - **外部依赖/证据状态：**实施 Issue #96 已存在；PR #97/#99/#112 均未合并到当前恢复分支。PR #32 的既有 CI 仍不构成 uv 迁移验收，候选分支运行证据只按 #96 固定基线与各 AC 评估，不计入当前恢复分支 VERIFIED。
@@ -62,7 +62,7 @@ SR-028 的第七轮专项设计评审为 [PR #46 Review #6084094037](https://git
 
 - AC-028-01～AC-028-06：SR-028 达到 READY、独立实施 Issue 建立后即可执行，不依赖 Agent Runtime 产品阶段。
 - AC-028-07（CI 环境与测试入口）和 AC-028-08（SR-001 Workflow/Artifact 迁移）：所需 SR-001 Workflow 与脚本已随 PR #32 合入。独立实施 PR 核对目标分支仍含这些入口及 SR-003 回归工作流后，按 G02 §3.8 迁移与复验。既有成功结果不计为迁移 PASS。
-- SR-028 当前没有实施 Issue。当前设计整改关联 Issue #12；原 Issue #35 已 CLOSED，仅为原始 G02 设计追踪。两者均不授予代码、配置、pyproject、锁文件或 Workflow 写入授权。
+- SR-028 的实施 Issue 是 #96（OPEN）；PR #99 的产品实现已由独立技术复核记录 IMPLEMENTED，并选择性进入唯一 mainline PR #115。Issue #12/#35 是设计治理来源，不是实施授权；实际实施和验收仍按 #96 与 AC-028-01～10 追踪。
 
 ## 5. Acceptance
 
@@ -174,3 +174,4 @@ Go Echo 前置（在 `examples/echo/plugin/`，设置 `GOWORK=off`）：`go buil
 | 2026-11-28 | 0.2.10 | GPT-6（ChatGPT） | 文档头、§0、§7、设计依据、修订记录 | 同步第七轮 SR-028 专项设计批准与当前 DRAFT/未集成状态；登记 #96/#97/#99/#112 的实际存在及依赖边界 | 防止把第六轮历史 CHANGES_REQUESTED 当作最新结论，或把旧快照候选实施误报为当前恢复分支已集成/VERIFIED | Issue #12；Issue #96；PR #46/#97/#99/#112；Review #6084094037 |
 | 2026-11-28 | 0.2.11 | GPT-6.2（ChatGPT） | 文档头、§0、§7、修订记录 | 明确 #96 为现有实施 Issue，补充 #99 候选分支 IMPLEMENTED 与 #112 旧 Head P1/当前 Head 待复评状态，并更新 G02 版本引用 | 消除 SR-028 当前启动入口对实施 Issue 和候选实施证据的遗漏，防止将未合入候选分支升级为当前基线 VERIFIED | Issue #12/#96；PR #46/#97/#99/#112；Review #6084094037/#6094704264/#6086849161 |
 | 2026-11-28 | 0.2.12 | GPT-6.2（ChatGPT） | 文档头、§0、§7、§8、修订记录 | 将 PR #99 的 uv 工具链实现与证据选择性纳入 PR #115；明确 SR-028 IN_PROGRESS、候选证据与 mainline 复验的区别，并更新 G02/SR-002 版本引用 | 避免把候选分支 IMPLEMENTED 结论误报为 mainline VERIFIED，或继续沿用已过时的 pip 当前入口 | Issue #96；PR #99/#112/#115；Review #6094704264；G02 v0.2.10 |
+| 2026-11-28 | 0.2.13 | GPT-6.2（ChatGPT） | 文档头、§0、§4.2、修订记录 | 同步 PR #112 两项 P2 修复、45/45 策略测试与 PR #115 共享策略候选；明确 #96 实施 Issue 和 #97 READY 回填已被 IN_PROGRESS 取代 | 消除实施入口缺失和旧策略 P2 状态造成的误导，继续区分 IMPLEMENTED 候选证据与 mainline VERIFIED | Issue #50/#96/#111；PR #97/#99/#112/#115；SR-028 |
