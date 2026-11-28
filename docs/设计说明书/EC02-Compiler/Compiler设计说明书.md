@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.2.21\
+> 文档版本：0.2.22\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 修订日期：2026-11-28\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -10,7 +10,7 @@
 
 ## 1. 权威与版本边界
 
-1. CA-SL 作者语义由 ca-skills 拥有。**唯一新产品语言目标为 CA-SL 1.6.0（尚未发布）**；准确机器 languageTarget 待 ca-skills / Compiler Owner 冻结。历史 v1alpha5 [normative SHA 18d8184](https://github.com/odango-chan/ca-skills/tree/18d8184367982ccbc835756136c4a53f9096c3a0) 仅作只读审计，不进入新 Parser/Build。
+1. CA-SL 作者语义由 ca-skills 拥有。**唯一新产品语言目标为 CA-SL 1.6.0（尚未发布）**；中央机器 languageTarget 已固定为 connectionagent.io/v1.6.0，正式 Schema / Golden / Release 仍由 ca-skills 发布。历史 v1alpha5 [normative SHA 18d8184](https://github.com/odango-chan/ca-skills/tree/18d8184367982ccbc835756136c4a53f9096c3a0) 仅作只读审计，不进入新 Parser/Build。
 2. Compiler 产品基线为 v2.1.0；本轮实现审查基线为 [ca-skill-compiler commit 255ab85fa5abb4b0bf36656bf64250cafebf45cb](https://github.com/odango-chan/ca-skill-compiler/tree/255ab85fa5abb4b0bf36656bf64250cafebf45cb)。
 3. 已发布 Artifact **connectionagent.io/compiler-artifact/v1alpha5** 完全冻结，保持 Manifest、文件布局、字节、Build/Verify 行为及 Golden 不变。
 4. Development Artifact **connectionagent.io/compiler-artifact/development/v1alpha1** 完全冻结，继续 **NOT_ADMITTED**；不得把它当作 Agent 可运行发布包。
@@ -162,9 +162,26 @@ AC-013-01 报告采用 Go 1.26.6、cel-go 0.33.2、Go protobuf 1.36.10、CPython
 
 - connectionagent.io/compiler-artifact/v1alpha5 保持完全不变。
 - Development v1alpha1 保持完全不变并继续 NOT_ADMITTED。
-- 新发布 Runtime Artifact 使用唯一 1.6.0 版本化 Manifest/文件布局，准确 languageTarget 由 ca-skills / Compiler 正式冻结；不兼容旧包。
-- 建议的新 Artifact API 候选为 connectionagent.io/compiler-artifact/2；对应的新 BuildResult API 候选为 connectionagent.io/compiler-build-result/2。**两者均为本设计提案，不是已冻结 API。** 新 BuildRequest / BuildResult / DependencyInspection 必须提供只面向 1.6.0 的唯一新 DTO 与机器身份；**禁止复用旧 v1alpha5 BuildRequest/DependencyInspection 作为新入口**，具体 Schema 由 Compiler Owner 冻结。新 Compiler 版本的正式 Runtime Build 只产生 2 BuildResult / Artifact，VerifyBuildResult 只接受该结果契约；不在同一二进制中双轨支持旧/新 Runtime BuildResult，不增加版本 dispatch、fallback 或兼容路由。旧 v2.1.0 Release 及其 Artifact/BuildResult v1alpha5 保持不可变历史发布。Development Build 继续使用其独立 v1alpha1 API/Artifact 家族，不因 when 扩展。AC-013-03 开始前 Compiler Owner 必须书面确认两个新 API version；如采用其他命名，先更新本节和 SR-013，再实施。Harness 不得自行发明第三个版本名。
+- 新发布 Runtime Artifact 使用唯一 1.6.0 版本化 Manifest/文件布局，languageTarget 与 BuildRequest / DependencyInspection / BuildResult / Artifact API 身份按 §5.1.1 由 Next 中央固定；正式 Schema / Golden / Release 仍待生产仓发布；不兼容旧包。
+- 新 Compiler 只实现 §5.1.1 固定的 Artifact / BuildResult / BuildRequest / DependencyInspection API；新 Runtime Build 只产生 Artifact / BuildResult /2，VerifyBuildResult 只接受该结果契约。不在同一二进制中双轨支持旧/新 Runtime BuildResult，不增加版本 dispatch、fallback 或兼容路由。旧 v2.1.0 Release 及其 Artifact/BuildResult v1alpha5 保持不可变历史发布。Development Build 继续使用其独立 v1alpha1 API/Artifact 家族，不因 when 扩展。
 - 不把 Development 专用 executionStatus=NOT_ADMITTED、hostAdmission 或 Skill Admission 状态写入新发布 Runtime Artifact。
+
+### 5.1.1 中央冻结的 1.6.0 机器契约目标（尚未发布）
+
+本设计在 Next 冻结唯一目标值，生产仓负责实现和发布，不再把机器标识留给 Compiler Owner 在实施时临时选择：
+
+| 契约 | 唯一目标标识 |
+|---|---|
+| CA-SL languageTarget | connectionagent.io/v1.6.0 |
+| BuildRequest | connectionagent.io/compiler-build-request/2 |
+| DependencyInspection | connectionagent.io/compiler-dependency-inspection/2 |
+| BuildResult | connectionagent.io/compiler-build-result/2 |
+| Runtime Artifact Manifest | connectionagent.io/compiler-artifact/2 |
+| Compiler Release SemVer | 3.0.0（从 v2.1.0 进行不兼容主版本升级；不发布 alpha / rc） |
+
+以上是中央设计目标，不表示这些 API、Schema、Golden、可执行文件或 Release 已经存在。ca-skill-compiler#61 的目标是 CA-SL v1alpha5，保留为历史设计/实现记录，不得用于 1.6.0 实施、验收或发布；SR-013 达到 READY 后再创建新的 Compiler 实施 Issue，并在其中引用本设计固定 SHA。
+
+新版本不接受旧 v1alpha5 Runtime Artifact、旧 Build DTO 或 Development Artifact 作为输入；不做兼容映射、fallback、自动迁移或双轨 Parser。
 
 ### 5.2 候选文件布局
 
@@ -411,3 +428,4 @@ SR-013 AC-013-07 需验证原版组件直接引用、跨文件 CommonData 闭包
 | 2026-11-27 | 0.2.19 | ChatGPT / GPT-6.2 | §12 Manifest / Build / Verify | 移除 sourceDigest 与 outputFiles SHA-256；Build / Verify 不计算或比较 SHA-256 / checksum / digest | 遵守 Demo 全链路无 hash 校验要求，避免 Compiler 产物另行引入完整性门禁 | IR-009；Issue #47；SR-013；CA-SL 1.6.0 |
 | 2026-11-27 | 0.2.20 | ChatGPT（GPT-6.2） | §1、§5.2～§5.3、§6、§12 | 将 Request Schema Artifact / Manifest 闭包按 dialect 分型；本地 G.4 写入规范化 Artifact，外部 OAS3 只引用精确 pin 的 Source Bundle 原件及 JSON Pointer；when 类型位置引用也改为 dialect-aware | 使 Build/Verify、Manifest、Bundle、Host 对 OAS3 原始 bytes、Schema 定位与运行期离线闭包有唯一一致的所有权表达 | Issue #49/#47；IR-008/009；SR-013/031；PR #52 |
 | 2026-11-28 | 0.2.21 | GPT-6.2（ChatGPT） | 文档头、§1、修订记录 | 同步 1.6.0-only Compiler 实施入口至 #62，并纳入 PR #52 作者资源 / Script Registry 与 OAS3 dialect-aware Artifact 表示 | 避免 1.6.0 实施继续指向历史 #61；保持本地 G.4 与外部 OAS3 的 Artifact/Manifest 分型 | Issue #40/#47/#49/#62；IR-008/009；SR-013/031/032；PR #52/#115 |
+| 2026-11-28 | 0.2.22 | GPT-6.2（ChatGPT） | §1、§5.1、§5.1.1、修订记录 | 固定 CA-SL 1.6.0 languageTarget、Compiler 3.0.0 与四项机器 API /2 目标 | 将 Compiler 机器契约从 Owner 待命名候选收敛为 Next 唯一设计目标，保留正式 Schema/Release 未发布状态 | Issue #113；SR-013；SR-027；F08；CA-SL 1.6.0；PR #115 |
