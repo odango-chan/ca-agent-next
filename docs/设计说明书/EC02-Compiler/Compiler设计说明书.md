@@ -14,7 +14,7 @@
 2. Compiler 产品基线为 v2.1.0；本轮实现审查基线为 [ca-skill-compiler commit 255ab85fa5abb4b0bf36656bf64250cafebf45cb](https://github.com/odango-chan/ca-skill-compiler/tree/255ab85fa5abb4b0bf36656bf64250cafebf45cb)。
 3. 已发布 Artifact **connectionagent.io/compiler-artifact/v1alpha5** 完全冻结，保持 Manifest、文件布局、字节、Build/Verify 行为及 Golden 不变。
 4. Development Artifact **connectionagent.io/compiler-artifact/development/v1alpha1** 完全冻结，继续 **NOT_ADMITTED**；不得把它当作 Agent 可运行发布包。
-5. Contract.when、Request Schema 根/闭包与 Capability→Callable Binding 必须共同进入**CA-SL 1.6.0 新 Runtime Artifact**；API 版本和语言机器标识独立，由正式 Owner Gate 冻结。新版不接受旧 v1alpha5 Artifact/BuildRequest/BuildResult，也不提供旧版 fallback。
+5. Contract.when、Request Schema 根/闭包与 Capability→Callable Binding 必须共同进入**CA-SL 1.6.0 新 Runtime Artifact**；机器 API 身份和 languageTarget 按 §5.1.1 由 Next 中央固定，生产 Owner 发布正式 Schema / Golden / CLI / Release。新版不接受旧 v1alpha5 Artifact/BuildRequest/BuildResult，也不提供旧版 fallback。
 6. Compiler 不执行 Skill、Tool、Observation、Python Script、网络或 Runtime 选择。Agent 不调用 Compiler；消费端设计由 F02 与 SR-004/005/006 负责。
 
 ## 2. 单一 Core、当前实现基线与复用边界
@@ -303,7 +303,7 @@ Chromium parity 脚本使用真实 Headless Chrome；若默认路径不可用，
 - CA-SL v1alpha5 规范来源和语言标识已固定。
 - AC-013-01 隔离 PoC 的固定归档、18/18 报告和完整性复核见 SR-013 §3；本轮复跑 NOT_RUN。
 - AC-013-02 正式 Contract.when 编译：NOT_RUN。
-- AC-013-03 新版 Runtime Artifact Schema/API：待 Compiler Owner 对 §5.1 候选版本作明确确认。
+- AC-013-03 新版 Runtime Artifact Schema/API：机器身份已由 Next 按 §5.1.1 固定；正式 Schema / Golden / CLI / Release 待 Compiler Owner 实现和发布。
 - AC-013-04 Build/Verify 与产品门禁：NOT_RUN。
 - AC-013-05 Compiler Release 资产：依赖 AC-013-01～04、AC-013-06 和单独发布授权，BLOCKED。
 - AC-013-06 Schema-only Package / Schema dependency closure / 零 Capability roots：BLOCKED / NOT_RUN，联合 SR-030 AC-030-03。
@@ -313,7 +313,7 @@ Chromium parity 脚本使用真实 Headless Chrome；若默认路径不可用，
 
 ### 10.1 输入语义
 
-本节是 SR-029 对现有 Artifact v2 候选的增量要求。新候选只面向 CA-SL 1.6.0；v1alpha5 / Compiler v2.1.0 已发布路径保持冻结，Development v1alpha1 继续 NOT_ADMITTED。
+本节是 SR-029 对 1.6.0 新 Runtime Artifact /2 的增量要求。机器身份已按 §5.1.1 固定；新契约只面向 CA-SL 1.6.0。v1alpha5 / Compiler v2.1.0 已发布路径保持冻结，Development v1alpha1 继续 NOT_ADMITTED。
 
 Contract.capabilities 是 Capability Grant 列表；Procedure 的 operation.capability / observation.capability 是使用点。dependencies 仍提供精确 Owner Contract / Provider Interface Package 快照。Skill 作者源不出现 Callable ID。
 
@@ -336,7 +336,7 @@ Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId�
 
 ### 10.3 Artifact v2 Capability Binding
 
-既有候选 API connectionagent.io/compiler-artifact/2 与 connectionagent.io/compiler-build-result/2 保持候选名称；本次将其唯一 languageTarget 更新为 （1.6.0 languageTarget 机器标识待发行方冻结）。它们尚未通过 Compiler Owner Gate，不是已冻结 API。新 BuildRequest 必须 1.6.0-only，精确字段经 Compiler Owner Gate 冻结。
+中央设计目标已冻结：languageTarget=connectionagent.io/v1.6.0；BuildRequest=connectionagent.io/compiler-build-request/2；DependencyInspection=connectionagent.io/compiler-dependency-inspection/2；BuildResult=connectionagent.io/compiler-build-result/2；Runtime Artifact=connectionagent.io/compiler-artifact/2；Compiler Release=3.0.0。正式 Schema、Golden、CLI 与 Release 尚未发布；生产 Owner 按该目标实现，不得自行改名或增加兼容入口。
 
 每个 Skill 的 Manifest 增加 capabilityBindings[]。每项至少包含：
 
@@ -370,7 +370,7 @@ Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId�
 
 | 边界 | 当前可评审决议 | 实施前由谁冻结 |
 |---|---|---|
-| 作者与语言 | 仅 1.6.0 Contract/Procedure/when/Capability；旧 Alias::Callable 全拒绝 | ca-skills：机器 languageTarget、作者 Schema、Golden |
+| 作者与语言 | 仅 1.6.0 Contract/Procedure/when/Capability；旧 Alias::Callable 全拒绝 | Next：languageTarget 唯一值；ca-skills：正式作者 Schema、Golden 与 Release |
 | 一对一 Link | Owner 24/24、Provider 查询子集 2/2，含 Codec 全量 3/3（单包和跨包均须双向唯一）；Reconcile internal-only；每公开 Callable 仅一 Capability | Owner/Provider 发布新 Package/Schema |
 | Capability roots 与 Schema dependency closure | 零 Capability roots 合法；若有 contexts Schema-only 引用，Package dependency closure 可非空；仅无外部 Capability / Schema 引用时整体闭包为空 | Compiler：新 BuildRequest / DependencyInspection 必须区分 Capability roots 与 Schema-only 依赖 |
 | Schema-only Interface Package | 显式导出 Schema、0 Capability / 0 Callable，可作为 contexts Schema 依赖；不产生 Capability grant、Callable binding、Tool allowlist 或 Tool Effect | Compiler 1.6.0 Package Schema / Link / Build / Verify；SR-013 AC-013-06 与 SR-030 AC-030-03 联合验收 |
