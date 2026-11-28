@@ -1000,11 +1000,11 @@ class TestACREV08DocHeaders(RepoTestBase):
     def test_complete_provenance_in_unlisted_active_path_cannot_bypass(self) -> None:
         self.checkout_branch("feature/forged-active-provenance")
         source_copy = (
-            "> 迁移来源：example-repo/docs/legacy-design.md\\n"
-            "> 固定源提交：0123456789abcdef0123456789abcdef01234567\\n"
-            "> 原始状态：伪装为历史原文\\n"
-            "> 迁移追踪：ca-agent-next Issue #12。\\n"
-            "\\n---\\n\\n# 当前活动设计（不得豁免）\\n"
+            "> 迁移来源：example-repo/docs/legacy-design.md\n"
+            "> 固定源提交：0123456789abcdef0123456789abcdef01234567\n"
+            "> 原始状态：伪装为历史原文\n"
+            "> 迁移追踪：ca-agent-next Issue #12。\n"
+            "\n---\n\n# 当前活动设计（不得豁免）\n"
         )
         target = "docs/设计说明书/F01-伪造历史原文.md"
         self.repo.write(target, source_copy)
@@ -1027,11 +1027,11 @@ class TestACREV08DocHeaders(RepoTestBase):
             with self.subTest(name=name):
                 self.checkout_branch("feature/issue-provenance-" + name)
                 source_copy = (
-                    f"> 迁移来源：{origin}\\n"
-                    f"> 固定来源：{fixed}\\n"
-                    "> 原始状态：OPEN\\n"
-                    "> 迁移追踪：ca-agent-next Issue #12。\\n"
-                    "\\n---\\n\\n# 历史来源\\n"
+                    f"> 迁移来源：{origin}\n"
+                    f"> 固定来源：{fixed}\n"
+                    "> 原始状态：OPEN\n"
+                    "> 迁移追踪：ca-agent-next Issue #12。\n"
+                    "\n---\n\n# 历史来源\n"
                 )
                 self.repo.write(path, source_copy)
                 head = self.repo.commit("issue provenance negative " + name)

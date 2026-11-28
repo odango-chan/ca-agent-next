@@ -1136,6 +1136,11 @@ def _is_archived_source_copy(text: str, path: str) -> bool:
                 and ARCHIVED_ISSUE_SOURCE_IDENTITIES.get(path)
                 == (source_repo, source_issue)
             )
+    # A malformed fixed Issue record cannot be laundered through a second
+    # 40-hex commit token in the same archived-document header.
+    if fixed_issue_lines and not has_fixed_issue_snapshot:
+        return False
+
     has_source_state = any(
         re.match(r"^>\s*(?:原始状态|源文档定位)\s*[：:]\s*\S", line)
         for line in metadata
