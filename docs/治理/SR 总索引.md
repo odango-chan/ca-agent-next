@@ -32,7 +32,7 @@
 | [SR-007](../SR/SR-007-统一运行时动作边界与双执行模式.md) | [IR-004](../IR/IR%20总登记册.md#ir-004) | 统一运行时动作边界与双执行模式 | DRAFT |
 | [SR-008](../SR/SR-008-Echo%20垂直端到端示例.md) | [IR-004](../IR/IR%20总登记册.md#ir-004) | Echo 垂直端到端示例 | DRAFT |
 | [SR-009](../SR/SR-009-OpenAMSM%20SBI%20事件插件与二进制产物交接.md) | [IR-005](../IR/IR%20总登记册.md#ir-005) | OpenAMSM SBI 事件插件与二进制产物交接 | DRAFT |
-| [SR-010](../SR/SR-010-OpenAMSM%20工具插件与按需编解码集成.md) | [IR-005](../IR/IR%20总登记册.md#ir-005) | OpenAMSM 工具插件与按需编解码集成（AC-010-10 原版 OAS3 multipart / N1-N2-N2 Ext1） | DRAFT |
+| [SR-010](../SR/SR-010-OpenAMSM%20工具插件与按需编解码集成.md) | [IR-005](../IR/IR%20总登记册.md#ir-005) | OpenAMSM 工具插件与按需编解码集成（AC-010-03 no-hash Channel；AC-010-10 OAS3 multipart / N1-N2-N2 Ext1） | DRAFT |
 | [SR-011](../SR/SR-011-真实%20OpenAMSM%20创建修改释放端到端验证.md) | [IR-005](../IR/IR%20总登记册.md#ir-005) | 真实 OpenAMSM 创建修改释放端到端验证 | DRAFT |
 | [SR-012](../SR/SR-012-Compiler设计归档与跨仓收敛.md) | [IR-006](../IR/IR%20总登记册.md#ir-006) | Compiler 设计归档与跨仓收敛 | DRAFT |
 | [SR-013](../SR/SR-013-Compiler已检查when与发布产物.md) | [IR-003](../IR/IR%20总登记册.md#ir-003) | Compiler 已检查 when 与发布产物（AC-013-07 OAS3 direct refs） | DRAFT |
@@ -75,7 +75,7 @@
 | SR-007 | CHANGES_REQUESTED | P1：AC-007-05 缺 Owner Proof 完整身份字段与同 ID Proof 负例 | DRAFT |
 | SR-008 | APPROVE_FOR_READY（限定） | 三场景静态设计；真实 Echo 运行仍阻塞 | DRAFT |
 | SR-009 | CHANGES_REQUESTED | P1：Plugin Run 所有权矛盾；completion Event type / payload Schema / fixtures 未冻结 | DRAFT |
-| SR-010 | APPROVE_FOR_READY（限定） | Host ArtifactStore/Channel 与 06A；新增 AC-010-10 OAS3 requestBody / multipart / N1-N2-N2 Ext1 Content-ID 仍 BLOCKED/NOT_RUN，依赖 Source Bundle / Compiler Resolver / Provider | DRAFT |
+| SR-010 | APPROVE_FOR_READY（限定） | Host ArtifactStore/Channel 与 06A；AC-010-03 因外部 ArtifactStore v1 强制 SHA-256 与 Demo no-hash 冲突而 BLOCKED；新增 AC-010-10 OAS3 requestBody / multipart / N1-N2-N2 Ext1 Content-ID 也 BLOCKED/NOT_RUN | DRAFT |
 | SR-011 | CHANGES_REQUESTED | P1：AC-011-04 缺 N1/N2 乱序、交错、多事务与旧代际断言 | DRAFT |
 | SR-012 | APPROVE_FOR_READY（限定） | 固定源 docs/design=12、docs=218；源仓正文替换仍等默认分支链接 | DRAFT |
 | SR-013 | APPROVE_FOR_READY（限定） | Compiler/Schema-only 设计与历史 PoC 归档；新增 AC-013-07 原版 OAS3 direct refs / dialect-aware Resolver BLOCKED/NOT_RUN | DRAFT |
@@ -143,7 +143,7 @@
 | [SR-006](../SR/SR-006-技能解析器与续跑选择.md) | 阶段 READY（本仓 Skill 链路） | AC-006-01～04/06/07 | 以本地 fixture 检查选择与精确续跑，接入 A 批 SR-005 generation。05 的正式 typed-input 互操作另验。 | [#70](https://github.com/odango-chan/ca-agent-next/issues/70#issuecomment-7209449444) |
 | [SR-008](../SR/SR-008-Echo%20垂直端到端示例.md) | 限定设计已认可，等待直接依赖 | AC-008-01/04（SKILL.md-only） | 已获限定设计认可。接入 A 批真实 Importer、Catalog、Resolver 后验证 Fake Model、文本 Delivery、重放与越权拒绝；02/03/05 等 Echo Interface、Bundle 和组合环境。 | [#72](https://github.com/odango-chan/ca-agent-next/issues/72#issuecomment-7210341882) |
 | [SR-009](../SR/SR-009-OpenAMSM%20SBI%20事件插件与二进制产物交接.md) | 模块设计已认可，待目标仓实施交接 | AC-009-01～06（测试 Host/peer） | 独立 Go Plugin 模块已获设计认可。目标仓 ca-openamsm-plugin 的实施分支和 Issue 需登记；联调验证由 SR-011 跟踪。Create 断言须覆盖 eventType；responseObligationId 由 Host 分配。 | [#73](https://github.com/odango-chan/ca-agent-next/issues/73#issuecomment-7210217168) |
-| [SR-010](../SR/SR-010-OpenAMSM%20工具插件与按需编解码集成.md) | 阶段 READY（本仓 Host Channel） | AC-010-01～05/09（Next Host Channel） | AC-010-10 OAS3 requestBody / multipart / N1-N2-N2 Ext1 Content-ID 映射 BLOCKED/NOT_RUN；依赖 SR-031 / SR-013 / SR-026。 | [#74](https://github.com/odango-chan/ca-agent-next/issues/74#issuecomment-7210244694) |
+| [SR-010](../SR/SR-010-OpenAMSM%20工具插件与按需编解码集成.md) | 阶段 READY（本仓 no-hash Host Channel 限定范围） | AC-010-01/02/04/05/09 | AC-010-03 因外部 v1 SHA-256 contract 不兼容而 BLOCKED；AC-010-10 OAS3 requestBody / multipart / N1-N2-N2 Ext1 Content-ID 映射 BLOCKED/NOT_RUN；依赖 SR-031 / SR-013 / SR-026。 | [#74](https://github.com/odango-chan/ca-agent-next/issues/74#issuecomment-7210244694) |
 | [SR-011](../SR/SR-011-真实%20OpenAMSM%20创建修改释放端到端验证.md) | 限定设计已认可，等待直接依赖 | AC-011-06 静态架构断言 | 已获限定设计认可。组合实现具备后检查 Core 零业务分支；01～05 等同批 Bundle、Compiler Verify、Provider/Owner Package 和隔离对端。 | [#75](https://github.com/odango-chan/ca-agent-next/issues/75#issuecomment-7210271472) |
 | [SR-012](../SR/SR-012-Compiler设计归档与跨仓收敛.md) | 阶段 READY（中央只读核验） | AC-012-01 的 Next→源仓静态部分、03 | [固定源报告](../issue-95-fixed-source-handoff/SR-012.md)已核对 218/12、blob 与正文差异；01 限定范围及 03 静态门槛 PASS；02 与源仓回链 NOT_RUN。 | [#76](https://github.com/odango-chan/ca-agent-next/issues/76#issuecomment-7210373026)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95) |
 | [SR-013](../SR/SR-013-Compiler已检查when与发布产物.md) | 阶段 READY（中央只读核验） | AC-013-01 归档完整性 | [归档报告](../issue-95-fixed-source-handoff/SR-013.md)：58/58 哈希相符但三处归档缺陷未闭合，本轮 FAIL、复跑 NOT_RUN；AC-013-02～06 产品未运行；新增 AC-013-07 原版 OAS3 direct reference BLOCKED/NOT_RUN。 | [#77](https://github.com/odango-chan/ca-agent-next/issues/77#issuecomment-7209276846)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95)；Issue #47 |
@@ -319,3 +319,4 @@
 | 2026-11-28 | 0.3.70 | GLM-5.3（DeepSeek Harness） | 文档头、修订记录 | 将“当前 Head `68162cdb` / CI #46100503592”更正为第九轮复评基线 Head `2b66bded` 与 CI #46101070088；第九轮整改后最终 Head 以 Issue #12 检查点为准 | 消除增量提交对父提交 SHA 的过期自引用 | Issue #12；PR #46；Review #6095143611 |
 | 2026-11-28 | 0.3.71 | GPT-6.2（ChatGPT） | 文档头、SR-031 清单、IR-009 增量、修订记录 | 纳入 SR-031 原版 OAS3 Source Bundle 与 EC01.3GPP 权威设计，更新 30 项 SR / 9 项 IR 追踪，并刷新 PR #46 第九轮 APPROVE_FOR_READY 与恢复分支合并边界 | 使 SR 总索引与已导入的 IR-009、SR-031、EC01.3GPP 文档保持一致，不把新增设计评议升级为产品验收 | Issue #47；Issue #12；PR #46/#115；Review #6095601142 |
 | 2026-11-28 | 0.3.72 | GPT-6.2（ChatGPT） | SR-010/013/026/027 状态与修订记录 | 将 AC-010-10、AC-013-07、AC-026-04～06、AC-027-05 的 OAS3 / Codec / Bundle 边界纳入 SR 追踪，明确各项 BLOCKED/NOT_RUN | 防止新增 IR-009 设计被误读为 Provider / Compiler / Bundle 产品验收通过 | Issue #47；IR-009；PR #115 |
+| 2026-11-28 | 0.3.73 | GPT-6.2（ChatGPT） | SR-010 AC-010-03 状态、修订记录 | 明确 Demo no-hash Artifact Channel；外部强制 SHA-256 的 ArtifactStore v1 不可直接复用，AC-010-03 保持 BLOCKED | 避免把摘要校验、内容寻址或旧契约兼容带入 Demo 范围 | Issue #50；PR #115；SR-001 AC-REV-08 |
