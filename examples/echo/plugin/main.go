@@ -77,6 +77,7 @@ type waitOperation struct {
 type plugin struct {
 	hostIDs     map[string]struct{}
 	outgoingIDs map[string]struct{}
+	ingressPending map[string]string
 	initialized bool
 	seq         int
 	fault       string
@@ -123,6 +124,7 @@ func main() {
 	p := &plugin{
 		hostIDs:     map[string]struct{}{},
 		outgoingIDs: map[string]struct{}{},
+		ingressPending: map[string]string{},
 		fault:       *faultMode,
 		extensions:  extensions,
 		ingress:     ingressJSON,
@@ -259,9 +261,9 @@ func (p *plugin) handleInitialize(in frame) {
 	logf("INGRESS_EVENT_SENT eventId=%s", eventID)
 }
 
-// handleAck is the receiver-side check for the injected runId negative case.
-// The design says ingress.ack may contain only eventId, disposition and an
-// optional error; any Run/Skill/artifactRef identity is a protocol violation.
+// handleAck validates the complete receiver-side IPC boundary, including
+// correlation with the exact ingress.event and nested Host-only identities.
+// Error details must never be copied back to this test peer.
 func (p *plugin) handleAck(in frame) {
 	allowed := map[string]bool{"eventId": true, "disposition": true, "error": true}
 	for key := range in.Payload {
@@ -269,8 +271,10 @@ func (p *plugin) handleAck(in frame) {
 			p.violation("UNEXPECTED_PAYLOAD_FIELD", "ingress.ack", key)
 		}
 	}
-	if in.CorrelationID == "" || in.Payload["eventId"] == nil {
-		p.violation("ACK_CORRELATION_MISMATCH", "ingress.ack", "")
+	expectedEvent, pending := p.ingressPending[in.CorrelationID]
+	actualEvent, validEvent := in.Payload["eventId"].(string)
+	if in.CorrelationID == "" || !pending || !validEvent || actualEvent != expectedEvent {
+		p.violation("ACK_CORRELATION_MISMATCH", "ingress.ack", in.CorrelationID)
 	}
 	disposition, _ := in.Payload["disposition"].(string)
 	switch disposition {
@@ -278,7 +282,32 @@ func (p *plugin) handleAck(in frame) {
 	default:
 		p.violation("ACK_DISPOSITION_INVALID", "ingress.ack", disposition)
 	}
-	logf("ACK disposition=%s eventId=%v", disposition, in.Payload["eventId"])
+	if raw, present := in.Payload["error"]; present {
+		if disposition != "conflict" && disposition != "rejected" {
+			p.violation("ACK_UNEXPECTED_ERROR", "ingress.ack", disposition)
+		}
+		details, valid := raw.(map[string]any)
+		if !valid {
+			p.violation("ACK_ERROR_INVALID", "ingress.ack", "error")
+		}
+		for key, value := range details {
+			switch key {
+			case "code", "message":
+				if _, ok := value.(string); !ok {
+					p.violation("ACK_ERROR_INVALID", "ingress.ack", key)
+				}
+			case "retryable":
+				if _, ok := value.(bool); !ok {
+					p.violation("ACK_ERROR_INVALID", "ingress.ack", key)
+				}
+			default:
+				// This also rejects nested error.details and identities at any depth.
+				p.violation("ACK_ERROR_UNEXPECTED_FIELD", "ingress.ack", key)
+			}
+		}
+	}
+	delete(p.ingressPending, in.CorrelationID)
+	logf("ACK disposition=%s eventId=%v", disposition, actualEvent)
 }
 
 func (p *plugin) handleInvoke(in frame) {
@@ -407,11 +436,24 @@ func (p *plugin) handleDelivery(in frame) {
 	}
 	delivery, _ := in.Payload["deliveryId"].(string)
 	if delivery == "" {
-		p.violation("DELIVERY_IDENTITY_MISMATCH", "delivery.dispatch", "")
+		p.violation("DELIVERY_IDENTITY_MISMATCH", "delivery.dispatch", "deliveryId")
+	}
+	for _, required := range []string{"responseObligationId", "responseChannelId", "eventType"} {
+		value, ok := in.Payload[required].(string)
+		if !ok || value == "" {
+			p.violation("DELIVERY_REQUIRED_FIELD", "delivery.dispatch", required)
+		}
+	}
+	if _, ok := in.Payload["headers"].(map[string]any); !ok {
+		p.violation("DELIVERY_REQUIRED_FIELD", "delivery.dispatch", "headers")
+	}
+	if _, present := in.Payload["body"]; !present {
+		// Explicit JSON null is valid for an empty HTTP response body.
+		p.violation("DELIVERY_REQUIRED_FIELD", "delivery.dispatch", "body")
 	}
 	status, ok := in.Payload["statusCode"].(float64)
-	if !ok {
-		p.violation("DELIVERY_STATUS_INVALID", "delivery.dispatch", "")
+	if !ok || status < 100 || status > 599 || status != float64(int(status)) {
+		p.violation("DELIVERY_STATUS_INVALID", "delivery.dispatch", "statusCode")
 	}
 	golden := ""
 	if delivery == deliveryID && in.Payload["responseObligationId"] == obligationID &&
@@ -583,6 +625,11 @@ func (p *plugin) sendWithID(messageID, correlationID, messageType string, payloa
 		p.violation("DUPLICATE_LOCAL_MESSAGE_ID", messageType, messageID)
 	}
 	p.outgoingIDs[messageID] = struct{}{}
+	if messageType == "ingress.event" {
+		// Bind ack to the exact outgoing message, not just any nonempty ID.
+		event, _ := payload["eventId"].(string)
+		p.ingressPending[messageID] = event
+	}
 	p.writeWithID(messageID, correlationID, messageType, payload)
 }
 
