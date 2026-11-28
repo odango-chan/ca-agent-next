@@ -1,11 +1,11 @@
 # 业务接入与 OpenAMSM 集成设计说明书
 
 > 文档类型：业务集成设计说明书  
-> 文档版本：0.3.4\
+> 文档版本：0.3.5
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first；实施及发布 NOT_RUN）
 > 功能归属：F06 — 业务接入与集成；EC04、EC05、EC07  
 > 关联 IR：IR-004、IR-005、IR-006  
-> 关联 SR：SR-009、SR-010、SR-011、SR-017、SR-018、SR-019、SR-026、SR-030\
+> 关联 SR：SR-009、SR-010、SR-011、SR-017、SR-018、SR-019、SR-026、SR-030、SR-031
 > 修订日期：2026-11-28
 > 全局评审范围：继承根目录 Agent.md 的 review_scope。  
 > 本文局部非目标：生产级资格、完整 NAS/NGAP 和 Core 业务分支。
@@ -70,7 +70,7 @@ Plugin 不负责：
 | 内容 | 权威来源 | Next 使用方式 |
 |---|---|---|
 | Nsmf SBI Operation、HTTP 路径和 JSON Schema | 3GPP TS 29.502 / OpenAMSM OpenAPI 基线 | EC04 解析 |
-| multipart/related、Content-ID、N1/N2 slot | 3GPP OpenAPI 与 OpenAMSM 实际行为 | EC04 + F05 |
+| multipart/related、Content-ID、N1/N2/N2 Ext1 slot | 3GPP OpenAPI 与 OpenAMSM 实际行为 | EC04 + F05 + SR-031 |
 | NAS 5GSM 消息与字段 | 3GPP NAS 标准、已资格化 Codec | Skill 按需调用 Codec Tool |
 | NGAP N2 PDU Session Resource 消息 | 3GPP NGAP 标准、已资格化 Codec | Skill 按需调用 Codec Tool |
 | Skill requestSchema / when / Event metadata | CA-SL **1.6.0** Publisher 正式冻结的 Schema/metadata 与 Compiler #62 CheckedExpr（尚未发布） | F02 T1 Resolver/Compiler 静态检查；旧 v1alpha5 只读审计 |
@@ -87,23 +87,23 @@ Plugin 不负责：
 
 | Event type | OpenAPI operation / path | payload 必需字段 | classification | binary Artifact slots |
 |---|---|---|---|---|
-| `nsmf.create-sm-context` | `PostSmContexts` / `POST /sm-contexts` | `operationId="PostSmContexts"`；`request` 为原样 `SmContextCreateData` JSON object | 无 NAS operation discriminator；保留原始 `requestType` 等 OpenAPI 字段，不补默认值 | `n1SmMsg.contentId → n1.request`；`n2SmInfo.contentId → n2.request` |
-| `nsmf.update-sm-context` | `UpdateSmContext` / `POST /sm-contexts/{smContextRef}/modify` | `operationId="UpdateSmContext"`；`smContextRef`；`request` 为原样 `SmContextUpdateData` JSON object | `discriminator.n1MessageType` 只允许 `0xC9`（UE Modify）或 `0xD1`（UE-requested Release） | `n1SmMsg.contentId → n1.request`；若请求实际含 N2 part，则 `n2SmInfo.contentId → n2.request` |
+| `nsmf.create-sm-context` | `PostSmContexts` / `POST /sm-contexts` | `operationId="PostSmContexts"`；`request` 为原样 `SmContextCreateData` JSON object | 无 NAS operation discriminator；保留原始 `requestType` 等 OpenAPI 字段，不补默认值 | `n1SmMsg.contentId → n1.request`；`n2SmInfo.contentId → n2.request`；`n2SmInfoExt1.contentId → n2Ext1.request` |
+| `nsmf.update-sm-context` | `UpdateSmContext` / `POST /sm-contexts/{smContextRef}/modify` | `operationId="UpdateSmContext"`；`smContextRef`；`request` 为原样 `SmContextUpdateData` JSON object | `discriminator.n1MessageType` 只允许 `0xC9`（UE Modify）或 `0xD1`（UE-requested Release） | `n1SmMsg.contentId → n1.request`；若请求实际含 N2 / N2 Ext1 part，则 `n2SmInfo.contentId → n2.request`；`n2SmInfoExt1.contentId → n2Ext1.request` |
 | `nsmf.update-sm-context.continuation` | 同一 `UpdateSmContext` / modify path | `operationId="UpdateSmContext"`；`smContextRef`；`request` 为原样 `SmContextUpdateData` JSON object | 至少包含 `discriminator.n1MessageType="0xD4"`，或 `discriminator.n2SmInfoType` 为 `PDU_RES_SETUP_RSP`、`PDU_RES_MOD_RSP`、`PDU_RES_REL_RSP`；两路可在同一请求中同时出现 | `n1SmMsg.contentId → n1.confirmation`；`n2SmInfo.contentId → n2.confirmation` |
 
-每个 `ingress.event` 的 IPC payload 固定包含：`eventId`、`ingressId`、`eventType`、可选 `externalRequestId`、`responseChannelId`、`source{protocol,peerId}`、上述规范化 `payload` 与 `artifacts[]`。规范化 `payload` 固定为 `{operationId, smContextRef?, request, discriminator?}`；其中 `request` 保留 OpenAPI JSON 字段名和值，不把原始 N1/N2 bytes 嵌入 JSON。每个 Artifact descriptor 固定包含 `stagingPath`（相对路径）、`slot`、`mediaType`、`contentId`（若 multipart 提供）和 `byteLength`。N2 `n2SmInfoType` 直接使用 OpenAPI enum 字符串；N1 最小 5GSM 头分类先要求至少 4 字节且第 0 字节 EPD=`0x2e`，从偏移 3（第 4 字节）读取 Message Type，并以 `0xC9`/`0xD1`/`0xD4` 字符串表达；第 1/2 字节分别是 PDU Session Identity/PTI，不得将首字节当作消息类型。该步骤仅作 T1 最小路由分类，不执行完整 NAS/NGAP 解码；短于 4 字节或 EPD 不匹配必须 fail-closed。
+每个 `ingress.event` 的 IPC payload 固定包含：`eventId`、`ingressId`、`eventType`、可选 `externalRequestId`、`responseChannelId`、`source{protocol,peerId}`、上述规范化 `payload` 与 `artifacts[]`。规范化 `payload` 固定为 `{operationId, smContextRef?, request, discriminator?}`；其中 `request` 保留 OpenAPI JSON 字段名和值，不把原始 N1/N2/N2 Ext1 bytes 嵌入 JSON。每个 Artifact descriptor 固定包含 `stagingPath`（相对路径）、`slot`、`mediaType`、`contentId`（若 multipart 提供）和 `byteLength`。N2 `n2SmInfoType` 直接使用 OpenAPI enum 字符串；N1 最小 5GSM 头分类先要求至少 4 字节且第 0 字节 EPD=`0x2e`，从偏移 3（第 4 字节）读取 Message Type，并以 `0xC9`/`0xD1`/`0xD4` 字符串表达；第 1/2 字节分别是 PDU Session Identity/PTI，不得将首字节当作消息类型。该步骤仅作 T1 最小路由分类，不执行完整 NAS/NGAP 解码；短于 4 字节或 EPD 不匹配必须 fail-closed。
 
 分类规则：
 1. N1 为 `0xC9` 或 `0xD1` 且无 continuation-only discriminator 时，Event type 为 `nsmf.update-sm-context`。
 2. N1 为 `0xD4`，或 N2 类型为上述三种 response 时，Event type 为 `nsmf.update-sm-context.continuation`；两路同时出现且都属于 continuation 时保留两路 Artifact/discriminator。
 3. 同一请求同时出现新操作 discriminator（0xC9/0xD1）与 continuation discriminator，或 discriminator 缺失、未知、与 Content-ID/part 不匹配时，拒绝整个 ingress，不发布 Event。
-4. 当前 Demo 不消费 `n2SmInfoExt1`；若其出现而没有显式受支持 slot，必须 fail-closed，不得静默丢弃或误并入 `n2SmInfo`。
+4. `n2SmInfoExt1` 仅在选定 OAS3 operation/profile 显式声明 N2 Ext1 slot 时接收；引用缺失、重复 Content-ID、错 slot 或错 media type 必须 fail-closed，不得静默丢弃或误并入 `n2SmInfo`。未被 JSON 引用的 part 不得交给 Codec，额外 part 策略由 ingress profile 明确规定。
 
 `responseChannelId` 是 Plugin 为每个 HTTP/2 stream 生成的本地短期 handle，只用于把 Host 的 `delivery.dispatch` 送回该次 HTTP response；Plugin 只保留对应的内存 waiter。Host 为每个 ingress 创建 `responseObligationId`，并在 `delivery.dispatch` 中提供。Plugin 会在该帧中瞬时收到此 Host-owned opaque token，但不得生成、解释为 Run 身份、跨请求保存/持久化、转发或在 `delivery.result` 中回传；Plugin 只使用本地 `responseChannelId` 将当前 dispatch 写回对应 HTTP/2 stream，不得混同两种 ID。Plugin 不接收、不存储、不发送 Run ID、generation、releaseTxn 或 continuation state。
 
 `externalRequestId` 不是上述 3GPP OpenAPI 字段。仅在受信 Demo peer 明确配置并发送私有 `X-CA-Request-Id` 时填入；真实对端未提供稳定身份时为空，不得用 `smContextRef`、Content-ID 或 responseChannelId 冒充跨重试幂等键。Host 负责 deduplication 和 Run association。Continuation 由 Host-owned pending index 依据受信 peer、operationId、smContextRef 和 discriminator 查找；无匹配或多重匹配时拒绝，不创建新 Run。Owner/Runtime 再验证原 Run 的 generation、releaseTxn、SUPI/PSI 与本路 originalInvocationId/Proof。当前 HTTP callback 的 response obligation 与原 Run 的执行身份分开管理。
 
-SBI requestSchema 是 Skill 选择期正式 Request Schema 根；采用 OpenAMSM 支持版本的原始 OAS3 JSON 组件及其保留字节的 `$ref`，不复制整个 multipart 结构、不把 N1/N2 字节转为模型可见字符串。T0 只提取及 staging 原始 Artifact；T1 仅用 Publisher 冻结的 Event metadata 与请求输入及最小 discriminator；T2 绑定 Skill/Run 后由资格化 Codec READ 解码并验证正式 Result Schema；T3 Owner mutation/Receipt/Proof/Reconcile；T4 continuation 仅恢复原 Run。T2 Codec Result 不得进入 T1。
+SBI requestSchema 是 Skill 选择期正式 Request Schema 根；Skill-owned G.4 根可在显式 pin SR-031 Source Bundle 后直接引用 OpenAMSM 支持版本的原始 OAS3 JSON Schema Component，保留字节与相对 `$ref`，Compiler 按 OAS3 dialect 解析；不复制整个 multipart 结构、不把 N1/N2/N2 Ext1 字节转为模型可见字符串。T0 只提取及 staging 原始 Artifact；T1 仅用 Publisher 冻结的 Event metadata 与请求输入及最小 discriminator；T2 绑定 Skill/Run 后由资格化 Codec READ 解码并验证正式 Result Schema；T3 Owner mutation/Receipt/Proof/Reconcile；T4 continuation 仅恢复原 Run。T2 Codec Result 不得进入 T1。
 
 **1.6.0 MAS Skill 作者仅引用 Capability ID。** Compiler 只对 Publisher 正式冻结的 Owner/Provider 一对一公开映射检查 Grant、唯一 Callable、kind/Effect/Schema 并生成 Binding；Provider 两个查询 2/2，加正式 Codec 目标 3/3；Owner 两项旧 Parser 必须分别签认：双移除为候选 22/22；一项移除、一项重构为只消费已验证 Codec Result 的纯业务 READ 为候选 23/23；两项均重构为纯业务 READ 为候选 24/24；任一项未签认则最终成员数未冻结、Publisher 不得 Release。其他导出变化必须重新计数。Runtime 只消费已检查 Binding 与部署身份，不从 v1alpha5 历史 Artifact 或私有 backend Catalog 构造映射。
 
@@ -341,6 +341,19 @@ Create → Modify → Release 的顺序、Owner authoritative state、Receipt / 
 
 1.6.0 Create/Modify/Release Skill 必须由 ca-skills 作者重新编写、使用唯一新 Compiler Check/Build/Verify 并正式发布 Bundle；历史 v1alpha5 E2E/Owner v1alpha4 只是业务输出参考，不能证明新 Runtime Binding 或新系统资格。SR-009 单独验 Plugin ingress/delivery/staging，SR-010 单独验 Host Artifact Channel、Provider/Codec，SR-011 才在正式新发布物和隔离环境齐备后执行同 UE/PSI 的真实 E2E；OM/EX 不能倒灌模块设计 READY 门槛。
 
+## 14. OpenAMSM 原版 OpenAPI 3.0 直接消费与 Create 解码阶段修正（IR-009）
+
+**原版来源与直接引用**：ca-skills / SR-031 只原样代发布 OpenAMSM 实际使用的 OpenAPI 3.0 YAML 与可达引用闭包，所有 bytes / 相对 `$ref` 不变。Plugin 按 OAS 3.0 operation / requestBody / multipart 验证；Compiler 在 Skill 显式 pin Source Bundle 后可直接解析原版 `components/schemas`。外部 Schema Object 按 OAS 3.0 dialect 处理，不生成 G.4 Adapter；Skill-owned `requestSchema` 根及本地节点仍遵循 G.4。Host Context 只经 `Contract.contexts` 引用。
+
+1. **T0**：Event Plugin 按 TS 29.502 的选定 `PostSmContexts.requestBody` 验证 SBI JSON、`multipart/related`、`jsonData`、N1/N2/N2 Ext1 binary parts、Content-Type 与 Content-ID；只 lazy resolve 该选定 surface 的 refs，不全文件 eager resolve 其他 operation。当前 `SmContextCreateData` 的可达闭包为 TS 29.502 / 29.571 / 29.510 NFManagement / 29.518 Namf 四份原版 YAML。依据 CommonData `RefToBinaryData.contentId`，`n1SmMsg.contentId` ↔ N1 part、`n2SmInfo.contentId` ↔ N2 part、`n2SmInfoExt1.contentId` ↔ N2 Ext1 part；必须精确匹配对应 slot，引用目标缺失、重复 Content-ID、错槽或错媒体类型在 Artifact 发布前拒绝。未被 JSON 引用的 part 不得交给 Codec；额外 part 的拒绝 / 忽略由 ingress profile 明确规定。通过验证后保存原始 N1/N2/N2 Ext1 bytes。T0 只做最小 0xC9 / 0xD1 / 0xD4 分类，不完整解码。
+2. **T1**：Skill Request / `when` 只读取到场 SBI JSON / 已规范化 Event 字段；不调用 Codec。Create 的 PDU Session Type / SSC mode / NAS PTI 等只有从 N1 解码才能获得，不能在 T1 强制要求。
+3. **T2**：选定 Procedure 调正式 Codec READ 后，才能通过 Provider Output Schema 使用 NAS / NGAP Result。SBI 与 N1 的 PSI / 类型冲突在 Owner mutation 前拒绝，不补默认值。
+4. **Modify / Release / Continuation**：0xC9 是最小分类，不代表完整 Modify Decoder；0xD1 首批候选不证明 Create / Modify / N2 已支持；0xD4 / N2 completion 只续跑原 Run，检查 generation / PSI / PTI / N2 message type。
+5. **类型职责**：SBI 原版 OAS Source Bundle（SR-031）、Compiler OAS3 Resolver（SR-013）、Provider NAS/NGAP Output Schema（SR-026）、Skill-owned Request（CA-SL 1.6.0）与 Host Context（SR-030）是不同工件 / Owner。Codec JSON 不代表 Owner Receipt / Commit Proof；Source Bundle 不产生 Tool Scope。
+6. **门槛**：SR-031 Source Bundle、SR-010 ingress / Artifact Channel、SR-013 Compiler Resolver、SR-026 Provider Profile、SR-027 Bundle 各自独立验收。没有正式 OAS3 Resolver / Provider / 1.6.0 Bundle 时对应产品 AC NOT_RUN / BLOCKED；不引入旧版兼容。
+
+[权威设计](../EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)。
+
 ## 修订记录
 
 
@@ -362,3 +375,4 @@ Create → Modify → Release 的顺序、Owner authoritative state、Receipt / 
 | 2026-11-28 | 0.3.2-integration-2 | GPT-6（ChatGPT） | §13.2、§13.7 | 修复整合稿遗留的旧 `parse-n1.operation.output` 编译示例，恢复正式数据流约束和 0xC9/0xD1 双阶段验收条件 | 原始 NAS 只由资格化 Codec 解码；避免示例与 Owner Parser 不得 fallback 的新架构冲突 | Issue #12；#40；#113；PR #45；#46 |
 | 2026-11-28 | 0.3.3 | GPT-6（ChatGPT） | §4.1、修订记录 | 修正 5GSM EPD 与 Message Type 字节偏移；明确 responseObligationId 在 dispatch 中的瞬时接收边界；补齐 Owner Parser 混合签认基数 | 防止将 NAS EPD 当作消息类型、误拒合法 Delivery，或将未签认的固定 Owner 数量当作发布条件 | Issue #12；PR #46；Review #6095143611 |
 | 2026-11-28 | 0.3.4 | GLM-5.3（DeepSeek Harness） | 修订记录 | 合并被空行拆断的孤儿修订表段为单一连续表格，不改变任何历史行内容 | 修复 R8-09 同类 Markdown 渲染断裂，保证修订数据完整可见 | Issue #12；PR #46；Review #6095143611 |
+| 2026-11-28 | 0.3.5 | GPT-6.2（ChatGPT） | §4.1、§14 | 补齐 N2 Ext1 Content-ID / slot 映射，并明确原版 OAS3 Source Bundle、T0/T1/T2/T4 和 Codec Result 分阶段边界 | 与 IR-009 / SR-031 / SR-010 的三组 multipart 引用一致，避免错误丢弃或误交二进制 | Issue #47；IR-009；SR-010/031；PR #115 |
