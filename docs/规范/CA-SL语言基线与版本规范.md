@@ -1,9 +1,9 @@
 # CA-SL 语言基线与版本规范
 
 > 文档类型：语言版本与运行时消费规范  
-> 文档版本：0.2.7\
+> 文档版本：0.2.9\
 > 状态：历史 CA-SL v1alpha5 FROZEN / RELEASED；**下一正式目标 CA-SL 1.6.0 DESIGN / NOT_RELEASED**，设计待评审；Compiler/Bundle 产品门槛未完成
-> 修订日期：2026-11-27
+> 修订日期：2026-11-28
 > 关联 IR：IR-003、IR-006；SR-023、SR-013  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
 > 本文局部非目标：旧版兼容、Agent 内置 Compiler、Skill Admission、签名、Trust Registry 和额外 SHA-256
@@ -24,7 +24,7 @@
 
 ### 新发布物的数字版本
 
-两个 Development Interface Package 的 `package.json.version` 与各自 snapshot key 均为 `1.0.0`。新设计的 Runtime Artifact 与 BuildResult 候选版本段为 `2`，按 SR-013 的 Owner 契约确认及发布流程冻结。复核已有发行物时按固定 revision 读取原始路径、`apiVersion`、`languageTarget`、Schema `$id` 和字节；新版机器标识由 ca-skills / Compiler 全新冻结；**不迁移旧版机器标识**，不实现旧标识别名或兼容输入。
+**历史 Compiler v2.1.0 的**两个 Development Interface Package 的 `package.json.version` 与各自 snapshot key 均为 `1.0.0`。新设计的 Runtime Artifact 与 BuildResult 候选版本段为 `2`，按 SR-013 的 Owner 契约确认及发布流程冻结。复核已有发行物时按固定 revision 读取原始路径、`apiVersion`、`languageTarget`、Schema `$id` 和字节；新版机器标识由 ca-skills / Compiler 全新冻结；**不迁移旧版机器标识**，不实现旧标识别名或兼容输入。
 
 ## 2. Next 作者与运行时消费边界
 
@@ -35,12 +35,12 @@
 - Compiler 只从 `skills/<skill-id>/assurance/contract.yaml` 读取、校验并编译可选顶层 when。SKILL.md Front Matter 不声明 when。
 - SBI JSON 直接采用 OpenAMSM 对应版本的 3GPP/OpenAMSM 正式 OpenAPI YAML，保留原件及其引用。NAS/NGAP 二进制经 Codec 解码，解码字段遵循 Codec 发布的结果 Schema。`format: binary` 只描述传输形式。选择期只读取当时已存在的输入，Request Schema 解析与 when 的静态类型检查遵循正式 CA-SL / Compiler 契约。
 - predicates.yaml 只描述执行期 Predicate；when 只负责新 Event 的 Skill 选择。
-- 历史 Node、Wait 与 Procedure Graph 语义可查冻结 v1alpha5 规范。新实现仅消费正式发布的 1.6.0 契约。
+- 新 **1.6.0** Node 仍具有 Precondition、Operation、Observation、Postcondition 四阶段，Wait/Procedure Graph 的精确语义由 ca-skills 下一正式作者规范冻结；Operation/Observation 只是 Node 阶段，不新增 Skill-facing Operation ID。历史 v1alpha5 的 Node、Wait 与 Procedure Graph 只读留档，新实现只消费正式 1.6.0 契约。
 - Next Agent 只导入正式发布 Bundle，不读取作者源进行运行时编译，不内置或调用 Compiler。
 
 ## 3. when 的发布与运行时依赖
 
-when 的作者语义已进入 CA-SL v1alpha5 正式发布。它使用 Event 与 Skill requestSchema 类型环境，必须在发布阶段完成 CEL 解析、静态类型检查和 G.4 限制检查。
+**历史事实：**`when` 曾进入 v1alpha5 发布，但不构成新产品入口。**1.6.0 唯一目标**中 `when` 仅在 `assurance/contract.yaml` 顶层；Compiler 以 Publisher 冻结的 Event metadata、当前 Skill 的 Request Schema 进行 CEL 解析、静态类型检查，并编译 CheckedExpr/DescriptorSet。`has()`、nullable、短路和 G.4 Guard 的新正式剖面由 ca-skills Publisher 与 Compiler #62 冻结，不把历史 Profile 直接视为 1.6.0 已发布语义；T1 不能读取 T2 Codec Result。
 
 但语言规范发布不等于 Compiler 发布物已完成：
 - ca-skill-compiler Issue #61 当前 OPEN，但仅对应 v1alpha5 历史范围；CA-SL 1.6.0-only 新 Compiler 实施由 Issue [#62](https://github.com/odango-chan/ca-skill-compiler/issues/62) 独立跟踪。
@@ -76,14 +76,16 @@ CA-SL 语义变化必须：
 
 ## 修订记录
 
-| 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
-|---|---|---|---|---|---|
-| 2026-11-25 | 0.1.3 | 原记录 | 全文 | 建立 CA-SL v1alpha5 发布登记 | IR-006 |
-| 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | §1–5 | 核对 #88/#89 合并状态，迁入完整规范正文，明确源仓状态差异与 Compiler #61 未完成边界 | Issue #12；SR-023；SR-013 |
-| 2026-11-25 | 0.2.1 | Codex / GPT-6 | 正文 | §4 对齐中央设计与语言发布责任 | Issue #12 |
-| 2026-11-26 | 0.2.2 | Codex / GPT-6 | 见本行变更 | 区分数字版本的新发布物和固定来源的实际机器标识 | Issue #12 |
-| 2026-11-26 | 0.2.3 | GPT-6.2（ChatGPT） | 文档头、§1、§6、修订记录 | 根据 Issue #40 明确下一正式目标改为 CA-SL 1.6.0（不使用 v1alpha6），定义 Capability-first 与历史冻结发布边界；避免反复 alpha 命名、静默重解释 v1alpha5 或提前宣称 1.6.0 已发布 | Issue #40；SR-029；SR-004；SR-013；SR-027 |
-| 2026-11-26 | 0.2.4 | GPT-6.2（ChatGPT） | §1、§4、§6、修订记录 | 将无兼容要求冻结为 1.6.0 全链路单版本强制规则：不接受旧语法、旧 Build DTO、旧 Bundle、旧 Artifact、迁移或 fallback；历史记录仅审计留档，不让旧产物成为新版合法输入 | Issue #40/#43；SR-029；SR-004 |
-| 2026-11-27 | 0.2.5 | Codex | §2 | 对齐 1.6.0 作者源、输入 Schema 与编译职责 | Issue #40、#43；PR #44 |
-| 2026-11-27 | 0.2.6 | GPT-6.2（ChatGPT） | 文档头、修订记录 | 合并 #45 的 1.6.0-only 设计增量并保留恢复分支当前状态，避免回滚 #44 与后续修订。 | Issue #12/#40/#43；PR #44/#45 |
-| 2026-11-27 | 0.2.7 | GPT-6.2（ChatGPT） | §3/§6 CA-SL 1.6.0 版本边界 | 将 1.6.0 新发布 Artifact 的实施追踪改为 Compiler #62，保留 #61 历史范围。；原因：让版本规范和跨仓实施追踪保持一致，避免版本目标错位。 | Issue #40/#62；PR #45 |
+| 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
+|---|---|---|---|---|---|---|
+| 2026-11-25 | 0.1.3 | 原记录 | 全文 | 建立 CA-SL v1alpha5 发布登记 | 见修改内容列（历史合并记录） | IR-006 |
+| 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | §1–5 | 核对 #88/#89 合并状态，迁入完整规范正文，明确源仓状态差异与 Compiler #61 未完成边界 | 见修改内容列（历史合并记录） | Issue #12；SR-023；SR-013 |
+| 2026-11-25 | 0.2.1 | Codex / GPT-6 | 正文 | §4 对齐中央设计与语言发布责任 | 见修改内容列（历史合并记录） | Issue #12 |
+| 2026-11-26 | 0.2.2 | Codex / GPT-6 | 见本行变更 | 区分数字版本的新发布物和固定来源的实际机器标识 | 见修改内容列（历史合并记录） | Issue #12 |
+| 2026-11-26 | 0.2.3 | GPT-6.2（ChatGPT） | 文档头、§1、§6、修订记录 | 根据 Issue #40 明确下一正式目标改为 CA-SL 1.6.0（不使用 v1alpha6），定义 Capability-first 与历史冻结发布边界；避免反复 alpha 命名、静默重解释 v1alpha5 或提前宣称 1.6.0 已发布 | 见修改内容列（历史合并记录） | Issue #40；SR-029；SR-004；SR-013；SR-027 |
+| 2026-11-26 | 0.2.4 | GPT-6.2（ChatGPT） | §1、§4、§6、修订记录 | 将无兼容要求冻结为 1.6.0 全链路单版本强制规则：不接受旧语法、旧 Build DTO、旧 Bundle、旧 Artifact、迁移或 fallback；历史记录仅审计留档，不让旧产物成为新版合法输入 | 见修改内容列（历史合并记录） | Issue #40/#43；SR-029；SR-004 |
+| 2026-11-27 | 0.2.5 | Codex | §2 | 对齐 1.6.0 作者源、输入 Schema 与编译职责 | 见修改内容列（历史合并记录） | Issue #40、#43；PR #44 |
+| 2026-11-27 | 0.2.6 | GPT-6.2（ChatGPT） | 文档头、修订记录 | 合并 #45 的 1.6.0-only 设计增量并保留恢复分支当前状态，避免回滚 #44 与后续修订。 | 见修改内容列（历史合并记录） | Issue #12/#40/#43；PR #44/#45 |
+| 2026-11-27 | 0.2.7 | GPT-6.2（ChatGPT） | §3/§6 CA-SL 1.6.0 版本边界 | 将 1.6.0 新发布 Artifact 的实施追踪改为 Compiler #62，保留 #61 历史范围。；原因：让版本规范和跨仓实施追踪保持一致，避免版本目标错位。 | 见修改内容列（历史合并记录） | Issue #40/#62；PR #45 |
+| 2026-11-28 | 0.2.8 | GPT-6（ChatGPT） | §1～3、§6、修订记录 | 在 #46 整合分支中保留已合 #45 的 when 唯一来源、Compiler #62 与历史只读边界，同时合并 #46 的 Node/Guard/CheckedExpr 显式约束，状态仍 DESIGN / NOT_RELEASED | 防止分叉分支单侧覆盖 1.6.0-only 权威语义 | Issue #12；#40；PR #45；#46 |
+| 2026-11-28 | 0.2.9 | GLM-5.3（DeepSeek Harness） | 修订记录 | 将 6 列历史修订表统一为 7 列标准结构 | 关闭 R3-LEDGER-01 同族列宽失配 | Issue #12；PR #46；Review #6095143611 |

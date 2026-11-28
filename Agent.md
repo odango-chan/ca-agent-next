@@ -7,11 +7,13 @@
 ## 1. 任务开始流程
 
 0. 创建或引用覆盖本批变更的 Issue，并按[治理规范](docs/规范/文档编写与治理规范.md#14-分支命名与生命周期)命名新分支。
+0.1 对多步骤、多 SR、多仓库或预计跨上下文的长时间运行 Goal，必须在实质性工作前按[SR 管理规范 §9.1](docs/规范/SR%20管理规范.md#91-长时间运行-goal-的启动检查点与进度持久化)建立 GitHub 检查点，记录任务范围、基线、工作清单、状态和唯一 Next Action，并重新读取核验；失败时停止并报告 `CHECKPOINT_NOT_ESTABLISHED`。
+0.2 执行期间每完成一个独立工作项即更新并核验检查点。Goal 中断时先从 GitHub 恢复进度：原 Goal 可恢复则继续原 Goal；不可恢复则创建关联原 Goal/Issue 的续跑 Goal，只处理未完成项，不重启整批、不重复已完成项。规则见[SR 管理规范 §9.2](docs/规范/SR%20管理规范.md#92-goal-中断后的恢复与续跑)。
 1. 阅读 README.md、本文和 docs/治理/功能树与需求追踪基线.md。
 2. 根据用户任务、Issue 或 PR 变更识别仓库、Feature / IR / SR。
 3. 检查 SR 状态、依赖类型（设计/实施/模块验收/系统集成）和本次要执行的阶段/Acceptance；只检查本阶段直接消费的依赖。DRAFT / BLOCKED 不得直接实施；READY 仍须通过当前阶段实施门禁。不得把功能阶段顺序、文档引用或系统级 EX 推断成未登记的前置依赖。
 4. 只读取对应功能设计说明书、相关规范、外部 EC 权威文档和验收要求。
-5. 实施前核对仓库、分支、HEAD、工作区和外部依赖当前状态。
+5. 实施前核对仓库、分支、HEAD、工作区和外部依赖当前状态；评审任务按[SR 管理规范 §9.3](docs/规范/SR%20管理规范.md#93-批量评审的快照与逐项推进)固定本轮最新 Review Snapshot，PR 正常前进不要求漂移快照。
 6. 实施后回填 SR、Issue、PR、Commit、Test 和验收证据。
 
 不要要求每项任务阅读所有设计文档。跨功能任务才同时加载多个 Feature。
@@ -21,7 +23,7 @@ DeepSeek Harness 默认使用 Goal 模式。按[SR 管理规范](docs/规范/SR%
 ## 2. 仓库与语言边界
 
 - Agent Core、Host、Agent Model Loop、Skill Importer、Skill Resolver 和 Runtime 使用 Python。
-- Python 工程工具链设计入口见 [G02 Python 工程工具链与环境管理](docs/设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md)；SR-028 当前为 DRAFT，uv 尚未实施。只有 SR-028 经评审达到 READY 并建立独立实施 Issue 后，才按其要求迁移依赖、锁文件、worktree 环境和 CI；不得将 uv 迁移混入 SR-001 PR #32。
+- Python 工程工具链设计入口见 [G02 Python 工程工具链与环境管理](docs/设计说明书/G02-Python工程工具链/Python工程工具链设计说明书.md)；当前恢复分支 SR-028 仍为 DRAFT/READY=0。第七轮设计 Review #6084094037 仅对固定 Head `93f1389e` / Base `3c7c4838` 授予设计 APPROVE_FOR_READY；实施 Issue #96 已存在，PR #97（READY 状态回填）、PR #99（基于旧设计 SHA 的 uv 实施候选）和 PR #112（堆叠共享基线）均 OPEN、未合并到当前恢复分支。不得重复创建实施 Issue、从当前 PR #46 Head 启动 uv 迁移，或将候选分支证据记为当前分支 VERIFIED；现有 #96 必须遵守其固定基线、独立分支和不合并授权边界。不得将 uv 迁移混入 SR-001 PR #32。
 - 独立 Plugin 可以使用 Go；Go Plugin 不代表 Go Host。
 - ca-agent-demo 是既有 Python 实现和测试证据来源，只能逐文件选择性复用，不得整体复制。
 - ca-skills、ca-skill-compiler、ca-client-tools、ca-openamsm-plugin、env-openamsm、env-5gc-sim、ca-skill-studio-demo 等保有独立实现和发布职责；ca-runtime 与 ca-agent 是参考/目标仓，不是 Next 运行时依赖。
@@ -160,6 +162,7 @@ review_scope:
 
 | 日期 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
 |---|---|---|---|---|---|
+| 2026-11-27 | GPT-6（ChatGPT） | §1 | 强制长时间运行 Goal 启动前建立并核验 GitHub 检查点；规定执行中增量更新、原 Goal 恢复/续跑，以及评审快照固定规则入口 | 防止 Goal 中断丢失进度、重复执行和因 PR 普通提交导致评审误暂停 | Issue #92；Issue #12；PR #46 |
 | 2026-11-25 | 历史修订者/模型未记录 | 原第 1～11 节及 review_scope | 既有协作约束和机器可读评审范围；逐章历史记录未建立 | 原始修订者未记录，本轮不臆造 | PR #1 |
 | 2026-11-25 | GPT-6.2（ChatGPT） | 第 1～6 节 | 将功能识别和按需阅读流程交给功能树，精简硬约束，保留 review_scope 原始区块 | Agent.md 过长且重复设计细节 | F01～F07、G01；SR-001～011；PR #1 |
 | 2026-11-25 | GPT-6.2（ChatGPT） | 第 2、3、5 节 | 明确外部架构/设计/规范/ADR 全部集中到 Next，兄弟仓只保留实现资料并链接回中央设计；增加未发布 Host→Tool Artifact Channel fail-closed 约束 | 防止设计分叉和 Provider 误用 Event staging | EC01～EC07、REF01～REF03；SR-015～SR-023；Issue #12 |
@@ -171,3 +174,4 @@ review_scope:
 | 2026-11-25 | GPT-6.2（ChatGPT） | 第 3、4、7 节 | 更正 ca-host.artifact-store/v1 已冻结、Provider/Go Host 外部实现已存在、Next Python Host 尚未实现的三层状态；明确 SHA-256 仅为既有协议传输校验 | 消除 F05、F03.05 与源仓实现状态冲突，避免把外部 PASS 计入 Next | F05、F03.05、SR-009、SR-010；Issue #12 |
 | 2026-11-26 | GPT-6.2（ChatGPT） | 第 1、2、5 节 | 明确设计/实施/AC/EX 分阶段门禁，分离设计与实施 Issue，并要求实施 Commit/Push 后核对远端 SHA | 防止独立 SR 被无关下游依赖或系统级 EX 阻塞，并确保交付可追溯 | Issue #21；SR 管理规范 §6.1；PR #20 |
 | 2026-11-26 | GPT-6（ChatGPT） | §3、修订记录 | 明确 CA-SL 1.6.0 Capability-first 双向一对一、Compiler Binding、全链路绝不兼容旧版和设计待评审与实施 READY 分离 | 避免 Harness 为历史 v1alpha5 擅自构建兼容适配或提前实施 | Issue #40；IR-008；SR-029 |
+| 2026-11-28 | GPT-6（ChatGPT） | §2、修订记录 | 澄清 SR-028 第七轮设计批准、当前分支 DRAFT、Issue #96 与 PR #97/#99/#112 的真实状态和固定基线边界 | 防止重复开实施任务、从错误设计 Head 开始迁移，或把候选分支证据误报为当前分支 VERIFIED | Issue #12；Issue #96；PR #46/#97/#99/#112 |

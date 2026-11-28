@@ -1,12 +1,14 @@
 # EC05 — OpenAMSM Owner 与权威状态架构设计
 
 > 文档类型：外部能力域架构设计（实现派生重建）  
-> 文档版本：0.1.0  
+> 文档版本：0.1.5\
 > 状态：依据当前 main 代码、Owner 声明、契约和验收材料重建；源仓没有独立总体架构文档  
 > 功能归属：EC05；关联 F04、F05、F06、F07  
-> 关联需求：IR-004、IR-005；SR-007、SR-010、SR-011、SR-018  
+> 关联需求：IR-004、IR-005；SR-007、SR-010、SR-011、SR-018、SR-025\
 > 修订日期：2026-11-25  
-> 实现基线：env-openamsm main dc83ccbf5be54dcc7112dd43ba95ea6fa5975550
+> 实现基线：env-openamsm main dc83ccbf5be54dcc7112dd43ba95ea6fa5975550\
+> 全局评审范围：继承根目录 Agent.md 的 review_scope
+> 本文局部非目标：不重建 Agent Runtime、Provider、Plugin 或 Studio 内部实现；不扩展到生产级 DFX 或全量 3GPP 资格
 
 ## 1. 架构定位与权威归属
 
@@ -41,6 +43,32 @@ Owner 以 contracts/mas/operations.yaml 作为声明源，由 publish.py 生成 
 ToolCatalog 描述 Callable ID、Effect、Capability、输入输出 Schema 和 Owner 结果语义。MUTATION Callable 必须有 Receipt Schema、Commit Proof 和精确原始 Invocation 关联。READ Callable 不得被误报为副作用提交。
 
 Owner 声明源、发布产物、Provider 绑定与 Skill 作者源分别归属不同仓库；Next 只消费正式发布契约，不复制 Owner 操作实现。
+
+## 2.1 CA-SL 1.6.0 Capability-first 发布目标
+
+本节是 Next 新目标设计，不改写 env-openamsm v1alpha4 已发布字节和现有业务实现。
+
+| 项目 | 历史 Owner v1alpha4 | 新 CA-SL 1.6.0 目标 |
+|---|---|---|
+| CapabilityContracts | 24 Capability / 25 Callable membership；唯一多成员项为 mas.se.events.emit | establishment / release marker 两种事件分别成为独立 Capability；两个旧 Parser 分别签认后再计算公开成员数，不预设 24/24 |
+| Reconcile | mas.reconcile.exact_original 曾出现在 Skill-facing CapabilityContracts | 从 Skill-facing CapabilityContracts 移除；MAS.RECONCILE 保留 ToolCatalog 和 Mutation Reconcile binding，Runtime Coordinator internal-only |
+| Receipt Query | MAS.RECEIPT_QUERY 为普通受控 READ | 保持普通 Skill-facing READ Capability / Callable |
+| ToolCatalog | 25 contracts（21 MUTATION + 4 READ，历史 v1alpha4 基数） | 仅按 Owner 正式签认的 1.6.0 导出/内部绑定发布；`MAS.RECONCILE` 保留 internal-only，实际新 Package 数量不沿用历史 25 的假设 |
+| 发布 | v1alpha4 Owner source / package | SR-025 重新发布 1.6.0 Capability-first Package；新发布物尚未交付 |
+
+**两项历史 N1 Parser 的逐项签认矩阵（规范性）：**
+
+| `SSM.PARSE_N1_MODIFY` | `SSM.PARSE_N1_RELEASE` | 候选公开成员数 | 发布门槛 |
+|---|---|---|---|
+| 移除 | 移除 | 22/22 | 两项均由 Owner 正式签认移除 |
+| 移除 | 重构为只消费已验证 Codec Result 的纯业务 READ | 23/23 | 保留项完成纯业务重构并单独签认 |
+| 重构为只消费已验证 Codec Result 的纯业务 READ | 移除 | 23/23 | 保留项完成纯业务重构并单独签认 |
+| 重构为只消费已验证 Codec Result 的纯业务 READ | 重构为只消费已验证 Codec Result 的纯业务 READ | 24/24 | 两项均完成纯业务重构并分别签认 |
+| 任一未签认 | 任一未签认 | 未冻结 | Publisher 不得发布；不得猜测或自动改变成员 |
+
+其他导出变化须重新计算最终数量；以上均为条件候选，不是已发布事实。
+
+新作者不得写 Owner Callable ID。Compiler 必须从显式依赖 Package 唯一解析 Capability→Callable，并校验 kind、Effect、Schema、Owner identity；不得以旧 24/25 membership 或旧 Artifact 作为新输入。具体新 Package Schema / Publisher 版本由 SR-025 与 Compiler 1.6.0 契约冻结。
 
 ## 3. Owner 组件边界
 
@@ -125,6 +153,11 @@ UE-requested Release 的 NAS message type 是 0xD1，与 AMF/network-initiated R
 
 ## 修订记录
 
-| 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
-|---|---|---|---|---|---|
-| 2026-11-25 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 根据 Owner 发布声明、Receipt、Scheme C 设计和当前主线文件重建架构；标记为实现派生重建，避免虚构原始架构文档 | Issue #12；SR-018 |
+| 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
+|---|---|---|---|---|---|---|
+| 2026-11-25 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 根据 Owner 发布声明、Receipt、Scheme C 设计和当前主线文件重建架构；标记为实现派生重建，避免虚构原始架构文档 | 见修改内容列（历史合并记录） | Issue #12；SR-018 |
+| 2026-11-26 | 0.1.1 | GPT-6（ChatGPT） | 1.6.0 新目标与历史边界 | 增加 1.6.0 Owner Capability 24/24 目标与 Reconcile internal-only 边界，保留 v1alpha4 为历史实现基线 | 见修改内容列（历史合并记录） | Issue #12/#40；PR #46 |
+| 2026-11-26 | 0.1.2 | GPT-6（ChatGPT） | 文档头、§2.1、修订记录 | 补齐治理要求的全局评审范围与局部非目标；将 SR-025 纳入 1.6.0 Publisher 关联 | 使正式文档通过 review_scope 头部门禁，并显式追踪 Owner 新发布责任 | Issue #12/#40；SR-025；PR #46 |
+| 2026-11-28 | 0.1.3 | GPT-6（ChatGPT） | §2.1、修订记录 | 将 Owner 1.6.0 公开成员数改为两项历史 Parser 分别签认后推导，补齐混合与未签认情形 | 避免把历史 ToolCatalog 基数或固定 24/24 候选误当成新 Publisher 的强制契约 | Issue #12；SR-025；PR #46；Review #6095143611 |
+| 2026-11-28 | 0.1.4 | GLM-5.3（DeepSeek Harness） | 修订记录 | 合并被空行拆断的孤儿修订表段为单一连续表格，不改变任何历史行内容 | 修复 R8-09 同类 Markdown 渲染断裂，保证修订数据完整可见 | Issue #12；PR #46；Review #6095143611 |
+| 2026-11-28 | 0.1.5 | GLM-5.3（DeepSeek Harness） | 修订记录 | 将 6 列历史修订表统一为 7 列标准结构 | 关闭 R3-LEDGER-01/R8-09 同族列宽失配，保证原因/关联列渲染可见 | Issue #12；PR #46；Review #6095143611 |

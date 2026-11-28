@@ -1,15 +1,16 @@
 # Context 与 Artifact 管理设计说明书
 
 > 文档类型：机制设计说明书  
-> 文档版本：0.4.2  
+> 文档版本：0.4.7\
 > 状态：目标设计已重建；ca-host.artifact-store/v1 已冻结并由 Provider v1.2.0 消费；ca-agent Go Host P1 已验收；Next Python Host / ArtifactStore / Channel NOT_IMPLEMENTED  
 > 功能归属：F05 — Context 与 Artifact 管理  
-> 关联 SR：SR-009；交叉 SR：SR-007、SR-010、SR-011、SR-015、SR-017  
+> 关联 SR：SR-009；交叉 SR：SR-007、SR-010、SR-011、SR-015、SR-017、SR-030\
 > 关联 IR：IR-004、IR-005、IR-006  
 > 修订日期：2026-11-26  
 > 适用范围：Event Context、Run Context、Observation/Evidence 投影、Host-owned ArtifactStore、SBI multipart、Plugin Handoff、Codec 输入输出
 
-全局评审范围继承根目录 [Agent.md](../../../Agent.md) 的 review_scope。本文局部非目标见 §13。
+> 全局评审范围：继承根目录 Agent.md 的 review_scope。
+> 本文局部非目标：详见 §13。
 
 ## 1. 目标与基本边界
 
@@ -72,7 +73,7 @@ Context Fact 是带来源的结构化事实，不因进入 Context 就自动成�
 
 ### 3.1 Observation
 
-- Observation 必须由声明为 READ 的 Tool 能力取得。
+- Observation 必须由唯一映射的 READ Capability / Callable 取得；Skill 只引用 Capability。
 - READ 返回必须符合该 Callable 所属 Provider Interface 或 Owner Contract 的输出 Schema，并关联原 Run/Invocation。
 - Observation 的来源、对象范围和新鲜度必须保留；缺失、来源不匹配或 Schema 无效时不得构造成功事实。
 - UNKNOWN 必须保持 UNKNOWN，不得因模型推断、缓存默认值或“没有查到”而转成 PASS/true。
@@ -95,7 +96,7 @@ Host 是模型上下文的唯一组装者。模型只接收当前任务所需且
 - Event Schema 允许的业务输入字段；
 - 明确标记 MODEL_VISIBLE 的只读事实；
 - 当前 Run 的最小执行摘要；
-- 当前 Skill 可见的 Callable 描述和参数 Schema。
+- 当前 Skill 已授权的 Capability 描述和参数 Schema；不得把 Callable ID 或 backendOperationId 投影给模型。
 
 以下内容默认 HOST_ONLY：
 
@@ -309,11 +310,11 @@ Demo 必须具备：本地 Host-owned ArtifactStore、精确 slot、相对路径
 | ca-runtime Skill Context Identity | 参考设计 | REF02 Skill Context 原文；是 Go RuntimeHost 参考，不是 Next Python 契约 |
 | ca-agent Go Host Artifact Store | IMPLEMENTED / VERIFIED（外部参考） | main 447d0cc；ca-host.artifact-store/v1；P1 acceptance 43/43（read-only 11/11）；real-NF multipart NOT_VERIFIED；仅证明 Go Host 参考实现 |
 | ca-host.artifact-store/v1 契约 | FROZEN / ACCEPTED | TARGET01 原文；contract pin 2c0b07f；Provider v1.2.0 固定 fixtures；artifactRef 为随机 opaque token，SHA-256 仅用于逐 Artifact 传输校验 |
-| ca-client-tools Provider Artifact Channel | IMPLEMENTED（Provider v1.2.0） | main 7bcb261；`contracts/host-artifact-store/v1/`、`internal/artifactchannel/`、`internal/providerapp/artifacts.go`；缺少 artifactChannel 时 fail-closed |
+| ca-client-tools Provider Artifact Channel | IMPLEMENTED（历史 Provider v1.2.0） | main 7bcb261；`contracts/host-artifact-store/v1/`、`internal/artifactchannel/`、`internal/providerapp/artifacts.go`；证明冻结 Host Artifact Channel 的传输实现，不证明 1.6.0 Interface Package / Capability exports |
 | Next Host→Tool Artifact Channel | NOT_IMPLEMENTED | Next Python Host 尚无 server/adapter；SR-010 实施；通过 ca-host.artifact-store/v1 共享 fixtures 前保持 NOT_CONFIGURED |
 | ca-client-tools Codec Phase B | OPEN / NOT_MERGED | PR #39 OPEN（非 Draft）；Phase B 已达 FINAL_PASS / PHASE_C_READY，但未合并 |
 | env-5gc-sim Mock AMF Codec C1 | OPEN / NOT_MERGED | PR #86 OPEN；只将 Mock AMF 测试对端迁移到 `ca-client-tools/protocol/codec`，不提供 Agent Tool/Provider Callable，也不实现 Next Host/Runtime 集成 |
-| Next Agent Tool / Provider Codec Consumer | NOT_STARTED | PR #39 尚未合并；PR #86 不属于 Agent Tool/Provider 集成；Next 尚无 Codec Tool Callable 消费验收 |
+| Next Agent Tool / Provider Codec Consumer | NOT_STARTED（1.6.0 目标设计见 SR-026） | PR #39 尚未合并；PR #86 不属于 Agent Tool/Provider 集成；新目标为一个 Skill-facing Codec Capability ↔ 一个公开 Callable，内部只处理已声明 NAS 消息子集 |
 | Next Artifact / OpenAMSM E2E | NOT_RUN | 不得以外部仓的测试 PASS 代替 |
 
 ### 14.1 复用原则
@@ -321,6 +322,18 @@ Demo 必须具备：本地 Host-owned ArtifactStore、精确 slot、相对路径
 可选择性复用：事实来源与 freshness、只读 Observation、模型可见性显式 allowlist、Skill reference 精确路径、Artifact ref 由 Host 管理的概念。
 
 不直接复用：artifact:sha256 内容寻址、ca-agent-demo 的完整 PlanningContext / ContextOffer / Candidate Strategy 模型、5GC 专用 Context alias 和 MAS 业务参数。复用必须由后续 SR 明确具体代码路径和必要性。
+
+### 14.2 1.6.0 Capability / Package 目标边界
+
+| 接口域 | 新 1.6.0 目标 | 旧发布物的定位 |
+|---|---|---|
+| Owner MAS | 最终成员数须由 Owner 对两项旧 N1 Parser 分别签认后推导（条件候选 22/22、23/23、24/24；MAS.RECONCILE 保持 internal-only，不计入 Skill-facing 成员） | Owner v1alpha4 的 24/25 membership（ToolCatalog 25 contracts）仅作来源审计 |
+| Provider READ | 两个通用 READ Capability 各映射一个公开 Callable，分别用封闭 contextKind / resourceKind 选择内部后端 | Provider v1.2.0 的 2 Capability / 11 READ Callable 仅作来源审计 |
+| Provider Codec | 新增一个 Codec Capability ↔ 一个公开 Callable；首批只覆盖 SR-026 冻结的 NAS Decode 子集 | 旧 Provider Interface 未导出该 Capability；PR #86 Mock AMF Codec 不构成 Provider 发布 |
+| Host Context | 由 SR-030 发布 Schema-only Package，0 Capability / 0 Callable；只供 Contract.contexts 的 Host Context Schema 闭包；requestSchema 始终指向 Skill 自有请求 Schema | SR-024 VERIFIED 仅证明旧 Development Package Publisher，不证明 1.6.0 Package |
+| Host Artifact Channel | ca-host.artifact-store/v1 传输契约独立冻结；继续作为 Host→Tool 二进制通道 | 不因 CA-SL 版本升级而改变 wire contract |
+
+模型只接收 Capability 描述；Runtime 从 1.6.0 Artifact capabilityBindings 解析内部 Callable。Provider v1.2.0 的 11 个公开 READ ID 不得成为新 Skill-facing 输入。Studio Project Lock 保存导入来源、Package identity/version 与安装快照；这些 provenance 不得塞入 Package Manifest，也不得新增包级 hash / signature。
 
 ## 15. 原始设计资产与实现参考
 
@@ -350,21 +363,26 @@ Demo 必须具备：本地 Host-owned ArtifactStore、精确 slot、相对路径
 - Model projection 不包含原始 bytes、stagingPath、Provider 私有参数或未授权事实。
 - Observation 必须来自 READ 能力；Evidence 必须符合 Owner Contract；UNKNOWN 不得提升。
 - Next Host 尚未实现 ca-host.artifact-store/v1 channel 前，所有 artifact-bearing Provider binding 必须 NOT_CONFIGURED，并在远端 I/O 前拒绝；实现后必须通过共享 v1 fixtures，覆盖引用/slot/direction、字节长度与摘要、配额、过期、取消、清理和输出原子发布。
-- Codec 只按正式发布 Callable 和已验证消息子集调用；原始 Artifact 不被修改。
+- Codec 只按正式发布的 1:1 Capability / Callable 和已验证消息子集调用；原始 Artifact 不被修改。
 - Duplicate Event、Continuation、Delivery retry 和 Host restart 不产生伪成功或重复 mutation。
 - 所有测试分别记录 Next / ca-agent-demo / ca-runtime 的仓库、SHA、命令和范围；外部参考仓 PASS 不算 Next PASS。
 
 ## 17. 功能归属与需求追踪
 
-本说明书属于 F05。SR-009 仅承载 ca-openamsm-plugin 的 Event/Delivery 与本地 staging；SR-010 承载 Next Host ArtifactStore、ca-host.artifact-store/v1 channel server、Provider v2 Driver 和 Codec 消费；SR-015 负责 Tool Interface / Provider 设计移交；真实 OpenAMSM E2E 由 SR-011 承载。F06 负责业务事件、Create/Modify/Release 映射；F03/F03.05 负责 Plugin 与 Provider IPC/Channel；F04 负责 Action 授权和 Owner outcome。
+本说明书属于 F05。SR-009 仅承载 ca-openamsm-plugin 的 Event/Delivery 与本地 staging；SR-010 承载 Next Host ArtifactStore、ca-host.artifact-store/v1 channel server、Provider v2 Driver 和 Codec 消费；SR-015 记录历史 Tool Interface / Provider 设计移交；SR-026 发布 Codec Capability / Callable；SR-030 发布 Host Context Schema-only Package；真实 OpenAMSM E2E 由 SR-011 承载。F06 负责业务事件、Create/Modify/Release 映射；F03/F03.05 负责 Plugin 与 Provider IPC/Channel；F04 负责 Action 授权和 Owner outcome。
 
 ## 修订记录
 
-| 日期 | 版本 | 修订者/模型 | 章节 | 修改内容及原因 | 关联 |
-|---|---|---|---|---|---|
-| 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 全文 | 归入 F05，明确 Context、ArtifactStore、Codec 与外部契约关系 | F05；SR-009；EC03/EC04；PR #1 |
-| 2026-11-25 | 0.2.1 | GPT-6.2（ChatGPT） | §1–12 | 补充 Event/Delivery staging、OpenAMSM slot、Run/Artifact 关联与失败处理 | IR-005；SR-009 |
-| 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | 全文 | 从未实现视角重建 Context/Artifact 目标；核对 ca-agent-demo Context/ArtifactStore 代码与测试；明确不移植 content-addressed SHA256，并冻结 Host→Tool Channel 未发布边界 | Issue #12；SR-009、SR-010、SR-015 |
+| 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
+|---|---|---|---|---|---|---|
+| 2026-11-25 | 0.2.0 | GPT-6.2（ChatGPT） | 全文 | 归入 F05，明确 Context、ArtifactStore、Codec 与外部契约关系 | 见修改内容列（历史合并记录） | F05；SR-009；EC03/EC04；PR #1 |
+| 2026-11-25 | 0.2.1 | GPT-6.2（ChatGPT） | §1–12 | 补充 Event/Delivery staging、OpenAMSM slot、Run/Artifact 关联与失败处理 | 见修改内容列（历史合并记录） | IR-005；SR-009 |
+| 2026-11-25 | 0.3.0 | GPT-6.2（ChatGPT） | 全文 | 从未实现视角重建 Context/Artifact 目标；核对 ca-agent-demo Context/ArtifactStore 代码与测试；明确不移植 content-addressed SHA256，并冻结 Host→Tool Channel 未发布边界 | 见修改内容列（历史合并记录） | Issue #12；SR-009、SR-010、SR-015 |
 | 2026-11-25 | 0.4.0 | GPT-6.2（ChatGPT） | §5、§6.2、§7、§12～17 | 将 Host Artifact Store v1 从“未发布”纠正为已冻结契约；区分 Provider/Go Host 外部实现与 Next Python Host 未实现；明确随机 artifactRef 与逐字节 SHA-256 传输校验的不同语义，并把 SR-009/SR-010 的 Host/Plugin 责任拆清 | ca-agent contract pin 2c0b07f、ca-agent main 447d0cc P1 证据、ca-client-tools v1.2.0 源码/fixtures；避免沿用 ca-agent-demo 旧注释和内容寻址实现误判协议状态 | Issue #12；SR-009、SR-010、SR-015 |
 | 2026-11-25 | 0.4.1 | GPT-6.2（ChatGPT） | §14～15 | 补入 env-5gc-sim PR #86 的 Mock AMF Codec C1 状态，并明确它不等于 Agent Tool/Provider Codec Consumer；保持 Next Host ArtifactStore/Channel NOT_IMPLEMENTED | 防止把测试对端的 Codec API 迁移误报为 Next Tool/Provider 或 Host 二进制链路完成 | Issue #12；SR-009、SR-010、SR-011 |
-| 2026-11-26 | 0.4.2 | Codex / GPT-6 | 见本行变更 | §2～4 明确跨请求的响应义务及声明 Schema 的归属 | Issue #12 |
+| 2026-11-26 | 0.4.2 | Codex / GPT-6 | 见本行变更 | §2～4 明确跨请求的响应义务及声明 Schema 的归属 | 见修改内容列（历史合并记录） | Issue #12 |
+| 2026-11-26 | 0.4.3 | GPT-6（ChatGPT） | 当前目标契约 | 新增 1.6.0 Capability / Codec / Host Context Schema-only Package 目标，修正模型可见 Callable 和旧 Provider v1.2.0 的证据定位 | 见修改内容列（历史合并记录） | Issue #12/#40；PR #46 |
+| 2026-11-26 | 0.4.4 | GPT-6（ChatGPT） | 文档头、F05/Host Context 责任映射 | 统一正式评审范围/局部非目标声明，并将 1.6.0 Host Context Schema-only Publisher 纳入 SR-030 交叉追踪 | 修复 review context CI 头部门禁；区分 Host Context Schema 发布与其他 Context/Artifact 职责 | Issue #12；SR-030；PR #46 |
+| 2026-11-26 | 0.4.5 | GPT-6（ChatGPT） | Host Context Package 消费边界、修订记录 | 明确 SR-030 Schema-only Package 只由 Contract.contexts 引用，不替代 Skill 自有 requestSchema | 与 CA-SL 1.6.0 §4 的 Request / Context Schema 分工一致，避免 Schema root 语义混淆 | Issue #12/#40；CA-SL 1.6.0；SR-030；PR #46 |
+| 2026-11-28 | 0.4.6 | GLM-5.3（DeepSeek Harness） | §14.2、修订记录 | 将 §14.2 Owner MAS 目标行同步为条件签认基数；合并修订表断裂孤儿段 | 关闭 R8-05 残留与 R8-09 同类渲染断裂 | Issue #12；PR #46；Review #6095143611 |
+| 2026-11-28 | 0.4.7 | GLM-5.3（DeepSeek Harness） | 修订记录 | 修订表 6 列统一 7 列（承接 0.4.6 的条件签认基数修正） | 关闭 R3-LEDGER-01 同族列宽失配 | Issue #12；PR #46；Review #6095143611 |

@@ -1,15 +1,16 @@
 # SR-029：Capability-first Skill 作者接口与 Callable 一对一绑定
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.2.6  
+> SR 版本：0.2.10  
 > 状态：待评审 / DESIGN_READY_FOR_REVIEW；非实施 READY；新版规范/产品 NOT_RELEASED
 > 创建日期：2026-11-26  
+> 修订日期：2026-11-28\
 > 上游需求：[IR-008](../IR/IR%20总登记册.md#ir-008)；关联需求：[IR-003](../IR/IR%20总登记册.md#ir-003)  
 > 功能：F02、F03.05、F04、F06、F08、F09、EC02  
 > 设计 Issue：[ca-agent-next #40](https://github.com/odango-chan/ca-agent-next/issues/40)  
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
 > 本文局部非目标：见 §12（不包含下游仓代码修改、产品实施/发行或旧版兼容）
-> 历史设计起点：PR #44 原 Head `7f83bf6135d4572dca7d3d5bdb6243765440b0f6`；该提交仅为初始审计快照。现行 #45 已整合已合入恢复分支的 #44，当前评审基线以 PR #45 的最新 Base/Head 固定记录为准
+> 历史设计起点：PR #44 原 Head `7f83bf6135d4572dca7d3d5bdb6243765440b0f6`（不包含本 SR 文件）；#44/#45 已合入恢复分支。当前整合设计快照为 PR #46 Head `c0d89e68371f0205a874873d6c277f31d10c019b` 与恢复分支 `c806def7ddc262b4b3c96574a78f360a679ac8d2`，后续独立评审必须重新固定实际新 SHA。
 > 工作分支：docs/issue-40-casl-160-capability-design-review
 > 本 SR 性质：中央架构与规范设计；不授权修改任何下游实现仓
 
@@ -75,6 +76,8 @@ Skill-facing Capability 与公开 Callable 严格双向一对一；Operation / O
 目标把既有两个查询 Capability 各收敛为一个公开 Callable，Capability ID 分别保持 `openamsm.smf.mas.context.read` 和 `openamsm.nf.metrics.read`。SMF Context Read 的 Input 增加封闭 contextKind 枚举 sc / pa / upn / ssm / iam / ups / ca / saa；NF Metrics Read 的 Input 增加封闭 resourceKind 枚举 amf.ue-info / amf.gnb-info / smf.pdu-info。原 8+3 个 backendOperationId 只作为 Provider 私有路由保留。
 
 **新 1.6.0 Provider 目标为 3 个公开 Capability / 3 个唯一 Callable（3/3，不是 2/2）：**两个上述查询入口，加上 SR-026 设计的一个独立 NAS Codec READ Capability/唯一 Callable。Codec 的机器 ID、Schema、slot、mediaType、result Profile、handler 与纯数字 SemVer **均须由 ca-client-tools Publisher 正式冻结**，本文不得虚构；3/3 是设计目标而非现有 v1.2.0 发布事实。首个候选已核实向量是 0xD1 Release Request；Modify 0xC9、其他 NAS 和 NGAP 都不能因“同为 Codec”自动获得资格。若后续不同消息无法在**一个封闭选择器与封闭输出 Schema** 中表达，应在下一设计版本拆分新的 1:1 Capability/Callable，并同步重算基数，禁止动态任意 profile。
+
+两个通用查询 READ 构成 2/2 子集。加入 SR-026 的一个 Codec READ 后，Provider 全量为 3 Capability / 3 公开 Callable。逐 Package 与跨 Package 合并均检查双向唯一，重复或缺项均失败。
 
 ## 4. 规范性设计决策
 
@@ -162,7 +165,7 @@ Owner 1.6.0 目标：
 
 Provider Interface 目标：
 
-- **目标 3 Capability / 3 公开 Callable：**SMF Context Read、NF Metrics Read，以及独立 Codec READ（SR-026）。前两者的 8+3 个旧 backendOperationId 只保留为内部路由。
+- **Provider 目标 3 Capability / 3 公开 Callable：**SMF Context Read、NF Metrics Read 与 Codec READ（SR-026）。两个通用查询构成 2/2 子集；加 Codec 后 3/3 全量。逐 Package 与跨 Package 检查双向唯一，重复/缺项均 fail-closed。前两者的 8+3 个旧 backendOperationId 仅保留内部路由。
 - Codec Capability / 唯一 Callable 的实际 ID、Schema、消息 Profile、slot/mediaType、handler、版本及正反向向量由 ca-client-tools 发布者冻结；正式发布前标记 BLOCKED / NOT_RELEASED。任何 0xC9 Modify 或 NGAP 消费均须有各自资格化 Profile 和机器校验结果 Schema，不可由首批 0xD1 反推。
 - 同一公开 Callable 仅允许按**封闭选择器和封闭 Input/Output Schema** 路由多个内部 handler；超出正式声明的 Profile 必须拒绝，不能使用 Owner Parser fallback。
 
@@ -204,13 +207,35 @@ Runtime 以 Capability ID 为 Skill / Procedure 作者侧 Action 入口，从当
 
 ## 10. OpenAMSM 示例映射
 
-| Skill | 当前 v1alpha5 Callable 引用 | 1.6.0 Capability 引用 |
-|---|---|---|
-| Create | SE.EMIT_EVENTS | mas.se.establishment-event.record |
-| Modify | UPN.MODIFY_QOS_DELTA | mas.upn.up.qos.delta |
-| Release | SE.EMIT_RELEASE_EVENT_C | mas.se.release-event-marker.write |
+以下按原 Procedure 的节点顺序列出全部 `tool: mas::…` 引用。固定作者源为 ca-skills `780497a2918ad3e7bdff554ab64b0ba627e867e0`，对应 [Create Procedure](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/examples/skills/establish-pdu-session-mas/assurance/procedure.yaml)、[Modify Procedure](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/examples/skills/modify-pdu-session-mas/assurance/procedure.yaml)、[Release Procedure](https://github.com/odango-chan/ca-skills/blob/780497a2918ad3e7bdff554ab64b0ba627e867e0/examples/skills/release-pdu-session-mas/assurance/procedure.yaml)。Callable 列省略共同的 `mas::` 前缀。目标列取自 §2 固定 Owner CapabilityContracts，并应用 §3.1 的两项事件拆分。
 
-Create / Release 继续分别使用原有 Schema 与 Evidence Guarantee；Modify 的 QoS Delta、Receipt、UNKNOWN 和 N1/N2 流程不变。Provider Observation 使用两个通用 READ Capability 和封闭 selector。此表是作者源映射，不是当前 ca-skills 已更新证据。
+| Skill | v1alpha5 Owner Callable | 1.6.0 设计目标 Capability |
+|---|---|---|
+| Create | `SC.VALIDATE_SUBSCRIPTION` | `mas.sc.subscription.validate` |
+| Create | `SAA.SECONDARY_AUTH` | `mas.saa.secondary.auth` |
+| Create | `SC.CREATE_SM_CONTEXT` | `mas.sc.context.create` |
+| Create | `SC.REGISTER_UECM` | `mas.sc.uecm.register` |
+| Create | `PA.CREATE_SM_POLICY` | `mas.pa.sm.policy.create` |
+| Create | `UPS.DECIDE_ANCHOR` | `mas.ups.anchor.decide` |
+| Create | `IAM.ALLOCATE_ADDRESS` | `mas.iam.address.allocate` |
+| Create | `PA.UPDATE_SM_POLICY` | `mas.pa.sm.policy.update` |
+| Create | `CA.CREATE_CHARGING` | `mas.ca.charging.create` |
+| Create | `UPN.CREATE_UP_SESSION` | `mas.upn.up.session.create` |
+| Create | `SSM.SIGNAL_UE_AN` | `mas.ssm.ue.an.signal` |
+| Create | `UPN.MODIFY_UP_SESSION` | `mas.upn.up.session.modify` |
+| Create | `SE.EMIT_EVENTS` | `mas.se.establishment-event.record` |
+| Modify | `SSM.PARSE_N1_MODIFY` | `mas.ssm.n1.modify.parse` |
+| Modify | `UPN.MODIFY_QOS_DELTA` | `mas.upn.up.qos.delta` |
+| Release | `SSM.PARSE_N1_RELEASE` | `mas.ssm.n1.release.parse` |
+| Release | `SSM.BUILD_RELEASE_COMMAND` | `mas.ssm.n1.release.build` |
+| Release | `SSM.RELEASE_CONFIRM_N1` | `mas.ssm.n1.release.confirm.n1` |
+| Release | `SSM.RELEASE_CONFIRM_N2` | `mas.ssm.n1.release.confirm.n2` |
+| Release | `PA.DELETE_SM_POLICY_C` | `mas.pa.sm.policy.delete` |
+| Release | `UPN.DELETE_UP_SESSION` | `mas.upn.up.session.delete` |
+| Release | `SE.EMIT_RELEASE_EVENT_C` | `mas.se.release-event-marker.write` |
+| Release | `SC.RELEASE_SM_CONTEXT_C` | `mas.sc.context.release` |
+
+AC-029-10 按 Skill 分别提取并去重 `mas::` 引用，与表中对应 Callable 集合做双向差集。Create 应有 13 项、Modify 2 项、Release 8 项；遗漏、额外引用或同一目标绑定多个 Callable 均不满足此项设计。按 §3.1 分别核对两项事件的 Schema 与 Evidence Guarantee，Modify 保留 QoS Delta、Receipt、UNKNOWN 与原 N1/N2 流程。表格只覆盖三个 Procedure 实际使用的 Owner Callable。Owner 最终成员数须由 Publisher 对两项旧 N1 Parser 逐项签认（移除条件 22/22、纯业务 READ 保留两项条件 24/24，其他决策重算），不能预先宣称 24/24 已冻结；Provider 查询与 Codec 的闭包另见 AC-029-05。正式作者源、Owner 发布和运行验收仍按各自门槛取证。
 
 ### 10.1 Codec → Owner 的唯一 T2 数据流
 
@@ -251,13 +276,13 @@ Owner 待决事项在 Next [Issue #40](https://github.com/odango-chan/ca-agent-n
 | AC-029-02 | Provider 历史 2/11 基数与 8+3 查询分组有固定来源；1.6.0 目标 **3/3（含 Codec）**，机器合同/发布仍 BLOCKED | 设计已记录；Codec Publisher 未冻结 |
 | AC-029-03 | Capability ↔ Callable 双向一对一、Operation/Observation kind、Effect、Schema 规则明确 | 设计已记录，待独立评审 |
 | AC-029-04 | Owner 事件 Capability 拆分、Reconcile internal-only、Receipt Query 保留规则明确 | 设计已记录，待独立评审 |
-| AC-029-05 | Provider 两个通用 READ + Codec READ 的 **3/3** 设计；封闭选择器/Schema、私有 backend 路由与正式发布门槛明确 | 设计待独立评审；产品 BLOCKED |
+| AC-029-05 | Provider 通用查询 2/2 与含 Codec 的全量 3/3；逐包、跨包双向唯一，重复绑定、漏 Codec 均失败；封闭 selector/Schema 仅路由私有 backend | 设计待独立评审；Codec Publisher 与产品验收 BLOCKED |
 | AC-029-06 | 1.6.0 正式命名、完全无兼容/自动迁移、准确机器标识与作者 Schema 发布责任清晰 | 待独立设计评审 |
 | AC-029-07 | Compiler Link、诊断、Artifact v2 capabilityBindings 与 Build/Verify 边界明确 | 设计已记录，待独立评审 |
 | AC-029-08 | Runtime Action、Callable allowlist、Reconcile 内部入口明确 | 设计已记录，待独立评审 |
 | AC-029-09 | Skill Studio Capability-only Explorer / LSP / AI Authoring 明确 | 设计已记录，待独立评审 |
-| AC-029-10 | MAS Create / Modify / Release 的 T1/T2 分层、Codec 唯一协议解码与 Owner Parser 待决 22/22 或 24/24 条件目标明确；0xC9/NGAP 需独立资格化 | 设计待独立评审；Owner/Codec 产品 BLOCKED |
-| AC-029-11 | F02/F03.05/F04/F06/F08/F09/EC02、IR/SR、版本规范/功能树/目录与 SR-004 一致；静态门禁 | 待静态检查与独立评审 |
+| AC-029-10 | MAS Create / Modify / Release 的原 Procedure Owner Callable 13/2/8 逐项双向差集、T1/T2 分层、Codec 唯一解码以及 Owner 两 Parser 22/22 或 24/24 条件目标；0xC9/NGAP 必须单独资格化 | 设计待独立评审；Owner/Codec 发布与产品验收 BLOCKED |
+| AC-029-11 | F02/F03/F03.05/F04/F06/F08/F09/EC02、IR/SR、版本规范/功能树/目录与 SR-004 一致；校验三层旧包拒绝、EC02 工具链、查询 2/2/全量 3/3、逐包与跨包双射，缺 Codec 不得计全量通过；新产品发布前仅验设计 | 待静态检查与独立评审 |
 | AC-029-12 | 未修改下游仓；未把设计目标误报为实现或 E2E PASS | 待独立评审 |
 
 ## 14. 依赖与状态边界
@@ -276,6 +301,7 @@ Owner 待决事项在 Next [Issue #40](https://github.com/odango-chan/ca-agent-n
 
 ## 修订记录
 
+
 | 日期 | 版本 | 修订者/模型 | 章节 | 修改内容 | 原因 | 关联 |
 |---|---|---|---|---|---|---|
 | 2026-11-26 | 0.1.0 | GPT-6.2（ChatGPT） | 全文 | 建立 Capability-first Skill 作者接口、一对一 Callable、Package cardinality 审计及 Compiler / Runtime / Studio 闭环 | 消除 Skill 源码与 Provider / Owner 内部 Callable ID 的耦合，并明确 v1alpha5 冻结与 1.6.0 候选边界 | IR-008、IR-003、Issue #40 |
@@ -286,3 +312,11 @@ Owner 待决事项在 Next [Issue #40](https://github.com/odango-chan/ca-agent-n
 | 2026-11-27 | 0.2.4 | GPT-6.2（ChatGPT） | §5、§13、修订记录 | 明确可选 when 唯一位于 assurance/contract.yaml 顶层；SKILL.md Front Matter 和 predicates.yaml 不声明 when；1.6.0 CEL/G.4 语义由正式规范冻结。 | 锁定作者字段归属，避免旧版本语义被隐式带入 1.6.0。 | Issue #40；IR-008；SR-013；EC02；F08 |
 | 2026-11-27 | 0.2.5 | GPT-6.2（ChatGPT） | 文档头、§15 评审历史、修订记录 | 历史 PR #44 原 Head、#45 Draft 观察值改为明确历史时点，当前 #45 非 Draft 且未独立 APPROVE | 不让已合并/重定向后的 PR 被旧历史文字误判为当前状态 | Issue #40；PR #44/#45；SR-029 |
 | 2026-11-28 | 0.2.6 | GPT-6（ChatGPT） | §3、§6、§10.1、§11、§13 | 补入 Provider Codec 目标 3/3、T1/T2 唯一解码链，固定 Owner 两 Parser 证据与二选一 22/22/24/24 条件基数 | 处理第六轮 R6-P1-01，避免凭名称删除 Owner 接口或让旧 NAS Parser 充当 Codec fallback | Issue #40/#113；PR #45；SR-026；F06 |
+| 2026-11-26 | PR46-0.2.4（原分支） | GPT-6（ChatGPT） | 文档头、§0、设计依据 | 提交设计待评审、明确新旧契约/验收隔离并保留 DRAFT 主状态 | 统一中央评审批次，防止旧版发布证据冒充新版资格 | Issue #12；PR #45；SR-029 |
+| 2026-11-27 | PR46-0.2.5（原分支） | Codex / GPT-6 | §3.2、§6、AC-029-05/11 | 区分查询子集与 Provider 全量 | 落实首轮独立评审，区分设计依据与实测证据 | Issue #12，PR #46 |
+| 2026-11-27 | PR46-0.2.6（原分支） | Codex / GPT-6 | AC-029-11 | 覆盖 F03 主设计、EC02 工具链与跨包版本导航 | 落实 PR #46 第二轮独立评审 | Issue #12，PR #46 |
+| 2026-11-27 | PR46-0.2.7（原分支） | GPT-6（ChatGPT） | 第三轮设计自评/历史修订表 | CA-SL 1.6.0-only、Owner 24/24、Provider 查询 2/2 与含 Codec 3/3、旧包拒绝及跨包双射已明确；生产者机器契约另行冻结；将第二轮结论保留为历史、登记第三轮独立复评候选并按版本整理记录 | 设计范围可供外部评审而不提前授权代码实施或夸大 AC 状态 | Issue #12；PR #46；SR-029 |
+| 2026-11-27 | PR46-0.2.8（原分支） | GPT-6（ChatGPT） | 文档头、评审状态、修订记录 | 将第三轮独立模型 Review #6082541121 的限定结论替换第三轮自评状态 | 区分中央语言/作者模型设计认可与生产者正式机器契约发布 | Issue #12；PR #46；Review #6082541121 |
+| 2026-11-27 | PR46-0.2.9（原分支） | Codex / GPT-6 | 文档头、§10、AC-029-10 | 补全三个 Procedure 共 23 条 Owner 映射与集合核验规则，区分架构来源与评审入口 | 处理 R1-SR029-01/02 | Issue #12、#90；PR #46 |
+| 2026-11-28 | 0.2.10 | GPT-6（ChatGPT） | §3、§6、§10～13、修订记录 | #46 与 #45 三方整合：保存三份 MAS Procedure 13/2/8 独立复评依据与 #45 Owner Parser 待签认、Codec 3/3/T1-T2 资格化门槛；保持 1.6.0-only、原历史分支修订账本可追溯 | 防止 24/24 固定口径回退和历史批准冒充已发布产品 | Issue #12；#40；#113；PR #45；#46 |
+| 2026-11-28 | 0.2.10-integration-fix | GPT-6（ChatGPT） | 文档头与修订记录 | 修正整合期间版本/验收时点一致性，不改变产品状态 | 保持历史证据与新 1.6.0 设计边界 | Issue #12；PR #45；#46 |

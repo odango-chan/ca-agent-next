@@ -2,12 +2,12 @@
 
 > 文档类型：机制设计说明书  
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
-> 文档版本：0.3.6
+> 文档版本：0.3.9
 > 功能归属：F04 — Runtime 执行  
 > 关联 SR：SR-007    
 > 全局评审范围：继承根目录 Agent.md 的 review_scope    
 > 本文局部非目标：以本文范围与非目标章节为准；无额外扩展  
-> 修订日期：2026-11-25  
+> 修订日期：2026-11-26\
 > 适用范围：Python Runtime、Run、Callable Scope 检查、Outcome/Evidence、Wait/Resume/Reconcile
 
 关联需求项见 [IR-003](../../IR/IR%20总登记册.md#ir-003)、[IR-004](../../IR/IR%20总登记册.md#ir-004)。
@@ -31,28 +31,26 @@ Runtime 是唯一执行路径的控制点，负责将已绑定 Skill 的执行�
 
 Host 不直接调用 Tool Plugin。LLM 不得绕过 Runtime，也不得自行扩大 Skill 声明的 Callable Scope、制造 Evidence 或声明 Owner mutation 已提交。
 
-## 3. 统一 Action Boundary
+## 3. 统一 Action Boundary（CA-SL 1.6.0 唯一目标）
 
-Deterministic 与 LLM-guided 都形成同一种概念上的 Runtime Action Request，并经过相同的校验和分发路径。Callable ID、输入/输出 Schema 和 Effect 来自 Skill Artifact dependencyClosure 声明的契约来源：Provider Interface Package 或业务 Owner Contract Package；Capability membership 来自对应契约的 Capability 定义。OpenAMSM MAS 的 `mas::CALLABLE` 来自 Owner Contract Package，而不是 ca-client-tools 的 11-READ Interface Package。**冻结 CA-SL v1alpha5 Artifact 不序列化作者源 `contract.capabilities` 的 Capability ID**；Compiler Build-time 使用 Owner `CapabilityContracts` 校验作者源 Capability 声明，Runtime 只从 Artifact `operation` / `observation` exports 建立精确 Callable allowlist，并按部署固定 Owner Contract 验证 Owner Callable membership / Effect。不得让 Runtime 从 Artifact 读取 Capability ID，也不得把 Capability ID 作为 Skill Runtime Scope 字段。Owner Outcomes、Receipt、Commit Proof 和 Reconcile 只来自 Owner Contract Package。Provider Runtime Bindings 只提供私有 backendOperationId、HostInvocation/privateArguments 来源和 observation 定位，不是公开 Tool 契约或授权来源。不得在 Agent Core 内维护重复 Tool 定义。
+Deterministic Procedure 与 LLM-guided **统一提交概念 Action Request**：`runId`、`catalogGeneration`、`skillId`、`stage`、`capabilityId`、`arguments`、当前 `artifactRefs` 与 `correlation`。这些是设计级字段含义；最终 wire/DTO 精确名称由 Runtime/Compiler 正式 Schema 冻结。模型只能提出当前 Skill 已授权的 Capability ID/arguments，绝不能指定 Callable ID、Provider、Owner alias、backendOperationId 或 URL。
 
-冻结 CA-SL v1alpha5 Artifact 的 dependencyClosure 只携带 stablePackageId 与 required exports，不携带 Owner package version / snapshotDigest。Next 目标 Runtime 设计因此使用 provider.yaml 的 `interfacePackagePath` / `interfaceSnapshotDigest` 校验 Provider Interface snapshot，并使用 Provider Runtime Bindings sidecar 中的 Owner stableId、version、publicationDigest、manifestDigest 校验部署安装的 Owner publication；这属于部署级依赖固定，不是逐 Skill 字节级 pin。该描述是 Next 目标设计，不声称 ca-agent-demo main 已实现此 package loader。Runtime 必须同时验证 Artifact 所需 exports / Schema 存在且与 sidecar Owner identity 一致。
+Runtime 分发前必须按固定顺序：
 
-Runtime 在分发前至少核对：
+1. 验证 Run 状态、当前绑定的 Skill、固定 Catalog generation，以及当前 stage 对应合法 Procedure/LLM 执行上下文。
+2. 从 **1.6.0 已发布 Artifact 的 `capabilityBindings`** 根据该 Skill/Capability ID 精确查出唯一公开 Callable；Binding 缺失、多个命中、重复归属、未授权或处于历史 API 的输入全部 fail-closed。
+3. 验证 Capability 处于该 Skill 的已检查授权集合；`operation.capability` 只能使用 kind=operation，`observation.capability` 只能使用 kind=observation 且 Effect=READ。Callable 的 kind/Effect/Schema/Owner identity 来自已编译 Binding 和部署固定的正式契约，不能由模型覆盖。
+4. 验证 Provider Interface 或 Owner Contract Package 的固定来源身份、Version/Publication/Manifest identity、准确 Callable exports 与 Schema；Provider 安装的 Interface snapshot/Runtime Bindings sidecar 必须与 Artifact 绑定的身份一致。缺失、版本不符、歧义、Scope 不匹配不得派发。
+5. 在 Host-owned ArtifactStore 内校验本次 Invocation 的 Artifact Reference 及 Schema、Effect、deadline/budget 和 continuation 约束；**所有拒绝发生在 Plugin IPC 之前**，其 dispatch/Owner mutation 计数必须为 0。
+6. 只有检查通过后，唯一 Plugin Manager 的 Tools Extension 执行内部 Callable 派发。Provider 私有 backendOperationId 可由已冻结的封闭输入 discriminator 确定，不暴露给 Skill/模型，也不扩大 Scope；Owner Receipt/Commit Proof 决定状态，UNKNOWN 不能升级成 COMMITTED，Reconcile 仅 Coordinator 可按原 Invocation 私有调用。
 
-1. 当前 Run 是否绑定有效 Skill 和对应 Catalog generation。
-2. Action 是否属于当前 Skill 发布 Artifact `dependencyClosure[].exports[]` 中的精确 `operation` / `observation` Callable allowlist。
-3. Callable ID 是否存在，参数是否符合部署固定的 Provider Interface Package 或 Owner Contract Package Schema；Provider Interface bytes 应匹配 provider.yaml 的 `interfaceSnapshotDigest`；Owner snapshot 的 stable ID / required exports 应与 Artifact dependencyClosure 一致，Owner version / publicationDigest / manifestDigest 应与 Provider sidecar 一致。冻结 v1alpha5 Artifact 不含 Capability ID；对 Owner Callable 只验证部署 Owner Contract 中的 membership / Effect，不读取不存在的 Skill Capability 字段。
-4. Effect 是否与该 Operation 的声明一致。
-5. Artifact Reference 是否由 Host 管理并关联到当前 Invocation。
-6. Action 是否满足当前 Run 的状态和 continuation 约束。
-
-通过后由 Plugin Manager 分发；拒绝时产生明确诊断，不调用 Plugin。此检查是 Demo 的调用范围正确性，不是生产级 Skill Admission 或 Owner Trust。
+**历史审计边界：**旧 v1alpha5 Artifact 曾只导出 Callable allowlist、不序列化作者 Capability ID，旧 `mas::CALLABLE` 不等于新规范。此事实仅用来解释旧版本无法作为 1.6.0 Runtime 输入；不得据此删除/跳过新 Artifact `capabilityBindings`，不再以旧 dependencyClosure 的字段布局定义当前 Runtime DTO。
 
 ## 4. 两种执行模式
 
 ### 4.1 Deterministic
 
-前提是 Skill 发布包包含有效 Assurance Artifact，且该 Artifact 已由外部 Compiler 构建并发布。Procedure Engine 只消费已发布 Procedure，不调用 Compiler，不重新做 Procedure Graph 验证。它推进 Procedure 并通过统一 Action Boundary 执行其中的 Action。Procedure 的 precondition、operation、observation、postcondition 语义以 CA-SL v1alpha5 和 Compiler 发布契约为准。
+前提是 Skill 发布包包含有效 Assurance Artifact，且该 Artifact 已由外部 Compiler 构建并发布。Procedure Engine 只消费已发布 Procedure，不调用 Compiler，不重新做 Procedure Graph 验证。它推进 Procedure 并通过统一 Action Boundary 执行其中的 Action。Procedure 的 precondition、operation、observation、postcondition 阶段以正式 **CA-SL 1.6.0** 和新 Compiler 发布契约为准；Operation / Observation 是阶段而非对外 Operation ID。
 
 ### 4.2 LLM-guided
 
@@ -155,3 +153,6 @@ MAS.RECONCILE 不是 Skill-facing Capability。普通 Skill / LLM Action 必须�
 | 2026-11-25 | 0.3.4 | Codex / GPT-6 | 正文 | §4.2 明确未声明 Callable 时的运行行为 | 消除执行歧义并同步中央设计 | Issue #12 |
 | 2026-11-26 | 0.3.5 | GPT-6.2（ChatGPT） | §3、§6、§7 | 明确 frozen v1alpha5 Capability ID 不进入 Runtime Artifact/Scope，并补齐 sidecar Reconcile internal-only 的 Runtime 保证 | 对齐 F03.05 的 Callable allowlist、Owner membership/Effect 与 exact-original Reconcile 边界 | IR-006 · SR-015 · Issue #12 |
 | 2026-11-26 | 0.3.6 | GPT-6（ChatGPT） | 新增 1.6.0 目标章节、状态及修订记录 | 移植一对一 Binding / Selector / Action 设计并标为待评审 | 无旧版兼容或产品完成承诺 | Issue #40；SR-029 |
+| 2026-11-26 | 0.3.7 | GPT-6（ChatGPT） | 核心规范与验收章节 | 以唯一 1.6.0 Capability Action Request 重写 §3，旧 Callable-only Runtime 降为历史审计 | 消除 §3 与 §10 规范相互否定，明确 dispatch 前 fail-closed 顺序 | Issue #12/#40；SR-007；SR-029 |
+| 2026-11-26 | 0.3.8 | GPT-6（ChatGPT） | 最终一致性复评 / 规范性描述 | 更新规范性 Capability Action Boundary 修订日期和 Release/SourcePath 责任追踪 | 消除 1.6.0 与历史 Development 的模糊措辞，修正后续评审的可执行门槛 | Issue #12/#40；PR #46 |
+| 2026-11-28 | 0.3.9 | GLM-5.3（DeepSeek Harness） | 修订记录 | 合并被空行拆断的孤儿修订表段为单一连续表格，不改变任何历史行内容 | 修复 R8-09 同类 Markdown 渲染断裂，保证修订数据完整可见 | Issue #12；PR #46；Review #6095143611 |
