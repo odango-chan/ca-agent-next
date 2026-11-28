@@ -240,6 +240,8 @@ class PythonToolchainPolicyTests(unittest.TestCase):
             "      - name: Unrelated version\n"
             "        with:\n"
             "          version: '0.13.10'\n"
+            "      - name: Run Python tests\n"
+            "        run: uv " + "run --no-sync --locked python -m unittest\n"
         )
         found = workflow_toolchain_violations(
             ".github/workflows/python-tests.yml", content, manifest
