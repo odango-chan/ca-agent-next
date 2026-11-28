@@ -7,7 +7,9 @@ for AC-010-09. It speaks the closed NDJSON framing, consumes the Host-owned
 ``ca-host.artifact-store/v2`` channel (GET input / POST output, no SHA-256),
 and records a machine-readable trace for test assertions.
 
-Usage: ``python provider_v2_fake.py --config <config.json>``.
+Usage (from the repository root):
+``uv run --no-sync --locked --group dev --extra plugins python
+tests/fixtures/provider_v2_fake.py --config <config.json>``.
 """
 
 from __future__ import annotations
