@@ -1,7 +1,7 @@
 # 技能工作台与AI编写设计说明书
 
 > 文档类型：设计说明书  
-> 文档版本：0.3.20\
+> 文档版本：0.3.21
 > 状态：**设计待评审**（CA-SL 1.6.0-only Capability-first；Studio 新 Package Explorer/LSP/AI Authoring 1.6.0 路径尚未实施；既有 #267/#270/#272 历史实现与新发布验收分离）
 > 修订日期：2026-11-28\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -215,6 +215,16 @@ AI Authoring 的 Change Set 只能新增或修改 Capability ID、Procedure argu
 | 多宿主一致性 | 同正式 1.6.0 Snapshot 的 Node/Native/WASM/Chromium | 诊断/结果相同，记录 SHA、测试数、命令、真实截图/日志 |
 
 **评审与实施门槛**：上述每项测试的正式 Package Schema、Compiler DTO/CLI/Worker、语言标识由对应发布者冻结后才允许产品 PASS。Studio 旧 Example 替换、旧 1.6.0 不兼容及历史导入结果仅用于审计，不能混入新 AC。SR-016 是该矩阵的实施与验收追踪入口；系统 E2E 不能代替 Studio 模块 AC。
+
+## 10. 原版 3GPP OpenAPI 只读展示与直接 Schema Component 引用（IR-009）
+
+- 工作台可展示 SR-031 原样代发布的 OpenAMSM OpenAPI 3.0 Source Bundle，作为只读标准来源视图；保留原始 bytes、文件名 / 路径 / 相对 `$ref`，不提供自动格式化、重写、修补或保存原件修改。当前 `PostSmContexts.requestBody → jsonData → SmContextCreateData` 选定闭包为四份原版 YAML / 102 个 Schema Component；不要求展示或导入全部 472 份 YAML。任何 AI Change Set 试图修改原版 YAML 必须拒绝。
+- Schema Explorer / LSP 可沿已 pin Source Bundle 的精确 `components/schemas` 外部引用显示定义、来源文件、JSON Pointer、OpenAMSM commit 和标准版本；仅解析选定闭包可达 refs，不全局 eager resolve 未选定 operation。可展示 `RefToBinaryData.contentId` 与 N1/N2/N2 Ext1 multipart slot 的映射；未被 JSON 引用的 part 不得交给 Codec，额外 part 的拒绝 / 忽略策略由 ingress profile 定义。Compiler 才是跨 dialect Schema Link / Build / Verify 权威。不得把原版 OAS3 Schema Object 重写为 G.4 Adapter；本地 Skill-owned Request 根仍遵循 G.4。
+- Studio / Project Lock 必须记录正式 Source Bundle dependency identity、选定 operation / requestBody / Schema Component roots 与对应可达文件快照；正式 Lock wire 字段由 Publisher / Compiler Owner 冻结，不新增自定义 per-file digest / package hash。不解析动态 latest、不从任意 URL 下载，也不让无 3GPP 依赖的项目被强制导入该 Bundle。
+- Procedure 可引用 ca-client-tools 正式 Codec READ Capability 与 Output Schema，但不能展示私有 Handler / Callable；当 T1 `when` 企图读取 T2 才解码的 NAS 字段，Compiler 应给稳定的 SourcePath / 可用性诊断，不能偷偷触发解码。
+- NAS / NGAP Output Schema 是 Provider 独立发布物，不从 SBI `format: binary` 推导。没有正式 Compiler OAS3 Resolver / Provider Golden 时，不生成假 Schema、不宣称产品 PASS；现行产品验收 NOT_RUN。
+
+[统一权威设计](../EC01-3GPP公共Schema/3GPP公共Schema发布与Skill分阶段消费设计说明书.md)与 [SR-031](../../SR/SR-031-3GPP公共Schema-only-Publisher.md)。唯一语言 1.6.0，不创建第二管理器。
 
 ## 修订记录
 
