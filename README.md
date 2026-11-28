@@ -4,7 +4,7 @@ CA Agent Next 是下一代通用 Agent 的独立实现仓。目标是用尽可�
 
 **语言决策：Agent Core、Host、Agent Model Loop、Skill Importer、Skill Resolver 和 Runtime 固定使用 Python。** 独立 Plugin 可以使用 Go；Go Plugin 不意味着 Go Host。
 
-> 当前设计与治理状态以 [SR 总索引](docs/治理/SR%20总索引.md) 和 [Issue #50](https://github.com/odango-chan/ca-agent-next/issues/50) 为准；唯一 mainline 集成入口为 PR #115（OPEN / Draft）。SR-028 设计已 READY，uv 工具链正在 PR #115 集成候选中；尚未合入 main，当前 Head 的回归复验仍在进行。
+> 当前设计与治理状态以 [SR 总索引](docs/治理/SR%20总索引.md) 和 [Issue #50](https://github.com/odango-chan/ca-agent-next/issues/50) 为准；PR #115 唯一 mainline 集成入口仍为 OPEN / Draft（Base main @ b2ed5eb84114f9c2556a0cd06ed974887b1b70ad），本次代码与策略核验快照 Head `609fb12612c8990a37ba0e174cfacadfd7a7c5d9`；Review Context #46130016832 SUCCESS，Python Toolchain Policy Bootstrap #46130016864 SUCCESS（48/48），SR-003 Regression #46130016833 SUCCESS（Ubuntu 重跑与 Windows 均为 Host 52/52、Plugin 87/87、Review Context 84/84、Total 271/271）。Ubuntu 首次执行在 `test_process_exit_clears_extensions` 出现一次 IPC_TIMEOUT；同一 SHA 的失败 Job 重跑后 271/271 通过，未修改测试或产品代码，作为时序风险保留。当前未合入 main，未标 VERIFIED/RELEASED；PR #115 全量独立复评仍待完成。 SR-028 设计 READY、PR #99 候选实施 IMPLEMENTED、PR #112 共享策略 P2 已独立复评、PR #97 READY 回填已核实为设计状态来源；当前 SR-028 仍为 IN_PROGRESS。
 
 ## 从这里开始
 
