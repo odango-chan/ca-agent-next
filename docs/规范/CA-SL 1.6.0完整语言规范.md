@@ -1,12 +1,12 @@
 # CA-SL 1.6.0 完整语言规范（中央设计稿）
 
 > 文档类型：CA-SL 作者语言规范（中央规范性设计稿）
-> 文档版本：0.1.3
+> 文档版本：0.1.4
 > 语言版本：CA-SL 1.6.0
 > languageTarget 候选：connectionagent.io/v1.6.0（本设计建议值；发布前由 ca-skills 与 Compiler Owner 在正式 Schema / Golden 中确认）
 > 状态：**DRAFT / REVIEW_REQUESTED**；未发布、未冻结、不得作为已发布产品规范
 > 全局评审范围：继承根目录 Agent.md 的 review_scope
-> 修订日期：2026-11-27
+> 修订日期：2026-11-28
 > 规范所有者：ca-agent-next（中央设计）；正式作者 Schema / Golden / Release 由 ca-skills 发布
 > 关联：IR-003、IR-008；Issue #40；SR-023、SR-029、SR-013、SR-027
 > 本文局部非目标：Compiler API / Artifact 字段级 Schema、Provider / Owner 发布物字段、Agent Runtime 实现、生产 Admission、签名、Trust Registry、生产 Qualification
@@ -95,7 +95,8 @@ contract.yaml 是唯一 Contract。它不需要 apiVersion / kind 包装；语�
 示例：
 
 ~~~yaml
-when: 'event.type == "nsmf.create-sm-context" && input.requestType == 1'
+# 仅在 Event Publisher 已冻结 event.type metadata 后可引用
+when: 'event.type == "nsmf.create-sm-context" && has(input.request.requestType) && input.request.requestType == "INITIAL_REQUEST"'
 precondition: validate-request.precondition
 requestSchema: schemas/create-request.schema.json
 dependencies:
@@ -109,6 +110,8 @@ capabilities:
 limits:
   maxActions: 12
 ~~~
+
+本例的 `input` 根是规范化 Event payload，`input.request` 才是原版 OpenAPI `SmContextCreateData` 对象。当前固定 OpenAMSM OAS3 源中 `requestType` 是可选字段，其 `RequestType` 组件通过 `anyOf` 给出两个 `type: string` 分支（其中一个带 enum）；因此必须用 `has(input.request.requestType)` 守卫并比较字符串 `"INITIAL_REQUEST"`，不能比较整数。`event.type` 仅在 Publisher 冻结其 metadata Schema/Descriptor 后才使该正例有效；否则该引用必须编译失败。`has()` 与 `&&` 左到右短路仍须由 ca-skills Publisher 纳入并冻结于 CA-SL 1.6.0 CEL Profile，当前仅是设计候选。
 
 **不定义 goal 字段。** Skill 的目的由 SKILL.md 描述；Procedure 的最终业务成功证明由一个可达 Postcondition 阶段的聚合 PASS 直接路由 SUCCEEDED。不得在 Contract、Postcondition 阶段或 Predicate 成员增加 goal 字段。
 
@@ -210,8 +213,8 @@ Script 仅允许 Skill 自有的纯本地 Python：
 when 是 contract.yaml 顶层可选 CEL 表达式；不属于 Procedure、PredicateSet、Precondition 或 Postcondition。它必须是纯表达式，静态结果类型必须为 bool。
 
 允许的变量只有：
-- event.type：Host 验证后的规范化 Event 类型字符串；
-- input：当前规范化 Event payload，静态类型来自本 Skill 的 requestSchema。
+- event.type：只有当所选 Event Publisher 在正式发布的 Event metadata contract 中声明并冻结该字段为 string，且对应 Schema/Descriptor 被固定到当前依赖快照时才可引用；它不是全局默认字段。未冻结、未声明或无法解析时，引用必须在编译期拒绝。
+- input：当前规范化 Event payload，静态类型来自本 Skill 的 requestSchema；按 F06，OpenAMSM payload 的 `request` 属性承载原样 `SmContextCreateData` / `SmContextUpdateData`，因此请求字段通过 `input.request.*` 访问。
 
 when 不得读取 Context、Tool Result、Observation、Evidence、环境变量、时钟或可变 Host 状态；不得调用 Tool、查询网络或产生副作用。
 
@@ -270,20 +273,37 @@ Owner 不得声明 Runtime 保留的 DENIED、OUTCOME_UNKNOWN、COMMITTED 或 In
 
 ## 12. Request Schema / CEL 的 JSON Schema Profile
 
+本节的有限子集只约束 Skill-owned G.4 JSON Schema 根及其 G.4 资源。`Contract.requestSchema` 指向 Skill 自有 G.4 根；该根可以通过固定依赖引用原版 OpenAPI 3.0 文档中的 Schema component。原版 OAS3 文档及其 Schema Object **不是 G.4 资源**，不得将本节的 G.4 关键字限制套用到 OAS3；也不得为了符合 G.4 而修改、重新序列化、投影或要求生成 Adapter。
+
+### 12.1 Skill-owned G.4 资源
+
 本设计采用 JSON Schema Draft 2020-12 的显式有限子集；正式发布前必须由 ca-skills / Compiler 在 Schema / Golden 中冻结完全相同的关键字集合。允许的断言关键字：
-- $ref、type、properties、required、additionalProperties、items、minItems、maxItems、minLength、maxLength、minimum、maximum、exclusiveMinimum、exclusiveMaximum、enum、const。
+- `$ref`、`type`、`properties`、`required`、`additionalProperties`、`items`、`minItems`、`maxItems`、`minLength`、`maxLength`、`minimum`、`maximum`、`exclusiveMinimum`、`exclusiveMaximum`、`enum`、`const`。
 
 允许的非断言注解：
-- $schema、$id、title、description、default、examples。default 不得合成输入值。
+- `$schema`、`$id`、`title`、`description`、`default`、`examples`。`default` 不得合成输入值。
 
-不支持：
-- $defs、definitions、allOf、anyOf、oneOf、not、if/then/else、pattern、patternProperties、unevaluatedProperties、contains、prefixItems、format、动态引用和扩展关键字。
-- type 仅允许单值 string / integer / number / boolean / object / array / null，或恰好两个成员的 [T, "null"]。
-- additionalProperties 只允许 true / false；用于 SourcePath 的对象必须闭合并声明 additionalProperties=false。
-- items 仅允许单一 Schema，不允许 tuple 数组。
-- $ref 必须解析到精确、独立的 Schema $id 和受信依赖快照；不支持片段引用和循环闭包。
-- 未知关键字不得忽略；不支持的现实 Owner Schema 必须由 Owner 发布受支持的正式投影，Skill 不得复制影子契约。
+G.4 资源不支持：
+- `$defs`、`definitions`、`allOf`、`anyOf`、`oneOf`、`not`、`if/then/else`、`pattern`、`patternProperties`、`unevaluatedProperties`、`contains`、`prefixItems`、`format`、动态引用和扩展关键字。
+- `type` 仅允许单值 `string` / `integer` / `number` / `boolean` / `object` / `array` / `null`，或恰好两个成员的 `[T, "null"]`。
+- `additionalProperties` 只允许 `true` / `false`；用于 SourcePath 的对象必须闭合并声明 `additionalProperties=false`。
+- `items` 仅允许单一 Schema，不允许 tuple 数组。
+- G.4 资源内的本地 fragment 引用不属于本 Profile；`$ref` 必须解析到精确、独立的资源身份及受信依赖快照。循环闭包必须拒绝。
+- 未知关键字不得忽略；不支持的 G.4 结构必须明确报错，不得静默降级。
 
+### 12.2 原版 OpenAPI 3.0 资源
+
+- Skill-owned G.4 根可以使用带文档 URI 与 fragment 的 `$ref` 指向固定依赖中的 OAS3 3.0 Schema component，例如 `TS29502_Nsmf_PDUSession.yaml#/components/schemas/SmContextCreateData`。该 fragment 是 OAS3 文档内的组件指针，不是 G.4 本地 fragment。
+- 进入 OAS3 文档后，其内部引用（包括 `#/components/schemas/RequestType`）必须由 OAS3 3.0 resolver 按 OAS3 语义解析；OAS3 Schema Object 的 `anyOf`、`allOf`、`oneOf` 等按 OAS3 3.0 规范处理，不套用 G.4 的有限关键字列表。
+- Resolver 必须同时保留每个资源的 source URI、原始字节/固定 SHA、dialect、fragment 和相对 `$ref` 关系，构建跨 dialect 依赖闭包；不得把 OAS3 资源重新解释为 G.4，也不得要求 Adapter/投影。
+- 对当前固定 OpenAMSM `SmContextCreateData.requestType`，OAS3 `RequestType` 的两个 `anyOf` 分支均为 `type: string`，因此 CEL 静态类型为 string；属性本身可选，读取前必须使用 `has()`。这只说明该固定源，不得泛化为所有 3GPP 版本。
+- 若 Compiler 尚不能原生解析所引用的 OAS3 3.0 资源或其 fragment/相对引用，相关 Check/Build 必须 BLOCKED/FAILED；不得通过改写原件、复制影子 Schema 或强制 Adapter 绕过。
+
+### 12.3 静态类型与闭包
+
+- CEL 类型检查必须沿每个资源自己的 dialect 解析属性类型；G.4 和 OAS3 资源可共同进入同一已固定闭包，但不得混淆各自关键字语义。
+- `input` 的根类型来自 Skill-owned G.4 `requestSchema`；当其属性引用 OAS3 component 时，Resolver 按 OAS3 语义取得对应属性类型。可选字段仍须 `has()` 守卫，可空字段仍须同一短路表达式中的非 null 守卫。
+- 未解析引用、未知 dialect、循环闭包、未固定来源或不支持的资源必须 fail-closed；不得静默忽略关键字或猜测类型。
 ## 13. 静态检查与稳定诊断
 
 Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后执行结构、字段、标识符、依赖、Schema、Capability Link、Procedure Graph、CEL、Predicate / Evidence 和 Wait 检查。未知字段、重复 YAML Key、自定义 Tag、循环 Alias、未知根类型和不确定标量必须拒绝。
@@ -370,7 +390,7 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 
 - 当前是中央完整设计稿，必须经独立设计评审后才能冻结。
 - ca-skills 负责发布 1.6.0 作者 Schema、完整规范、机器 languageTarget、Golden 和正式 Release Record。
-- Compiler 负责新 Parser / AST / Check / Link / BuildRequest / BuildResult / Artifact / Verify；SR-013 / Compiler Issue #61 负责实现与产品证据。
+- Compiler 负责新 Parser / AST / Check / Link / BuildRequest / BuildResult / Artifact / Verify；SR-013 / Compiler Issue #62 负责 CA-SL 1.6.0-only 实现与产品证据；#61 仅为历史 v1alpha5 记录，不得作为新版实施入口。
 - Owner / Provider 分别发布满足一对一映射的 Package；Host Context Publisher 只发布 Schema-only Package。
 - SR-027 负责新 Bundle；SR-004～006 负责导入、Catalog、Resolver；F04 负责 Runtime Action Boundary；F09 / SR-016 负责 Studio。
 - 未正式发布前，所有产品实现和运行验收保持 NOT_RELEASED / NOT_RUN；本设计通过不代表实施 READY。
@@ -383,3 +403,4 @@ Compiler 必须先安全解析 YAML，再建立统一 AST / SourcePath，随后�
 | 2026-11-26 | 0.1.1 | GPT-6（ChatGPT） | §4、§16、修订记录 | 明确 requestSchema 指向 Skill 自有 Schema，Host Context Schema-only Package 仅通过 Contract.contexts 引用 | 避免将 Host Context Package 当作 Request Schema 根，统一 Contract.requestSchema 与 contexts 的不同所有权 | Issue #12/#40；SR-029、SR-030；PR #46 |
 | 2026-11-26 | 0.1.2 | GPT-6（ChatGPT） | 文档头、修订记录 | 补齐根 Agent.md review_scope 标准声明，保持完整规范进入独立评审时的统一治理范围 | 避免正式 CA-SL 规范稿因缺少全局评审范围而无法生成 Review Context | Issue #12/#40；PR #46 |
 | 2026-11-27 | 0.1.3 | kimi-k3.1-pro | §2、修订记录 | 将 schemas、scripts 移出 assurance，与 assurance、references 同列于 Skill 根目录 | 修正目录树与 EC01 作者源布局不一致，明确辅助资源不属于 assurance 子目录 | Issue #95；SR-023 |
+| 2026-11-28 | 0.1.4 | GPT-6（ChatGPT） | §4、§9、§12、§18、修订记录 | 修正 `when` 的规范化输入路径、可选字符串 Guard 与 Event metadata 冻结条件；分离 Skill-owned G.4 和原版 OAS3 3.0 的 dialect/fragment/anyOf 解析；统一 Compiler #62 新版入口 | 避免合法原版 OpenAPI 被 G.4 规则误拒、错误 CEL 类型或未冻结 Event 字段进入产品契约 | Issue #12；#40；PR #46；Review #6095143611 |
