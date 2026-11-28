@@ -511,8 +511,11 @@ def _yaml_key_value(text: str) -> tuple[str, str] | None:
 
 
 def _workflow_step_records(content: str) -> list[dict[str, str | None]]:
-    """Extract step-level uses and direct with.version values from workflow YAML."""
+    """Extract only real jobs.<job>.steps[] action uses and direct with.version values."""
     records: list[dict[str, str | None]] = []
+    jobs_indent: int | None = None
+    job_indent: int | None = None
+    in_jobs = False
     in_steps = False
     steps_indent: int | None = None
     step_indent: int | None = None
@@ -529,12 +532,48 @@ def _workflow_step_records(content: str) -> list[dict[str, str | None]]:
         indent = len(raw_line) - len(raw_line.lstrip())
         body = raw_line.lstrip()
 
+        if not in_jobs:
+            field = _yaml_key_value(body) if indent == 0 else None
+            if field and field[0] == "jobs" and not field[1]:
+                in_jobs = True
+                jobs_indent = indent
+                job_indent = None
+            continue
+
+        if jobs_indent is not None and indent <= jobs_indent:
+            finish_step()
+            in_jobs = False
+            in_steps = False
+            jobs_indent = None
+            job_indent = None
+            steps_indent = None
+            step_indent = None
+            with_indent = None
+            current = None
+            continue
+
         if not in_steps:
-            if re.fullmatch(r"steps:\s*(?:#.*)?", body):
-                in_steps = True
-                steps_indent = indent
-                step_indent = None
-                current = None
+            if jobs_indent is None:
+                continue
+            if indent == jobs_indent + 2:
+                field = _yaml_key_value(body)
+                if field:
+                    # A direct child of jobs is a job id. Nested env/run text
+                    # cannot establish a job or a steps list.
+                    finish_step()
+                    current = None
+                    job_indent = indent
+                    step_indent = None
+                    with_indent = None
+                continue
+            if job_indent is not None and indent == job_indent + 2:
+                field = _yaml_key_value(body)
+                if field and field[0] == "steps" and not field[1]:
+                    in_steps = True
+                    steps_indent = indent
+                    step_indent = None
+                    current = None
+                    with_indent = None
             continue
 
         if steps_indent is not None and indent <= steps_indent:
@@ -544,6 +583,10 @@ def _workflow_step_records(content: str) -> list[dict[str, str | None]]:
             step_indent = None
             with_indent = None
             current = None
+            if jobs_indent is not None and indent == jobs_indent + 2:
+                field = _yaml_key_value(body)
+                if field:
+                    job_indent = indent
             continue
 
         if body.startswith("- "):
@@ -567,7 +610,7 @@ def _workflow_step_records(content: str) -> list[dict[str, str | None]]:
             elif first_field and first_field[0] == "with":
                 with_indent = indent + 2
                 inline_version = re.search(
-                    r"(?:^|[,{]\s*)version\s*:\s*([^,}]+)",
+                    r"(?:^|[,{]\\s*)version\\s*:\\s*([^,}]+)",
                     first_field[1],
                 )
                 if inline_version:
@@ -588,7 +631,7 @@ def _workflow_step_records(content: str) -> list[dict[str, str | None]]:
             elif key == "with":
                 with_indent = indent
                 inline_version = re.search(
-                    r"(?:^|[,{]\s*)version\s*:\s*([^,}]+)",
+                    r"(?:^|[,{]\\s*)version\\s*:\\s*([^,}]+)",
                     value,
                 )
                 if inline_version:
@@ -604,7 +647,6 @@ def _workflow_step_records(content: str) -> list[dict[str, str | None]]:
 
     finish_step()
     return records
-
 
 def workflow_toolchain_violations(
     path: str,
