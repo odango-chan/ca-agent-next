@@ -78,6 +78,10 @@ cd /path/to/isolated-poc
 sha256sum -c SHA256SUMS
 ```
 
+该清单使用归档根相对路径；必须在 `isolated-poc/` 根目录执行。固定归档当前共 58 个被清单覆盖的文件（清单自身不纳入）。
+
+**vet 证据边界：**固定归档中没有 `vet.log`。原始 `EVIDENCE.md` 虽记录历史 `go vet` 退出码 0，但缺少原始输出日志，故不能独立复核；`go-test.log` 只证明 Go test，不可替代 vet。此次归档修复没有重新运行 vet，也没有补造日志。
+
 ## 5. 确定性专项
 
 同一源码、两个全新输出目录：
@@ -107,6 +111,8 @@ go test ./internal/compiler -run '^TestAC013DeterminismProbe$' -count=1 -v
 ```
 
 审计读取同目录的 `python_verify.py`、`go-test.log`。若日志文件名不同，先复制为 `go-test.log`。
+
+注意：`audit_evidence.py` 的 `go_test_pass` 字段只检查 Go test 日志，不检查 `go vet`。该脚本也不代替上文的 `sha256sum -c SHA256SUMS` 归档清单校验。当前固定归档没有 `vet.log`，因此不能从该脚本的 PASS 字段推导 vet 通过。
 
 预期关键字段：`pairing_ok=true`、`type_url_ok=true`、`deserialize_ok=true`、
 `python_all_ok=true`、`static_rejection_count=6`、`go_test_pass=true`。
