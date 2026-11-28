@@ -1,7 +1,7 @@
 # SR-027：技能Bundle构建与发布
 
 > 文档类型：软件需求（SR）  
-> SR 版本：0.3.2\
+> SR 版本：0.3.3\
 > 状态：整项 DRAFT；中央作者源与 Bundle 构建机器契约已固定，DESIGN_REVIEW_REQUESTED；产品 AC 仍 NOT_RUN，ca-skills 1.6.0 作者 Schema/Golden、Compiler 3.0.0 Release 与五根作者源尚未发布。
 > 下一步：独立评审本轮五根作者源、Compiler pin、release/bundle-inputs.yaml、Bundle 目录与原子 ZIP 契约；达到 SR-027 READY 后再创建 ca-skills 实施 Issue。
 > 阶段依据：[独立评审 #89](https://github.com/odango-chan/ca-agent-next/issues/89#issuecomment-7209388846)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。
@@ -117,7 +117,7 @@ ZIP 复用仓库既有确定性归档规则：路径排序、统一 /、固定�
 
 ca-skills / SR-031 原样发布 OpenAMSM 实际支持版本的 OpenAPI 3.0 Source Bundle；原始 YAML bytes、相对路径和 `$ref` 不变。Source Bundle 是不可变标准来源快照，不是 Schema-only Interface Package，不导出 Capability / Callable，也不需要 Adapter。
 
-- 新 CA-SL 1.6.0 Skill 的 Request 根始终自有、遵循 G.4，并且只描述 T1 已可用的 SBI / 归一化字段。若字段类型需要复用原版 3GPP 类型，Skill 显式声明并 pin Source Bundle dependency，Compiler 直接解析精确 `components/schemas`；外部目标使用 OAS 3.0 dialect，不做投影。
+- 新 CA-SL 1.6.0 Skill 的 `requestSchema` **入口路径始终属于当前 Skill Package**（`schemas/*.schema.yaml`），只约束 T1 已可用的 SBI / 归一化字段；入口文件可采用**本地 G.4 闭合对象根**，也可采用**唯一纯单 `$ref` 别名根**精确引用已 pin Source Bundle 的原版 OAS 3.0 `components/schemas`，不得为别名添加 G.4 兄弟字段或强制 `additionalProperties: false`。仅本地 G.4 节点按 G.4 语义校验；外部目标及可达闭包保留原始 OAS3 dialect，不改写、投影或转成 G.4。Compiler 必须对选定闭包与锁定身份离线 fail-closed 验证；未选定 operation 不全局 eager resolve。
 - Bundle / Compiler Lock 必须固定 OpenAMSM source commit、Source Bundle identity、每个文件的原始相对路径 / Git blob ID / byte length、选定 operation surface、完整可达 `$ref` 闭包和标准版本取证；Publisher 直接 byte-compare 原件，不新增 per-file SHA-256 / digest 或 package hash。Build / Verify 不得动态下载 latest 或跨 commit 混源。
 - 当前 `PostSmContexts.requestBody` → `jsonData` → `SmContextCreateData` 的选定闭包是四份原版 YAML / 102 个 Schema Component；不要求复制 472 份 standard YAML，也不要求解析根文件中未选定 operation 的 refs。
 - Provider Codec Output Schema 与 OpenAPI Source Bundle 是不同依赖。NAS / NGAP 结果由 ca-client-tools SR-026 发布，必须固定 OpenAMSM 协议源版本和已资格化 Profile；0xD1 首批不能证明 Create / Modify / N2 支持。
@@ -151,3 +151,4 @@ ca-skills / SR-031 原样发布 OpenAMSM 实际支持版本的 OpenAPI 3.0 Sourc
 | 2026-11-28 | 0.3.0 | GPT-6.2（ChatGPT） | §0、§2.2、§3～6、修订记录 | 固定 CA-SL 1.6.0 languageTarget、Compiler 3.0.0 / API /2、五根作者源、Bundle 输入锁与原子 ZIP 契约 | 把生产端设计从等待外部命名推进为中央可评审的唯一目标，同时保留产品未发布状态 | Issue #113；F08；EC02；SR-013/027/029/030；PR #115 |
 | 2026-11-28 | 0.3.1 | GPT-6（ChatGPT） | §2.1、§2.2、修订记录 | 将 Create/Modify/Release 三条 MAS 根统一标记正式 Codec READ 与未发布阻塞；将历史 Owner Parser grant 限定为待签认映射，明确唯一 T2 解码、Owner 22/22 或 24/24 二选一 | 消除 SR-027 与 SR-029 §3.1、SR-026 的跨仓依赖冲突，不允许 Create 跳过 Codec 或 Modify/Release 使用旧 Parser fallback | Issue #40/#47/#113；SR-026/027/029；PR #125 |
 | 2026-11-28 | 0.3.2 | GPT-6（ChatGPT） | §2.1、§2.2、§5.1、修订记录 | 将正式 Codec Package、消息 Profile、Output Schema 和 Source Bundle 纳入精确 Bundle pin；明确 MAS Owner/Codec/Host 生产者交接；新增缺 Codec、错 Profile、旧 Parser fallback 负例 | 避免 1.6.0 Bundle 只锁 Owner/Host 而遗漏 Codec 造成 T2 运行期动态扩权与错误解码 | Issue #40/#47/#113；SR-026/027/029/031；PR #125 |
+| 2026-11-28 | 0.3.3 | GPT-6（ChatGPT） | §6、文档头、修订记录 | 区分 Skill-owned requestSchema 本地 G.4 闭合根与纯单 $ref OAS3 根别名；仅本地节点按 G.4 校验，原件保留 OAS3 dialect | 与 SR-031/CA-SL 1.6.0 的原版标准引用设计一致，禁止 Publisher/Compiler 误加 G.4 闭合规则或改写 OAS3 | Issue #47/#40；SR-013/027/031；PR #125 |
