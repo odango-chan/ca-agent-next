@@ -23,6 +23,13 @@ from .manifest import (
     ResponseBinding,
     load_manifest,
 )
+from .provider_v2 import (
+    ArtifactSlotSpec,
+    ProviderBindingSpec,
+    ProviderLimits,
+    ProviderV2Config,
+    StdioProviderV2Driver,
+)
 from .manager import (
     CancelledOutcome,
     DeliveryOutcome,
@@ -63,4 +70,9 @@ __all__ = [
     "ToolInvocationHandle",
     "ToolsExtensionDriver",
     "ProviderV2ToolsExtensionDriver",
+    "ArtifactSlotSpec",
+    "ProviderBindingSpec",
+    "ProviderLimits",
+    "ProviderV2Config",
+    "StdioProviderV2Driver",
 ]
