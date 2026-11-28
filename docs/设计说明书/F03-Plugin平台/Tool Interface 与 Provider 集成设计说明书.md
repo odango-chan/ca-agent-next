@@ -1,7 +1,7 @@
 # Tool Interface 与 Provider 集成设计说明书
 
 > 文档类型：功能子模块设计说明书
-> 文档版本：0.4.7
+> 文档版本：0.4.8
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 功能归属：F03.05 — Tool Plugin 集成
 > 交叉功能：F03.01～F03.04、F04.01、F04.05、F05.02、F06
@@ -147,7 +147,7 @@
 
 冻结 CA-SL v1alpha5 Runtime 使用的 Owner Contract Package 与 Skill Studio / Compiler v2.1.0 Development profile 使用的 `interface-package/v1alpha1` 是两个不同消费面。Development package 是对 Owner v1alpha4 source snapshot 的静态包装，不替代 Owner 原始 ToolCatalog、CapabilityContracts、Evidence Guarantees，也不替代 Provider Interface Package 或 Provider Runtime Bindings。
 
-历史 Compiler v2.1.0 的 MAS Owner Development Interface Package 由 F09 §4（只读审计）记载，其 24/25 members、Provider v1.2.0 11 READ、旧 1.0.0 wrapper 均不是新目标。**当前 SR-025 负责全新 1.6.0 Owner 24/24 Capability-first Publisher**，所需 Package Schema、Publisher version、合法身份与 Bindings 由 Owner/Compiler 正式发布；Provider 查询子集 2/2，加 Codec 后全量 3/3，由 ca-client-tools 发布，不能从旧数组直接转换。
+历史 Compiler v2.1.0 的 MAS Owner Development Interface Package 由 F09 §4（只读审计）记载，其 24/25 members、Provider v1.2.0 11 READ、旧 1.0.0 wrapper 均不是新目标。**当前 SR-025 负责全新 1.6.0 Owner Capability-first Publisher，最终公开成员数须由 Owner 对两项旧 Parser 分别签认后推导，不存在预先固定的 24/24 发布要求**；所需 Package Schema、Publisher version、合法身份与 Bindings 由 Owner/Compiler 正式发布；Provider 查询子集 2/2，加 Codec 后全量 3/3，由 ca-client-tools 发布，不能从旧数组直接转换。
 
 **历史 Compiler v2.1.0 的** Development package version 必须为 exact SemVer，旧 wrapper 的 1.0.0 只供源审计；**新 1.6.0 Publisher 不得默认使用该版本或旧 package.json Schema**。Owner source version v1alpha4 不能冒充新语言或新 Package identity。必须保留 Owner source stable Package ID、ToolCatalog contract IDs、Owner outcomes、Receipt / Commit Proof / Reconcile 语义或冻结 v1alpha5 Runtime Owner linking。
 
@@ -407,7 +407,7 @@ Next Runtime 必须从已验证 sidecar 中所有 Mutation 的 `commitProof.reco
 
 现有 ca-client-tools v1.2.0 的 **2 Capability / 11 READ Callable** 只是历史基数；新 Provider 目标为 **3 Capability / 3 唯一 Callable**：两个收敛查询入口加一个 SR-026 Codec READ。Codec 的公开机器 ID、输入/输出 Schema、封闭消息 Profile、slot/mediaType、handler 与发行版本由 ca-client-tools Publisher 冻结，未发布前不可配置为可用。首批 0xD1 Release Request 向量不证明 0xC9 Modify 或 NGAP 资格；这两类业务依赖分开标记 BLOCKED。
 
-`env-openamsm@dc83ccbf5be54dcc7112dd43ba95ea6fa5975550` 的 `SSM.PARSE_N1_MODIFY` 虽声明 Effect=READ，但在 `0007-ssm-n1-modify-parse.patch` 中实际调用 `ogs_nas_5gsm_decode`；`SSM.PARSE_N1_RELEASE` 也已存在历史 Owner ToolCatalog，但其 handler 输入/语义须进一步核验。**READ ≠ 纯业务校验**。新版 Skill 的 NAS/NGAP 解码唯一归已资格化 Provider Codec；Owner 只能消费经 Result Schema 校验的 typed projection 作业务验证，并保留业务状态、mutation、Receipt/Proof/Reconcile。Owner 需选择移除两个旧解码 Capability（条件目标 22/22）或重构为纯业务 READ（保留两项条件目标 24/24），发布者签认前不宣称最终基数。相关冻结门槛见 SR-029 §3/§10.1、F06 §7.1；不得把历史 Parser 自动视作新版 Callable，也不能在 Codec 未发布时做 fallback。
+`env-openamsm@dc83ccbf5be54dcc7112dd43ba95ea6fa5975550` 的 `SSM.PARSE_N1_MODIFY` 虽声明 Effect=READ，但在 `0007-ssm-n1-modify-parse.patch` 中实际调用 `ogs_nas_5gsm_decode`；`SSM.PARSE_N1_RELEASE` 也已存在历史 Owner ToolCatalog，但其 handler 输入/语义须进一步核验。**READ ≠ 纯业务校验**。新版 Skill 的 NAS/NGAP 解码唯一归已资格化 Provider Codec；Owner 只能消费经 Result Schema 校验的 typed projection 作业务验证，并保留业务状态、mutation、Receipt/Proof/Reconcile。Owner 必须分别签认两个旧 Parser：双移除为候选 22/22；一项移除、一项重构为只消费已验证 Codec Result 的纯业务 READ 为候选 23/23；两项均重构为纯业务 READ 为候选 24/24；任一项未签认时成员数未冻结且不得发布。任何其他导出变化都必须重新计数。相关冻结门槛见 SR-029 §3/§10.1、F06 §7.1；不得把历史 Parser 自动视作新版 Callable，也不能在 Codec 未发布时做 fallback。
 
 T1 只允许 Event Plugin 为共享 SBI Update 路径最小读取 NAS 消息类型作路由；正式协议 Decode 在绑定 Skill/Run 后的 T2 Provider READ 中执行，Host-owned Artifact channel 以 Invocation/slot 授权；Result Schema 未验证不得传给 Owner，不能构造 T1 when/input。二进制原始 bytes 保留为证据。
 
@@ -506,12 +506,22 @@ Codec PR #39 的固定候选 `eb1169fe1d0e2e691d101908aad08ee8801da754` 在 `pro
 
 | 当前关系 | 真实成员 | 审计结果 | 1.6.0 目标 |
 |---|---|---|---|
-| 24 个 Capability 条目 / 25 个 membership | 23 个单成员 Capability + mas.se.events.emit 的 2 个成员 | 唯一多成员 Capability 为 mas.se.events.emit | 拆分事件及排除 Reconcile 后**暂计 24/24**，仍须决定两个 N1 Parser 的去留/重构；最终为条件 22/22 或 24/24（按 Owner 冻结） |
+| 24 个 Capability 条目 / 25 个 membership | 23 个单成员 Capability + mas.se.events.emit 的 2 个成员 | 唯一多成员 Capability 为 mas.se.events.emit | 拆分事件及排除 Reconcile 后，两个 Parser 决策前仅作为推导基数；双移除候选 22/22、一删一留候选 23/23、双保留为纯业务 READ 候选 24/24；以逐项签认后的实际导出重算，不冻结固定数量 |
 | mas.se.events.emit | SE.EMIT_EVENTS；SE.EMIT_RELEASE_EVENT_C | Input Schema 不同：ESTABLISHED + sessionKeys；RELEASED marker。Evidence Guarantee 不同：se.establishment-event-recorded 与 se.release-event-marker-written | 分别导出 mas.se.establishment-event.record → SE.EMIT_EVENTS；mas.se.release-event-marker.write → SE.EMIT_RELEASE_EVENT_C |
 | mas.reconcile.exact_original | MAS.RECONCILE | 当前 CapabilityContracts 中存在，但它是 Mutation Reconcile 专用 READ target | 从 Skill-facing CapabilityContracts 移除；保留 ToolCatalog contract、mutation.reconcile binding 和 Runtime internal-only Coordinator 路径 |
 | mas.receipt.query | MAS.RECEIPT_QUERY | 普通 READ evidence Callable，受 Capability / Scope 约束 | 保留当前 Skill-facing Capability / Callable 一对一映射 |
 
-现有 Owner ToolCatalog 的 **25 contracts（21 MUTATION + 4 READ）是 v1alpha4 历史基数**；MAS.RECONCILE 在新版仍为 internal-only，不可授予 Skill。移除 Reconcile Capability 并拆分事件时，尚未处理 N1 Parser 的**临时目标**为 24/24。因旧 SSM.PARSE_N1_MODIFY 实际内含 NAS 解码、SSM.PARSE_N1_RELEASE 需进一步 handler 审计，最终必须由 Owner 在两个互斥方案中签认：从新 Skill-facing Package 移出两个 Parser 时目标 **22/22**；或发布只接受已验证 Codec Result 的纯业务 READ，若两项均保留则目标 **24/24**；其他重组应重新计数。不能未经签认就断言其余 23 个单成员身份均可原样沿用，也不擅自修改旧 ToolCatalog。
+现有 Owner ToolCatalog 的 **25 contracts（21 MUTATION + 4 READ）是 v1alpha4 历史基数**；MAS.RECONCILE 在新版仍为 internal-only，不可授予 Skill。拆分 `mas.se.events.emit` 并排除 Reconcile 后，必须以两项旧 Parser 的分别签认推导实际成员数，不设固定 24/24 门槛：
+
+| `SSM.PARSE_N1_MODIFY` | `SSM.PARSE_N1_RELEASE` | 1.6.0 候选成员数 | 发布条件 |
+|---|---|---|---|
+| 移除 | 移除 | 22/22 | 两项均有 Owner 正式移除签认 |
+| 移除 | 重构为纯业务 READ | 23/23 | 保留项只消费经 Codec Result Schema 验证的 typed projection，并有 Owner 正式签认 |
+| 重构为纯业务 READ | 移除 | 23/23 | 保留项只消费经 Codec Result Schema 验证的 typed projection，并有 Owner 正式签认 |
+| 重构为纯业务 READ | 重构为纯业务 READ | 24/24 | 两项均完成纯业务重构并分别签认 |
+| 任一未签认 | 任一未签认 | 未冻结 | Publisher 必须拒绝 Release，不得猜测、自动删除或自动补齐成员 |
+
+历史 ToolCatalog 成员数不等于新版公开 Package 成员数；不能未经签认就断言其余单成员身份均可原样沿用，任何其他导出变化均须重新计数，也不擅自修改旧 ToolCatalog。
 
 事件拆分保留原有 ToolCatalog Schema 和 Evidence Guarantee，不把两种事件合并成泛化接口。建立事件仍使用 ESTABLISHED + sessionKeys 和 se.establishment-event-recorded；释放标记仍使用 RELEASED 与 se.release-event-marker-written。只替换 Skill-facing Capability ID，不更改 Owner 的业务副作用或保证含义。
 
@@ -570,7 +580,7 @@ Runtime Action 以 Capability ID 为 Skill / Procedure 作者侧入口。Runtime
 | 输入类别 | 唯一 1.6.0 行为 |
 |---|---|
 | 合法 1:1 Capability / Callable，kind/Effect/Schema 匹配 | Compiler 构建唯一 Binding，Runtime 经 Artifact Scope 分发内部 Callable |
-| 旧 Owner 24 IDs/25 members（两个 Event Callable 共用一个 Capability） | 拒绝；需 Owner 发布拆分的 24/24 |
+| 旧 Owner 24 IDs/25 members（两个 Event Callable 共用一个 Capability） | 拒绝该旧一对二导出；Owner 必须拆分事件并对两个 Parser 分别签认，最终数量按 22/22、23/23、24/24 条件推导；未签认不得发布，不要求固定 24/24 |
 | 旧 Provider 2 Capability/11 READ Callable | 拒绝作为新版公开面；新 Provider 目标为两个通用 READ 1:1 加一个 Codec 1:1，合计 3/3；两个 READ 使用封闭 contextKind/resourceKind selector |
 | 旧 v1alpha5 Alias::Callable、Artifact、旧 Development 1.0.0 ZIP | 新 Authoring/Compiler/Agent/Studio 都拒绝，不转换、不 fallback |
 | 模型指定 Callable/backendOperationId/URL 或自由文本 selector | IPC 前拒绝；Provider 只能用 Schema 闭合路由私有 handler |
@@ -608,3 +618,4 @@ Runtime Action 以 Capability ID 为 Skill / Procedure 作者侧入口。Runtime
 | 2026-11-27 | 0.4.3 | Codex / GPT-6 | Provider 一对一映射 | 区分查询 2/2 与包含 Codec 的 3/3 | 与 SR-029、F06 的发布范围对齐 | Issue #12，PR #46 |
 
 | 2026-11-28 | 0.4.7 | GPT-6（ChatGPT） | §2、§5、§12 与修订记录 | 整合 #45 公开 Callable 的唯一 Binding、Skill 作者源与编译 Artifact 分层、#46 Provider/Codec 封闭路由；保留历史发布只读 | 不将公开 Tool 误作内部分发身份，维持 1.6.0-only | Issue #12；#40；PR #45；#46 |
+| 2026-11-28 | 0.4.8 | GPT-6（ChatGPT） | §4.4、§8.3、§12.2、§12.8、修订记录 | 将 Owner Parser 数量从固定 24/24 改为逐项签认矩阵，补齐混合裁决与未签认阻断 | 避免合法 Owner Package 因固定成员数被误拒，并确保 Compiler 只接受 Owner 冻结的实际 1:1 成员 | Issue #12；SR-025；PR #46；Review #6095143611 |
