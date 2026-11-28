@@ -1,6 +1,6 @@
 # CA-SL Compiler 设计说明书
 
-> 文档版本：0.2.22\
+> 文档版本：0.2.23\
 > 状态：**设计待评审**（CA-SL 1.6.0 Capability-first 增量设计；实施及外部发布仍 NOT_RUN）
 > 修订日期：2026-11-28\
 > 全局评审范围：继承根目录 Agent.md 的 review_scope  
@@ -179,7 +179,7 @@ AC-013-01 报告采用 Go 1.26.6、cel-go 0.33.2、Go protobuf 1.36.10、CPython
 | Runtime Artifact Manifest | connectionagent.io/compiler-artifact/2 |
 | Compiler Release SemVer | 3.0.0（从 v2.1.0 进行不兼容主版本升级；不发布 alpha / rc） |
 
-以上是中央设计目标，不表示这些 API、Schema、Golden、可执行文件或 Release 已经存在。ca-skill-compiler#61 的目标是 CA-SL v1alpha5，保留为历史设计/实现记录，不得用于 1.6.0 实施、验收或发布；SR-013 达到 READY 后再创建新的 Compiler 实施 Issue，并在其中引用本设计固定 SHA。
+以上是中央设计目标，不表示这些 API、Schema、Golden、可执行文件或 Release 已经存在。ca-skill-compiler#61 的目标是 CA-SL v1alpha5，保留为历史设计/实现记录，不得用于 1.6.0 实施、验收或发布；CA-SL 1.6.0-only Compiler 实施 Issue [#62](https://github.com/odango-chan/ca-skill-compiler/issues/62) 已存在；本仓 SR-013 的具体实施阶段仍须满足 READY/授权门槛，并在 #62 记录受测设计 SHA，不再重复创建新 Issue。
 
 新版本不接受旧 v1alpha5 Runtime Artifact、旧 Build DTO 或 Development Artifact 作为输入；不做兼容映射、fallback、自动迁移或双轨 Parser。
 
@@ -294,7 +294,7 @@ Chromium parity 脚本使用真实 Headless Chrome；若默认路径不可用，
 ## 8. 发布边界与外部消费
 
 - Compiler 的职责止于 Check、Build、Verify、Artifact Schema、Compiler Release 和可复现证据。
-- ca-skills CI 负责选取并固定稳定 Compiler Release、编译 Assurance Skill、验证结果，并按 ca-skills Bundle 契约组装 SKILL.md 与发布 Artifact。该工作由 F08 与 SR-027 追踪，不归入 Compiler #61 的代码实现。
+- ca-skills CI 负责选取并固定稳定 Compiler Release、编译 Assurance Skill、验证结果，并按 ca-skills Bundle 契约组装 SKILL.md 与发布 Artifact。该工作由 F08 与 SR-027 追踪，不属于历史 Compiler #61，也不属于新版 Compiler #62 的 Bundle 发布职责。
 - Next Agent 只消费正式发布 Bundle；导入、Catalog、CEL 反序列化和每 Event 求值由 F02 / SR-004/005/006 验收。Next 不内置 Compiler、不调用 Compiler 命令、不实现 Skill Admission。
 - Compiler Release、ca-skills Bundle Release、Next Runtime E2E 是三个独立证据层。一个通过不能替代另一个。
 
@@ -371,7 +371,7 @@ Link 阶段不访问 Provider 动态 catalog，也不选择 backendOperationId�
 | 边界 | 当前可评审决议 | 实施前由谁冻结 |
 |---|---|---|
 | 作者与语言 | 仅 1.6.0 Contract/Procedure/when/Capability；旧 Alias::Callable 全拒绝 | Next：languageTarget 唯一值；ca-skills：正式作者 Schema、Golden 与 Release |
-| 一对一 Link | Owner 24/24、Provider 查询子集 2/2，含 Codec 全量 3/3（单包和跨包均须双向唯一）；Reconcile internal-only；每公开 Callable 仅一 Capability | Owner/Provider 发布新 Package/Schema |
+| 一对一 Link | Owner 旧两项 N1 Parser 必须由 Owner 分别签认移除或改造为纯业务 READ，公开基数可能为 22/22、23/23 或 24/24，未签认前不固定数量；Provider 查询子集 2/2，含 Codec 全量 3/3（单包和跨包均须双向唯一）；Reconcile internal-only；每公开 Callable 仅一 Capability | Owner/Provider 发布新 Package/Schema 与最终成员数；Compiler 不猜测 |
 | Capability roots 与 Schema dependency closure | 零 Capability roots 合法；若有 contexts Schema-only 引用，Package dependency closure 可非空；仅无外部 Capability / Schema 引用时整体闭包为空 | Compiler：新 BuildRequest / DependencyInspection 必须区分 Capability roots 与 Schema-only 依赖 |
 | Schema-only Interface Package | 显式导出 Schema、0 Capability / 0 Callable，可作为 contexts Schema 依赖；不产生 Capability grant、Callable binding、Tool allowlist 或 Tool Effect | Compiler 1.6.0 Package Schema / Link / Build / Verify；SR-013 AC-013-06 与 SR-030 AC-030-03 联合验收 |
 | when 与 Request Schema | input 使用需 Schema；event.type-only 不要求；Guard/nullable 静态检查；有 Schema 时无 when 也发布根闭包 | ca-skills 新 CEL 剖面 + Compiler CheckedExpr/DescriptorSet |
@@ -429,3 +429,4 @@ SR-013 AC-013-07 需验证原版组件直接引用、跨文件 CommonData 闭包
 | 2026-11-27 | 0.2.20 | ChatGPT（GPT-6.2） | §1、§5.2～§5.3、§6、§12 | 将 Request Schema Artifact / Manifest 闭包按 dialect 分型；本地 G.4 写入规范化 Artifact，外部 OAS3 只引用精确 pin 的 Source Bundle 原件及 JSON Pointer；when 类型位置引用也改为 dialect-aware | 使 Build/Verify、Manifest、Bundle、Host 对 OAS3 原始 bytes、Schema 定位与运行期离线闭包有唯一一致的所有权表达 | Issue #49/#47；IR-008/009；SR-013/031；PR #52 |
 | 2026-11-28 | 0.2.21 | GPT-6.2（ChatGPT） | 文档头、§1、修订记录 | 同步 1.6.0-only Compiler 实施入口至 #62，并纳入 PR #52 作者资源 / Script Registry 与 OAS3 dialect-aware Artifact 表示 | 避免 1.6.0 实施继续指向历史 #61；保持本地 G.4 与外部 OAS3 的 Artifact/Manifest 分型 | Issue #40/#47/#49/#62；IR-008/009；SR-013/031/032；PR #52/#115 |
 | 2026-11-28 | 0.2.22 | GPT-6.2（ChatGPT） | §1、§5.1、§5.1.1、修订记录 | 固定 CA-SL 1.6.0 languageTarget、Compiler 3.0.0 与四项机器 API /2 目标 | 将 Compiler 机器契约从 Owner 待命名候选收敛为 Next 唯一设计目标，保留正式 Schema/Release 未发布状态 | Issue #113；SR-013；SR-027；F08；CA-SL 1.6.0；PR #115 |
+| 2026-11-28 | 0.2.23 | GPT-6（ChatGPT） | §5.1、§9、§11、修订记录 | 修复重复创建 Compiler #62 Issue 口径；Bundle 归 ca-skills；Owner 最终 22/23/24 一对一基数需两项 Parser 分别签认 | 避免 EC02 意外回退 F06/SR-029/EC05 已确定的责任与条件合同 | Issue #50/#40/#113；Compiler #62；PR #115 |
