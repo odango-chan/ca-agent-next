@@ -1011,7 +1011,15 @@ def _is_archived_source_copy(text: str) -> bool:
     )
     has_fixed_commit = any(
         re.fullmatch(
-            r">\s*固定源提交[：:]\s*\x60?[0-9a-fA-F]{40}\x60?\s*",
+            r">\\s*(?:固定源提交|固定候选提交)[：:]\\s*\\x60?[0-9a-fA-F]{40}\\x60?\\s*",
+            line,
+        )
+        for line in metadata
+    )
+    has_fixed_issue_snapshot = any(
+        re.match(
+            r"^>\\s*固定来源[：:]\\s*Issue\\s+#\\d+.*最后更新时间\\s+"
+            r"\\d{4}-\\d{2}-\\d{2}\\s+\\d{2}:\\d{2}\\s+UTC\\s*$",
             line,
         )
         for line in metadata
@@ -1031,7 +1039,7 @@ def _is_archived_source_copy(text: str) -> bool:
     )
     return (
         origin_is_complete
-        and has_fixed_commit
+        and (has_fixed_commit or has_fixed_issue_snapshot)
         and has_source_state
         and has_migration_trace
     )
