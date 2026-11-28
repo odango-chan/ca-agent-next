@@ -628,7 +628,7 @@ Runtime Action 以 Capability ID 为 Skill / Procedure 作者侧入口。Runtime
 
 - CA-SL v1alpha5 与 Compiler v2.1.0 已发布语义和字节完全冻结；其中 tool: alias::Callable 的历史语义不变。
 - CA-SL 1.6.0 是 Capability-first 唯一目标作者版本候选，尚未由 ca-skills 发布。
-- Compiler Artifact API / BuildResult API 的新版本候选仍是 connectionagent.io/compiler-artifact/2 与 connectionagent.io/compiler-build-result/2；其 languageTarget 候选为 connectionagent.io/v1.6.0，并承载 Request Schema、when 和 capabilityBindings。正式发布前由 ca-skills / Compiler 在 Schema / Golden 中共同确认。
+- Compiler Artifact / BuildResult / BuildRequest / DependencyInspection 的唯一机器身份由 Next 中央固定为 connectionagent.io/compiler-artifact/2、connectionagent.io/compiler-build-result/2、connectionagent.io/compiler-build-request/2、connectionagent.io/compiler-dependency-inspection/2；languageTarget=connectionagent.io/v1.6.0，Compiler Release=3.0.0。正式 Schema / Golden / CLI / Release 仍由 ca-skills / Compiler Owner 发布；未发布前不代表产品 PASS。
 - 不提供 v1alpha5 / 1.6.0 双语法兼容、自动迁移、旧 Artifact 回退或 Development Artifact 运行时回退。Development v1alpha1 继续 NOT_ADMITTED。
 - 本设计不修改任何下游仓；各仓实现必须由后续目标仓 SR 单独授权。
 
