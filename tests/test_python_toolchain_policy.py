@@ -254,20 +254,20 @@ class PythonToolchainPolicyTests(unittest.TestCase):
             "uv_version": "0.13.10",
         }
         content = (
-            "name: Python tests\\n"
-            "env:\\n"
-            "  NOTE: |\\n"
-            "    jobs:\\n"
-            "      fake:\\n"
-            "        steps:\\n"
-            "          - uses: astral-sh/setup-uv@abc123\\n"
-            "            with:\\n"
-            "              version: '0.13.10'\\n"
-            "jobs: # actual workflow jobs\\n"
-            "  test:\\n"
-            "    steps: # actual job steps\\n"
-            "      - name: Run tests\\n"
-            "        run: echo 'no actual setup-uv step'\\n"
+            "name: Python tests\n"
+            "env:\n"
+            "  NOTE: |\n"
+            "    jobs:\n"
+            "      fake:\n"
+            "        steps:\n"
+            "          - uses: astral-sh/setup-uv@abc123\n"
+            "            with:\n"
+            "              version: '0.13.10'\n"
+            "jobs: # actual workflow jobs\n"
+            "  test:\n"
+            "    steps: # actual job steps\n"
+            "      - name: Run tests\n"
+            "        run: echo 'no actual setup-uv step'\n"
         )
         found = workflow_toolchain_violations(
             ".github/workflows/python-tests.yml", content, manifest
