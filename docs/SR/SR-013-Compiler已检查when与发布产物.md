@@ -127,6 +127,10 @@ AC-013-01 可记录为 **PASS（隔离 PoC 范围）**，但必须同时保留�
 
 PoC 中复用 Development Schema/Lock fixture 只证明共享 Schema 解析机制和序列化互操作，不允许正式产品路径依赖 Development Artifact 或改变 Development v1alpha1。
 
+### 3.5 Event metadata 与 T1/T2 输入边界（待正式资格化）
+
+`when` 只位于 `assurance/contract.yaml`。Publisher 冻结 Event metadata 字段/类型后 Compiler 才构建 CEL 类型环境；仅表达式实际引用的 metadata 进入 DescriptorSet，仅引用 `input` 时加入 Request Schema 类型闭包。不得预设所有 Skill 均有 `event.type`，也不能让 T1 选择依赖 T2 Codec Result。原版 OpenAPI 3.0 资源不属于 G.4 dialect，不得改写。
+
 ## 4. AC-013-02：CA-SL 1.6.0 Contract.when、Request Schema 与静态检查
 
 ### 4.1 唯一目标与可复用输入
@@ -183,7 +187,7 @@ skills/<skill-name>/compiled/when.checked.pb
 skills/<skill-name>/compiled/when.types.pb
 ~~~
 
-request-schema 根与完整 G.4 $ref 资源闭包只要 Contract 声明 requestSchema 就必须存在，与 when 是否存在无关；when.*.pb 仅在 Skill 声明 when 时存在。最终文件名和 Manifest 字段以 Compiler Owner 批准后的版本化 Schema 为准；不得保留多个兼容别名。
+Skill-owned G.4 Request Schema 根与完整 dialect-aware `$ref` 闭包在 Contract 声明 requestSchema 时必须存在，且与 when 无关；原版 3GPP OpenAPI 3.0 YAML 保留 source bytes、相对 `$ref` 与 OAS3 dialect，不改写、投影或强制 G.4 Adapter。具体 resolver/Manifest 由 Compiler Owner/SR-031（PR #48）冻结；when.*.pb 仅在声明 when 时输出，无旧别名。
 
 ### 5.3 Manifest 必需语义
 
@@ -206,7 +210,7 @@ request-schema 根与完整 G.4 $ref 资源闭包只要 Contract 声明 requestS
 ### 6.1 Build
 
 - 仅按正式 CA-SL **1.6.0** 进行单一 Parser/AST/静态检查，按 SR-029 校验公开 Capability↔Callable 双向一对一，Procedure 只携带 Capability ID；不得解析旧 v1alpha5。
-- 对声明 requestSchema 的 Skill 生成规范化 G.4 Schema 根与完整引用闭包，供 Host 运行期校验。
+- 对声明 requestSchema 的 Skill 生成 Skill-owned G.4 根和完整 `$ref` 闭包；引用原版 OAS3 components 时保留原始文件字节、相对 `$ref` 与 OAS3 语义，Host 按正式 1.6.0 Publisher Event/Input 契约校验。
 - 对有 when 的 Skill 生成 CheckedExpr Any 与 DescriptorSet；仅当 when 引用 input 时，DescriptorSet 才纳入该 Request Schema 类型闭包。
 - 按新版 Manifest 装配确定性 Artifact。
 - 无错误时返回完整 Artifact；任何错误都返回空 OutputFiles，不返回部分产物。
@@ -218,7 +222,7 @@ request-schema 根与完整 G.4 $ref 资源闭包只要 Contract 声明 requestS
 
 - 验证 Artifact API / languageTarget。
 - 验证 Manifest、路径、文件清单、重复归属和必需文件。
-- 验证已声明 Request Schema 的根与全部资源可解析，保留精确 $id 和 G.4 约束，无未解析/越界/重复资源。
+- 校验 Skill-owned G.4 根、OAS3 引用资源按各自 dialect 完整解析并保留原生约束/source bytes/已声明 `$id`；未解析、越界、重复或静默丢失 OAS3 关键字必须拒绝。
 - 验证 Any type URL、CheckedExpr protobuf、bool 类型和 DescriptorSet。
 - 验证所有类型引用可解析，Request Schema identity 与该 Skill 一致。
 - 验证 SourcePath、表达式位置、程序文件与 Manifest 一致。
@@ -441,3 +445,4 @@ AC-013-02/04 仍 NOT_RUN，03/05/06 仍 BLOCKED。整项 DRAFT 主状态不变�
 | 2026-11-27 | 0.2.24 | Codex / GPT-6 | 文档头 | 登记阶段 READY（中央只读核验）及 AC 范围与工作项 #95 | 按单项独立评审推进 | Issue #12、#77；PR #46 |
 | 2026-11-27 | 0.2.25 | kimi-k3.1-pro | AC-013-01、§13、文档头 | 核对 58 项归档哈希与历史结果，发现 audit 登记不一致、绝对式校验路径及 vet 日志缺项；将本轮归档完整性记为 FAIL，复跑 NOT_RUN | 区分文件存在性、内部一致性和产品运行验收，避免过度判 PASS | Issue #95；PR #18 |
 | 2026-11-28 | 0.2.28 | GPT-6（ChatGPT） | 头部、AC-013-01、实施前置 | 明确新版 Compiler #62，修正 cases.json 固定证据路径；历史 #110 已合独立证据分支但当前产品 AC 不升级 | 防止历史 #61/归档修复变成新 Compiler 产品资格 | Issue #12；#40；#102；PR #45；#46；#110 |
+| 2026-11-28 | 0.2.28-integration | GPT-6（ChatGPT） | §3.5、§5～6 | 整合 Publisher Event metadata、T1/T2 分层、OpenAPI 原始字节和 OAS3/G.4 解析边界；具体算法留给 SR-031/#48 | 拒绝旧 Adapter 或 Codec 输出在选择期前置 | Issue #40；#47；PR #45；#46；#48 |
