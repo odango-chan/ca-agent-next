@@ -1,7 +1,7 @@
 # SR-013 Compiler 已检查 when 与发布产物
 
-> 文档版本：0.2.28\
-> 状态：整项 DRAFT；阶段 READY（中央只读核验）。AC-013-01 归档完整性。  
+> 文档版本：0.2.29
+> 状态：整项 DRAFT；阶段 READY（中央只读核验）。AC-013-01 归档完整性仍按历史审计状态；AC-013-02～06 NOT_RUN/BLOCKED；新增 AC-013-07 原版 OAS3 直接引用与执行期 Codec Result，当前 BLOCKED/NOT_RUN（待 SR-031 dependency kind、Resolver/Validator、Build DTO/Lock 和 Golden 冻结）。
 > 下一步：PR #18 在恢复分支的原始归档审计 FAIL 维持其历史快照，#110 已单独合入隔离证据分支而非当前恢复分支；先按固定 SHA 核查该修复能否合入并复核。AC-013-02～06 的 1.6.0-only 机器合同与 Compiler #62 仍待 Publisher 正式冻结、实测 NOT_RUN。\
 > 阶段依据：[独立评审 #77](https://github.com/odango-chan/ca-agent-next/issues/77#issuecomment-7209276846)，评审 Head `42a7fe2ce7826b7cda74110e843f39401571299c`；本轮登记与实施入口见 [SR 总索引 §2.4](../治理/SR%20总索引.md)。  
 > 工作项：[阶段工作项 #95](https://github.com/odango-chan/ca-agent-next/issues/95)。[本轮固定归档核验报告](../issue-95-fixed-source-handoff/SR-013.md)。
@@ -64,6 +64,7 @@ SR-013 整体仍为 DRAFT。AC-013-01 的隔离 PoC 完成不自动把 SR-013 �
 | AC-013-04 | NOT_RUN | 新版 Build / Verify、Go/Python、Native/WASM/Chromium 与旧契约回归 | 
 | AC-013-05 | BLOCKED（依赖 AC-013-01～04、AC-013-06 和发布授权） | 经授权发布 Compiler Release 并记录资产和 smoke 证据 |
 | AC-013-06 | BLOCKED（依赖 1.6.0 Package Schema / DependencyInspection / Golden） | 验证 Schema-only Package、Schema closure 与零 Capability roots 的分离语义；与 SR-030 AC-030-03 联合验收 |
+| AC-013-07 | 原版 OpenAPI 3.0 Source Bundle pin、选定 operation / multipart requestBody 的 lazy refs、G.4↔OAS3 dialect-aware resolver、CEL union/optional/nullability 类型推导、T1/T2 分阶段与负例；产品 BLOCKED/NOT_RUN |
 
 ## 3. AC-013-01：Schema-aware Go/Python 隔离 PoC
 
@@ -405,6 +406,24 @@ SR-013 只有 AC-013-01～06 均达到各自通过条件，Compiler Release 有�
 3. `EVIDENCE.md` 声明的 `vet.log` 未归档；历史 vet 结果不得当作本轮执行证据。
 
 AC-013-02/04 仍 NOT_RUN，03/05/06 仍 BLOCKED。整项 DRAFT 主状态不变；本核验不实施 Compiler、不发布 Artifact，也不把历史报告或 CI 当当前产品验收。
+
+## 14. AC-013-07：原版 OpenAPI 3.0 直接引用与执行期 Codec Result
+
+新增独立 AC-013-07，不追溯改变 AC-013-01～06 的既有评审状态。本 AC 撤销“必须先发布 G.4 Adapter 才能引用 3GPP 类型”的假设。SR-031 发布不可变 OpenAMSM OpenAPI Source Bundle；Compiler 通过显式 pin 的 dependency 直接解析原版 OAS3 Schema Component。Skill-owned Request 根仍是本地 G.4，外部 OAS3 Schema Object 按自身 dialect 解释，不转换、不投影、不改原件。
+
+| 子例 | 固定输入 | 必须结果 |
+|---|---|---|
+| 07a Source Bundle pin | OpenAMSM commit `dc83ccbf5be54dcc7112dd43ba95ea6fa5975550`；TS 29.502 / 29.571 / 29.510 NFManagement / 29.518 Namf 四个 Git blob、各自标准版本、选定 surface | Lock 唯一不可变；仅锁 Git blob / byte length 与原始 bytes；dynamic latest / 混源 / 缺文件拒绝，不新增 per-file digest / package hash |
+| 07b operation / schema ref | `PostSmContexts.requestBody` → `multipart/related` → `jsonData` → `#/components/schemas/SmContextCreateData`；102 个可达 Schema Component、四文件闭包 | 原生 OAS3 解析；仅解析选定 surface 的可达 refs；未选定 operation refs 不 eager resolve；选定闭包所有 refs 同一 snapshot，原件 byte 不变 |
+| 07c dialect boundary | Skill G.4 root 内精确引用 OAS3 `components/schemas`；真实闭包含 `anyOf` / `oneOf` / `allOf` / `nullable` / `format` / `pattern` / `additionalProperties` | 本地按 G.4，外部按 OAS3 Schema Object；组合语义、pattern、schema-valued additionalProperties 等保留，不投影 |
+| 07d type inference | CEL 读取 OAS3 Schema Component 字段，含 union / intersection / optional / nullable / 不同分支类型 | `anyOf` / `oneOf` 只无条件暴露在每个可满足分支均声明、均 required 且同类型的字段；可选字段只有在 CEL 明确支持 optional 时才可按 optional 暴露；`allOf` 按交集组合；Null 与 Missing 分离；歧义字段静态拒绝 |
+| 07e stage availability | T1 when / Request；T2 已选 Procedure Codec READ Output / SourcePath | when 不读 T2 Result、不调用 Codec；T2 Result 只能由后继 Node 显式引用 |
+| 07f failure isolation | 缺 dependency、错误 alias/path/pointer、非法 pointer escape、规范化后逃出 Source Root、选定闭包 nested ref 缺失、unsupported OAS keyword、跨 source commit、dynamic latest | `SCHEMA_INVALID` / 稳定诊断，Build 无部分 Artifact；选定闭包外 refs 不阻塞当前消费；允许规范化后仍在 Source Root 内的 `../`；逃出 Source Root 拒绝；不回退 Adapter / projection |
+| 07g Bundle / Verify | 固定 Source Bundle + Skill Request + Provider Output Schema + Host Context / Owner dependencies | 离线 Build / Verify；Lock 保存选定闭包；无 Codec Skill 不强制依赖 Source Bundle / Codec |
+
+OpenAPI operation / multipart ingress 验证由 SR-010 负责；Compiler 负责 Request Schema 跨 dialect 引用和类型检查。NAS / NGAP Output Schema 由 SR-026 Provider 发布，不能用 SBI binary slot 代替。一个 Codec Capability 是否可用单一封闭 Output Schema + 固定 enum selector 表达多 Profile，必须以 Provider Golden 证明；否则另提设计，不能静默增加 Callable 或放宽 1:1。
+
+**产品门槛**：正式 Source Bundle dependency kind、URI / JSON Pointer wire 表示、Resolver / Validator 版本、Build DTO / Lock 字段和 Golden 未冻结前，`AC-013-07=BLOCKED/NOT_RUN`。SR-031 byte-compare 可独立验收，不得升级 Compiler AC。
 
 ## 修订记录
 
