@@ -1,7 +1,7 @@
 # SR 总索引
 
 > 文档类型：软件需求索引  
-> 文档版本：0.3.82
+> 文档版本：0.3.83
 > 状态：31 项 SR：4 VERIFIED（仅各自历史模块范围）、1 IMPLEMENTED（设计移交）、25 DRAFT、1 IN_PROGRESS（SR-028；设计 READY、候选实施 IMPLEMENTED、mainline 集成未完成）。PR #46 第九轮 Review #6095601142 已合入恢复设计基线 `92436348`，main 尚未更新。PR #115 OPEN / Draft / mergeable=true / 未合并；Base `main` @ `b2ed5eb84114f9c2556a0cd06ed974887b1b70ad`。最新文档 Head `7ffb84e9ddf419941f570004ceac714554719d96`：Review Context #46136575669 SUCCESS、Python Toolchain Policy Bootstrap #46136575656 SUCCESS。SR-003 Plugin Manager Regression #46135833372 在代码快照 `ce26156a7f6ca7aad29ab87ed59986e55e9a1482` 的 Ubuntu / Windows Job 均 SUCCESS，Artifact 上传成功；`7ffb84e` 与 `ce26156` 之间仅为文档修订，SR-003 Workflow 未在 docs-only Head 重跑，因此不把该测试标记为 `7ffb84e` 的同 SHA 结果。本轮指针/统计修订同样只改文档，将触发新的 Review Context / Policy Bootstrap。第三批选择性收编已推送；PR #115 全量独立复评仍待完成。 PR #99、#112、#97 均保持源 PR 状态，不作为第二个集成入口；其实现/策略/READY 证据只按已核验范围选择性收编。PR #52 两项 P2 已收编，PR #115 全量独立复评待完成。
 > 修订日期：2026-11-28\
 > 权威规则：[SR 管理规范](../规范/SR%20管理规范.md)  
@@ -77,7 +77,7 @@
 | SR-006 | APPROVE_FOR_READY（限定） | 直接文本、when 三态、幂等冲突与原代际 Continuation | DRAFT |
 | SR-007 | CHANGES_REQUESTED | P1：AC-007-05 缺 Owner Proof 完整身份字段与同 ID Proof 负例 | DRAFT |
 | SR-008 | APPROVE_FOR_READY（限定） | 三场景静态设计；真实 Echo 运行仍阻塞 | DRAFT |
-| SR-009 | APPROVE_FOR_READY（仅旧快照 `ee73ad48`）/ 当前增量复评 PENDING | Issue #73 的旧快照 P1 已修订；当前 SR-009 v0.2.13 / F06 v0.3.7 / Plugin PR #1 新增 T0 classifier 依赖与 responseChannel 边界，等待 Issue #116 独立复评；生产 AC-009-04 classifier 依赖 ca-client-tools#44，BLOCKED_EXTERNAL_INPUT | DRAFT |
+| SR-009 | #116 固定 Head `ba5354c` 限定 APPROVE_FOR_READY（0 P0 / 0 P1 / 11 P2）；当前增量待独立复评 | SR-009 v0.2.15、F05 v0.4.13、F06 v0.3.9、IPC v0.2.8 只选择性吸收契约修订；#117 Head `64ee3c7` 的独立复评 4 P1 / 9 P2 NEEDS_REVISION，不能整分支覆盖；生产 AC-009-04 classifier 依赖 ca-client-tools#44，BLOCKED_EXTERNAL_INPUT，新增 Ext1/Host 三元产品子项 NOT_RUN | DRAFT（仅限定设计阶段候选） |
 | SR-010 | APPROVE_FOR_READY（限定） | Host ArtifactStore/Channel 与 06A；AC-010-03 因外部 ArtifactStore v1 强制 SHA-256 与 Demo no-hash 冲突而 BLOCKED；新增 AC-010-10 OAS3 requestBody / multipart / N1-N2-N2 Ext1 Content-ID 也 BLOCKED/NOT_RUN | DRAFT |
 | SR-011 | CHANGES_REQUESTED | P1：AC-011-04 缺 N1/N2 乱序、交错、多事务与旧代际断言 | DRAFT |
 | SR-012 | APPROVE_FOR_READY（限定） | 固定源 docs/design=12、docs=218；源仓正文替换仍等默认分支链接 | DRAFT |
@@ -145,7 +145,7 @@
 | [SR-005](../SR/SR-005-技能目录与条件程序消费.md) | 阶段 READY（本仓 Skill 链路） | AC-005-01/03/04/06 | 不可变 Catalog、原子激活和 generation。集成读取 A 批 SR-004 的 candidate；02/05 等正式 CheckedExpr/DescriptorSet。 | [#69](https://github.com/odango-chan/ca-agent-next/issues/69#issuecomment-7209428208) |
 | [SR-006](../SR/SR-006-技能解析器与续跑选择.md) | 阶段 READY（本仓 Skill 链路） | AC-006-01～04/06/07 | 以本地 fixture 检查选择与精确续跑，接入 A 批 SR-005 generation。05 的正式 typed-input 互操作另验。 | [#70](https://github.com/odango-chan/ca-agent-next/issues/70#issuecomment-7209449444) |
 | [SR-008](../SR/SR-008-Echo%20垂直端到端示例.md) | 限定设计已认可，等待直接依赖 | AC-008-01/04（SKILL.md-only） | 已获限定设计认可。接入 A 批真实 Importer、Catalog、Resolver 后验证 Fake Model、文本 Delivery、重放与越权拒绝；02/03/05 等 Echo Interface、Bundle 和组合环境。 | [#72](https://github.com/odango-chan/ca-agent-next/issues/72#issuecomment-7210341882) |
-| [SR-009](../SR/SR-009-OpenAMSM%20SBI%20事件插件与二进制产物交接.md) | 阶段 READY 候选（待 #116 独立增量复评） | AC-009-01/02/03/05/06；AC-009-04 Event mapping 可用 test double，生产 classifier BLOCKED | ca-openamsm-plugin PR #1 仅为已刷新的设计文档；按治理规则，当前不创建实施 Issue。ca-client-tools#44 发布 T0 classifier API 后才能完成 AC-009-04 生产绑定；SR-011 负责系统联调。 | [#73](https://github.com/odango-chan/ca-agent-next/issues/73#issuecomment-7210217168)（旧快照）；[#116](https://github.com/odango-chan/ca-agent-next/issues/116)（当前增量复评） |
+| [SR-009](../SR/SR-009-OpenAMSM%20SBI%20事件插件与二进制产物交接.md) | #116 旧快照限定批准；本版增量待复评 | AC-009-01/02/03/05/06 已批准子集 + AC-009-04 Event mapping/Schema/test-double；新增 Ext1/Host 三元验证 NOT_RUN，生产 T0 classifier BLOCKED | ca-openamsm-plugin Issue #2 / PR #3 实施候选 OPEN，模块 CI #46123933375 SUCCESS；#117 源 PR 仍不满足复评门槛，不能覆盖 #115；SR-011 管系统联调，Next AC/OM/E2E 未验收 | [#116](https://github.com/odango-chan/ca-agent-next/issues/116)；[PR #117](https://github.com/odango-chan/ca-agent-next/pull/117)；[Plugin PR #3](https://github.com/odango-chan/ca-openamsm-plugin/pull/3) |
 | [SR-010](../SR/SR-010-OpenAMSM%20工具插件与按需编解码集成.md) | 阶段 READY（本仓 no-hash Host Channel 限定范围） | AC-010-01/02/04/05/09 | AC-010-03 因外部 v1 SHA-256 contract 不兼容而 BLOCKED；AC-010-10 OAS3 requestBody / multipart / N1-N2-N2 Ext1 Content-ID 映射 BLOCKED/NOT_RUN；依赖 SR-031 / SR-013 / SR-026。 | [#74](https://github.com/odango-chan/ca-agent-next/issues/74#issuecomment-7210244694) |
 | [SR-011](../SR/SR-011-真实%20OpenAMSM%20创建修改释放端到端验证.md) | 限定设计已认可，等待直接依赖 | AC-011-06 静态架构断言 | 已获限定设计认可。组合实现具备后检查 Core 零业务分支；01～05 等同批 Bundle、Compiler Verify、Provider/Owner Package 和隔离对端。 | [#75](https://github.com/odango-chan/ca-agent-next/issues/75#issuecomment-7210271472) |
 | [SR-012](../SR/SR-012-Compiler设计归档与跨仓收敛.md) | 阶段 READY（中央只读核验） | AC-012-01 的 Next→源仓静态部分、03 | [固定源报告](../issue-95-fixed-source-handoff/SR-012.md)已核对 218/12、blob 与正文差异；01 限定范围及 03 静态门槛 PASS；02 与源仓回链 NOT_RUN。 | [#76](https://github.com/odango-chan/ca-agent-next/issues/76#issuecomment-7210373026)；[#95](https://github.com/odango-chan/ca-agent-next/issues/95) |
@@ -192,7 +192,7 @@
 - Phase D：SR-005、SR-006。
 - Phase E：SR-007。
 - Phase F：SR-008。
-- Phase G：SR-009 独立 Plugin 模块可在自身阶段 READY、独立实施 Issue 与目标仓授权后先行，不等待 Echo；当前 #116 增量复评完成前不创建实施 Issue。SR-009 AC-009-04 生产 classifier 另等 ca-client-tools#44；SR-010 逐子阶段核对实施依赖；系统 OM 组合仍待 Echo 与 Host/Owner 对端.
+- Phase G：SR-009 旧固定快照已限定设计批准，但 #115 当前 v0.2.15 中新增 Ext1/Host 三元边界需再复评；外部 Plugin Issue #2 / PR #3 为模块候选，不以 Echo 或系统 E2E 作为模块门禁；AC-009-04 生产 classifier 仍等待 ca-client-tools#44；SR-010 逐子阶段核对实施依赖；系统 OM 组合仍待 Echo 与 Host/Owner 对端.
 - Phase H：SR-011。
 - Capability-first 新版本设计：[SR-029 v0.2.6](../SR/SR-029-Capability-first-Skill作者接口与Callable一对一绑定.md) / [Issue #40](https://github.com/odango-chan/ca-agent-next/issues/40)：**CA-SL 1.6.0-only / 完全无旧版兼容**。Provider 目标由历史查询 2/2 扩展为含 Codec READ 的 **3/3**；Owner 两项历史 Parser 必须分别签认，双移除/一删一留/双保留为纯业务 READ 分别形成 **22/22、23/23、24/24** 条件候选；任一未签认则成员数未冻结、不得发布。T1 不读 T2 Codec Result；Modify 0xC9/NGAP 未资格化 BLOCKED。F02/F03.05/F04/F06/F08/F09/EC02 均按候选设计约束，Compiler/Publisher/Runtime/Studio/Bundle 新契约尚未发布，不启动代码实施；下游 PR #46/#48 冲突另设集成任务，不直接修改。
 - Compiler 外部发布依赖：SR-012、SR-013；SR-013 AC-013-01 当前修复后固定归档以 [PR #115 固定证据目录](../参考与审计/fixtures/ac-013-01/isolated-poc/README.md) 为唯一入口，完整 59 Blob（58 个清单覆盖文件 + SHA256SUMS）；Issue #102 detached checkout 复验 58/58、SHA256SUMS、audit_evidence.py、Python 18/18 PASS；`vet.log` NOT_ARCHIVED；不代表 Compiler 产品发布或整项 SR VERIFIED。
@@ -209,9 +209,9 @@
 - 设计来源：ca-agent-next PR #1 的架构、设计、规范和 Acceptance 文档。
 - PR #1：已合并；只代表设计文档变更。
 - Next Runtime：README 声明尚无已验收 Runtime 实现。
-- 当前 31 项 SR 中 4 VERIFIED（SR-001/002/003/024）、1 IMPLEMENTED（SR-015）、26 DRAFT（其中 SR-029/SR-030 设计待评审）；SR-024 VERIFIED 仅覆盖旧 v1alpha5 Development Publisher；SR-013 归档 PoC 不改变 DRAFT；SR-009 只覆盖 Event/Delivery Plugin/staging，SR-010 覆盖 Host ArtifactStore、Channel、Provider v2 Driver/Codec。
+- 当前 31 项 SR 中 4 VERIFIED（SR-001/002/003/024）、1 IMPLEMENTED（SR-015）、25 DRAFT、1 IN_PROGRESS（SR-028；设计 READY、候选实施 IMPLEMENTED，但 mainline 未 VERIFIED）；SR-024 VERIFIED 仅覆盖旧 v1alpha5 Development Publisher；SR-013 归档 PoC 不改变 DRAFT；SR-009 只覆盖 Event/Delivery Plugin/staging，SR-010 覆盖 Host ArtifactStore、Channel、Provider v2 Driver/Codec。
 - Issue #12 追踪本轮中央设计资产恢复；PR #11/#13/#15/#16/#18 均在独立分支 OPEN/DRAFT，恢复分支已同步可复用的最新文档内容但尚未创建 PR；PR 状态不等于 SR 实施状态。
-- 恢复分支 docs/restore-original-designs-20261125 尚未创建指向 main 的总 PR；SR-002 设计 PR #20 与实施 PR #23 均已合并到恢复分支，SR-002 为 VERIFIED、AC-002-01～08 PASS；EX-01 仍 NOT_RUN。该恢复分支尚未合并 main。
+- 恢复设计分支已由 PR #115（唯一 mainline 集成入口，OPEN / Draft）选择性收编，当前仍未合入 main；SR-002 设计 PR #20 与实施 PR #23 均已合并到恢复分支，SR-002 为 VERIFIED、AC-002-01～08 PASS；EX-01 仍 NOT_RUN。该恢复分支尚未合并 main。
 - ca-agent-demo、ca-client-tools、ca-skill-compiler、ca-skills 和 ca-openamsm-plugin 的现有代码/PR 只能作为外部复用或依赖证据，不能自动算作 Next SR 已实施。
 
 ## 修订记录
@@ -333,3 +333,4 @@
 | 2026-11-28 | 0.3.80 | GPT-6.2（ChatGPT） | SR-013/016/017/018/019 详细行、修订记录 | 清除第二张详细状态表中的旧 SR-013 归档 FAIL / rerun NOT_RUN；同步 AC-016-01、Host artifactRef、Owner Release 限定 PASS 与 Mock 固定源状态 | 防止同一 SR 在索引不同章节出现互相矛盾的状态 | Issue #50/#95/#102/#104/#106；PR #107/#110/#114/#115 |
 | 2026-11-28 | 0.3.81 | GPT-6.2（ChatGPT） | 文档头、SR-013/016/017/030 当前版本、修订记录 | 同步第三批收编后的 SR 版本和 ce26156 CI 快照；保留 AC-013-01 归档/历史 PoC PASS、AC-016-01 NOT_RUN、AC-017-02 FAIL、SR-018 历史 Release 限定 PASS 与当前候选阻塞 | 避免 SR 索引继续引用旧 CI 快照或旧 SR 版本 | Issue #50/#95/#102/#103/#106；PR #107/#110/#114/#115 |
 | 2026-11-28 | 0.3.82 | GPT-6.2（ChatGPT） | §2.4、§2.7、修订记录 | 将 AC-013-01 导航切换到 PR #115 已纳入的修复后完整归档；同步 SR-016/F09 当前版本与最新文档/代码测试 SHA 边界 | 清除 SR 索引中的 PR #18 修复前归档入口及过期版本引用 | Issue #50/#95/#102/#106；PR #107/#110/#114/#115 |
+| 2026-11-28 | 0.3.83 | GPT-6（ChatGPT） | 文档头、§2.4、Phase G、§4、修订记录 | 登记 #116 固定限定设计批准及 #117 后续 4 P1/9 P2；同步 SR-009 v0.2.15、F05 v0.4.13、F06 v0.3.9、IPC v0.2.8；修正“26 DRAFT”与“尚未创建 main PR”的旧现行表述，SR-028 继续 IN_PROGRESS | 防止旧 #117 文档覆盖 #115 当前第三批与 uv 状态，不拿外部 Plugin CI 当 Next 产品 PASS | Issue #50/#116；PR #115/#117；ca-openamsm-plugin#3 |
